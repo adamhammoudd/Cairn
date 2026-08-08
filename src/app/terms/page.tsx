@@ -1,0 +1,75 @@
+import Link from "next/link";
+import { Logo } from "@/components/logo";
+
+export const metadata = { title: "Terms of Service — Cairn" };
+
+export default function TermsPage() {
+  return (
+    <div className="mx-auto min-h-screen max-w-3xl px-6 py-12">
+      <div className="mb-8">
+        <Logo size={30} />
+      </div>
+
+      <div className="mb-8 rounded-card border border-negative/40 bg-panel px-4 py-3 text-[13px] leading-relaxed text-primary">
+        <span className="font-semibold">Draft — not legal advice.</span> This is a first-pass,
+        non-lawyer draft. It has not been reviewed by a licensed attorney and is not launch-ready.
+      </div>
+
+      <h1 className="mb-6 font-serif text-3xl text-primary">Terms of Service</h1>
+
+      <div className="flex flex-col gap-5 text-[14px] leading-relaxed text-muted">
+        <section>
+          <h2 className="mb-2 font-serif text-lg text-primary">1. What Cairn is</h2>
+          <p>
+            Cairn is a portfolio-tracking and market-research application. It aggregates market
+            and news data, tracks user-entered holdings, and provides an AI analysis engine that
+            surfaces probability-weighted, market/sector/ticker-level context.
+          </p>
+        </section>
+        <section>
+          <h2 className="mb-2 font-serif text-lg text-primary">2. What Cairn is not</h2>
+          <p>
+            Cairn is not a broker-dealer — it does not execute trades, hold custody of assets, or
+            connect to brokerage accounts. Cairn is not investment advice: every AI output is
+            scoped to a market, sector, or ticker, never to a specific user&apos;s position. Cairn
+            is not a registered investment adviser.
+          </p>
+        </section>
+        <section>
+          <h2 className="mb-2 font-serif text-lg text-primary">3. Eligibility and accounts</h2>
+          <p>
+            Users must be able to form a binding contract in their jurisdiction. Account creation
+            requires an email and password.
+          </p>
+        </section>
+        <section>
+          <h2 className="mb-2 font-serif text-lg text-primary">4. User content</h2>
+          <p>
+            Holdings, watchlists, chat messages, and settings entered by a user remain that
+            user&apos;s data, stored to provide the service and never sold. See the Privacy
+            Policy.
+          </p>
+        </section>
+        <section>
+          <h2 className="mb-2 font-serif text-lg text-primary">5. AI analysis engine disclosures</h2>
+          <p>
+            Every probability output is accompanied by its underlying sources and historical
+            analogs — never a bare number. Outputs express confidence and uncertainty explicitly.
+            A server-side scope guard rejects any generated output resolving to a personal
+            directive before it is stored or shown — a technical control, not a guarantee. The
+            engine may be wrong or based on an incomplete sample. Always verify sources and
+            consult a licensed advisor before making financial decisions.
+          </p>
+        </section>
+        <section>
+          <h2 className="mb-2 font-serif text-lg text-primary">6–10. Billing, liability, termination, governing law, changes</h2>
+          <p>Placeholders pending legal review — see the full draft in the repository.</p>
+        </section>
+      </div>
+
+      <Link href="/login" className="mt-10 inline-block text-[13px] text-accent">
+        ← Back to sign in
+      </Link>
+    </div>
+  );
+}

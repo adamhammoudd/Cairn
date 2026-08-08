@@ -1,0 +1,92 @@
+# Cairn Privacy Policy
+
+> **DRAFT — NOT LEGAL ADVICE.** First-pass, non-lawyer draft. Not launch-ready. Requires review by
+> a licensed attorney qualified in the relevant jurisdiction(s), with particular attention to data
+> handling requirements the AI analysis engine introduces beyond a typical SaaS app (see Section 6
+> and the jurisdictional checklist).
+
+_Last drafted: Phase 6 build. Effective date: not set — do not publish until legal review is complete._
+
+## 1. What we collect
+
+| Category | Examples | Why |
+|---|---|---|
+| Account data | Email, password (hashed by Supabase Auth), display name | Authentication, account identity |
+| Portfolio data | Holdings (symbol, quantity, purchase price/date, sector/class/geography), watchlists | Core product feature — portfolio tracking |
+| Settings | Chart preferences, currency, notification thresholds | Personalization |
+| Chat data | Chat messages, session history | Conversational assistant feature, support/audit |
+| Usage-derived | Which stored analyses were referenced in a chat response or briefing | Product function (methodology transparency), not analytics/tracking |
+
+We do **not** collect brokerage credentials, bank details, or execute any financial transaction —
+Cairn has no trade-execution or brokerage-connection feature.
+
+## 2. How we use it
+
+- Provide the service (render your portfolio, chat history, settings)
+- **Relevance ranking only**: your holdings/watchlist symbols are used to decide *which* stored,
+  already-generated market/sector/ticker analyses are relevant enough to surface to you — they are
+  never sent to the AI model as instructions to produce advice about your specific position. See
+  the AI analysis engine section of the Terms of Service for the technical control backing this.
+- Generate your daily briefing (deterministic templating over already-validated analyses — no new
+  AI generation happens as part of building your briefing)
+
+## 3. What we don't do
+
+- We do not sell personal data.
+- We do not use portfolio/watchlist data to train models on other users' behalf, and it is never
+  included in prompts sent for market/sector/ticker-level analysis generation (that pipeline only
+  ever receives a scope like "AAPL" or "semiconductors" — never a user identifier or position).
+
+## 4. Third parties / subprocessors
+
+| Party | Purpose |
+|---|---|
+| Supabase | Database, auth, storage, scheduled Edge Functions |
+| Anthropic (Claude API) | Powers the AI analysis engine and conversational assistant |
+| News/market data providers (see `data_providers` table, configurable) | Source data for the market/news layer |
+| Stripe _(Phase 12, not yet integrated)_ | Payment processing once billing ships |
+
+_[Legal review: confirm whether a formal subprocessor list / DPA references are required for the
+target jurisdiction(s), and whether Anthropic's data-retention terms for API usage need to be
+disclosed more specifically here.]_
+
+## 5. Data retention and deletion
+
+Users can export their data (JSON) and delete their account at any time via Settings → Export &
+delete (Phase 1), which removes the account and cascades to owned data per the database schema's
+foreign-key constraints.
+
+## 6. AI-specific data handling — flagged for legal review
+
+This section exists because the AI analysis engine's output type (probability/pattern analysis)
+carries materially more regulatory weight than a typical feature, and because chat messages sent
+to Claude may reference a user's portfolio context for relevance ranking even though the response
+itself is never personalized:
+
+- Chat messages you send are sent to Anthropic's API to generate a response. _[Confirm Anthropic's
+  data-retention/training-use terms for API traffic and disclose accurately here.]_
+- Portfolio/watchlist symbols used for relevance ranking (Section 2) are read server-side to
+  choose which analyses to retrieve — they are not embedded in the text sent to the model beyond
+  the ticker/sector scope itself.
+- _[EU/UK: confirm whether any of the above constitutes automated decision-making under GDPR
+  Article 22 requiring additional disclosure — the "relevance ranking only" design is intended to
+  keep this out of scope, but that's an engineering intent, not a legal conclusion.]_
+
+## 7. Cookies and sessions
+
+Supabase Auth session cookies only, used for authentication — no third-party advertising/tracking
+cookies.
+
+## 8. Children's privacy
+
+_[Placeholder — standard age-restriction clause (e.g. 18+) to be confirmed by counsel given
+financial-data handling.]_
+
+## 9. Changes to this policy
+
+Material changes — especially anything affecting Section 6 — will be flagged as higher-priority
+for legal re-review than routine changes.
+
+## 10. Contact
+
+_[Placeholder — support/privacy contact email once established.]_

@@ -1,0 +1,61 @@
+import Link from "next/link";
+import { Logo } from "@/components/logo";
+
+export const metadata = { title: "Privacy Policy — Cairn" };
+
+export default function PrivacyPage() {
+  return (
+    <div className="mx-auto min-h-screen max-w-3xl px-6 py-12">
+      <div className="mb-8">
+        <Logo size={30} />
+      </div>
+
+      <div className="mb-8 rounded-card border border-negative/40 bg-panel px-4 py-3 text-[13px] leading-relaxed text-primary">
+        <span className="font-semibold">Draft — not legal advice.</span> This is a first-pass,
+        non-lawyer draft. It has not been reviewed by a licensed attorney and is not launch-ready.
+      </div>
+
+      <h1 className="mb-6 font-serif text-3xl text-primary">Privacy Policy</h1>
+
+      <div className="flex flex-col gap-5 text-[14px] leading-relaxed text-muted">
+        <section>
+          <h2 className="mb-2 font-serif text-lg text-primary">What we collect</h2>
+          <p>
+            Account data (email, hashed password, display name), portfolio data (holdings,
+            watchlists), settings, and chat history. We do not collect brokerage credentials or
+            bank details — Cairn has no trade-execution feature.
+          </p>
+        </section>
+        <section>
+          <h2 className="mb-2 font-serif text-lg text-primary">How we use it</h2>
+          <p>
+            To provide the service, and to rank which stored market/sector/ticker analyses are
+            relevant enough to surface in your daily briefing and chat — your holdings/watchlist
+            are used for that ranking only, never sent to the AI model as instructions to produce
+            advice about your specific position.
+          </p>
+        </section>
+        <section>
+          <h2 className="mb-2 font-serif text-lg text-primary">What we don&apos;t do</h2>
+          <p>
+            We do not sell personal data. Portfolio data is never included in the prompts used to
+            generate market/sector/ticker analyses — that pipeline only ever receives a scope like
+            &quot;AAPL&quot; or &quot;semiconductors,&quot; never a user identifier or position.
+          </p>
+        </section>
+        <section>
+          <h2 className="mb-2 font-serif text-lg text-primary">Third parties</h2>
+          <p>Supabase (database, auth, storage), Anthropic (Claude API), configured news/market data providers.</p>
+        </section>
+        <section>
+          <h2 className="mb-2 font-serif text-lg text-primary">Your data, your control</h2>
+          <p>Export your data or delete your account at any time from Settings.</p>
+        </section>
+      </div>
+
+      <Link href="/login" className="mt-10 inline-block text-[13px] text-accent">
+        ← Back to sign in
+      </Link>
+    </div>
+  );
+}

@@ -2,10 +2,26 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createChatSession, listChatSessions, listChatMessages } from "@/lib/actions/chat";
+import { getAnalysesByIds, type AnalysisWithMethodology } from "@/lib/actions/analysis";
+import { MethodologyCard } from "@/components/analysis/methodology-card";
+import { Disclosure } from "@/components/compliance/disclosure";
 
 interface Message {
   role: "user" | "assistant";
   content: string;
+  analyses?: AnalysisWithMethodology[];
+}
+
+const REFS_MARKER = /\sCAIRN_REFS:(\[[^\]]*\])$/;
+
+function splitRefs(raw: string): { text: string; ids: string[] } {
+  const match = raw.match(REFS_MARKER);
+  if (!match) return { text: raw, ids: [] };
+  try {
+    return { text: raw.slice(0, match.index), ids: JSON.parse(match[1]) };
+  } catch {
+    return { text: raw, ids: [] };
+  }
 }
 
 export function ChatThread({ compact = false }: { compact?: boolean }) {
@@ -21,7 +37,15 @@ export function ChatThread({ compact = false }: { compact?: boolean }) {
       if (sessions.length > 0) {
         setSessionId(sessions[0].id);
         const history = await listChatMessages(sessions[0].id);
-        setMessages(history.map((m) => ({ role: m.role, content: m.content })));
+        const withAnalyses = await Promise.all(
+          history.map(async (m) => ({
+            role: m.role,
+            content: m.content,
+            analyses:
+              m.referenced_analysis_ids.length > 0 ? await getAnalysesByIds(m.referenced_analysis_ids) : undefined,
+          })),
+        );
+        setMessages(withAnalyses);
       } else {
         const created = await createChatSession();
         setSessionId(created.id);
@@ -51,14 +75,26 @@ export function ChatThread({ compact = false }: { compact?: boolean }) {
       if (!res.body) throw new Error("No response stream.");
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
+      let raw = "";
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        const chunk = decoder.decode(value, { stream: true });
+        raw += decoder.decode(value, { stream: true });
+        const { text: displayText } = splitRefs(raw);
         setMessages((prev) => {
           const next = [...prev];
-          next[next.length - 1] = { role: "assistant", content: next[next.length - 1].content + chunk };
+          next[next.length - 1] = { role: "assistant", content: displayText };
+          return next;
+        });
+      }
+
+      const { ids } = splitRefs(raw);
+      if (ids.length > 0) {
+        const analyses = await getAnalysesByIds(ids);
+        setMessages((prev) => {
+          const next = [...prev];
+          next[next.length - 1] = { ...next[next.length - 1], analyses };
           return next;
         });
       }
@@ -83,15 +119,21 @@ export function ChatThread({ compact = false }: { compact?: boolean }) {
         ) : (
           <div className="flex flex-col gap-3.5">
             {messages.map((m, i) => (
-              <div
-                key={i}
-                className={`max-w-[88%] rounded-xl px-4 py-2.5 text-[13.5px] leading-relaxed whitespace-pre-wrap ${
-                  m.role === "user"
-                    ? "self-end bg-active text-primary"
-                    : "self-start border border-line bg-panel text-primary"
-                }`}
-              >
-                {m.content || (streaming && i === messages.length - 1 ? "…" : "")}
+              <div key={i} className={`flex flex-col gap-2 ${m.role === "user" ? "items-end" : "items-start"}`}>
+                <div
+                  className={`max-w-[88%] rounded-xl px-4 py-2.5 text-[13.5px] leading-relaxed whitespace-pre-wrap ${
+                    m.role === "user" ? "bg-active text-primary" : "border border-line bg-panel text-primary"
+                  }`}
+                >
+                  {m.content || (streaming && i === messages.length - 1 ? "…" : "")}
+                </div>
+                {m.analyses && m.analyses.length > 0 && (
+                  <div className="flex w-[92%] flex-col gap-2">
+                    {m.analyses.map((a) => (
+                      <MethodologyCard key={a.id} analysis={a} compact />
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -117,9 +159,9 @@ export function ChatThread({ compact = false }: { compact?: boolean }) {
           Send
         </button>
       </div>
-      <p className="px-3 pb-2 text-[11px] text-dim">
-        Informational only, not investment advice. Always verify sources.
-      </p>
+      <div className="px-3 pb-2">
+        <Disclosure />
+      </div>
     </div>
   );
 }

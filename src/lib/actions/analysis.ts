@@ -37,17 +37,16 @@ export interface AnalysisWithMethodology {
   analogs: { id: string; symbol: string | null; sector: string | null; event_type: string; event_date: string; description: string | null }[];
 }
 
-export async function listAnalyses(): Promise<AnalysisWithMethodology[]> {
-  const supabase = await createClient();
+type BareAnalysis = Omit<AnalysisWithMethodology, "sources" | "analogs">;
 
-  const { data: analyses } = await supabase
-    .from("ai_analyses")
-    .select("*")
-    .eq("status", "validated")
-    .order("created_at", { ascending: false })
-    .limit(20);
-
-  if (!analyses || analyses.length === 0) return [];
+// Shared by every surface that renders MethodologyCard (research page, daily
+// briefing, chat citations) — Phase 6 requires the same component with the
+// same data everywhere, so the enrichment query lives in exactly one place.
+async function attachMethodology(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  analyses: BareAnalysis[],
+): Promise<AnalysisWithMethodology[]> {
+  if (analyses.length === 0) return [];
 
   const ids = analyses.map((a) => a.id);
 
@@ -85,4 +84,25 @@ export async function listAnalyses(): Promise<AnalysisWithMethodology[]> {
       .map((l) => eventById.get(l.historical_event_id))
       .filter((e): e is NonNullable<typeof e> => !!e),
   }));
+}
+
+export async function listAnalyses(): Promise<AnalysisWithMethodology[]> {
+  const supabase = await createClient();
+
+  const { data: analyses } = await supabase
+    .from("ai_analyses")
+    .select("*")
+    .eq("status", "validated")
+    .order("created_at", { ascending: false })
+    .limit(20);
+
+  return attachMethodology(supabase, analyses ?? []);
+}
+
+export async function getAnalysesByIds(ids: string[]): Promise<AnalysisWithMethodology[]> {
+  if (ids.length === 0) return [];
+  const supabase = await createClient();
+
+  const { data: analyses } = await supabase.from("ai_analyses").select("*").in("id", ids);
+  return attachMethodology(supabase, analyses ?? []);
 }

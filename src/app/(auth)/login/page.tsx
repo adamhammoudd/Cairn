@@ -62,7 +62,14 @@ export default function LoginPage() {
         </p>
       </div>
       <p className="mt-7 max-w-[400px] text-center text-xs leading-relaxed text-dim">
-        Cairn is informational only — not a broker and not investment advice.
+        Cairn is informational only — not a broker and not investment advice.{" "}
+        <Link href="/terms" className="text-accent">
+          Terms
+        </Link>{" "}
+        ·{" "}
+        <Link href="/privacy" className="text-accent">
+          Privacy
+        </Link>
       </p>
     </>
   );
