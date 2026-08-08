@@ -4,6 +4,7 @@
 
 export type ChartView = "1D" | "1W" | "1M" | "3M" | "1Y" | "ALL";
 export type MetricStyle = "percent" | "absolute";
+export type AssetType = "equity" | "etf" | "crypto" | "forex" | "future";
 
 export interface Database {
   public: {
@@ -58,6 +59,74 @@ export interface Database {
           compact_mode?: boolean;
           extended_hours?: boolean;
           notification_thresholds?: Record<string, unknown>;
+        };
+        Relationships: [];
+      };
+      holdings: {
+        Row: {
+          id: string;
+          user_id: string;
+          symbol: string;
+          asset_type: AssetType;
+          quantity: number;
+          purchase_price: number;
+          purchase_date: string;
+          sector: string | null;
+          asset_class: string | null;
+          geography: string | null;
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          symbol: string;
+          asset_type?: AssetType;
+          quantity: number;
+          purchase_price: number;
+          purchase_date: string;
+          sector?: string | null;
+          asset_class?: string | null;
+          geography?: string | null;
+          notes?: string | null;
+        };
+        Update: {
+          symbol?: string;
+          asset_type?: AssetType;
+          quantity?: number;
+          purchase_price?: number;
+          purchase_date?: string;
+          sector?: string | null;
+          asset_class?: string | null;
+          geography?: string | null;
+          notes?: string | null;
+        };
+        Relationships: [];
+      };
+      historical_prices: {
+        Row: {
+          id: number;
+          symbol: string;
+          asset_type: AssetType;
+          ts: string;
+          open: number | null;
+          high: number | null;
+          low: number | null;
+          close: number | null;
+          volume: number | null;
+        };
+        Insert: {
+          symbol: string;
+          asset_type?: AssetType;
+          ts: string;
+          open?: number | null;
+          high?: number | null;
+          low?: number | null;
+          close?: number | null;
+          volume?: number | null;
+        };
+        Update: {
+          close?: number | null;
         };
         Relationships: [];
       };
