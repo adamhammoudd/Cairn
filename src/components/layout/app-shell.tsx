@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
+import { ChatPanel } from "@/components/chat/chat-panel";
 
 interface AppShellProps {
   displayName: string;
@@ -16,6 +17,7 @@ export function AppShell({ displayName, plan, children }: AppShellProps) {
         <Header />
         <main className="flex-1 overflow-auto p-7 lg:p-8">{children}</main>
       </div>
+      <ChatPanel />
     </div>
   );
 }

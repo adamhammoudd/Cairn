@@ -242,6 +242,67 @@ export interface Database {
         Update: never;
         Relationships: [];
       };
+      chat_sessions: {
+        Row: { id: string; user_id: string; title: string | null; created_at: string };
+        Insert: { user_id: string; title?: string | null };
+        Update: { title?: string | null };
+        Relationships: [];
+      };
+      chat_messages: {
+        Row: {
+          id: string;
+          session_id: string;
+          role: "user" | "assistant";
+          content: string;
+          referenced_analysis_ids: string[];
+          created_at: string;
+        };
+        Insert: {
+          session_id: string;
+          role: "user" | "assistant";
+          content: string;
+          referenced_analysis_ids?: string[];
+        };
+        Update: never;
+        Relationships: [];
+      };
+      daily_briefings: {
+        Row: {
+          id: string;
+          user_id: string;
+          briefing_date: string;
+          content: Record<string, unknown>;
+          created_at: string;
+        };
+        Insert: { user_id: string; briefing_date: string; content: Record<string, unknown> };
+        Update: { content?: Record<string, unknown> };
+        Relationships: [];
+      };
+      watchlists: {
+        Row: { id: string; user_id: string; name: string; sort_order: number };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
+      watchlist_items: {
+        Row: { id: string; watchlist_id: string; symbol: string; sort_order: number; added_at: string };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
+      calendar_events: {
+        Row: {
+          id: string;
+          symbol: string | null;
+          event_type: string;
+          event_date: string;
+          title: string;
+          metadata: Record<string, unknown>;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
