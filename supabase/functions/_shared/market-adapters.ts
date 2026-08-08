@@ -12,30 +12,35 @@ export interface PriceBar {
   volume: number | null;
 }
 
-// Stooq's CSV endpoint is free and keyless: https://stooq.com/q/d/l/?s=aapl.us&i=d
-export async function fetchStooqDaily(symbol: string, assetType: PriceBar["asset_type"]): Promise<PriceBar[]> {
-  const url = `https://stooq.com/q/d/l/?s=${encodeURIComponent(symbol)}&i=d`;
-  const res = await fetch(url, { headers: { "User-Agent": "cairn-ingest/1.0" } });
-  if (!res.ok) throw new Error(`stooq ${symbol}: HTTP ${res.status}`);
+// Yahoo Finance's chart endpoint is free and keyless. Stooq's CSV endpoint
+// (the original choice here) now sits behind a JS proof-of-work bot check
+// that a server-side fetch can't solve, so it's not usable from an Edge
+// Function — this replaced it after that was confirmed against the live API.
+export async function fetchYahooFinanceDaily(
+  symbol: string,
+  assetType: PriceBar["asset_type"],
+  range = "2y",
+): Promise<PriceBar[]> {
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=${range}&interval=1d`;
+  const res = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0 (cairn-ingest/1.0)" } });
+  if (!res.ok) throw new Error(`yahoo ${symbol}: HTTP ${res.status}`);
 
-  const csv = await res.text();
-  const lines = csv.trim().split("\n");
-  if (lines.length < 2 || !lines[0].startsWith("Date")) return []; // symbol not found
+  const json = await res.json();
+  const result = json?.chart?.result?.[0];
+  if (!result) return [];
 
-  const bars: PriceBar[] = [];
-  for (const line of lines.slice(1)) {
-    const [date, open, high, low, close, volume] = line.split(",");
-    if (!date) continue;
-    bars.push({
-      symbol: symbol.toUpperCase().replace(/\.US$/, ""),
-      asset_type: assetType,
-      ts: date,
-      open: open ? Number(open) : null,
-      high: high ? Number(high) : null,
-      low: low ? Number(low) : null,
-      close: close ? Number(close) : null,
-      volume: volume ? Number(volume) : null,
-    });
-  }
-  return bars;
+  const timestamps: number[] = result.timestamp ?? [];
+  const quote = result.indicators?.quote?.[0] ?? {};
+  const { open = [], high = [], low = [], close = [], volume = [] } = quote as Record<string, (number | null)[]>;
+
+  return timestamps.map((ts, i) => ({
+    symbol: symbol.toUpperCase(),
+    asset_type: assetType,
+    ts: new Date(ts * 1000).toISOString().slice(0, 10),
+    open: open[i] ?? null,
+    high: high[i] ?? null,
+    low: low[i] ?? null,
+    close: close[i] ?? null,
+    volume: volume[i] ?? null,
+  }));
 }

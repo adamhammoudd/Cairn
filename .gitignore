@@ -39,3 +39,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# supabase CLI local cache
+supabase/.temp/
+
+# local tooling, not app code
+.mcp.json
+graphify-out/

@@ -5,7 +5,7 @@
 
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
-import { fetchStooqDaily, type PriceBar } from "../_shared/market-adapters.ts";
+import { fetchYahooFinanceDaily, type PriceBar } from "../_shared/market-adapters.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -32,14 +32,14 @@ Deno.serve(async (req) => {
     const symbols = Array.isArray(provider.config?.symbols) ? (provider.config.symbols as string[]) : [];
     const assetType = (provider.config?.asset_type as PriceBar["asset_type"]) ?? "equity";
 
-    if (adapterName !== "stooq_csv") {
+    if (adapterName !== "yahoo_finance_chart") {
       results.push({ provider: provider.name, error: `unknown adapter "${adapterName}"` });
       continue;
     }
 
     for (const symbol of symbols) {
       try {
-        const bars = await fetchStooqDaily(symbol, assetType);
+        const bars = await fetchYahooFinanceDaily(symbol, assetType);
         if (bars.length === 0) {
           results.push({ provider: provider.name, symbol, error: "no data returned" });
           continue;
