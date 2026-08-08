@@ -5,6 +5,9 @@
 export type ChartView = "1D" | "1W" | "1M" | "3M" | "1Y" | "ALL";
 export type MetricStyle = "percent" | "absolute";
 export type AssetType = "equity" | "etf" | "crypto" | "forex" | "future";
+export type ScopeType = "market" | "sector" | "ticker";
+export type ConfidenceLevel = "low" | "medium" | "high";
+export type AnalysisStatus = "validated" | "rejected" | "pending_review";
 
 export interface Database {
   public: {
@@ -128,6 +131,115 @@ export interface Database {
         Update: {
           close?: number | null;
         };
+        Relationships: [];
+      };
+      news_items: {
+        Row: {
+          id: string;
+          provider_id: string | null;
+          external_id: string | null;
+          title: string;
+          body: string | null;
+          url: string | null;
+          source_name: string;
+          published_at: string;
+          ingested_at: string;
+          tickers: string[];
+          sectors: string[];
+          sentiment_score: number | null;
+          reliability_weight: number;
+          dedup_hash: string;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
+      historical_events: {
+        Row: {
+          id: string;
+          symbol: string | null;
+          sector: string | null;
+          event_type: string;
+          event_date: string;
+          description: string | null;
+          price_before: number | null;
+          price_after: number | null;
+          volume_at_event: number | null;
+          metadata: Record<string, unknown>;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
+      ai_analyses: {
+        Row: {
+          id: string;
+          scope_type: ScopeType;
+          scope_value: string;
+          analysis_type: string;
+          probability_low: number;
+          probability_high: number;
+          confidence_level: ConfidenceLevel;
+          sample_size: number;
+          reasoning_text: string;
+          model_version: string;
+          status: AnalysisStatus;
+          created_at: string;
+        };
+        Insert: {
+          scope_type: ScopeType;
+          scope_value: string;
+          analysis_type: string;
+          probability_low: number;
+          probability_high: number;
+          confidence_level: ConfidenceLevel;
+          sample_size: number;
+          reasoning_text: string;
+          model_version: string;
+          status?: AnalysisStatus;
+        };
+        Update: never;
+        Relationships: [];
+      };
+      ai_analysis_sources: {
+        Row: { id: string; analysis_id: string; news_item_id: string; weight: number };
+        Insert: { analysis_id: string; news_item_id: string; weight?: number };
+        Update: never;
+        Relationships: [];
+      };
+      ai_analysis_historical_analogs: {
+        Row: {
+          id: string;
+          analysis_id: string;
+          historical_event_id: string;
+          similarity_score: number;
+          note: string | null;
+        };
+        Insert: {
+          analysis_id: string;
+          historical_event_id: string;
+          similarity_score: number;
+          note?: string | null;
+        };
+        Update: never;
+        Relationships: [];
+      };
+      ai_scope_guard_log: {
+        Row: {
+          id: string;
+          raw_output: string;
+          flagged: boolean;
+          flag_reason: string | null;
+          linked_analysis_id: string | null;
+          created_at: string;
+        };
+        Insert: {
+          raw_output: string;
+          flagged: boolean;
+          flag_reason?: string | null;
+          linked_analysis_id?: string | null;
+        };
+        Update: never;
         Relationships: [];
       };
     };
