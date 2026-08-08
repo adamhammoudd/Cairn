@@ -8,6 +8,7 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 import { ADAPTERS, type ProviderRow } from "../_shared/adapters.ts";
 import { dedupHash } from "../_shared/dedup.ts";
+import { tagContent } from "../_shared/tagging.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -45,6 +46,7 @@ Deno.serve(async (req) => {
 
       for (const item of items) {
         const hash = await dedupHash(item.title, item.published_at);
+        const { tickers, sectors } = tagContent(item.title, item.body);
         const { error: upsertError } = await supabase
           .from("news_items")
           .upsert(
@@ -58,6 +60,8 @@ Deno.serve(async (req) => {
               published_at: item.published_at,
               reliability_weight: provider.weight,
               dedup_hash: hash,
+              tickers,
+              sectors,
             },
             { onConflict: "dedup_hash", ignoreDuplicates: true },
           );
