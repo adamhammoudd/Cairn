@@ -5,6 +5,7 @@ import { deleteSavedScreen, runScreen, saveScreen } from "@/lib/actions/screener
 import {
   ASSET_TYPES,
   EMPTY_FILTERS,
+  formatMarketCap,
   type SavedScreen,
   type ScreenerFilters,
   type ScreenerRow,
@@ -145,9 +146,47 @@ export function ScreenerPanel({ initialRows, savedScreens }: ScreenerPanelProps)
           />
         </div>
 
+        <div className="rounded-card border border-line bg-panel p-5">
+          <div className="mb-3 text-[11.5px] tracking-[0.06em] text-muted uppercase">Market cap ($M)</div>
+          <div className="flex items-center gap-2">
+            <input
+              placeholder="Min"
+              onChange={(e) => setFilters((f) => ({ ...f, minMarketCapM: numOrNull(e.target.value) }))}
+              className="w-full rounded-lg border border-line bg-active px-2.5 py-1.5 text-[12.5px] text-primary outline-none"
+            />
+            <input
+              placeholder="Max"
+              onChange={(e) => setFilters((f) => ({ ...f, maxMarketCapM: numOrNull(e.target.value) }))}
+              className="w-full rounded-lg border border-line bg-active px-2.5 py-1.5 text-[12.5px] text-primary outline-none"
+            />
+          </div>
+
+          <div className="mt-4 mb-3 text-[11.5px] tracking-[0.06em] text-muted uppercase">P/E ratio</div>
+          <div className="flex items-center gap-2">
+            <input
+              placeholder="Min"
+              onChange={(e) => setFilters((f) => ({ ...f, minPe: numOrNull(e.target.value) }))}
+              className="w-full rounded-lg border border-line bg-active px-2.5 py-1.5 text-[12.5px] text-primary outline-none"
+            />
+            <input
+              placeholder="Max"
+              onChange={(e) => setFilters((f) => ({ ...f, maxPe: numOrNull(e.target.value) }))}
+              className="w-full rounded-lg border border-line bg-active px-2.5 py-1.5 text-[12.5px] text-primary outline-none"
+            />
+          </div>
+
+          <div className="mt-4 mb-3 text-[11.5px] tracking-[0.06em] text-muted uppercase">Min dividend yield (%)</div>
+          <input
+            placeholder="e.g. 1.5"
+            onChange={(e) => setFilters((f) => ({ ...f, minDividendYield: numOrNull(e.target.value) }))}
+            className="w-full rounded-lg border border-line bg-active px-2.5 py-1.5 text-[12.5px] text-primary outline-none"
+          />
+        </div>
+
         <p className="text-[11.5px] leading-relaxed text-dim">
-          Market cap, P/E, and dividend yield need a fundamentals data provider — the current
-          ingestion pipeline covers price and volume only.
+          Market cap, P/E, and dividend yield are derived from SEC XBRL filings against the latest
+          close. Funds and ETFs don&apos;t file those concepts, so they show — and are excluded by
+          those filters.
         </p>
       </aside>
 
@@ -171,17 +210,20 @@ export function ScreenerPanel({ initialRows, savedScreens }: ScreenerPanelProps)
           </div>
         ) : (
           <div className="overflow-hidden rounded-card border border-line bg-panel">
-            <div className="grid grid-cols-[1.2fr_0.8fr_0.9fr_0.8fr_1fr] border-b border-line px-5 py-3.5 text-[11.5px] tracking-[0.06em] text-muted uppercase">
+            <div className="grid grid-cols-[1fr_0.7fr_0.8fr_0.7fr_0.9fr_0.9fr_0.6fr_0.7fr] border-b border-line px-5 py-3.5 text-[11.5px] tracking-[0.06em] text-muted uppercase">
               <div>Symbol</div>
               <div>Type</div>
               <div>Price</div>
               <div>Change</div>
               <div>Volume</div>
+              <div>Mkt cap</div>
+              <div>P/E</div>
+              <div>Yield</div>
             </div>
             {rows.map((r) => (
               <div
                 key={r.symbol}
-                className="grid grid-cols-[1.2fr_0.8fr_0.9fr_0.8fr_1fr] items-center border-b border-line px-5 py-3.5 last:border-b-0"
+                className="grid grid-cols-[1fr_0.7fr_0.8fr_0.7fr_0.9fr_0.9fr_0.6fr_0.7fr] items-center border-b border-line px-5 py-3.5 last:border-b-0"
               >
                 <div className="text-sm text-primary">{r.symbol}</div>
                 <div className="text-[12.5px] text-muted capitalize">{r.assetType}</div>
@@ -197,6 +239,11 @@ export function ScreenerPanel({ initialRows, savedScreens }: ScreenerPanelProps)
                 </div>
                 <div className="text-[13px] text-muted">
                   {r.volume === null ? "—" : r.volume.toLocaleString()}
+                </div>
+                <div className="text-[13px] text-primary">{formatMarketCap(r.marketCap)}</div>
+                <div className="text-[13px] text-muted">{r.pe === null ? "—" : r.pe.toFixed(1)}</div>
+                <div className="text-[13px] text-muted">
+                  {r.dividendYield === null ? "—" : `${r.dividendYield.toFixed(2)}%`}
                 </div>
               </div>
             ))}

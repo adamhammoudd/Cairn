@@ -154,6 +154,21 @@ export interface Database {
         Update: never;
         Relationships: [];
       };
+      fundamentals: {
+        Row: {
+          id: number;
+          symbol: string;
+          as_of_date: string;
+          shares_outstanding: number | null;
+          eps_ttm: number | null;
+          dividends_ttm: number | null;
+          source: string;
+          updated_at: string;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
       historical_events: {
         Row: {
           id: string;
