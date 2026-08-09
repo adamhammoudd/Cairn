@@ -1,4 +1,5 @@
 import type { AnalysisWithMethodology } from "@/lib/actions/analysis";
+import type { CalendarEvent } from "@/lib/calendar";
 import { Disclosure } from "@/components/compliance/disclosure";
 
 const CONFIDENCE_COLOR: Record<string, string> = {
@@ -10,9 +11,11 @@ const CONFIDENCE_COLOR: Record<string, string> = {
 interface MethodologyCardProps {
   analysis: AnalysisWithMethodology;
   compact?: boolean;
+  /** Upcoming calendar events for this analysis's scope — context, not an input to the probability. */
+  upcomingEvents?: CalendarEvent[];
 }
 
-export function MethodologyCard({ analysis, compact = false }: MethodologyCardProps) {
+export function MethodologyCard({ analysis, compact = false, upcomingEvents = [] }: MethodologyCardProps) {
   return (
     <div className={`rounded-card border border-line bg-panel ${compact ? "p-4" : "p-6"}`}>
       <div className="mb-3 flex items-center justify-between">
@@ -85,6 +88,22 @@ export function MethodologyCard({ analysis, compact = false }: MethodologyCardPr
                 ))}
               </ul>
             )}
+          </div>
+        </div>
+      )}
+
+      {upcomingEvents.length > 0 && (
+        <div className="mt-3 rounded-lg border border-line bg-active px-3 py-2">
+          <div className="mb-1.5 text-[11px] tracking-[0.06em] text-muted uppercase">
+            Upcoming for {analysis.scope_value}
+          </div>
+          <div className="flex flex-col gap-1">
+            {upcomingEvents.slice(0, 3).map((e) => (
+              <div key={e.id} className="text-[12px] text-muted">
+                <span className="capitalize">{e.event_type}</span> ·{" "}
+                {new Date(`${e.event_date}T00:00:00`).toLocaleDateString()}
+              </div>
+            ))}
           </div>
         </div>
       )}
