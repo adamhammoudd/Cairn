@@ -1,0 +1,60 @@
+// Types and constants for the screener. Kept out of lib/actions/screener.ts
+// because a "use server" module may only export async functions — a plain
+// object export there is a build error.
+
+export interface ScreenerFilters {
+  assetTypes: string[];
+  minPrice: number | null;
+  maxPrice: number | null;
+  minChangePct: number | null;
+  maxChangePct: number | null;
+  minVolume: number | null;
+  /** Market cap in millions, to keep the input field short. */
+  minMarketCapM: number | null;
+  maxMarketCapM: number | null;
+  minPe: number | null;
+  maxPe: number | null;
+  minDividendYield: number | null;
+}
+
+export interface ScreenerRow {
+  symbol: string;
+  assetType: string;
+  price: number | null;
+  changePct: number | null;
+  volume: number | null;
+  /** Derived at query time from fundamentals + latest close, never stored. */
+  marketCap: number | null;
+  pe: number | null;
+  dividendYield: number | null;
+}
+
+export interface SavedScreen {
+  id: string;
+  name: string;
+  filters: ScreenerFilters;
+}
+
+export const EMPTY_FILTERS: ScreenerFilters = {
+  assetTypes: [],
+  minPrice: null,
+  maxPrice: null,
+  minChangePct: null,
+  maxChangePct: null,
+  minVolume: null,
+  minMarketCapM: null,
+  maxMarketCapM: null,
+  minPe: null,
+  maxPe: null,
+  minDividendYield: null,
+};
+
+export const ASSET_TYPES = ["equity", "etf", "crypto", "forex", "future"] as const;
+
+export function formatMarketCap(n: number | null): string {
+  if (n === null) return "—";
+  if (n >= 1e12) return `$${(n / 1e12).toFixed(2)}T`;
+  if (n >= 1e9) return `$${(n / 1e9).toFixed(1)}B`;
+  if (n >= 1e6) return `$${(n / 1e6).toFixed(0)}M`;
+  return `$${n.toLocaleString()}`;
+}

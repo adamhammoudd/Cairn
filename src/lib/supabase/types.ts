@@ -154,6 +154,21 @@ export interface Database {
         Update: never;
         Relationships: [];
       };
+      fundamentals: {
+        Row: {
+          id: number;
+          symbol: string;
+          as_of_date: string;
+          shares_outstanding: number | null;
+          eps_ttm: number | null;
+          dividends_ttm: number | null;
+          source: string;
+          updated_at: string;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
       historical_events: {
         Row: {
           id: string;
@@ -280,14 +295,26 @@ export interface Database {
       };
       watchlists: {
         Row: { id: string; user_id: string; name: string; sort_order: number };
-        Insert: never;
-        Update: never;
+        Insert: { user_id: string; name: string; sort_order?: number };
+        Update: { name?: string; sort_order?: number };
         Relationships: [];
       };
       watchlist_items: {
         Row: { id: string; watchlist_id: string; symbol: string; sort_order: number; added_at: string };
-        Insert: never;
-        Update: never;
+        Insert: { watchlist_id: string; symbol: string; sort_order?: number };
+        Update: { sort_order?: number };
+        Relationships: [];
+      };
+      saved_screens: {
+        Row: {
+          id: string;
+          user_id: string;
+          name: string;
+          filters: Record<string, unknown>;
+          created_at: string;
+        };
+        Insert: { user_id: string; name: string; filters: Record<string, unknown> };
+        Update: { name?: string; filters?: Record<string, unknown> };
         Relationships: [];
       };
       calendar_events: {
@@ -299,7 +326,13 @@ export interface Database {
           title: string;
           metadata: Record<string, unknown>;
         };
-        Insert: never;
+        Insert: {
+          symbol?: string | null;
+          event_type: string;
+          event_date: string;
+          title: string;
+          metadata?: Record<string, unknown>;
+        };
         Update: never;
         Relationships: [];
       };

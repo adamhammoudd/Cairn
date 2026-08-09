@@ -17,6 +17,9 @@ Run against your project's SQL editor (or `psql`), in order:
 ```
 supabase functions deploy ingest-news --no-verify-jwt
 supabase functions deploy ingest-market-data --no-verify-jwt
+supabase functions deploy ingest-fundamentals --no-verify-jwt
+supabase functions deploy ingest-calendar --no-verify-jwt
+supabase functions deploy generate-daily-briefings --no-verify-jwt
 ```
 
 `--no-verify-jwt` lets pg_cron invoke these without presenting a secret — the
@@ -30,6 +33,30 @@ supabase functions invoke ingest-market-data
 ```
 
 Each returns a per-provider `{ fetched, inserted }` (or `error`) summary.
+
+## 2a. What each function ingests
+
+| Function | Source | Keyless? | Writes |
+|---|---|---|---|
+| `ingest-news` | RSS feeds, SEC EDGAR full-text | yes | `news_items` |
+| `ingest-market-data` | Yahoo Finance chart API | yes | `historical_prices` |
+| `ingest-fundamentals` | SEC EDGAR XBRL `companyconcept` | yes (User-Agent required) | `fundamentals` |
+| `ingest-calendar` | Nasdaq public calendar API | yes (browser User-Agent required) | `calendar_events` |
+| `generate-daily-briefings` | internal (no external call) | — | `daily_briefings` |
+
+Two caveats worth knowing before relying on these:
+
+- **`ingest-fundamentals`** stores only raw reported figures (shares outstanding,
+  TTM EPS, TTM dividends). Market cap, P/E, and dividend yield are derived at
+  query time against the latest close so they can't go stale as prices move.
+  ETFs and funds don't file those XBRL concepts, so they get no row and are
+  excluded by those screener filters rather than given fabricated values.
+- **`ingest-calendar`** covers earnings, ex-dividend, and split dates only.
+  Nasdaq's IPO endpoint returned nothing usable for a forward window, and no
+  keyless economic-calendar feed was found (the Fed's `calendar.json` is a
+  historical archive), so the `economic` and `ipo` event types stay empty until
+  a provider is added. It also relies on an undocumented public endpoint — if it
+  starts returning zero rows, check whether the response shape changed.
 
 ## 3. Adding a new source
 

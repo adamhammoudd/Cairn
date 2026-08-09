@@ -76,6 +76,22 @@ create table historical_prices (
 );
 create index on historical_prices (symbol, ts desc);
 
+-- Fundamentals from SEC EDGAR XBRL. Raw reported figures only — market cap,
+-- P/E, and dividend yield are derived at query time against historical_prices
+-- so they don't go stale as prices move.
+create table fundamentals (
+  id bigserial primary key,
+  symbol text not null,
+  as_of_date date not null,
+  shares_outstanding numeric,
+  eps_ttm numeric,
+  dividends_ttm numeric,
+  source text not null default 'sec_xbrl',
+  updated_at timestamptz not null default now(),
+  unique (symbol)
+);
+create index on fundamentals (symbol);
+
 create table historical_events (
   id uuid primary key default gen_random_uuid(),
   symbol text,
@@ -337,6 +353,7 @@ create policy "update own" on discussion_threads for update using (auth.uid() = 
 -- market/news/analysis tables: public read, no user-scoping (service-role writes only via edge functions)
 alter table news_items enable row level security;
 alter table historical_prices enable row level security;
+alter table fundamentals enable row level security;
 alter table historical_events enable row level security;
 alter table ai_analyses enable row level security;
 alter table ai_analysis_sources enable row level security;
@@ -347,6 +364,7 @@ alter table esg_scores enable row level security;
 
 create policy "public read" on news_items for select using (true);
 create policy "public read" on historical_prices for select using (true);
+create policy "public read" on fundamentals for select using (true);
 create policy "public read" on historical_events for select using (true);
 create policy "public read" on ai_analyses for select using (status = 'validated');
 create policy "public read" on ai_analysis_sources for select using (true);
