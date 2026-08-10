@@ -20,6 +20,7 @@ supabase functions deploy ingest-market-data --no-verify-jwt
 supabase functions deploy ingest-fundamentals --no-verify-jwt
 supabase functions deploy ingest-calendar --no-verify-jwt
 supabase functions deploy generate-daily-briefings --no-verify-jwt
+supabase functions deploy evaluate-alerts --no-verify-jwt
 ```
 
 `--no-verify-jwt` lets pg_cron invoke these without presenting a secret — the
@@ -43,6 +44,7 @@ Each returns a per-provider `{ fetched, inserted }` (or `error`) summary.
 | `ingest-fundamentals` | SEC EDGAR XBRL `companyconcept` | yes (User-Agent required) | `fundamentals` |
 | `ingest-calendar` | Nasdaq public calendar API | yes (browser User-Agent required) | `calendar_events` |
 | `generate-daily-briefings` | internal (no external call) | — | `daily_briefings` |
+| `evaluate-alerts` | internal (no external call) | — | `alert_deliveries`, `alerts.last_triggered_at` |
 
 Two caveats worth knowing before relying on these:
 
@@ -51,6 +53,12 @@ Two caveats worth knowing before relying on these:
   query time against the latest close so they can't go stale as prices move.
   ETFs and funds don't file those XBRL concepts, so they get no row and are
   excluded by those screener filters rather than given fabricated values.
+- **`evaluate-alerts`** evaluates against daily OHLCV bars, so it's scheduled
+  around the market-data ingest rather than continuously — running more often
+  would re-read the same bar. Only `in_app` deliveries actually reach the user;
+  `push` and `email` rows are written with status `unconfigured` because no
+  provider is wired. Its condition logic is duplicated from `src/lib/alerts.ts`
+  (Deno vs Node, no shared module) — change both together.
 - **`ingest-calendar`** covers earnings, ex-dividend, and split dates only.
   Nasdaq's IPO endpoint returned nothing usable for a forward window, and no
   keyless economic-calendar feed was found (the Fed's `calendar.json` is a

@@ -336,6 +336,56 @@ export interface Database {
         Update: never;
         Relationships: [];
       };
+      alerts: {
+        Row: {
+          id: string;
+          user_id: string;
+          alert_type: string;
+          scope_value: string;
+          condition: Record<string, unknown>;
+          cooldown_seconds: number;
+          last_triggered_at: string | null;
+          enabled: boolean;
+          channels: string[];
+          created_at: string;
+        };
+        Insert: {
+          user_id: string;
+          alert_type: string;
+          scope_value: string;
+          condition: Record<string, unknown>;
+          cooldown_seconds?: number;
+          enabled?: boolean;
+          channels?: string[];
+        };
+        Update: {
+          condition?: Record<string, unknown>;
+          cooldown_seconds?: number;
+          enabled?: boolean;
+          channels?: string[];
+          last_triggered_at?: string | null;
+        };
+        Relationships: [];
+      };
+      alert_deliveries: {
+        Row: {
+          id: string;
+          alert_id: string;
+          channel: string;
+          message: string | null;
+          status: string;
+          sent_at: string;
+          read_at: string | null;
+        };
+        Insert: {
+          alert_id: string;
+          channel: string;
+          message?: string | null;
+          status?: string;
+        };
+        Update: { read_at?: string | null; status?: string };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;

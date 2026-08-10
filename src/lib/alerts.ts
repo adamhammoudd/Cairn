@@ -1,0 +1,199 @@
+// Alert types, condition shapes, and the pure evaluation logic.
+//
+// Kept out of lib/actions/alerts.ts because a "use server" module may only
+// export async functions. The scheduled evaluator duplicates evaluateAlert in
+// Deno (supabase/functions/evaluate-alerts) — the two must stay in sync; there
+// is no shared module across the Node/Deno boundary.
+
+export type AlertType = "price" | "pct_change" | "volume_spike" | "technical_crossover" | "ai_confidence";
+export type AlertChannel = "in_app" | "push" | "email";
+export type Comparator = "above" | "below";
+export type ConfidenceLevel = "low" | "medium" | "high";
+
+export interface Alert {
+  id: string;
+  alert_type: AlertType;
+  scope_value: string;
+  condition: Record<string, unknown>;
+  cooldown_seconds: number;
+  last_triggered_at: string | null;
+  enabled: boolean;
+  channels: AlertChannel[];
+  created_at: string;
+}
+
+export interface AlertDelivery {
+  id: string;
+  alert_id: string;
+  channel: AlertChannel;
+  message: string | null;
+  status: string;
+  sent_at: string;
+  read_at: string | null;
+}
+
+export const ALERT_TYPE_LABELS: Record<AlertType, string> = {
+  price: "Price",
+  pct_change: "% change",
+  volume_spike: "Volume spike",
+  technical_crossover: "Technical crossover",
+  ai_confidence: "AI confidence",
+};
+
+export const COOLDOWN_OPTIONS = [
+  { value: 3600, label: "1 hour" },
+  { value: 21600, label: "6 hours" },
+  { value: 43200, label: "12 hours" },
+  { value: 86400, label: "24 hours" },
+];
+
+const CONFIDENCE_RANK: Record<ConfidenceLevel, number> = { low: 0, medium: 1, high: 2 };
+
+/** Market data for one symbol, newest close first. */
+export interface SymbolSeries {
+  closes: number[];
+  volumes: number[];
+}
+
+export interface AnalysisSnapshot {
+  confidence_level: ConfidenceLevel;
+  analysis_type: string;
+  probability_low: number;
+  probability_high: number;
+  created_at: string;
+}
+
+export interface EvaluationInput {
+  alert: Pick<Alert, "alert_type" | "scope_value" | "condition">;
+  series?: SymbolSeries;
+  analyses?: AnalysisSnapshot[];
+}
+
+export interface EvaluationResult {
+  triggered: boolean;
+  message: string | null;
+}
+
+function sma(values: number[], days: number, offset = 0): number | null {
+  const slice = values.slice(offset, offset + days);
+  if (slice.length < days) return null;
+  return slice.reduce((a, b) => a + b, 0) / days;
+}
+
+export function isCoolingDown(lastTriggeredAt: string | null, cooldownSeconds: number, now = Date.now()): boolean {
+  if (!lastTriggeredAt) return false;
+  return now - new Date(lastTriggeredAt).getTime() < cooldownSeconds * 1000;
+}
+
+export function evaluateAlert({ alert, series, analyses }: EvaluationInput): EvaluationResult {
+  const c = alert.condition;
+  const notTriggered: EvaluationResult = { triggered: false, message: null };
+
+  if (alert.alert_type === "ai_confidence") {
+    const minLevel = (c.minLevel as ConfidenceLevel) ?? "medium";
+    const match = (analyses ?? []).find(
+      (a) => CONFIDENCE_RANK[a.confidence_level] >= CONFIDENCE_RANK[minLevel],
+    );
+    if (!match) return notTriggered;
+    return {
+      triggered: true,
+      message:
+        `${alert.scope_value}: a ${match.confidence_level}-confidence ${match.analysis_type.replace(/_/g, " ")} ` +
+        `analysis (${match.probability_low}–${match.probability_high}%) is available. ` +
+        `Market-level analysis only — not advice about any position.`,
+    };
+  }
+
+  if (!series || series.closes.length < 2) return notTriggered;
+  const [latest, prev] = series.closes;
+
+  switch (alert.alert_type) {
+    case "price": {
+      const target = Number(c.value);
+      const above = (c.comparator as Comparator) === "above";
+      if (!Number.isFinite(target)) return notTriggered;
+      if (above ? latest > target : latest < target) {
+        return {
+          triggered: true,
+          message: `${alert.scope_value} is ${above ? "above" : "below"} $${target} (last close $${latest.toFixed(2)}).`,
+        };
+      }
+      return notTriggered;
+    }
+
+    case "pct_change": {
+      const target = Number(c.value);
+      if (!Number.isFinite(target) || prev === 0) return notTriggered;
+      const changePct = ((latest - prev) / prev) * 100;
+      const above = (c.comparator as Comparator) === "above";
+      if (above ? changePct > target : changePct < target) {
+        return {
+          triggered: true,
+          message: `${alert.scope_value} moved ${changePct >= 0 ? "+" : ""}${changePct.toFixed(2)}% on the last close, ${above ? "above" : "below"} the ${target}% threshold.`,
+        };
+      }
+      return notTriggered;
+    }
+
+    case "volume_spike": {
+      const multiplier = Number(c.multiplier);
+      if (!Number.isFinite(multiplier) || series.volumes.length < 31) return notTriggered;
+      const latestVol = series.volumes[0];
+      // Average the 30 bars *before* the latest, so the spike isn't diluted by
+      // including itself in its own baseline.
+      const baseline = sma(series.volumes, 30, 1);
+      if (baseline === null || baseline === 0) return notTriggered;
+      if (latestVol > baseline * multiplier) {
+        return {
+          triggered: true,
+          message: `${alert.scope_value} volume was ${(latestVol / baseline).toFixed(1)}× its 30-day average (threshold ${multiplier}×).`,
+        };
+      }
+      return notTriggered;
+    }
+
+    case "technical_crossover": {
+      const fastDays = Number(c.fastDays);
+      const slowDays = Number(c.slowDays);
+      if (!Number.isFinite(fastDays) || !Number.isFinite(slowDays) || fastDays >= slowDays) return notTriggered;
+
+      const fastNow = sma(series.closes, fastDays, 0);
+      const slowNow = sma(series.closes, slowDays, 0);
+      const fastPrev = sma(series.closes, fastDays, 1);
+      const slowPrev = sma(series.closes, slowDays, 1);
+      if (fastNow === null || slowNow === null || fastPrev === null || slowPrev === null) return notTriggered;
+
+      // Only fire on the bar the lines actually cross — comparing current
+      // position alone would re-fire every day the trend persists.
+      const up = (c.direction as Comparator) === "above";
+      const crossed = up ? fastPrev <= slowPrev && fastNow > slowNow : fastPrev >= slowPrev && fastNow < slowNow;
+      if (crossed) {
+        return {
+          triggered: true,
+          message: `${alert.scope_value}: ${fastDays}-day SMA crossed ${up ? "above" : "below"} the ${slowDays}-day SMA.`,
+        };
+      }
+      return notTriggered;
+    }
+
+    default:
+      return notTriggered;
+  }
+}
+
+export function describeCondition(alertType: AlertType, condition: Record<string, unknown>): string {
+  switch (alertType) {
+    case "price":
+      return `Price ${condition.comparator} $${condition.value}`;
+    case "pct_change":
+      return `Day change ${condition.comparator} ${condition.value}%`;
+    case "volume_spike":
+      return `Volume > ${condition.multiplier}× 30-day average`;
+    case "technical_crossover":
+      return `${condition.fastDays}d SMA crosses ${condition.direction} ${condition.slowDays}d SMA`;
+    case "ai_confidence":
+      return `AI confidence reaches ${condition.minLevel}`;
+    default:
+      return "—";
+  }
+}
