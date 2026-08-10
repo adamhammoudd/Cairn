@@ -8,6 +8,7 @@ export type AssetType = "equity" | "etf" | "crypto" | "forex" | "future";
 export type ScopeType = "market" | "sector" | "ticker";
 export type ConfidenceLevel = "low" | "medium" | "high";
 export type AnalysisStatus = "validated" | "rejected" | "pending_review";
+export type SubscriptionTier = "free" | "premium";
 
 export interface Database {
   public: {
@@ -481,6 +482,18 @@ export interface Database {
           created_at: string;
         };
         Insert: { user_id: string; name: string; target_value: number; target_date: string };
+        Update: never;
+        Relationships: [];
+      };
+      subscriptions: {
+        Row: { user_id: string; tier: SubscriptionTier; created_at: string };
+        Insert: { user_id: string; tier?: SubscriptionTier };
+        Update: { tier?: SubscriptionTier };
+        Relationships: [];
+      };
+      ai_usage_events: {
+        Row: { id: string; user_id: string; created_at: string };
+        Insert: { user_id: string };
         Update: never;
         Relationships: [];
       };
