@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState, useTransition } from "react";
 import { deleteSavedScreen, runScreen, saveScreen } from "@/lib/actions/screener";
 import {
@@ -225,7 +226,9 @@ export function ScreenerPanel({ initialRows, savedScreens }: ScreenerPanelProps)
                 key={r.symbol}
                 className="grid grid-cols-[1fr_0.7fr_0.8fr_0.7fr_0.9fr_0.9fr_0.6fr_0.7fr] items-center border-b border-line px-5 py-3.5 last:border-b-0"
               >
-                <div className="text-sm text-primary">{r.symbol}</div>
+                <Link href={`/ticker/${r.symbol}`} className="text-sm text-primary hover:text-accent">
+                  {r.symbol}
+                </Link>
                 <div className="text-[12.5px] text-muted capitalize">{r.assetType}</div>
                 <div className="text-[13.5px] text-primary">
                   {r.price === null ? "—" : r.price.toLocaleString(undefined, { style: "currency", currency: "USD" })}

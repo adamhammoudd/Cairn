@@ -367,6 +367,24 @@ export interface Database {
         };
         Relationships: [];
       };
+      crypto_metrics: {
+        Row: {
+          id: number;
+          symbol: string;
+          coingecko_id: string;
+          name: string;
+          market_cap: number | null;
+          total_volume_24h: number | null;
+          circulating_supply: number | null;
+          max_supply: number | null;
+          price_change_24h_pct: number | null;
+          market_cap_rank: number | null;
+          updated_at: string;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
       alert_deliveries: {
         Row: {
           id: string;
