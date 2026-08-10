@@ -18,6 +18,7 @@ export async function requestAnalysis(_prevState: string | null, formData: FormD
   }
 
   revalidatePath("/research");
+  if (scopeType === "ticker") revalidatePath(`/ticker/${scopeValue.toUpperCase()}`);
   return "saved";
 }
 
@@ -95,6 +96,21 @@ export async function listAnalyses(): Promise<AnalysisWithMethodology[]> {
     .eq("status", "validated")
     .order("created_at", { ascending: false })
     .limit(20);
+
+  return attachMethodology(supabase, analyses ?? []);
+}
+
+export async function getAnalysesForScope(scopeType: ScopeType, scopeValue: string): Promise<AnalysisWithMethodology[]> {
+  const supabase = await createClient();
+
+  const { data: analyses } = await supabase
+    .from("ai_analyses")
+    .select("*")
+    .eq("status", "validated")
+    .eq("scope_type", scopeType)
+    .eq("scope_value", scopeValue)
+    .order("created_at", { ascending: false })
+    .limit(10);
 
   return attachMethodology(supabase, analyses ?? []);
 }

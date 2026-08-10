@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState, useState, useTransition } from "react";
 import {
   addWatchlistItem,
@@ -126,7 +127,9 @@ export function WatchlistPanel({ watchlists }: { watchlists: WatchlistWithItems[
                   }`}
                 >
                   <div className="cursor-grab text-[14px] text-muted select-none">⠿</div>
-                  <div className="text-sm text-primary">{item.symbol}</div>
+                  <Link href={`/ticker/${item.symbol}`} className="text-sm text-primary hover:text-accent">
+                    {item.symbol}
+                  </Link>
                   <div className="text-[13.5px] text-primary">{fmtCurrency(item.latestClose)}</div>
                   <div
                     className={`text-[13px] ${
