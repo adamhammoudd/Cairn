@@ -154,6 +154,22 @@ export interface Database {
         Update: never;
         Relationships: [];
       };
+      data_providers: {
+        Row: {
+          id: string;
+          name: string;
+          provider_type: string;
+          endpoint: string;
+          weight: number;
+          priority: number;
+          enabled: boolean;
+          config: Record<string, unknown>;
+          created_at: string;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
       fundamentals: {
         Row: {
           id: number;
@@ -162,6 +178,8 @@ export interface Database {
           shares_outstanding: number | null;
           eps_ttm: number | null;
           dividends_ttm: number | null;
+          sector: string | null;
+          sic: string | null;
           source: string;
           updated_at: string;
         };
@@ -402,6 +420,55 @@ export interface Database {
           status?: string;
         };
         Update: { read_at?: string | null; status?: string };
+        Relationships: [];
+      };
+      discussion_threads: {
+        Row: {
+          id: string;
+          symbol: string;
+          user_id: string;
+          parent_id: string | null;
+          body: string;
+          upvotes: number;
+          downvotes: number;
+          flagged: boolean;
+          created_at: string;
+        };
+        Insert: {
+          symbol: string;
+          user_id: string;
+          parent_id?: string | null;
+          body: string;
+          flagged?: boolean;
+        };
+        Update: { flagged?: boolean; upvotes?: number; downvotes?: number };
+        Relationships: [];
+      };
+      discussion_votes: {
+        Row: {
+          id: string;
+          thread_id: string;
+          user_id: string;
+          direction: number;
+          created_at: string;
+        };
+        Insert: { thread_id: string; user_id: string; direction: number };
+        Update: never;
+        Relationships: [];
+      };
+      esg_scores: {
+        Row: {
+          id: string;
+          symbol: string;
+          environmental: number | null;
+          social: number | null;
+          governance: number | null;
+          total: number | null;
+          source: string;
+          as_of_date: string;
+        };
+        Insert: never;
+        Update: never;
         Relationships: [];
       };
     };

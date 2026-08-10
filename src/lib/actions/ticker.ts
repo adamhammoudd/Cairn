@@ -20,6 +20,7 @@ export interface TickerData {
     market_cap_rank: number | null;
   } | null;
   news: { id: string; title: string; source_name: string; url: string | null; published_at: string }[];
+  esg: { environmental: number | null; social: number | null; governance: number | null; total: number | null; source: string } | null;
 }
 
 // Asset type is read off the ingested price history rather than a hardcoded
@@ -44,7 +45,7 @@ export async function getTickerDetail(symbolRaw: string): Promise<TickerData | n
   const changePct =
     latest.close !== null && prev !== null && prev !== 0 ? ((latest.close - prev) / prev) * 100 : null;
 
-  const [{ data: fundamentals }, { data: cryptoMetrics }, { data: news }] = await Promise.all([
+  const [{ data: fundamentals }, { data: cryptoMetrics }, { data: news }, { data: esg }] = await Promise.all([
     supabase
       .from("fundamentals")
       .select("shares_outstanding, eps_ttm, dividends_ttm")
@@ -63,6 +64,13 @@ export async function getTickerDetail(symbolRaw: string): Promise<TickerData | n
       .contains("tickers", [symbol])
       .order("published_at", { ascending: false })
       .limit(15),
+    supabase
+      .from("esg_scores")
+      .select("environmental, social, governance, total, source")
+      .eq("symbol", symbol)
+      .order("as_of_date", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
   ]);
 
   return {
@@ -75,5 +83,6 @@ export async function getTickerDetail(symbolRaw: string): Promise<TickerData | n
     fundamentals: fundamentals ?? null,
     cryptoMetrics: cryptoMetrics ?? null,
     news: news ?? [],
+    esg: esg ?? null,
   };
 }

@@ -110,17 +110,20 @@ Deno.serve(async (req) => {
 
     try {
       const base = `https://data.sec.gov/api/xbrl/companyconcept/CIK${cik}/us-gaap`;
-      const [epsDoc, sharesDoc, divDoc] = await Promise.all([
+      const [epsDoc, sharesDoc, divDoc, submissionsDoc] = await Promise.all([
         secJson(`${base}/EarningsPerShareDiluted.json`),
         secJson(`${base}/CommonStockSharesOutstanding.json`),
         secJson(`${base}/CommonStockDividendsPerShareDeclared.json`),
+        secJson(`https://data.sec.gov/submissions/CIK${cik}.json`),
       ]);
 
       const epsTtm = trailingTwelveMonths(factsFor(epsDoc, "USD/shares"));
       const sharesFact = latestInstant(factsFor(sharesDoc, "shares"));
       const divTtm = trailingTwelveMonths(factsFor(divDoc, "USD/shares"));
+      const sector = (submissionsDoc as { sicDescription?: string } | null)?.sicDescription ?? null;
+      const sic = (submissionsDoc as { sic?: string } | null)?.sic ?? null;
 
-      if (epsTtm === null && sharesFact === null && divTtm === null) {
+      if (epsTtm === null && sharesFact === null && divTtm === null && sector === null) {
         results.push({ symbol, error: "no usable XBRL facts" });
         continue;
       }
@@ -132,13 +135,15 @@ Deno.serve(async (req) => {
           shares_outstanding: sharesFact?.val ?? null,
           eps_ttm: epsTtm,
           dividends_ttm: divTtm,
+          sector,
+          sic,
           source: "sec_xbrl",
           updated_at: new Date().toISOString(),
         },
         { onConflict: "symbol" },
       );
 
-      results.push({ symbol, eps_ttm: epsTtm, shares: sharesFact?.val ?? null, dividends_ttm: divTtm, error: error?.message });
+      results.push({ symbol, eps_ttm: epsTtm, shares: sharesFact?.val ?? null, dividends_ttm: divTtm, sector, error: error?.message });
     } catch (err) {
       results.push({ symbol, error: err instanceof Error ? err.message : String(err) });
     }

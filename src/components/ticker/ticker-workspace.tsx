@@ -8,16 +8,19 @@ import type { AnalysisWithMethodology } from "@/lib/actions/analysis";
 import { TickerChart } from "@/components/ticker/ticker-chart";
 import { TickerAnalysisRequest } from "@/components/ticker/ticker-analysis-request";
 import { MethodologyCard } from "@/components/analysis/methodology-card";
+import { DiscussionPanel } from "@/components/ticker/discussion-panel";
+import type { DiscussionComment } from "@/lib/discussion";
 
-const EQUITY_TABS = ["Chart", "Profile", "Financials", "News", "Analysis"] as const;
-const CRYPTO_TABS = ["Chart", "Profile", "News", "Analysis"] as const;
+const EQUITY_TABS = ["Chart", "Profile", "Financials", "News", "Analysis", "Discussion"] as const;
+const CRYPTO_TABS = ["Chart", "Profile", "News", "Analysis", "Discussion"] as const;
 
 interface TickerWorkspaceProps {
   data: TickerData;
   analyses: AnalysisWithMethodology[];
+  discussion: DiscussionComment[];
 }
 
-export function TickerWorkspace({ data, analyses }: TickerWorkspaceProps) {
+export function TickerWorkspace({ data, analyses, discussion }: TickerWorkspaceProps) {
   const isCrypto = data.assetType === "crypto";
   const tabs = isCrypto ? CRYPTO_TABS : EQUITY_TABS;
   const [tab, setTab] = useState<(typeof tabs)[number]>("Chart");
@@ -113,6 +116,21 @@ export function TickerWorkspace({ data, analyses }: TickerWorkspaceProps) {
               rather than being estimated.
             </p>
           )}
+
+          {data.esg && (
+            <div className="mt-6 border-t border-line pt-5">
+              <div className="mb-3 text-[11px] tracking-[0.06em] text-muted uppercase">ESG scores</div>
+              <div className="grid grid-cols-2 gap-4">
+                <Stat label="Environmental" value={data.esg.environmental ?? "—"} />
+                <Stat label="Social" value={data.esg.social ?? "—"} />
+                <Stat label="Governance" value={data.esg.governance ?? "—"} />
+                <Stat label="Total" value={data.esg.total ?? "—"} />
+              </div>
+              <p className="mt-3 text-[12px] text-dim">
+                ESG scores are illustrative demo data ({data.esg.source}), not sourced from a live ESG data provider.
+              </p>
+            </div>
+          )}
         </div>
       )}
 
@@ -162,6 +180,8 @@ export function TickerWorkspace({ data, analyses }: TickerWorkspaceProps) {
           )}
         </div>
       )}
+
+      {tab === "Discussion" && <DiscussionPanel symbol={data.symbol} comments={discussion} />}
 
       {tab === "Analysis" && (
         <div className="flex flex-col gap-5">
