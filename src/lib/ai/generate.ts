@@ -26,6 +26,33 @@ Hard rules, no exceptions:
   statement, set confidence_level to "low" and say so plainly in reasoning_text — do not
   fabricate a pattern to fill the field.`;
 
+// Phase 9: crypto's data profile differs enough from equities that reusing the
+// equity framing produces subtly wrong output. Three concrete differences,
+// rather than a vague "crypto is more volatile" nudge:
+//  - There are no earnings, guidance, splits, or filings, so the analogs are
+//    derived volatility regimes computed from price history, not scheduled
+//    corporate events. The model must not reason as if an earnings cycle exists.
+//  - Baseline volatility is multiples of equity baseline, so an equity-calibrated
+//    "elevated volatility" read would fire constantly and carry no information.
+//    Elevated has to mean elevated *relative to that asset's own history*.
+//  - It trades continuously, so there is no overnight gap or pre/post-market
+//    session to reason about.
+const CRYPTO_PROMPT_ADDENDUM = `
+
+This scope is a crypto asset. Its data profile is materially different from an equity, and
+applying equity assumptions to it produces wrong output:
+- There are no earnings, guidance, splits, dividends, or regulatory filings for this asset. Any
+  historical analogs you are given are volatility regimes derived from its own realized price
+  history — they are statistical windows, not scheduled corporate events. Do not reason about an
+  earnings cycle, a reporting date, or company fundamentals.
+- Crypto's baseline volatility is several times that of equities. "Elevated volatility" must mean
+  elevated relative to THIS asset's own historical baseline, not relative to a stock. Do not call
+  ordinary crypto volatility elevated.
+- This asset trades 24/7. There is no overnight gap, market open/close, or pre/post-market
+  session to reason about.
+- Crypto price history is typically shorter and regime-shifting. Weight confidence accordingly and
+  prefer "low" when the analog window is short or the regimes are dissimilar.`;
+
 interface GenerateAnalysisInput {
   scopeType: ScopeType;
   scopeValue: string;
@@ -86,6 +113,17 @@ export async function generateAnalysis({ scopeType, scopeValue }: GenerateAnalys
   else if (scopeType === "sector") newsQuery = newsQuery.contains("sectors", [scopeValue]);
   const { data: news } = await newsQuery;
 
+  // Asset type drives which framing the model gets. Derived from the ingested
+  // data rather than a hardcoded symbol list, so a newly-tracked coin is
+  // treated as crypto the moment its price history lands.
+  const { data: assetRow } = await supabase
+    .from("historical_prices")
+    .select("asset_type")
+    .eq("symbol", scopeValue)
+    .limit(1)
+    .maybeSingle();
+  const isCrypto = scopeType === "ticker" && assetRow?.asset_type === "crypto";
+
   let eventsQuery = supabase
     .from("historical_events")
     .select("id, symbol, sector, event_type, event_date, description, price_before, price_after, volume_at_event")
@@ -108,7 +146,7 @@ export async function generateAnalysis({ scopeType, scopeValue }: GenerateAnalys
   const response = await client.messages.create({
     model: MODEL,
     max_tokens: 2048,
-    system: SYSTEM_PROMPT,
+    system: isCrypto ? SYSTEM_PROMPT + CRYPTO_PROMPT_ADDENDUM : SYSTEM_PROMPT,
     output_config: { format: { type: "json_schema", schema: OUTPUT_SCHEMA } },
     messages: [
       {
