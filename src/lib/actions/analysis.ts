@@ -1,21 +1,34 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { generateAnalysis } from "@/lib/ai/generate";
+import { checkAiUsageAllowed, recordAiUsage } from "@/lib/actions/billing";
 import type { ScopeType } from "@/lib/supabase/types";
 
 export async function requestAnalysis(_prevState: string | null, formData: FormData) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
   const scopeType = formData.get("scope_type") as ScopeType;
   const scopeValue = String(formData.get("scope_value") ?? "").trim();
 
   if (!scopeValue) return "Enter a market, sector, or ticker to analyze.";
+
+  const gate = await checkAiUsageAllowed(user.id);
+  if (!gate.allowed) return gate.message ?? "AI analysis limit reached for this plan.";
 
   try {
     await generateAnalysis({ scopeType, scopeValue: scopeType === "ticker" ? scopeValue.toUpperCase() : scopeValue });
   } catch (err) {
     return err instanceof Error ? err.message : "Failed to generate analysis.";
   }
+
+  await recordAiUsage(user.id);
 
   revalidatePath("/research");
   if (scopeType === "ticker") revalidatePath(`/ticker/${scopeValue.toUpperCase()}`);
