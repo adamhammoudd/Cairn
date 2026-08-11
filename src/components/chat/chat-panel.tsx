@@ -16,7 +16,6 @@ export function ChatPanel() {
         <div className="fixed right-6 bottom-24 z-20 flex h-[520px] w-[380px] flex-col overflow-hidden rounded-card border border-line bg-panel shadow-2xl">
           <div className="flex items-center justify-between border-b border-line px-4 py-3">
             <div className="flex items-center gap-2">
-              <span className="h-1.5 w-1.5 rounded-full bg-accent" />
               <span className="text-[11.5px] tracking-[0.08em] text-muted uppercase">AI research</span>
             </div>
             <button type="button" onClick={() => setOpen(false)} className="text-muted hover:text-primary">

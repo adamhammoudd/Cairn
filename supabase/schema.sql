@@ -25,6 +25,7 @@ create table user_settings (
   compact_mode boolean not null default false,
   extended_hours boolean not null default false,
   notification_thresholds jsonb not null default '{}'::jsonb,
+  dashboard_layout text[] not null default array['portfolio','markets','watchlist','news','assistant'],
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );

@@ -42,6 +42,7 @@ export interface Database {
           compact_mode: boolean;
           extended_hours: boolean;
           notification_thresholds: Record<string, unknown>;
+          dashboard_layout: string[];
           created_at: string;
           updated_at: string;
         };
@@ -54,6 +55,7 @@ export interface Database {
           compact_mode?: boolean;
           extended_hours?: boolean;
           notification_thresholds?: Record<string, unknown>;
+          dashboard_layout?: string[];
         };
         Update: {
           default_chart_view?: ChartView;
@@ -63,6 +65,7 @@ export interface Database {
           compact_mode?: boolean;
           extended_hours?: boolean;
           notification_thresholds?: Record<string, unknown>;
+          dashboard_layout?: string[];
         };
         Relationships: [];
       };
