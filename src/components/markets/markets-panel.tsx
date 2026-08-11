@@ -3,20 +3,26 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { ASSET_TYPES, formatMarketCap, type ScreenerRow } from "@/lib/screener";
+import type { CryptoRow } from "@/lib/crypto";
+import { CryptoTable } from "@/components/crypto/crypto-table";
 
 interface MarketsPanelProps {
   rows: ScreenerRow[];
+  cryptoRows: CryptoRow[];
 }
 
 const TABS = ["all", ...ASSET_TYPES] as const;
 
-export function MarketsPanel({ rows }: MarketsPanelProps) {
+export function MarketsPanel({ rows, cryptoRows }: MarketsPanelProps) {
   const [tab, setTab] = useState<(typeof TABS)[number]>("all");
 
-  const filtered = useMemo(
-    () => (tab === "all" ? rows : rows.filter((r) => r.assetType === tab)),
-    [rows, tab]
-  );
+  // "all" excludes crypto's generic screener row so it isn't listed twice --
+  // crypto gets its own richer table (rank, 24h change, supply) below.
+  const filtered = useMemo(() => {
+    if (tab === "crypto") return [];
+    if (tab === "all") return rows.filter((r) => r.assetType !== "crypto");
+    return rows.filter((r) => r.assetType === tab);
+  }, [rows, tab]);
 
   return (
     <div>
@@ -35,7 +41,9 @@ export function MarketsPanel({ rows }: MarketsPanelProps) {
         ))}
       </div>
 
-      {filtered.length === 0 ? (
+      {tab === "crypto" ? (
+        <CryptoTable rows={cryptoRows} />
+      ) : filtered.length === 0 ? (
         <div className="rounded-card border border-dashed border-line p-12 text-center text-sm text-muted">
           No {tab === "all" ? "" : `${tab} `}symbols tracked yet.
         </div>
