@@ -4,10 +4,8 @@ import { useMemo } from "react";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { xAxisConfig } from "@/lib/portfolio";
 import { buildPriceSeries } from "@/lib/ticker";
-import type { ComparisonRow } from "@/lib/comparison";
+import { COMPARISON_COLORS, type ComparisonRow } from "@/lib/comparison";
 import type { ChartView } from "@/lib/supabase/types";
-
-const COLORS = ["#2FC685", "#4C9BF0", "#E0B341", "#C77DE0"];
 
 function MiniChart({ row, timeframe, color }: { row: ComparisonRow; timeframe: ChartView; color: string }) {
   const points = useMemo(() => buildPriceSeries(row.bars, timeframe), [row.bars, timeframe]);
@@ -63,7 +61,7 @@ export function ComparisonCharts({ rows, timeframe }: { rows: ComparisonRow[]; t
   return (
     <div className="grid grid-cols-2 gap-4">
       {rows.map((row, i) => (
-        <MiniChart key={row.symbol} row={row} timeframe={timeframe} color={COLORS[i % COLORS.length]} />
+        <MiniChart key={row.symbol} row={row} timeframe={timeframe} color={COMPARISON_COLORS[i % COMPARISON_COLORS.length]} />
       ))}
     </div>
   );

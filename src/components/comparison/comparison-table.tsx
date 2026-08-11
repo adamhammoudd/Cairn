@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { formatMarketCap } from "@/lib/screener";
-import type { ComparisonRow } from "@/lib/comparison";
+import { COMPARISON_COLORS, type ComparisonRow } from "@/lib/comparison";
 
 function fmtCurrency(n: number | null) {
   if (n === null) return "—";
@@ -21,12 +21,16 @@ export function ComparisonTable({ rows }: { rows: ComparisonRow[] }) {
         <div>Div. yield</div>
         <div>Volume</div>
       </div>
-      {rows.map((row) => (
+      {rows.map((row, i) => (
         <div
           key={row.symbol}
           className="grid grid-cols-[1fr_0.8fr_0.8fr_0.9fr_0.6fr_0.9fr_0.9fr] items-center border-b border-line px-5 py-3.5 last:border-b-0"
         >
-          <Link href={`/ticker/${row.symbol}`} className="text-sm text-primary hover:text-accent">
+          <Link href={`/ticker/${row.symbol}`} className="flex items-center gap-2 text-sm text-primary hover:text-accent">
+            <span
+              className="h-2 w-2 shrink-0 rounded-full"
+              style={{ background: COMPARISON_COLORS[i % COMPARISON_COLORS.length] }}
+            />
             {row.symbol}
           </Link>
           <div className="text-[13.5px] text-primary">{fmtCurrency(row.price)}</div>
