@@ -313,9 +313,27 @@ export interface Database {
         Relationships: [];
       };
       watchlists: {
-        Row: { id: string; user_id: string; name: string; sort_order: number };
-        Insert: { user_id: string; name: string; sort_order?: number };
-        Update: { name?: string; sort_order?: number };
+        Row: {
+          id: string;
+          user_id: string;
+          name: string;
+          description: string | null;
+          display_prefs: Record<string, unknown>;
+          sort_order: number;
+        };
+        Insert: {
+          user_id: string;
+          name: string;
+          description?: string | null;
+          display_prefs?: Record<string, unknown>;
+          sort_order?: number;
+        };
+        Update: {
+          name?: string;
+          description?: string | null;
+          display_prefs?: Record<string, unknown>;
+          sort_order?: number;
+        };
         Relationships: [];
       };
       watchlist_items: {

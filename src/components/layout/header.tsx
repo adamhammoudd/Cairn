@@ -1,13 +1,22 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { NAV_ITEMS } from "@/lib/nav-items";
+import { NAV_ITEMS, isNavGroup } from "@/lib/nav-items";
+
+function findPageTitle(pathname: string): string {
+  for (const entry of NAV_ITEMS) {
+    const leaves = isNavGroup(entry) ? entry.items : [entry];
+    const match = leaves.find((leaf) =>
+      leaf.route === "/" ? pathname === "/" : pathname.startsWith(leaf.route)
+    );
+    if (match) return match.label;
+  }
+  return "Cairn";
+}
 
 export function Header() {
   const pathname = usePathname();
-  const pageTitle =
-    NAV_ITEMS.find((item) => (item.route === "/" ? pathname === "/" : pathname.startsWith(item.route)))
-      ?.label ?? "Cairn";
+  const pageTitle = findPageTitle(pathname);
 
   return (
     <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between border-b border-line bg-canvas px-7">
@@ -33,7 +42,6 @@ export function Header() {
             className="w-full bg-transparent text-[13px] text-primary placeholder:text-dim outline-none"
           />
         </div>
-        <span className="h-2 w-2 shrink-0 rounded-full bg-accent" title="All systems nominal" />
       </div>
     </header>
   );

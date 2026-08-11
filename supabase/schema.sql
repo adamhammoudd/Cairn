@@ -211,6 +211,8 @@ create table watchlists (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
   name text not null,
+  description text,
+  display_prefs jsonb not null default '{}'::jsonb,
   sort_order int not null default 0
 );
 
