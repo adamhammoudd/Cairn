@@ -4,42 +4,39 @@ interface LogoProps {
   wordmarkColor?: string;
 }
 
-export function Logo({ size = 32, showWordmark = true, wordmarkColor = "#F5F5F5" }: LogoProps) {
+export function Logo({ size = 32, showWordmark = true, wordmarkColor = "var(--color-primary)" }: LogoProps) {
   const glow = Math.round(size * 0.2);
 
   return (
     <div className="inline-flex items-center" style={{ gap: Math.round(size * 0.28) }}>
       <div className="relative shrink-0" style={{ width: size, height: size }}>
         <div
-          className="absolute rounded-full"
+          className="absolute rounded-full bg-gradient-to-br from-accent-light to-accent-dark"
           style={{
             left: "12%",
             top: "60%",
             width: "76%",
             height: "30%",
-            background: "linear-gradient(135deg, #5EE6A6, #22B573)",
             boxShadow: `0 0 ${glow}px rgba(47,198,133,0.35)`,
           }}
         />
         <div
-          className="absolute rounded-full"
+          className="absolute rounded-full bg-gradient-to-br from-accent-light to-accent-dark"
           style={{
             left: "21%",
             top: "34%",
             width: "58%",
             height: "27%",
-            background: "linear-gradient(135deg, #5EE6A6, #22B573)",
             boxShadow: `0 0 ${glow}px rgba(47,198,133,0.3)`,
           }}
         />
         <div
-          className="absolute rounded-full"
+          className="absolute rounded-full bg-gradient-to-br from-accent-light to-accent-dark"
           style={{
             left: "30%",
             top: "10%",
             width: "40%",
             height: "22%",
-            background: "linear-gradient(135deg, #5EE6A6, #22B573)",
             boxShadow: `0 0 ${glow}px rgba(47,198,133,0.25)`,
           }}
         />
