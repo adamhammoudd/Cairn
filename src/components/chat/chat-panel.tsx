@@ -32,8 +32,7 @@ export function ChatPanel() {
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="fixed right-6 bottom-6 z-20 flex h-14 w-14 items-center justify-center rounded-full shadow-lg"
-        style={{ background: "linear-gradient(135deg, #5EE6A6, #22B573)" }}
+        className="fixed right-6 bottom-6 z-20 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-accent-light to-accent-dark shadow-lg"
         aria-label="Toggle AI research chat"
       >
         <span className="font-serif text-lg text-canvas">{open ? "✕" : "AI"}</span>

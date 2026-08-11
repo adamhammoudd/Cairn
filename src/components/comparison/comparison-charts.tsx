@@ -7,7 +7,9 @@ import { buildPriceSeries } from "@/lib/ticker";
 import type { ComparisonRow } from "@/lib/comparison";
 import type { ChartView } from "@/lib/supabase/types";
 
-const COLORS = ["#2FC685", "#4C9BF0", "#E0B341", "#C77DE0"];
+// Token-only palette (accent scale + neutrals) — the prior blue/gold/purple
+// set introduced hues outside the brand guide without design-lead sign-off.
+const COLORS = ["#2FC685", "#5EE6A6", "#8A8A8A", "#6A6A6A"];
 
 function MiniChart({ row, timeframe, color }: { row: ComparisonRow; timeframe: ChartView; color: string }) {
   const points = useMemo(() => buildPriceSeries(row.bars, timeframe), [row.bars, timeframe]);

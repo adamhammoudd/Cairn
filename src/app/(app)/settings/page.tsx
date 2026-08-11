@@ -26,8 +26,7 @@ export default async function SettingsPage() {
         <div className="mb-4 text-xs tracking-[0.08em] text-muted uppercase">Account</div>
         <div className="mb-5 flex items-center gap-4">
           <div
-            className="h-[52px] w-[52px] shrink-0 rounded-full"
-            style={{ background: "linear-gradient(135deg, #5EE6A6, #22B573)" }}
+            className="h-[52px] w-[52px] shrink-0 rounded-full bg-gradient-to-br from-accent-light to-accent-dark"
           />
           <div>
             <div className="text-[15px] text-primary">{profile?.display_name || "Account"}</div>

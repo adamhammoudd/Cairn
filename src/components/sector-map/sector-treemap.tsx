@@ -35,10 +35,10 @@ function Cell({ x = 0, y = 0, width = 0, height = 0, name, changePct = null, dep
       <rect x={x} y={y} width={width} height={height} fill={colorForChange(changePct ?? null)} stroke="#0F0F0F" strokeWidth={1.5} />
       {showLabel && (
         <>
-          <text x={x + width / 2} y={y + height / 2 - 4} textAnchor="middle" fontSize={12} fill="#F2F2F2">
+          <text x={x + width / 2} y={y + height / 2 - 4} textAnchor="middle" fontSize={12} fill="var(--color-primary)">
             {name}
           </text>
-          <text x={x + width / 2} y={y + height / 2 + 12} textAnchor="middle" fontSize={11} fill="#C9C9C9">
+          <text x={x + width / 2} y={y + height / 2 + 12} textAnchor="middle" fontSize={11} fill="var(--color-muted)">
             {changePct === null ? "—" : `${changePct >= 0 ? "+" : ""}${changePct.toFixed(2)}%`}
           </text>
         </>
