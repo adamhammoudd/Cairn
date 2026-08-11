@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { createChatSession, listChatSessions, listChatMessages } from "@/lib/actions/chat";
+import { createChatSession, listChatSessions, listChatMessages, type ChatSession } from "@/lib/actions/chat";
 import { getAnalysesByIds, type AnalysisWithMethodology } from "@/lib/actions/analysis";
 import { MethodologyCard } from "@/components/analysis/methodology-card";
 import { Disclosure } from "@/components/compliance/disclosure";
@@ -24,33 +24,56 @@ function splitRefs(raw: string): { text: string; ids: string[] } {
   }
 }
 
+function sessionLabel(session: ChatSession): string {
+  return session.title?.trim() || `Chat — ${new Date(session.created_at).toLocaleDateString()}`;
+}
+
 export function ChatThread({ compact = false }: { compact?: boolean }) {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
+  const [sessions, setSessions] = useState<ChatSession[]>([]);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [search, setSearch] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  async function loadSession(id: string) {
+    setSessionId(id);
+    setHistoryOpen(false);
+    const history = await listChatMessages(id);
+    const withAnalyses = await Promise.all(
+      history.map(async (m) => ({
+        role: m.role,
+        content: m.content,
+        analyses:
+          m.referenced_analysis_ids.length > 0 ? await getAnalysesByIds(m.referenced_analysis_ids) : undefined,
+      })),
+    );
+    setMessages(withAnalyses);
+  }
+
+  async function startNewChat() {
+    const created = await createChatSession();
+    setSessions((prev) => [created, ...prev]);
+    setSessionId(created.id);
+    setMessages([]);
+    setHistoryOpen(false);
+  }
 
   useEffect(() => {
     (async () => {
-      const sessions = await listChatSessions();
-      if (sessions.length > 0) {
-        setSessionId(sessions[0].id);
-        const history = await listChatMessages(sessions[0].id);
-        const withAnalyses = await Promise.all(
-          history.map(async (m) => ({
-            role: m.role,
-            content: m.content,
-            analyses:
-              m.referenced_analysis_ids.length > 0 ? await getAnalysesByIds(m.referenced_analysis_ids) : undefined,
-          })),
-        );
-        setMessages(withAnalyses);
+      const list = await listChatSessions();
+      setSessions(list);
+      if (list.length > 0) {
+        await loadSession(list[0].id);
       } else {
         const created = await createChatSession();
+        setSessions([created]);
         setSessionId(created.id);
       }
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -98,6 +121,13 @@ export function ChatThread({ compact = false }: { compact?: boolean }) {
           return next;
         });
       }
+
+      // First send in a fresh session gives it a title server-side -- refresh
+      // the list so it shows up as something other than a bare date.
+      const wasUntitled = sessions.find((s) => s.id === sessionId)?.title == null;
+      if (wasUntitled) {
+        setSessions(await listChatSessions());
+      }
     } catch {
       setMessages((prev) => {
         const next = [...prev];
@@ -109,8 +139,58 @@ export function ChatThread({ compact = false }: { compact?: boolean }) {
     }
   }
 
+  const filteredSessions = sessions.filter((s) => sessionLabel(s).toLowerCase().includes(search.toLowerCase()));
+
   return (
     <div className="flex h-full flex-col">
+      <div className="relative flex items-center justify-between gap-2 border-b border-line px-3 py-2.5">
+        <button
+          type="button"
+          onClick={() => setHistoryOpen((o) => !o)}
+          className="rounded-lg px-2.5 py-1.5 text-[12px] text-muted transition-colors duration-fast ease-standard hover:bg-active hover:text-primary"
+        >
+          History {historyOpen ? "▲" : "▼"}
+        </button>
+        <button
+          type="button"
+          onClick={startNewChat}
+          className="rounded-lg px-2.5 py-1.5 text-[12px] text-muted transition-colors duration-fast ease-standard hover:bg-active hover:text-primary"
+        >
+          + New chat
+        </button>
+
+        {historyOpen && (
+          <div className="absolute top-full left-0 z-10 mt-1 w-full overflow-hidden rounded-lg border border-line bg-panel shadow-lg">
+            <div className="border-b border-line p-2">
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search conversations…"
+                className="w-full rounded-lg border border-line bg-active px-2.5 py-1.5 text-[12.5px] text-primary outline-none"
+              />
+            </div>
+            <div className="max-h-64 overflow-y-auto py-1">
+              {filteredSessions.length === 0 ? (
+                <div className="px-3 py-2 text-[12px] text-dim">No conversations found.</div>
+              ) : (
+                filteredSessions.map((s) => (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() => loadSession(s.id)}
+                    className={`block w-full truncate px-3 py-2 text-left text-[12.5px] transition-colors duration-fast ease-standard hover:bg-active ${
+                      s.id === sessionId ? "text-primary" : "text-muted"
+                    }`}
+                  >
+                    {sessionLabel(s)}
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
       <div ref={scrollRef} className={`flex-1 overflow-y-auto ${compact ? "px-3 py-3" : "px-2 py-4"}`}>
         {messages.length === 0 ? (
           <p className="text-[13px] text-muted">

@@ -68,20 +68,6 @@ export function WatchlistPanel({ watchlists }: { watchlists: WatchlistWithItems[
             {w.name}
           </button>
         ))}
-
-        <form action={createAction} className="ml-auto flex items-center gap-2">
-          <input
-            name="name"
-            placeholder="New list name"
-            className="w-40 rounded-lg border border-line bg-active px-3 py-2 text-[13px] text-primary outline-none"
-          />
-          <button
-            type="submit"
-            className="rounded-lg bg-gradient-to-br from-accent-light to-accent-dark px-3.5 py-2 text-[13px] font-semibold text-canvas"
-          >
-            + New list
-          </button>
-        </form>
       </div>
 
       {!active ? (
@@ -99,8 +85,22 @@ export function WatchlistPanel({ watchlists }: { watchlists: WatchlistWithItems[
               placeholder="Add symbol (e.g. NVDA)"
               className="w-52 rounded-lg border border-line bg-active px-3 py-2 text-[13px] text-primary uppercase outline-none"
             />
-            <button type="submit" className="rounded-lg border border-line px-3.5 py-2 text-[13px] text-primary transition-colors duration-fast ease-standard hover:bg-active">
+            <button
+              type="submit"
+              className="rounded-lg border border-line px-3.5 py-2 text-[13px] text-primary transition-colors duration-fast ease-standard hover:bg-active"
+            >
               Add
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (window.confirm(`Delete the "${active.name}" list?`)) {
+                  startMutate(() => deleteWatchlist(active.id));
+                }
+              }}
+              className="ml-auto text-[12.5px] text-muted hover:text-negative"
+            >
+              Delete list
             </button>
           </form>
           {addError && addError !== "saved" && <p className="text-[13px] text-negative">{addError}</p>}
@@ -110,11 +110,10 @@ export function WatchlistPanel({ watchlists }: { watchlists: WatchlistWithItems[
               No symbols in this list yet.
             </div>
           ) : (
-            <>
-              <div className="overflow-hidden rounded-card border border-line bg-panel">
-                <div
-                  className={`grid ${active.displayPrefs.showSparkline ? "grid-cols-[24px_1.4fr_0.9fr_0.8fr_110px_60px]" : "grid-cols-[24px_1.4fr_0.9fr_0.8fr_60px]"} border-b border-line px-5 py-3.5 text-[11.5px] tracking-[0.06em] text-muted uppercase`}
-                >
+            <div className="overflow-hidden rounded-card border border-line bg-panel">
+              <div
+                className={`grid ${active.displayPrefs.showSparkline ? "grid-cols-[24px_1.4fr_0.9fr_0.8fr_110px_60px]" : "grid-cols-[24px_1.4fr_0.9fr_0.8fr_60px]"} border-b border-line px-5 py-3.5 text-[11.5px] tracking-[0.06em] text-muted uppercase`}
+              >
                 <div />
                 <div>Symbol</div>
                 <div>Price</div>
@@ -159,22 +158,6 @@ export function WatchlistPanel({ watchlists }: { watchlists: WatchlistWithItems[
                   </button>
                 </div>
               ))}
-            </div>
-            <div className="mt-4 rounded-card border border-line bg-panel p-4">
-              <div className="flex items-center justify-between gap-3">
-                <p className="text-[13px] text-muted">Delete this list when you're done with it.</p>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (window.confirm(`Delete the "${active.name}" list?`)) {
-                      startMutate(() => deleteWatchlist(active.id));
-                    }
-                  }}
-                  className="rounded-lg border border-negative px-3.5 py-2 text-[13px] text-negative transition-colors duration-fast ease-standard hover:bg-negative/10"
-                >
-                  Delete list
-                </button>
-              </div>
             </div>
           )}
         </>

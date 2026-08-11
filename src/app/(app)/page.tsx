@@ -2,10 +2,8 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { runScreen } from "@/lib/actions/screener";
 import { EMPTY_FILTERS } from "@/lib/screener";
-import { DashboardHome } from "@/components/dashboard/dashboard-home";
-import { computeHoldingMetrics, computeTimelineSeries, computeTotals, latestCloseBySymbol } from "@/lib/portfolio";
-import { formatCurrency } from "@/lib/portfolio";
-import { getTodayBriefing } from "@/lib/actions/briefing";
+import { DashboardHome, MODULE_KEYS, type ModuleKey } from "@/components/dashboard/dashboard-home";
+import { computeHoldingMetrics, computeTotals, latestCloseBySymbol } from "@/lib/portfolio";
 
 function fmtCurrency(n: number) {
   return n.toLocaleString(undefined, { style: "currency", currency: "USD" });
@@ -67,9 +65,12 @@ export default async function DashboardPage() {
 
   const watchlistSymbols = new Set((watchlistItemsRes.data ?? []).map((item) => item.symbol));
 
+  const rawLayout = (settingsRes.data?.dashboard_layout as string[] | null) ?? [];
+  const initialLayout = rawLayout.filter((key): key is ModuleKey => (MODULE_KEYS as string[]).includes(key));
+
   return (
     <DashboardHome
-      initialLayout={(settingsRes.data?.dashboard_layout as string[] | null) ?? []}
+      initialLayout={initialLayout}
       portfolio={{
         totalValue: fmtCurrency(totals.totalValue),
         totalGain: `${totals.totalGain >= 0 ? "+" : ""}${fmtCurrency(totals.totalGain)}`,

@@ -5,7 +5,8 @@ import { useActionState } from "react";
 import { updateDashboardLayout } from "@/lib/actions/dashboard";
 import { DashboardSummaryCard } from "@/components/dashboard/dashboard-summary-card";
 
-type ModuleKey = "portfolio" | "markets" | "watchlist" | "news" | "assistant";
+export type ModuleKey = "portfolio" | "markets" | "watchlist" | "news" | "assistant";
+export const MODULE_KEYS: ModuleKey[] = ["portfolio", "markets", "watchlist", "news", "assistant"];
 
 interface DashboardHomeProps {
   initialLayout: ModuleKey[];
