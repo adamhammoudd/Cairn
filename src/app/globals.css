@@ -12,6 +12,15 @@
   --color-accent-light: #5ee6a6;
   --color-accent-dark: #22b573;
   --color-negative: #d96c6c;
+
+  /* Secondary/tertiary accents — never used for gain/loss. Gain stays accent green,
+     loss/destructive stays negative red, everywhere. */
+  --color-warning: #d9a441;
+  --color-info: #5b8def;
+
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
 }
 
 @theme inline {
@@ -26,11 +35,17 @@
   --color-accent-light: var(--color-accent-light);
   --color-accent-dark: var(--color-accent-dark);
   --color-negative: var(--color-negative);
+  --color-warning: var(--color-warning);
+  --color-info: var(--color-info);
 
   --font-sans: "Helvetica Neue", Helvetica, Arial, sans-serif;
   --font-serif: Georgia, "Times New Roman", serif;
 
   --radius-card: 14px;
+
+  --ease-standard: var(--ease-standard);
+  --duration-fast: var(--duration-fast);
+  --duration-base: var(--duration-base);
 }
 
 html {
@@ -45,4 +60,17 @@ body {
 
 input::placeholder {
   color: var(--color-dim);
+}
+
+/* Purposeful motion only: hover/focus states, view transitions, loading states.
+   Respect reduced-motion preference — never force animation on users who opt out. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
