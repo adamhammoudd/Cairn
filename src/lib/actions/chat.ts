@@ -3,7 +3,14 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
-export async function createChatSession(title?: string) {
+export interface ChatSession {
+  id: string;
+  user_id: string;
+  title: string | null;
+  created_at: string;
+}
+
+export async function createChatSession(title?: string): Promise<ChatSession> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -20,7 +27,7 @@ export async function createChatSession(title?: string) {
   return data;
 }
 
-export async function listChatSessions() {
+export async function listChatSessions(): Promise<ChatSession[]> {
   const supabase = await createClient();
   const {
     data: { user },

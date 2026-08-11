@@ -2,6 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { checkScopeGuard, checkCompleteness } from "@/lib/ai/scope-guard";
+import { computeHistoricalStats, computeSimilarityScore } from "@/lib/ai/analytics";
 import type { ScopeType, ConfidenceLevel } from "@/lib/supabase/types";
 
 const MODEL = "claude-opus-5";
@@ -24,7 +25,11 @@ Hard rules, no exceptions:
   say so and set confidence_level to "low" rather than overstating.
 - If the available news/history genuinely doesn't support any pattern-based probability
   statement, set confidence_level to "low" and say so plainly in reasoning_text — do not
-  fabricate a pattern to fill the field.`;
+  fabricate a pattern to fill the field.
+- A "Computed historical statistics" block is provided below the raw event list — those numbers
+  (average/median move, share of analogs that moved positive) were calculated deterministically
+  from the event data, not by you. Ground your reasoning_text in those actual figures rather than
+  eyeballing the raw list yourself, and don't restate them more precisely than given.`;
 
 // Phase 9: crypto's data profile differs enough from equities that reusing the
 // equity framing produces subtly wrong output. Three concrete differences,
@@ -142,6 +147,17 @@ export async function generateAnalysis({ scopeType, scopeValue }: GenerateAnalys
     );
   }
 
+  // Deterministic arithmetic on the analogs, computed here rather than left
+  // for the model to eyeball -- see lib/ai/analytics.ts.
+  const stats = computeHistoricalStats(eventsList);
+  const statsBlock =
+    stats.sampleCount === 0
+      ? "No analogs with both a before/after price are available -- no computed statistics."
+      : `Sample size: ${stats.sampleCount} analog(s) with both a before and after price.
+Average move: ${stats.avgMovePct!.toFixed(2)}%
+Median move: ${stats.medianMovePct!.toFixed(2)}%
+Share that moved positive: ${(stats.positiveRatio! * 100).toFixed(0)}%`;
+
   const client = new Anthropic();
   const response = await client.messages.create({
     model: MODEL,
@@ -158,6 +174,9 @@ ${JSON.stringify(newsList, null, 2)}
 
 Historical events for pattern matching (id, symbol/sector, event_type, event_date, description, price_before, price_after, volume):
 ${JSON.stringify(eventsList, null, 2)}
+
+Computed historical statistics (calculated deterministically from the events above, not model-generated):
+${statsBlock}
 
 Produce one probability-weighted analysis for this scope grounded in the data above.`,
       },
@@ -233,11 +252,12 @@ Produce one probability-weighted analysis for this scope grounded in the data ab
       .insert(sourceIds.map((news_item_id) => ({ analysis_id: analysis.id, news_item_id })));
   }
   if (analogIds.length > 0) {
+    const eventDateById = new Map(eventsList.map((e) => [e.id, e.event_date]));
     await admin.from("ai_analysis_historical_analogs").insert(
       analogIds.map((historical_event_id) => ({
         analysis_id: analysis.id,
         historical_event_id,
-        similarity_score: 1,
+        similarity_score: computeSimilarityScore(eventDateById.get(historical_event_id)!),
       })),
     );
   }
