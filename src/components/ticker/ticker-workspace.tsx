@@ -9,6 +9,7 @@ import { TickerChart } from "@/components/ticker/ticker-chart";
 import { TickerAnalysisRequest } from "@/components/ticker/ticker-analysis-request";
 import { MethodologyCard } from "@/components/analysis/methodology-card";
 import { DiscussionPanel } from "@/components/ticker/discussion-panel";
+import { AddHoldingButton } from "@/components/ticker/add-holding-button";
 import type { DiscussionComment } from "@/lib/discussion";
 
 const EQUITY_TABS = ["Chart", "Profile", "Financials", "News", "Analysis", "Discussion"] as const;
@@ -55,13 +56,16 @@ export function TickerWorkspace({ data, analyses, discussion }: TickerWorkspaceP
             <div className="mt-0.5 text-[13px] text-muted">{data.cryptoMetrics.name}</div>
           )}
         </div>
-        <div className="text-right">
-          <div className="font-serif text-2xl text-primary">
-            {data.price === null ? "—" : data.price.toLocaleString(undefined, { style: "currency", currency: "USD" })}
+        <div className="flex items-start gap-4">
+          <div className="text-right">
+            <div className="font-serif text-2xl text-primary">
+              {data.price === null ? "—" : data.price.toLocaleString(undefined, { style: "currency", currency: "USD" })}
+            </div>
+            <div className={`text-[13px] ${data.changePct === null ? "text-muted" : positive ? "text-accent" : "text-negative"}`}>
+              {data.changePct === null ? "—" : `${positive ? "+" : ""}${data.changePct.toFixed(2)}%`}
+            </div>
           </div>
-          <div className={`text-[13px] ${data.changePct === null ? "text-muted" : positive ? "text-accent" : "text-negative"}`}>
-            {data.changePct === null ? "—" : `${positive ? "+" : ""}${data.changePct.toFixed(2)}%`}
-          </div>
+          <AddHoldingButton symbol={data.symbol} assetType={data.assetType} />
         </div>
       </div>
 

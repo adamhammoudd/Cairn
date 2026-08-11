@@ -5,19 +5,22 @@ import { addHolding, updateHolding } from "@/lib/actions/holdings";
 import { SubmitButton } from "@/components/auth/submit-button";
 import { SymbolTypeahead } from "@/components/portfolio/symbol-typeahead";
 import type { Holding } from "@/lib/portfolio";
+import type { AssetType } from "@/lib/supabase/types";
 
 const ASSET_TYPES = ["equity", "etf", "crypto", "forex", "future"] as const;
 
 interface HoldingModalProps {
   holding: Holding | null; // null = add mode
+  /** Add mode only -- pre-fills and locks the symbol, e.g. from the ticker detail page's "Add Holding" button. */
+  initialSymbol?: { symbol: string; assetType: AssetType };
   onClose: () => void;
 }
 
-export function HoldingModal({ holding, onClose }: HoldingModalProps) {
+export function HoldingModal({ holding, initialSymbol, onClose }: HoldingModalProps) {
   const action = holding ? updateHolding : addHolding;
   const [result, formAction] = useActionState(action, null);
   const formRef = useRef<HTMLFormElement>(null);
-  const [assetType, setAssetType] = useState(holding?.asset_type ?? "equity");
+  const [assetType, setAssetType] = useState(holding?.asset_type ?? initialSymbol?.assetType ?? "equity");
 
   useEffect(() => {
     if (result === "saved") onClose();
@@ -36,10 +39,10 @@ export function HoldingModal({ holding, onClose }: HoldingModalProps) {
 
           <div className="grid grid-cols-2 gap-4">
             <Field label="Symbol">
-              {holding ? (
+              {holding || initialSymbol ? (
                 <input
                   name="symbol"
-                  defaultValue={holding.symbol}
+                  defaultValue={holding?.symbol ?? initialSymbol?.symbol}
                   readOnly
                   className="w-full cursor-not-allowed rounded-lg border border-line bg-active px-3 py-2 text-sm text-muted outline-none uppercase"
                 />
