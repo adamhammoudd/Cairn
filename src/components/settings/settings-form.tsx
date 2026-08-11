@@ -23,9 +23,10 @@ export function SettingsForm({ settings }: { settings: Settings }) {
     (settings.notification_thresholds?.price_move_percent as number | undefined) ?? 5;
 
   return (
-    <form action={formAction} className="flex flex-col gap-6">
-      <div className="rounded-card border border-line bg-panel p-6">
-        <div className="mb-4 text-xs tracking-[0.08em] text-muted uppercase">Display</div>
+    <form action={formAction} className="flex flex-col gap-8">
+      <section id="display" className="flex flex-col gap-4">
+        <h2 className="text-xs tracking-[0.08em] text-muted uppercase">Display</h2>
+        <div className="rounded-card border border-line bg-panel p-6">
 
         <div className="flex flex-col gap-5">
           <Row label="Default chart timeframe" hint="Applied when opening a ticker">
@@ -127,24 +128,27 @@ export function SettingsForm({ settings }: { settings: Settings }) {
             <Toggle name="extended_hours" defaultChecked={settings.extended_hours} />
           </Row>
         </div>
-      </div>
+        </div>
+      </section>
 
-      <div className="rounded-card border border-line bg-panel p-6">
-        <div className="mb-4 text-xs tracking-[0.08em] text-muted uppercase">Notification thresholds</div>
-        <Row label="Price move alert" hint="Minimum % move before a price alert can fire">
-          <div className="flex items-center gap-2">
-            <input
-              type="number"
-              name="price_move_threshold"
-              defaultValue={notificationThreshold}
-              min={0.1}
-              step={0.1}
-              className="w-20 rounded-md border border-line bg-transparent px-3 py-1.5 text-right text-[12.5px] text-primary outline-none"
-            />
-            <span className="text-[12.5px] text-muted">%</span>
-          </div>
-        </Row>
-      </div>
+      <section id="notifications" className="flex flex-col gap-4">
+        <h2 className="text-xs tracking-[0.08em] text-muted uppercase">Notifications</h2>
+        <div className="rounded-card border border-line bg-panel p-6">
+          <Row label="Price move alert" hint="Minimum % move before a price alert can fire">
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                name="price_move_threshold"
+                defaultValue={notificationThreshold}
+                min={0.1}
+                step={0.1}
+                className="w-20 rounded-md border border-line bg-transparent px-3 py-1.5 text-right text-[12.5px] text-primary outline-none"
+              />
+              <span className="text-[12.5px] text-muted">%</span>
+            </div>
+          </Row>
+        </div>
+      </section>
 
       <div className="flex items-center gap-3">
         <SubmitButton>Save changes</SubmitButton>
