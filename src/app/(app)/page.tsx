@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { runScreen, EMPTY_FILTERS } from "@/lib/actions/screener";
+import { runScreen } from "@/lib/actions/screener";
+import { EMPTY_FILTERS } from "@/lib/screener";
 import { DashboardHome } from "@/components/dashboard/dashboard-home";
 import { computeHoldingMetrics, computeTimelineSeries, computeTotals, latestCloseBySymbol } from "@/lib/portfolio";
 import { formatCurrency } from "@/lib/portfolio";
@@ -17,14 +18,10 @@ export default async function DashboardPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const [settingsRes, holdingsRes, watchlistsRes, watchlistItemsRes, newsRes, sessionsRes, briefingRes] = await Promise.all([
+  const [settingsRes, holdingsRes, watchlistsRes, newsRes, sessionsRes, briefingRes] = await Promise.all([
     supabase.from("user_settings").select("dashboard_layout").eq("user_id", user.id).maybeSingle(),
     supabase.from("holdings").select("*").eq("user_id", user.id).order("created_at", { ascending: true }),
     supabase.from("watchlists").select("id, name").eq("user_id", user.id).order("sort_order", { ascending: true }),
-    supabase.from("watchlist_items").select("symbol").in(
-      "watchlist_id",
-      (watchlistsRes.data ?? []).map((w) => w.id),
-    ),
     supabase.from("news_items").select("id, title").order("published_at", { ascending: false }).limit(1),
     supabase
       .from("chat_sessions")
@@ -40,6 +37,14 @@ export default async function DashboardPage() {
       .limit(1)
       .maybeSingle(),
   ]);
+
+  const watchlistItemsRes = await supabase
+    .from("watchlist_items")
+    .select("symbol")
+    .in(
+      "watchlist_id",
+      (watchlistsRes.data ?? []).map((w) => w.id),
+    );
 
   const holdings = holdingsRes.data ?? [];
   const symbols = Array.from(new Set(holdings.map((h) => h.symbol)));
