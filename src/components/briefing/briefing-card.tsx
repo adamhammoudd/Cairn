@@ -5,6 +5,7 @@ import { requestBriefing } from "@/lib/actions/briefing";
 import type { BriefingContent } from "@/lib/ai/briefing";
 import type { AnalysisWithMethodology } from "@/lib/actions/analysis";
 import { MethodologyCard } from "@/components/analysis/methodology-card";
+import { Disclosure } from "@/components/compliance/disclosure";
 
 interface BriefingCardProps {
   briefing: BriefingContent | null;
@@ -44,6 +45,12 @@ export function BriefingCard({ briefing, analyses }: BriefingCardProps) {
               </div>
             )}
           </>
+        )}
+
+        {briefing && (
+          <div className="mt-3 border-t border-line pt-3">
+            <Disclosure />
+          </div>
         )}
       </div>
 

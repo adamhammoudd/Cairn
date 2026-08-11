@@ -68,6 +68,20 @@ export function WatchlistPanel({ watchlists }: { watchlists: WatchlistWithItems[
             {w.name}
           </button>
         ))}
+
+        <form action={createAction} className="ml-auto flex items-center gap-2">
+          <input
+            name="name"
+            placeholder="New list name"
+            className="w-40 rounded-lg border border-line bg-active px-3 py-2 text-[13px] text-primary outline-none"
+          />
+          <button
+            type="submit"
+            className="rounded-lg bg-gradient-to-br from-accent-light to-accent-dark px-3.5 py-2 text-[13px] font-semibold text-canvas"
+          >
+            + New list
+          </button>
+        </form>
       </div>
 
       {!active ? (

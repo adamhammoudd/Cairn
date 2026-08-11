@@ -149,6 +149,14 @@ export function Sidebar({ displayName, plan }: SidebarProps) {
             </form>
           </div>
         )}
+      <div className="mt-2 flex items-center gap-2.5 border-t border-line pt-2.5">
+        <div
+          className="h-[30px] w-[30px] shrink-0 rounded-full bg-gradient-to-br from-accent-light to-accent-dark"
+        />
+        <div className="flex flex-col overflow-hidden">
+          <span className="truncate text-[13px] text-primary">{displayName}</span>
+          <span className="text-[11.5px] text-muted capitalize">{plan} plan</span>
+        </div>
       </div>
     </aside>
   );

@@ -153,8 +153,7 @@ export function ChatThread({ compact = false }: { compact?: boolean }) {
           type="button"
           onClick={send}
           disabled={streaming || !input.trim()}
-          className="rounded-lg px-3.5 py-2 text-[13px] font-semibold text-canvas disabled:opacity-50"
-          style={{ background: "linear-gradient(135deg, #5EE6A6, #22B573)" }}
+          className="rounded-lg bg-gradient-to-br from-accent-light to-accent-dark px-3.5 py-2 text-[13px] font-semibold text-canvas disabled:opacity-50"
         >
           Send
         </button>

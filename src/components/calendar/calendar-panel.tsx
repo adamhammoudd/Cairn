@@ -3,12 +3,14 @@
 import { useMemo, useState } from "react";
 import { EVENT_TYPES, type CalendarEvent } from "@/lib/calendar";
 
+// Neutral-only — accent green is reserved for gain indicators, so event-type
+// dots (none of which represent a gain) no longer borrow it decoratively.
 const TYPE_COLOR: Record<string, string> = {
-  earnings: "#2FC685",
-  economic: "#5EE6A6",
-  dividend: "#8A8A8A",
-  ipo: "#2FC685",
-  split: "#5EE6A6",
+  earnings: "var(--color-primary)",
+  economic: "var(--color-muted)",
+  dividend: "var(--color-dim)",
+  ipo: "var(--color-primary)",
+  split: "var(--color-muted)",
 };
 
 function formatDayLabel(iso: string) {
@@ -84,7 +86,7 @@ export function CalendarPanel({ events }: { events: CalendarEvent[] }) {
                   <div className="flex items-center gap-3">
                     <span
                       className="h-2 w-2 shrink-0 rounded-full"
-                      style={{ background: TYPE_COLOR[e.event_type] ?? "#8A8A8A" }}
+                      style={{ background: TYPE_COLOR[e.event_type] ?? "var(--color-muted)" }}
                     />
                     <div>
                       {e.symbol && <div className="text-sm text-primary">{e.symbol}</div>}
