@@ -3,22 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { readDisplayPrefs, type DisplayPrefs, type WatchlistWithItems } from "@/lib/watchlists";
 
-export interface WatchlistItemWithData {
-  id: string;
-  symbol: string;
-  sort_order: number;
-  latestClose: number | null;
-  changePct: number | null;
-  sparkline: number[];
-}
-
-export interface WatchlistWithItems {
-  id: string;
-  name: string;
-  sort_order: number;
-  items: WatchlistItemWithData[];
-}
+export type { WatchlistWithItems } from "@/lib/watchlists";
 
 export async function listWatchlists(): Promise<WatchlistWithItems[]> {
   const supabase = await createClient();
@@ -68,6 +55,8 @@ export async function listWatchlists(): Promise<WatchlistWithItems[]> {
   return lists.map((l) => ({
     id: l.id,
     name: l.name,
+    description: l.description,
+    displayPrefs: readDisplayPrefs(l.display_prefs),
     sort_order: l.sort_order,
     items: (items ?? [])
       .filter((i) => i.watchlist_id === l.id)
@@ -91,6 +80,12 @@ export async function createWatchlist(_prevState: string | null, formData: FormD
   const name = String(formData.get("name") ?? "").trim();
   if (!name) return "Enter a name for the list.";
 
+  const description = String(formData.get("description") ?? "").trim() || null;
+  const displayPrefs: DisplayPrefs = {
+    sortBy: readDisplayPrefs({ sortBy: formData.get("sort_by") }).sortBy,
+    showSparkline: formData.get("show_sparkline") === "on",
+  };
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -104,11 +99,17 @@ export async function createWatchlist(_prevState: string | null, formData: FormD
 
   const { error } = await supabase
     .from("watchlists")
-    .insert({ user_id: user.id, name, sort_order: count ?? 0 });
+    .insert({
+      user_id: user.id,
+      name,
+      description,
+      display_prefs: displayPrefs as unknown as Record<string, unknown>,
+      sort_order: count ?? 0,
+    });
   if (error) return error.message;
 
   revalidatePath("/watchlists");
-  return "saved";
+  redirect("/watchlists");
 }
 
 export async function deleteWatchlist(id: string) {
