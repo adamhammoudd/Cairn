@@ -21,8 +21,7 @@ export function HoldingsTable({ metrics }: { metrics: HoldingMetrics[] }) {
         <button
           type="button"
           onClick={() => setEditing("new")}
-          className="rounded-lg px-4 py-2 text-[13.5px] font-semibold text-canvas"
-          style={{ background: "linear-gradient(135deg, #5EE6A6, #22B573)" }}
+          className="rounded-lg bg-gradient-to-br from-accent-light to-accent-dark px-4 py-2 text-[13.5px] font-semibold text-canvas"
         >
           + Add holding
         </button>
@@ -50,8 +49,7 @@ export function HoldingsTable({ metrics }: { metrics: HoldingMetrics[] }) {
             >
               <div className="flex items-center gap-2.5">
                 <div
-                  className="h-[26px] w-[26px] shrink-0 rounded-full opacity-85"
-                  style={{ background: "linear-gradient(135deg, #5EE6A6, #22B573)" }}
+                  className="h-[26px] w-[26px] shrink-0 rounded-full bg-gradient-to-br from-accent-light to-accent-dark opacity-85"
                 />
                 <div>
                   <div className="text-sm text-primary">{m.symbol}</div>

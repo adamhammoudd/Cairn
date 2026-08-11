@@ -60,8 +60,7 @@ export default function ResetPasswordPage() {
         <button
           type="submit"
           disabled={!ready || pending}
-          className="w-full rounded-[10px] py-3.5 text-[15px] font-semibold text-canvas disabled:opacity-60"
-          style={{ background: "linear-gradient(135deg, #5EE6A6, #22B573)" }}
+          className="w-full rounded-[10px] bg-gradient-to-br from-accent-light to-accent-dark py-3.5 text-[15px] font-semibold text-canvas disabled:opacity-60"
         >
           {pending ? "Updating…" : "Update password"}
         </button>

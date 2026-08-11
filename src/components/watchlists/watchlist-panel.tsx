@@ -62,8 +62,7 @@ export function WatchlistPanel({ watchlists }: { watchlists: WatchlistWithItems[
           />
           <button
             type="submit"
-            className="rounded-lg px-3.5 py-2 text-[13px] font-semibold text-canvas"
-            style={{ background: "linear-gradient(135deg, #5EE6A6, #22B573)" }}
+            className="rounded-lg bg-gradient-to-br from-accent-light to-accent-dark px-3.5 py-2 text-[13px] font-semibold text-canvas"
           >
             + New list
           </button>

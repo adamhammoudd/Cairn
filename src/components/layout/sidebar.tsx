@@ -43,8 +43,7 @@ export function Sidebar({ displayName, plan }: SidebarProps) {
 
       <div className="mt-2 flex items-center gap-2.5 border-t border-line pt-2.5">
         <div
-          className="h-[30px] w-[30px] shrink-0 rounded-full"
-          style={{ background: "linear-gradient(135deg, #5EE6A6, #22B573)" }}
+          className="h-[30px] w-[30px] shrink-0 rounded-full bg-gradient-to-br from-accent-light to-accent-dark"
         />
         <div className="flex flex-col overflow-hidden">
           <span className="truncate text-[13px] text-primary">{displayName}</span>
