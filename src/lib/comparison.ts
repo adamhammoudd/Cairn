@@ -2,6 +2,10 @@ import type { TimelinePoint } from "@/lib/portfolio";
 
 export const MAX_COMPARE = 4;
 
+// One color per compare slot, shared across chips/charts/table so a symbol
+// reads as the same series everywhere on the page.
+export const COMPARISON_COLORS = ["#2FC685", "#4C9BF0", "#E0B341", "#C77DE0"];
+
 export interface ComparisonRow {
   symbol: string;
   assetType: string;

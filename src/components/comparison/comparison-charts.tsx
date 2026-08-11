@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { xAxisConfig } from "@/lib/portfolio";
 import { buildPriceSeries } from "@/lib/ticker";
-import type { ComparisonRow } from "@/lib/comparison";
+import { COMPARISON_COLORS, type ComparisonRow } from "@/lib/comparison";
 import type { ChartView } from "@/lib/supabase/types";
 
 // Token-only palette (accent scale + neutrals) — the prior blue/gold/purple
@@ -65,7 +65,7 @@ export function ComparisonCharts({ rows, timeframe }: { rows: ComparisonRow[]; t
   return (
     <div className="grid grid-cols-2 gap-4">
       {rows.map((row, i) => (
-        <MiniChart key={row.symbol} row={row} timeframe={timeframe} color={COLORS[i % COLORS.length]} />
+        <MiniChart key={row.symbol} row={row} timeframe={timeframe} color={COMPARISON_COLORS[i % COMPARISON_COLORS.length]} />
       ))}
     </div>
   );
