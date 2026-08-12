@@ -44,9 +44,9 @@ interface MarketCoin {
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-async function cg<T>(path: string): Promise<T | null> {
+async function cg<T>(baseUrl: string, path: string): Promise<T | null> {
   try {
-    const res = await fetch(`https://api.coingecko.com/api/v3${path}`, {
+    const res = await fetch(`${baseUrl}${path}`, {
       headers: { Accept: "application/json", "User-Agent": "cairn-ingest/1.0" },
     });
     if (!res.ok) return null;
@@ -141,7 +141,26 @@ Deno.serve(async (req) => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
 
+  // Base URL and enabled flag come from data_providers rather than being
+  // hardcoded, so this source can be disabled or repointed without a code
+  // deploy, same as every other ingestion function (see seed/providers.sql).
+  const { data: provider, error: providerError } = await supabase
+    .from("data_providers")
+    .select("endpoint, enabled")
+    .eq("provider_type", "market_data")
+    .contains("config", { adapter: "coingecko" })
+    .maybeSingle();
+
+  if (providerError) {
+    return Response.json({ error: providerError.message }, { status: 500, headers: corsHeaders });
+  }
+  if (!provider || !provider.enabled) {
+    return Response.json({ skipped: "CoinGecko provider missing or disabled in data_providers" }, { headers: corsHeaders });
+  }
+  const baseUrl = provider.endpoint;
+
   const coins = await cg<MarketCoin[]>(
+    baseUrl,
     `/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=${TOP_N}&page=1`,
   );
   if (!coins || !Array.isArray(coins)) {
@@ -198,6 +217,7 @@ Deno.serve(async (req) => {
     await sleep(REQUEST_DELAY_MS);
 
     const chart = await cg<{ prices: [number, number][] }>(
+      baseUrl,
       `/coins/${coin.id}/market_chart?vs_currency=usd&days=${HISTORY_DAYS}&interval=daily`,
     );
     if (!chart?.prices?.length) {

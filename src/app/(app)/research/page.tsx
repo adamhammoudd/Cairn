@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { listAnalyses } from "@/lib/actions/analysis";
 import { getEventsForScopes } from "@/lib/actions/calendar";
+import { getUserPlan } from "@/lib/actions/billing";
+import { TIER_LIMITS } from "@/lib/billing";
 import { RequestForm } from "@/components/analysis/request-form";
 import { MethodologyCard } from "@/components/analysis/methodology-card";
 
@@ -12,7 +14,8 @@ export default async function ResearchPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const analyses = await listAnalyses();
+  const [analyses, plan] = await Promise.all([listAnalyses(), getUserPlan()]);
+  const depth = TIER_LIMITS[plan].analysisDepth;
   const eventsByScope = await getEventsForScopes(
     Array.from(new Set(analyses.filter((a) => a.scope_type === "ticker").map((a) => a.scope_value))),
   );
@@ -28,7 +31,7 @@ export default async function ResearchPage() {
       ) : (
         <div className="flex flex-col gap-5">
           {analyses.map((a) => (
-            <MethodologyCard key={a.id} analysis={a} upcomingEvents={eventsByScope[a.scope_value] ?? []} />
+            <MethodologyCard key={a.id} analysis={a} depth={depth} upcomingEvents={eventsByScope[a.scope_value] ?? []} />
           ))}
         </div>
       )}

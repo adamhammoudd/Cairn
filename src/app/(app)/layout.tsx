@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { getTier } from "@/lib/actions/billing";
+import { getUserPlan } from "@/lib/actions/billing";
 import { AppShell } from "@/components/layout/app-shell";
 
 export default async function AppLayout({ children }: { children: ReactNode }) {
@@ -14,7 +14,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
 
   const [{ data: profile }, plan] = await Promise.all([
     supabase.from("profiles").select("display_name").eq("user_id", user.id).single(),
-    getTier(),
+    getUserPlan(),
   ]);
 
   const displayName = profile?.display_name || user.email || "Account";

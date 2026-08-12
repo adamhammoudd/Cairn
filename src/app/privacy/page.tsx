@@ -45,7 +45,11 @@ export default function PrivacyPage() {
         </section>
         <section>
           <h2 className="mb-2 font-serif text-lg text-primary">Third parties</h2>
-          <p>Supabase (database, auth, storage), Anthropic (Claude API), configured news/market data providers.</p>
+          <p>
+            Supabase (database, auth, storage) and configured news/market data providers. No
+            third-party AI provider: the analysis engine and assistant run on a model hosted on our
+            own infrastructure, so your chat messages are never sent to an external model service.
+          </p>
         </section>
         <section>
           <h2 className="mb-2 font-serif text-lg text-primary">Your data, your control</h2>

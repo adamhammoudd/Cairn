@@ -3,7 +3,8 @@ import { createClient } from "@/lib/supabase/server";
 import { runScreen } from "@/lib/actions/screener";
 import { EMPTY_FILTERS } from "@/lib/screener";
 import { DashboardHome, MODULE_KEYS, type ModuleKey } from "@/components/dashboard/dashboard-home";
-import { computeHoldingMetrics, computeTotals, latestCloseBySymbol } from "@/lib/portfolio";
+import { computeHoldingMetrics, computeTotals } from "@/lib/portfolio";
+import { getLatestCloses } from "@/lib/market-data/current-price";
 
 function fmtCurrency(n: number) {
   return n.toLocaleString(undefined, { style: "currency", currency: "USD" });
@@ -46,12 +47,7 @@ export default async function DashboardPage() {
 
   const holdings = holdingsRes.data ?? [];
   const symbols = Array.from(new Set(holdings.map((h) => h.symbol)));
-  const priceRows =
-    symbols.length > 0
-      ? (await supabase.from("historical_prices").select("*").in("symbol", symbols).order("ts", { ascending: true })).data ?? []
-      : [];
-
-  const closes = latestCloseBySymbol(priceRows);
+  const closes = await getLatestCloses(symbols);
   const metrics = computeHoldingMetrics(holdings, closes);
   const totals = computeTotals(metrics, closes);
 

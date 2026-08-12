@@ -4,10 +4,21 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { computeUsageSummary, startOfCurrentMonthIso, type UsageSummary } from "@/lib/billing";
+import {
+  computeUsageSummary,
+  computeChatUsageSummary,
+  startOfCurrentMonthIso,
+  startOfTodayIso,
+  type UsageSummary,
+  type ChatUsageSummary,
+} from "@/lib/billing";
 import type { SubscriptionTier } from "@/lib/supabase/types";
 
-export async function getTier(): Promise<SubscriptionTier> {
+// The one shared gate every premium/billing-gated feature routes through
+// (CLAUDE.md: "Every premium/billing feature must route through the shared
+// getUserPlan() gate"). Previously named getTier() with zero call sites —
+// renamed so it's actually the thing every gate below calls.
+export async function getUserPlan(): Promise<SubscriptionTier> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -35,6 +46,25 @@ export async function getBillingSummary(): Promise<UsageSummary> {
   ]);
 
   return computeUsageSummary(subscription?.tier ?? "free", count ?? 0);
+}
+
+export async function getChatUsageSummary(): Promise<ChatUsageSummary> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return computeChatUsageSummary("free", 0);
+
+  const [{ data: subscription }, { count }] = await Promise.all([
+    supabase.from("subscriptions").select("tier").eq("user_id", user.id).maybeSingle(),
+    supabase
+      .from("chat_usage_events")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .gte("created_at", startOfTodayIso()),
+  ]);
+
+  return computeChatUsageSummary(subscription?.tier ?? "free", count ?? 0);
 }
 
 // Self-serve, no payment — this build has no real billing processor yet
@@ -94,4 +124,40 @@ export async function checkAiUsageAllowed(userId: string): Promise<UsageGate> {
 export async function recordAiUsage(userId: string): Promise<void> {
   const admin = createAdminClient();
   await admin.from("ai_usage_events").insert({ user_id: userId });
+}
+
+// Checked by app/api/chat/route.ts before calling the model — same
+// before-not-after discipline as checkAiUsageAllowed above. Daily rather
+// than monthly (chat is a much higher-frequency surface than requesting a
+// full analysis), and Premium's null limit means "never denied."
+export async function checkChatUsageAllowed(userId: string): Promise<UsageGate> {
+  const supabase = await createClient();
+
+  const [{ data: subscription }, { count }] = await Promise.all([
+    supabase.from("subscriptions").select("tier").eq("user_id", userId).maybeSingle(),
+    supabase
+      .from("chat_usage_events")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", userId)
+      .gte("created_at", startOfTodayIso()),
+  ]);
+
+  const summary = computeChatUsageSummary(subscription?.tier ?? "free", count ?? 0);
+  if (summary.limit !== null && (summary.remaining ?? 0) <= 0) {
+    return {
+      allowed: false,
+      message: `You've used all ${summary.limit} chat messages included in your ${summary.tier} plan today. Switch plans on the Billing page or try again tomorrow.`,
+    };
+  }
+  return { allowed: true };
+}
+
+// A response is recorded as usage whenever the user actually received one —
+// including a scope-guard rewrite, since a model call was made and an answer
+// was shown either way. Only a genuine failure upstream (no response at all)
+// should skip this, matching checkAiUsageAllowed's "never costs a slot on
+// failure" philosophy adapted to chat's every-turn cadence.
+export async function recordChatUsage(userId: string): Promise<void> {
+  const admin = createAdminClient();
+  await admin.from("chat_usage_events").insert({ user_id: userId });
 }

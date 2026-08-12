@@ -265,16 +265,20 @@ export interface Database {
         Row: {
           id: string;
           raw_output: string;
+          corrected_output: string | null;
           flagged: boolean;
           flag_reason: string | null;
           linked_analysis_id: string | null;
+          source_surface: "analysis" | "chat";
           created_at: string;
         };
         Insert: {
           raw_output: string;
+          corrected_output?: string | null;
           flagged: boolean;
           flag_reason?: string | null;
           linked_analysis_id?: string | null;
+          source_surface?: "analysis" | "chat";
         };
         Update: never;
         Relationships: [];
@@ -513,6 +517,12 @@ export interface Database {
         Relationships: [];
       };
       ai_usage_events: {
+        Row: { id: string; user_id: string; created_at: string };
+        Insert: { user_id: string };
+        Update: never;
+        Relationships: [];
+      };
+      chat_usage_events: {
         Row: { id: string; user_id: string; created_at: string };
         Insert: { user_id: string };
         Update: never;

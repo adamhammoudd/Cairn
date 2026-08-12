@@ -48,7 +48,16 @@ export interface AnalysisWithMethodology {
   model_version: string;
   created_at: string;
   sources: { id: string; title: string; source_name: string; url: string | null; published_at: string }[];
-  analogs: { id: string; symbol: string | null; sector: string | null; event_type: string; event_date: string; description: string | null }[];
+  analogs: {
+    id: string;
+    symbol: string | null;
+    sector: string | null;
+    event_type: string;
+    event_date: string;
+    description: string | null;
+    similarity_score: number;
+    note: string | null;
+  }[];
 }
 
 type BareAnalysis = Omit<AnalysisWithMethodology, "sources" | "analogs">;
@@ -66,7 +75,10 @@ async function attachMethodology(
 
   const [{ data: sourceLinks }, { data: analogLinks }] = await Promise.all([
     supabase.from("ai_analysis_sources").select("analysis_id, news_item_id").in("analysis_id", ids),
-    supabase.from("ai_analysis_historical_analogs").select("analysis_id, historical_event_id").in("analysis_id", ids),
+    supabase
+      .from("ai_analysis_historical_analogs")
+      .select("analysis_id, historical_event_id, similarity_score, note")
+      .in("analysis_id", ids),
   ]);
 
   const newsIds = Array.from(new Set((sourceLinks ?? []).map((s) => s.news_item_id)));
@@ -95,7 +107,11 @@ async function attachMethodology(
       .filter((n): n is NonNullable<typeof n> => !!n),
     analogs: (analogLinks ?? [])
       .filter((l) => l.analysis_id === a.id)
-      .map((l) => eventById.get(l.historical_event_id))
+      .map((l) => {
+        const event = eventById.get(l.historical_event_id);
+        if (!event) return null;
+        return { ...event, similarity_score: l.similarity_score, note: l.note };
+      })
       .filter((e): e is NonNullable<typeof e> => !!e),
   }));
 }

@@ -81,3 +81,92 @@ export function checkCompleteness(a: AnalysisCompleteness): ScopeGuardResult {
   }
   return { passed: true, reason: null };
 }
+
+// ---------------------------------------------------------------------------
+// Chat-specific gate: unlike generate.ts, chat produces free text rather than
+// a structured probability field, so "does not freelance new probability
+// claims outside the validated pipeline" (Phase 5 spec) needs its own check.
+// Deliberately narrow to probability-flavored language ("62% chance/
+// likelihood/odds") rather than any bare "%" so it doesn't flag routine
+// factual restatements of news ("shares fell 4% today") as a violation.
+// ---------------------------------------------------------------------------
+
+export interface ProbabilityRangeContext {
+  probability_low: number;
+  probability_high: number;
+}
+
+const PROBABILITY_CLAIM =
+  /(\d{1,3}(?:\.\d+)?)\s*%\s*(?:chance|likelihood|probability|likely|odds)\b|\b(?:chance|likelihood|probability|odds)(?:\s+\S+){0,4}?\s+(\d{1,3}(?:\.\d+)?)\s*%/gi;
+
+// Small tolerance for the model restating a stored range's midpoint or
+// rounding slightly, without opening the door to an unrelated invented figure.
+const RANGE_TOLERANCE = 1;
+
+export function checkNoFreelancedProbability(
+  text: string,
+  contextAnalyses: ProbabilityRangeContext[],
+): ScopeGuardResult {
+  for (const match of text.matchAll(PROBABILITY_CLAIM)) {
+    const raw = match[1] ?? match[2];
+    if (!raw) continue;
+    const value = Number(raw);
+    const grounded = contextAnalyses.some(
+      (a) => value >= a.probability_low - RANGE_TOLERANCE && value <= a.probability_high + RANGE_TOLERANCE,
+    );
+    if (!grounded) {
+      return { passed: false, reason: "freelanced_probability_claim" };
+    }
+  }
+  return { passed: true, reason: null };
+}
+
+// ---------------------------------------------------------------------------
+// Deterministic rewrite for a flagged chat response. Never a second model
+// call — built only from already-validated ai_analyses fields (which passed
+// this same guard at generation time in generate.ts) plus fixed boilerplate,
+// so it cannot itself contain a fresh, unvalidated claim. The boilerplate is
+// hand-checked against every rule above, and re-verified at runtime as a
+// defense-in-depth measure — this function must never return text that would
+// itself fail checkScopeGuard.
+// ---------------------------------------------------------------------------
+
+export interface AnalysisForRewrite {
+  scope_type: string;
+  scope_value: string;
+  probability_low: number;
+  probability_high: number;
+  confidence_level: string;
+  reasoning_text: string;
+}
+
+const REWRITE_INTRO =
+  "This assistant describes markets, sectors, and tickers at a general level only — it does not give personal buy, sell, or hold guidance for an individual reader.";
+const REWRITE_FALLBACK_NO_CONTEXT =
+  `${REWRITE_INTRO} There's no stored analysis on record yet for what was asked — a fresh one can be requested from the Research page.`;
+const REWRITE_ULTRA_SAFE_FALLBACK =
+  "This assistant only describes markets, sectors, and tickers in general terms and cannot respond to that request. Please rephrase, or visit the Research page for stored analyses.";
+
+export function rewriteForScopeGuard(contextAnalyses: AnalysisForRewrite[]): string {
+  let text: string;
+  if (contextAnalyses.length === 0) {
+    text = REWRITE_FALLBACK_NO_CONTEXT;
+  } else {
+    const lines = contextAnalyses.map(
+      (a) =>
+        `- ${a.scope_type} · ${a.scope_value}: ${a.probability_low}-${a.probability_high}% (${a.confidence_level} confidence) — ${a.reasoning_text}`,
+    );
+    text = `${REWRITE_INTRO} Here's what's already on record at the market/sector/ticker level:\n\n${lines.join("\n")}`;
+  }
+
+  // Defense in depth: the rewrite itself must pass the same gate it exists to
+  // enforce. If it somehow doesn't (e.g. a future edit to REWRITE_INTRO
+  // reintroduces a flagged phrase), fall back to a string with zero
+  // interpolated content instead of ever risking output that failed its own
+  // check.
+  const selfCheck = checkScopeGuard(text);
+  if (!selfCheck.passed || checkNoFreelancedProbability(text, contextAnalyses).reason) {
+    return REWRITE_ULTRA_SAFE_FALLBACK;
+  }
+  return text;
+}

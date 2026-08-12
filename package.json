@@ -6,10 +6,14 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:scope-guard": "tsx scripts/tests/adversarial-scope-guard.ts",
+    "test:probability": "tsx scripts/tests/probability-math.ts",
+    "test:methodology": "tsx scripts/tests/methodology-substance.ts",
+    "test:citations": "tsx scripts/tests/citation-freshness.ts",
+    "test:ai-suite": "tsx scripts/tests/run-all.ts"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.116.0",
     "@supabase/ssr": "^0.12.4",
     "@supabase/supabase-js": "^2.112.2",
     "clsx": "^2.1.1",
@@ -24,9 +28,11 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "dotenv": "^17.4.2",
     "eslint": "^9",
     "eslint-config-next": "16.3.0",
     "tailwindcss": "^4",
+    "tsx": "^4.23.12",
     "typescript": "^5"
   }
 }

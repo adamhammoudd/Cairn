@@ -10,9 +10,10 @@ import { Disclosure } from "@/components/compliance/disclosure";
 interface BriefingCardProps {
   briefing: BriefingContent | null;
   analyses: AnalysisWithMethodology[];
+  analysisDepth: "top_line" | "full";
 }
 
-export function BriefingCard({ briefing, analyses }: BriefingCardProps) {
+export function BriefingCard({ briefing, analyses, analysisDepth }: BriefingCardProps) {
   const [pending, startTransition] = useTransition();
 
   return (
@@ -55,7 +56,7 @@ export function BriefingCard({ briefing, analyses }: BriefingCardProps) {
       </div>
 
       {analyses.map((a) => (
-        <MethodologyCard key={a.id} analysis={a} compact />
+        <MethodologyCard key={a.id} analysis={a} dense depth={analysisDepth} />
       ))}
     </div>
   );

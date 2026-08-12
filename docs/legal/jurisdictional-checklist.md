@@ -49,15 +49,23 @@ hold up, not because we believe they don't.
 - [ ] **UK FCA — financial promotion rules.** Confirm whether any output could be construed as a
       "financial promotion" requiring FCA-authorized approval, given the UK's broader definition
       relative to the US.
-- [ ] **Data residency / cross-border transfer.** Supabase and Anthropic API infrastructure —
-      confirm where data is processed/stored and whether Standard Contractual Clauses or an
-      adequacy decision covers the transfer for EU/UK users.
+- [ ] **Data residency / cross-border transfer.** Supabase infrastructure and the VPS hosting the
+      self-hosted model — confirm where data is processed/stored and whether Standard Contractual
+      Clauses or an adequacy decision covers the transfer for EU/UK users. Note the model host is
+      now a location we choose, which may make residency easier to satisfy than a vendor API would.
 
 ## Cross-cutting
 
-- [ ] **Anthropic API terms as a subprocessor.** Confirm Anthropic's data-retention and
-      training-use terms for API traffic are compatible with the Privacy Policy's representations,
-      and re-confirm whenever the underlying model changes.
+- [ ] **Self-hosted model — liability now sits entirely with us.** There is no third-party AI
+      subprocessor anymore (see `docs/self-hosted-model.md`). Confirm the consequences: we are
+      solely responsible for the model's outputs, for the licence terms of the open-weight model
+      actually deployed (Qwen/Llama/Mistral licences differ, and some carry acceptable-use or
+      redistribution conditions), and for securing the inference endpoint. **Confirm the deployed
+      model's licence permits commercial use in our jurisdictions.**
+- [ ] **Deterministic probability computation.** Probability ranges/confidence are now computed in
+      code (Wilson score interval), not model-generated. Confirm whether describing outputs as
+      statistically derived and reproducible changes how they should be characterized — it may
+      strengthen the "analytical output, not advice" position, but should not be overclaimed.
 - [ ] **Audit trail sufficiency.** `ai_scope_guard_log` retains every flagged/rejected generation
       (Phase 4). Confirm retention period and whether this log itself is discoverable/subject to
       regulatory request, and whether that changes what should be logged.

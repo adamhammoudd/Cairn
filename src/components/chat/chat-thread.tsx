@@ -3,8 +3,12 @@
 import { useEffect, useRef, useState } from "react";
 import { createChatSession, listChatSessions, listChatMessages, type ChatSession } from "@/lib/actions/chat";
 import { getAnalysesByIds, type AnalysisWithMethodology } from "@/lib/actions/analysis";
+import { getUserPlan } from "@/lib/actions/billing";
+import { TIER_LIMITS } from "@/lib/billing";
 import { MethodologyCard } from "@/components/analysis/methodology-card";
 import { Disclosure } from "@/components/compliance/disclosure";
+
+const MESSAGES_PAGE_SIZE = 30;
 
 interface Message {
   role: "user" | "assistant";
@@ -36,13 +40,14 @@ export function ChatThread({ compact = false }: { compact?: boolean }) {
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const [depth, setDepth] = useState<"top_line" | "full">("full");
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingOlder, setLoadingOlder] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  async function loadSession(id: string) {
-    setSessionId(id);
-    setHistoryOpen(false);
-    const history = await listChatMessages(id);
-    const withAnalyses = await Promise.all(
+  async function withAnalyses(history: Awaited<ReturnType<typeof listChatMessages>>): Promise<Message[]> {
+    return Promise.all(
       history.map(async (m) => ({
         role: m.role,
         content: m.content,
@@ -50,7 +55,30 @@ export function ChatThread({ compact = false }: { compact?: boolean }) {
           m.referenced_analysis_ids.length > 0 ? await getAnalysesByIds(m.referenced_analysis_ids) : undefined,
       })),
     );
-    setMessages(withAnalyses);
+  }
+
+  async function loadSession(id: string) {
+    setSessionId(id);
+    setHistoryOpen(false);
+    const history = await listChatMessages(id, 0);
+    setMessages(await withAnalyses(history));
+    setPage(0);
+    setHasMore(history.length === MESSAGES_PAGE_SIZE);
+  }
+
+  async function loadOlderMessages() {
+    if (!sessionId || loadingOlder) return;
+    setLoadingOlder(true);
+    try {
+      const nextPage = page + 1;
+      const older = await listChatMessages(sessionId, nextPage);
+      const olderWithAnalyses = await withAnalyses(older);
+      setMessages((prev) => [...olderWithAnalyses, ...prev]);
+      setPage(nextPage);
+      setHasMore(older.length === MESSAGES_PAGE_SIZE);
+    } finally {
+      setLoadingOlder(false);
+    }
   }
 
   async function startNewChat() {
@@ -63,7 +91,8 @@ export function ChatThread({ compact = false }: { compact?: boolean }) {
 
   useEffect(() => {
     (async () => {
-      const list = await listChatSessions();
+      const [list, plan] = await Promise.all([listChatSessions(), getUserPlan()]);
+      setDepth(TIER_LIMITS[plan].analysisDepth);
       setSessions(list);
       if (list.length > 0) {
         await loadSession(list[0].id);
@@ -94,6 +123,16 @@ export function ChatThread({ compact = false }: { compact?: boolean }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ sessionId, message: text }),
       });
+
+      if (!res.ok) {
+        const errorText = (await res.text()) || "Something went wrong. Try again.";
+        setMessages((prev) => {
+          const next = [...prev];
+          next[next.length - 1] = { role: "assistant", content: errorText };
+          return next;
+        });
+        return;
+      }
 
       if (!res.body) throw new Error("No response stream.");
       const reader = res.body.getReader();
@@ -198,6 +237,16 @@ export function ChatThread({ compact = false }: { compact?: boolean }) {
           </p>
         ) : (
           <div className="flex flex-col gap-3.5">
+            {hasMore && (
+              <button
+                type="button"
+                onClick={loadOlderMessages}
+                disabled={loadingOlder}
+                className="mx-auto rounded-lg px-3 py-1.5 text-[12px] text-muted transition-colors duration-fast ease-standard hover:bg-active hover:text-primary disabled:opacity-50"
+              >
+                {loadingOlder ? "Loading…" : "Load earlier messages"}
+              </button>
+            )}
             {messages.map((m, i) => (
               <div key={i} className={`flex flex-col gap-2 ${m.role === "user" ? "items-end" : "items-start"}`}>
                 <div
@@ -207,10 +256,19 @@ export function ChatThread({ compact = false }: { compact?: boolean }) {
                 >
                   {m.content || (streaming && i === messages.length - 1 ? "…" : "")}
                 </div>
+                {/* Every assistant response gets its own attached disclosure, not
+                    just ones that happen to cite a MethodologyCard (which already
+                    embeds one) — the panel-level Disclosure below the composer
+                    isn't enough on its own for a plain-text reply. */}
+                {m.role === "assistant" && m.content && (!m.analyses || m.analyses.length === 0) && (
+                  <div className="w-[92%]">
+                    <Disclosure />
+                  </div>
+                )}
                 {m.analyses && m.analyses.length > 0 && (
                   <div className="flex w-[92%] flex-col gap-2">
                     {m.analyses.map((a) => (
-                      <MethodologyCard key={a.id} analysis={a} compact />
+                      <MethodologyCard key={a.id} analysis={a} dense depth={depth} />
                     ))}
                   </div>
                 )}

@@ -19,9 +19,10 @@ interface TickerWorkspaceProps {
   data: TickerData;
   analyses: AnalysisWithMethodology[];
   discussion: DiscussionComment[];
+  analysisDepth: "top_line" | "full";
 }
 
-export function TickerWorkspace({ data, analyses, discussion }: TickerWorkspaceProps) {
+export function TickerWorkspace({ data, analyses, discussion, analysisDepth }: TickerWorkspaceProps) {
   const isCrypto = data.assetType === "crypto";
   const tabs = isCrypto ? CRYPTO_TABS : EQUITY_TABS;
   const [tab, setTab] = useState<(typeof tabs)[number]>("Chart");
@@ -63,6 +64,9 @@ export function TickerWorkspace({ data, analyses, discussion }: TickerWorkspaceP
             </div>
             <div className={`text-[13px] ${data.changePct === null ? "text-muted" : positive ? "text-accent" : "text-negative"}`}>
               {data.changePct === null ? "—" : `${positive ? "+" : ""}${data.changePct.toFixed(2)}%`}
+            </div>
+            <div className="mt-0.5 text-[10.5px] text-dim">
+              {data.priceSource === "live" ? "Live" : "Last close (delayed)"}
             </div>
           </div>
           <AddHoldingButton symbol={data.symbol} assetType={data.assetType} />
@@ -195,7 +199,7 @@ export function TickerWorkspace({ data, analyses, discussion }: TickerWorkspaceP
               No analyses for {data.symbol} yet. Request one above.
             </div>
           ) : (
-            analyses.map((a) => <MethodologyCard key={a.id} analysis={a} />)
+            analyses.map((a) => <MethodologyCard key={a.id} analysis={a} depth={analysisDepth} />)
           )}
         </div>
       )}

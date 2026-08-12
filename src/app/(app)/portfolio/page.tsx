@@ -5,8 +5,8 @@ import {
   computeHoldingMetrics,
   computeTimelineSeries,
   computeTotals,
-  latestCloseBySymbol,
 } from "@/lib/portfolio";
+import { getLatestCloses } from "@/lib/market-data/current-price";
 import type { ChartView } from "@/lib/supabase/types";
 import { StatCard } from "@/components/portfolio/stat-card";
 import { PortfolioChart } from "@/components/portfolio/portfolio-chart";
@@ -44,7 +44,7 @@ export default async function PortfolioPage() {
       : { data: [] };
 
   const priceRows = prices ?? [];
-  const closes = latestCloseBySymbol(priceRows);
+  const closes = await getLatestCloses(symbols);
   const metrics = computeHoldingMetrics(rows, closes);
   const totals = computeTotals(metrics, closes);
 

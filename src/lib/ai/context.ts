@@ -1,4 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/lib/supabase/types";
 
 // Same tracked list as supabase/functions/_shared/tagging.ts (kept in sync
 // manually — one runs in Deno, the other in Node, no shared module between them).
@@ -29,8 +31,13 @@ export interface ChatContext {
 
 // Relevance ranking only — never used to shape what's said, only which stored
 // analyses are worth surfacing. Shared by chat context and the daily briefing.
-export async function getUserSymbols(userId: string): Promise<string[]> {
-  const supabase = await createClient();
+//
+// `client` is optional and only meant for contexts with no Next.js request
+// scope to grab the request-scoped client from (the Section 7 test suite,
+// which calls runChatTurn directly) — every real request path leaves it
+// unset and gets the normal request-scoped client.
+export async function getUserSymbols(userId: string, client?: SupabaseClient<Database>): Promise<string[]> {
+  const supabase = client ?? (await createClient());
 
   const [{ data: holdings }, { data: watchlistItems }] = await Promise.all([
     supabase.from("holdings").select("symbol").eq("user_id", userId),
@@ -48,11 +55,15 @@ export async function getUserSymbols(userId: string): Promise<string[]> {
   return Array.from(new Set([...(holdings ?? []).map((h) => h.symbol), ...(watchlistItems ?? []).map((w) => w.symbol)]));
 }
 
-export async function buildChatContext(userMessage: string, userId: string): Promise<ChatContext> {
-  const supabase = await createClient();
+export async function buildChatContext(
+  userMessage: string,
+  userId: string,
+  client?: SupabaseClient<Database>,
+): Promise<ChatContext> {
+  const supabase = client ?? (await createClient());
 
   const mentioned = detectTickers(userMessage);
-  const portfolioSymbols = await getUserSymbols(userId);
+  const portfolioSymbols = await getUserSymbols(userId, client);
 
   // explicit mention in the message wins; otherwise fall back to portfolio symbols for relevance
   const relevantSymbols = mentioned.length > 0 ? mentioned : portfolioSymbols;

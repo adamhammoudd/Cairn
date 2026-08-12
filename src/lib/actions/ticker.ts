@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentPrice } from "@/lib/market-data/current-price";
 import type { AssetType } from "@/lib/supabase/types";
 
 export interface TickerData {
@@ -10,6 +11,7 @@ export interface TickerData {
   price: number | null;
   changePct: number | null;
   volume: number | null;
+  priceSource: "live" | "last_close";
   fundamentals: { shares_outstanding: number | null; eps_ttm: number | null; dividends_ttm: number | null } | null;
   cryptoMetrics: {
     name: string;
@@ -41,11 +43,9 @@ export async function getTickerDetail(symbolRaw: string): Promise<TickerData | n
   if (!bars || bars.length === 0) return null;
 
   const latest = bars[bars.length - 1];
-  const prev = bars.length > 1 ? bars[bars.length - 2].close : null;
-  const changePct =
-    latest.close !== null && prev !== null && prev !== 0 ? ((latest.close - prev) / prev) * 100 : null;
 
-  const [{ data: fundamentals }, { data: cryptoMetrics }, { data: news }, { data: esg }] = await Promise.all([
+  const [currentPrice, { data: fundamentals }, { data: cryptoMetrics }, { data: news }, { data: esg }] = await Promise.all([
+    getCurrentPrice(symbol),
     supabase
       .from("fundamentals")
       .select("shares_outstanding, eps_ttm, dividends_ttm")
@@ -77,9 +77,10 @@ export async function getTickerDetail(symbolRaw: string): Promise<TickerData | n
     symbol,
     assetType: latest.asset_type,
     bars: bars.map((b) => ({ ts: b.ts, close: b.close })),
-    price: latest.close,
-    changePct,
-    volume: latest.volume,
+    price: currentPrice.price ?? latest.close,
+    changePct: currentPrice.changePct,
+    volume: currentPrice.volume ?? latest.volume,
+    priceSource: currentPrice.source,
     fundamentals: fundamentals ?? null,
     cryptoMetrics: cryptoMetrics ?? null,
     news: news ?? [],

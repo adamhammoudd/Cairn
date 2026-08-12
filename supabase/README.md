@@ -11,6 +11,13 @@ Run against your project's SQL editor (or `psql`), in order:
 3. `migrations/0002_schedule_ingestion.sql` — pg_cron schedule for the two
    ingestion Edge Functions (edit the `<project-ref>` placeholder and set
    `app.settings.service_role_key` first, see comment in the file)
+4. Remaining numbered migrations in order, including `0013_scope_guard_hardening.sql`
+   (adds `ai_scope_guard_log.corrected_output`/`source_surface`, needed by the
+   restructured chat scope-guard in `lib/ai/chat-generate.ts`) and
+   `0014_chat_usage_gate.sql` (adds `chat_usage_events`, needed by the chat
+   daily-message cap in `lib/actions/billing.ts`). Re-run `seed/providers.sql`
+   too — it now also seeds the CoinGecko provider row `ingest-crypto` reads
+   from instead of a hardcoded URL.
 
 ## 2. Edge Functions
 
