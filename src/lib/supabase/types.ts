@@ -270,6 +270,7 @@ export interface Database {
           flag_reason: string | null;
           linked_analysis_id: string | null;
           source_surface: "analysis" | "chat";
+          is_test: boolean;
           created_at: string;
         };
         Insert: {
@@ -279,6 +280,7 @@ export interface Database {
           flag_reason?: string | null;
           linked_analysis_id?: string | null;
           source_surface?: "analysis" | "chat";
+          is_test?: boolean;
         };
         Update: never;
         Relationships: [];
