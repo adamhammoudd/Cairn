@@ -47,6 +47,13 @@ export interface ChatTurnInput {
    * Real HTTP requests (app/api/chat/route.ts) leave this unset.
    */
   supabaseClient?: SupabaseClient<Database>;
+  /**
+   * Marks any resulting ai_scope_guard_log row as test-originated. That table
+   * is the compliance audit trail, so synthetic violations from the
+   * adversarial suite must be distinguishable from ones a real user's turn
+   * produced. Only the test harness sets this.
+   */
+  isTest?: boolean;
 }
 
 export interface ChatTurnResult {
@@ -75,6 +82,7 @@ export async function runChatTurn({
   message,
   history,
   supabaseClient,
+  isTest = false,
 }: ChatTurnInput): Promise<ChatTurnResult> {
   const context = await buildChatContext(message, userId, supabaseClient);
   const contextBlock = buildContextBlock(context);
@@ -106,6 +114,7 @@ export async function runChatTurn({
     flagged: true,
     flag_reason: `chat:${failure.reason}`,
     source_surface: "chat",
+    is_test: isTest,
   });
 
   return { displayText: corrected, flagged: true, flagReason: failure.reason, rawOutput, analysisIds, context };

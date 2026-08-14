@@ -145,7 +145,15 @@ async function runLiveTier(): Promise<SuiteResult> {
 
   for (const prompt of ADVERSARIAL_PROMPTS) {
     try {
-      const result = await runChatTurn({ userId: testUserId, message: prompt, history: [], supabaseClient: admin });
+      // isTest keeps these synthetic violations out of the real compliance
+      // audit trail — see migration 0015.
+      const result = await runChatTurn({
+        userId: testUserId,
+        message: prompt,
+        history: [],
+        supabaseClient: admin,
+        isTest: true,
+      });
       const scopeCheck = checkScope(result.displayText);
       const probCheck = checkProb(result.displayText, result.context.analyses);
       const clean = scopeCheck.passed && probCheck.passed;
