@@ -1,30 +1,70 @@
+import Link from "next/link";
+import type { ReactNode } from "react";
+
 interface DashboardSummaryCardProps {
   title: string;
-  subtitle: string;
+  href: string;
+  ctaLabel: string;
+  tint?: "accent" | "info" | "violet" | "warning";
   value: string;
+  valueTone?: "primary" | "positive" | "negative";
   detail: string;
-  tone?: "primary" | "positive" | "negative" | "info";
+  delay?: number;
+  wide?: boolean;
+  children?: ReactNode;
 }
 
-const TONE_CLASSES: Record<NonNullable<DashboardSummaryCardProps["tone"]>, string> = {
+const TINT_CLASSES: Record<NonNullable<DashboardSummaryCardProps["tint"]>, string> = {
+  accent: "bg-accent",
+  info: "bg-info",
+  violet: "bg-violet",
+  warning: "bg-warning",
+};
+
+const VALUE_TONE_CLASSES: Record<NonNullable<DashboardSummaryCardProps["valueTone"]>, string> = {
   primary: "text-primary",
   positive: "text-accent",
   negative: "text-negative",
-  info: "text-info",
 };
 
-export function DashboardSummaryCard({ title, subtitle, value, detail, tone = "primary" }: DashboardSummaryCardProps) {
+export function DashboardSummaryCard({
+  title,
+  href,
+  ctaLabel,
+  tint = "accent",
+  value,
+  valueTone = "primary",
+  detail,
+  delay = 0,
+  wide = false,
+  children,
+}: DashboardSummaryCardProps) {
   return (
-    <div className="rounded-card border border-line bg-panel p-5 transition-colors duration-fast ease-standard hover:border-accent/40 hover:bg-active">
-      <div className="mb-3 flex items-center justify-between gap-3">
-        <div>
-          <div className="text-[12px] tracking-[0.12em] text-muted uppercase">{title}</div>
-          <div className="mt-1 text-sm text-muted">{subtitle}</div>
+    <div
+      className={`animate-rise-in group relative rounded-card border border-line bg-panel p-4.5 transition-[border-color,transform,box-shadow] duration-base ease-standard hover:-translate-y-0.5 hover:border-[#3A3A3A] hover:shadow-[0_12px_30px_rgba(0,0,0,0.45)] ${
+        wide ? "sm:col-span-2" : ""
+      }`}
+      style={{ animationDelay: `${delay}ms` }}
+    >
+      <div className="mb-3.5 flex items-center justify-between gap-2.5">
+        <div className="flex items-center gap-2.5">
+          <span className={`h-3.5 w-1.25 rounded-sm ${TINT_CLASSES[tint]}`} />
+          <span className="font-mono text-[10.5px] tracking-[0.14em] text-muted uppercase">{title}</span>
         </div>
-        <div className={`rounded-full px-2 py-1 text-[11px] font-semibold ${TONE_CLASSES[tone]} bg-white/5`}>{tone}</div>
+        <Link
+          href={href}
+          className="text-[11.5px] text-dim transition-colors duration-fast ease-standard hover:text-accent"
+        >
+          {ctaLabel} →
+        </Link>
       </div>
-      <div className={`font-serif text-3xl ${TONE_CLASSES[tone]}`}>{value}</div>
-      <div className="mt-3 text-[13px] text-muted">{detail}</div>
+
+      {children ?? (
+        <>
+          <div className={`font-serif text-[26px] leading-none ${VALUE_TONE_CLASSES[valueTone]}`}>{value}</div>
+          <div className="mt-2.5 text-[12px] text-muted">{detail}</div>
+        </>
+      )}
     </div>
   );
 }
