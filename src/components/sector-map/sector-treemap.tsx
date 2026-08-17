@@ -1,64 +1,97 @@
 "use client";
 
-import { ResponsiveContainer, Treemap } from "recharts";
-import { colorForChange } from "@/lib/sector-map";
+import Link from "next/link";
+import { colorForChange, labelToneForChange, weightedAvgChange } from "@/lib/sector-map";
 import type { SectorMapNode } from "@/lib/sector-map";
 
-interface CellProps {
-  x?: number;
-  y?: number;
-  width?: number;
-  height?: number;
-  name?: string;
-  changePct?: number | null;
-  depth?: number;
-}
+// Cap tiles per sector so labels stay legible; the rest roll into a remainder
+// tile rather than becoming unreadable slivers.
+const MAX_TILES = 6;
 
-function Cell({ x = 0, y = 0, width = 0, height = 0, name, changePct = null, depth }: CellProps) {
-  // depth 1 = sector group rect (no fill, just a label strip); depth 2 = a symbol leaf.
-  if (depth === 1) {
-    return (
-      <g>
-        <rect x={x} y={y} width={width} height={height} fill="none" stroke="#2A2A2A" strokeWidth={1} />
-        {width > 60 && height > 18 && (
-          <text x={x + 6} y={y + 14} fontSize={11} fill="#8A8A8A" className="uppercase">
-            {name}
-          </text>
-        )}
-      </g>
-    );
-  }
-
-  const showLabel = width > 40 && height > 28;
-  return (
-    <g>
-      <rect x={x} y={y} width={width} height={height} fill={colorForChange(changePct ?? null)} stroke="#0F0F0F" strokeWidth={1.5} />
-      {showLabel && (
-        <>
-          <text x={x + width / 2} y={y + height / 2 - 4} textAnchor="middle" fontSize={12} fill="var(--color-primary)">
-            {name}
-          </text>
-          <text x={x + width / 2} y={y + height / 2 + 12} textAnchor="middle" fontSize={11} fill="var(--color-muted)">
-            {changePct === null ? "—" : `${changePct >= 0 ? "+" : ""}${changePct.toFixed(2)}%`}
-          </text>
-        </>
-      )}
-    </g>
-  );
+function fmtPct(pct: number | null) {
+  if (pct === null) return "—";
+  return `${pct >= 0 ? "+" : ""}${pct.toFixed(2)}%`;
 }
 
 export function SectorTreemap({ data }: { data: SectorMapNode[] }) {
   return (
-    <div className="rounded-card border border-line bg-panel p-4">
-      <ResponsiveContainer width="100%" height={520}>
-        <Treemap
-          data={data as unknown as Record<string, unknown>[]}
-          dataKey="size"
-          stroke="#0F0F0F"
-          content={<Cell />}
-          isAnimationActive={false}
+    <div className="flex flex-col gap-3.5">
+      <div className="flex items-center gap-2.5 self-end">
+        <span className="font-mono text-[10px] tracking-[0.12em] text-dim uppercase">−5%</span>
+        <div
+          className="h-2 w-32.5 rounded-full"
+          style={{
+            background:
+              "linear-gradient(90deg, rgba(217,108,108,1), rgba(217,108,108,0.15), rgba(47,198,133,0.15), rgba(47,198,133,1))",
+          }}
         />
-      </ResponsiveContainer>
+        <span className="font-mono text-[10px] tracking-[0.12em] text-dim uppercase">+5%</span>
+      </div>
+
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-3">
+        {data.map((sector, index) => {
+          const sorted = [...sector.children].sort((a, b) => b.size - a.size);
+          const tiles = sorted.slice(0, MAX_TILES);
+          const total = tiles.reduce((sum, t) => sum + t.size, 0) || 1;
+          const avg = weightedAvgChange(sector.children);
+
+          return (
+            <div
+              key={sector.name}
+              className="animate-rise-in rounded-xl border border-line bg-panel p-3.75"
+              style={{ animationDelay: `${index * 50}ms` }}
+            >
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <span className="font-mono text-[10px] tracking-[0.14em] text-muted uppercase">{sector.name}</span>
+                <span
+                  className={`text-[12.5px] tabular-nums ${
+                    avg === null ? "text-muted" : avg >= 0 ? "text-accent" : "text-negative"
+                  }`}
+                >
+                  {fmtPct(avg)}
+                </span>
+              </div>
+
+              <div className="flex h-32.5 gap-1">
+                {tiles.map((tile) => {
+                  const tone = labelToneForChange(tile.changePct);
+                  return (
+                    <Link
+                      key={tile.name}
+                      href={`/ticker/${tile.name}`}
+                      // Floor each tile at 8% of the row so a mega-cap next to a
+                      // small-cap doesn't reduce the latter to an invisible sliver.
+                      style={{
+                        flexGrow: Math.max(tile.size, total * 0.08),
+                        flexBasis: 0,
+                        background: colorForChange(tile.changePct),
+                      }}
+                      className="flex min-w-0 flex-col justify-end gap-0.75 overflow-hidden rounded-lg p-2.25 transition-[transform,box-shadow] duration-base ease-standard hover:-translate-y-0.5 hover:shadow-[0_10px_22px_rgba(0,0,0,0.45)]"
+                    >
+                      <span
+                        className={`truncate text-[12px] font-semibold ${tone === "dark" ? "text-canvas" : "text-primary"}`}
+                      >
+                        {tile.name}
+                      </span>
+                      <span
+                        className={`truncate font-mono text-[10px] tabular-nums ${
+                          tone === "dark" ? "text-canvas/75" : "text-muted"
+                        }`}
+                      >
+                        {fmtPct(tile.changePct)}
+                      </span>
+                    </Link>
+                  );
+                })}
+              </div>
+
+              {sorted.length > MAX_TILES && (
+                <div className="mt-2 text-[11px] text-dim">+{sorted.length - MAX_TILES} smaller holdings</div>
+              )}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

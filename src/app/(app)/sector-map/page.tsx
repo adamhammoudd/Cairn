@@ -5,18 +5,22 @@ export default async function SectorMapPage() {
   const data = await getSectorHeatmap();
 
   return (
-    <div className="flex max-w-[900px] flex-col gap-6">
+    <div className="animate-page-in flex flex-col gap-4.5">
       <div>
-        <h2 className="font-serif text-2xl text-primary">Sector Map</h2>
-        <p className="mt-1 text-[13px] text-muted">
-          Box size is market cap, color is today&apos;s % change. Symbols with no SEC-classified sector show under
-          &quot;Unclassified.&quot;
+        <div className="mb-2 font-mono text-[10.5px] tracking-[0.16em] text-muted uppercase">Markets · Sector map</div>
+        <h1 className="font-serif text-[32px] leading-tight font-normal text-primary">Sector map</h1>
+        <p className="mt-1.5 max-w-[540px] text-[13.5px] text-muted text-pretty">
+          Tile area is market cap; saturation is the size of today&apos;s move. Symbols with no SEC-classified sector
+          show under &quot;Unclassified.&quot;
         </p>
       </div>
 
       {data.length === 0 ? (
-        <div className="rounded-card border border-dashed border-line p-12 text-center text-sm text-muted">
-          No price data available yet.
+        <div className="rounded-card border border-dashed border-line px-6 py-16 text-center">
+          <div className="font-serif text-[21px] text-primary">No ground mapped yet</div>
+          <p className="mx-auto mt-2 max-w-[400px] text-[13px] text-muted text-pretty">
+            Once price data lands for your tracked symbols, they&apos;ll group into sectors here.
+          </p>
         </div>
       ) : (
         <SectorTreemap data={data} />
