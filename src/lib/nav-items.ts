@@ -15,7 +15,7 @@ export function isNavGroup(entry: NavEntry): entry is NavGroup {
 }
 
 export const NAV_ITEMS: NavEntry[] = [
-  { label: "Dashboard", route: "/" },
+  { label: "Base Camp", route: "/" },
   {
     label: "Markets",
     items: [
@@ -42,5 +42,4 @@ export const NAV_ITEMS: NavEntry[] = [
     ],
   },
   { label: "AI Assistant", route: "/assistant" },
-  { label: "Billing", route: "/billing" },
 ];

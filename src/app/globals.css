@@ -17,6 +17,7 @@
      loss/destructive stays negative red, everywhere. */
   --color-warning: #d9a441;
   --color-info: #5b8def;
+  --color-violet: #9b8ce0;
 
   --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
   --duration-fast: 120ms;
@@ -37,15 +38,104 @@
   --color-negative: var(--color-negative);
   --color-warning: var(--color-warning);
   --color-info: var(--color-info);
+  --color-violet: var(--color-violet);
 
   --font-sans: "Helvetica Neue", Helvetica, Arial, sans-serif;
-  --font-serif: Georgia, "Times New Roman", serif;
+  --font-serif: var(--font-newsreader), Georgia, "Times New Roman", serif;
+  --font-mono: var(--font-ibm-plex-mono), "SFMono-Regular", Consolas, monospace;
 
   --radius-card: 14px;
 
   --ease-standard: var(--ease-standard);
   --duration-fast: var(--duration-fast);
   --duration-base: var(--duration-base);
+}
+
+@keyframes cn-menu {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes cn-page {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes cn-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes cn-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes cn-breathe {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes cn-blink {
+  0%,
+  60% {
+    opacity: 1;
+  }
+  61%,
+  100% {
+    opacity: 0.15;
+  }
+}
+
+.animate-menu-in {
+  animation: cn-menu 150ms var(--ease-standard) both;
+}
+
+.animate-page-in {
+  animation: cn-page 260ms var(--ease-standard) both;
+}
+
+.animate-rise-in {
+  animation: cn-rise 300ms var(--ease-standard) both;
+}
+
+.animate-draw {
+  animation: cn-draw 700ms var(--ease-standard) both;
+}
+
+.animate-breathe {
+  animation: cn-breathe 2.4s ease-in-out infinite;
+}
+
+.animate-blink {
+  animation: cn-blink 1s steps(1) infinite;
 }
 
 html {

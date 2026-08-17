@@ -44,43 +44,53 @@ export function TickerWorkspace({ data, analyses, discussion, analysisDepth }: T
       : null;
 
   return (
-    <div className="flex max-w-[900px] flex-col gap-6">
-      <div className="flex items-start justify-between">
-        <div>
-          <div className="flex items-center gap-2">
-            <h2 className="font-serif text-2xl text-primary">{data.symbol}</h2>
-            <span className="rounded-md border border-line px-2 py-0.5 text-[11px] text-muted capitalize">
-              {data.assetType}
-            </span>
+    <div className="animate-page-in flex flex-col gap-3.5">
+      <div className="flex flex-wrap items-start justify-between gap-4.5">
+        <div className="flex items-start gap-3.5">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-accent-light to-accent-dark font-mono text-[14px] text-canvas">
+            {data.symbol.slice(0, 2)}
           </div>
-          {isCrypto && data.cryptoMetrics && (
-            <div className="mt-0.5 text-[13px] text-muted">{data.cryptoMetrics.name}</div>
-          )}
+          <div>
+            <div className="flex flex-wrap items-baseline gap-3">
+              <h1 className="font-serif text-[30px] leading-tight font-normal text-primary">{data.symbol}</h1>
+              <span className="rounded-full border border-line px-2 py-0.75 font-mono text-[9.5px] tracking-[0.1em] text-muted uppercase">
+                {data.assetType}
+              </span>
+            </div>
+            {isCrypto && data.cryptoMetrics && (
+              <div className="mt-1.25 text-[13px] text-muted">{data.cryptoMetrics.name}</div>
+            )}
+          </div>
         </div>
-        <div className="flex items-start gap-4">
+
+        <div className="flex flex-wrap items-center gap-5.5">
           <div className="text-right">
-            <div className="font-serif text-2xl text-primary">
+            <div className="font-serif text-[30px] leading-none tabular-nums text-primary">
               {data.price === null ? "—" : data.price.toLocaleString(undefined, { style: "currency", currency: "USD" })}
             </div>
-            <div className={`text-[13px] ${data.changePct === null ? "text-muted" : positive ? "text-accent" : "text-negative"}`}>
-              {data.changePct === null ? "—" : `${positive ? "+" : ""}${data.changePct.toFixed(2)}%`}
+            <div
+              className={`mt-1.5 text-[12.5px] tabular-nums ${
+                data.changePct === null ? "text-muted" : positive ? "text-accent" : "text-negative"
+              }`}
+            >
+              {data.changePct === null ? "—" : `${positive ? "+" : ""}${data.changePct.toFixed(2)}% today`}
             </div>
-            <div className="mt-0.5 text-[10.5px] text-dim">
-              {data.priceSource === "live" ? "Live" : "Last close (delayed)"}
+            <div className="mt-1 font-mono text-[9.5px] tracking-[0.12em] text-dim uppercase">
+              {data.priceSource === "live" ? "Live" : "Last close · delayed"}
             </div>
           </div>
           <AddHoldingButton symbol={data.symbol} assetType={data.assetType} />
         </div>
       </div>
 
-      <div className="flex gap-1.5 border-b border-line">
+      <div className="flex w-fit flex-wrap gap-1.5 rounded-xl border border-line bg-panel p-1">
         {tabs.map((t) => (
           <button
             key={t}
             type="button"
             onClick={() => setTab(t)}
-            className={`px-3.5 py-2.5 text-[13.5px] ${
-              tab === t ? "border-b-2 border-accent text-primary" : "text-muted"
+            className={`rounded-lg px-3.25 py-1.75 text-[12.5px] transition-colors duration-base ease-standard ${
+              tab === t ? "bg-active text-primary" : "text-muted hover:text-primary"
             }`}
           >
             {t}
@@ -210,8 +220,8 @@ export function TickerWorkspace({ data, analyses, discussion, analysisDepth }: T
 function Stat({ label, value }: { label: string; value: string | number }) {
   return (
     <div>
-      <div className="mb-1 text-[11px] tracking-[0.06em] text-muted uppercase">{label}</div>
-      <div className="text-[14px] text-primary">{value}</div>
+      <div className="font-mono text-[9.5px] tracking-[0.12em] text-dim uppercase">{label}</div>
+      <div className="mt-1.5 text-[14px] tabular-nums text-primary">{value}</div>
     </div>
   );
 }

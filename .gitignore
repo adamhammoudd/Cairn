@@ -52,3 +52,8 @@ graphify-out/
 # run-all.ts). The report is meant to be read by a human after a run, not
 # version-controlled; committing them is pure churn.
 scripts/tests/report/
+
+# Sibling tooling/skill checkouts some contributors keep in-tree. Not part of
+# the app, but tsconfig's **/*.ts include would otherwise type-check them and
+# fail the build (also excluded in tsconfig.json).
+external/

@@ -2,18 +2,27 @@
 
 import { useActionState, useState, useTransition } from "react";
 import { createAlert, deleteAlert, toggleAlert, type DeliveryWithAlert } from "@/lib/actions/alerts";
+import { Switch } from "@/components/switch";
 import {
   ALERT_TYPE_LABELS,
   COOLDOWN_OPTIONS,
   describeCondition,
   type Alert,
+  type AlertChannel,
   type AlertType,
 } from "@/lib/alerts";
 
 const TYPES = Object.keys(ALERT_TYPE_LABELS) as AlertType[];
 
+const CHANNEL_LABELS: Record<AlertChannel, string> = {
+  in_app: "In-app",
+  push: "Push",
+  email: "Email",
+};
+
+const LABEL = "mb-1.75 block text-[12px] text-muted";
 const inputClass =
-  "w-full rounded-lg border border-line bg-active px-3 py-2 text-[13px] text-primary outline-none";
+  "w-full rounded-lg border border-line bg-canvas px-3 py-2.25 text-[12.5px] text-primary outline-none transition-colors duration-base ease-standard focus:border-accent";
 
 interface AlertPanelProps {
   alerts: Alert[];
@@ -23,17 +32,41 @@ interface AlertPanelProps {
 export function AlertPanel({ alerts, deliveries }: AlertPanelProps) {
   const [error, formAction] = useActionState(createAlert, null);
   const [alertType, setAlertType] = useState<AlertType>("price");
+  const [formOpen, setFormOpen] = useState(false);
   const [, startMutate] = useTransition();
 
-  return (
-    <div className="grid grid-cols-[1fr_360px] gap-6">
-      <div className="flex flex-col gap-6">
-        <form action={formAction} className="rounded-card border border-line bg-panel p-5">
-          <div className="mb-4 text-[11.5px] tracking-[0.06em] text-muted uppercase">New alert</div>
+  const activeCount = alerts.filter((a) => a.enabled).length;
 
-          <div className="grid grid-cols-2 gap-3">
+  function cooldownLabel(seconds: number) {
+    return COOLDOWN_OPTIONS.find((o) => o.value === seconds)?.label ?? `${seconds}s`;
+  }
+
+  return (
+    <div className="animate-page-in flex flex-col gap-3.5">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <div className="mb-2 font-mono text-[10.5px] tracking-[0.16em] text-muted uppercase">Portfolio · Alerts</div>
+          <h1 className="font-serif text-[32px] leading-tight font-normal text-primary">Alerts</h1>
+          <p className="mt-1.5 max-w-[560px] text-[13.5px] text-muted text-pretty">
+            {activeCount} active. Each fires once per cooldown window, then goes quiet.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setFormOpen((prev) => !prev)}
+          className="rounded-lg bg-gradient-to-br from-accent-light to-accent-dark px-4 py-2.5 text-[13px] font-semibold text-canvas transition-[box-shadow,transform] duration-base ease-standard hover:-translate-y-px hover:shadow-[0_0_26px_rgba(47,198,133,0.35)]"
+        >
+          {formOpen ? "Close" : "+ New alert"}
+        </button>
+      </div>
+
+      {formOpen && (
+        <form action={formAction} className="animate-menu-in rounded-card border border-line bg-panel p-4.5">
+          <div className="mb-3.5 font-mono text-[10px] tracking-[0.14em] text-muted uppercase">New alert</div>
+
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <label className="block">
-              <span className="mb-1.5 block text-[12.5px] text-muted">Type</span>
+              <span className={LABEL}>Type</span>
               <select
                 name="alert_type"
                 value={alertType}
@@ -49,27 +82,27 @@ export function AlertPanel({ alerts, deliveries }: AlertPanelProps) {
             </label>
 
             <label className="block">
-              <span className="mb-1.5 block text-[12.5px] text-muted">
-                {alertType === "ai_confidence" ? "Ticker or sector" : "Ticker"}
-              </span>
+              <span className={LABEL}>{alertType === "ai_confidence" ? "Ticker or sector" : "Ticker"}</span>
               <input name="scope_value" placeholder="NVDA" required className={`${inputClass} uppercase`} />
             </label>
           </div>
 
-          <div className="mt-3 grid grid-cols-2 gap-3">
+          <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
             {(alertType === "price" || alertType === "pct_change") && (
               <>
                 <label className="block">
-                  <span className="mb-1.5 block text-[12.5px] text-muted">Direction</span>
+                  <span className={LABEL}>Direction</span>
                   <select name="comparator" className={inputClass}>
-                    <option value="above" className="bg-panel">Above</option>
-                    <option value="below" className="bg-panel">Below</option>
+                    <option value="above" className="bg-panel">
+                      Above
+                    </option>
+                    <option value="below" className="bg-panel">
+                      Below
+                    </option>
                   </select>
                 </label>
                 <label className="block">
-                  <span className="mb-1.5 block text-[12.5px] text-muted">
-                    {alertType === "price" ? "Price ($)" : "Day change (%)"}
-                  </span>
+                  <span className={LABEL}>{alertType === "price" ? "Price ($)" : "Day change (%)"}</span>
                   <input name="value" type="number" step="any" required className={inputClass} />
                 </label>
               </>
@@ -77,7 +110,7 @@ export function AlertPanel({ alerts, deliveries }: AlertPanelProps) {
 
             {alertType === "volume_spike" && (
               <label className="block">
-                <span className="mb-1.5 block text-[12.5px] text-muted">Multiple of 30-day avg volume</span>
+                <span className={LABEL}>Multiple of 30-day avg volume</span>
                 <input name="multiplier" type="number" step="0.1" defaultValue={2} required className={inputClass} />
               </label>
             )}
@@ -85,18 +118,22 @@ export function AlertPanel({ alerts, deliveries }: AlertPanelProps) {
             {alertType === "technical_crossover" && (
               <>
                 <label className="block">
-                  <span className="mb-1.5 block text-[12.5px] text-muted">Fast SMA (days)</span>
+                  <span className={LABEL}>Fast SMA (days)</span>
                   <input name="fastDays" type="number" defaultValue={50} required className={inputClass} />
                 </label>
                 <label className="block">
-                  <span className="mb-1.5 block text-[12.5px] text-muted">Slow SMA (days)</span>
+                  <span className={LABEL}>Slow SMA (days)</span>
                   <input name="slowDays" type="number" defaultValue={200} required className={inputClass} />
                 </label>
                 <label className="block">
-                  <span className="mb-1.5 block text-[12.5px] text-muted">Cross direction</span>
+                  <span className={LABEL}>Cross direction</span>
                   <select name="direction" className={inputClass}>
-                    <option value="above" className="bg-panel">Fast crosses above slow</option>
-                    <option value="below" className="bg-panel">Fast crosses below slow</option>
+                    <option value="above" className="bg-panel">
+                      Fast crosses above slow
+                    </option>
+                    <option value="below" className="bg-panel">
+                      Fast crosses below slow
+                    </option>
                   </select>
                 </label>
               </>
@@ -104,17 +141,23 @@ export function AlertPanel({ alerts, deliveries }: AlertPanelProps) {
 
             {alertType === "ai_confidence" && (
               <label className="block">
-                <span className="mb-1.5 block text-[12.5px] text-muted">Notify at confidence</span>
+                <span className={LABEL}>Notify at confidence</span>
                 <select name="minLevel" defaultValue="medium" className={inputClass}>
-                  <option value="low" className="bg-panel">Low or higher</option>
-                  <option value="medium" className="bg-panel">Medium or higher</option>
-                  <option value="high" className="bg-panel">High only</option>
+                  <option value="low" className="bg-panel">
+                    Low or higher
+                  </option>
+                  <option value="medium" className="bg-panel">
+                    Medium or higher
+                  </option>
+                  <option value="high" className="bg-panel">
+                    High only
+                  </option>
                 </select>
               </label>
             )}
 
             <label className="block">
-              <span className="mb-1.5 block text-[12.5px] text-muted">Cooldown</span>
+              <span className={LABEL}>Cooldown</span>
               <select name="cooldown_seconds" defaultValue={3600} className={inputClass}>
                 {COOLDOWN_OPTIONS.map((o) => (
                   <option key={o.value} value={o.value} className="bg-panel">
@@ -126,8 +169,8 @@ export function AlertPanel({ alerts, deliveries }: AlertPanelProps) {
           </div>
 
           <div className="mt-4">
-            <span className="mb-2 block text-[12.5px] text-muted">Deliver via</span>
-            <div className="flex gap-4">
+            <span className="mb-2 block text-[12px] text-muted">Deliver via</span>
+            <div className="flex flex-wrap gap-4">
               <label className="flex items-center gap-2 text-[13px] text-primary">
                 <input type="checkbox" name="channels" value="in_app" defaultChecked className="accent-accent" />
                 In-app
@@ -142,9 +185,8 @@ export function AlertPanel({ alerts, deliveries }: AlertPanelProps) {
               </label>
             </div>
             <p className="mt-2 text-[11.5px] text-dim">
-              Push and email are recorded but not delivered — no provider is wired yet, so those
-              rows are logged as <span className="text-muted">unconfigured</span> rather than
-              silently dropped.
+              Push and email are recorded but not delivered — no provider is wired yet, so those rows are logged as{" "}
+              <span className="text-muted">unconfigured</span> rather than silently dropped.
             </p>
           </div>
 
@@ -152,79 +194,121 @@ export function AlertPanel({ alerts, deliveries }: AlertPanelProps) {
 
           <button
             type="submit"
-            className="mt-4 rounded-lg bg-gradient-to-br from-accent-light to-accent-dark px-4 py-2 text-[13.5px] font-semibold text-canvas"
+            className="mt-4 rounded-lg bg-gradient-to-br from-accent-light to-accent-dark px-4 py-2.5 text-[13px] font-semibold text-canvas transition-[box-shadow,transform] duration-base ease-standard hover:-translate-y-px hover:shadow-[0_0_26px_rgba(47,198,133,0.35)]"
           >
             Create alert
           </button>
         </form>
+      )}
 
-        {alerts.length === 0 ? (
-          <div className="rounded-card border border-dashed border-line p-12 text-center text-sm text-muted">
-            No alerts yet.
-          </div>
-        ) : (
-          <div className="overflow-hidden rounded-card border border-line bg-panel">
-            <div className="grid grid-cols-[0.9fr_1fr_1.5fr_0.8fr_0.7fr_70px] border-b border-line px-5 py-3.5 text-[11.5px] tracking-[0.06em] text-muted uppercase">
-              <div>Symbol</div>
-              <div>Type</div>
-              <div>Condition</div>
-              <div>Cooldown</div>
-              <div>Status</div>
-              <div />
+      <div className="grid grid-cols-1 items-start gap-3.5 lg:grid-cols-[1fr_320px]">
+        <div className="flex flex-col gap-2.5">
+          {alerts.length === 0 ? (
+            <div className="rounded-card border border-dashed border-line px-6 py-16 text-center">
+              <div className="font-serif text-[20px] text-primary">No markers set</div>
+              <p className="mx-auto mt-2 max-w-[380px] text-[13px] text-muted text-pretty">
+                Create an alert and Cairn watches for the condition, then goes quiet for the cooldown window.
+              </p>
             </div>
-            {alerts.map((a) => (
+          ) : (
+            alerts.map((a, index) => (
               <div
                 key={a.id}
-                className="grid grid-cols-[0.9fr_1fr_1.5fr_0.8fr_0.7fr_70px] items-center border-b border-line px-5 py-3.5 last:border-b-0"
+                className={`animate-rise-in flex flex-wrap items-center gap-4 rounded-xl border bg-panel p-4.5 transition-colors duration-base ease-standard ${
+                  a.enabled ? "border-line" : "border-[#1C1C1C]"
+                }`}
+                style={{ animationDelay: `${index * 40}ms` }}
               >
-                <div className="text-sm text-primary">{a.scope_value}</div>
-                <div className="text-[12.5px] text-muted">{ALERT_TYPE_LABELS[a.alert_type]}</div>
-                <div className="text-[12.5px] text-muted">{describeCondition(a.alert_type, a.condition)}</div>
-                <div className="text-[12.5px] text-muted">
-                  {COOLDOWN_OPTIONS.find((o) => o.value === a.cooldown_seconds)?.label ??
-                    `${a.cooldown_seconds}s`}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => startMutate(() => toggleAlert(a.id, !a.enabled))}
-                  className={`flex items-center gap-1.5 text-[12.5px] ${a.enabled ? "text-accent" : "text-muted"}`}
-                >
-                  <span className={`h-1.5 w-1.5 rounded-full ${a.enabled ? "bg-accent" : "bg-muted"}`} />
-                  {a.enabled ? "Active" : "Paused"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => startMutate(() => deleteAlert(a.id))}
-                  className="text-[12.5px] text-muted hover:text-negative"
-                >
-                  Delete
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+                <div className="min-w-[180px] flex-1">
+                  <div className="flex flex-wrap items-center gap-2.5">
+                    <span
+                      className={`text-[14px] transition-colors duration-base ease-standard ${
+                        a.enabled ? "text-primary" : "text-dim"
+                      }`}
+                    >
+                      {a.scope_value}
+                    </span>
+                    <span className="rounded-full border border-line px-2 py-0.75 font-mono text-[9.5px] tracking-[0.1em] text-muted uppercase">
+                      {ALERT_TYPE_LABELS[a.alert_type]}
+                    </span>
+                  </div>
 
-      <aside className="rounded-card border border-line bg-panel p-5">
-        <div className="mb-3 text-[11.5px] tracking-[0.06em] text-muted uppercase">Recent notifications</div>
-        {deliveries.length === 0 ? (
-          <p className="text-[12.5px] text-dim">Nothing yet — alerts appear here when they fire.</p>
-        ) : (
-          <div className="flex flex-col gap-3">
-            {deliveries.map((d) => (
-              <div key={d.id} className="border-b border-line pb-3 last:border-b-0 last:pb-0">
-                <div className="mb-1 flex items-center justify-between">
-                  <span className="text-[12.5px] text-primary">{d.scope_value}</span>
-                  <span className="text-[11px] text-dim">
-                    {new Date(d.sent_at).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
-                  </span>
+                  <div className="mt-1.75 text-[12.5px] text-muted">
+                    {describeCondition(a.alert_type, a.condition)}
+                  </div>
+
+                  <div className="mt-2.25 flex flex-wrap items-center gap-2">
+                    <span className="font-mono text-[10px] tracking-[0.1em] text-dim uppercase">
+                      Cooldown {cooldownLabel(a.cooldown_seconds)}
+                    </span>
+                    {a.channels.map((ch) => (
+                      <span key={ch} className="rounded-full border border-line px-2 py-0.75 text-[10.5px] text-muted">
+                        {CHANNEL_LABELS[ch] ?? ch}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-                <p className="text-[12.5px] leading-relaxed text-muted">{d.message ?? "—"}</p>
+
+                <div
+                  className={`min-w-[130px] text-[11.5px] ${a.last_triggered_at ? "text-accent" : "text-dim"}`}
+                  suppressHydrationWarning
+                >
+                  {a.last_triggered_at
+                    ? `Triggered ${new Date(a.last_triggered_at).toLocaleDateString(undefined, {
+                        month: "short",
+                        day: "numeric",
+                      })}`
+                    : "Not yet triggered"}
+                </div>
+
+                <div className="flex items-center gap-1.5">
+                  <Switch
+                    checked={a.enabled}
+                    label={`${a.enabled ? "Pause" : "Enable"} ${a.scope_value} alert`}
+                    onToggle={() => startMutate(() => toggleAlert(a.id, !a.enabled))}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => startMutate(() => deleteAlert(a.id))}
+                    aria-label={`Delete ${a.scope_value} alert`}
+                    title="Delete"
+                    className="flex h-7 w-7 items-center justify-center rounded-lg text-negative transition-colors duration-fast ease-standard hover:bg-negative/12"
+                  >
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M3 6h18" />
+                      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                    </svg>
+                  </button>
+                </div>
               </div>
-            ))}
+            ))
+          )}
+        </div>
+
+        <aside className="overflow-hidden rounded-card border border-line bg-panel">
+          <div className="border-b border-line px-4 py-3.25 font-mono text-[10px] tracking-[0.14em] text-muted uppercase">
+            Recent deliveries
           </div>
-        )}
-      </aside>
+          {deliveries.length === 0 ? (
+            <p className="px-4 py-5 text-[12.5px] text-dim">Nothing yet — alerts appear here when they fire.</p>
+          ) : (
+            deliveries.map((d) => (
+              <div key={d.id} className="flex gap-2.75 border-b border-line px-4 py-3.5 last:border-b-0">
+                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
+                <div className="min-w-0">
+                  <div className="text-[12.5px] leading-relaxed text-primary text-pretty">
+                    {d.message ?? `${d.scope_value} alert fired.`}
+                  </div>
+                  <div className="mt-1.25 text-[11px] text-dim" suppressHydrationWarning>
+                    {CHANNEL_LABELS[d.channel] ?? d.channel} ·{" "}
+                    {new Date(d.sent_at).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </aside>
+      </div>
     </div>
   );
 }

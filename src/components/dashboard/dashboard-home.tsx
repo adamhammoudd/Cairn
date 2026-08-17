@@ -10,9 +10,11 @@ export const MODULE_KEYS: ModuleKey[] = ["portfolio", "markets", "watchlist", "n
 
 interface DashboardHomeProps {
   initialLayout: ModuleKey[];
+  today: string;
   portfolio: {
     totalValue: string;
     totalGain: string;
+    positive: boolean;
     positions: number;
   };
   markets: {
@@ -34,27 +36,28 @@ interface DashboardHomeProps {
   };
 }
 
-const MODULES: { key: ModuleKey; label: string; description: string }[] = [
-  { key: "portfolio", label: "Portfolio", description: "Holdings, value, and performance at a glance." },
-  { key: "markets", label: "Markets", description: "Tracked symbols, top market type, and broad market context." },
-  { key: "watchlist", label: "Watchlist", description: "Your watchlists, symbols, and quick status." },
-  { key: "news", label: "News", description: "Trending headlines prioritized for your holdings and sectors." },
-  { key: "assistant", label: "AI Assistant", description: "Your latest briefing and conversation history." },
+const MODULES: { key: ModuleKey; label: string; href: string; cta: string; tint: "accent" | "info" | "violet" | "warning" }[] = [
+  { key: "portfolio", label: "Portfolio", href: "/portfolio", cta: "Open holdings", tint: "accent" },
+  { key: "markets", label: "Markets", href: "/markets", cta: "Browse markets", tint: "info" },
+  { key: "watchlist", label: "Watchlist", href: "/watchlists", cta: "Open watchlists", tint: "violet" },
+  { key: "news", label: "News", href: "/news", cta: "Read all", tint: "warning" },
+  { key: "assistant", label: "AI Assistant", href: "/assistant", cta: "Open assistant", tint: "accent" },
 ];
 
 const DEFAULT_LAYOUT: ModuleKey[] = ["portfolio", "markets", "watchlist", "news", "assistant"];
 
-export function DashboardHome({ initialLayout, portfolio, markets, watchlist, news, assistant }: DashboardHomeProps) {
+export function DashboardHome({ initialLayout, today, portfolio, markets, watchlist, news, assistant }: DashboardHomeProps) {
   const [layout, setLayout] = useState<ModuleKey[]>(initialLayout.length ? initialLayout : DEFAULT_LAYOUT);
+  const [arranging, setArranging] = useState(false);
   const [result, formAction] = useActionState(updateDashboardLayout, null);
 
   const moduleMap = new Map(MODULES.map((module) => [module.key, module]));
+  const hidden = MODULE_KEYS.filter((key) => !layout.includes(key));
 
   function moveModule(key: ModuleKey, direction: -1 | 1) {
     setLayout((current) => {
       const next = [...current];
       const index = next.indexOf(key);
-      if (index === -1) return current;
       const target = index + direction;
       if (target < 0 || target >= next.length) return current;
       [next[index], next[target]] = [next[target], next[index]];
@@ -62,164 +65,182 @@ export function DashboardHome({ initialLayout, portfolio, markets, watchlist, ne
     });
   }
 
-  function toggleModule(key: ModuleKey) {
-    setLayout((current) =>
-      current.includes(key) ? current.filter((module) => module !== key) : [...current, key],
+  function hideModule(key: ModuleKey) {
+    setLayout((current) => current.filter((k) => k !== key));
+  }
+
+  function showModule(key: ModuleKey) {
+    setLayout((current) => [...current, key]);
+  }
+
+  function renderCard(key: ModuleKey, index: number) {
+    const module = moduleMap.get(key);
+    if (!module) return null;
+    const delay = index * 40;
+
+    const content = (() => {
+      switch (key) {
+        case "portfolio":
+          return (
+            <DashboardSummaryCard
+              key={key}
+              title={module.label}
+              href={module.href}
+              ctaLabel={module.cta}
+              tint={module.tint}
+              value={portfolio.totalValue}
+              valueTone={portfolio.positive ? "positive" : "negative"}
+              detail={`${portfolio.totalGain} unrealized · ${portfolio.positions} positions`}
+              delay={delay}
+            />
+          );
+        case "markets":
+          return (
+            <DashboardSummaryCard
+              key={key}
+              title={module.label}
+              href={module.href}
+              ctaLabel={module.cta}
+              tint={module.tint}
+              value={markets.featuredType}
+              detail={`${markets.trackedSymbols} symbols tracked across equities, ETFs, crypto, and forex`}
+              delay={delay}
+            />
+          );
+        case "watchlist":
+          return (
+            <DashboardSummaryCard
+              key={key}
+              title={module.label}
+              href={module.href}
+              ctaLabel={module.cta}
+              tint={module.tint}
+              value={`${watchlist.symbols} symbols`}
+              detail={`${watchlist.lists} lists · top list: ${watchlist.topListName}`}
+              delay={delay}
+            />
+          );
+        case "news":
+          return (
+            <DashboardSummaryCard
+              key={key}
+              title={module.label}
+              href={module.href}
+              ctaLabel={module.cta}
+              tint={module.tint}
+              value={news.headline || "No headlines yet"}
+              detail={`${news.articles} recent articles prioritized for your holdings and sectors`}
+              delay={delay}
+            />
+          );
+        case "assistant":
+          return (
+            <DashboardSummaryCard
+              key={key}
+              title={module.label}
+              href={module.href}
+              ctaLabel={module.cta}
+              tint={module.tint}
+              value={assistant.briefingDate ?? "No briefing today"}
+              detail={`${assistant.sessions} conversations · resume a thread or review the briefing`}
+              delay={delay}
+            />
+          );
+        default:
+          return null;
+      }
+    })();
+
+    if (!content) return null;
+
+    return (
+      <div key={key} className="relative">
+        {content}
+        {arranging && (
+          <div className="absolute top-3.5 right-4.5 flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => moveModule(key, -1)}
+              className="flex h-6 w-6 items-center justify-center rounded-md border border-line text-[11px] text-muted transition-colors duration-fast ease-standard hover:border-accent hover:text-primary"
+            >
+              ↑
+            </button>
+            <button
+              type="button"
+              onClick={() => moveModule(key, 1)}
+              className="flex h-6 w-6 items-center justify-center rounded-md border border-line text-[11px] text-muted transition-colors duration-fast ease-standard hover:border-accent hover:text-primary"
+            >
+              ↓
+            </button>
+            <button
+              type="button"
+              onClick={() => hideModule(key)}
+              className="flex h-6 w-6 items-center justify-center rounded-md border border-line text-[12px] text-muted transition-colors duration-fast ease-standard hover:border-negative hover:text-negative"
+            >
+              ×
+            </button>
+          </div>
+        )}
+      </div>
     );
   }
 
-  function renderCard(key: ModuleKey) {
-    switch (key) {
-      case "portfolio":
-        return (
-          <DashboardSummaryCard
-            key={key}
-            title="Portfolio"
-            subtitle={`${portfolio.positions} positions`}
-            value={portfolio.totalValue}
-            detail={`Unrealized gain/loss: ${portfolio.totalGain}`}
-            tone={portfolio.totalGain.startsWith("-") ? "negative" : "positive"}
-          />
-        );
-      case "markets":
-        return (
-          <DashboardSummaryCard
-            key={key}
-            title="Markets"
-            subtitle={`${markets.trackedSymbols} tracked symbols`}
-            value={markets.featuredType}
-            detail="Filtered by assets you care about, including equities, ETFs, crypto, and forex."
-            tone="info"
-          />
-        );
-      case "watchlist":
-        return (
-          <DashboardSummaryCard
-            key={key}
-            title="Watchlist"
-            subtitle={`${watchlist.lists} lists`}
-            value={`${watchlist.symbols} symbols`}
-            detail={`Top list: ${watchlist.topListName}`}
-            tone="primary"
-          />
-        );
-      case "news":
-        return (
-          <DashboardSummaryCard
-            key={key}
-            title="News"
-            subtitle={`${news.articles} recent articles`}
-            value={news.headline || "No headlines yet"}
-            detail="Prioritized by your holdings, watchlist, and sectors."
-            tone="info"
-          />
-        );
-      case "assistant":
-        return (
-          <DashboardSummaryCard
-            key={key}
-            title="AI Assistant"
-            subtitle={`${assistant.sessions} conversations`}
-            value={assistant.briefingDate ?? "No briefing today"}
-            detail="Resume a thread or review the latest market briefing."
-            tone="primary"
-          />
-        );
-      default:
-        return null;
-    }
-  }
-
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-3 rounded-card border border-line bg-panel p-5">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-2xl font-serif text-primary">Dashboard</h1>
-            <p className="mt-1 text-sm text-muted">
-              One place for your portfolio performance, market context, watchlist status, news, and AI research.
-            </p>
-          </div>
-          <div className="rounded-full border border-line bg-active px-4 py-2 text-[13px] text-muted">
-            Click Save to persist your dashboard module selections and order.
-          </div>
+    <div className="animate-page-in flex flex-col gap-3.5">
+      <div className="mb-1 flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <div className="mb-2 font-mono text-[10.5px] tracking-[0.16em] text-muted uppercase">{today} · markets open</div>
+          <h1 className="font-serif text-[34px] leading-tight font-normal text-primary">Base Camp</h1>
+          <p className="mt-1.5 max-w-[560px] text-[13.5px] text-muted text-pretty">
+            Your marker for the day — portfolio, markets, and what the assistant flagged while you were away.
+          </p>
         </div>
 
-        <form action={formAction} className="grid gap-4">
-          <div className="grid gap-4 rounded-card border border-line bg-canvas p-4">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <div className="text-sm text-primary">Dashboard layout</div>
-                <p className="text-[13px] text-muted">Show or hide modules, then reorder them to match your workflow.</p>
-              </div>
-              <button
-                type="submit"
-                className="inline-flex items-center justify-center rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-canvas transition hover:bg-accent-dark"
-              >
-                Save layout
-              </button>
-            </div>
-
-            <div className="grid gap-3 sm:grid-cols-2">
-              {MODULES.map((module) => {
-                const selectedIndex = layout.indexOf(module.key);
-                const selected = selectedIndex !== -1;
-
-                return (
-                  <div
-                    key={module.key}
-                    className="flex items-center justify-between gap-3 rounded-lg border border-line bg-panel px-4 py-3"
-                  >
-                    <div>
-                      <label className="flex items-center gap-2 text-sm text-primary">
-                        <input
-                          type="checkbox"
-                          checked={selected}
-                          onChange={() => toggleModule(module.key)}
-                          className="accent-accent"
-                        />
-                        {module.label}
-                      </label>
-                      <div className="text-[12.5px] text-muted">{module.description}</div>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <button
-                        type="button"
-                        onClick={() => moveModule(module.key, -1)}
-                        className="rounded-md border border-line px-2 py-1 text-xs text-muted transition hover:border-accent hover:text-primary"
-                        disabled={!selected || selectedIndex === 0}
-                      >
-                        ↑
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => moveModule(module.key, 1)}
-                        className="rounded-md border border-line px-2 py-1 text-xs text-muted transition hover:border-accent hover:text-primary"
-                        disabled={!selected || selectedIndex === layout.length - 1}
-                      >
-                        ↓
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            <div className="hidden">
-              {layout.map((key) => (
-                <input key={key} type="hidden" name="layout" value={key} />
-              ))}
-            </div>
-
-            {result && result !== "saved" && <div className="text-sm text-negative">{result}</div>}
-            {result === "saved" && <div className="text-sm text-accent">Layout saved.</div>}
-          </div>
+        <form action={formAction} className="flex items-center gap-2">
+          {layout.map((key) => (
+            <input key={key} type="hidden" name="layout" value={key} />
+          ))}
+          <button
+            type="button"
+            onClick={() => setArranging((prev) => !prev)}
+            className={`rounded-lg border border-line px-3 py-2 text-[12.5px] text-primary transition-colors duration-base ease-standard hover:border-[#3A3A3A] ${
+              arranging ? "bg-active" : "bg-transparent"
+            }`}
+          >
+            {arranging ? "Done" : "Arrange"}
+          </button>
+          {arranging && (
+            <button
+              type="submit"
+              className="rounded-lg bg-accent px-3 py-2 text-[12.5px] font-semibold text-canvas transition-colors duration-base ease-standard hover:bg-accent-dark"
+            >
+              Save layout
+            </button>
+          )}
         </form>
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-2">
-        {layout.map((module) => renderCard(module)).filter(Boolean)}
+      {result && result !== "saved" && <div className="text-sm text-negative">{result}</div>}
+
+      <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
+        {layout.map((key, index) => renderCard(key, index))}
       </div>
+
+      {hidden.length > 0 && (
+        <div className="mt-1 flex flex-wrap items-center gap-2.5 rounded-xl border border-dashed border-line p-3.5">
+          <span className="font-mono text-[10.5px] tracking-[0.14em] text-dim uppercase">Hidden</span>
+          {hidden.map((key) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => showModule(key)}
+              className="rounded-full border border-line px-2.5 py-1 text-xs text-muted transition-colors duration-base ease-standard hover:border-accent hover:text-primary"
+            >
+              + {moduleMap.get(key)?.label}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

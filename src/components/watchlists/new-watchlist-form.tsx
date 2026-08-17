@@ -1,62 +1,98 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createWatchlist } from "@/lib/actions/watchlists";
 import { SubmitButton } from "@/components/auth/submit-button";
+import { Toggle } from "@/components/settings/toggle";
+
+const LABEL = "font-mono text-[9.5px] tracking-[0.12em] text-dim uppercase";
+const FIELD =
+  "w-full rounded-lg border border-line bg-canvas px-3.25 py-3 text-[13.5px] text-primary outline-none transition-colors duration-base ease-standard focus:border-accent";
 
 export function NewWatchlistForm() {
   const [result, formAction] = useActionState(createWatchlist, null);
+  const [name, setName] = useState("");
   const router = useRouter();
 
   return (
-    <form action={formAction} className="flex max-w-md flex-col gap-4">
-      <label className="block">
-        <span className="mb-1.5 block text-[12.5px] text-muted">Name</span>
-        <input
-          name="name"
-          required
-          placeholder="e.g. Core holdings"
-          className="w-full rounded-lg border border-line bg-active px-3 py-2 text-sm text-primary outline-none"
-        />
-      </label>
+    <form action={formAction} className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[1fr_260px]">
+      <div className="flex flex-col gap-3.5">
+        <div className="rounded-card border border-line bg-panel p-4.5">
+          <div className={`${LABEL} mb-2`}>Name</div>
+          <input
+            name="name"
+            required
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="e.g. Semis & AI"
+            className={FIELD}
+          />
 
-      <label className="block">
-        <span className="mb-1.5 block text-[12.5px] text-muted">Description</span>
-        <textarea
-          name="description"
-          rows={2}
-          placeholder="What this list is for"
-          className="w-full resize-none rounded-lg border border-line bg-active px-3 py-2 text-sm text-primary outline-none"
-        />
-      </label>
+          <div className={`${LABEL} mt-4 mb-2`}>Description</div>
+          <textarea
+            name="description"
+            rows={2}
+            placeholder="What this list is for"
+            className={`${FIELD} resize-none`}
+          />
+        </div>
 
-      <label className="block">
-        <span className="mb-1.5 block text-[12.5px] text-muted">Default sort</span>
-        <select
-          name="sort_by"
-          defaultValue="manual"
-          className="w-full rounded-lg border border-line bg-active px-3 py-2 text-sm text-primary outline-none"
-        >
-          <option value="manual" className="bg-panel">Manual (drag to reorder)</option>
-          <option value="symbol" className="bg-panel">Symbol</option>
-          <option value="price" className="bg-panel">Price</option>
-          <option value="change" className="bg-panel">% change</option>
-        </select>
-      </label>
+        <div className="rounded-card border border-line bg-panel p-4.5">
+          <div className={`${LABEL} mb-3`}>Behaviour</div>
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(210px,1fr))] gap-3">
+            <div>
+              <div className="mb-1.75 text-[12px] text-muted">Default sort</div>
+              <select name="sort_by" defaultValue="manual" className={`${FIELD} py-2.5 text-[12.5px]`}>
+                <option value="manual" className="bg-panel">
+                  Manual (drag to reorder)
+                </option>
+                <option value="symbol" className="bg-panel">
+                  Symbol
+                </option>
+                <option value="price" className="bg-panel">
+                  Price
+                </option>
+                <option value="change" className="bg-panel">
+                  24h change
+                </option>
+              </select>
+            </div>
 
-      <label className="flex cursor-pointer items-center gap-2 text-[13px] text-muted">
-        <input type="checkbox" name="show_sparkline" defaultChecked className="accent-accent" />
-        Show trend sparkline
-      </label>
+            <div>
+              <div className="mb-1.75 text-[12px] text-muted">Trend sparkline</div>
+              <div className="flex items-center justify-between rounded-lg border border-line bg-canvas px-3.25 py-2.5">
+                <span className="text-[12.5px] text-primary">Show 30d trend</span>
+                <Toggle name="show_sparkline" defaultChecked />
+              </div>
+            </div>
+          </div>
+        </div>
 
-      {result && <p className="text-[13px] text-negative">{result}</p>}
+        {result && <p className="text-[13px] text-negative">{result}</p>}
 
-      <div className="mt-1 flex items-center gap-3">
-        <SubmitButton>Create watchlist</SubmitButton>
-        <button type="button" onClick={() => router.push("/watchlists")} className="text-[13px] text-muted">
-          Cancel
-        </button>
+        <div className="flex justify-end gap-2.25">
+          <button
+            type="button"
+            onClick={() => router.push("/watchlists")}
+            className="rounded-lg border border-line px-4 py-2.75 text-[12.5px] text-primary transition-colors duration-base ease-standard hover:border-[#3A3A3A]"
+          >
+            Cancel
+          </button>
+          <SubmitButton>Create watchlist</SubmitButton>
+        </div>
+      </div>
+
+      <div className="rounded-card border border-line bg-[#0C0C0C] p-4.5 lg:order-last">
+        <div className={`${LABEL} mb-3`}>Preview</div>
+        <div className="flex items-center gap-2.25 rounded-xl border border-line bg-active px-3.25 py-2.75">
+          <span className="h-4 w-1.25 shrink-0 rounded-sm bg-accent" />
+          <span className="truncate text-[13px] text-primary">{name || "Untitled list"}</span>
+        </div>
+        <p className="mt-3.5 text-[12px] leading-relaxed text-muted text-pretty">
+          Appears in the Portfolio group of the nav and as a filter on News. Alerts you configure deliver by the
+          channels set in Settings → Notifications.
+        </p>
       </div>
     </form>
   );

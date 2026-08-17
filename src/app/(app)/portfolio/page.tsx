@@ -58,25 +58,55 @@ export default async function PortfolioPage() {
     geography: computeAllocation(metrics, "geography"),
   };
 
+  // Last 30 closes per symbol, for the holdings table's inline trend column.
+  const sparklines: Record<string, number[]> = {};
+  for (const symbol of symbols) {
+    sparklines[symbol] = priceRows
+      .filter((p) => p.symbol === symbol && p.close !== null)
+      .slice(-30)
+      .map((p) => p.close as number);
+  }
+
+  const assetTypeCount = new Set(rows.map((h) => h.asset_type)).size;
+
   return (
-    <div className="flex flex-col gap-6">
-      <div className="grid grid-cols-4 gap-5">
-        <StatCard label="Total value" value={fmtCurrency(totals.totalValue)} />
-        <StatCard label="Total cost basis" value={fmtCurrency(totals.totalCostBasis)} />
+    <div className="animate-page-in flex flex-col gap-3.5">
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-3">
         <StatCard
-          label="Unrealized gain/loss"
-          value={`${totals.totalGain >= 0 ? "+" : ""}${fmtCurrency(totals.totalGain)}`}
-          tone={totals.totalGain >= 0 ? "positive" : "negative"}
+          label="Total value"
+          value={fmtCurrency(totals.totalValue)}
+          sub={`${metrics.length} ${metrics.length === 1 ? "position" : "positions"}`}
         />
-        <StatCard label="Today" value={fmtPct(totals.todayChangePct)} tone={totals.todayChangePct >= 0 ? "positive" : "negative"} />
+        <StatCard
+          label="Unrealised gain"
+          value={`${totals.totalGain >= 0 ? "+" : ""}${fmtCurrency(totals.totalGain)}`}
+          sub={`${totals.totalGainPct >= 0 ? "+" : ""}${totals.totalGainPct.toFixed(2)}% on cost`}
+          tone={totals.totalGain >= 0 ? "positive" : "negative"}
+          delayMs={50}
+        />
+        <StatCard
+          label="Today"
+          value={fmtPct(totals.todayChangePct)}
+          sub="Since previous close"
+          tone={totals.todayChangePct >= 0 ? "positive" : "negative"}
+          delayMs={100}
+        />
+        <StatCard
+          label="Cost basis"
+          value={fmtCurrency(totals.totalCostBasis)}
+          sub={`Across ${assetTypeCount} asset ${assetTypeCount === 1 ? "type" : "types"}`}
+          delayMs={150}
+        />
       </div>
 
-      <div className="grid grid-cols-[2fr_1fr] gap-5">
+      <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-[2fr_1fr]">
         <PortfolioChart seriesByTimeframe={seriesByTimeframe} hasHoldings={rows.length > 0} />
         <AllocationPanel byDimension={allocationByDimension} />
       </div>
 
-      <HoldingsTable metrics={metrics} />
+      <div className="mt-2.5">
+        <HoldingsTable metrics={metrics} sparklines={sparklines} />
+      </div>
     </div>
   );
 }

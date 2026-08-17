@@ -12,7 +12,7 @@ export function AppShell({ displayName, plan, children }: AppShellProps) {
   return (
     <div className="flex min-h-screen flex-col bg-canvas">
       <TopNav displayName={displayName} plan={plan} />
-      <main className="flex-1 overflow-auto p-7 lg:p-8">{children}</main>
+      <main className="mx-auto w-full max-w-[1560px] flex-1 overflow-auto px-5.5 pt-6.5 pb-15 sm:px-7">{children}</main>
       <ChatPanel />
     </div>
   );

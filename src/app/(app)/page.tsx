@@ -64,12 +64,16 @@ export default async function DashboardPage() {
   const rawLayout = (settingsRes.data?.dashboard_layout as string[] | null) ?? [];
   const initialLayout = rawLayout.filter((key): key is ModuleKey => (MODULE_KEYS as string[]).includes(key));
 
+  const today = new Date().toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+
   return (
     <DashboardHome
       initialLayout={initialLayout}
+      today={today}
       portfolio={{
         totalValue: fmtCurrency(totals.totalValue),
         totalGain: `${totals.totalGain >= 0 ? "+" : ""}${fmtCurrency(totals.totalGain)}`,
+        positive: totals.totalGain >= 0,
         positions: holdings.length,
       }}
       markets={{

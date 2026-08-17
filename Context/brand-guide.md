@@ -14,13 +14,23 @@ doubles visually as an ascending bar chart. Reference: cairn-logo-concept.svg.
   and gain indicators.
 - Red is reserved exclusively for loss/negative/destructive indicators (including delete
   actions) — never used decoratively.
+- Categorical tints (non-semantic, never for gain/loss or CTAs): warning `#d9a441`,
+  info `#5b8def`, violet `#9B8CE0`. Used for tagging/labeling only — e.g. category tags in
+  market/screener tables (violet for crypto-type rows), watchlist-relevance flags on news
+  items, and chart tints for a given watchlist. Adding further tints follows the palette
+  expansion policy below.
 - Text: off-white `#F5F5F5` for headings, muted gray `#8A8A8A` for secondary text.
 - Borders: subtle 1px `#2A2A2A` rather than heavy dividers.
 
 ## Typography
-Serif display face for the wordmark/headlines (warmth and trust, avoiding a cold, sterile
-fintech look); clean sans-serif for body copy and UI labels; wide letter-spacing on
-eyebrow/label text.
+Two display/body typefaces plus one mono face, each with a fixed role:
+- **Serif (Newsreader, variable weights 400/500, opsz axis, via next/font/google)** —
+  wordmark/headlines only. Warm and trustworthy, avoiding a cold, sterile fintech look.
+- **Sans-serif** — body copy and UI labels/controls; the default face everywhere that isn't
+  a headline or tabular/eyebrow data.
+- **Mono (IBM Plex Mono)** — eyebrow/label text (e.g. "PORTFOLIO", timestamps) and tabular
+  data. Reinforces the trading-terminal feel; does not replace sans for general UI copy.
+Wide letter-spacing on eyebrow/label text regardless of face.
 
 ## Overall feel
 High-density but calm — precise like a trading terminal, without feeling aggressive or

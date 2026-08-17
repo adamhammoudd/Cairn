@@ -1,16 +1,22 @@
 interface StatCardProps {
   label: string;
   value: string;
+  sub?: string;
   tone?: "primary" | "positive" | "negative";
+  delayMs?: number;
 }
 
-export function StatCard({ label, value, tone = "primary" }: StatCardProps) {
+export function StatCard({ label, value, sub, tone = "primary", delayMs = 0 }: StatCardProps) {
   const color = tone === "positive" ? "text-accent" : tone === "negative" ? "text-negative" : "text-primary";
 
   return (
-    <div className="rounded-card border border-line bg-panel p-5">
-      <div className="mb-2 text-[11.5px] tracking-[0.08em] text-muted uppercase">{label}</div>
-      <div className={`font-serif text-2xl ${color}`}>{value}</div>
+    <div
+      className="animate-rise-in rounded-card border border-line bg-panel px-4.5 py-4"
+      style={{ animationDelay: `${delayMs}ms` }}
+    >
+      <div className="font-mono text-[10px] tracking-[0.14em] text-muted uppercase">{label}</div>
+      <div className={`mt-2.25 font-serif text-[26px] leading-none tabular-nums ${color}`}>{value}</div>
+      {sub && <div className="mt-1.5 text-[11.5px] text-dim">{sub}</div>}
     </div>
   );
 }

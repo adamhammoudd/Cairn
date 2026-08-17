@@ -51,6 +51,17 @@ export const EMPTY_FILTERS: ScreenerFilters = {
 
 export const ASSET_TYPES = ["equity", "etf", "crypto", "forex", "future"] as const;
 
+// Shared asset-type tag treatment for Markets + Screener rows: equity reads as
+// primary (default/plain), etf=info, crypto=violet, forex=warning, and
+// "future" (this app has no separate "index" type) takes the muted/index tone.
+export const ASSET_TYPE_TAG_CLASS: Record<string, string> = {
+  equity: "text-primary border-line",
+  etf: "text-info border-info/30",
+  crypto: "text-violet border-violet/30",
+  forex: "text-warning border-warning/30",
+  future: "text-muted border-line",
+};
+
 export function formatMarketCap(n: number | null): string {
   if (n === null) return "—";
   if (n >= 1e12) return `$${(n / 1e12).toFixed(2)}T`;

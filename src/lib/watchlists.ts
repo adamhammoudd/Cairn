@@ -18,6 +18,19 @@ export interface DisplayPrefs {
 
 export const DEFAULT_DISPLAY_PREFS: DisplayPrefs = { sortBy: "manual", showSparkline: true };
 
+// Watchlists have no persisted color, but the list tabs read much better with
+// one. Derive it from the id so a list keeps its tint across reorders without
+// needing a schema column. Categorical only -- never gain/loss meaning.
+const WATCHLIST_TINTS = ["bg-accent", "bg-info", "bg-violet", "bg-warning"] as const;
+
+export function tintForWatchlist(id: string): string {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) {
+    hash = (hash * 31 + id.charCodeAt(i)) | 0;
+  }
+  return WATCHLIST_TINTS[Math.abs(hash) % WATCHLIST_TINTS.length];
+}
+
 export function readDisplayPrefs(raw: unknown): DisplayPrefs {
   const r = (raw ?? {}) as Partial<DisplayPrefs>;
   return {

@@ -34,7 +34,10 @@ export async function fetchQuote(symbol: string): Promise<QuoteResult | null> {
   const res = await fetch(url, { next: { revalidate: 60 } });
   if (!res.ok) return null;
 
-  const data = await res.json();
+  // res.json() is typed `unknown` by the current fetch typings; this is an
+  // untrusted third-party payload either way, so every field below is still
+  // presence-checked before use.
+  const data = (await res.json()) as Record<string, unknown>;
   if (data.status === "error" || data.code) return null;
 
   return {

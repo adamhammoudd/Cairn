@@ -33,7 +33,9 @@ export async function searchMarketNews(query: string): Promise<NewsSearchResult[
   const res = await fetch(url, { next: { revalidate: 300 } });
   if (!res.ok) return [];
 
-  const data = await res.json();
+  // res.json() is typed `unknown` by the current fetch typings; the payload is
+  // third-party, so the shape is still checked before use.
+  const data = (await res.json()) as Record<string, unknown>;
   const articles = Array.isArray(data.articles) ? data.articles : [];
 
   return articles.map((a: { url: string; title: string; source?: { name?: string }; publishedAt: string }) => ({
