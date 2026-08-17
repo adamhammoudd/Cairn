@@ -38,8 +38,19 @@ export function TopNav({ displayName, plan }: TopNavProps) {
   const [openGroup, setOpenGroup] = useState<string | null>(null);
   const [accountOpen, setAccountOpen] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [lastPathname, setLastPathname] = useState(pathname);
   const navRef = useRef<HTMLElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
+
+  // Collapse any open menu when the route changes. Adjusted during render
+  // rather than in an effect so there's no extra commit with the menu still
+  // open on the new page (React's "adjusting state when props change").
+  if (pathname !== lastPathname) {
+    setLastPathname(pathname);
+    setOpenGroup(null);
+    setAccountOpen(false);
+    setMobileNavOpen(false);
+  }
 
   useEffect(() => {
     function onClickAway(e: MouseEvent) {
@@ -51,12 +62,6 @@ export function TopNav({ displayName, plan }: TopNavProps) {
     document.addEventListener("mousedown", onClickAway);
     return () => document.removeEventListener("mousedown", onClickAway);
   }, []);
-
-  useEffect(() => {
-    setOpenGroup(null);
-    setAccountOpen(false);
-    setMobileNavOpen(false);
-  }, [pathname]);
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
