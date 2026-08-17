@@ -9,7 +9,7 @@ import {
   reorderWatchlistItems,
   type WatchlistWithItems,
 } from "@/lib/actions/watchlists";
-import { Sparkline } from "@/components/watchlists/sparkline";
+import { Sparkline } from "@/components/sparkline";
 
 function fmtCurrency(n: number | null) {
   if (n === null) return "—";

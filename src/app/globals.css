@@ -126,6 +126,18 @@
   animation: cn-rise 300ms var(--ease-standard) both;
 }
 
+.animate-draw {
+  animation: cn-draw 700ms var(--ease-standard) both;
+}
+
+.animate-breathe {
+  animation: cn-breathe 2.4s ease-in-out infinite;
+}
+
+.animate-blink {
+  animation: cn-blink 1s steps(1) infinite;
+}
+
 html {
   color-scheme: dark;
 }
