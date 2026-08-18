@@ -1,6 +1,194 @@
 @import "tailwindcss";
 
-/* ui-reset-v2: visual-layer reset. No custom color system, no custom
-   typography, no keyframes/animation classes — those all applied via
-   className/style, which has been stripped from every component. Browser
-   defaults only. Restore design tokens here when reapplying a design pass. */
+:root {
+  --color-canvas: #0a0a0a;
+  --color-panel: #0f0f0f;
+  --color-active: #141414;
+  --color-line: #2a2a2a;
+  --color-primary: #f5f5f5;
+  --color-muted: #8a8a8a;
+  --color-dim: #6a6a6a;
+  --color-accent: #2fc685;
+  --color-accent-light: #5ee6a6;
+  --color-accent-dark: #22b573;
+  --color-negative: #d96c6c;
+
+  /* Secondary/tertiary accents — never used for gain/loss. Gain stays accent green,
+     loss/destructive stays negative red, everywhere. */
+  --color-warning: #d9a441;
+  --color-info: #5b8def;
+  --color-violet: #9b8ce0;
+
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+}
+
+@theme inline {
+  --color-canvas: var(--color-canvas);
+  --color-panel: var(--color-panel);
+  --color-active: var(--color-active);
+  --color-line: var(--color-line);
+  --color-primary: var(--color-primary);
+  --color-muted: var(--color-muted);
+  --color-dim: var(--color-dim);
+  --color-accent: var(--color-accent);
+  --color-accent-light: var(--color-accent-light);
+  --color-accent-dark: var(--color-accent-dark);
+  --color-negative: var(--color-negative);
+  --color-warning: var(--color-warning);
+  --color-info: var(--color-info);
+  --color-violet: var(--color-violet);
+
+  --font-sans: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-serif: var(--font-newsreader), Georgia, "Times New Roman", serif;
+  --font-mono: var(--font-ibm-plex-mono), "SFMono-Regular", Consolas, monospace;
+
+  --radius-card: 14px;
+
+  --ease-standard: var(--ease-standard);
+  --duration-fast: var(--duration-fast);
+  --duration-base: var(--duration-base);
+}
+
+@keyframes cn-menu {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes cn-page {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes cn-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes cn-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes cn-scrim {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes cn-sheet {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes cn-breathe {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes cn-blink {
+  0%,
+  60% {
+    opacity: 1;
+  }
+  61%,
+  100% {
+    opacity: 0.15;
+  }
+}
+
+.animate-menu-in {
+  animation: cn-menu 150ms var(--ease-standard) both;
+}
+
+.animate-page-in {
+  animation: cn-page 260ms var(--ease-standard) both;
+}
+
+.animate-rise-in {
+  animation: cn-rise 300ms var(--ease-standard) both;
+}
+
+.animate-scrim-in {
+  animation: cn-scrim 160ms var(--ease-standard) both;
+}
+
+.animate-sheet-in {
+  animation: cn-sheet 220ms var(--ease-standard) both;
+}
+
+.animate-draw {
+  animation: cn-draw 700ms var(--ease-standard) both;
+}
+
+.animate-breathe {
+  animation: cn-breathe 2.4s ease-in-out infinite;
+}
+
+.animate-blink {
+  animation: cn-blink 1s steps(1) infinite;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  background: var(--color-canvas);
+  color: var(--color-primary);
+  font-family: var(--font-sans);
+}
+
+input::placeholder {
+  color: var(--color-dim);
+}
+
+/* Purposeful motion only: hover/focus states, view transitions, loading states.
+   Respect reduced-motion preference — never force animation on users who opt out. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -26,48 +26,48 @@ export function HoldingsTable({
 
   return (
     <>
-      <div>
+      <div className="mb-5.5 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <div>Portfolio</div>
-          <h2>Holdings</h2>
+          <div className="mb-2 font-mono text-[10.5px] tracking-[0.16em] text-muted uppercase">Portfolio</div>
+          <h2 className="font-serif text-[32px] leading-tight font-normal text-primary">Holdings</h2>
         </div>
         <button
           type="button"
           onClick={() => setEditing("new")}
-
- >
-          <span>+</span> Add holding
+          className="flex items-center gap-2 rounded-lg bg-gradient-to-br from-accent-light to-accent-dark px-4 py-2.5 text-[13px] font-semibold text-canvas transition-[box-shadow,transform] duration-base ease-standard hover:-translate-y-px hover:shadow-[0_0_26px_rgba(47,198,133,0.35)]"
+        >
+          <span className="text-[15px] leading-none">+</span> Add holding
         </button>
       </div>
 
       {metrics.length === 0 ? (
-        <div>
-          <div>No stones stacked yet</div>
-          <p>
+        <div className="rounded-card border border-line bg-panel px-6 py-15 text-center">
+          <div className="font-serif text-[20px] text-primary">No stones stacked yet</div>
+          <p className="mx-auto mt-2 mb-4.5 max-w-[380px] text-[13px] text-muted text-pretty">
             Add your first holding and Cairn starts tracking value, gain/loss, and news relevance for it.
           </p>
           <button
             type="button"
             onClick={() => setEditing("new")}
-
- >
+            className="rounded-lg bg-gradient-to-br from-accent-light to-accent-dark px-4.5 py-2.5 text-[13px] font-semibold text-canvas transition-[box-shadow,transform] duration-base ease-standard hover:-translate-y-px hover:shadow-[0_0_26px_rgba(47,198,133,0.35)]"
+          >
             + Add holding
           </button>
         </div>
       ) : (
-        <div>
-          <div>
-            <span>
+        <div className="overflow-hidden rounded-card border border-line bg-panel">
+          <div className="flex items-center justify-between border-b border-line px-4.5 py-3.5">
+            <span className="font-mono text-[10.5px] tracking-[0.14em] text-muted uppercase">
               {metrics.length} {metrics.length === 1 ? "position" : "positions"}
             </span>
-            <span>Sorted by entry date</span>
+            <span className="text-[11.5px] text-dim">Sorted by entry date</span>
           </div>
 
-          <div>
-            <div>
+          <div className="overflow-x-auto">
+            <div className="min-w-[860px]">
               <div
-
- >
+                className={`grid ${COLS} gap-3 border-b border-line px-4.5 py-2.5 font-mono text-[9.5px] tracking-[0.12em] text-dim uppercase`}
+              >
                 <div>Holding</div>
                 <div>Qty</div>
                 <div>Price</div>
@@ -84,34 +84,39 @@ export function HoldingsTable({
                 return (
                   <div
                     key={m.id}
-
- >
-                    <div>
+                    className={`grid ${COLS} items-center gap-3 border-b border-line px-4.5 py-3.25 transition-colors duration-fast ease-standard last:border-b-0 hover:bg-active`}
+                  >
+                    <div className="flex min-w-0 items-center gap-2.5">
                       <div
-
- >
+                        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg font-mono text-[10px] font-medium text-canvas"
+                        style={{
+                          background: positive
+                            ? "linear-gradient(135deg, #5EE6A6, #22B573)"
+                            : "linear-gradient(135deg, #E39B9B, #C25A5A)",
+                        }}
+                      >
                         {m.symbol.slice(0, 2)}
                       </div>
-                      <div>
-                        <div>{m.symbol}</div>
-                        <div>{m.asset_type}</div>
+                      <div className="min-w-0">
+                        <div className="text-[13px] text-primary">{m.symbol}</div>
+                        <div className="truncate text-[11px] text-muted capitalize">{m.asset_type}</div>
                       </div>
                     </div>
 
-                    <div>{m.quantity}</div>
-                    <div>{fmtCurrency(m.currentPrice)}</div>
-                    <div>
+                    <div className="text-[12.5px] tabular-nums text-primary">{m.quantity}</div>
+                    <div className="text-[12.5px] tabular-nums text-primary">{fmtCurrency(m.currentPrice)}</div>
+                    <div className="text-[12.5px] tabular-nums text-muted">
                       {fmtCurrency(m.purchase_price * m.quantity)}
                     </div>
-                    <div>{fmtCurrency(m.value)}</div>
+                    <div className="text-[12.5px] tabular-nums text-primary">{fmtCurrency(m.value)}</div>
 
-                    <div>
-                      <span>
+                    <div className="flex flex-col gap-0.5">
+                      <span className={`text-[12.5px] tabular-nums ${positive ? "text-accent" : "text-negative"}`}>
                         {m.gain === null ? "—" : `${positive ? "+" : ""}${fmtCurrency(m.gain)}`}
                       </span>
                       <span
-
- >
+                        className={`text-[11px] tabular-nums opacity-70 ${positive ? "text-accent" : "text-negative"}`}
+                      >
                         {m.gainPct === null ? "" : `${m.gainPct >= 0 ? "+" : ""}${m.gainPct.toFixed(1)}%`}
                       </span>
                     </div>
@@ -120,14 +125,14 @@ export function HoldingsTable({
                       <Sparkline values={series} positive={positive} delayMs={index * 60} />
                     </div>
 
-                    <div>
+                    <div className="flex items-center justify-end gap-1">
                       <button
                         type="button"
                         onClick={() => setEditing(m)}
                         aria-label={`Edit ${m.symbol}`}
                         title="Edit"
-
- >
+                        className="flex h-7 w-7 items-center justify-center rounded-lg text-muted transition-colors duration-fast ease-standard hover:bg-active hover:text-primary"
+                      >
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                           <path d="M12 20h9" />
                           <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
@@ -143,8 +148,8 @@ export function HoldingsTable({
                         }}
                         aria-label={`Delete ${m.symbol}`}
                         title="Delete"
-
- >
+                        className="flex h-7 w-7 items-center justify-center rounded-lg text-negative transition-colors duration-fast ease-standard hover:bg-negative/12 disabled:opacity-50"
+                      >
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                           <path d="M3 6h18" />
                           <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />

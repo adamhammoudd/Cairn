@@ -11,7 +11,7 @@ interface SparklineProps {
 // ResponsiveContainer is heavy at that multiplicity.
 export function Sparkline({ values, positive, className = "h-7 w-[90px]", delayMs = 0 }: SparklineProps) {
   if (values.length < 2) {
-    return <div>—</div>;
+    return <div className={`${className} text-[11px] text-dim`}>—</div>;
   }
 
   const min = Math.min(...values);
@@ -24,18 +24,19 @@ export function Sparkline({ values, positive, className = "h-7 w-[90px]", delayM
     .join(" ");
 
   return (
-    <svg viewBox="0 0 100 28" preserveAspectRatio="none">
+    <svg viewBox="0 0 100 28" className={`block ${className}`} preserveAspectRatio="none">
       <polyline
         points={points}
         fill="none"
-        stroke="#666666"
+        stroke={positive ? "var(--color-accent)" : "var(--color-negative)"}
         strokeWidth={1.8}
         strokeLinejoin="round"
         vectorEffect="non-scaling-stroke"
         pathLength="1"
         strokeDasharray="1"
-
- />
+        className="animate-draw"
+        style={{ animationDelay: `${delayMs}ms` }}
+      />
     </svg>
   );
 }

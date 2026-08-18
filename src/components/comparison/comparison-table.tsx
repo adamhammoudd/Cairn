@@ -57,19 +57,20 @@ export function ComparisonTable({ rows }: { rows: ComparisonRow[] }) {
   const gridTemplate = `minmax(120px, 170px) repeat(${rows.length}, minmax(0, 1fr))`;
 
   return (
-    <div>
-      <div>
+    <div className="overflow-hidden rounded-card border border-line bg-panel">
+      <div className="border-b border-line px-4.5 py-3.25 font-mono text-[10px] tracking-[0.14em] text-muted uppercase">
         Aligned metrics
       </div>
 
-      <div>
-        <div>
+      <div className="overflow-x-auto">
+        <div className="min-w-fit">
           <div
-
- >
+            className="grid items-center gap-3 border-b border-line px-4.5 py-2.75 font-mono text-[9.5px] tracking-[0.12em] text-dim uppercase"
+            style={{ gridTemplateColumns: gridTemplate }}
+          >
             <div>Metric</div>
             {rows.map((row) => (
-              <div key={row.symbol}>
+              <div key={row.symbol} className="text-primary">
                 {row.symbol}
               </div>
             ))}
@@ -78,13 +79,14 @@ export function ComparisonTable({ rows }: { rows: ComparisonRow[] }) {
           {METRICS.map((metric, index) => (
             <div
               key={metric.label}
-
- >
-              <div>{metric.label}</div>
+              className="animate-rise-in grid items-center gap-3 border-b border-line px-4.5 py-3.25 transition-colors duration-fast ease-standard last:border-b-0 hover:bg-active"
+              style={{ gridTemplateColumns: gridTemplate, animationDelay: `${index * 30}ms` }}
+            >
+              <div className="text-[12px] text-muted">{metric.label}</div>
               {rows.map((row) => {
                 const cell = metric.cell(row);
                 return (
-                  <div key={row.symbol}>
+                  <div key={row.symbol} className={`text-[13px] tabular-nums ${TONE_CLASS[cell.tone]}`}>
                     {cell.text}
                   </div>
                 );

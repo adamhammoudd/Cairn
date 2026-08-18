@@ -12,8 +12,9 @@ export function AddHoldingButton({ symbol, assetType }: { symbol: string; assetT
       <button
         type="button"
         onClick={() => setOpen(true)}
-
- >
+        className="rounded-lg px-4 py-2 text-[13px] font-semibold text-canvas transition-opacity duration-fast ease-standard hover:opacity-90"
+        style={{ background: "linear-gradient(135deg, #5EE6A6, #22B573)" }}
+      >
         + Add holding
       </button>
       {open && (

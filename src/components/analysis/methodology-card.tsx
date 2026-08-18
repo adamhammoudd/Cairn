@@ -41,56 +41,56 @@ export function MethodologyCard({
   const isTopLine = depth === "top_line";
 
   return (
-    <div>
-      <div>
+    <div className={`rounded-card border border-line bg-panel ${isDense ? "p-4" : "p-6"}`}>
+      <div className="mb-3 flex items-center justify-between">
         <div>
-          <div>
+          <div className="text-[11.5px] tracking-[0.06em] text-muted uppercase">
             {analysis.scope_type} · {analysis.scope_value}
           </div>
-          <div>
+          <div className={`mt-1 font-serif text-primary capitalize ${isDense ? "text-base" : "text-lg"}`}>
             {analysis.analysis_type.replace(/_/g, " ")}
           </div>
         </div>
-        <div>
-          <div>
+        <div className="text-right">
+          <div className={`font-serif text-primary ${isDense ? "text-lg" : "text-xl"}`}>
             {analysis.probability_low}–{analysis.probability_high}%
           </div>
-          <div>
+          <div className={`text-[12px] capitalize ${CONFIDENCE_COLOR[analysis.confidence_level] ?? "text-muted"}`}>
             {analysis.confidence_level} confidence
           </div>
         </div>
       </div>
 
-      <p>
+      <p className={`text-primary leading-relaxed ${isDense ? "mb-3 text-[13px]" : "mb-4 text-[13.5px]"}`}>
         {analysis.reasoning_text}
       </p>
 
       {isTopLine ? (
-        <div>
+        <div className="mb-3 text-[12px] text-muted">
           {analysis.sources.length} source{analysis.sources.length === 1 ? "" : "s"} ·{" "}
           {analysis.sample_size} historical analog{analysis.sample_size === 1 ? "" : "s"}
-          <span> · Full sources, analogs, and match detail on Premium</span>
+          <span className="text-dim"> · Full sources, analogs, and match detail on Premium</span>
         </div>
       ) : (
-        <div>
+        <div className="grid grid-cols-2 gap-4">
           <div>
-            <div>
+            <div className="mb-2 text-[11px] tracking-[0.06em] text-muted uppercase">
               Sources ({analysis.sources.length})
             </div>
             {analysis.sources.length === 0 ? (
-              <div>None cited</div>
+              <div className="text-[12.5px] text-dim">None cited</div>
             ) : (
-              <ul>
+              <ul className="flex flex-col gap-1.5">
                 {analysis.sources.map((s) => (
-                  <li key={s.id}>
+                  <li key={s.id} className="text-[12.5px] text-muted">
                     {s.url ? (
-                      <a href={s.url} target="_blank" rel="noreferrer">
+                      <a href={s.url} target="_blank" rel="noreferrer" className="text-accent">
                         {s.title}
                       </a>
                     ) : (
-                      <span>{s.title}</span>
+                      <span className="text-accent">{s.title}</span>
                     )}
-                    <span> · {s.source_name}</span>
+                    <span className="text-dim"> · {s.source_name}</span>
                   </li>
                 ))}
               </ul>
@@ -98,29 +98,30 @@ export function MethodologyCard({
           </div>
 
           <div>
-            <div>
+            <div className="mb-2 text-[11px] tracking-[0.06em] text-muted uppercase">
               Historical analogs ({analysis.sample_size} sample{analysis.sample_size === 1 ? "" : "s"})
             </div>
             {analysis.analogs.length === 0 ? (
-              <div>None matched</div>
+              <div className="text-[12.5px] text-dim">None matched</div>
             ) : (
-              <ul>
+              <ul className="flex flex-col gap-2">
                 {analysis.analogs.map((e) => {
                   const matchPct = Math.round(e.similarity_score * 100);
                   return (
-                    <li key={e.id}>
-                      <div>
+                    <li key={e.id} className="text-[12.5px] text-muted">
+                      <div className="flex items-center justify-between gap-2.5">
                         <span>
-                          <span>{e.symbol ?? e.sector}</span> — {e.event_type} ·{" "}
+                          <span className="text-primary">{e.symbol ?? e.sector}</span> — {e.event_type} ·{" "}
                           {new Date(e.event_date).toLocaleDateString()}
-                          {e.note && <span> — {e.note}</span>}
+                          {e.note && <span className="text-dim"> — {e.note}</span>}
                         </span>
-                        <span>{matchPct}%</span>
+                        <span className="shrink-0 tabular-nums text-dim">{matchPct}%</span>
                       </div>
-                      <div>
+                      <div className="mt-1 h-0.75 overflow-hidden rounded-full bg-active">
                         <div
-
- />
+                          className="h-full rounded-full bg-gradient-to-r from-accent-light to-accent-dark"
+                          style={{ width: `${matchPct}%` }}
+                        />
                       </div>
                     </li>
                   );
@@ -132,14 +133,14 @@ export function MethodologyCard({
       )}
 
       {upcomingEvents.length > 0 && (
-        <div>
-          <div>
+        <div className="mt-3 rounded-lg border border-line bg-active px-3 py-2">
+          <div className="mb-1.5 text-[11px] tracking-[0.06em] text-muted uppercase">
             Upcoming for {analysis.scope_value}
           </div>
-          <div>
+          <div className="flex flex-col gap-1">
             {upcomingEvents.slice(0, 3).map((e) => (
-              <div key={e.id}>
-                <span>{e.event_type}</span> ·{" "}
+              <div key={e.id} className="text-[12px] text-muted">
+                <span className="capitalize">{e.event_type}</span> ·{" "}
                 {new Date(`${e.event_date}T00:00:00`).toLocaleDateString()}
               </div>
             ))}
@@ -148,12 +149,12 @@ export function MethodologyCard({
       )}
 
       {analysis.confidence_level === "low" && (
-        <div>
+        <div className="mt-3 rounded-lg border border-line bg-active px-3 py-2 text-[12px] text-muted">
           Low-confidence output — small historical sample or weak pattern match. Treat as directional, not precise.
         </div>
       )}
 
-      <div>
+      <div className="mt-3.5">
         <Disclosure variant="callout" />
       </div>
     </div>

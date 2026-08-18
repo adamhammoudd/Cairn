@@ -31,44 +31,44 @@ export function PositionSizingCalculator({ defaultAccountValue }: { defaultAccou
     <CalcCard
       title="Position sizing"
       blurb="Fixed-fractional sizing: risks a set % of your account on the distance between entry and stop. A calculator, not a recommendation to enter any position."
- >
-      <div>
+    >
+      <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
         <CalcField label="Account value ($)">
           <input
             value={accountValue}
             onChange={(e) => setAccountValue(e.target.value)}
             placeholder="e.g. 50000"
-
- />
+            className={CALC_INPUT}
+          />
         </CalcField>
         <CalcField label="Risk per trade (%)">
-          <input value={riskPct} onChange={(e) => setRiskPct(e.target.value)} placeholder="e.g. 1" />
+          <input value={riskPct} onChange={(e) => setRiskPct(e.target.value)} placeholder="e.g. 1" className={CALC_INPUT} />
         </CalcField>
         <CalcField label="Entry price ($)">
           <input
             value={entryPrice}
             onChange={(e) => setEntryPrice(e.target.value)}
             placeholder="e.g. 182.50"
-
- />
+            className={CALC_INPUT}
+          />
         </CalcField>
         <CalcField label="Stop price ($)">
           <input
             value={stopPrice}
             onChange={(e) => setStopPrice(e.target.value)}
             placeholder="e.g. 175.00"
-
- />
+            className={CALC_INPUT}
+          />
         </CalcField>
       </div>
 
       {hasInputs && (
-        <div>
-          <div>
-            <span>Share quantity</span>
-            <span>{result.shareQty.toLocaleString()}</span>
+        <div className="mt-4 rounded-xl border border-line bg-canvas p-4">
+          <div className="flex items-baseline justify-between gap-3">
+            <span className="text-[12px] text-muted">Share quantity</span>
+            <span className="font-serif text-[28px] tabular-nums text-primary">{result.shareQty.toLocaleString()}</span>
           </div>
-          <div>
+          <div className="mt-3.5 grid grid-cols-2 gap-2.5 lg:grid-cols-4">
             <CalcStat label="Risk amount" value={fmtCurrency(result.riskAmount)} />
             <CalcStat label="Risk / share" value={fmtCurrency(result.riskPerShare)} />
             <CalcStat label="Position value" value={fmtCurrency(result.positionValue)} />

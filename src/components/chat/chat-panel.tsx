@@ -13,16 +13,16 @@ export function ChatPanel() {
   return (
     <>
       {open && (
-        <div>
-          <div>
-            <div>
-              <span>AI research</span>
+        <div className="fixed right-6 bottom-24 z-20 flex h-[520px] w-[380px] flex-col overflow-hidden rounded-card border border-line bg-panel shadow-2xl">
+          <div className="flex items-center justify-between border-b border-line px-4 py-3">
+            <div className="flex items-center gap-2">
+              <span className="text-[11.5px] tracking-[0.08em] text-muted uppercase">AI research</span>
             </div>
-            <button type="button" onClick={() => setOpen(false)}>
+            <button type="button" onClick={() => setOpen(false)} className="text-muted hover:text-primary">
               ✕
             </button>
           </div>
-          <div>
+          <div className="min-h-0 flex-1">
             <ChatThread compact />
           </div>
         </div>
@@ -31,10 +31,10 @@ export function ChatPanel() {
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-
+        className="fixed right-6 bottom-6 z-20 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-accent-light to-accent-dark shadow-lg"
         aria-label="Toggle AI research chat"
- >
-        <span>{open ? "✕" : "AI"}</span>
+      >
+        <span className="font-serif text-lg text-canvas">{open ? "✕" : "AI"}</span>
       </button>
     </>
   );

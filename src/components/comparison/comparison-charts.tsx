@@ -13,17 +13,17 @@ function MiniChart({ row, timeframe, color }: { row: ComparisonRow; timeframe: C
   const gradientId = `compareFill-${row.symbol}`;
 
   return (
-    <div>
-      <div>
-        <span>{row.symbol}</span>
+    <div className="rounded-card border border-line bg-panel p-4">
+      <div className="mb-2 flex items-center justify-between">
+        <span className="text-[13px] font-semibold text-primary">{row.symbol}</span>
         <span
-
- >
+          className={`text-[12px] ${row.changePct === null ? "text-muted" : row.changePct >= 0 ? "text-accent" : "text-negative"}`}
+        >
           {row.changePct === null ? "—" : `${row.changePct >= 0 ? "+" : ""}${row.changePct.toFixed(2)}%`}
         </span>
       </div>
       {points.length === 0 ? (
-        <div>No price history.</div>
+        <div className="flex h-[140px] items-center justify-center text-[12px] text-muted">No price history.</div>
       ) : (
         <ResponsiveContainer width="100%" height={140}>
           <AreaChart syncId="comparison-timeline" data={points} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
@@ -37,14 +37,18 @@ function MiniChart({ row, timeframe, color }: { row: ComparisonRow; timeframe: C
               dataKey="date"
               interval={interval}
               tickFormatter={tickFormatter}
+              tick={{ fill: "#8A8A8A", fontSize: 10 }}
+              axisLine={{ stroke: "#2A2A2A" }}
               tickLine={false}
               minTickGap={20}
- />
+            />
             <YAxis hide domain={["dataMin", "dataMax"]} />
             <Tooltip
               formatter={(value) => Number(value).toLocaleString(undefined, { style: "currency", currency: "USD" })}
               labelFormatter={(label) => new Date(String(label)).toLocaleDateString()}
- />
+              contentStyle={{ background: "#0F0F0F", border: "1px solid #2A2A2A", borderRadius: 8, fontSize: 12 }}
+              labelStyle={{ color: "#8A8A8A" }}
+            />
             <Area type="monotone" dataKey="value" stroke={color} strokeWidth={2} fill={`url(#${gradientId})`} />
           </AreaChart>
         </ResponsiveContainer>
@@ -55,7 +59,7 @@ function MiniChart({ row, timeframe, color }: { row: ComparisonRow; timeframe: C
 
 export function ComparisonCharts({ rows, timeframe }: { rows: ComparisonRow[]; timeframe: ChartView }) {
   return (
-    <div>
+    <div className="grid grid-cols-2 gap-4">
       {rows.map((row, i) => (
         <MiniChart key={row.symbol} row={row} timeframe={timeframe} color={COMPARISON_COLORS[i % COMPARISON_COLORS.length]} />
       ))}

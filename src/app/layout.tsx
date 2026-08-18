@@ -26,10 +26,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-
+      className={`h-full antialiased ${newsreader.variable} ${ibmPlexMono.variable}`}
       suppressHydrationWarning
- >
-      <body suppressHydrationWarning>
+    >
+      <body className="flex min-h-full flex-col" suppressHydrationWarning>
         {children}
         <BuildBadge />
       </body>

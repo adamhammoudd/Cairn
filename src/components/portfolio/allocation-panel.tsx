@@ -9,8 +9,7 @@ const DIMENSIONS = [
   { key: "geography", label: "Geography" },
 ] as const;
 
-// ui-reset-v2: neutral placeholders, no brand color system in this baseline.
-const COLORS = ["#555555", "#666666", "#777777", "#888888", "#999999"];
+const COLORS = ["#2FC685", "#5EE6A6", "#22B573", "#8A8A8A", "#6A6A6A"];
 
 interface AllocationPanelProps {
   byDimension: Record<(typeof DIMENSIONS)[number]["key"], AllocationSlice[]>;
@@ -21,36 +20,39 @@ export function AllocationPanel({ byDimension }: AllocationPanelProps) {
   const slices = byDimension[dimension];
 
   return (
-    <div>
-      <div>
+    <div className="rounded-card border border-line bg-panel p-6">
+      <div className="mb-4 flex gap-1.5">
         {DIMENSIONS.map((d) => (
           <button
             key={d.key}
             type="button"
             onClick={() => setDimension(d.key)}
-
- >
+            className={`rounded-md px-3 py-1.5 text-xs ${
+              dimension === d.key ? "bg-active text-primary" : "text-muted"
+            }`}
+          >
             {d.label}
           </button>
         ))}
       </div>
 
       {slices.length === 0 ? (
-        <div>No holdings to allocate yet.</div>
+        <div className="py-8 text-center text-sm text-muted">No holdings to allocate yet.</div>
       ) : (
-        <div>
+        <div className="flex flex-col gap-3">
           {slices.map((s, i) => (
             <div key={s.label}>
-              <div>
+              <div className="mb-1.5 flex justify-between text-[13px] text-primary">
                 <span>
                   {s.label} · {s.pct.toFixed(0)}%
                 </span>
                 <span>{s.value.toLocaleString(undefined, { style: "currency", currency: "USD" })}</span>
               </div>
-              <div>
+              <div className="h-1.5 rounded-full bg-active">
                 <div
-
- />
+                  className="h-full rounded-full"
+                  style={{ width: `${s.pct}%`, background: COLORS[i % COLORS.length] }}
+                />
               </div>
             </div>
           ))}

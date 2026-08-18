@@ -3,9 +3,9 @@ import type { TimelinePoint } from "@/lib/portfolio";
 export const MAX_COMPARE = 4;
 
 // One color per compare slot, shared across chips/charts/table so a symbol
-// reads as the same series everywhere on the page.
-// ui-reset-v2: neutral placeholders, no brand color system in this baseline.
-export const COMPARISON_COLORS = ["#666666", "#777777", "#888888", "#999999"];
+// reads as the same series everywhere on the page. Pulled straight from the
+// design token set (accent, info, warning, violet) -- no new hex values.
+export const COMPARISON_COLORS = ["#2FC685", "#5B8DEF", "#D9A441", "#9B8CE0"];
 
 export interface ComparisonRow {
   symbol: string;

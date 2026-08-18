@@ -31,9 +31,9 @@ export function SettingsForm({ settings, activeTab }: SettingsFormProps) {
 
   return (
     <form action={formAction}>
-      <div>
+      <div className={activeTab === "display" ? "flex flex-col divide-y divide-line" : "hidden"}>
         <Row label="Default chart timeframe" hint="Applied when opening a ticker">
-          <div>
+          <div className="flex gap-1.5">
             {CHART_VIEWS.map((v) => (
               <label key={v}>
                 <input
@@ -41,9 +41,9 @@ export function SettingsForm({ settings, activeTab }: SettingsFormProps) {
                   name="default_chart_view"
                   value={v}
                   defaultChecked={settings.default_chart_view === v}
-
- />
-                <span>
+                  className="peer sr-only"
+                />
+                <span className="cursor-pointer rounded-md border border-line px-3 py-1.5 text-[12.5px] text-muted peer-checked:border-transparent peer-checked:bg-active peer-checked:text-primary">
                   {v}
                 </span>
               </label>
@@ -55,10 +55,10 @@ export function SettingsForm({ settings, activeTab }: SettingsFormProps) {
           <select
             name="currency"
             defaultValue={settings.currency}
-
- >
+            className="rounded-md border border-line bg-transparent px-3.5 py-1.5 text-[12.5px] text-primary outline-none"
+          >
             {CURRENCIES.map((c) => (
-              <option key={c} value={c}>
+              <option key={c} value={c} className="bg-panel">
                 {c}
               </option>
             ))}
@@ -69,10 +69,10 @@ export function SettingsForm({ settings, activeTab }: SettingsFormProps) {
           <select
             name="refresh_rate_seconds"
             defaultValue={settings.refresh_rate_seconds}
-
- >
+            className="rounded-md border border-line bg-transparent px-3.5 py-1.5 text-[12.5px] text-primary outline-none"
+          >
             {REFRESH_RATES.map((r) => (
-              <option key={r.value} value={r.value}>
+              <option key={r.value} value={r.value} className="bg-panel">
                 {r.label}
               </option>
             ))}
@@ -80,7 +80,7 @@ export function SettingsForm({ settings, activeTab }: SettingsFormProps) {
         </Row>
 
         <Row label="Density" hint="Compact reduces row height across tables">
-          <div>
+          <div className="flex gap-1.5">
             {(["comfortable", "compact"] as const).map((d) => (
               <label key={d}>
                 <input
@@ -88,9 +88,9 @@ export function SettingsForm({ settings, activeTab }: SettingsFormProps) {
                   name="compact_mode"
                   value={d === "compact" ? "on" : "off"}
                   defaultChecked={settings.compact_mode === (d === "compact")}
-
- />
-                <span>
+                  className="peer sr-only"
+                />
+                <span className="cursor-pointer rounded-md border border-line px-3 py-1.5 text-[12.5px] text-muted capitalize peer-checked:border-transparent peer-checked:bg-active peer-checked:text-primary">
                   {d}
                 </span>
               </label>
@@ -99,16 +99,16 @@ export function SettingsForm({ settings, activeTab }: SettingsFormProps) {
         </Row>
 
         <Row label="Show percent vs. dollar change">
-          <div>
+          <div className="flex gap-1.5">
             <label>
               <input
                 type="radio"
                 name="metric_style"
                 value="percent"
                 defaultChecked={settings.metric_style === "percent"}
-
- />
-              <span>
+                className="peer sr-only"
+              />
+              <span className="cursor-pointer rounded-md border border-line px-3 py-1.5 text-[12.5px] text-muted peer-checked:border-transparent peer-checked:bg-active peer-checked:text-primary">
                 Percent
               </span>
             </label>
@@ -118,9 +118,9 @@ export function SettingsForm({ settings, activeTab }: SettingsFormProps) {
                 name="metric_style"
                 value="absolute"
                 defaultChecked={settings.metric_style === "absolute"}
-
- />
-              <span>
+                className="peer sr-only"
+              />
+              <span className="cursor-pointer rounded-md border border-line px-3 py-1.5 text-[12.5px] text-muted peer-checked:border-transparent peer-checked:bg-active peer-checked:text-primary">
                 Dollar
               </span>
             </label>
@@ -132,26 +132,26 @@ export function SettingsForm({ settings, activeTab }: SettingsFormProps) {
         </Row>
       </div>
 
-      <div>
+      <div className={activeTab === "notifications" ? "flex flex-col divide-y divide-line" : "hidden"}>
         <Row label="Price move alert" hint="Minimum % move before a price alert can fire">
-          <div>
+          <div className="flex items-center gap-2">
             <input
               type="number"
               name="price_move_threshold"
               defaultValue={notificationThreshold}
               min={0.1}
               step={0.1}
-
- />
-            <span>%</span>
+              className="w-20 rounded-md border border-line bg-transparent px-3 py-1.5 text-right text-[12.5px] text-primary outline-none"
+            />
+            <span className="text-[12.5px] text-muted">%</span>
           </div>
         </Row>
       </div>
 
-      <div>
+      <div className={showSave ? "mt-6 flex items-center gap-3 border-t border-line pt-5" : "hidden"}>
         <SubmitButton>Save changes</SubmitButton>
-        {result === "saved" && <span>Saved.</span>}
-        {result && result !== "saved" && <span>{result}</span>}
+        {result === "saved" && <span className="text-[13px] text-accent">Saved.</span>}
+        {result && result !== "saved" && <span className="text-[13px] text-negative">{result}</span>}
       </div>
     </form>
   );
@@ -159,10 +159,10 @@ export function SettingsForm({ settings, activeTab }: SettingsFormProps) {
 
 function Row({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
-    <div>
-      <div>
-        <div>{label}</div>
-        {hint && <div>{hint}</div>}
+    <div className="flex items-center justify-between gap-4 py-3.5 first:pt-0 last:pb-0">
+      <div className="min-w-0">
+        <div className="text-[13px] text-primary">{label}</div>
+        {hint && <div className="mt-1 text-[11.5px] leading-relaxed text-muted">{hint}</div>}
       </div>
       {children}
     </div>
