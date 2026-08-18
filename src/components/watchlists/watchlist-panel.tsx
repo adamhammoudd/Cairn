@@ -83,9 +83,7 @@ export function WatchlistPanel({ watchlists }: { watchlists: WatchlistWithItems[
               >
                 <span className={`h-3.5 w-1.25 shrink-0 rounded-sm ${tintForWatchlist(w.id)}`} />
                 <span className={`text-[13px] ${isActive ? "text-primary" : "text-muted"}`}>{w.name}</span>
-                <span className="font-mono text-[10px] text-dim">
-                  {w.items.length} {w.items.length === 1 ? "symbol" : "symbols"}
-                </span>
+                <span className="font-mono text-[10px] text-dim">{w.items.length}</span>
               </button>
             );
           })}

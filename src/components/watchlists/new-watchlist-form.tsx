@@ -16,7 +16,19 @@ export function NewWatchlistForm() {
   const router = useRouter();
 
   return (
-    <form action={formAction} className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[1fr_260px]">
+    <form action={formAction} className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[260px_1fr]">
+      <div className="rounded-card border border-line bg-[#0C0C0C] p-4.5">
+        <div className={`${LABEL} mb-3`}>Preview</div>
+        <div className="flex items-center gap-2.25 rounded-xl border border-line bg-active px-3.25 py-2.75">
+          <span className="h-4 w-1.25 shrink-0 rounded-sm bg-accent" />
+          <span className="truncate text-[13px] text-primary">{name || "Untitled list"}</span>
+        </div>
+        <p className="mt-3.5 text-[12px] leading-relaxed text-muted text-pretty">
+          Appears in the Portfolio group of the nav and as a filter on News. Alerts you configure here deliver by the
+          channels set in Settings → Notifications.
+        </p>
+      </div>
+
       <div className="flex flex-col gap-3.5">
         <div className="rounded-card border border-line bg-panel p-4.5">
           <div className={`${LABEL} mb-2`}>Name</div>
@@ -81,18 +93,6 @@ export function NewWatchlistForm() {
           </button>
           <SubmitButton>Create watchlist</SubmitButton>
         </div>
-      </div>
-
-      <div className="rounded-card border border-line bg-[#0C0C0C] p-4.5 lg:order-last">
-        <div className={`${LABEL} mb-3`}>Preview</div>
-        <div className="flex items-center gap-2.25 rounded-xl border border-line bg-active px-3.25 py-2.75">
-          <span className="h-4 w-1.25 shrink-0 rounded-sm bg-accent" />
-          <span className="truncate text-[13px] text-primary">{name || "Untitled list"}</span>
-        </div>
-        <p className="mt-3.5 text-[12px] leading-relaxed text-muted text-pretty">
-          Appears in the Portfolio group of the nav and as a filter on News. Alerts you configure deliver by the
-          channels set in Settings → Notifications.
-        </p>
       </div>
     </form>
   );

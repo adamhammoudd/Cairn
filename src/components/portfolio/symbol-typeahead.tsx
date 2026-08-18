@@ -12,6 +12,20 @@ interface SymbolTypeaheadProps {
 // free-typed text. That's the data-integrity fix: a mistyped or ambiguous
 // ticker can't reach the holdings table because there's no path from typing
 // to a submitted value that doesn't go through a real market-data-layer row.
+// Highlights the first occurrence of `query` within `text`, case-insensitive.
+// Matched substring instantly bolded/accented -- no per-item animation (per motion spec).
+function highlightMatch(text: string, query: string) {
+  const i = text.toLowerCase().indexOf(query.trim().toLowerCase());
+  if (i === -1 || !query.trim()) return text;
+  return (
+    <>
+      {text.slice(0, i)}
+      <span className="text-accent">{text.slice(i, i + query.trim().length)}</span>
+      {text.slice(i + query.trim().length)}
+    </>
+  );
+}
+
 export function SymbolTypeahead({ onSelect }: SymbolTypeaheadProps) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SymbolSearchResult[]>([]);
@@ -68,7 +82,7 @@ export function SymbolTypeahead({ onSelect }: SymbolTypeaheadProps) {
       />
 
       {open && query.trim() && !selected && (
-        <div className="absolute top-full left-0 z-10 mt-1 w-full overflow-hidden rounded-lg border border-line bg-panel py-1 shadow-lg">
+        <div className="animate-menu-in absolute top-full left-0 z-10 mt-1 w-full overflow-hidden rounded-lg border border-line bg-panel py-1 shadow-lg">
           {results.length === 0 ? (
             <div className="px-3.5 py-2 text-[12.5px] text-dim">No matching tracked symbols.</div>
           ) : (
@@ -80,8 +94,8 @@ export function SymbolTypeahead({ onSelect }: SymbolTypeaheadProps) {
                 className="flex w-full items-center justify-between px-3.5 py-2 text-left text-[13px] text-muted transition-colors duration-fast ease-standard hover:bg-active hover:text-primary"
               >
                 <span>
-                  <span className="text-primary">{r.symbol}</span>
-                  {r.name && <span className="ml-2 text-[12px] text-muted">{r.name}</span>}
+                  <span className="text-primary">{highlightMatch(r.symbol, query)}</span>
+                  {r.name && <span className="ml-2 text-[12px] text-muted">{highlightMatch(r.name, query)}</span>}
                 </span>
                 <span className="text-[11px] text-dim capitalize">{r.assetType}</span>
               </button>

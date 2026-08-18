@@ -95,7 +95,7 @@ export function TopNav({ displayName, plan }: TopNavProps) {
           <span className="block h-px rounded-full bg-muted" />
         </button>
 
-        <nav className="hidden min-w-0 flex-1 items-center gap-0.5 overflow-hidden min-[900px]:flex">
+        <nav className="hidden min-w-0 flex-1 items-center gap-0.5 overflow-visible min-[900px]:flex">
           {NAV_ITEMS.map((entry) => {
             if (!isNavGroup(entry)) {
               const isActive = isRouteActive(pathname, entry.route);

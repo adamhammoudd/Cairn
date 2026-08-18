@@ -87,12 +87,26 @@ export function GoalTracker({ goals }: { goals: GoalProgress[] }) {
                 <div className="mt-2.25 flex flex-wrap items-center justify-between gap-2 text-[12px] text-muted">
                   <span className="tabular-nums">{g.progressPct.toFixed(1)}% of target</span>
                   <span className="tabular-nums">
-                    {g.yearsRemaining === null
-                      ? "Target date passed"
-                      : g.requiredAnnualReturnPct === null
-                        ? "No current portfolio value to project from"
-                        : `Needs ${g.requiredAnnualReturnPct.toFixed(1)}%/yr for ${g.yearsRemaining.toFixed(1)}y`}
+                    {g.yearsRemaining === null ? "Target date passed" : `${g.yearsRemaining.toFixed(1)}y remaining`}
                   </span>
+                </div>
+
+                <div className="mt-3.5 rounded-xl border border-line bg-canvas p-3.25">
+                  <div className="text-[11.5px] text-muted">Required annual return to hit the target on time</div>
+                  <div className="mt-1.75 font-serif text-[22px] tabular-nums text-primary">
+                    {g.yearsRemaining === null
+                      ? "—"
+                      : g.requiredAnnualReturnPct === null
+                        ? "—"
+                        : `${g.requiredAnnualReturnPct.toFixed(1)}%`}
+                  </div>
+                  <div className="mt-1.5 text-[11px] leading-relaxed text-dim text-pretty">
+                    {g.yearsRemaining === null
+                      ? "Target date has passed."
+                      : g.requiredAnnualReturnPct === null
+                        ? "No current portfolio value to project from."
+                        : "Solved from compound growth on today's value. Not a forecast — just the rate the arithmetic requires."}
+                  </div>
                 </div>
               </div>
             );

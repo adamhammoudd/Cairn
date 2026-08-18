@@ -12,7 +12,15 @@ interface DashboardSummaryCardProps {
   delay?: number;
   wide?: boolean;
   children?: ReactNode;
+  arranging?: boolean;
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
+  onToggleWide?: () => void;
+  onHide?: () => void;
 }
+
+const ARRANGE_BTN =
+  "flex h-6 w-6 items-center justify-center rounded-md border border-line text-[11px] text-muted transition-colors duration-fast ease-standard hover:border-accent hover:text-primary";
 
 const TINT_CLASSES: Record<NonNullable<DashboardSummaryCardProps["tint"]>, string> = {
   accent: "bg-accent",
@@ -38,6 +46,11 @@ export function DashboardSummaryCard({
   delay = 0,
   wide = false,
   children,
+  arranging = false,
+  onMoveUp,
+  onMoveDown,
+  onToggleWide,
+  onHide,
 }: DashboardSummaryCardProps) {
   return (
     <div
@@ -47,16 +60,37 @@ export function DashboardSummaryCard({
       style={{ animationDelay: `${delay}ms` }}
     >
       <div className="mb-3.5 flex items-center justify-between gap-2.5">
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2.25">
           <span className={`h-3.5 w-1.25 rounded-sm ${TINT_CLASSES[tint]}`} />
           <span className="font-mono text-[10.5px] tracking-[0.14em] text-muted uppercase">{title}</span>
         </div>
-        <Link
-          href={href}
-          className="text-[11.5px] text-dim transition-colors duration-fast ease-standard hover:text-accent"
-        >
-          {ctaLabel} →
-        </Link>
+        {arranging ? (
+          <div className="flex items-center gap-1">
+            <button type="button" onClick={onMoveUp} className={ARRANGE_BTN}>
+              ↑
+            </button>
+            <button type="button" onClick={onMoveDown} className={ARRANGE_BTN}>
+              ↓
+            </button>
+            <button type="button" onClick={onToggleWide} className={ARRANGE_BTN}>
+              ⇔
+            </button>
+            <button
+              type="button"
+              onClick={onHide}
+              className="flex h-6 w-6 items-center justify-center rounded-md border border-line text-[12px] text-muted transition-colors duration-fast ease-standard hover:border-negative hover:text-negative"
+            >
+              ×
+            </button>
+          </div>
+        ) : (
+          <Link
+            href={href}
+            className="text-[11.5px] text-dim transition-colors duration-fast ease-standard hover:text-accent"
+          >
+            {ctaLabel} →
+          </Link>
+        )}
       </div>
 
       {children ?? (

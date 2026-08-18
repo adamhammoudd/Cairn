@@ -27,9 +27,12 @@ export function HoldingModal({ holding, initialSymbol, onClose }: HoldingModalPr
   }, [result, onClose]);
 
   return (
-    <div className="fixed inset-0 z-20 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
+    <div
+      className="animate-scrim-in fixed inset-0 z-20 flex items-center justify-center bg-black/60 p-4"
+      onClick={onClose}
+    >
       <div
-        className="w-full max-w-md rounded-card border border-line bg-panel p-6"
+        className="animate-sheet-in w-full max-w-md rounded-card border border-line bg-panel p-6"
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="mb-5 font-serif text-lg text-primary">{holding ? "Edit asset" : "Add holding"}</h2>

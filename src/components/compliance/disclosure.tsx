@@ -1,5 +1,5 @@
 interface DisclosureProps {
-  variant?: "inline" | "banner";
+  variant?: "inline" | "banner" | "callout";
 }
 
 // The one component every probability output and chat response touching
@@ -14,6 +14,18 @@ export function Disclosure({ variant = "inline" }: DisclosureProps) {
         Cairn&apos;s analysis is market/sector/ticker-level output — it never resolves to a
         personalized buy, hold, or sell recommendation. Always verify sources and consult a
         licensed advisor before making financial decisions.
+      </div>
+    );
+  }
+
+  if (variant === "callout") {
+    return (
+      <div className="flex items-center gap-2.25 rounded-lg border border-line bg-canvas/40 px-3 py-2.5">
+        <span aria-hidden className="h-6.5 w-1.25 flex-shrink-0 rounded-sm bg-warning" />
+        <p className="text-[11.5px] leading-relaxed text-muted text-pretty">
+          Market/sector/ticker-level analytical output, not personalized financial advice. Not a
+          recommendation to buy, hold, or sell anything.
+        </p>
       </div>
     );
   }

@@ -45,7 +45,7 @@ export function ComparisonPanel({
 
   return (
     <div className="animate-page-in flex flex-col gap-3.5">
-      <div className="flex flex-wrap items-end justify-between gap-4">
+      <div className="mb-1.5 flex flex-wrap items-end justify-between gap-4">
         <div>
           <div className="mb-2 font-mono text-[10.5px] tracking-[0.16em] text-muted uppercase">Compare</div>
           <h1 className="font-serif text-[32px] leading-tight font-normal text-primary">Side by side</h1>
@@ -100,7 +100,7 @@ export function ComparisonPanel({
               return (
                 <div
                   key={row.symbol}
-                  className="animate-rise-in rounded-xl border border-line bg-panel p-4"
+                  className="animate-rise-in rounded-card border border-line bg-panel p-4"
                   style={{ animationDelay: `${i * 60}ms` }}
                 >
                   <div className="flex items-start justify-between gap-2.5">

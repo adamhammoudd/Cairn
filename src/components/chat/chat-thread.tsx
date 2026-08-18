@@ -32,6 +32,10 @@ function sessionLabel(session: ChatSession): string {
   return session.title?.trim() || `Chat — ${new Date(session.created_at).toLocaleDateString()}`;
 }
 
+function sessionWhen(session: ChatSession): string {
+  return new Date(session.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
 export function ChatThread({ compact = false }: { compact?: boolean }) {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -195,7 +199,7 @@ export function ChatThread({ compact = false }: { compact?: boolean }) {
           onClick={startNewChat}
           className="rounded-lg px-2.5 py-1.5 text-[12px] text-muted transition-colors duration-fast ease-standard hover:bg-active hover:text-primary"
         >
-          + New chat
+          + New thread
         </button>
 
         {historyOpen && (
@@ -208,6 +212,7 @@ export function ChatThread({ compact = false }: { compact?: boolean }) {
                 className="w-full rounded-lg border border-line bg-active px-2.5 py-1.5 text-[12.5px] text-primary outline-none"
               />
             </div>
+            <div className="px-3 pt-2 pb-1 font-mono text-[9.5px] tracking-[0.14em] text-dim uppercase">History</div>
             <div className="max-h-64 overflow-y-auto py-1">
               {filteredSessions.length === 0 ? (
                 <div className="px-3 py-2 text-[12px] text-dim">No conversations found.</div>
@@ -217,11 +222,12 @@ export function ChatThread({ compact = false }: { compact?: boolean }) {
                     key={s.id}
                     type="button"
                     onClick={() => loadSession(s.id)}
-                    className={`block w-full truncate px-3 py-2 text-left text-[12.5px] transition-colors duration-fast ease-standard hover:bg-active ${
+                    className={`block w-full truncate rounded-lg px-3 py-2 text-left transition-colors duration-fast ease-standard hover:bg-active ${
                       s.id === sessionId ? "text-primary" : "text-muted"
                     }`}
                   >
-                    {sessionLabel(s)}
+                    <div className="truncate text-[12.5px]">{sessionLabel(s)}</div>
+                    <div className="mt-0.5 text-[10.5px] text-dim">{sessionWhen(s)}</div>
                   </button>
                 ))
               )}
@@ -254,7 +260,10 @@ export function ChatThread({ compact = false }: { compact?: boolean }) {
                     m.role === "user" ? "bg-active text-primary" : "border border-line bg-panel text-primary"
                   }`}
                 >
-                  {m.content || (streaming && i === messages.length - 1 ? "…" : "")}
+                  {m.content}
+                  {streaming && m.role === "assistant" && i === messages.length - 1 && (
+                    <span className="ml-0.5 inline-block h-[15px] w-[7px] translate-y-[2px] animate-blink bg-accent align-middle" />
+                  )}
                 </div>
                 {/* Every assistant response gets its own attached disclosure, not
                     just ones that happen to cite a MethodologyCard (which already

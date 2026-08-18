@@ -63,15 +63,17 @@ export function PositionSizingCalculator({ defaultAccountValue }: { defaultAccou
       </div>
 
       {hasInputs && (
-        <div className="mt-5 grid grid-cols-2 gap-4 border-t border-line pt-4.5 lg:grid-cols-4">
-          <CalcStat label="Risk amount" value={fmtCurrency(result.riskAmount)} />
-          <CalcStat label="Risk / share" value={fmtCurrency(result.riskPerShare)} />
-          <CalcStat label="Share quantity" value={result.shareQty.toLocaleString()} />
-          <CalcStat
-            label="Position value"
-            value={fmtCurrency(result.positionValue)}
-            sub={`${result.positionPctOfAccount.toFixed(1)}% of account`}
-          />
+        <div className="mt-4 rounded-xl border border-line bg-canvas p-4">
+          <div className="flex items-baseline justify-between gap-3">
+            <span className="text-[12px] text-muted">Share quantity</span>
+            <span className="font-serif text-[28px] tabular-nums text-primary">{result.shareQty.toLocaleString()}</span>
+          </div>
+          <div className="mt-3.5 grid grid-cols-2 gap-2.5 lg:grid-cols-4">
+            <CalcStat label="Risk amount" value={fmtCurrency(result.riskAmount)} />
+            <CalcStat label="Risk / share" value={fmtCurrency(result.riskPerShare)} />
+            <CalcStat label="Position value" value={fmtCurrency(result.positionValue)} />
+            <CalcStat label="Weight" value={`${result.positionPctOfAccount.toFixed(1)}%`} />
+          </div>
         </div>
       )}
     </CalcCard>

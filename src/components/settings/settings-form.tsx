@@ -31,7 +31,7 @@ export function SettingsForm({ settings, activeTab }: SettingsFormProps) {
 
   return (
     <form action={formAction}>
-      <div className={activeTab === "display" ? "flex flex-col gap-5" : "hidden"}>
+      <div className={activeTab === "display" ? "flex flex-col divide-y divide-line" : "hidden"}>
         <Row label="Default chart timeframe" hint="Applied when opening a ticker">
           <div className="flex gap-1.5">
             {CHART_VIEWS.map((v) => (
@@ -132,7 +132,7 @@ export function SettingsForm({ settings, activeTab }: SettingsFormProps) {
         </Row>
       </div>
 
-      <div className={activeTab === "notifications" ? "flex flex-col gap-5" : "hidden"}>
+      <div className={activeTab === "notifications" ? "flex flex-col divide-y divide-line" : "hidden"}>
         <Row label="Price move alert" hint="Minimum % move before a price alert can fire">
           <div className="flex items-center gap-2">
             <input
@@ -159,10 +159,10 @@ export function SettingsForm({ settings, activeTab }: SettingsFormProps) {
 
 function Row({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
-    <div className="flex items-center justify-between gap-4">
-      <div>
-        <div className="mb-0.5 text-sm text-primary">{label}</div>
-        {hint && <div className="text-[12.5px] text-muted">{hint}</div>}
+    <div className="flex items-center justify-between gap-4 py-3.5 first:pt-0 last:pb-0">
+      <div className="min-w-0">
+        <div className="text-[13px] text-primary">{label}</div>
+        {hint && <div className="mt-1 text-[11.5px] leading-relaxed text-muted">{hint}</div>}
       </div>
       {children}
     </div>

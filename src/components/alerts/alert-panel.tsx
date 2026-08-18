@@ -201,7 +201,31 @@ export function AlertPanel({ alerts, deliveries }: AlertPanelProps) {
         </form>
       )}
 
-      <div className="grid grid-cols-1 items-start gap-3.5 lg:grid-cols-[1fr_320px]">
+      <div className="grid grid-cols-1 items-start gap-3.5 lg:grid-cols-[300px_1fr]">
+        <aside className="overflow-hidden rounded-card border border-line bg-panel">
+          <div className="border-b border-line px-4 py-3.25 font-mono text-[10px] tracking-[0.14em] text-muted uppercase">
+            Recent deliveries
+          </div>
+          {deliveries.length === 0 ? (
+            <p className="px-4 py-5 text-[12.5px] text-dim">Nothing yet — alerts appear here when they fire.</p>
+          ) : (
+            deliveries.map((d) => (
+              <div key={d.id} className="flex gap-2.75 border-b border-line px-4 py-3.5 last:border-b-0">
+                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
+                <div className="min-w-0">
+                  <div className="text-[12.5px] leading-relaxed text-primary text-pretty">
+                    {d.message ?? `${d.scope_value} alert fired.`}
+                  </div>
+                  <div className="mt-1.25 text-[11px] text-dim" suppressHydrationWarning>
+                    {CHANNEL_LABELS[d.channel] ?? d.channel} ·{" "}
+                    {new Date(d.sent_at).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </aside>
+
         <div className="flex flex-col gap-2.5">
           {alerts.length === 0 ? (
             <div className="rounded-card border border-dashed border-line px-6 py-16 text-center">
@@ -284,30 +308,6 @@ export function AlertPanel({ alerts, deliveries }: AlertPanelProps) {
             ))
           )}
         </div>
-
-        <aside className="overflow-hidden rounded-card border border-line bg-panel">
-          <div className="border-b border-line px-4 py-3.25 font-mono text-[10px] tracking-[0.14em] text-muted uppercase">
-            Recent deliveries
-          </div>
-          {deliveries.length === 0 ? (
-            <p className="px-4 py-5 text-[12.5px] text-dim">Nothing yet — alerts appear here when they fire.</p>
-          ) : (
-            deliveries.map((d) => (
-              <div key={d.id} className="flex gap-2.75 border-b border-line px-4 py-3.5 last:border-b-0">
-                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
-                <div className="min-w-0">
-                  <div className="text-[12.5px] leading-relaxed text-primary text-pretty">
-                    {d.message ?? `${d.scope_value} alert fired.`}
-                  </div>
-                  <div className="mt-1.25 text-[11px] text-dim" suppressHydrationWarning>
-                    {CHANNEL_LABELS[d.channel] ?? d.channel} ·{" "}
-                    {new Date(d.sent_at).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
-                  </div>
-                </div>
-              </div>
-            ))
-          )}
-        </aside>
       </div>
     </div>
   );

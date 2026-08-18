@@ -251,7 +251,7 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-[1fr_0.7fr_0.8fr_0.7fr_0.9fr_0.9fr_0.6fr_0.7fr] gap-2.5 border-b border-line px-4.5 py-2.5 font-mono text-[9.5px] tracking-[0.1em] text-dim uppercase">
+              <div className="grid grid-cols-[1fr_0.8fr_0.9fr_0.8fr_0.9fr_0.9fr_0.7fr_0.8fr] gap-2.5 border-b border-line px-4.5 py-2.5 font-mono text-[9.5px] tracking-[0.1em] text-dim uppercase">
                 <div>Symbol</div>
                 <div>Type</div>
                 <div>Price</div>
@@ -261,11 +261,12 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
                 <div>P/E</div>
                 <div>Yield</div>
               </div>
-              {rows.map((r) => (
+              {rows.map((r, index) => (
                 <Link
                   key={r.symbol}
                   href={`/ticker/${r.symbol}`}
-                  className="grid grid-cols-[1fr_0.7fr_0.8fr_0.7fr_0.9fr_0.9fr_0.6fr_0.7fr] items-center gap-2.5 border-b border-line px-4.5 py-3 transition-colors duration-fast ease-standard last:border-b-0 hover:bg-active"
+                  className="animate-rise-in grid grid-cols-[1fr_0.8fr_0.9fr_0.8fr_0.9fr_0.9fr_0.7fr_0.8fr] items-center gap-2.5 border-b border-line px-4.5 py-3 transition-colors duration-fast ease-standard last:border-b-0 hover:bg-active"
+                  style={{ animationDelay: `${index * 25}ms` }}
                 >
                   <div className="text-sm text-primary">{r.symbol}</div>
                   <div className={`font-mono text-[10px] tracking-[0.08em] uppercase ${(ASSET_TYPE_TAG_CLASS[r.assetType] ?? "text-muted").split(" ")[0]}`}>

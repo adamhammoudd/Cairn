@@ -38,7 +38,7 @@ export function SectorTreemap({ data }: { data: SectorMapNode[] }) {
           return (
             <div
               key={sector.name}
-              className="animate-rise-in rounded-xl border border-line bg-panel p-3.75"
+              className="animate-rise-in rounded-card border border-line bg-panel p-3.75"
               style={{ animationDelay: `${index * 50}ms` }}
             >
               <div className="mb-3 flex items-center justify-between gap-3">
@@ -66,7 +66,7 @@ export function SectorTreemap({ data }: { data: SectorMapNode[] }) {
                         flexBasis: 0,
                         background: colorForChange(tile.changePct),
                       }}
-                      className="flex min-w-0 flex-col justify-end gap-0.75 overflow-hidden rounded-lg p-2.25 transition-[transform,box-shadow] duration-base ease-standard hover:-translate-y-0.5 hover:shadow-[0_10px_22px_rgba(0,0,0,0.45)]"
+                      className="flex min-w-0 flex-col justify-end gap-0.75 overflow-hidden rounded-[9px] p-2.25 transition-[transform,box-shadow] duration-base ease-standard hover:-translate-y-0.5 hover:shadow-[0_10px_22px_rgba(0,0,0,0.45)]"
                     >
                       <span
                         className={`truncate text-[12px] font-semibold ${tone === "dark" ? "text-canvas" : "text-primary"}`}

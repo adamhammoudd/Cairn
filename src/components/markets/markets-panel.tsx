@@ -43,7 +43,7 @@ export function MarketsPanel({ rows, cryptoRows }: MarketsPanelProps) {
         <div className="mb-2 font-mono text-[10.5px] tracking-[0.16em] text-muted uppercase">Markets</div>
         <h1 className="font-serif text-[32px] leading-tight font-normal text-primary">The whole board</h1>
         <p className="mt-1.5 max-w-[560px] text-[13.5px] text-muted text-pretty">
-          Equities, ETFs, crypto, forex and futures in one filterable view.
+          Equities, ETFs, crypto, forex and indices in one filterable view.
         </p>
       </div>
 

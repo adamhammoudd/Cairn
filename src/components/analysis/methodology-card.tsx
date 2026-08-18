@@ -2,10 +2,13 @@ import type { AnalysisWithMethodology } from "@/lib/actions/analysis";
 import type { CalendarEvent } from "@/lib/calendar";
 import { Disclosure } from "@/components/compliance/disclosure";
 
+// text-negative is reserved exclusively for loss/destructive indicators (see
+// CLAUDE.md brand guardrail) — low confidence is neither, so it uses the
+// warning token instead.
 const CONFIDENCE_COLOR: Record<string, string> = {
   high: "text-accent",
   medium: "text-primary",
-  low: "text-negative",
+  low: "text-warning",
 };
 
 interface MethodologyCardProps {
@@ -85,7 +88,7 @@ export function MethodologyCard({
                         {s.title}
                       </a>
                     ) : (
-                      s.title
+                      <span className="text-accent">{s.title}</span>
                     )}
                     <span className="text-dim"> · {s.source_name}</span>
                   </li>
@@ -101,15 +104,28 @@ export function MethodologyCard({
             {analysis.analogs.length === 0 ? (
               <div className="text-[12.5px] text-dim">None matched</div>
             ) : (
-              <ul className="flex flex-col gap-1.5">
-                {analysis.analogs.map((e) => (
-                  <li key={e.id} className="text-[12.5px] text-muted">
-                    <span className="text-primary">{e.symbol ?? e.sector}</span> — {e.event_type} ·{" "}
-                    {new Date(e.event_date).toLocaleDateString()}
-                    <span className="text-dim"> · {Math.round(e.similarity_score * 100)}% match</span>
-                    {e.note && <span className="text-dim"> — {e.note}</span>}
-                  </li>
-                ))}
+              <ul className="flex flex-col gap-2">
+                {analysis.analogs.map((e) => {
+                  const matchPct = Math.round(e.similarity_score * 100);
+                  return (
+                    <li key={e.id} className="text-[12.5px] text-muted">
+                      <div className="flex items-center justify-between gap-2.5">
+                        <span>
+                          <span className="text-primary">{e.symbol ?? e.sector}</span> — {e.event_type} ·{" "}
+                          {new Date(e.event_date).toLocaleDateString()}
+                          {e.note && <span className="text-dim"> — {e.note}</span>}
+                        </span>
+                        <span className="shrink-0 tabular-nums text-dim">{matchPct}%</span>
+                      </div>
+                      <div className="mt-1 h-0.75 overflow-hidden rounded-full bg-active">
+                        <div
+                          className="h-full rounded-full bg-gradient-to-r from-accent-light to-accent-dark"
+                          style={{ width: `${matchPct}%` }}
+                        />
+                      </div>
+                    </li>
+                  );
+                })}
               </ul>
             )}
           </div>
@@ -138,8 +154,8 @@ export function MethodologyCard({
         </div>
       )}
 
-      <div className="mt-3 border-t border-line pt-3">
-        <Disclosure />
+      <div className="mt-3.5">
+        <Disclosure variant="callout" />
       </div>
     </div>
   );

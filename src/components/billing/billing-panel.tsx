@@ -38,12 +38,12 @@ export function BillingPanel({ summary }: { summary: UsageSummary }) {
 
         <div className="mt-4 h-2 overflow-hidden rounded-full bg-active">
           <div
-            className={`h-full rounded-full ${usagePct >= 100 ? "bg-negative" : "bg-accent"}`}
+            className={`h-full rounded-full ${usagePct >= 100 ? "bg-warning" : "bg-accent"}`}
             style={{ width: `${usagePct}%` }}
           />
         </div>
         {summary.remaining === 0 && (
-          <p className="mt-2 text-[12px] text-negative">
+          <p className="mt-2 text-[12px] text-warning">
             Limit reached for this month. Switch to a higher plan below or wait until next month.
           </p>
         )}

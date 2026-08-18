@@ -5,10 +5,10 @@ interface LogoProps {
 }
 
 export function Logo({ size = 32, showWordmark = true, wordmarkColor = "var(--color-primary)" }: LogoProps) {
-  const glow = Math.round(size * 0.2);
+  const glow = Math.round(size / 3);
 
   return (
-    <div className="inline-flex items-center" style={{ gap: Math.round(size * 0.28) }}>
+    <div className="inline-flex items-center" style={{ gap: Math.round(size * 0.375) }}>
       <div className="relative shrink-0" style={{ width: size, height: size }}>
         <div
           className="absolute rounded-full bg-gradient-to-br from-accent-light to-accent-dark"
@@ -16,7 +16,7 @@ export function Logo({ size = 32, showWordmark = true, wordmarkColor = "var(--co
             left: "12%",
             top: "60%",
             width: "76%",
-            height: "30%",
+            height: "28%",
             boxShadow: `0 0 ${glow}px rgba(47,198,133,0.35)`,
           }}
         />
@@ -26,7 +26,7 @@ export function Logo({ size = 32, showWordmark = true, wordmarkColor = "var(--co
             left: "21%",
             top: "34%",
             width: "58%",
-            height: "27%",
+            height: "25%",
             boxShadow: `0 0 ${glow}px rgba(47,198,133,0.3)`,
           }}
         />
@@ -36,7 +36,7 @@ export function Logo({ size = 32, showWordmark = true, wordmarkColor = "var(--co
             left: "30%",
             top: "10%",
             width: "40%",
-            height: "22%",
+            height: "21%",
             boxShadow: `0 0 ${glow}px rgba(47,198,133,0.25)`,
           }}
         />
@@ -44,7 +44,7 @@ export function Logo({ size = 32, showWordmark = true, wordmarkColor = "var(--co
       {showWordmark && (
         <span
           className="font-serif leading-none tracking-[0.01em]"
-          style={{ fontSize: Math.round(size * 0.72), color: wordmarkColor }}
+          style={{ fontSize: Math.round(size * 0.833), color: wordmarkColor }}
         >
           Cairn
         </span>

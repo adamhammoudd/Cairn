@@ -44,15 +44,32 @@ export function ScenarioModeler({ holdings }: { holdings: ScenarioHolding[] }) {
       title="Scenario modeling"
       blurb="Applies a hypothetical price move to today's holdings. A what-if on current value, not a forecast of what will happen."
     >
-      <div className="max-w-xs">
-        <CalcField label="Global price move (%)">
-          <input
-            value={globalShockPct}
-            onChange={(e) => setGlobalShockPct(e.target.value)}
-            placeholder="e.g. -10"
-            className={CALC_INPUT}
-          />
-        </CalcField>
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <div className="max-w-xs flex-1">
+          <CalcField label="Global price move (%)">
+            <input
+              type="range"
+              min={-30}
+              max={30}
+              step={1}
+              value={Number(globalShockPct) || 0}
+              onChange={(e) => setGlobalShockPct(e.target.value)}
+              className="w-full accent-accent"
+            />
+          </CalcField>
+        </div>
+        <div
+          className={`font-serif text-[20px] tabular-nums ${
+            (Number(globalShockPct) || 0) > 0
+              ? "text-accent"
+              : (Number(globalShockPct) || 0) < 0
+                ? "text-negative"
+                : "text-primary"
+          }`}
+        >
+          {(Number(globalShockPct) || 0) > 0 ? "+" : ""}
+          {globalShockPct || 0}%
+        </div>
       </div>
 
       <div className="mt-4 overflow-hidden rounded-xl border border-line">

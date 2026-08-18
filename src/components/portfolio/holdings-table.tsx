@@ -26,7 +26,7 @@ export function HoldingsTable({
 
   return (
     <>
-      <div className="mb-3.5 flex flex-wrap items-end justify-between gap-4">
+      <div className="mb-5.5 flex flex-wrap items-end justify-between gap-4">
         <div>
           <div className="mb-2 font-mono text-[10.5px] tracking-[0.16em] text-muted uppercase">Portfolio</div>
           <h2 className="font-serif text-[32px] leading-tight font-normal text-primary">Holdings</h2>

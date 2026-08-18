@@ -54,7 +54,7 @@ export function NewsPanel({ items }: { items: NewsFeedItem[] }) {
       <div className="mb-4.5">
         <div className="mb-2 font-mono text-[10.5px] tracking-[0.16em] text-muted uppercase">News</div>
         <h1 className="font-serif text-[32px] leading-tight font-normal text-primary">Ranked for you</h1>
-        <p className="mt-1.5 max-w-[580px] text-[13.5px] text-muted text-pretty">
+        <p className="mt-1.75 max-w-[580px] text-[13.5px] text-muted text-pretty">
           Items touching your holdings surface first, then your sectors, then macro. Every item carries its source and
           age.
         </p>
@@ -82,7 +82,7 @@ export function NewsPanel({ items }: { items: NewsFeedItem[] }) {
         {visible.map((item, index) => (
           <article
             key={item.id}
-            className="animate-rise-in flex gap-3.5 rounded-xl border border-line bg-panel p-4.5 transition-[border-color,transform] duration-base ease-standard hover:-translate-y-px hover:border-[#3A3A3A]"
+            className="animate-rise-in flex gap-3.5 rounded-xl border border-line bg-panel px-4.5 py-4 transition-[border-color,transform] duration-base ease-standard hover:-translate-y-px hover:border-[#3A3A3A]"
             style={{ animationDelay: `${Math.min(index, 8) * 40}ms` }}
           >
             <span className={`w-0.75 shrink-0 rounded-full ${RELEVANCE_BAR[item.relevance]}`} />

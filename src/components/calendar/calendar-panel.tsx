@@ -66,12 +66,10 @@ export function CalendarPanel({ events }: { events: CalendarEvent[] }) {
     year: "numeric",
   });
 
+  // Flat, date-ascending list (not grouped by day) — matches the "Next up" list in the mock.
   const upcoming = useMemo(
-    () =>
-      Array.from(byDate.entries())
-        .filter(([date]) => date >= todayIso)
-        .sort((a, b) => a[0].localeCompare(b[0])),
-    [byDate, todayIso],
+    () => filtered.filter((e) => e.event_date >= todayIso).sort((a, b) => a.event_date.localeCompare(b.event_date)),
+    [filtered, todayIso],
   );
 
   function toggle(type: string) {
@@ -82,10 +80,7 @@ export function CalendarPanel({ events }: { events: CalendarEvent[] }) {
     <div className="animate-page-in flex flex-col gap-4">
       <div>
         <div className="mb-2 font-mono text-[10.5px] tracking-[0.16em] text-muted uppercase">Planning · Calendar</div>
-        <h1 className="font-serif text-[32px] leading-tight font-normal text-primary">What&apos;s ahead</h1>
-        <p className="mt-1.5 max-w-[560px] text-[13.5px] text-muted text-pretty">
-          Earnings, economic prints, dividends, and listings for the symbols you track.
-        </p>
+        <h1 className="font-serif text-[32px] leading-tight font-normal text-primary">{monthLabel}</h1>
       </div>
 
       <div className="flex w-fit flex-wrap gap-1.5 rounded-xl border border-line bg-panel p-1">
@@ -113,44 +108,65 @@ export function CalendarPanel({ events }: { events: CalendarEvent[] }) {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 items-start gap-3.5 xl:grid-cols-[1fr_340px]">
-        <div className="overflow-hidden rounded-card border border-line bg-panel">
-          <div className="border-b border-line px-4.5 py-3.25 font-mono text-[10px] tracking-[0.14em] text-muted uppercase">
-            {monthLabel}
+      <div className="grid grid-cols-1 items-start gap-3.5 xl:grid-cols-[340px_1fr]">
+        <aside className="overflow-hidden rounded-card border border-line bg-panel">
+          <div className="border-b border-line px-4 py-3.25 font-mono text-[10px] tracking-[0.14em] text-muted uppercase">
+            Next up
           </div>
 
-          <div className="grid grid-cols-7 border-b border-line">
+          {upcoming.length === 0 ? (
+            <p className="px-4 py-5 text-[12.5px] text-dim">
+              No upcoming events{activeTypes.length > 0 ? " of this type" : ""}.
+            </p>
+          ) : (
+            upcoming.map((e) => (
+              <div key={e.id} className="flex gap-2.75 border-b border-line/70 px-4 py-3.5 last:border-b-0">
+                <span className="w-0.75 shrink-0 rounded-sm" style={{ background: tintForEvent(e.event_type) }} />
+                <div className="min-w-0">
+                  <div
+                    className="font-mono text-[9.5px] tracking-[0.12em] uppercase"
+                    style={{ color: tintForEvent(e.event_type) }}
+                  >
+                    {e.event_type} · {formatDayLabel(e.event_date, todayIso)}
+                  </div>
+                  <div className="mt-1.5 text-[13px] text-primary">
+                    {e.symbol ? `${e.symbol} — ${e.title}` : e.title}
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </aside>
+
+        <div className="rounded-card border border-line bg-panel p-4">
+          <div className="grid grid-cols-7 gap-1.5 pb-2">
             {DOW.map((d) => (
-              <div key={d} className="px-2 py-2 text-center font-mono text-[9.5px] tracking-[0.12em] text-dim uppercase">
+              <div key={d} className="text-center font-mono text-[9.5px] tracking-[0.12em] text-dim uppercase">
                 {d}
               </div>
             ))}
           </div>
 
-          <div className="grid grid-cols-7">
+          <div className="grid grid-cols-7 gap-1.5">
             {cells.map((cell) => (
               <div
                 key={cell.iso}
-                className={`min-h-[76px] border-r border-b border-line p-1.5 last:border-r-0 ${
-                  cell.isToday ? "bg-active" : ""
+                className={`min-h-[74px] rounded-lg border p-1.75 transition-colors duration-fast ease-standard hover:border-line ${
+                  cell.isToday ? "border-accent bg-active" : "border-line/70"
                 } ${cell.inMonth ? "" : "opacity-40"}`}
               >
                 <div
-                  className={`mb-1 text-[11px] tabular-nums ${
-                    cell.isToday
-                      ? "inline-flex h-5 w-5 items-center justify-center rounded-full border border-accent/40 text-primary"
-                      : cell.inMonth
-                        ? "text-muted"
-                        : "text-dim"
+                  className={`font-mono text-[10.5px] tabular-nums ${
+                    cell.isToday ? "text-accent" : cell.inMonth ? "text-primary" : "text-dim"
                   }`}
                 >
                   {cell.day}
                 </div>
-                <div className="flex flex-col gap-0.75">
+                <div className="mt-1.5 flex flex-col gap-0.75">
                   {cell.events.slice(0, 2).map((e) => (
-                    <div key={e.id} className="flex items-center gap-1" title={`${e.symbol ?? ""} ${e.title}`.trim()}>
+                    <div key={e.id} className="flex items-center gap-1.25" title={`${e.symbol ?? ""} ${e.title}`.trim()}>
                       <span
-                        className="h-1.5 w-1.5 shrink-0 rounded-full"
+                        className="h-1 w-1 shrink-0 rounded-full"
                         style={{ background: tintForEvent(e.event_type) }}
                       />
                       <span className="truncate text-[10px] text-muted">{e.symbol ?? e.title}</span>
@@ -164,45 +180,6 @@ export function CalendarPanel({ events }: { events: CalendarEvent[] }) {
             ))}
           </div>
         </div>
-
-        <aside className="overflow-hidden rounded-card border border-line bg-panel">
-          <div className="border-b border-line px-4 py-3.25 font-mono text-[10px] tracking-[0.14em] text-muted uppercase">
-            Upcoming
-          </div>
-
-          {upcoming.length === 0 ? (
-            <p className="px-4 py-5 text-[12.5px] text-dim">
-              No upcoming events{activeTypes.length > 0 ? " of this type" : ""}.
-            </p>
-          ) : (
-            upcoming.map(([date, dayEvents]) => (
-              <div key={date} className="border-b border-line px-4 py-3.5 last:border-b-0">
-                <div className="mb-2 font-mono text-[9.5px] tracking-[0.12em] text-dim uppercase">
-                  {formatDayLabel(date, todayIso)}
-                </div>
-                <div className="flex flex-col gap-2">
-                  {dayEvents.map((e) => (
-                    <div key={e.id} className="flex gap-2.5">
-                      <span
-                        className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full"
-                        style={{ background: tintForEvent(e.event_type) }}
-                      />
-                      <div className="min-w-0">
-                        {e.symbol && <div className="text-[12.5px] text-primary">{e.symbol}</div>}
-                        <div className={e.symbol ? "text-[11.5px] text-muted" : "text-[12.5px] text-primary"}>
-                          {e.title}
-                        </div>
-                        <div className="mt-0.5 font-mono text-[9.5px] tracking-[0.1em] text-dim uppercase">
-                          {e.event_type}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))
-          )}
-        </aside>
       </div>
     </div>
   );
