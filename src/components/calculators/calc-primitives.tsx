@@ -9,8 +9,8 @@ export const CALC_LABEL = "font-mono text-[9.5px] tracking-[0.12em] text-dim upp
 
 export function CalcField({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <label className="flex flex-col gap-1.75">
-      <span className={CALC_LABEL}>{label}</span>
+    <label>
+      <span>{label}</span>
       {children}
     </label>
   );
@@ -30,9 +30,9 @@ export function CalcStat({
   const color = tone === "positive" ? "text-accent" : tone === "negative" ? "text-negative" : "text-primary";
   return (
     <div>
-      <div className={CALC_LABEL}>{label}</div>
-      <div className={`mt-1.75 font-serif text-[22px] leading-none tabular-nums ${color}`}>{value}</div>
-      {sub && <div className="mt-1.25 text-[11.5px] text-dim">{sub}</div>}
+      <div>{label}</div>
+      <div>{value}</div>
+      {sub && <div>{sub}</div>}
     </div>
   );
 }
@@ -47,9 +47,9 @@ export function CalcCard({
   children: ReactNode;
 }) {
   return (
-    <div className="rounded-card border border-line bg-panel p-4.5">
-      <div className="font-serif text-[17px] text-primary">{title}</div>
-      <p className="mt-1.5 mb-4 max-w-[620px] text-[12.5px] leading-relaxed text-dim text-pretty">{blurb}</p>
+    <div>
+      <div>{title}</div>
+      <p>{blurb}</p>
       {children}
     </div>
   );

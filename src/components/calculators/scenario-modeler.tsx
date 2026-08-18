@@ -30,9 +30,9 @@ export function ScenarioModeler({ holdings }: { holdings: ScenarioHolding[] }) {
 
   if (holdings.length === 0) {
     return (
-      <div className="rounded-card border border-dashed border-line px-6 py-16 text-center">
-        <div className="font-serif text-[20px] text-primary">Nothing to model against</div>
-        <p className="mx-auto mt-2 max-w-[380px] text-[13px] text-muted text-pretty">
+      <div>
+        <div>Nothing to model against</div>
+        <p>
           Add holdings on the Portfolio page and you can shock them here to see what it does to total value.
         </p>
       </div>
@@ -43,9 +43,9 @@ export function ScenarioModeler({ holdings }: { holdings: ScenarioHolding[] }) {
     <CalcCard
       title="Scenario modeling"
       blurb="Applies a hypothetical price move to today's holdings. A what-if on current value, not a forecast of what will happen."
-    >
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-        <div className="max-w-xs flex-1">
+ >
+      <div>
+        <div>
           <CalcField label="Global price move (%)">
             <input
               type="range"
@@ -54,30 +54,24 @@ export function ScenarioModeler({ holdings }: { holdings: ScenarioHolding[] }) {
               step={1}
               value={Number(globalShockPct) || 0}
               onChange={(e) => setGlobalShockPct(e.target.value)}
-              className="w-full accent-accent"
-            />
+
+ />
           </CalcField>
         </div>
         <div
-          className={`font-serif text-[20px] tabular-nums ${
-            (Number(globalShockPct) || 0) > 0
-              ? "text-accent"
-              : (Number(globalShockPct) || 0) < 0
-                ? "text-negative"
-                : "text-primary"
-          }`}
-        >
+
+ >
           {(Number(globalShockPct) || 0) > 0 ? "+" : ""}
           {globalShockPct || 0}%
         </div>
       </div>
 
-      <div className="mt-4 overflow-hidden rounded-xl border border-line">
-        <div className="overflow-x-auto">
-          <div className="min-w-[720px]">
+      <div>
+        <div>
+          <div>
             <div
-              className={`grid ${COLS} gap-3 border-b border-line px-4 py-2.5 font-mono text-[9.5px] tracking-[0.12em] text-dim uppercase`}
-            >
+
+ >
               <div>Symbol</div>
               <div>Current price</div>
               <div>Override %</div>
@@ -88,24 +82,22 @@ export function ScenarioModeler({ holdings }: { holdings: ScenarioHolding[] }) {
             {rows.map((r) => (
               <div
                 key={r.symbol}
-                className={`grid ${COLS} items-center gap-3 border-b border-line px-4 py-2.75 text-[12.5px] transition-colors duration-fast ease-standard last:border-b-0 hover:bg-active`}
-              >
-                <div className="text-primary">{r.symbol}</div>
-                <div className="tabular-nums text-muted">{fmtCurrency(r.currentPrice)}</div>
+
+ >
+                <div>{r.symbol}</div>
+                <div>{fmtCurrency(r.currentPrice)}</div>
                 <input
                   value={overrides[r.symbol] ?? ""}
                   onChange={(e) => setOverride(r.symbol, e.target.value)}
                   placeholder={globalShockPct}
                   aria-label={`${r.symbol} price move override, percent`}
-                  className="w-20 rounded-md border border-line bg-canvas px-2 py-1 text-[12px] tabular-nums text-primary outline-none transition-colors duration-base ease-standard focus:border-accent"
-                />
-                <div className="tabular-nums text-muted">{fmtCurrency(r.hypotheticalPrice)}</div>
-                <div className="tabular-nums text-primary">{fmtCurrency(r.currentValue)}</div>
+
+ />
+                <div>{fmtCurrency(r.hypotheticalPrice)}</div>
+                <div>{fmtCurrency(r.currentValue)}</div>
                 <div
-                  className={`tabular-nums ${
-                    r.valueDelta === null ? "text-primary" : r.valueDelta >= 0 ? "text-accent" : "text-negative"
-                  }`}
-                >
+
+ >
                   {fmtCurrency(r.hypotheticalValue)}
                 </div>
               </div>
@@ -114,14 +106,14 @@ export function ScenarioModeler({ holdings }: { holdings: ScenarioHolding[] }) {
         </div>
       </div>
 
-      <div className="mt-5 grid grid-cols-1 gap-4 border-t border-line pt-4.5 sm:grid-cols-3">
+      <div>
         <CalcStat label="Current total" value={fmtCurrency(currentTotal)} />
         <CalcStat label="Hypothetical total" value={fmtCurrency(hypotheticalTotal)} />
         <CalcStat
           label="Change"
           value={`${totalDelta >= 0 ? "+" : ""}${fmtCurrency(totalDelta)}`}
           tone={totalDelta >= 0 ? "positive" : "negative"}
-        />
+ />
       </div>
     </CalcCard>
   );

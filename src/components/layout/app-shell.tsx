@@ -10,9 +10,9 @@ interface AppShellProps {
 
 export function AppShell({ displayName, plan, children }: AppShellProps) {
   return (
-    <div className="flex min-h-screen flex-col bg-canvas">
+    <div>
       <TopNav displayName={displayName} plan={plan} />
-      <main className="mx-auto w-full max-w-[1560px] flex-1 overflow-auto px-5.5 pt-6.5 pb-15 sm:px-7">{children}</main>
+      <main>{children}</main>
       <ChatPanel />
     </div>
   );

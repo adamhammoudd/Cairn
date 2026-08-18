@@ -185,49 +185,47 @@ export function ChatThread({ compact = false }: { compact?: boolean }) {
   const filteredSessions = sessions.filter((s) => sessionLabel(s).toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <div className="flex h-full flex-col">
-      <div className="relative flex items-center justify-between gap-2 border-b border-line px-3 py-2.5">
+    <div>
+      <div>
         <button
           type="button"
           onClick={() => setHistoryOpen((o) => !o)}
-          className="rounded-lg px-2.5 py-1.5 text-[12px] text-muted transition-colors duration-fast ease-standard hover:bg-active hover:text-primary"
-        >
+
+ >
           History {historyOpen ? "▲" : "▼"}
         </button>
         <button
           type="button"
           onClick={startNewChat}
-          className="rounded-lg px-2.5 py-1.5 text-[12px] text-muted transition-colors duration-fast ease-standard hover:bg-active hover:text-primary"
-        >
+
+ >
           + New thread
         </button>
 
         {historyOpen && (
-          <div className="absolute top-full left-0 z-10 mt-1 w-full overflow-hidden rounded-lg border border-line bg-panel shadow-lg">
-            <div className="border-b border-line p-2">
+          <div>
+            <div>
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search conversations…"
-                className="w-full rounded-lg border border-line bg-active px-2.5 py-1.5 text-[12.5px] text-primary outline-none"
-              />
+
+ />
             </div>
-            <div className="px-3 pt-2 pb-1 font-mono text-[9.5px] tracking-[0.14em] text-dim uppercase">History</div>
-            <div className="max-h-64 overflow-y-auto py-1">
+            <div>History</div>
+            <div>
               {filteredSessions.length === 0 ? (
-                <div className="px-3 py-2 text-[12px] text-dim">No conversations found.</div>
+                <div>No conversations found.</div>
               ) : (
                 filteredSessions.map((s) => (
                   <button
                     key={s.id}
                     type="button"
                     onClick={() => loadSession(s.id)}
-                    className={`block w-full truncate rounded-lg px-3 py-2 text-left transition-colors duration-fast ease-standard hover:bg-active ${
-                      s.id === sessionId ? "text-primary" : "text-muted"
-                    }`}
-                  >
-                    <div className="truncate text-[12.5px]">{sessionLabel(s)}</div>
-                    <div className="mt-0.5 text-[10.5px] text-dim">{sessionWhen(s)}</div>
+
+ >
+                    <div>{sessionLabel(s)}</div>
+                    <div>{sessionWhen(s)}</div>
                   </button>
                 ))
               )}
@@ -236,33 +234,31 @@ export function ChatThread({ compact = false }: { compact?: boolean }) {
         )}
       </div>
 
-      <div ref={scrollRef} className={`flex-1 overflow-y-auto ${compact ? "px-3 py-3" : "px-2 py-4"}`}>
+      <div ref={scrollRef}>
         {messages.length === 0 ? (
-          <p className="text-[13px] text-muted">
+          <p>
             Ask about a ticker, sector, or market trend — I&apos;ll answer from stored research only.
           </p>
         ) : (
-          <div className="flex flex-col gap-3.5">
+          <div>
             {hasMore && (
               <button
                 type="button"
                 onClick={loadOlderMessages}
                 disabled={loadingOlder}
-                className="mx-auto rounded-lg px-3 py-1.5 text-[12px] text-muted transition-colors duration-fast ease-standard hover:bg-active hover:text-primary disabled:opacity-50"
-              >
+
+ >
                 {loadingOlder ? "Loading…" : "Load earlier messages"}
               </button>
             )}
             {messages.map((m, i) => (
-              <div key={i} className={`flex flex-col gap-2 ${m.role === "user" ? "items-end" : "items-start"}`}>
+              <div key={i}>
                 <div
-                  className={`max-w-[88%] rounded-xl px-4 py-2.5 text-[13.5px] leading-relaxed whitespace-pre-wrap ${
-                    m.role === "user" ? "bg-active text-primary" : "border border-line bg-panel text-primary"
-                  }`}
-                >
+
+ >
                   {m.content}
                   {streaming && m.role === "assistant" && i === messages.length - 1 && (
-                    <span className="ml-0.5 inline-block h-[15px] w-[7px] translate-y-[2px] animate-blink bg-accent align-middle" />
+                    <span />
                   )}
                 </div>
                 {/* Every assistant response gets its own attached disclosure, not
@@ -270,12 +266,12 @@ export function ChatThread({ compact = false }: { compact?: boolean }) {
                     embeds one) — the panel-level Disclosure below the composer
                     isn't enough on its own for a plain-text reply. */}
                 {m.role === "assistant" && m.content && (!m.analyses || m.analyses.length === 0) && (
-                  <div className="w-[92%]">
+                  <div>
                     <Disclosure />
                   </div>
                 )}
                 {m.analyses && m.analyses.length > 0 && (
-                  <div className="flex w-[92%] flex-col gap-2">
+                  <div>
                     {m.analyses.map((a) => (
                       <MethodologyCard key={a.id} analysis={a} dense depth={depth} />
                     ))}
@@ -287,25 +283,25 @@ export function ChatThread({ compact = false }: { compact?: boolean }) {
         )}
       </div>
 
-      <div className="flex items-center gap-2 border-t border-line p-3">
+      <div>
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && send()}
           placeholder="Ask about NVDA, semiconductors, the market…"
           disabled={streaming}
-          className="flex-1 rounded-lg border border-line bg-active px-3 py-2 text-[13.5px] text-primary outline-none disabled:opacity-60"
-        />
+
+ />
         <button
           type="button"
           onClick={send}
           disabled={streaming || !input.trim()}
-          className="rounded-lg bg-gradient-to-br from-accent-light to-accent-dark px-3.5 py-2 text-[13px] font-semibold text-canvas disabled:opacity-50"
-        >
+
+ >
           Send
         </button>
       </div>
-      <div className="px-3 pb-2">
+      <div>
         <Disclosure />
       </div>
     </div>

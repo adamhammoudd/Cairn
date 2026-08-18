@@ -5,21 +5,21 @@ export const metadata = { title: "Privacy Policy — Cairn" };
 
 export default function PrivacyPage() {
   return (
-    <div className="mx-auto min-h-screen max-w-3xl px-6 py-12">
-      <div className="mb-8">
+    <div>
+      <div>
         <Logo size={30} />
       </div>
 
-      <div className="mb-8 rounded-card border border-negative/40 bg-panel px-4 py-3 text-[13px] leading-relaxed text-primary">
-        <span className="font-semibold">Draft — not legal advice.</span> This is a first-pass,
+      <div>
+        <span>Draft — not legal advice.</span> This is a first-pass,
         non-lawyer draft. It has not been reviewed by a licensed attorney and is not launch-ready.
       </div>
 
-      <h1 className="mb-6 font-serif text-3xl text-primary">Privacy Policy</h1>
+      <h1>Privacy Policy</h1>
 
-      <div className="flex flex-col gap-5 text-[14px] leading-relaxed text-muted">
+      <div>
         <section>
-          <h2 className="mb-2 font-serif text-lg text-primary">What we collect</h2>
+          <h2>What we collect</h2>
           <p>
             Account data (email, hashed password, display name), portfolio data (holdings,
             watchlists), settings, and chat history. We do not collect brokerage credentials or
@@ -27,7 +27,7 @@ export default function PrivacyPage() {
           </p>
         </section>
         <section>
-          <h2 className="mb-2 font-serif text-lg text-primary">How we use it</h2>
+          <h2>How we use it</h2>
           <p>
             To provide the service, and to rank which stored market/sector/ticker analyses are
             relevant enough to surface in your daily briefing and chat — your holdings/watchlist
@@ -36,7 +36,7 @@ export default function PrivacyPage() {
           </p>
         </section>
         <section>
-          <h2 className="mb-2 font-serif text-lg text-primary">What we don&apos;t do</h2>
+          <h2>What we don&apos;t do</h2>
           <p>
             We do not sell personal data. Portfolio data is never included in the prompts used to
             generate market/sector/ticker analyses — that pipeline only ever receives a scope like
@@ -44,7 +44,7 @@ export default function PrivacyPage() {
           </p>
         </section>
         <section>
-          <h2 className="mb-2 font-serif text-lg text-primary">Third parties</h2>
+          <h2>Third parties</h2>
           <p>
             Supabase (database, auth, storage) and configured news/market data providers. No
             third-party AI provider: the analysis engine and assistant run on a model hosted on our
@@ -52,12 +52,12 @@ export default function PrivacyPage() {
           </p>
         </section>
         <section>
-          <h2 className="mb-2 font-serif text-lg text-primary">Your data, your control</h2>
+          <h2>Your data, your control</h2>
           <p>Export your data or delete your account at any time from Settings.</p>
         </section>
       </div>
 
-      <Link href="/login" className="mt-10 inline-block text-[13px] text-accent">
+      <Link href="/login">
         ← Back to sign in
       </Link>
     </div>

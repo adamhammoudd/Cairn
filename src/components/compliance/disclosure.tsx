@@ -9,8 +9,8 @@ interface DisclosureProps {
 export function Disclosure({ variant = "inline" }: DisclosureProps) {
   if (variant === "banner") {
     return (
-      <div className="rounded-card border border-line bg-panel px-4 py-3 text-[12.5px] leading-relaxed text-muted">
-        <span className="font-semibold text-primary">Informational only, not investment advice.</span>{" "}
+      <div>
+        <span>Informational only, not investment advice.</span>{" "}
         Cairn&apos;s analysis is market/sector/ticker-level output — it never resolves to a
         personalized buy, hold, or sell recommendation. Always verify sources and consult a
         licensed advisor before making financial decisions.
@@ -20,9 +20,9 @@ export function Disclosure({ variant = "inline" }: DisclosureProps) {
 
   if (variant === "callout") {
     return (
-      <div className="flex items-center gap-2.25 rounded-lg border border-line bg-canvas/40 px-3 py-2.5">
-        <span aria-hidden className="h-6.5 w-1.25 flex-shrink-0 rounded-sm bg-warning" />
-        <p className="text-[11.5px] leading-relaxed text-muted text-pretty">
+      <div>
+        <span aria-hidden />
+        <p>
           Market/sector/ticker-level analytical output, not personalized financial advice. Not a
           recommendation to buy, hold, or sell anything.
         </p>
@@ -31,7 +31,7 @@ export function Disclosure({ variant = "inline" }: DisclosureProps) {
   }
 
   return (
-    <p className="text-[11px] leading-relaxed text-dim">
+    <p>
       Market/sector/ticker-level analytical output, not personalized financial advice. Not a
       recommendation to buy, hold, or sell anything.
     </p>

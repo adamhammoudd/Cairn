@@ -93,6 +93,6 @@ export default async function DashboardPage() {
         sessions: sessionsRes.data?.length ?? 0,
         briefingDate: briefingRes.data?.briefing_date ?? null,
       }}
-    />
+ />
   );
 }

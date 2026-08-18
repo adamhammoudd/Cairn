@@ -11,10 +11,10 @@ function LoginMessage() {
   const message = useSearchParams().get("message");
 
   if (message === "check-your-email") {
-    return <p className="mb-4 text-[13px] text-accent">Check your email to confirm your account.</p>;
+    return <p>Check your email to confirm your account.</p>;
   }
   if (message === "check-your-email-for-reset-link") {
-    return <p className="mb-4 text-[13px] text-accent">Check your email for a password reset link.</p>;
+    return <p>Check your email for a password reset link.</p>;
   }
   return null;
 }
@@ -24,22 +24,22 @@ export default function LoginPage() {
 
   return (
     <>
-      <div className="w-full max-w-[400px] rounded-2xl border border-line bg-panel px-8 py-9">
-        <h1 className="mb-1.5 font-serif text-[26px] text-primary">Welcome back</h1>
-        <p className="mb-7 text-sm text-muted">Sign in to your portfolio dashboard.</p>
+      <div>
+        <h1>Welcome back</h1>
+        <p>Sign in to your portfolio dashboard.</p>
 
         <Suspense fallback={null}>
           <LoginMessage />
         </Suspense>
-        {error && <p className="mb-4 text-[13px] text-negative">{error}</p>}
+        {error && <p>{error}</p>}
 
         <form action={formAction}>
           <Field id="email" name="email" type="email" label="Email" placeholder="you@example.com" required />
-          <div className="mb-1.5 flex items-center justify-between">
-            <label htmlFor="password" className="text-[13px] text-muted">
+          <div>
+            <label htmlFor="password">
               Password
             </label>
-            <Link href="/forgot-password" className="text-[12.5px] text-accent">
+            <Link href="/forgot-password">
               Forgot password?
             </Link>
           </div>
@@ -49,25 +49,25 @@ export default function LoginPage() {
             type="password"
             placeholder="••••••••"
             required
-            className="mb-[26px] w-full rounded-lg border border-line bg-active px-3.5 py-3 text-sm text-primary outline-none"
-          />
+
+ />
           <SubmitButton>Sign in</SubmitButton>
         </form>
 
-        <p className="mt-[22px] text-center text-[13.5px] text-muted">
+        <p>
           Don&apos;t have an account?{" "}
-          <Link href="/signup" className="font-semibold text-accent">
+          <Link href="/signup">
             Sign up
           </Link>
         </p>
       </div>
-      <p className="mt-7 max-w-[400px] text-center text-xs leading-relaxed text-dim">
+      <p>
         Cairn is informational only — not a broker and not investment advice.{" "}
-        <Link href="/terms" className="text-accent">
+        <Link href="/terms">
           Terms
         </Link>{" "}
         ·{" "}
-        <Link href="/privacy" className="text-accent">
+        <Link href="/privacy">
           Privacy
         </Link>
       </p>

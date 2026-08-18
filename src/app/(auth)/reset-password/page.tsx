@@ -46,22 +46,22 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="w-full max-w-[400px] rounded-2xl border border-line bg-panel px-8 py-9">
-      <h1 className="mb-1.5 font-serif text-[26px] text-primary">Set a new password</h1>
-      <p className="mb-7 text-sm text-muted">Choose a new password for your account.</p>
+    <div>
+      <h1>Set a new password</h1>
+      <p>Choose a new password for your account.</p>
 
-      {error && <p className="mb-4 text-[13px] text-negative">{error}</p>}
+      {error && <p>{error}</p>}
 
       <form onSubmit={handleSubmit}>
         <Field id="password" name="password" type="password" label="New password" placeholder="••••••••" required minLength={8} />
-        <div className="mb-[26px]">
+        <div>
           <Field id="confirm" name="confirm" type="password" label="Confirm password" placeholder="••••••••" required minLength={8} />
         </div>
         <button
           type="submit"
           disabled={!ready || pending}
-          className="w-full rounded-[10px] bg-gradient-to-br from-accent-light to-accent-dark py-3.5 text-[15px] font-semibold text-canvas disabled:opacity-60"
-        >
+
+ >
           {pending ? "Updating…" : "Update password"}
         </button>
       </form>

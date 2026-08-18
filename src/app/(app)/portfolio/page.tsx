@@ -70,41 +70,41 @@ export default async function PortfolioPage() {
   const assetTypeCount = new Set(rows.map((h) => h.asset_type)).size;
 
   return (
-    <div className="animate-page-in flex flex-col gap-3.5">
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-3">
+    <div>
+      <div>
         <StatCard
           label="Total value"
           value={fmtCurrency(totals.totalValue)}
           sub={`${metrics.length} ${metrics.length === 1 ? "position" : "positions"}`}
-        />
+ />
         <StatCard
           label="Unrealised gain"
           value={`${totals.totalGain >= 0 ? "+" : ""}${fmtCurrency(totals.totalGain)}`}
           sub={`${totals.totalGainPct >= 0 ? "+" : ""}${totals.totalGainPct.toFixed(2)}% on cost`}
           tone={totals.totalGain >= 0 ? "positive" : "negative"}
           delayMs={50}
-        />
+ />
         <StatCard
           label="Today"
           value={fmtPct(totals.todayChangePct)}
           sub="Since previous close"
           tone={totals.todayChangePct >= 0 ? "positive" : "negative"}
           delayMs={100}
-        />
+ />
         <StatCard
           label="Cost basis"
           value={fmtCurrency(totals.totalCostBasis)}
           sub={`Across ${assetTypeCount} asset ${assetTypeCount === 1 ? "type" : "types"}`}
           delayMs={150}
-        />
+ />
       </div>
 
-      <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-[2fr_1fr]">
+      <div>
         <PortfolioChart seriesByTimeframe={seriesByTimeframe} hasHoldings={rows.length > 0} />
         <AllocationPanel byDimension={allocationByDimension} />
       </div>
 
-      <div className="mt-2.5">
+      <div>
         <HoldingsTable metrics={metrics} sparklines={sparklines} />
       </div>
     </div>

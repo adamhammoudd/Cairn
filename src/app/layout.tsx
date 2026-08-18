@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Newsreader, IBM_Plex_Mono } from "next/font/google";
+import { BuildBadge } from "@/components/build-badge";
 import "./globals.css";
 
 const newsreader = Newsreader({
@@ -25,11 +26,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`h-full antialiased ${newsreader.variable} ${ibmPlexMono.variable}`}
+
       suppressHydrationWarning
-    >
-      <body className="flex min-h-full flex-col" suppressHydrationWarning>
+ >
+      <body suppressHydrationWarning>
         {children}
+        <BuildBadge />
       </body>
     </html>
   );

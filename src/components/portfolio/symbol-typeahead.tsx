@@ -20,7 +20,7 @@ function highlightMatch(text: string, query: string) {
   return (
     <>
       {text.slice(0, i)}
-      <span className="text-accent">{text.slice(i, i + query.trim().length)}</span>
+      <span>{text.slice(i, i + query.trim().length)}</span>
       {text.slice(i + query.trim().length)}
     </>
   );
@@ -66,7 +66,7 @@ export function SymbolTypeahead({ onSelect }: SymbolTypeaheadProps) {
   }
 
   return (
-    <div ref={containerRef} className="relative">
+    <div ref={containerRef}>
       <input type="hidden" name="symbol" value={selected?.symbol ?? ""} required />
       <input
         value={query}
@@ -78,26 +78,26 @@ export function SymbolTypeahead({ onSelect }: SymbolTypeaheadProps) {
         onFocus={() => setOpen(true)}
         placeholder="Search ticker or name…"
         autoComplete="off"
-        className="w-full rounded-lg border border-line bg-active px-3 py-2 text-sm text-primary outline-none uppercase placeholder:normal-case"
-      />
+
+ />
 
       {open && query.trim() && !selected && (
-        <div className="animate-menu-in absolute top-full left-0 z-10 mt-1 w-full overflow-hidden rounded-lg border border-line bg-panel py-1 shadow-lg">
+        <div>
           {results.length === 0 ? (
-            <div className="px-3.5 py-2 text-[12.5px] text-dim">No matching tracked symbols.</div>
+            <div>No matching tracked symbols.</div>
           ) : (
             results.map((r) => (
               <button
                 key={r.symbol}
                 type="button"
                 onClick={() => pick(r)}
-                className="flex w-full items-center justify-between px-3.5 py-2 text-left text-[13px] text-muted transition-colors duration-fast ease-standard hover:bg-active hover:text-primary"
-              >
+
+ >
                 <span>
-                  <span className="text-primary">{highlightMatch(r.symbol, query)}</span>
-                  {r.name && <span className="ml-2 text-[12px] text-muted">{highlightMatch(r.name, query)}</span>}
+                  <span>{highlightMatch(r.symbol, query)}</span>
+                  {r.name && <span>{highlightMatch(r.name, query)}</span>}
                 </span>
-                <span className="text-[11px] text-dim capitalize">{r.assetType}</span>
+                <span>{r.assetType}</span>
               </button>
             ))
           )}

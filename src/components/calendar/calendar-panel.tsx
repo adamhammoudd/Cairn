@@ -77,20 +77,18 @@ export function CalendarPanel({ events }: { events: CalendarEvent[] }) {
   }
 
   return (
-    <div className="animate-page-in flex flex-col gap-4">
+    <div>
       <div>
-        <div className="mb-2 font-mono text-[10.5px] tracking-[0.16em] text-muted uppercase">Planning · Calendar</div>
-        <h1 className="font-serif text-[32px] leading-tight font-normal text-primary">{monthLabel}</h1>
+        <div>Planning · Calendar</div>
+        <h1>{monthLabel}</h1>
       </div>
 
-      <div className="flex w-fit flex-wrap gap-1.5 rounded-xl border border-line bg-panel p-1">
+      <div>
         <button
           type="button"
           onClick={() => setActiveTypes([])}
-          className={`rounded-lg px-3.25 py-1.75 text-[12.5px] transition-colors duration-base ease-standard ${
-            activeTypes.length === 0 ? "bg-active text-primary" : "text-muted hover:text-primary"
-          }`}
-        >
+
+ >
           All
         </button>
         {EVENT_TYPES.map((t) => (
@@ -98,38 +96,35 @@ export function CalendarPanel({ events }: { events: CalendarEvent[] }) {
             key={t}
             type="button"
             onClick={() => toggle(t)}
-            className={`flex items-center gap-1.75 rounded-lg px-3.25 py-1.75 text-[12.5px] capitalize transition-colors duration-base ease-standard ${
-              activeTypes.includes(t) ? "bg-active text-primary" : "text-muted hover:text-primary"
-            }`}
-          >
-            <span className="h-1.5 w-1.5 rounded-full" style={{ background: tintForEvent(t) }} />
+
+ >
+            <span />
             {t}
           </button>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 items-start gap-3.5 xl:grid-cols-[340px_1fr]">
-        <aside className="overflow-hidden rounded-card border border-line bg-panel">
-          <div className="border-b border-line px-4 py-3.25 font-mono text-[10px] tracking-[0.14em] text-muted uppercase">
+      <div>
+        <aside>
+          <div>
             Next up
           </div>
 
           {upcoming.length === 0 ? (
-            <p className="px-4 py-5 text-[12.5px] text-dim">
+            <p>
               No upcoming events{activeTypes.length > 0 ? " of this type" : ""}.
             </p>
           ) : (
             upcoming.map((e) => (
-              <div key={e.id} className="flex gap-2.75 border-b border-line/70 px-4 py-3.5 last:border-b-0">
-                <span className="w-0.75 shrink-0 rounded-sm" style={{ background: tintForEvent(e.event_type) }} />
-                <div className="min-w-0">
+              <div key={e.id}>
+                <span />
+                <div>
                   <div
-                    className="font-mono text-[9.5px] tracking-[0.12em] uppercase"
-                    style={{ color: tintForEvent(e.event_type) }}
-                  >
+
+ >
                     {e.event_type} · {formatDayLabel(e.event_date, todayIso)}
                   </div>
-                  <div className="mt-1.5 text-[13px] text-primary">
+                  <div>
                     {e.symbol ? `${e.symbol} — ${e.title}` : e.title}
                   </div>
                 </div>
@@ -138,42 +133,37 @@ export function CalendarPanel({ events }: { events: CalendarEvent[] }) {
           )}
         </aside>
 
-        <div className="rounded-card border border-line bg-panel p-4">
-          <div className="grid grid-cols-7 gap-1.5 pb-2">
+        <div>
+          <div>
             {DOW.map((d) => (
-              <div key={d} className="text-center font-mono text-[9.5px] tracking-[0.12em] text-dim uppercase">
+              <div key={d}>
                 {d}
               </div>
             ))}
           </div>
 
-          <div className="grid grid-cols-7 gap-1.5">
+          <div>
             {cells.map((cell) => (
               <div
                 key={cell.iso}
-                className={`min-h-[74px] rounded-lg border p-1.75 transition-colors duration-fast ease-standard hover:border-line ${
-                  cell.isToday ? "border-accent bg-active" : "border-line/70"
-                } ${cell.inMonth ? "" : "opacity-40"}`}
-              >
+
+ >
                 <div
-                  className={`font-mono text-[10.5px] tabular-nums ${
-                    cell.isToday ? "text-accent" : cell.inMonth ? "text-primary" : "text-dim"
-                  }`}
-                >
+
+ >
                   {cell.day}
                 </div>
-                <div className="mt-1.5 flex flex-col gap-0.75">
+                <div>
                   {cell.events.slice(0, 2).map((e) => (
-                    <div key={e.id} className="flex items-center gap-1.25" title={`${e.symbol ?? ""} ${e.title}`.trim()}>
+                    <div key={e.id} title={`${e.symbol ?? ""} ${e.title}`.trim()}>
                       <span
-                        className="h-1 w-1 shrink-0 rounded-full"
-                        style={{ background: tintForEvent(e.event_type) }}
-                      />
-                      <span className="truncate text-[10px] text-muted">{e.symbol ?? e.title}</span>
+
+ />
+                      <span>{e.symbol ?? e.title}</span>
                     </div>
                   ))}
                   {cell.events.length > 2 && (
-                    <span className="text-[10px] text-dim">+{cell.events.length - 2} more</span>
+                    <span>+{cell.events.length - 2} more</span>
                   )}
                 </div>
               </div>

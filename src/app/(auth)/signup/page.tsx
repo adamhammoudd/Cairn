@@ -11,11 +11,11 @@ export default function SignupPage() {
 
   return (
     <>
-      <div className="w-full max-w-[400px] rounded-2xl border border-line bg-panel px-8 py-9">
-        <h1 className="mb-1.5 font-serif text-[26px] text-primary">Create your account</h1>
-        <p className="mb-7 text-sm text-muted">Free to start — no card required.</p>
+      <div>
+        <h1>Create your account</h1>
+        <p>Free to start — no card required.</p>
 
-        {error && <p className="mb-4 text-[13px] text-negative">{error}</p>}
+        {error && <p>{error}</p>}
 
         <form action={formAction}>
           <Field id="name" name="name" type="text" label="Name" placeholder="Jordan Reyes" required />
@@ -28,26 +28,26 @@ export default function SignupPage() {
             placeholder="••••••••"
             required
             minLength={8}
-          />
-          <div className="mt-[26px]">
+ />
+          <div>
             <SubmitButton>Create account</SubmitButton>
           </div>
         </form>
 
-        <p className="mt-[22px] text-center text-[13.5px] text-muted">
+        <p>
           Already have an account?{" "}
-          <Link href="/login" className="font-semibold text-accent">
+          <Link href="/login">
             Sign in
           </Link>
         </p>
       </div>
-      <p className="mt-7 max-w-[400px] text-center text-xs leading-relaxed text-dim">
+      <p>
         Cairn is informational only — not a broker and not investment advice.{" "}
-        <Link href="/terms" className="text-accent">
+        <Link href="/terms">
           Terms
         </Link>{" "}
         ·{" "}
-        <Link href="/privacy" className="text-accent">
+        <Link href="/privacy">
           Privacy
         </Link>
       </p>

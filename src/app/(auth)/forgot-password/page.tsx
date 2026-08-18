@@ -10,23 +10,23 @@ export default function ForgotPasswordPage() {
   const [error, formAction] = useActionState(forgotPassword, null);
 
   return (
-    <div className="w-full max-w-[400px] rounded-2xl border border-line bg-panel px-8 py-9">
-      <h1 className="mb-1.5 font-serif text-[26px] text-primary">Reset your password</h1>
-      <p className="mb-7 text-sm leading-relaxed text-muted">
+    <div>
+      <h1>Reset your password</h1>
+      <p>
         Enter the email on your account and we&apos;ll send a link to reset your password.
       </p>
 
-      {error && <p className="mb-4 text-[13px] text-negative">{error}</p>}
+      {error && <p>{error}</p>}
 
       <form action={formAction}>
-        <div className="mb-[26px]">
+        <div>
           <Field id="email" name="email" type="email" label="Email" placeholder="you@example.com" required />
         </div>
         <SubmitButton>Send reset link</SubmitButton>
       </form>
 
-      <p className="mt-[22px] text-center text-[13.5px] text-muted">
-        <Link href="/login" className="font-semibold text-accent">
+      <p>
+        <Link href="/login">
           Back to sign in
         </Link>
       </p>

@@ -44,23 +44,23 @@ export function ComparisonPanel({
   const canAdd = selected.length < MAX_COMPARE;
 
   return (
-    <div className="animate-page-in flex flex-col gap-3.5">
-      <div className="mb-1.5 flex flex-wrap items-end justify-between gap-4">
+    <div>
+      <div>
         <div>
-          <div className="mb-2 font-mono text-[10.5px] tracking-[0.16em] text-muted uppercase">Compare</div>
-          <h1 className="font-serif text-[32px] leading-tight font-normal text-primary">Side by side</h1>
+          <div>Compare</div>
+          <h1>Side by side</h1>
         </div>
 
         {canAdd && (
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-[11.5px] text-dim">Add up to {MAX_COMPARE}:</span>
+          <div>
+            <span>Add up to {MAX_COMPARE}:</span>
             {available.slice(0, 4).map((symbol) => (
               <button
                 key={symbol}
                 type="button"
                 onClick={() => addSymbol(symbol)}
-                className="rounded-full border border-dashed border-line px-3 py-1.5 font-mono text-[11px] text-muted transition-colors duration-base ease-standard hover:border-accent hover:text-primary"
-              >
+
+ >
                 + {symbol}
               </button>
             ))}
@@ -68,8 +68,8 @@ export function ComparisonPanel({
               <select
                 value=""
                 onChange={(e) => addSymbol(e.target.value)}
-                className="rounded-full border border-dashed border-line bg-transparent px-3 py-1.5 font-mono text-[11px] text-muted outline-none transition-colors duration-base ease-standard hover:border-accent hover:text-primary"
-              >
+
+ >
                 <option value="" disabled>
                   + More…
                 </option>
@@ -85,34 +85,33 @@ export function ComparisonPanel({
       </div>
 
       {rows.length === 0 ? (
-        <div className="rounded-card border border-dashed border-line px-6 py-16 text-center">
-          <div className="font-serif text-[21px] text-primary">Nothing to line up yet</div>
-          <p className="mx-auto mt-2 max-w-[400px] text-[13px] text-muted text-pretty">
+        <div>
+          <div>Nothing to line up yet</div>
+          <p>
             Add up to {MAX_COMPARE} tickers and Cairn aligns their price action and fundamentals on the same axes.
           </p>
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-3">
+          <div>
             {rows.map((row, i) => {
               const color = COMPARISON_COLORS[i % COMPARISON_COLORS.length];
               const positive = (row.changePct ?? 0) >= 0;
               return (
                 <div
                   key={row.symbol}
-                  className="animate-rise-in rounded-card border border-line bg-panel p-4"
-                  style={{ animationDelay: `${i * 60}ms` }}
-                >
-                  <div className="flex items-start justify-between gap-2.5">
-                    <div className="min-w-0">
+
+ >
+                  <div>
+                    <div>
                       <Link
                         href={`/ticker/${row.symbol}`}
-                        className="flex items-center gap-2 text-[14px] text-primary transition-colors duration-fast ease-standard hover:text-accent"
-                      >
-                        <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: color }} />
+
+ >
+                        <span />
                         {row.symbol}
                       </Link>
-                      <div className="mt-0.75 truncate font-mono text-[10.5px] tracking-[0.08em] text-muted uppercase">
+                      <div>
                         {row.assetType}
                       </div>
                     </div>
@@ -120,15 +119,15 @@ export function ComparisonPanel({
                       type="button"
                       onClick={() => removeSymbol(row.symbol)}
                       aria-label={`Remove ${row.symbol}`}
-                      className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[14px] text-dim transition-colors duration-fast ease-standard hover:bg-negative/12 hover:text-negative"
-                    >
+
+ >
                       ×
                     </button>
                   </div>
 
-                  <div className="mt-3 flex items-baseline gap-2.5">
-                    <span className="font-serif text-[22px] tabular-nums text-primary">{fmtCurrency(row.price)}</span>
-                    <span className={`text-[12px] tabular-nums ${row.changePct === null ? "text-muted" : positive ? "text-accent" : "text-negative"}`}>
+                  <div>
+                    <span>{fmtCurrency(row.price)}</span>
+                    <span>
                       {row.changePct === null ? "—" : `${positive ? "+" : ""}${row.changePct.toFixed(2)}%`}
                     </span>
                   </div>
@@ -137,16 +136,14 @@ export function ComparisonPanel({
             })}
           </div>
 
-          <div className="flex flex-wrap gap-1.5 rounded-xl border border-line bg-panel p-1">
+          <div>
             {TIMEFRAMES.map((tf) => (
               <button
                 key={tf}
                 type="button"
                 onClick={() => setTimeframe(tf)}
-                className={`rounded-lg px-3.25 py-1.75 text-[12.5px] transition-colors duration-base ease-standard ${
-                  timeframe === tf ? "bg-active text-primary" : "text-muted hover:text-primary"
-                }`}
-              >
+
+ >
                 {tf}
               </button>
             ))}

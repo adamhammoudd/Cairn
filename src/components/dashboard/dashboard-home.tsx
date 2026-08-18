@@ -111,7 +111,7 @@ export function DashboardHome({ initialLayout, today, portfolio, markets, watchl
             detail={`${portfolio.totalGain} unrealized · ${portfolio.positions} positions`}
             delay={delay}
             {...arrangeProps}
-          />
+ />
         );
       case "markets":
         return (
@@ -125,7 +125,7 @@ export function DashboardHome({ initialLayout, today, portfolio, markets, watchl
             detail={`${markets.trackedSymbols} symbols tracked across equities, ETFs, crypto, and forex`}
             delay={delay}
             {...arrangeProps}
-          />
+ />
         );
       case "watchlist":
         return (
@@ -139,7 +139,7 @@ export function DashboardHome({ initialLayout, today, portfolio, markets, watchl
             detail={`${watchlist.lists} lists · top list: ${watchlist.topListName}`}
             delay={delay}
             {...arrangeProps}
-          />
+ />
         );
       case "news":
         return (
@@ -153,7 +153,7 @@ export function DashboardHome({ initialLayout, today, portfolio, markets, watchl
             detail={`${news.articles} recent articles prioritized for your holdings and sectors`}
             delay={delay}
             {...arrangeProps}
-          />
+ />
         );
       case "assistant":
         return (
@@ -167,7 +167,7 @@ export function DashboardHome({ initialLayout, today, portfolio, markets, watchl
             detail={`${assistant.sessions} conversations · resume a thread or review the briefing`}
             delay={delay}
             {...arrangeProps}
-          />
+ />
         );
       default:
         return null;
@@ -175,45 +175,43 @@ export function DashboardHome({ initialLayout, today, portfolio, markets, watchl
   }
 
   return (
-    <div className="animate-page-in">
-      <div className="mb-5.5 flex flex-wrap items-end justify-between gap-4">
+    <div>
+      <div>
         <div>
-          <div className="mb-2 font-mono text-[10.5px] tracking-[0.16em] text-muted uppercase">{today} · markets open</div>
-          <h1 className="font-serif text-[34px] leading-tight font-normal text-primary">Base Camp</h1>
-          <p className="mt-1.5 max-w-[560px] text-[13.5px] text-muted text-pretty">
+          <div>{today} · markets open</div>
+          <h1>Base Camp</h1>
+          <p>
             Your marker for the day — portfolio, markets, and what the assistant flagged while you were away.
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div>
           <button
             type="button"
             onClick={() => setLive((prev) => !prev)}
-            className="flex items-center gap-1.75 rounded-lg border border-line px-3 py-2 text-[12.5px] text-primary transition-colors duration-base ease-standard hover:border-[#3A3A3A]"
-          >
+
+ >
             <span
-              className={`animate-breathe h-1.5 w-1.5 rounded-full ${live ? "bg-accent" : "bg-dim"}`}
-            />
+
+ />
             {live ? "Live" : "Paused"}
           </button>
-          <form action={formAction} className="flex items-center gap-2">
+          <form action={formAction}>
             {layout.map((key) => (
               <input key={key} type="hidden" name="layout" value={key} />
             ))}
             <button
               type="button"
               onClick={() => setArranging((prev) => !prev)}
-              className={`rounded-lg border border-line px-3 py-2 text-[12.5px] text-primary transition-colors duration-base ease-standard hover:border-[#3A3A3A] ${
-                arranging ? "bg-active" : "bg-transparent"
-              }`}
-            >
+
+ >
               {arranging ? "Done" : "Arrange"}
             </button>
             {arranging && (
               <button
                 type="submit"
-                className="rounded-lg bg-accent px-3 py-2 text-[12.5px] font-semibold text-canvas transition-colors duration-base ease-standard hover:bg-accent-dark"
-              >
+
+ >
                 Save layout
               </button>
             )}
@@ -221,22 +219,22 @@ export function DashboardHome({ initialLayout, today, portfolio, markets, watchl
         </div>
       </div>
 
-      {result && result !== "saved" && <div className="mb-3.5 text-sm text-negative">{result}</div>}
+      {result && result !== "saved" && <div>{result}</div>}
 
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-3.5">
+      <div>
         {layout.map((key, index) => renderCard(key, index))}
       </div>
 
       {hidden.length > 0 && (
-        <div className="mt-4 flex flex-wrap items-center gap-2.5 rounded-xl border border-dashed border-line px-4 py-3.25">
-          <span className="font-mono text-[10.5px] tracking-[0.14em] text-dim uppercase">Hidden</span>
+        <div>
+          <span>Hidden</span>
           {hidden.map((key) => (
             <button
               key={key}
               type="button"
               onClick={() => showModule(key)}
-              className="rounded-full border border-line px-2.75 py-1.25 text-xs text-muted transition-colors duration-base ease-standard hover:border-accent hover:text-primary"
-            >
+
+ >
               + {moduleMap.get(key)?.label}
             </button>
           ))}

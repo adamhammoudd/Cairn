@@ -13,31 +13,29 @@ export function ChangePasswordForm() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="rounded-lg border border-line px-4 py-2 text-[13px] text-primary"
-      >
+ >
         Change password
       </button>
     );
   }
 
   return (
-    <form action={formAction} className="flex max-w-xs flex-col gap-3">
+    <form action={formAction}>
       <input
         type="password"
         name="password"
         placeholder="New password"
         required
         minLength={8}
-        className="w-full rounded-lg border border-line bg-active px-3.5 py-2.5 text-sm text-primary outline-none"
-      />
-      <div className="flex items-center gap-3">
+ />
+      <div>
         <SubmitButton>Update password</SubmitButton>
-        <button type="button" onClick={() => setOpen(false)} className="text-[13px] text-muted">
+        <button type="button" onClick={() => setOpen(false)}>
           Cancel
         </button>
       </div>
-      {result === "saved" && <span className="text-[13px] text-accent">Password updated.</span>}
-      {result && result !== "saved" && <span className="text-[13px] text-negative">{result}</span>}
+      {result === "saved" && <span>Password updated.</span>}
+      {result && result !== "saved" && <span>{result}</span>}
     </form>
   );
 }
