@@ -21,15 +21,15 @@ export default async function ResearchPage() {
   );
 
   return (
-    <div>
+    <div className="animate-page-in flex flex-col gap-4">
       <RequestForm />
 
       {analyses.length === 0 ? (
-        <div>
+        <div className="rounded-card border border-dashed border-line px-6 py-16 text-center text-[13px] text-muted">
           No analyses yet. Request one above — market, sector, or ticker level only.
         </div>
       ) : (
-        <div>
+        <div className="flex flex-col gap-4">
           {analyses.map((a) => (
             <MethodologyCard key={a.id} analysis={a} depth={depth} upcomingEvents={eventsByScope[a.scope_value] ?? []} />
           ))}

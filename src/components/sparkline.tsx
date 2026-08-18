@@ -31,7 +31,6 @@ export function Sparkline({ values, positive, className = "h-7 w-[90px]", delayM
         stroke={positive ? "var(--color-accent)" : "var(--color-negative)"}
         strokeWidth={1.8}
         strokeLinejoin="round"
-        vectorEffect="non-scaling-stroke"
         pathLength="1"
         strokeDasharray="1"
         className="animate-draw"

@@ -62,10 +62,10 @@ export function WatchlistPanel({ watchlists }: { watchlists: WatchlistWithItems[
     <div className="animate-page-in flex flex-col gap-4">
       <div>
         <div className="mb-2 font-mono text-[10.5px] tracking-[0.16em] text-muted uppercase">Watchlists</div>
-        <h1 className="font-serif text-[32px] leading-tight font-normal text-primary">
+        <h1 className="font-serif text-[32px] leading-[1.1] font-normal text-primary">
           {active?.name ?? "Watchlists"}
         </h1>
-        {active?.description && <p className="mt-1.5 text-[13.5px] text-muted text-pretty">{active.description}</p>}
+        {active?.description && <p className="mt-1.75 text-[13.5px] text-muted text-pretty">{active.description}</p>}
       </div>
 
       {watchlists.length > 0 && (
@@ -139,7 +139,7 @@ export function WatchlistPanel({ watchlists }: { watchlists: WatchlistWithItems[
               <div className="overflow-x-auto">
                 <div className="min-w-[640px]">
                   <div
-                    className={`grid ${cols} gap-3 border-b border-line px-4.5 py-2.75 font-mono text-[9.5px] tracking-[0.12em] text-dim uppercase`}
+                    className={`grid ${cols} gap-3 border-b border-[#1E1E1E] px-4.5 py-2.75 font-mono text-[9.5px] tracking-[0.12em] text-dim uppercase`}
                   >
                     <div />
                     <div>Symbol</div>
@@ -158,7 +158,7 @@ export function WatchlistPanel({ watchlists }: { watchlists: WatchlistWithItems[
                         onDragStart={() => setDragId(item.id)}
                         onDragOver={(e) => e.preventDefault()}
                         onDrop={() => handleDrop(item.id)}
-                        className={`animate-rise-in grid ${cols} items-center gap-3 border-b border-line px-4.5 py-3.25 transition-colors duration-fast ease-standard last:border-b-0 hover:bg-active ${
+                        className={`animate-rise-in grid ${cols} items-center gap-3 border-b border-[#171717] px-4.5 py-3.25 transition-colors duration-fast ease-standard last:border-b-0 hover:bg-active ${
                           dragId === item.id ? "opacity-50" : ""
                         }`}
                         style={{ animationDelay: `${index * 50}ms` }}

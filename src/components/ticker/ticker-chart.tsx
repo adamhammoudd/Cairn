@@ -66,12 +66,12 @@ export function TickerChart({ bars, positive }: TickerChartProps) {
             />
             <YAxis hide domain={["dataMin", "dataMax"]} />
             <Tooltip
-              formatter={(value) => Number(value).toLocaleString(undefined, { style: "currency", currency: "USD" })}
+              formatter={(value) => [Number(value).toLocaleString(undefined, { style: "currency", currency: "USD" }), "Close"] as [string, string]}
               labelFormatter={(label) => new Date(String(label)).toLocaleDateString()}
               contentStyle={{ background: "#0F0F0F", border: "1px solid #2A2A2A", borderRadius: 8, fontSize: 12 }}
               labelStyle={{ color: "#8A8A8A" }}
             />
-            <Area type="monotone" dataKey="value" stroke={color} strokeWidth={2} fill="url(#tickerFill)" />
+            <Area type="monotone" dataKey="value" stroke={color} strokeWidth={2} fill="url(#tickerFill)" isAnimationActive={false} />
           </AreaChart>
           </ResponsiveContainer>
         )}

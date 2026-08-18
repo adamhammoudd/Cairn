@@ -35,19 +35,54 @@ const ACCOUNT_MENU = [
 
 export function TopNav({ displayName, plan }: TopNavProps) {
   const pathname = usePathname();
-  const [openGroup, setOpenGroup] = useState<string | null>(null);
+  // A group menu opens on hover *and* toggles on click. `pinned` is the
+  // click-opened group, `hovered` the pointer-opened one, and `suppressed`
+  // remembers a group the user clicked shut while the pointer is still on it —
+  // without it, the hover that's still active would immediately reopen it.
+  const [pinned, setPinned] = useState<string | null>(null);
+  const [hovered, setHovered] = useState<string | null>(null);
+  const [suppressed, setSuppressed] = useState<string | null>(null);
   const [accountOpen, setAccountOpen] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [lastPathname, setLastPathname] = useState(pathname);
   const navRef = useRef<HTMLElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
 
+  const isGroupOpen = (label: string) => pinned === label || (hovered === label && suppressed !== label);
+
+  function closeGroups() {
+    setPinned(null);
+    setHovered(null);
+    setSuppressed(null);
+  }
+
+  function toggleGroup(label: string) {
+    if (isGroupOpen(label)) {
+      setPinned(null);
+      setSuppressed(label); // pointer is still over it — don't let hover reopen
+    } else {
+      setPinned(label);
+      setSuppressed(null);
+    }
+  }
+
+  function enterGroup(label: string) {
+    setHovered(label);
+    setSuppressed((prev) => (prev === label ? prev : null));
+  }
+
+  function leaveGroup(label: string) {
+    setHovered((prev) => (prev === label ? null : prev));
+    setSuppressed((prev) => (prev === label ? null : prev));
+    setPinned((prev) => (prev === label ? null : prev));
+  }
+
   // Collapse any open menu when the route changes. Adjusted during render
   // rather than in an effect so there's no extra commit with the menu still
   // open on the new page (React's "adjusting state when props change").
   if (pathname !== lastPathname) {
     setLastPathname(pathname);
-    setOpenGroup(null);
+    closeGroups();
     setAccountOpen(false);
     setMobileNavOpen(false);
   }
@@ -55,7 +90,9 @@ export function TopNav({ displayName, plan }: TopNavProps) {
   useEffect(() => {
     function onClickAway(e: MouseEvent) {
       if (navRef.current && !navRef.current.contains(e.target as Node)) {
-        setOpenGroup(null);
+        setPinned(null);
+        setHovered(null);
+        setSuppressed(null);
         setAccountOpen(false);
       }
     }
@@ -78,7 +115,7 @@ export function TopNav({ displayName, plan }: TopNavProps) {
 
   return (
     <header ref={navRef} className="sticky top-0 z-30 shrink-0 border-b border-line bg-canvas/95 backdrop-blur">
-      <div className="mx-auto flex h-15 max-w-[1560px] items-center gap-6 px-5 sm:px-7">
+      <div className="mx-auto flex h-15 max-w-[1560px] items-center gap-6.5 px-5.5">
         <Link href="/" className="shrink-0">
           <Logo size={24} />
         </Link>
@@ -103,14 +140,14 @@ export function TopNav({ displayName, plan }: TopNavProps) {
                 <div key={entry.route} className="relative">
                   <Link
                     href={entry.route}
-                    className={`flex items-center rounded-lg px-2.5 py-1.5 text-[13.5px] whitespace-nowrap transition-colors duration-fast ease-standard hover:bg-active ${
+                    className={`flex items-center rounded-lg px-2.75 py-1.75 text-[13.5px] whitespace-nowrap transition-colors duration-fast ease-standard hover:bg-active ${
                       isActive ? "text-primary" : "text-muted"
                     }`}
                   >
                     {entry.label}
                   </Link>
                   <span
-                    className={`absolute right-2.5 bottom-[-12px] left-2.5 h-[1.5px] origin-left scale-x-0 rounded-full bg-gradient-to-r from-accent-light to-accent-dark transition-transform duration-base ease-standard ${
+                    className={`absolute right-2.75 bottom-[-12px] left-2.75 h-[1.5px] origin-left scale-x-0 rounded-full bg-gradient-to-r from-accent-light to-accent-dark transition-transform duration-base ease-standard ${
                       isActive ? "scale-x-100" : ""
                     }`}
                   />
@@ -119,19 +156,19 @@ export function TopNav({ displayName, plan }: TopNavProps) {
             }
 
             const hasActive = groupHasActiveRoute(pathname, entry);
-            const isOpen = openGroup === entry.label;
+            const isOpen = isGroupOpen(entry.label);
 
             return (
               <div
                 key={entry.label}
                 className="relative"
-                onMouseEnter={() => setOpenGroup(entry.label)}
-                onMouseLeave={() => setOpenGroup((prev) => (prev === entry.label ? null : prev))}
+                onMouseEnter={() => enterGroup(entry.label)}
+                onMouseLeave={() => leaveGroup(entry.label)}
               >
                 <button
                   type="button"
-                  onClick={() => setOpenGroup((prev) => (prev === entry.label ? null : entry.label))}
-                  className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[13.5px] whitespace-nowrap transition-colors duration-fast ease-standard hover:bg-active ${
+                  onClick={() => toggleGroup(entry.label)}
+                  className={`flex items-center gap-1.5 rounded-lg px-2.75 py-1.75 text-[13.5px] whitespace-nowrap transition-colors duration-fast ease-standard hover:bg-active ${
                     hasActive || isOpen ? "text-primary" : "text-muted"
                   }`}
                 >
@@ -155,22 +192,27 @@ export function TopNav({ displayName, plan }: TopNavProps) {
                 />
 
                 {isOpen && (
-                  <div className="animate-menu-in absolute top-[calc(100%+10px)] left-0 min-w-52 rounded-xl border border-line bg-panel p-1.5 shadow-2xl">
-                    {entry.items.map((item) => {
-                      const isActive = isRouteActive(pathname, item.route);
-                      return (
-                        <Link
-                          key={item.route}
-                          href={item.route}
-                          onClick={() => setOpenGroup(null)}
-                          className={`block rounded-lg px-2.5 py-2 text-[13px] whitespace-nowrap transition-colors duration-fast ease-standard ${
-                            isActive ? "bg-active text-primary" : "text-muted hover:bg-active hover:text-primary"
-                          }`}
-                        >
-                          {item.label}
-                        </Link>
-                      );
-                    })}
+                  // pt-2.5 is a transparent hover bridge, not a gap: offsetting
+                  // the panel itself would drop the pointer out of the group on
+                  // the way down and close the menu before it can be clicked.
+                  <div className="animate-menu-in absolute top-full left-0 z-50 min-w-52 pt-2.5">
+                    <div className="rounded-xl border border-line bg-panel p-1.25 shadow-[0_18px_40px_rgba(0,0,0,0.6),0_0_0_1px_rgba(47,198,133,0.05)]">
+                      {entry.items.map((item) => {
+                        const isActive = isRouteActive(pathname, item.route);
+                        return (
+                          <Link
+                            key={item.route}
+                            href={item.route}
+                            onClick={closeGroups}
+                            className={`block rounded-lg px-2.5 py-2 text-[13px] whitespace-nowrap transition-colors duration-fast ease-standard ${
+                              isActive ? "bg-active text-primary" : "text-muted hover:bg-[#191919] hover:text-primary"
+                            }`}
+                          >
+                            {item.label}
+                          </Link>
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
               </div>

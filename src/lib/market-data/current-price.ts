@@ -40,8 +40,9 @@ async function lastCloseRows(symbols: string[]): Promise<Map<string, { close: nu
 }
 
 function toLastClosePrice(symbol: string, rows: { close: number | null; volume: number | null }[]): CurrentPrice {
-  const latest = rows[0]?.close ?? null;
-  const prev = rows[1]?.close ?? null;
+  // numeric columns arrive as strings over PostgREST; coerce before any math.
+  const latest = rows[0]?.close == null ? null : Number(rows[0].close);
+  const prev = rows[1]?.close == null ? null : Number(rows[1].close);
   return {
     symbol,
     price: latest,
@@ -82,12 +83,12 @@ export async function getLatestCloses(symbols: string[]): Promise<Map<string, { 
     if (tryLive) {
       const quote = await fetchQuote(symbol);
       if (quote && quote.price !== null) {
-        result.set(symbol, { latest: quote.price, prev: rows[0]?.close ?? null });
+        result.set(symbol, { latest: quote.price, prev: rows[0]?.close == null ? null : Number(rows[0].close) });
         continue;
       }
     }
     const fallback = toLastClosePrice(symbol, rows);
-    result.set(symbol, { latest: fallback.price, prev: rows[1]?.close ?? null });
+    result.set(symbol, { latest: fallback.price, prev: rows[1]?.close == null ? null : Number(rows[1].close) });
   }
   return result;
 }

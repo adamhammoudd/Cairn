@@ -32,7 +32,7 @@ export function PositionSizingCalculator({ defaultAccountValue }: { defaultAccou
       title="Position sizing"
       blurb="Fixed-fractional sizing: risks a set % of your account on the distance between entry and stop. A calculator, not a recommendation to enter any position."
     >
-      <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-2.75">
         <CalcField label="Account value ($)">
           <input
             value={accountValue}
@@ -68,7 +68,7 @@ export function PositionSizingCalculator({ defaultAccountValue }: { defaultAccou
             <span className="text-[12px] text-muted">Share quantity</span>
             <span className="font-serif text-[28px] tabular-nums text-primary">{result.shareQty.toLocaleString()}</span>
           </div>
-          <div className="mt-3.5 grid grid-cols-2 gap-2.5 lg:grid-cols-4">
+          <div className="mt-3.5 grid grid-cols-2 gap-2.5">
             <CalcStat label="Risk amount" value={fmtCurrency(result.riskAmount)} />
             <CalcStat label="Risk / share" value={fmtCurrency(result.riskPerShare)} />
             <CalcStat label="Position value" value={fmtCurrency(result.positionValue)} />

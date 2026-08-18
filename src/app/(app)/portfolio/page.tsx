@@ -64,48 +64,51 @@ export default async function PortfolioPage() {
     sparklines[symbol] = priceRows
       .filter((p) => p.symbol === symbol && p.close !== null)
       .slice(-30)
-      .map((p) => p.close as number);
+      .map((p) => Number(p.close));
   }
 
   const assetTypeCount = new Set(rows.map((h) => h.asset_type)).size;
 
   return (
-    <div>
-      <div>
-        <StatCard
-          label="Total value"
-          value={fmtCurrency(totals.totalValue)}
-          sub={`${metrics.length} ${metrics.length === 1 ? "position" : "positions"}`}
- />
-        <StatCard
-          label="Unrealised gain"
-          value={`${totals.totalGain >= 0 ? "+" : ""}${fmtCurrency(totals.totalGain)}`}
-          sub={`${totals.totalGainPct >= 0 ? "+" : ""}${totals.totalGainPct.toFixed(2)}% on cost`}
-          tone={totals.totalGain >= 0 ? "positive" : "negative"}
-          delayMs={50}
- />
-        <StatCard
-          label="Today"
-          value={fmtPct(totals.todayChangePct)}
-          sub="Since previous close"
-          tone={totals.todayChangePct >= 0 ? "positive" : "negative"}
-          delayMs={100}
- />
-        <StatCard
-          label="Cost basis"
-          value={fmtCurrency(totals.totalCostBasis)}
-          sub={`Across ${assetTypeCount} asset ${assetTypeCount === 1 ? "type" : "types"}`}
-          delayMs={150}
- />
-      </div>
+    <div className="animate-page-in">
+      <HoldingsTable metrics={metrics} sparklines={sparklines}>
+        <div className="mb-4 grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-3">
+          <StatCard
+            label="Total value"
+            value={fmtCurrency(totals.totalValue)}
+            sub={`${metrics.length} ${metrics.length === 1 ? "position" : "positions"}`}
+          />
+          <StatCard
+            label="Unrealised gain"
+            value={`${totals.totalGain >= 0 ? "+" : ""}${fmtCurrency(totals.totalGain)}`}
+            sub={`${totals.totalGainPct >= 0 ? "+" : ""}${totals.totalGainPct.toFixed(2)}% on cost`}
+            tone={totals.totalGain >= 0 ? "positive" : "negative"}
+            delayMs={50}
+          />
+          <StatCard
+            label="Today"
+            value={fmtPct(totals.todayChangePct)}
+            sub="Since previous close"
+            tone={totals.todayChangePct >= 0 ? "positive" : "negative"}
+            delayMs={100}
+          />
+          <StatCard
+            label="Cost basis"
+            value={fmtCurrency(totals.totalCostBasis)}
+            sub={`Across ${assetTypeCount} asset ${assetTypeCount === 1 ? "type" : "types"}`}
+            delayMs={150}
+          />
+        </div>
 
-      <div>
-        <PortfolioChart seriesByTimeframe={seriesByTimeframe} hasHoldings={rows.length > 0} />
+        <div className="mb-3.5">
+          <PortfolioChart seriesByTimeframe={seriesByTimeframe} hasHoldings={rows.length > 0} />
+        </div>
+      </HoldingsTable>
+
+      {/* Not in the mock, which stops at the holdings table — kept below it so the
+          allocation breakdown stays available without displacing the chart. */}
+      <div className="mt-3.5">
         <AllocationPanel byDimension={allocationByDimension} />
-      </div>
-
-      <div>
-        <HoldingsTable metrics={metrics} sparklines={sparklines} />
       </div>
     </div>
   );

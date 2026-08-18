@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useActionState } from "react";
 import { updateDashboardLayout } from "@/lib/actions/dashboard";
 import { DashboardSummaryCard } from "@/components/dashboard/dashboard-summary-card";
+import { decodeEntities } from "@/lib/news";
 
 export type ModuleKey = "portfolio" | "markets" | "watchlist" | "news" | "assistant";
 export const MODULE_KEYS: ModuleKey[] = ["portfolio", "markets", "watchlist", "news", "assistant"];
@@ -14,27 +15,65 @@ interface DashboardHomeProps {
   portfolio: {
     totalValue: string;
     totalGain: string;
+    totalGainPct: number;
     positive: boolean;
     positions: number;
+    sparkline: number[];
+    topHoldings: { symbol: string; gainPct: number }[];
   };
   markets: {
     trackedSymbols: number;
-    featuredType: string;
+    top: { symbol: string; price: number; changePct: number }[];
   };
   watchlist: {
     lists: number;
     symbols: number;
-    topListName: string;
+    alertsPastThreshold: number;
+    topMovers: { symbol: string; pct: number }[];
   };
   news: {
     articles: number;
-    headline: string;
+    items: { title: string; source: string; publishedAt: string; tint: "accent" | "violet" | "warning" }[];
   };
   assistant: {
     sessions: number;
-    briefingDate: string | null;
+    latestAnalysis: {
+      quote: string;
+      sourceCount: number;
+      sampleSize: number;
+      confidenceLevel: string;
+    } | null;
   };
 }
+
+function sparklinePoints(values: number[], width: number, height: number) {
+  if (values.length < 2) return "";
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const span = max - min || 1;
+  return values
+    .map((v, i) => {
+      const x = (i / (values.length - 1)) * width;
+      const y = height - ((v - min) / span) * height;
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    })
+    .join(" ");
+}
+
+function timeAgo(iso: string) {
+  const ms = Date.now() - new Date(iso).getTime();
+  const mins = Math.round(ms / 60000);
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.round(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  return `${Math.round(hours / 24)}d ago`;
+}
+
+const NEWS_TINT: Record<"accent" | "violet" | "warning", string> = {
+  accent: "bg-accent",
+  violet: "bg-violet",
+  warning: "bg-warning",
+};
 
 const MODULES: { key: ModuleKey; label: string; href: string; cta: string; tint: "accent" | "info" | "violet" | "warning" }[] = [
   { key: "portfolio", label: "Portfolio", href: "/portfolio", cta: "Open holdings", tint: "accent" },
@@ -49,7 +88,9 @@ const DEFAULT_LAYOUT: ModuleKey[] = ["portfolio", "markets", "watchlist", "news"
 export function DashboardHome({ initialLayout, today, portfolio, markets, watchlist, news, assistant }: DashboardHomeProps) {
   const [layout, setLayout] = useState<ModuleKey[]>(initialLayout.length ? initialLayout : DEFAULT_LAYOUT);
   const [arranging, setArranging] = useState(false);
-  const [wideKeys, setWideKeys] = useState<Set<ModuleKey>>(new Set());
+  // Portfolio ships double-width, as in the mock — its sparkline sits beside
+  // the value rather than wrapping under it.
+  const [wideKeys, setWideKeys] = useState<Set<ModuleKey>>(new Set<ModuleKey>(["portfolio"]));
   const [live, setLive] = useState(true);
   const [result, formAction] = useActionState(updateDashboardLayout, null);
 
@@ -100,74 +141,131 @@ export function DashboardHome({ initialLayout, today, portfolio, markets, watchl
     switch (key) {
       case "portfolio":
         return (
-          <DashboardSummaryCard
-            key={key}
-            title={module.label}
-            href={module.href}
-            ctaLabel={module.cta}
-            tint={module.tint}
-            value={portfolio.totalValue}
-            valueTone={portfolio.positive ? "positive" : "negative"}
-            detail={`${portfolio.totalGain} unrealized · ${portfolio.positions} positions`}
-            delay={delay}
-            {...arrangeProps}
-          />
+          <DashboardSummaryCard key={key} title={module.label} href={module.href} ctaLabel={module.cta} tint={module.tint} delay={delay} {...arrangeProps}>
+            <div className="flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <div className="font-serif text-[30px] leading-none text-primary">{portfolio.totalValue}</div>
+                <div className="mt-2 text-xs text-muted">
+                  <span className={portfolio.positive ? "text-accent" : "text-negative"}>
+                    {portfolio.totalGain} {portfolio.totalGainPct >= 0 ? "+" : ""}
+                    {portfolio.totalGainPct.toFixed(2)}%
+                  </span>{" "}
+                  all time
+                </div>
+              </div>
+              {portfolio.sparkline.length > 1 && (
+                <svg viewBox="0 0 180 46" width={180} height={46} className="shrink-0">
+                  <polyline
+                    points={sparklinePoints(portfolio.sparkline, 180, 46)}
+                    fill="none"
+                    stroke="var(--color-accent)"
+                    strokeWidth={1.8}
+                    strokeLinejoin="round"
+                    pathLength="1"
+                    strokeDasharray="1"
+                    className="animate-draw"
+                  />
+                </svg>
+              )}
+            </div>
+            {portfolio.topHoldings.length > 0 && (
+              <div className="mt-4 flex flex-col gap-2">
+                {portfolio.topHoldings.map((h) => (
+                  <div key={h.symbol} className="flex items-center justify-between gap-3 text-[12.5px]">
+                    <span className="text-primary">{h.symbol}</span>
+                    <span className={`font-mono tabular-nums ${h.gainPct >= 0 ? "text-accent" : "text-negative"}`}>
+                      {h.gainPct >= 0 ? "+" : ""}
+                      {h.gainPct.toFixed(1)}%
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </DashboardSummaryCard>
         );
       case "markets":
         return (
-          <DashboardSummaryCard
-            key={key}
-            title={module.label}
-            href={module.href}
-            ctaLabel={module.cta}
-            tint={module.tint}
-            value={markets.featuredType}
-            detail={`${markets.trackedSymbols} symbols tracked across equities, ETFs, crypto, and forex`}
-            delay={delay}
-            {...arrangeProps}
-          />
+          <DashboardSummaryCard key={key} title={module.label} href={module.href} ctaLabel={module.cta} tint={module.tint} delay={delay} {...arrangeProps}>
+            <div className="flex flex-col gap-2.5">
+              {markets.top.map((r) => (
+                <div key={r.symbol} className="flex items-center justify-between gap-3">
+                  <span className="text-[12.5px] text-primary">{r.symbol}</span>
+                  <span className="font-mono text-[12.5px] tabular-nums text-muted">
+                    {r.price.toLocaleString(undefined, { style: "currency", currency: "USD" })}
+                  </span>
+                  <span className={`font-mono text-xs tabular-nums ${r.changePct >= 0 ? "text-accent" : "text-negative"}`}>
+                    {r.changePct >= 0 ? "+" : ""}
+                    {r.changePct.toFixed(2)}%
+                  </span>
+                </div>
+              ))}
+            </div>
+          </DashboardSummaryCard>
         );
       case "watchlist":
         return (
-          <DashboardSummaryCard
-            key={key}
-            title={module.label}
-            href={module.href}
-            ctaLabel={module.cta}
-            tint={module.tint}
-            value={`${watchlist.symbols} symbols`}
-            detail={`${watchlist.lists} lists · top list: ${watchlist.topListName}`}
-            delay={delay}
-            {...arrangeProps}
-          />
+          <DashboardSummaryCard key={key} title={module.label} href={module.href} ctaLabel={module.cta} tint={module.tint} delay={delay} {...arrangeProps}>
+            <div className="mb-3 text-[12.5px] text-muted">
+              {watchlist.lists} lists · {watchlist.symbols} symbols ·{" "}
+              {watchlist.alertsPastThreshold > 0 ? `${watchlist.alertsPastThreshold} past an alert threshold` : "none past an alert threshold"}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {watchlist.topMovers.map((m) => (
+                <span key={m.symbol} className="inline-flex items-center gap-2 rounded-full border border-line px-2.75 py-1.5 text-xs">
+                  <span className="text-primary">{m.symbol}</span>
+                  <span className={`font-mono tabular-nums ${m.pct >= 0 ? "text-accent" : "text-negative"}`}>
+                    {m.pct >= 0 ? "+" : ""}
+                    {m.pct.toFixed(1)}%
+                  </span>
+                </span>
+              ))}
+            </div>
+          </DashboardSummaryCard>
         );
       case "news":
         return (
-          <DashboardSummaryCard
-            key={key}
-            title={module.label}
-            href={module.href}
-            ctaLabel={module.cta}
-            tint={module.tint}
-            value={news.headline || "No headlines yet"}
-            detail={`${news.articles} recent articles prioritized for your holdings and sectors`}
-            delay={delay}
-            {...arrangeProps}
-          />
+          <DashboardSummaryCard key={key} title={module.label} href={module.href} ctaLabel={module.cta} tint={module.tint} delay={delay} {...arrangeProps}>
+            {news.items.length === 0 ? (
+              <div className="text-[12.5px] text-muted">No headlines yet</div>
+            ) : (
+              <div className="flex flex-col gap-3">
+                {news.items.map((item, i) => (
+                  <div key={i} className="flex gap-2.5">
+                    <span className={`w-[3px] shrink-0 rounded-sm ${NEWS_TINT[item.tint]}`} />
+                    <div>
+                      <div className="text-[12.5px] leading-normal text-primary">{decodeEntities(item.title)}</div>
+                      <div className="mt-1 text-[11px] text-dim">
+                        {item.source} · {timeAgo(item.publishedAt)}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </DashboardSummaryCard>
         );
       case "assistant":
         return (
-          <DashboardSummaryCard
-            key={key}
-            title={module.label}
-            href={module.href}
-            ctaLabel={module.cta}
-            tint={module.tint}
-            value={assistant.briefingDate ?? "No briefing today"}
-            detail={`${assistant.sessions} conversations · resume a thread or review the briefing`}
-            delay={delay}
-            {...arrangeProps}
-          />
+          <DashboardSummaryCard key={key} title={module.label} href={module.href} ctaLabel={module.cta} tint={module.tint} delay={delay} {...arrangeProps}>
+            {assistant.latestAnalysis ? (
+              <>
+                <div className="text-[13px] leading-relaxed text-primary">{assistant.latestAnalysis.quote}</div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <span className="rounded-full border border-line px-2.5 py-1.25 text-[11.5px] text-muted">
+                    {assistant.latestAnalysis.sourceCount} sources
+                  </span>
+                  <span className="rounded-full border border-line px-2.5 py-1.25 text-[11.5px] text-muted">
+                    {assistant.latestAnalysis.sampleSize} analogs
+                  </span>
+                  <span className="rounded-full border border-accent/35 px-2.5 py-1.25 text-[11.5px] text-accent capitalize">
+                    {assistant.latestAnalysis.confidenceLevel} confidence
+                  </span>
+                </div>
+              </>
+            ) : (
+              <div className="text-[12.5px] text-muted">{assistant.sessions} conversations · resume a thread or ask a question</div>
+            )}
+          </DashboardSummaryCard>
         );
       default:
         return null;
@@ -179,8 +277,8 @@ export function DashboardHome({ initialLayout, today, portfolio, markets, watchl
       <div className="mb-5.5 flex flex-wrap items-end justify-between gap-4">
         <div>
           <div className="mb-2 font-mono text-[10.5px] tracking-[0.16em] text-muted uppercase">{today} · markets open</div>
-          <h1 className="font-serif text-[34px] leading-tight font-normal text-primary">Base Camp</h1>
-          <p className="mt-1.5 max-w-[560px] text-[13.5px] text-muted text-pretty">
+          <h1 className="font-serif text-[34px] leading-[1.1] font-normal text-primary">Base Camp</h1>
+          <p className="mt-1.75 max-w-[560px] text-[13.5px] text-muted text-pretty">
             Your marker for the day — portfolio, markets, and what the assistant flagged while you were away.
           </p>
         </div>

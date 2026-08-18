@@ -46,15 +46,15 @@ export function AlertPanel({ alerts, deliveries }: AlertPanelProps) {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <div className="mb-2 font-mono text-[10.5px] tracking-[0.16em] text-muted uppercase">Portfolio · Alerts</div>
-          <h1 className="font-serif text-[32px] leading-tight font-normal text-primary">Alerts</h1>
-          <p className="mt-1.5 max-w-[560px] text-[13.5px] text-muted text-pretty">
+          <h1 className="font-serif text-[32px] leading-[1.1] font-normal text-primary">Alerts</h1>
+          <p className="mt-1.75 max-w-[560px] text-[13.5px] text-muted text-pretty">
             {activeCount} active. Each fires once per cooldown window, then goes quiet.
           </p>
         </div>
         <button
           type="button"
           onClick={() => setFormOpen((prev) => !prev)}
-          className="rounded-lg bg-gradient-to-br from-accent-light to-accent-dark px-4 py-2.5 text-[13px] font-semibold text-canvas transition-[box-shadow,transform] duration-base ease-standard hover:-translate-y-px hover:shadow-[0_0_26px_rgba(47,198,133,0.35)]"
+          className="rounded-[10px] bg-gradient-to-br from-accent-light to-accent-dark px-4 py-2.5 text-[13px] font-semibold text-canvas transition-[box-shadow,transform] duration-base ease-standard hover:-translate-y-px hover:shadow-[0_0_26px_rgba(47,198,133,0.35)]"
         >
           {formOpen ? "Close" : "+ New alert"}
         </button>

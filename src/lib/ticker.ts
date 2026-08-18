@@ -32,5 +32,7 @@ export function buildPriceSeries(bars: { ts: string; close: number | null }[], t
     rows = sorted.filter((b) => b.ts >= cutoffStr);
   }
 
-  return rows.map((b) => ({ date: b.ts, value: b.close }));
+  // `close` is a Postgres numeric, which PostgREST serialises as a string —
+  // charts need real numbers or the series degenerates to its endpoints.
+  return rows.map((b) => ({ date: b.ts, value: Number(b.close) }));
 }

@@ -19,7 +19,7 @@ export function GoalTracker({ goals }: { goals: GoalProgress[] }) {
         title="Goal tracking"
         blurb="Set a target portfolio value and date. Progress and required annual return are computed from your current portfolio value — not a prediction of whether you'll get there."
       >
-        <form action={formAction} className="grid grid-cols-1 items-end gap-3 sm:grid-cols-[1.4fr_1fr_1fr_auto]">
+        <form action={formAction} className="grid grid-cols-1 items-end gap-2.75 sm:grid-cols-2">
           <CalcField label="Goal name">
             <input name="name" placeholder="e.g. Retirement fund" className={CALC_INPUT} />
           </CalcField>

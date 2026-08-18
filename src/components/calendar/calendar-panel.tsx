@@ -80,7 +80,7 @@ export function CalendarPanel({ events }: { events: CalendarEvent[] }) {
     <div className="animate-page-in flex flex-col gap-4">
       <div>
         <div className="mb-2 font-mono text-[10.5px] tracking-[0.16em] text-muted uppercase">Planning · Calendar</div>
-        <h1 className="font-serif text-[32px] leading-tight font-normal text-primary">{monthLabel}</h1>
+        <h1 className="font-serif text-[32px] leading-[1.1] font-normal text-primary">{monthLabel}</h1>
       </div>
 
       <div className="flex w-fit flex-wrap gap-1.5 rounded-xl border border-line bg-panel p-1">

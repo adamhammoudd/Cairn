@@ -24,8 +24,8 @@ export function latestCloseBySymbol(prices: PriceBar[]) {
   for (const [symbol, rows] of bySymbol) {
     rows.sort((a, b) => (a.ts < b.ts ? 1 : -1)); // descending
     result.set(symbol, {
-      latest: rows[0]?.close ?? null,
-      prev: rows[1]?.close ?? null,
+      latest: rows[0]?.close == null ? null : Number(rows[0].close),
+      prev: rows[1]?.close == null ? null : Number(rows[1].close),
     });
   }
   return result;
@@ -161,7 +161,7 @@ export function computeTimelineSeries(holdings: Holding[], prices: PriceBar[], t
         cursor.set(h.symbol, i);
 
         if (rows[i].ts <= date && rows[i].close !== null) {
-          value += rows[i].close! * h.quantity;
+          value += Number(rows[i].close) * h.quantity;
           anyActive = true;
         }
       }
