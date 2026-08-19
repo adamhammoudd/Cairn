@@ -45,8 +45,22 @@ export function TopNav({ displayName, plan }: TopNavProps) {
   const [accountOpen, setAccountOpen] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [lastPathname, setLastPathname] = useState(pathname);
+  // Touch devices synthesise a mouseenter immediately before the click, so
+  // hover-to-open would open the menu and the tap would toggle it straight back
+  // shut — the nav reads as dead under a finger. Only wire hover where there's
+  // a real pointer; touch gets plain tap-to-toggle.
+  const [canHover, setCanHover] = useState(false);
   const navRef = useRef<HTMLElement>(null);
+  const drawerRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(hover: hover) and (pointer: fine)");
+    const sync = () => setCanHover(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
 
   const isGroupOpen = (label: string) => pinned === label || (hovered === label && suppressed !== label);
 
@@ -88,8 +102,12 @@ export function TopNav({ displayName, plan }: TopNavProps) {
   }
 
   useEffect(() => {
-    function onClickAway(e: MouseEvent) {
-      if (navRef.current && !navRef.current.contains(e.target as Node)) {
+    function onClickAway(e: Event) {
+      const target = e.target as Node;
+      const inside =
+        (navRef.current && navRef.current.contains(target)) ||
+        (drawerRef.current && drawerRef.current.contains(target));
+      if (!inside) {
         setPinned(null);
         setHovered(null);
         setSuppressed(null);
@@ -97,8 +115,23 @@ export function TopNav({ displayName, plan }: TopNavProps) {
       }
     }
     document.addEventListener("mousedown", onClickAway);
-    return () => document.removeEventListener("mousedown", onClickAway);
+    // iOS doesn't always deliver mousedown for taps outside an interactive
+    // element, so listen for the touch too.
+    document.addEventListener("touchstart", onClickAway);
+    return () => {
+      document.removeEventListener("mousedown", onClickAway);
+      document.removeEventListener("touchstart", onClickAway);
+    };
   }, []);
+
+  useEffect(() => {
+    if (!mobileNavOpen) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, [mobileNavOpen]);
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -114,23 +147,24 @@ export function TopNav({ displayName, plan }: TopNavProps) {
   }, []);
 
   return (
-    <header ref={navRef} className="sticky top-0 z-30 shrink-0 border-b border-line bg-canvas/95 backdrop-blur">
+    <>
+      <header ref={navRef} className="sticky top-0 z-30 shrink-0 border-b border-line bg-canvas/95 backdrop-blur">
       <div className="mx-auto flex h-15 max-w-[1560px] items-center gap-6.5 px-5.5">
-        <Link href="/" className="shrink-0">
+        <Link href="/" className="shrink-0 pr-1">
           <Logo size={24} />
         </Link>
 
-        <button
-          type="button"
-          onClick={() => setMobileNavOpen((prev) => !prev)}
-          aria-label="Toggle navigation"
-          aria-expanded={mobileNavOpen}
-          className="flex h-8 w-8.5 shrink-0 flex-col justify-center gap-1 rounded-lg border border-line bg-transparent px-1.5 transition-colors duration-fast ease-standard hover:border-[#3A3A3A] min-[900px]:hidden"
-        >
-          <span className="block h-px rounded-full bg-primary" />
-          <span className="block h-px rounded-full bg-primary" />
-          <span className="block h-px rounded-full bg-muted" />
-        </button>
+        <div className="flex w-full min-w-0 items-center gap-2 rounded-lg border border-line px-2.75 py-1.75 transition-colors duration-base ease-standard hover:border-[#3A3A3A] min-[900px]:hidden">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6A6A6A" strokeWidth="2" className="shrink-0">
+            <circle cx="11" cy="11" r="7" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+          <input
+            type="text"
+            placeholder="Search"
+            className="w-full min-w-0 bg-transparent text-[12.5px] text-primary placeholder:text-dim outline-none"
+          />
+        </div>
 
         <nav className="hidden min-w-0 flex-1 items-center gap-0.5 overflow-visible min-[900px]:flex">
           {NAV_ITEMS.map((entry) => {
@@ -162,8 +196,8 @@ export function TopNav({ displayName, plan }: TopNavProps) {
               <div
                 key={entry.label}
                 className="relative"
-                onMouseEnter={() => enterGroup(entry.label)}
-                onMouseLeave={() => leaveGroup(entry.label)}
+                onMouseEnter={canHover ? () => enterGroup(entry.label) : undefined}
+                onMouseLeave={canHover ? () => leaveGroup(entry.label) : undefined}
               >
                 <button
                   type="button"
@@ -235,17 +269,6 @@ export function TopNav({ displayName, plan }: TopNavProps) {
             <span className="rounded border border-line px-1 py-0.5 font-mono text-[10px] text-[#4A4A4A]">/</span>
           </div>
 
-          <button
-            type="button"
-            aria-label="Search"
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-line bg-transparent transition-colors duration-base ease-standard hover:border-[#3A3A3A] min-[900px]:hidden"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8A8A8A" strokeWidth="2">
-              <circle cx="11" cy="11" r="7" />
-              <line x1="21" y1="21" x2="16.65" y2="16.65" />
-            </svg>
-          </button>
-
           {plan === "free" && (
             <Link
               href="/billing"
@@ -255,7 +278,7 @@ export function TopNav({ displayName, plan }: TopNavProps) {
             </Link>
           )}
 
-          <div className="relative">
+          <div className="relative hidden min-[900px]:block">
             <button
               type="button"
               onClick={() => setAccountOpen((prev) => !prev)}
@@ -296,11 +319,81 @@ export function TopNav({ displayName, plan }: TopNavProps) {
               </div>
             )}
           </div>
+
+          <button
+            type="button"
+            onClick={() => setMobileNavOpen((prev) => !prev)}
+            aria-label="Toggle navigation"
+            aria-expanded={mobileNavOpen}
+            className={`flex h-8 w-8.5 shrink-0 touch-manipulation flex-col justify-center gap-1 rounded-lg border bg-transparent px-1.75 transition-colors duration-fast ease-standard hover:border-[#3A3A3A] min-[900px]:hidden ${
+              mobileNavOpen ? "border-accent" : "border-line"
+            }`}
+          >
+            <span className="block h-[1.5px] rounded-sm bg-primary" />
+            <span className="block h-[1.5px] rounded-sm bg-primary" />
+            <span className="block h-[1.5px] rounded-sm bg-muted" />
+          </button>
         </div>
       </div>
 
+      </header>
+
       {mobileNavOpen && (
-        <div className="animate-menu-in border-t border-line bg-[#0C0C0C] px-3.5 py-2.5 pb-4 min-[900px]:hidden">
+        <div ref={drawerRef} className="animate-menu-in fixed inset-x-0 top-15 bottom-0 z-40 overflow-y-auto overscroll-contain bg-canvas px-3.5 pt-3 pb-4 min-[900px]:hidden">
+          <div className="mb-2">
+            <button
+              type="button"
+              onClick={() => setAccountOpen((prev) => !prev)}
+              className="flex w-full items-center gap-2.5 rounded-lg p-2 text-left transition-colors duration-fast ease-standard hover:bg-[#151515]"
+            >
+              <div
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[12.5px] font-semibold text-canvas"
+                style={{ background: "linear-gradient(135deg, #5EE6A6, #22B573)" }}
+              >
+                {initialsOf(displayName)}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-[13.5px] text-primary">{displayName}</div>
+                <div className="mt-0.5 text-[11px] text-muted capitalize">{plan} plan</div>
+              </div>
+              <svg
+                width="9"
+                height="9"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#8A8A8A"
+                strokeWidth="3"
+                className={`shrink-0 transition-transform duration-base ease-standard ${accountOpen ? "rotate-180" : ""}`}
+              >
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </button>
+
+            {accountOpen && (
+              <div className="animate-menu-in flex flex-col py-1 pr-1 pl-11">
+                {ACCOUNT_MENU.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className="rounded-lg px-2 py-2.25 text-[13px] text-muted transition-colors duration-fast ease-standard hover:bg-[#151515] hover:text-primary"
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+                <form action={signOut}>
+                  <button
+                    type="submit"
+                    className="w-full rounded-lg px-2 py-2.25 text-left text-[13px] text-muted transition-colors duration-fast ease-standard hover:bg-[#151515] hover:text-primary"
+                  >
+                    Sign out
+                  </button>
+                </form>
+              </div>
+            )}
+          </div>
+
+          <div className="mb-1 border-t border-[#1E1E1E]" />
+
           {NAV_ITEMS.map((entry) => {
             if (!isNavGroup(entry)) {
               const isActive = isRouteActive(pathname, entry.route);
@@ -340,6 +433,6 @@ export function TopNav({ displayName, plan }: TopNavProps) {
           })}
         </div>
       )}
-    </header>
+    </>
   );
 }

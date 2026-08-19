@@ -40,7 +40,7 @@ export function HoldingModal({ holding, initialSymbol, onClose }: HoldingModalPr
         <form ref={formRef} action={formAction} className="flex flex-col gap-4">
           {holding && <input type="hidden" name="id" value={holding.id} />}
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="Symbol">
               {holding || initialSymbol ? (
                 <input
@@ -69,7 +69,7 @@ export function HoldingModal({ holding, initialSymbol, onClose }: HoldingModalPr
             </Field>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="Quantity">
               <input
                 name="quantity"
@@ -104,7 +104,7 @@ export function HoldingModal({ holding, initialSymbol, onClose }: HoldingModalPr
             />
           </Field>
 
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <Field label="Sector">
               <input
                 name="sector"

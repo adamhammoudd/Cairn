@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Field } from "@/components/auth/field";
+import { AuthError, AuthFooter, AuthHeader } from "@/components/auth/auth-chrome";
 
 export default function ResetPasswordPage() {
   const router = useRouter();
@@ -46,25 +47,40 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div>
-      <h1>Set a new password</h1>
-      <p>Choose a new password for your account.</p>
+    <>
+      <AuthHeader eyebrow="Account" title="Set a new password" blurb="Choose a new password for your account." />
 
-      {error && <p>{error}</p>}
+      {error && <AuthError>{error}</AuthError>}
 
       <form onSubmit={handleSubmit}>
-        <Field id="password" name="password" type="password" label="New password" placeholder="••••••••" required minLength={8} />
-        <div>
-          <Field id="confirm" name="confirm" type="password" label="Confirm password" placeholder="••••••••" required minLength={8} />
-        </div>
+        <Field
+          id="password"
+          name="password"
+          type="password"
+          label="New password"
+          placeholder="••••••••"
+          required
+          minLength={8}
+        />
+        <Field
+          id="confirm"
+          name="confirm"
+          type="password"
+          label="Confirm password"
+          placeholder="••••••••"
+          required
+          minLength={8}
+        />
         <button
           type="submit"
           disabled={!ready || pending}
-
- >
+          className="mt-5 w-full rounded-[10px] bg-gradient-to-br from-accent-light to-accent-dark py-2.75 text-[13.5px] font-semibold text-canvas transition-[box-shadow,transform] duration-base ease-standard hover:-translate-y-px hover:shadow-[0_0_26px_rgba(47,198,133,0.35)] disabled:opacity-60"
+        >
           {pending ? "Updating…" : "Update password"}
         </button>
       </form>
-    </div>
+
+      <AuthFooter />
+    </>
   );
 }

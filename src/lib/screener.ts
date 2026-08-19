@@ -71,7 +71,8 @@ export const ASSET_TYPE_LABEL: Record<string, string> = {
   etf: "ETFs",
   crypto: "Crypto",
   forex: "Forex",
-  future: "Futures",
+  // The mock labels this filter Indices; the stored asset_type is future.
+  future: "Indices",
 };
 
 /** Share volume, compacted the way the mock shows it ("22.4M"). */

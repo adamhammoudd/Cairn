@@ -1,7 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { createChatSession, listChatSessions, listChatMessages, type ChatSession } from "@/lib/actions/chat";
+import {
+  createChatSession,
+  deleteChatSession,
+  listChatSessions,
+  listChatMessages,
+  renameChatSession,
+  type ChatSession,
+} from "@/lib/actions/chat";
 import { getAnalysesByIds, type AnalysisWithMethodology } from "@/lib/actions/analysis";
 import { getUserPlan } from "@/lib/actions/billing";
 import { TIER_LIMITS } from "@/lib/billing";
@@ -48,6 +55,10 @@ export function ChatThread({ compact = false, briefing }: { compact?: boolean; b
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(false);
   const [loadingOlder, setLoadingOlder] = useState(false);
+  // Which conversation is being renamed, and the draft title for it.
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [draftTitle, setDraftTitle] = useState("");
+  const [historyError, setHistoryError] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   async function withAnalyses(history: Awaited<ReturnType<typeof listChatMessages>>): Promise<Message[]> {
@@ -91,6 +102,39 @@ export function ChatThread({ compact = false, briefing }: { compact?: boolean; b
     setSessionId(created.id);
     setMessages([]);
     setHistoryOpen(false);
+  }
+
+  function startRename(session: ChatSession) {
+    setEditingId(session.id);
+    setDraftTitle(session.title?.trim() || sessionLabel(session));
+    setHistoryError(null);
+  }
+
+  async function commitRename(id: string) {
+    const title = draftTitle;
+    setEditingId(null);
+    const error = await renameChatSession(id, title);
+    if (error) {
+      setHistoryError(error);
+      return;
+    }
+    setSessions((prev) => prev.map((s) => (s.id === id ? { ...s, title: title.trim() } : s)));
+  }
+
+  async function removeSession(id: string) {
+    if (!window.confirm("Delete this conversation and its messages? This cannot be undone.")) return;
+    const error = await deleteChatSession(id);
+    if (error) {
+      setHistoryError(error);
+      return;
+    }
+    setSessions((prev) => prev.filter((s) => s.id !== id));
+    // Deleting the open thread leaves nothing to show, so clear the transcript
+    // rather than leaving messages on screen that no longer exist.
+    if (id === sessionId) {
+      setSessionId(null);
+      setMessages([]);
+    }
   }
 
   useEffect(() => {
@@ -279,22 +323,75 @@ export function ChatThread({ compact = false, briefing }: { compact?: boolean; b
           </div>
           <div className="px-2 py-2.5">
             <div className="px-2 pt-1 pb-2 font-mono text-[9.5px] tracking-[0.14em] text-dim uppercase">History</div>
+            {historyError && <div className="px-2.5 pb-1.5 text-[11.5px] text-negative">{historyError}</div>}
             {sessions.length === 0 ? (
               <div className="px-2.5 py-2 text-[12px] text-dim">No conversations yet.</div>
             ) : (
-              sessions.map((s) => (
-                <button
-                  key={s.id}
-                  type="button"
-                  onClick={() => loadSession(s.id)}
-                  className={`mb-0.5 block w-full rounded-[9px] px-2.5 py-2.25 text-left transition-colors duration-fast ease-standard hover:bg-[#171717] ${
-                    s.id === sessionId ? "bg-active text-primary" : "text-muted"
-                  }`}
-                >
-                  <div className="truncate text-[12.5px]">{sessionLabel(s)}</div>
-                  <div className="mt-0.75 text-[10.5px] text-dim">{sessionWhen(s)}</div>
-                </button>
-              ))
+              sessions.map((s) =>
+                editingId === s.id ? (
+                  <form
+                    key={s.id}
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      void commitRename(s.id);
+                    }}
+                    className="mb-0.5 px-1"
+                  >
+                    <input
+                      autoFocus
+                      value={draftTitle}
+                      onChange={(e) => setDraftTitle(e.target.value)}
+                      onBlur={() => void commitRename(s.id)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Escape") setEditingId(null);
+                      }}
+                      className="w-full rounded-[9px] border border-accent bg-canvas px-2 py-2 text-[12.5px] text-primary outline-none"
+                    />
+                  </form>
+                ) : (
+                  <div
+                    key={s.id}
+                    className={`group mb-0.5 flex items-center gap-1 rounded-[9px] pr-1 transition-colors duration-fast ease-standard hover:bg-[#171717] ${
+                      s.id === sessionId ? "bg-active" : ""
+                    }`}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => loadSession(s.id)}
+                      className={`min-w-0 flex-1 px-2.5 py-2.25 text-left ${
+                        s.id === sessionId ? "text-primary" : "text-muted"
+                      }`}
+                    >
+                      <div className="truncate text-[12.5px]">{sessionLabel(s)}</div>
+                      <div className="mt-0.75 text-[10.5px] text-dim">{sessionWhen(s)}</div>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => startRename(s)}
+                      aria-label={`Rename ${sessionLabel(s)}`}
+                      title="Rename"
+                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-dim opacity-0 transition-opacity duration-fast ease-standard group-hover:opacity-100 focus-visible:opacity-100 hover:text-primary max-[900px]:opacity-100"
+                    >
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M12 20h9" />
+                        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                      </svg>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void removeSession(s.id)}
+                      aria-label={`Delete ${sessionLabel(s)}`}
+                      title="Delete"
+                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-negative opacity-0 transition-opacity duration-fast ease-standard group-hover:opacity-100 focus-visible:opacity-100 max-[900px]:opacity-100"
+                    >
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M3 6h18" />
+                        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                      </svg>
+                    </button>
+                  </div>
+                ),
+              )
             )}
           </div>
         </aside>
@@ -342,19 +439,67 @@ export function ChatThread({ compact = false, briefing }: { compact?: boolean; b
               {filteredSessions.length === 0 ? (
                 <div className="px-3 py-2 text-[12px] text-dim">No conversations found.</div>
               ) : (
-                filteredSessions.map((s) => (
-                  <button
-                    key={s.id}
-                    type="button"
-                    onClick={() => loadSession(s.id)}
-                    className={`block w-full truncate rounded-lg px-3 py-2 text-left transition-colors duration-fast ease-standard hover:bg-active ${
-                      s.id === sessionId ? "text-primary" : "text-muted"
-                    }`}
-                  >
-                    <div className="truncate text-[12.5px]">{sessionLabel(s)}</div>
-                    <div className="mt-0.5 text-[10.5px] text-dim">{sessionWhen(s)}</div>
-                  </button>
-                ))
+                filteredSessions.map((s) =>
+                  editingId === s.id ? (
+                    <form
+                      key={s.id}
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        void commitRename(s.id);
+                      }}
+                      className="px-2 py-1"
+                    >
+                      <input
+                        autoFocus
+                        value={draftTitle}
+                        onChange={(e) => setDraftTitle(e.target.value)}
+                        onBlur={() => void commitRename(s.id)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Escape") setEditingId(null);
+                        }}
+                        className="w-full rounded-lg border border-accent bg-canvas px-2 py-1.5 text-[12.5px] text-primary outline-none"
+                      />
+                    </form>
+                  ) : (
+                    <div
+                      key={s.id}
+                      className="group flex items-center gap-1 rounded-lg pr-1 transition-colors duration-fast ease-standard hover:bg-active"
+                    >
+                      <button
+                        type="button"
+                        onClick={() => loadSession(s.id)}
+                        className={`min-w-0 flex-1 px-3 py-2 text-left ${
+                          s.id === sessionId ? "text-primary" : "text-muted"
+                        }`}
+                      >
+                        <div className="truncate text-[12.5px]">{sessionLabel(s)}</div>
+                        <div className="mt-0.5 text-[10.5px] text-dim">{sessionWhen(s)}</div>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => startRename(s)}
+                        aria-label={`Rename ${sessionLabel(s)}`}
+                        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-dim hover:text-primary"
+                      >
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M12 20h9" />
+                          <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                        </svg>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void removeSession(s.id)}
+                        aria-label={`Delete ${sessionLabel(s)}`}
+                        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-negative"
+                      >
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M3 6h18" />
+                          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                        </svg>
+                      </button>
+                    </div>
+                  ),
+                )
               )}
             </div>
           </div>

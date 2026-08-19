@@ -44,8 +44,8 @@ export function SettingsTabs({ settings, displayName, email, billing, assistantC
   const activeLabel = TABS.find((t) => t.id === activeTab)?.label ?? "";
 
   return (
-    <div className="grid grid-cols-1 items-start gap-4 md:grid-cols-[220px_1fr]">
-      <nav className="flex flex-row gap-1 overflow-x-auto rounded-card border border-line bg-panel p-1.5 md:flex-col md:overflow-visible">
+    <div className="grid grid-cols-1 items-start gap-4 min-[900px]:grid-cols-[232px_1fr]">
+      <nav className="flex flex-col gap-1 rounded-card border border-line bg-panel p-1.75">
         {TABS.map((t) => {
           const active = t.id === activeTab;
           return (

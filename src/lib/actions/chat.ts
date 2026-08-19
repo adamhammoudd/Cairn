@@ -64,3 +64,43 @@ export async function listChatMessages(sessionId: string, page = 0) {
 
   return (data ?? []).reverse();
 }
+
+export async function renameChatSession(sessionId: string, title: string): Promise<string | null> {
+  const trimmed = title.trim();
+  if (!trimmed) return "Enter a name.";
+  if (trimmed.length > 80) return "Keep the name under 80 characters.";
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  // user_id is matched here as well as by RLS so a mismatched id is a no-op
+  // update rather than an error the caller has to interpret.
+  const { error } = await supabase
+    .from("chat_sessions")
+    .update({ title: trimmed })
+    .eq("id", sessionId)
+    .eq("user_id", user.id);
+
+  return error ? error.message : null;
+}
+
+export async function deleteChatSession(sessionId: string): Promise<string | null> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  // chat_messages.session_id is ON DELETE CASCADE, so the transcript goes with
+  // the session; no second delete to keep in sync.
+  const { error } = await supabase
+    .from("chat_sessions")
+    .delete()
+    .eq("id", sessionId)
+    .eq("user_id", user.id);
+
+  return error ? error.message : null;
+}

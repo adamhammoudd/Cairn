@@ -88,7 +88,9 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
         <h1 className="font-serif text-[32px] leading-[1.1] font-normal text-primary">Screener</h1>
       </div>
 
-      <div className="grid grid-cols-[260px_1fr] items-start gap-3.5">
+      {/* Filters sit beside the results only once there's room; below the mock's
+          900px breakpoint they stack, or the results column collapses to ~130px. */}
+      <div className="grid grid-cols-1 items-start gap-3.5 min-[900px]:grid-cols-[232px_1fr]">
         <aside className="rounded-card border border-line bg-panel p-4.5">
           <div className="font-mono text-[9.5px] tracking-[0.12em] text-dim uppercase">Asset type</div>
           <div className="mt-2.25 flex flex-wrap gap-1.5">

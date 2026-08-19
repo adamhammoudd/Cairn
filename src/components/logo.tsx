@@ -8,7 +8,7 @@ export function Logo({ size = 32, showWordmark = true, wordmarkColor = "var(--co
   const glow = Math.round(size / 3);
 
   return (
-    <div className="inline-flex items-center" style={{ gap: Math.round(size * 0.375) }}>
+    <div className="flex items-center" style={{ gap: Math.round(size * 0.375) }}>
       <div className="relative shrink-0" style={{ width: size, height: size }}>
         <div
           className="absolute rounded-full bg-gradient-to-br from-accent-light to-accent-dark"
@@ -43,7 +43,7 @@ export function Logo({ size = 32, showWordmark = true, wordmarkColor = "var(--co
       </div>
       {showWordmark && (
         <span
-          className="font-serif leading-none tracking-[0.01em]"
+          className="font-serif leading-none tracking-[0.01em] [transform:translateY(0.055em)]"
           style={{ fontSize: Math.round(size * 0.833), color: wordmarkColor }}
         >
           Cairn

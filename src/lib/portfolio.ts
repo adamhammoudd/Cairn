@@ -178,9 +178,17 @@ export function xAxisConfig(points: TimelinePoint[], timeframe: ChartView) {
   const desiredTicks = 6;
   const interval = points.length > desiredTicks ? Math.ceil(points.length / desiredTicks) - 1 : 0;
 
+  // 1D/1W points carry a time component when an intraday feed is available;
+  // formatting them as dates would print the same label on every tick.
   const formatters: Record<ChartView, (iso: string) => string> = {
-    "1D": (iso) => new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" }),
-    "1W": (iso) => new Date(iso).toLocaleDateString(undefined, { weekday: "short" }),
+    "1D": (iso) =>
+      iso.length > 10
+        ? new Date(iso).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })
+        : new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" }),
+    "1W": (iso) =>
+      iso.length > 10
+        ? new Date(iso).toLocaleString(undefined, { weekday: "short", hour: "numeric" })
+        : new Date(iso).toLocaleDateString(undefined, { weekday: "short" }),
     "1M": (iso) => new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" }),
     "3M": (iso) => new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" }),
     "1Y": (iso) => new Date(iso).toLocaleDateString(undefined, { month: "short" }),
