@@ -20,6 +20,14 @@ const ibmPlexMono = IBM_Plex_Mono({
 export const metadata: Metadata = {
   title: "Cairn",
   description: "Portfolio dashboard, market data, and AI research context. Not investment advice.",
+  icons: {
+    icon: [
+      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+    ],
+    apple: '/apple-touch-icon.png',
+    // Optionally add a webmanifest at /site.webmanifest if you want PWA support
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
