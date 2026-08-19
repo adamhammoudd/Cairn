@@ -104,7 +104,7 @@ export function TickerWorkspace({ data, analyses, discussion, analysisDepth }: T
         <div className="rounded-card border border-line bg-panel p-6">
           {isCrypto ? (
             data.cryptoMetrics ? (
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-4">
                 <Stat label="Market cap rank" value={data.cryptoMetrics.market_cap_rank ?? "—"} />
                 <Stat label="Market cap" value={formatMarketCap(data.cryptoMetrics.market_cap)} />
                 <Stat label="Volume (24h)" value={formatMarketCap(data.cryptoMetrics.total_volume_24h)} />
@@ -121,7 +121,7 @@ export function TickerWorkspace({ data, analyses, discussion, analysisDepth }: T
               <p className="text-[13px] text-dim">No crypto metrics ingested yet for this asset.</p>
             )
           ) : (
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-4">
               <Stat label="Market cap" value={formatMarketCap(marketCap)} />
               <Stat label="P/E (TTM)" value={pe === null ? "—" : pe.toFixed(1)} />
               <Stat label="Dividend yield" value={dividendYield === null ? "—" : `${dividendYield.toFixed(2)}%`} />
@@ -138,7 +138,7 @@ export function TickerWorkspace({ data, analyses, discussion, analysisDepth }: T
           {data.esg && (
             <div className="mt-6 border-t border-line pt-5">
               <div className="mb-3 text-[11px] tracking-[0.06em] text-muted uppercase">ESG scores</div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-4">
                 <Stat label="Environmental" value={data.esg.environmental ?? "—"} />
                 <Stat label="Social" value={data.esg.social ?? "—"} />
                 <Stat label="Governance" value={data.esg.governance ?? "—"} />
@@ -155,7 +155,7 @@ export function TickerWorkspace({ data, analyses, discussion, analysisDepth }: T
       {tab === "Financials" && !isCrypto && (
         <div className="rounded-card border border-line bg-panel p-6">
           {data.fundamentals ? (
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-4">
               <Stat
                 label="Shares outstanding"
                 value={data.fundamentals.shares_outstanding ? data.fundamentals.shares_outstanding.toLocaleString() : "—"}

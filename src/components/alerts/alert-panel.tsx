@@ -201,7 +201,7 @@ export function AlertPanel({ alerts, deliveries }: AlertPanelProps) {
         </form>
       )}
 
-      <div className="grid grid-cols-1 items-start gap-3.5 lg:grid-cols-[300px_1fr]">
+      <div className="grid grid-cols-1 items-start gap-3.5 min-[900px]:grid-cols-[300px_1fr]">
         <aside className="overflow-hidden rounded-card border border-line bg-panel">
           <div className="border-b border-line px-4 py-3.25 font-mono text-[10px] tracking-[0.14em] text-muted uppercase">
             Recent deliveries

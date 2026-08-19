@@ -59,7 +59,7 @@ function MiniChart({ row, timeframe, color }: { row: ComparisonRow; timeframe: C
 
 export function ComparisonCharts({ rows, timeframe }: { rows: ComparisonRow[]; timeframe: ChartView }) {
   return (
-    <div className="grid grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
       {rows.map((row, i) => (
         <MiniChart key={row.symbol} row={row} timeframe={timeframe} color={COMPARISON_COLORS[i % COMPARISON_COLORS.length]} />
       ))}

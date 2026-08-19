@@ -159,8 +159,8 @@ export function SettingsForm({ settings, activeTab }: SettingsFormProps) {
 
 function Row({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
-    <div className="flex items-center justify-between gap-4 py-3.5 first:pt-0 last:pb-0">
-      <div className="min-w-0">
+    <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2.5 py-3.5 first:pt-0 last:pb-0">
+      <div className="min-w-0 max-sm:w-full">
         <div className="text-[13px] text-primary">{label}</div>
         {hint && <div className="mt-1 text-[11.5px] leading-relaxed text-muted">{hint}</div>}
       </div>

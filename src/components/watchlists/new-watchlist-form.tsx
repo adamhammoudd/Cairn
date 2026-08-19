@@ -16,7 +16,7 @@ export function NewWatchlistForm() {
   const router = useRouter();
 
   return (
-    <form action={formAction} className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[260px_1fr]">
+    <form action={formAction} className="grid grid-cols-1 items-start gap-4 min-[900px]:grid-cols-[300px_1fr]">
       <div className="rounded-card border border-line bg-[#0C0C0C] p-4.5">
         <div className={`${LABEL} mb-3`}>Preview</div>
         <div className="flex items-center gap-2.25 rounded-xl border border-line bg-active px-3.25 py-2.75">
