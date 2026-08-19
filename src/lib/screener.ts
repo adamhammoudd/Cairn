@@ -23,6 +23,8 @@ export interface ScreenerRow {
   price: number | null;
   changePct: number | null;
   volume: number | null;
+  /** Up to the 12 most recent closes, oldest first, for a Trend sparkline. */
+  trend: number[];
   /** Derived at query time from fundamentals + latest close, never stored. */
   marketCap: number | null;
   pe: number | null;
@@ -61,6 +63,26 @@ export const ASSET_TYPE_TAG_CLASS: Record<string, string> = {
   forex: "text-warning border-warning/30",
   future: "text-muted border-line",
 };
+
+/** Filter-pill labels, matching the mock's wording. */
+export const ASSET_TYPE_LABEL: Record<string, string> = {
+  all: "All",
+  equity: "Equities",
+  etf: "ETFs",
+  crypto: "Crypto",
+  forex: "Forex",
+  // The mock labels this filter Indices; the stored asset_type is future.
+  future: "Indices",
+};
+
+/** Share volume, compacted the way the mock shows it ("22.4M"). */
+export function formatVolume(n: number | null): string {
+  if (n === null) return "—";
+  if (n >= 1e9) return `${(n / 1e9).toFixed(1)}B`;
+  if (n >= 1e6) return `${(n / 1e6).toFixed(1)}M`;
+  if (n >= 1e3) return `${(n / 1e3).toFixed(1)}K`;
+  return n.toLocaleString();
+}
 
 export function formatMarketCap(n: number | null): string {
   if (n === null) return "—";

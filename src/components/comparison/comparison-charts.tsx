@@ -49,7 +49,7 @@ function MiniChart({ row, timeframe, color }: { row: ComparisonRow; timeframe: C
               contentStyle={{ background: "#0F0F0F", border: "1px solid #2A2A2A", borderRadius: 8, fontSize: 12 }}
               labelStyle={{ color: "#8A8A8A" }}
             />
-            <Area type="monotone" dataKey="value" stroke={color} strokeWidth={2} fill={`url(#${gradientId})`} />
+            <Area type="monotone" dataKey="value" stroke={color} strokeWidth={2} fill={`url(#${gradientId})`} isAnimationActive={false} />
           </AreaChart>
         </ResponsiveContainer>
       )}
@@ -59,7 +59,7 @@ function MiniChart({ row, timeframe, color }: { row: ComparisonRow; timeframe: C
 
 export function ComparisonCharts({ rows, timeframe }: { rows: ComparisonRow[]; timeframe: ChartView }) {
   return (
-    <div className="grid grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
       {rows.map((row, i) => (
         <MiniChart key={row.symbol} row={row} timeframe={timeframe} color={COMPARISON_COLORS[i % COMPARISON_COLORS.length]} />
       ))}

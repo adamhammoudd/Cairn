@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import type { NewsFeedItem, NewsRelevance } from "@/lib/news";
+import { decodeEntities, type NewsFeedItem, type NewsRelevance } from "@/lib/news";
 
 const RELEVANCE_LABEL: Record<NewsRelevance, string> = {
   holding: "In your portfolio",
@@ -53,7 +53,7 @@ export function NewsPanel({ items }: { items: NewsFeedItem[] }) {
     <div className="animate-page-in">
       <div className="mb-4.5">
         <div className="mb-2 font-mono text-[10.5px] tracking-[0.16em] text-muted uppercase">News</div>
-        <h1 className="font-serif text-[32px] leading-tight font-normal text-primary">Ranked for you</h1>
+        <h1 className="font-serif text-[32px] leading-[1.1] font-normal text-primary">Ranked for you</h1>
         <p className="mt-1.75 max-w-[580px] text-[13.5px] text-muted text-pretty">
           Items touching your holdings surface first, then your sectors, then macro. Every item carries its source and
           age.
@@ -78,7 +78,7 @@ export function NewsPanel({ items }: { items: NewsFeedItem[] }) {
         })}
       </div>
 
-      <div className="flex max-w-[820px] flex-col gap-2.5">
+      <div className="flex flex-col gap-2.5">
         {visible.map((item, index) => (
           <article
             key={item.id}
@@ -105,10 +105,10 @@ export function NewsPanel({ items }: { items: NewsFeedItem[] }) {
                   rel="noreferrer"
                   className="font-serif text-[18px] leading-snug text-primary text-pretty transition-colors duration-fast ease-standard hover:text-accent"
                 >
-                  {item.title}
+                  {decodeEntities(item.title)}
                 </a>
               ) : (
-                <div className="font-serif text-[18px] leading-snug text-primary text-pretty">{item.title}</div>
+                <div className="font-serif text-[18px] leading-snug text-primary text-pretty">{decodeEntities(item.title)}</div>
               )}
 
               {item.matchedOn.length > 0 && (

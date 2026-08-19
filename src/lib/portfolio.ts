@@ -24,8 +24,8 @@ export function latestCloseBySymbol(prices: PriceBar[]) {
   for (const [symbol, rows] of bySymbol) {
     rows.sort((a, b) => (a.ts < b.ts ? 1 : -1)); // descending
     result.set(symbol, {
-      latest: rows[0]?.close ?? null,
-      prev: rows[1]?.close ?? null,
+      latest: rows[0]?.close == null ? null : Number(rows[0].close),
+      prev: rows[1]?.close == null ? null : Number(rows[1].close),
     });
   }
   return result;
@@ -161,7 +161,7 @@ export function computeTimelineSeries(holdings: Holding[], prices: PriceBar[], t
         cursor.set(h.symbol, i);
 
         if (rows[i].ts <= date && rows[i].close !== null) {
-          value += rows[i].close! * h.quantity;
+          value += Number(rows[i].close) * h.quantity;
           anyActive = true;
         }
       }
@@ -178,9 +178,17 @@ export function xAxisConfig(points: TimelinePoint[], timeframe: ChartView) {
   const desiredTicks = 6;
   const interval = points.length > desiredTicks ? Math.ceil(points.length / desiredTicks) - 1 : 0;
 
+  // 1D/1W points carry a time component when an intraday feed is available;
+  // formatting them as dates would print the same label on every tick.
   const formatters: Record<ChartView, (iso: string) => string> = {
-    "1D": (iso) => new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" }),
-    "1W": (iso) => new Date(iso).toLocaleDateString(undefined, { weekday: "short" }),
+    "1D": (iso) =>
+      iso.length > 10
+        ? new Date(iso).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })
+        : new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" }),
+    "1W": (iso) =>
+      iso.length > 10
+        ? new Date(iso).toLocaleString(undefined, { weekday: "short", hour: "numeric" })
+        : new Date(iso).toLocaleDateString(undefined, { weekday: "short" }),
     "1M": (iso) => new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" }),
     "3M": (iso) => new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" }),
     "1Y": (iso) => new Date(iso).toLocaleDateString(undefined, { month: "short" }),

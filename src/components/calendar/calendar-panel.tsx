@@ -80,7 +80,7 @@ export function CalendarPanel({ events }: { events: CalendarEvent[] }) {
     <div className="animate-page-in flex flex-col gap-4">
       <div>
         <div className="mb-2 font-mono text-[10.5px] tracking-[0.16em] text-muted uppercase">Planning · Calendar</div>
-        <h1 className="font-serif text-[32px] leading-tight font-normal text-primary">{monthLabel}</h1>
+        <h1 className="font-serif text-[32px] leading-[1.1] font-normal text-primary">{monthLabel}</h1>
       </div>
 
       <div className="flex w-fit flex-wrap gap-1.5 rounded-xl border border-line bg-panel p-1">
@@ -108,7 +108,7 @@ export function CalendarPanel({ events }: { events: CalendarEvent[] }) {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 items-start gap-3.5 xl:grid-cols-[340px_1fr]">
+      <div className="grid grid-cols-1 items-start gap-3.5 min-[900px]:grid-cols-[300px_1fr]">
         <aside className="overflow-hidden rounded-card border border-line bg-panel">
           <div className="border-b border-line px-4 py-3.25 font-mono text-[10px] tracking-[0.14em] text-muted uppercase">
             Next up

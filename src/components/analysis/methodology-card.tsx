@@ -72,7 +72,7 @@ export function MethodologyCard({
           <span className="text-dim"> · Full sources, analogs, and match detail on Premium</span>
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <div className="mb-2 text-[11px] tracking-[0.06em] text-muted uppercase">
               Sources ({analysis.sources.length})

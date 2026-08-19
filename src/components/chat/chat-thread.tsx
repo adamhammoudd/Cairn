@@ -1,7 +1,14 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { createChatSession, listChatSessions, listChatMessages, type ChatSession } from "@/lib/actions/chat";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  createChatSession,
+  deleteChatSession,
+  listChatSessions,
+  listChatMessages,
+  renameChatSession,
+  type ChatSession,
+} from "@/lib/actions/chat";
 import { getAnalysesByIds, type AnalysisWithMethodology } from "@/lib/actions/analysis";
 import { getUserPlan } from "@/lib/actions/billing";
 import { TIER_LIMITS } from "@/lib/billing";
@@ -36,7 +43,7 @@ function sessionWhen(session: ChatSession): string {
   return new Date(session.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
-export function ChatThread({ compact = false }: { compact?: boolean }) {
+export function ChatThread({ compact = false, briefing }: { compact?: boolean; briefing?: ReactNode }) {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -48,6 +55,10 @@ export function ChatThread({ compact = false }: { compact?: boolean }) {
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(false);
   const [loadingOlder, setLoadingOlder] = useState(false);
+  // Which conversation is being renamed, and the draft title for it.
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [draftTitle, setDraftTitle] = useState("");
+  const [historyError, setHistoryError] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   async function withAnalyses(history: Awaited<ReturnType<typeof listChatMessages>>): Promise<Message[]> {
@@ -91,6 +102,39 @@ export function ChatThread({ compact = false }: { compact?: boolean }) {
     setSessionId(created.id);
     setMessages([]);
     setHistoryOpen(false);
+  }
+
+  function startRename(session: ChatSession) {
+    setEditingId(session.id);
+    setDraftTitle(session.title?.trim() || sessionLabel(session));
+    setHistoryError(null);
+  }
+
+  async function commitRename(id: string) {
+    const title = draftTitle;
+    setEditingId(null);
+    const error = await renameChatSession(id, title);
+    if (error) {
+      setHistoryError(error);
+      return;
+    }
+    setSessions((prev) => prev.map((s) => (s.id === id ? { ...s, title: title.trim() } : s)));
+  }
+
+  async function removeSession(id: string) {
+    if (!window.confirm("Delete this conversation and its messages? This cannot be undone.")) return;
+    const error = await deleteChatSession(id);
+    if (error) {
+      setHistoryError(error);
+      return;
+    }
+    setSessions((prev) => prev.filter((s) => s.id !== id));
+    // Deleting the open thread leaves nothing to show, so clear the transcript
+    // rather than leaving messages on screen that no longer exist.
+    if (id === sessionId) {
+      setSessionId(null);
+      setMessages([]);
+    }
   }
 
   useEffect(() => {
@@ -184,59 +228,9 @@ export function ChatThread({ compact = false }: { compact?: boolean }) {
 
   const filteredSessions = sessions.filter((s) => sessionLabel(s).toLowerCase().includes(search.toLowerCase()));
 
-  return (
-    <div className="flex h-full flex-col">
-      <div className="relative flex items-center justify-between gap-2 border-b border-line px-3 py-2.5">
-        <button
-          type="button"
-          onClick={() => setHistoryOpen((o) => !o)}
-          className="rounded-lg px-2.5 py-1.5 text-[12px] text-muted transition-colors duration-fast ease-standard hover:bg-active hover:text-primary"
-        >
-          History {historyOpen ? "▲" : "▼"}
-        </button>
-        <button
-          type="button"
-          onClick={startNewChat}
-          className="rounded-lg px-2.5 py-1.5 text-[12px] text-muted transition-colors duration-fast ease-standard hover:bg-active hover:text-primary"
-        >
-          + New thread
-        </button>
-
-        {historyOpen && (
-          <div className="absolute top-full left-0 z-10 mt-1 w-full overflow-hidden rounded-lg border border-line bg-panel shadow-lg">
-            <div className="border-b border-line p-2">
-              <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search conversations…"
-                className="w-full rounded-lg border border-line bg-active px-2.5 py-1.5 text-[12.5px] text-primary outline-none"
-              />
-            </div>
-            <div className="px-3 pt-2 pb-1 font-mono text-[9.5px] tracking-[0.14em] text-dim uppercase">History</div>
-            <div className="max-h-64 overflow-y-auto py-1">
-              {filteredSessions.length === 0 ? (
-                <div className="px-3 py-2 text-[12px] text-dim">No conversations found.</div>
-              ) : (
-                filteredSessions.map((s) => (
-                  <button
-                    key={s.id}
-                    type="button"
-                    onClick={() => loadSession(s.id)}
-                    className={`block w-full truncate rounded-lg px-3 py-2 text-left transition-colors duration-fast ease-standard hover:bg-active ${
-                      s.id === sessionId ? "text-primary" : "text-muted"
-                    }`}
-                  >
-                    <div className="truncate text-[12.5px]">{sessionLabel(s)}</div>
-                    <div className="mt-0.5 text-[10.5px] text-dim">{sessionWhen(s)}</div>
-                  </button>
-                ))
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-
-      <div ref={scrollRef} className={`flex-1 overflow-y-auto ${compact ? "px-3 py-3" : "px-2 py-4"}`}>
+  const conversation = (
+    <>
+      <div ref={scrollRef} className={`flex-1 overflow-y-auto ${compact ? "px-3 py-3" : "p-5"}`}>
         {messages.length === 0 ? (
           <p className="text-[13px] text-muted">
             Ask about a ticker, sector, or market trend — I&apos;ll answer from stored research only.
@@ -308,6 +302,211 @@ export function ChatThread({ compact = false }: { compact?: boolean }) {
       <div className="px-3 pb-2">
         <Disclosure />
       </div>
+    </>
+  );
+
+  // Full page: the mock's "232px 1fr" grid — a persistent history rail beside
+  // the briefing + conversation column. The compact floating panel has no room
+  // for a rail, so it keeps history in a dropdown.
+  if (!compact) {
+    return (
+      <div className="grid items-start gap-4 min-[900px]:grid-cols-[232px_1fr]">
+        <aside className="overflow-hidden rounded-card border border-line bg-panel">
+          <div className="border-b border-line px-3.75 py-3.5">
+            <button
+              type="button"
+              onClick={startNewChat}
+              className="w-full rounded-[9px] border border-line py-2.25 text-[12.5px] text-primary transition-colors duration-base ease-standard hover:border-accent"
+            >
+              + New thread
+            </button>
+          </div>
+          <div className="px-2 py-2.5">
+            <div className="px-2 pt-1 pb-2 font-mono text-[9.5px] tracking-[0.14em] text-dim uppercase">History</div>
+            {historyError && <div className="px-2.5 pb-1.5 text-[11.5px] text-negative">{historyError}</div>}
+            {sessions.length === 0 ? (
+              <div className="px-2.5 py-2 text-[12px] text-dim">No conversations yet.</div>
+            ) : (
+              sessions.map((s) =>
+                editingId === s.id ? (
+                  <form
+                    key={s.id}
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      void commitRename(s.id);
+                    }}
+                    className="mb-0.5 px-1"
+                  >
+                    <input
+                      autoFocus
+                      value={draftTitle}
+                      onChange={(e) => setDraftTitle(e.target.value)}
+                      onBlur={() => void commitRename(s.id)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Escape") setEditingId(null);
+                      }}
+                      className="w-full rounded-[9px] border border-accent bg-canvas px-2 py-2 text-[12.5px] text-primary outline-none"
+                    />
+                  </form>
+                ) : (
+                  <div
+                    key={s.id}
+                    className={`group mb-0.5 flex items-center gap-1 rounded-[9px] pr-1 transition-colors duration-fast ease-standard hover:bg-[#171717] ${
+                      s.id === sessionId ? "bg-active" : ""
+                    }`}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => loadSession(s.id)}
+                      className={`min-w-0 flex-1 px-2.5 py-2.25 text-left ${
+                        s.id === sessionId ? "text-primary" : "text-muted"
+                      }`}
+                    >
+                      <div className="truncate text-[12.5px]">{sessionLabel(s)}</div>
+                      <div className="mt-0.75 text-[10.5px] text-dim">{sessionWhen(s)}</div>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => startRename(s)}
+                      aria-label={`Rename ${sessionLabel(s)}`}
+                      title="Rename"
+                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-dim opacity-0 transition-opacity duration-fast ease-standard group-hover:opacity-100 focus-visible:opacity-100 hover:text-primary max-[900px]:opacity-100"
+                    >
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M12 20h9" />
+                        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                      </svg>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void removeSession(s.id)}
+                      aria-label={`Delete ${sessionLabel(s)}`}
+                      title="Delete"
+                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-negative opacity-0 transition-opacity duration-fast ease-standard group-hover:opacity-100 focus-visible:opacity-100 max-[900px]:opacity-100"
+                    >
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M3 6h18" />
+                        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                      </svg>
+                    </button>
+                  </div>
+                ),
+              )
+            )}
+          </div>
+        </aside>
+
+        <div className="flex min-w-0 flex-col gap-4">
+          {briefing}
+          <div className="flex min-h-75 flex-col overflow-hidden rounded-card border border-line bg-panel">
+            {conversation}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex h-full flex-col">
+      <div className="relative flex items-center justify-between gap-2 border-b border-line px-3 py-2.5">
+        <button
+          type="button"
+          onClick={() => setHistoryOpen((o) => !o)}
+          className="rounded-lg px-2.5 py-1.5 text-[12px] text-muted transition-colors duration-fast ease-standard hover:bg-active hover:text-primary"
+        >
+          History {historyOpen ? "▲" : "▼"}
+        </button>
+        <button
+          type="button"
+          onClick={startNewChat}
+          className="rounded-lg px-2.5 py-1.5 text-[12px] text-muted transition-colors duration-fast ease-standard hover:bg-active hover:text-primary"
+        >
+          + New thread
+        </button>
+
+        {historyOpen && (
+          <div className="absolute top-full left-0 z-10 mt-1 w-full overflow-hidden rounded-lg border border-line bg-panel shadow-lg">
+            <div className="border-b border-line p-2">
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search conversations…"
+                className="w-full rounded-lg border border-line bg-active px-2.5 py-1.5 text-[12.5px] text-primary outline-none"
+              />
+            </div>
+            <div className="px-3 pt-2 pb-1 font-mono text-[9.5px] tracking-[0.14em] text-dim uppercase">History</div>
+            <div className="max-h-64 overflow-y-auto py-1">
+              {filteredSessions.length === 0 ? (
+                <div className="px-3 py-2 text-[12px] text-dim">No conversations found.</div>
+              ) : (
+                filteredSessions.map((s) =>
+                  editingId === s.id ? (
+                    <form
+                      key={s.id}
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        void commitRename(s.id);
+                      }}
+                      className="px-2 py-1"
+                    >
+                      <input
+                        autoFocus
+                        value={draftTitle}
+                        onChange={(e) => setDraftTitle(e.target.value)}
+                        onBlur={() => void commitRename(s.id)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Escape") setEditingId(null);
+                        }}
+                        className="w-full rounded-lg border border-accent bg-canvas px-2 py-1.5 text-[12.5px] text-primary outline-none"
+                      />
+                    </form>
+                  ) : (
+                    <div
+                      key={s.id}
+                      className="group flex items-center gap-1 rounded-lg pr-1 transition-colors duration-fast ease-standard hover:bg-active"
+                    >
+                      <button
+                        type="button"
+                        onClick={() => loadSession(s.id)}
+                        className={`min-w-0 flex-1 px-3 py-2 text-left ${
+                          s.id === sessionId ? "text-primary" : "text-muted"
+                        }`}
+                      >
+                        <div className="truncate text-[12.5px]">{sessionLabel(s)}</div>
+                        <div className="mt-0.5 text-[10.5px] text-dim">{sessionWhen(s)}</div>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => startRename(s)}
+                        aria-label={`Rename ${sessionLabel(s)}`}
+                        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-dim hover:text-primary"
+                      >
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M12 20h9" />
+                          <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                        </svg>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void removeSession(s.id)}
+                        aria-label={`Delete ${sessionLabel(s)}`}
+                        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-negative"
+                      >
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M3 6h18" />
+                          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                        </svg>
+                      </button>
+                    </div>
+                  ),
+                )
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {conversation}
     </div>
   );
 }

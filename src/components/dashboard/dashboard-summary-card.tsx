@@ -6,9 +6,9 @@ interface DashboardSummaryCardProps {
   href: string;
   ctaLabel: string;
   tint?: "accent" | "info" | "violet" | "warning";
-  value: string;
+  value?: string;
   valueTone?: "primary" | "positive" | "negative";
-  detail: string;
+  detail?: string;
   delay?: number;
   wide?: boolean;
   children?: ReactNode;
@@ -61,7 +61,7 @@ export function DashboardSummaryCard({
     >
       <div className="mb-3.5 flex items-center justify-between gap-2.5">
         <div className="flex items-center gap-2.25">
-          <span className={`h-3.5 w-1.25 rounded-sm ${TINT_CLASSES[tint]}`} />
+          <span className={`h-3.5 w-1.25 rounded-[3px] ${TINT_CLASSES[tint]}`} />
           <span className="font-mono text-[10.5px] tracking-[0.14em] text-muted uppercase">{title}</span>
         </div>
         {arranging ? (

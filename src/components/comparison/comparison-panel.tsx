@@ -5,7 +5,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { ComparisonCharts } from "@/components/comparison/comparison-charts";
 import { ComparisonTable } from "@/components/comparison/comparison-table";
-import { COMPARISON_COLORS, MAX_COMPARE, type ComparisonRow } from "@/lib/comparison";
+import { COMPARISON_COLORS, MAX_COMPARE, seriesFor, type ComparisonRow } from "@/lib/comparison";
+import { Sparkline } from "@/components/sparkline";
 import type { ChartView } from "@/lib/supabase/types";
 
 const TIMEFRAMES: ChartView[] = ["1D", "1W", "1M", "3M", "1Y", "ALL"];
@@ -48,7 +49,7 @@ export function ComparisonPanel({
       <div className="mb-1.5 flex flex-wrap items-end justify-between gap-4">
         <div>
           <div className="mb-2 font-mono text-[10.5px] tracking-[0.16em] text-muted uppercase">Compare</div>
-          <h1 className="font-serif text-[32px] leading-tight font-normal text-primary">Side by side</h1>
+          <h1 className="font-serif text-[32px] leading-[1.1] font-normal text-primary">Side by side</h1>
         </div>
 
         {canAdd && (
@@ -131,6 +132,16 @@ export function ComparisonPanel({
                     <span className={`text-[12px] tabular-nums ${row.changePct === null ? "text-muted" : positive ? "text-accent" : "text-negative"}`}>
                       {row.changePct === null ? "—" : `${positive ? "+" : ""}${row.changePct.toFixed(2)}%`}
                     </span>
+                  </div>
+
+                  <Sparkline
+                    values={seriesFor(row).map((p) => p.value)}
+                    positive={positive}
+                    className="mt-2.5 h-[70px] w-full"
+                    delayMs={i * 60}
+                  />
+                  <div className="mt-1.5 font-mono text-[9.5px] tracking-[0.1em] text-dim uppercase">
+                    Indexed · {timeframe}
                   </div>
                 </div>
               );

@@ -13,6 +13,10 @@ export function CryptoTable({ rows }: { rows: CryptoRow[] }) {
 
   return (
     <div className="overflow-hidden rounded-card border border-line bg-panel">
+      {/* Seven columns don't fit a phone; scroll the table inside the card
+          rather than letting the page scroll sideways. */}
+      <div className="overflow-x-auto">
+      <div className="min-w-[760px]">
       <div className="grid grid-cols-[40px_1.4fr_0.9fr_0.7fr_1fr_1fr_1fr] border-b border-line px-5 py-3.5 text-[11.5px] tracking-[0.06em] text-muted uppercase">
         <div>#</div>
         <div>Name</div>
@@ -50,6 +54,8 @@ export function CryptoTable({ rows }: { rows: CryptoRow[] }) {
           </div>
         </Link>
       ))}
+      </div>
+      </div>
     </div>
   );
 }

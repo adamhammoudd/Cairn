@@ -91,7 +91,7 @@ export function OnboardingSteps() {
           ))}
         </div>
 
-        <h1 className="relative m-0 font-serif text-[34px] leading-tight font-normal text-primary">
+        <h1 className="relative m-0 font-serif text-[34px] leading-[1.1] font-normal text-primary">
           Welcome to Cairn
         </h1>
         <p className="relative mx-auto mt-2.5 max-w-[480px] text-[14px] leading-relaxed text-muted text-pretty">

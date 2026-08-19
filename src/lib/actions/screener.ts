@@ -33,9 +33,11 @@ export async function runScreen(rawFilters: ScreenerFilters): Promise<ScreenerRo
   const bySymbol = new Map<string, { assetType: string; closes: number[]; volume: number | null }>();
   for (const p of prices ?? []) {
     const entry = bySymbol.get(p.symbol) ?? { assetType: p.asset_type, closes: [], volume: null };
-    if (entry.closes.length < 2 && p.close !== null) {
+    // rows are ordered ts desc, so closes accumulates most-recent-first; the
+    // first 2 drive price/changePct, up to 12 feed the Trend sparkline.
+    if (entry.closes.length < 12 && p.close !== null) {
       if (entry.closes.length === 0) entry.volume = p.volume;
-      entry.closes.push(p.close);
+      entry.closes.push(Number(p.close));
     }
     bySymbol.set(p.symbol, entry);
   }
@@ -51,6 +53,7 @@ export async function runScreen(rawFilters: ScreenerFilters): Promise<ScreenerRo
       price,
       changePct: price !== null && prev !== null && prev !== 0 ? ((price - prev) / prev) * 100 : null,
       volume: e.volume,
+      trend: [...e.closes].reverse(),
       marketCap: price !== null && f?.shares_outstanding ? price * f.shares_outstanding : null,
       // A negative or zero TTM EPS has no meaningful P/E — leave it null rather
       // than reporting a negative multiple that would sort nonsensically.

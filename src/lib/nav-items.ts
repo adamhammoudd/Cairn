@@ -22,14 +22,14 @@ export const NAV_ITEMS: NavEntry[] = [
       { label: "Markets", route: "/markets" },
       { label: "News", route: "/news" },
       { label: "Compare", route: "/comparison" },
-      { label: "Sector Map", route: "/sector-map" },
+      { label: "Sector map", route: "/sector-map" },
       { label: "Screener", route: "/screener" },
     ],
   },
   {
-    label: "My Portfolio",
+    label: "Portfolio",
     items: [
-      { label: "Portfolio", route: "/portfolio" },
+      { label: "Holdings", route: "/portfolio" },
       { label: "Watchlists", route: "/watchlists" },
       { label: "Alerts", route: "/alerts" },
     ],
@@ -41,5 +41,5 @@ export const NAV_ITEMS: NavEntry[] = [
       { label: "Calendar", route: "/calendar" },
     ],
   },
-  { label: "AI Assistant", route: "/assistant" },
+  { label: "Assistant", route: "/assistant" },
 ];

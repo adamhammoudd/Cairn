@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { xAxisConfig, type TimelinePoint } from "@/lib/portfolio";
+import { useRef, useState } from "react";
+import { Area, AreaChart, ResponsiveContainer, Tooltip, YAxis } from "recharts";
+import type { TimelinePoint } from "@/lib/portfolio";
+import { getIntradayPortfolioSeries } from "@/lib/actions/intraday";
 import type { ChartView } from "@/lib/supabase/types";
 
 const TIMEFRAMES: ChartView[] = ["1D", "1W", "1M", "3M", "1Y", "ALL"];
@@ -14,65 +15,106 @@ interface PortfolioChartProps {
 
 export function PortfolioChart({ seriesByTimeframe, hasHoldings }: PortfolioChartProps) {
   const [timeframe, setTimeframe] = useState<ChartView>("1M");
-  const points = seriesByTimeframe[timeframe];
-  const { interval, tickFormatter } = useMemo(() => xAxisConfig(points, timeframe), [points, timeframe]);
+  // 1D and 1W come from the live provider (minute and quarter-hour bars);
+  // every other range is the daily series computed on the server.
+  const [intraday, setIntraday] = useState<{ points: TimelinePoint[]; available: boolean } | null>(null);
+  const [loadingIntraday, setLoadingIntraday] = useState(false);
+  const isIntraday = timeframe === "1D" || timeframe === "1W";
+
+  // Fetched from the click rather than an effect: the range button is the
+  // only thing that can start this, and firing it here keeps the render pass
+  // free of cascading state updates.
+  const requestId = useRef(0);
+
+  function selectTimeframe(next: ChartView) {
+    setTimeframe(next);
+    if (next !== "1D" && next !== "1W") {
+      setIntraday(null);
+      return;
+    }
+    if (!hasHoldings) return;
+
+    const id = ++requestId.current;
+    setLoadingIntraday(true);
+    setIntraday(null);
+    getIntradayPortfolioSeries(next)
+      .then((res) => {
+        if (id === requestId.current) setIntraday(res);
+      })
+      .finally(() => {
+        if (id === requestId.current) setLoadingIntraday(false);
+      });
+  }
+
+  const intradayPoints = isIntraday && intraday?.points.length ? intraday.points : null;
+  const points = intradayPoints ?? (timeframe === "1D" ? [] : seriesByTimeframe[timeframe]);
 
   return (
-    <div className="rounded-card border border-line bg-panel p-6">
-      <div className="mb-4 flex gap-1.5">
-        {TIMEFRAMES.map((tf) => (
-          <button
-            key={tf}
-            type="button"
-            onClick={() => setTimeframe(tf)}
-            className={`rounded-md px-3 py-1.5 text-xs ${
-              timeframe === tf ? "bg-active text-primary" : "text-muted"
-            }`}
-          >
-            {tf}
-          </button>
-        ))}
+    <div className="overflow-hidden rounded-card border border-line bg-panel">
+      <div className="flex items-center justify-between gap-3 border-b border-[#1E1E1E] px-4 py-3">
+        <div className="flex gap-1 rounded-[10px] border border-[#232323] p-0.75">
+          {TIMEFRAMES.map((tf) => (
+            <button
+              key={tf}
+              type="button"
+              onClick={() => selectTimeframe(tf)}
+              className={`rounded-[7px] px-3 py-1.5 font-mono text-[11px] transition-colors duration-base ease-standard hover:text-primary ${
+                timeframe === tf ? "bg-[#1C1C1C] text-primary" : "text-muted"
+              }`}
+            >
+              {tf}
+            </button>
+          ))}
+        </div>
+        <span className="font-mono text-[10px] tracking-[0.12em] text-dim uppercase">
+          {intradayPoints
+            ? timeframe === "1D"
+              ? "Combined value · 1 min"
+              : "Combined value · 15 min"
+            : "Combined holdings value"}
+        </span>
       </div>
 
+      <div className="px-2 pt-3.5 pb-2">
       {!hasHoldings ? (
-        <div className="flex h-[180px] items-center justify-center text-sm text-muted">
+        <div className="flex h-[200px] items-center justify-center text-sm text-muted">
           Add a holding to see portfolio performance.
         </div>
+      ) : loadingIntraday && points.length === 0 ? (
+        <div className="flex h-[200px] items-center justify-center text-sm text-muted">Loading intraday prices…</div>
       ) : points.length === 0 ? (
-        <div className="flex h-[180px] items-center justify-center text-sm text-muted">
+        <div className="flex h-[200px] items-center justify-center px-6 text-center text-sm text-muted">
           {timeframe === "1D"
-            ? "Intraday data isn't available yet — only daily closes are ingested."
-            : "No price history for this range yet."}
+            ? "Intraday needs a market-data key (TWELVE_DATA_API_KEY). Stored prices are one close per day, which would draw a straight line between yesterday and today rather than a real session."
+            : isIntraday
+              ? "No intraday bars returned for this range."
+              : "No price history for this range yet."}
         </div>
       ) : (
-        <ResponsiveContainer width="100%" height={180}>
+        <ResponsiveContainer width="100%" height={200}>
           <AreaChart data={points} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
             <defs>
               <linearGradient id="portfolioFill" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#2FC685" stopOpacity={0.3} />
+                <stop offset="0%" stopColor="#2FC685" stopOpacity={0.22} />
                 <stop offset="100%" stopColor="#2FC685" stopOpacity={0} />
               </linearGradient>
             </defs>
-            <XAxis
-              dataKey="date"
-              interval={interval}
-              tickFormatter={tickFormatter}
-              tick={{ fill: "#8A8A8A", fontSize: 11 }}
-              axisLine={{ stroke: "#2A2A2A" }}
-              tickLine={false}
-              minTickGap={24}
-            />
             <YAxis hide domain={["dataMin", "dataMax"]} />
             <Tooltip
-              formatter={(value) => Number(value).toLocaleString(undefined, { style: "currency", currency: "USD" })}
-              labelFormatter={(label) => new Date(String(label)).toLocaleDateString()}
+              formatter={(value) => [Number(value).toLocaleString(undefined, { style: "currency", currency: "USD" }), "Close"] as [string, string]}
+              labelFormatter={(label) =>
+                String(label).length > 10
+                  ? new Date(String(label)).toLocaleString()
+                  : new Date(String(label)).toLocaleDateString()
+              }
               contentStyle={{ background: "#0F0F0F", border: "1px solid #2A2A2A", borderRadius: 8, fontSize: 12 }}
               labelStyle={{ color: "#8A8A8A" }}
             />
-            <Area type="monotone" dataKey="value" stroke="#2FC685" strokeWidth={2.5} fill="url(#portfolioFill)" />
+            <Area type="monotone" dataKey="value" stroke="#2FC685" strokeWidth={2} fill="url(#portfolioFill)" isAnimationActive={false} />
           </AreaChart>
         </ResponsiveContainer>
       )}
+      </div>
     </div>
   );
 }

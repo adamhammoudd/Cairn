@@ -22,6 +22,15 @@ export interface TickerData {
     market_cap_rank: number | null;
   } | null;
   news: { id: string; title: string; source_name: string; url: string | null; published_at: string }[];
+  /** Session and range figures the mock header cards show. */
+  open: number | null;
+  dayHigh: number | null;
+  dayLow: number | null;
+  week52High: number | null;
+  week52Low: number | null;
+  /** Annualised stdev of the last 30 daily returns, in percent. */
+  volatility30d: number | null;
+  nextEvent: { event_type: string; event_date: string } | null;
   esg: { environmental: number | null; social: number | null; governance: number | null; total: number | null; source: string } | null;
 }
 
@@ -35,7 +44,7 @@ export async function getTickerDetail(symbolRaw: string): Promise<TickerData | n
 
   const { data: bars } = await supabase
     .from("historical_prices")
-    .select("ts, close, volume, asset_type")
+    .select("ts, open, high, low, close, volume, asset_type")
     .eq("symbol", symbol)
     .order("ts", { ascending: true })
     .limit(400);
@@ -44,7 +53,7 @@ export async function getTickerDetail(symbolRaw: string): Promise<TickerData | n
 
   const latest = bars[bars.length - 1];
 
-  const [currentPrice, { data: fundamentals }, { data: cryptoMetrics }, { data: news }, { data: esg }] = await Promise.all([
+  const [currentPrice, { data: fundamentals }, { data: cryptoMetrics }, { data: news }, { data: nextEvent }, { data: esg }] = await Promise.all([
     getCurrentPrice(symbol),
     supabase
       .from("fundamentals")
@@ -65,6 +74,14 @@ export async function getTickerDetail(symbolRaw: string): Promise<TickerData | n
       .order("published_at", { ascending: false })
       .limit(15),
     supabase
+      .from("calendar_events")
+      .select("event_type, event_date")
+      .eq("symbol", symbol)
+      .gte("event_date", new Date().toISOString().slice(0, 10))
+      .order("event_date", { ascending: true })
+      .limit(1)
+      .maybeSingle(),
+    supabase
       .from("esg_scores")
       .select("environmental, social, governance, total, source")
       .eq("symbol", symbol)
@@ -72,6 +89,22 @@ export async function getTickerDetail(symbolRaw: string): Promise<TickerData | n
       .limit(1)
       .maybeSingle(),
   ]);
+
+  // 52-week range and 30-day volatility are derived here rather than stored,
+  // the same rule the screener follows for market cap: no second copy to age.
+  const yearAgo = new Date();
+  yearAgo.setDate(yearAgo.getDate() - 365);
+  const yearIso = yearAgo.toISOString().slice(0, 10);
+  const yearCloses = bars.filter((b) => b.ts >= yearIso && b.close !== null).map((b) => Number(b.close));
+
+  const recent = bars.slice(-31).filter((b) => b.close !== null).map((b) => Number(b.close));
+  let volatility30d: number | null = null;
+  if (recent.length >= 10) {
+    const returns = recent.slice(1).map((c, i) => Math.log(c / recent[i])).filter((r) => Number.isFinite(r));
+    const mean = returns.reduce((a, b) => a + b, 0) / returns.length;
+    const variance = returns.reduce((a, r) => a + (r - mean) ** 2, 0) / returns.length;
+    volatility30d = Math.sqrt(variance) * Math.sqrt(252) * 100;
+  }
 
   return {
     symbol,
@@ -85,5 +118,12 @@ export async function getTickerDetail(symbolRaw: string): Promise<TickerData | n
     cryptoMetrics: cryptoMetrics ?? null,
     news: news ?? [],
     esg: esg ?? null,
+    open: latest.open === null ? null : Number(latest.open),
+    dayHigh: latest.high === null ? null : Number(latest.high),
+    dayLow: latest.low === null ? null : Number(latest.low),
+    week52High: yearCloses.length > 0 ? Math.max(...yearCloses) : null,
+    week52Low: yearCloses.length > 0 ? Math.min(...yearCloses) : null,
+    volatility30d,
+    nextEvent: nextEvent ?? null,
   };
 }

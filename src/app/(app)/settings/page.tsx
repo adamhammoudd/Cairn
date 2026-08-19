@@ -22,11 +22,11 @@ export default async function SettingsPage() {
   }
 
   return (
-    <div className="animate-page-in flex flex-col gap-5">
-      <div>
-        <div className="mb-2 font-mono text-[10.5px] tracking-[0.16em] text-muted uppercase">Preferences</div>
-        <h1 className="font-serif text-[32px] leading-tight font-normal text-primary">Settings</h1>
-        <p className="mt-1.5 max-w-[560px] text-[13.5px] text-muted text-pretty">
+    <div className="animate-page-in">
+      <div className="mb-5.5">
+        <div className="mb-2 font-mono text-[10.5px] tracking-[0.16em] text-muted uppercase">Account · Settings</div>
+        <h1 className="font-serif text-[30px] leading-[1.1] font-normal text-primary">Settings</h1>
+        <p className="mt-1.75 max-w-[560px] text-[13.5px] text-muted text-pretty">
           Account, display, notifications, billing, and AI assistant preferences.
         </p>
       </div>
@@ -47,7 +47,7 @@ export default async function SettingsPage() {
           premiumLabel: TIER_LIMITS.premium.label,
           premiumAnalyses: TIER_LIMITS.premium.monthlyAiAnalyses,
         }}
-      />
+ />
     </div>
   );
 }

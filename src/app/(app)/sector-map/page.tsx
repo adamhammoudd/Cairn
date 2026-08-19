@@ -5,11 +5,11 @@ export default async function SectorMapPage() {
   const data = await getSectorHeatmap();
 
   return (
-    <div className="animate-page-in flex flex-col gap-4.5">
-      <div>
+    <div className="animate-page-in">
+      <div className="mb-5">
         <div className="mb-2 font-mono text-[10.5px] tracking-[0.16em] text-muted uppercase">Markets · Sector map</div>
-        <h1 className="font-serif text-[32px] leading-tight font-normal text-primary">Sector map</h1>
-        <p className="mt-1.5 max-w-[540px] text-[13.5px] text-muted text-pretty">
+        <h1 className="font-serif text-[32px] leading-[1.1] font-normal text-primary">Sector map</h1>
+        <p className="mt-1.75 max-w-[540px] text-[13.5px] text-muted text-pretty">
           Tile area is market cap; saturation is the size of today&apos;s move. Symbols with no SEC-classified sector
           show under &quot;Unclassified.&quot;
         </p>

@@ -4,10 +4,12 @@ import Link from "next/link";
 import { useEffect, useState, useTransition } from "react";
 import { deleteSavedScreen, runScreen, saveScreen } from "@/lib/actions/screener";
 import {
+  ASSET_TYPE_LABEL,
   ASSET_TYPE_TAG_CLASS,
   ASSET_TYPES,
   EMPTY_FILTERS,
   formatMarketCap,
+  formatVolume,
   type SavedScreen,
   type ScreenerFilters,
   type ScreenerRow,
@@ -81,12 +83,14 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
 
   return (
     <div className="animate-page-in">
-      <div className="mb-5">
+      <div className="mb-4.5">
         <div className="mb-2 font-mono text-[10.5px] tracking-[0.16em] text-muted uppercase">Markets · Screener</div>
-        <h1 className="font-serif text-[32px] leading-tight font-normal text-primary">Screener</h1>
+        <h1 className="font-serif text-[32px] leading-[1.1] font-normal text-primary">Screener</h1>
       </div>
 
-      <div className="grid grid-cols-[260px_1fr] items-start gap-3.5">
+      {/* Filters sit beside the results only once there's room; below the mock's
+          900px breakpoint they stack, or the results column collapses to ~130px. */}
+      <div className="grid grid-cols-1 items-start gap-3.5 min-[900px]:grid-cols-[232px_1fr]">
         <aside className="rounded-card border border-line bg-panel p-4.5">
           <div className="font-mono text-[9.5px] tracking-[0.12em] text-dim uppercase">Asset type</div>
           <div className="mt-2.25 flex flex-wrap gap-1.5">
@@ -97,11 +101,11 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
                   key={t}
                   type="button"
                   onClick={() => toggleAssetType(t)}
-                  className={`rounded-full border px-2.75 py-1.5 text-[11.5px] capitalize transition-colors duration-fast ease-standard hover:border-[#3A3A3A] ${
+                  className={`rounded-full border px-2.75 py-1.5 text-[11.5px] transition-colors duration-fast ease-standard hover:border-[#3A3A3A] ${
                     active ? "border-accent bg-accent/10 text-primary" : "border-line bg-transparent text-muted"
                   }`}
                 >
-                  {t}
+                  {ASSET_TYPE_LABEL[t] ?? t}
                 </button>
               );
             })}
@@ -283,10 +287,10 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
                     {r.changePct === null ? "—" : `${r.changePct >= 0 ? "+" : ""}${r.changePct.toFixed(2)}%`}
                   </div>
                   <div className="text-[12.5px] tabular-nums text-muted">
-                    {r.volume === null ? "—" : r.volume.toLocaleString()}
+                    {formatVolume(r.volume)}
                   </div>
                   <div className="text-[12.5px] tabular-nums text-primary">{formatMarketCap(r.marketCap)}</div>
-                  <div className="text-[12.5px] tabular-nums text-muted">{r.pe === null ? "—" : r.pe.toFixed(1)}</div>
+                  <div className="text-[12.5px] tabular-nums text-muted">{r.pe === null ? "—" : `${r.pe.toFixed(1)}00d7`}</div>
                   <div className="text-[12.5px] tabular-nums text-muted">
                     {r.dividendYield === null ? "—" : `${r.dividendYield.toFixed(2)}%`}
                   </div>

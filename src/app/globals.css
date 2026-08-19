@@ -174,10 +174,33 @@ body {
   background: var(--color-canvas);
   color: var(--color-primary);
   font-family: var(--font-sans);
+  /* The mock leaves line-height at the browser default (~1.2) and only sets it
+     explicitly where copy needs to breathe. Tailwind's preflight otherwise
+     inherits 1.5 everywhere, which stretches every row and card taller than the
+     design. Components opt back in with leading-* where the mock does. */
+  line-height: normal;
 }
 
 input::placeholder {
   color: var(--color-dim);
+}
+
+/* Touch input: skip the double-tap-zoom wait so taps register immediately, and
+   stand in for the hover states a finger never triggers — without feedback the
+   controls read as dead even when they fire. */
+button,
+a,
+select,
+[role="button"] {
+  touch-action: manipulation;
+}
+
+@media (hover: none) {
+  button:active,
+  a:active,
+  [role="button"]:active {
+    opacity: 0.72;
+  }
 }
 
 /* Purposeful motion only: hover/focus states, view transitions, loading states.

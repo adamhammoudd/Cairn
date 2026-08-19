@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { ASSET_TYPE_TAG_CLASS, ASSET_TYPES, formatMarketCap, type ScreenerRow } from "@/lib/screener";
+import { ASSET_TYPE_LABEL, ASSET_TYPE_TAG_CLASS, ASSET_TYPES, formatVolume, type ScreenerRow } from "@/lib/screener";
+import { assetName } from "@/lib/asset-names";
 import type { CryptoRow } from "@/lib/crypto";
 import { CryptoTable } from "@/components/crypto/crypto-table";
 
@@ -15,6 +16,20 @@ const TABS = ["all", ...ASSET_TYPES] as const;
 
 function initialsOf(symbol: string) {
   return symbol.slice(0, 2).toUpperCase();
+}
+
+function trendPoints(values: number[], width: number, height: number) {
+  if (values.length < 2) return "";
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const span = max - min || 1;
+  return values
+    .map((v, i) => {
+      const x = (i / (values.length - 1)) * width;
+      const y = height - ((v - min) / span) * height;
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    })
+    .join(" ");
 }
 
 export function MarketsPanel({ rows, cryptoRows }: MarketsPanelProps) {
@@ -41,8 +56,8 @@ export function MarketsPanel({ rows, cryptoRows }: MarketsPanelProps) {
     <div className="animate-page-in">
       <div className="mb-5">
         <div className="mb-2 font-mono text-[10.5px] tracking-[0.16em] text-muted uppercase">Markets</div>
-        <h1 className="font-serif text-[32px] leading-tight font-normal text-primary">The whole board</h1>
-        <p className="mt-1.5 max-w-[560px] text-[13.5px] text-muted text-pretty">
+        <h1 className="font-serif text-[32px] leading-[1.1] font-normal text-primary">The whole board</h1>
+        <p className="mt-1.75 max-w-[560px] text-[13.5px] text-muted text-pretty">
           Equities, ETFs, crypto, forex and indices in one filterable view.
         </p>
       </div>
@@ -54,11 +69,11 @@ export function MarketsPanel({ rows, cryptoRows }: MarketsPanelProps) {
               key={t}
               type="button"
               onClick={() => setTab(t)}
-              className={`rounded-lg px-3.5 py-1.5 text-[12.5px] capitalize transition-colors duration-fast ease-standard ${
+              className={`rounded-lg px-3.25 py-1.75 text-[12.5px] transition-colors duration-base ease-standard ${
                 tab === t ? "bg-active text-primary" : "text-muted hover:text-primary"
               }`}
             >
-              {t}
+              {ASSET_TYPE_LABEL[t] ?? t}
             </button>
           ))}
         </div>
@@ -81,53 +96,131 @@ export function MarketsPanel({ rows, cryptoRows }: MarketsPanelProps) {
         <CryptoTable rows={cryptoRows} />
       ) : (
         <div className="overflow-hidden rounded-card border border-line bg-panel">
-          <div className="grid grid-cols-[1.6fr_0.7fr_0.8fr_0.7fr_0.9fr_0.9fr] gap-3 border-b border-line px-5 py-2.75 font-mono text-[9.5px] tracking-[0.12em] text-dim uppercase">
+          <div className="hidden grid-cols-[1.6fr_0.9fr_1fr_0.9fr_1fr_100px] gap-3 border-b border-[#1E1E1E] px-5 py-2.75 font-mono text-[9.5px] tracking-[0.12em] text-dim uppercase sm:grid">
             <div>Asset</div>
             <div>Type</div>
             <div>Price</div>
             <div>24h</div>
             <div>Volume</div>
-            <div>Mkt cap</div>
+            <div>Trend</div>
           </div>
-          {filtered.map((r) => (
-            <Link
-              key={r.symbol}
-              href={`/ticker/${r.symbol}`}
-              className="grid grid-cols-[1.6fr_0.7fr_0.8fr_0.7fr_0.9fr_0.9fr] items-center gap-3 border-b border-line px-5 py-3 transition-colors duration-fast ease-standard last:border-b-0 hover:bg-active"
-            >
-              <div className="flex min-w-0 items-center gap-2.5">
-                <div
-                  className={`flex h-6.5 w-6.5 shrink-0 items-center justify-center rounded-lg border bg-active font-mono text-[9.5px] ${
-                    ASSET_TYPE_TAG_CLASS[r.assetType] ?? "text-muted border-line"
-                  }`}
-                >
-                  {initialsOf(r.symbol)}
-                </div>
-                <div className="min-w-0 text-sm text-primary">{r.symbol}</div>
-              </div>
-              <div>
-                <span
-                  className={`rounded-full border px-2 py-0.75 font-mono text-[9.5px] tracking-[0.1em] uppercase ${
-                    ASSET_TYPE_TAG_CLASS[r.assetType] ?? "text-muted border-line"
-                  }`}
-                >
-                  {r.assetType}
-                </span>
-              </div>
-              <div className="text-[12.5px] tabular-nums text-primary">
-                {r.price === null ? "—" : r.price.toLocaleString(undefined, { style: "currency", currency: "USD" })}
-              </div>
-              <div
-                className={`text-[12.5px] tabular-nums ${
-                  r.changePct === null ? "text-muted" : r.changePct >= 0 ? "text-accent" : "text-negative"
-                }`}
+          {filtered.map((r) => {
+            const changeColor = r.changePct === null ? "var(--color-muted)" : r.changePct >= 0 ? "var(--color-accent)" : "var(--color-negative)";
+            return (
+              <Link
+                key={r.symbol}
+                href={`/ticker/${r.symbol}`}
+                className="block border-b border-[#171717] transition-colors duration-fast ease-standard last:border-b-0 hover:bg-active sm:grid sm:grid-cols-[1.6fr_0.9fr_1fr_0.9fr_1fr_100px] sm:items-center sm:gap-3 sm:px-5 sm:py-3"
               >
-                {r.changePct === null ? "—" : `${r.changePct >= 0 ? "+" : ""}${r.changePct.toFixed(2)}%`}
-              </div>
-              <div className="text-[12.5px] tabular-nums text-muted">{r.volume === null ? "—" : r.volume.toLocaleString()}</div>
-              <div className="text-[12.5px] tabular-nums text-primary">{formatMarketCap(r.marketCap)}</div>
-            </Link>
-          ))}
+                {/* Phone (<640px): the mock collapses the row into a card. */}
+                <div className="flex flex-col gap-2 px-4 py-3.5 sm:hidden">
+                  <div className="flex items-center justify-between gap-2.5">
+                    <div className="flex min-w-0 items-center gap-2.5">
+                      <div
+                        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg font-mono text-[10px] text-canvas"
+                        style={{
+                          backgroundImage:
+                            r.changePct === null || r.changePct >= 0
+                              ? "linear-gradient(135deg, var(--color-accent-light), var(--color-accent-dark))"
+                              : "linear-gradient(135deg, #E39B9B, #C25A5A)",
+                        }}
+                      >
+                        {initialsOf(r.symbol)}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-[14px] text-primary">{r.symbol}</div>
+                        <div className="truncate text-[11px] text-muted">
+                          {assetName(r.symbol, ASSET_TYPE_LABEL[r.assetType] ?? r.assetType)}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="shrink-0 text-right">
+                      <div className="text-[13px] tabular-nums text-primary">
+                        {r.price === null ? "—" : r.price.toLocaleString(undefined, { style: "currency", currency: "USD" })}
+                      </div>
+                      <div
+                        className={`mt-0.75 text-[11.5px] tabular-nums ${
+                          r.changePct === null ? "text-muted" : r.changePct >= 0 ? "text-accent" : "text-negative"
+                        }`}
+                      >
+                        {r.changePct === null ? "—" : `${r.changePct >= 0 ? "+" : ""}${r.changePct.toFixed(2)}%`}
+                      </div>
+                    </div>
+                  </div>
+                  {r.trend.length > 1 && (
+                    <svg viewBox="0 0 100 28" preserveAspectRatio="none" className="block h-7.5 w-full">
+                      <polyline
+                        points={trendPoints(r.trend, 100, 28)}
+                        fill="none"
+                        stroke={changeColor}
+                        strokeWidth={1.6}
+                        vectorEffect="non-scaling-stroke"
+                        pathLength="1"
+                        strokeDasharray="1"
+                        className="animate-draw"
+                      />
+                    </svg>
+                  )}
+                </div>
+
+                <div className="hidden min-w-0 items-center gap-2.5 sm:flex">
+                  <div
+                    className="flex h-6.5 w-6.5 shrink-0 items-center justify-center rounded-lg font-mono text-[9.5px] text-canvas"
+                    style={{
+                      backgroundImage:
+                        r.changePct === null || r.changePct >= 0
+                          ? "linear-gradient(135deg, var(--color-accent-light), var(--color-accent-dark))"
+                          : "linear-gradient(135deg, #E39B9B, #C25A5A)",
+                    }}
+                  >
+                    {initialsOf(r.symbol)}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-[13px] text-primary">{r.symbol}</div>
+                    <div className="truncate text-[11px] text-muted">
+                      {assetName(r.symbol, ASSET_TYPE_LABEL[r.assetType] ?? r.assetType)}
+                    </div>
+                  </div>
+                </div>
+                <div className="hidden sm:block">
+                  <span
+                    className={`rounded-full border px-2 py-0.75 font-mono text-[9.5px] tracking-[0.1em] uppercase ${
+                      ASSET_TYPE_TAG_CLASS[r.assetType] ?? "text-muted border-line"
+                    }`}
+                  >
+                    {r.assetType}
+                  </span>
+                </div>
+                <div className="hidden text-[12.5px] tabular-nums text-primary sm:block">
+                  {r.price === null ? "—" : r.price.toLocaleString(undefined, { style: "currency", currency: "USD" })}
+                </div>
+                <div
+                  className={`hidden text-[12.5px] tabular-nums sm:block ${
+                    r.changePct === null ? "text-muted" : r.changePct >= 0 ? "text-accent" : "text-negative"
+                  }`}
+                >
+                  {r.changePct === null ? "—" : `${r.changePct >= 0 ? "+" : ""}${r.changePct.toFixed(2)}%`}
+                </div>
+                <div className="hidden text-[12.5px] tabular-nums text-muted sm:block">{formatVolume(r.volume)}</div>
+                <div className="hidden sm:block">
+                  {r.trend.length > 1 && (
+                    <svg viewBox="0 0 100 28" preserveAspectRatio="none" className="block h-6.5 w-23.5">
+                      <polyline
+                        points={trendPoints(r.trend, 100, 28)}
+                        fill="none"
+                        stroke={changeColor}
+                        strokeWidth={1.6}
+                        vectorEffect="non-scaling-stroke"
+                        pathLength="1"
+                        strokeDasharray="1"
+                        className="animate-draw"
+                      />
+                    </svg>
+                  )}
+                </div>
+              </Link>
+            );
+          })}
           {filtered.length === 0 && (
             <div className="px-6 py-16 text-center">
               <div className="mb-4.5 flex items-end justify-center gap-1.25">

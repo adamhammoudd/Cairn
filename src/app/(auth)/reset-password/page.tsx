@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Field } from "@/components/auth/field";
+import { AuthError, AuthFooter, AuthHeader } from "@/components/auth/auth-chrome";
 
 export default function ResetPasswordPage() {
   const router = useRouter();
@@ -46,25 +47,40 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="w-full max-w-[400px] rounded-2xl border border-line bg-panel px-8 py-9">
-      <h1 className="mb-1.5 font-serif text-[26px] text-primary">Set a new password</h1>
-      <p className="mb-7 text-sm text-muted">Choose a new password for your account.</p>
+    <>
+      <AuthHeader eyebrow="Account" title="Set a new password" blurb="Choose a new password for your account." />
 
-      {error && <p className="mb-4 text-[13px] text-negative">{error}</p>}
+      {error && <AuthError>{error}</AuthError>}
 
       <form onSubmit={handleSubmit}>
-        <Field id="password" name="password" type="password" label="New password" placeholder="••••••••" required minLength={8} />
-        <div className="mb-[26px]">
-          <Field id="confirm" name="confirm" type="password" label="Confirm password" placeholder="••••••••" required minLength={8} />
-        </div>
+        <Field
+          id="password"
+          name="password"
+          type="password"
+          label="New password"
+          placeholder="••••••••"
+          required
+          minLength={8}
+        />
+        <Field
+          id="confirm"
+          name="confirm"
+          type="password"
+          label="Confirm password"
+          placeholder="••••••••"
+          required
+          minLength={8}
+        />
         <button
           type="submit"
           disabled={!ready || pending}
-          className="w-full rounded-[10px] bg-gradient-to-br from-accent-light to-accent-dark py-3.5 text-[15px] font-semibold text-canvas disabled:opacity-60"
+          className="mt-5 w-full rounded-[10px] bg-gradient-to-br from-accent-light to-accent-dark py-2.75 text-[13.5px] font-semibold text-canvas transition-[box-shadow,transform] duration-base ease-standard hover:-translate-y-px hover:shadow-[0_0_26px_rgba(47,198,133,0.35)] disabled:opacity-60"
         >
           {pending ? "Updating…" : "Update password"}
         </button>
       </form>
-    </div>
+
+      <AuthFooter />
+    </>
   );
 }
