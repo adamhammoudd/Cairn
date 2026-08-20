@@ -85,7 +85,7 @@ export function PortfolioChart({ seriesByTimeframe, hasHoldings }: PortfolioChar
       ) : points.length === 0 ? (
         <div className="flex h-[200px] items-center justify-center px-6 text-center text-sm text-muted">
           {timeframe === "1D"
-            ? "Intraday needs a market-data key (TWELVE_DATA_API_KEY). Stored prices are one close per day, which would draw a straight line between yesterday and today rather than a real session."
+            ? "Intraday isn't available on this deployment - stored prices are one close per day, so an intraday view would draw a straight line between yesterday and today rather than a real session."
             : isIntraday
               ? "No intraday bars returned for this range."
               : "No price history for this range yet."}

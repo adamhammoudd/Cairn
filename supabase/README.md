@@ -23,6 +23,23 @@ Run against your project's SQL editor (or `psql`), in order:
 
 ## 2. Edge Functions
 
+
+> **Before deploying:** these functions are deployed `--no-verify-jwt` so
+> pg_cron can invoke them without a user token. That flag removes the only
+> authentication in front of them, so they now require a shared secret instead
+> (`supabase/functions/_shared/auth.ts`). Set it on both sides or every
+> scheduled job will 401 and every manual invocation will 503:
+>
+> ```bash
+> supabase secrets set CRON_SECRET=$(openssl rand -hex 32)
+> ```
+> ```sql
+> alter database postgres set app.settings.cron_secret = '<the same value>';
+> ```
+>
+> The value is deliberately not in this repository. Migration
+> `0023_cron_secret_header.sql` reads it with `current_setting()`.
+
 ```
 supabase functions deploy ingest-news --no-verify-jwt
 supabase functions deploy ingest-market-data --no-verify-jwt

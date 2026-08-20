@@ -13,6 +13,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { buildChatContext, type ChatContext } from "@/lib/ai/context";
 import { checkScopeGuard, checkNoFreelancedProbability, rewriteForScopeGuard } from "@/lib/ai/scope-guard";
+import { classifyScope, classifierMode, resolveUnavailable } from "@/lib/ai/scope-classifier";
 import { llmComplete } from "@/lib/ai/llm";
 import type { Database } from "@/lib/supabase/types";
 
@@ -109,7 +110,24 @@ export async function runChatTurn({
 
   const scopeCheck = checkScopeGuard(rawOutput);
   const probabilityCheck = checkNoFreelancedProbability(rawOutput, context.analyses);
-  const failure = !scopeCheck.passed ? scopeCheck : !probabilityCheck.passed ? probabilityCheck : null;
+  let failure = !scopeCheck.passed ? scopeCheck : !probabilityCheck.passed ? probabilityCheck : null;
+
+  // Layer 3: semantic second pass. Only consulted when the deterministic
+  // layers found nothing -- if they already flagged, the response is being
+  // rewritten regardless and a model round-trip would only add latency.
+  let classifierNote: string | null = null;
+  if (!failure) {
+    const verdict = await classifyScope(rawOutput);
+    if (verdict.status === "flagged") {
+      failure = { passed: false, reason: verdict.reason, evidence: verdict.rationale };
+    } else if (verdict.status === "unavailable") {
+      const resolution = resolveUnavailable(classifierMode(), verdict.detail);
+      classifierNote = resolution.note;
+      if (resolution.blocked) {
+        failure = { passed: false, reason: "classifier_unavailable_strict_mode", evidence: verdict.detail };
+      }
+    }
+  }
 
   if (!failure) {
     return { displayText: rawOutput, flagged: false, flagReason: null, rawOutput, analysisIds, context };
@@ -125,6 +143,8 @@ export async function runChatTurn({
     source_surface: "chat",
     is_test: isTest,
   });
+
+  if (classifierNote) console.warn(`[scope-guard] ${classifierNote}`);
 
   return { displayText: corrected, flagged: true, flagReason: failure.reason, rawOutput, analysisIds, context };
 }

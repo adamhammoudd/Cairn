@@ -138,9 +138,17 @@ export function ComparisonPanel({
                     </span>
                   </div>
 
+                  {/* Coloured by series identity, matching the large chart
+                      directly below - these summary sparklines previously
+                      coloured by gain/loss, so the same series rendered red
+                      here and green or blue there. In this product red means
+                      loss and nothing else, so a series cannot borrow it as an
+                      identity colour. Direction is still carried by the
+                      change figure above, which stays green/red. */}
                   <Sparkline
                     values={seriesFor(row).map((p) => p.value)}
                     positive={positive}
+                    color={color}
                     className="mt-2.5 h-[70px] w-full"
                     delayMs={i * 60}
                   />

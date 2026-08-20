@@ -10,6 +10,7 @@ import {
   type AlertChannel,
   type AlertType,
 } from "@/lib/alerts";
+import { FIELD_LABEL } from "@/components/field-label";
 
 const TYPES = Object.keys(ALERT_TYPE_LABELS) as AlertType[];
 
@@ -25,7 +26,7 @@ const CHANNELS: { value: AlertChannel; hint?: string }[] = [
   { value: "email", hint: "Needs an email provider" },
 ];
 
-const LABEL = "mb-1.75 block text-[12px] text-muted";
+const LABEL = FIELD_LABEL;
 const inputClass =
   "w-full rounded-lg border border-line bg-canvas px-3 py-2.25 text-[12.5px] text-primary outline-none transition-colors duration-base ease-standard focus:border-accent";
 
@@ -217,7 +218,7 @@ export function AlertForm({ alert, defaultChannels, onDone, onCancel }: AlertFor
       </div>
 
       <div className="mt-4">
-        <span className="mb-2 block text-[12px] text-muted">Deliver via</span>
+        <span className={LABEL}>Deliver via</span>
         <div className="flex flex-wrap gap-4">
           {CHANNELS.map((c) => (
             <label

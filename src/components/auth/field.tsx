@@ -1,4 +1,5 @@
-﻿import type { InputHTMLAttributes } from "react";
+import type { InputHTMLAttributes } from "react";
+import { FIELD_LABEL } from "@/components/field-label";
 
 interface FieldProps extends InputHTMLAttributes<HTMLInputElement> {
   label: string;
@@ -7,7 +8,7 @@ interface FieldProps extends InputHTMLAttributes<HTMLInputElement> {
 export function Field({ label, id, ...inputProps }: FieldProps) {
   return (
     <div className="mb-3.5 last:mb-0">
-      <label htmlFor={id} className="mb-1.75 block font-mono text-[9.5px] tracking-[0.12em] text-dim uppercase">
+      <label htmlFor={id} className={FIELD_LABEL}>
         {label}
       </label>
       <input

@@ -77,6 +77,16 @@ export async function changePassword(_prevState: string | null, formData: FormDa
   return "saved";
 }
 
+// GDPR Art. 20 portability / CCPA right to know.
+//
+// This returned only { account, profile, settings } - none of the holdings,
+// watchlists, chat history, alerts or briefings that the privacy policy says
+// Cairn collects. An export that omits most of the personal data held is not a
+// data export, and the policy's claim did not match the feature.
+//
+// Deletion is the other half and is genuinely correct: deleteAccount() removes
+// the auth user and every user_id column cascades, verified in
+// supabase/tests/gdpr_erasure.sql.
 export async function exportUserData() {
   const supabase = await createClient();
   const {
@@ -84,12 +94,58 @@ export async function exportUserData() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const [{ data: profile }, { data: settings }] = await Promise.all([
-    supabase.from("profiles").select("*").eq("user_id", user.id).single(),
-    supabase.from("user_settings").select("*").eq("user_id", user.id).single(),
+  const [
+    { data: profile },
+    { data: settings },
+    { data: holdings },
+    { data: watchlists },
+    { data: watchlistItems },
+    { data: chatSessions },
+    { data: chatMessages },
+    { data: alerts },
+    { data: alertDeliveries },
+    { data: savedScreens },
+    { data: briefings },
+    { data: goals },
+    { data: subscription },
+    { data: discussion },
+  ] = await Promise.all([
+    supabase.from("profiles").select("*").eq("user_id", user.id).maybeSingle(),
+    supabase.from("user_settings").select("*").eq("user_id", user.id).maybeSingle(),
+    supabase.from("holdings").select("*").eq("user_id", user.id),
+    supabase.from("watchlists").select("*").eq("user_id", user.id),
+    // Child tables are reachable through RLS, which scopes them to this
+    // user's parents - the same join the IDOR suite exercises.
+    supabase.from("watchlist_items").select("*"),
+    supabase.from("chat_sessions").select("*").eq("user_id", user.id),
+    supabase.from("chat_messages").select("*"),
+    supabase.from("alerts").select("*").eq("user_id", user.id),
+    supabase.from("alert_deliveries").select("*"),
+    supabase.from("saved_screens").select("*").eq("user_id", user.id),
+    supabase.from("daily_briefings").select("*").eq("user_id", user.id),
+    supabase.from("goals").select("*").eq("user_id", user.id),
+    supabase.from("subscriptions").select("*").eq("user_id", user.id).maybeSingle(),
+    supabase.from("discussion_threads").select("*").eq("user_id", user.id),
   ]);
 
-  return { account: { email: user.email, created_at: user.created_at }, profile, settings };
+  return {
+    exported_at: new Date().toISOString(),
+    account: { id: user.id, email: user.email, created_at: user.created_at },
+    profile,
+    settings,
+    holdings: holdings ?? [],
+    watchlists: watchlists ?? [],
+    watchlist_items: watchlistItems ?? [],
+    chat_sessions: chatSessions ?? [],
+    chat_messages: chatMessages ?? [],
+    alerts: alerts ?? [],
+    alert_deliveries: alertDeliveries ?? [],
+    saved_screens: savedScreens ?? [],
+    daily_briefings: briefings ?? [],
+    goals: goals ?? [],
+    subscription,
+    discussion_posts: discussion ?? [],
+  };
 }
 
 export async function deleteAccount() {

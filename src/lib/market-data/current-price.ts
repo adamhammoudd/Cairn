@@ -22,24 +22,29 @@ export interface CurrentPrice {
   source: "live" | "last_close";
 }
 
-async function lastCloseRows(symbols: string[]): Promise<Map<string, { close: number | null; volume: number | null }[]>> {
+async function lastCloseRows(
+  symbols: string[],
+): Promise<Map<string, { close: number | null; volume: number | null; asset_type: string }[]>> {
   const supabase = await createClient();
   const { data: bars } = await supabase
     .from("historical_prices")
-    .select("symbol, ts, close, volume")
+    .select("symbol, ts, close, volume, asset_type")
     .in("symbol", symbols)
     .order("ts", { ascending: false });
 
-  const bySymbol = new Map<string, { close: number | null; volume: number | null }[]>();
+  const bySymbol = new Map<string, { close: number | null; volume: number | null; asset_type: string }[]>();
   for (const b of bars ?? []) {
     const arr = bySymbol.get(b.symbol) ?? [];
-    if (arr.length < 2) arr.push({ close: b.close, volume: b.volume });
+    if (arr.length < 2) arr.push({ close: b.close, volume: b.volume, asset_type: b.asset_type });
     bySymbol.set(b.symbol, arr);
   }
   return bySymbol;
 }
 
-function toLastClosePrice(symbol: string, rows: { close: number | null; volume: number | null }[]): CurrentPrice {
+function toLastClosePrice(
+  symbol: string,
+  rows: { close: number | null; volume: number | null; asset_type?: string }[],
+): CurrentPrice {
   // numeric columns arrive as strings over PostgREST; coerce before any math.
   const latest = rows[0]?.close == null ? null : Number(rows[0].close);
   const prev = rows[1]?.close == null ? null : Number(rows[1].close);
@@ -52,6 +57,28 @@ function toLastClosePrice(symbol: string, rows: { close: number | null; volume: 
   };
 }
 
+// Crypto trades 24/7, so "change" has two different and both-defensible
+// meanings, and the app was showing one on each surface: the Markets crypto
+// tab read crypto_metrics.price_change_24h_pct (CoinGecko's rolling 24 hours)
+// while the ticker page derived it from the last two daily closes. For BTC in
+// one session that was +5.70% against -0.15% - same asset, same minute, two
+// screens, and no way for a reader to tell which to believe.
+//
+// The rolling figure wins for crypto, because a close-to-close delta on a
+// market that never closes is an arbitrary midnight-to-midnight slice. Equities
+// keep close-to-close, which is what a daily change means for a session-based
+// market.
+async function cryptoRolling24h(symbol: string): Promise<number | null> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("crypto_metrics")
+    .select("price_change_24h_pct")
+    .eq("symbol", symbol)
+    .maybeSingle();
+  const raw = data?.price_change_24h_pct;
+  return raw == null ? null : Number(raw);
+}
+
 export async function getCurrentPrice(symbol: string): Promise<CurrentPrice> {
   if (isMarketDataProviderConfigured()) {
     const quote = await fetchQuote(symbol);
@@ -60,7 +87,16 @@ export async function getCurrentPrice(symbol: string): Promise<CurrentPrice> {
     }
   }
   const rows = (await lastCloseRows([symbol])).get(symbol) ?? [];
-  return toLastClosePrice(symbol, rows);
+  const base = toLastClosePrice(symbol, rows);
+
+  // asset_type rides along on the rows already fetched, so equities never pay
+  // for a crypto_metrics round trip they cannot use.
+  if (rows[0]?.asset_type !== "crypto") return base;
+
+  // Falls back to close-to-close when the coin has no metrics row yet, so a
+  // newly-tracked symbol still shows a change rather than a blank.
+  const rolling = await cryptoRolling24h(symbol);
+  return rolling === null ? base : { ...base, changePct: rolling };
 }
 
 // Drop-in replacement for `latestCloseBySymbol(historical_prices rows)` used

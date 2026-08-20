@@ -190,6 +190,16 @@ export async function markDeliveriesRead(ids: string[]) {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  await supabase.from("alert_deliveries").update({ read_at: new Date().toISOString() }).in("id", ids);
+  // Constrained to deliveries belonging to this user's alerts rather than
+  // trusting the client-supplied id list and leaving RLS to catch it.
+  const { data: ownedAlerts } = await supabase.from("alerts").select("id").eq("user_id", user.id);
+  const owned = (ownedAlerts ?? []).map((a) => a.id);
+  if (owned.length === 0) return;
+
+  await supabase
+    .from("alert_deliveries")
+    .update({ read_at: new Date().toISOString() })
+    .in("id", ids)
+    .in("alert_id", owned);
   revalidatePath("/alerts");
 }

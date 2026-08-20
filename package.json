@@ -7,13 +7,20 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test:scope-guard": "tsx scripts/tests/adversarial-scope-guard.ts",
-    "test:probability": "tsx scripts/tests/probability-math.ts",
-    "test:methodology": "tsx scripts/tests/methodology-substance.ts",
-    "test:citations": "tsx scripts/tests/citation-freshness.ts",
-    "test:ai-suite": "tsx scripts/tests/run-all.ts",
-    "check-db": "tsx scripts/check-db.ts",
-    "guard-stats": "tsx scripts/guard-stats.ts"
+    "test:scope-guard": "tsx --conditions=react-server scripts/tests/adversarial-scope-guard.ts",
+    "test:probability": "tsx --conditions=react-server scripts/tests/probability-math.ts",
+    "test:methodology": "tsx --conditions=react-server scripts/tests/methodology-substance.ts",
+    "test:citations": "tsx --conditions=react-server scripts/tests/citation-freshness.ts",
+    "test:ai-suite": "tsx --conditions=react-server scripts/tests/run-all.ts",
+    "check-db": "tsx --conditions=react-server scripts/check-db.ts",
+    "guard-stats": "tsx --conditions=react-server scripts/guard-stats.ts",
+    "test:db": "bash scripts/db-tests.sh",
+    "test:tagging": "tsx --conditions=react-server scripts/tests/tagging.ts",
+    "test:guard-probe": "tsx --conditions=react-server scripts/tests/scope-guard-probe.ts",
+    "test:classifier": "tsx --conditions=react-server scripts/tests/scope-classifier.ts",
+    "test:market-hours": "tsx --conditions=react-server scripts/tests/market-hours.ts",
+    "test:contrast": "tsx --conditions=react-server scripts/tests/contrast.ts",
+    "test:a11y": "tsx --conditions=react-server scripts/a11y-audit.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.4",
@@ -23,9 +30,11 @@
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "recharts": "^3.10.1",
+    "server-only": "^0.0.1",
     "tailwind-merge": "^3.6.0"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
@@ -33,6 +42,7 @@
     "dotenv": "^17.4.2",
     "eslint": "^9",
     "eslint-config-next": "16.3.0",
+    "playwright": "^1.62.1",
     "tailwindcss": "^4",
     "tsx": "^4.23.12",
     "typescript": "^5"

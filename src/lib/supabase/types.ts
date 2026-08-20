@@ -555,6 +555,22 @@ export interface Database {
         Update: never;
         Relationships: [];
       };
+      auth_attempts: {
+        Row: {
+          id: number;
+          identifier_hash: string;
+          kind: "sign_in" | "sign_up" | "password_reset";
+          succeeded: boolean;
+          attempted_at: string;
+        };
+        Insert: {
+          identifier_hash: string;
+          kind: "sign_in" | "sign_up" | "password_reset";
+          succeeded?: boolean;
+        };
+        Update: never;
+        Relationships: [];
+      };
       chat_usage_events: {
         Row: { id: string; user_id: string; created_at: string };
         Insert: { user_id: string };
@@ -563,7 +579,14 @@ export interface Database {
       };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      // Prefix search limited by DISTINCT symbol rather than by price row -
+      // see supabase/migrations/0021_search_symbols_distinct.sql.
+      search_symbols: {
+        Args: { prefix: string; max_results?: number };
+        Returns: { symbol: string; asset_type: string }[];
+      };
+    };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
   };

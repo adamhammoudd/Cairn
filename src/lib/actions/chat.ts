@@ -57,8 +57,19 @@ export async function listChatMessages(sessionId: string, page = 0) {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  // RLS on chat_messages joins through chat_sessions.user_id - a foreign
-  // session_id simply returns no rows rather than another user's messages.
+  // Ownership checked here rather than left to RLS alone. RLS does join
+  // chat_messages through chat_sessions.user_id and a foreign session_id does
+  // return zero rows -- verified in supabase/tests/rls_idor.sql -- but chat
+  // history is the most sensitive thing this app stores, so the action makes
+  // the authorization decision itself and the policy stays a second line.
+  const { data: ownedSession } = await supabase
+    .from("chat_sessions")
+    .select("id")
+    .eq("id", sessionId)
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (!ownedSession) return [];
+
   const { data } = await supabase
     .from("chat_messages")
     .select("*")

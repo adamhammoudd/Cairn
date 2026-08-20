@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Logo } from "@/components/logo";
@@ -34,6 +34,30 @@ const ACCOUNT_MENU = [
   { label: "First-run walkthrough", href: "/onboarding" },
 ];
 
+
+// Module scope so the subscribe/snapshot identities are stable across renders;
+// passing fresh closures to useSyncExternalStore resubscribes every render.
+const HOVER_QUERY = "(hover: hover) and (pointer: fine)";
+
+function subscribeToHover(onChange: () => void): () => void {
+  if (typeof window === "undefined" || typeof window.matchMedia !== "function") return () => {};
+  const query = window.matchMedia(HOVER_QUERY);
+  query.addEventListener("change", onChange);
+  return () => query.removeEventListener("change", onChange);
+}
+
+function getHoverSnapshot(): boolean {
+  if (typeof window === "undefined" || typeof window.matchMedia !== "function") return false;
+  return window.matchMedia(HOVER_QUERY).matches;
+}
+
+// The server cannot know the client's pointer type. Reporting false there
+// means the first paint matches the touch layout and hover is enabled on
+// hydration, rather than hydrating into a mismatch.
+function getHoverServerSnapshot(): boolean {
+  return false;
+}
+
 export function TopNav({ displayName, plan }: TopNavProps) {
   const pathname = usePathname();
   // A group menu opens on hover *and* toggles on click. `pinned` is the
@@ -50,10 +74,15 @@ export function TopNav({ displayName, plan }: TopNavProps) {
   // hover-to-open would open the menu and the tap would toggle it straight back
   // shut - the nav reads as dead under a finger. Only wire hover where there's
   // a real pointer; touch gets plain tap-to-toggle.
-  const [canHover, setCanHover] = useState(false);
+  // Previously `useState(false)` with a setter that was never called, so this
+  // stayed false forever and the hover-to-open branch below was dead on every
+  // device, desktop included. A media query is external state the browser
+  // owns, so it is subscribed to rather than copied into React state - which
+  // also keeps it correct on a laptop with a touchscreen, where the answer can
+  // change mid-session.
+  const canHover = useSyncExternalStore(subscribeToHover, getHoverSnapshot, getHoverServerSnapshot);
   const navRef = useRef<HTMLElement>(null);
   const drawerRef = useRef<HTMLDivElement>(null);
-  const searchRef = useRef<HTMLInputElement>(null);
 
   const isGroupOpen = (label: string) => pinned === label || (hovered === label && suppressed !== label);
 
@@ -125,19 +154,6 @@ export function TopNav({ displayName, plan }: TopNavProps) {
       document.body.style.overflow = previous;
     };
   }, [mobileNavOpen]);
-
-  useEffect(() => {
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.key !== "/" || !searchRef.current) return;
-      const target = e.target as HTMLElement | null;
-      const editing = target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable);
-      if (editing) return;
-      e.preventDefault();
-      searchRef.current.focus();
-    }
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, []);
 
   return (
     <>
@@ -248,19 +264,12 @@ export function TopNav({ displayName, plan }: TopNavProps) {
         </nav>
 
         <div className="flex shrink-0 items-center gap-2.5">
-          <div className="hidden w-[180px] items-center gap-2 rounded-lg border border-line bg-transparent px-2.5 py-1.5 transition-colors duration-base ease-standard hover:border-[#3A3A3A] min-[1080px]:flex min-[1300px]:w-[230px]">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6A6A6A" strokeWidth="2" className="shrink-0">
-              <circle cx="11" cy="11" r="7" />
-              <line x1="21" y1="21" x2="16.65" y2="16.65" />
-            </svg>
-            <input
-              ref={searchRef}
-              type="text"
-              placeholder="Search tickers, news"
-              className="w-full min-w-0 bg-transparent text-[12.5px] text-primary placeholder:text-dim outline-none"
-            />
-            <span className="rounded border border-line px-1 py-0.5 font-mono text-[10px] text-[#4A4A4A]">/</span>
-          </div>
+          {/* Was a bare <input> with no onChange, no onSubmit and no handler of
+              any kind - the most prominent control on every screen, wired to
+              nothing, complete with a "/" shortcut badge that did focus it and
+              then did nothing else. GlobalSearch was already written and
+              imported here; it was simply never rendered. */}
+          <GlobalSearch className="hidden w-[180px] min-[1080px]:flex min-[1300px]:w-[230px]" />
 
           {plan === "free" && (
             <Link
