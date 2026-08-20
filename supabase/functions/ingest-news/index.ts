@@ -8,7 +8,7 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 import { ADAPTERS, type ProviderRow } from "../_shared/adapters.ts";
 import { dedupHash } from "../_shared/dedup.ts";
-import { tagContent } from "../_shared/tagging.ts";
+import { tagContent, type CryptoUniverseEntry } from "../_shared/tagging.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -29,6 +29,11 @@ Deno.serve(async (req) => {
     return Response.json({ error: providersError.message }, { status: 500, headers: corsHeaders });
   }
 
+  // The tracked coin set rotates (CoinGecko top-N by market cap), so the
+  // tagger is handed the current universe rather than carrying a stale copy.
+  const { data: coins } = await supabase.from("crypto_metrics").select("symbol, name");
+  const cryptoUniverse: CryptoUniverseEntry[] = coins ?? [];
+
   const results = [];
 
   for (const provider of (providers ?? []) as (ProviderRow & { weight: number })[]) {
@@ -46,7 +51,7 @@ Deno.serve(async (req) => {
 
       for (const item of items) {
         const hash = await dedupHash(item.title, item.published_at);
-        const { tickers, sectors } = tagContent(item.title, item.body);
+        const { tickers, sectors } = tagContent(item.title, item.body, cryptoUniverse);
         const { error: upsertError } = await supabase
           .from("news_items")
           .upsert(

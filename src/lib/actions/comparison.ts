@@ -32,19 +32,22 @@ export async function getComparisonData(symbols: string[]): Promise<ComparisonRo
   if (symbols.length === 0) return [];
   const supabase = await createClient();
 
-  const [{ data: bars }, { data: fundamentals }] = await Promise.all([
-    // Ordered ts DESCENDING, not ascending: the row cap applies to the whole
-    // result set, so ordering oldest-first handed back the *oldest* N bars and
-    // silently dropped the most recent ones -- every compared chart stopped
-    // short of today and `price` read off a stale bar. Newest-first keeps the
-    // cap on the far end of history instead, and the bars are re-sorted
-    // ascending per symbol below.
-    supabase
-      .from("historical_prices")
-      .select("symbol, asset_type, ts, close, volume")
-      .in("symbol", symbols)
-      .order("ts", { ascending: false })
-      .limit(600 * symbols.length),
+  // One query per symbol, newest-first, then reversed to ascending. A single
+  // .in() query with a shared LIMIT has two failure modes: ordered ascending
+  // it returns the *oldest* rows (so `price` was a months-stale bar), and
+  // ordered descending a symbol with a longer history starves the others of
+  // rows entirely. Symbol count on the Compare page is small.
+  const [barResults, { data: fundamentals }] = await Promise.all([
+    Promise.all(
+      symbols.map((symbol) =>
+        supabase
+          .from("historical_prices")
+          .select("symbol, asset_type, ts, close, volume")
+          .eq("symbol", symbol)
+          .order("ts", { ascending: false })
+          .limit(400),
+      ),
+    ),
     supabase.from("fundamentals").select("symbol, shares_outstanding, eps_ttm, dividends_ttm").in("symbol", symbols),
   ]);
 
@@ -52,13 +55,16 @@ export async function getComparisonData(symbols: string[]): Promise<ComparisonRo
   const barsBySymbol = new Map<string, { ts: string; close: number | null }[]>();
   const metaBySymbol = new Map<string, { assetType: string; volume: number | null }>();
 
-  for (const b of bars ?? []) {
-    const arr = barsBySymbol.get(b.symbol) ?? [];
-    arr.push({ ts: b.ts, close: b.close });
-    barsBySymbol.set(b.symbol, arr);
-    // Rows arrive newest-first, so the first row seen for a symbol is its
-    // latest bar -- that's the volume the summary card should show.
-    if (!metaBySymbol.has(b.symbol)) metaBySymbol.set(b.symbol, { assetType: b.asset_type, volume: b.volume });
+  for (const { data: rowsDesc } of barResults) {
+    if (!rowsDesc || rowsDesc.length === 0) continue;
+    const rows = rowsDesc.slice().reverse();
+    const symbol = rows[0].symbol;
+    barsBySymbol.set(
+      symbol,
+      rows.map((b) => ({ ts: b.ts, close: b.close })),
+    );
+    const newest = rowsDesc[0];
+    metaBySymbol.set(symbol, { assetType: newest.asset_type, volume: newest.volume });
   }
   for (const arr of barsBySymbol.values()) arr.reverse(); // back to oldest-first
 

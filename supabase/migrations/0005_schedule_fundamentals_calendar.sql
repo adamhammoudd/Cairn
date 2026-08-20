@@ -4,7 +4,7 @@
 --   supabase functions deploy ingest-fundamentals --no-verify-jwt
 --   supabase functions deploy ingest-calendar --no-verify-jwt
 --
--- Before running this file: replace <project-ref> below.
+-- Before running this file: replace vvferejzawkhzlmvvaog below.
 
 create extension if not exists pg_cron;
 create extension if not exists pg_net;
@@ -16,7 +16,7 @@ select cron.schedule(
   '0 6 * * 1',
   $$
   select net.http_post(
-    url := 'https://<project-ref>.functions.supabase.co/ingest-fundamentals',
+    url := 'https://vvferejzawkhzlmvvaog.functions.supabase.co/ingest-fundamentals',
     headers := jsonb_build_object('Content-Type', 'application/json')
   );
   $$
@@ -28,7 +28,7 @@ select cron.schedule(
   '30 6 * * *',
   $$
   select net.http_post(
-    url := 'https://<project-ref>.functions.supabase.co/ingest-calendar',
+    url := 'https://vvferejzawkhzlmvvaog.functions.supabase.co/ingest-calendar',
     headers := jsonb_build_object('Content-Type', 'application/json')
   );
   $$

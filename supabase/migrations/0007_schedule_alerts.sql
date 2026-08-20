@@ -1,7 +1,7 @@
 -- Schedules evaluate-alerts via pg_cron + pg_net.
 --
 -- Deploy first:  supabase functions deploy evaluate-alerts --no-verify-jwt
--- Then replace <project-ref> below and run this file.
+-- Then replace vvferejzawkhzlmvvaog below and run this file.
 --
 -- Cadence note: the alert conditions evaluate against daily OHLCV bars, so
 -- running more often than the market-data ingest would just re-read the same
@@ -17,7 +17,7 @@ select cron.schedule(
   '15 22 * * 1-5',
   $$
   select net.http_post(
-    url := 'https://<project-ref>.functions.supabase.co/evaluate-alerts',
+    url := 'https://vvferejzawkhzlmvvaog.functions.supabase.co/evaluate-alerts',
     headers := jsonb_build_object('Content-Type', 'application/json')
   );
   $$
@@ -28,7 +28,7 @@ select cron.schedule(
   '0 13 * * 1-5',
   $$
   select net.http_post(
-    url := 'https://<project-ref>.functions.supabase.co/evaluate-alerts',
+    url := 'https://vvferejzawkhzlmvvaog.functions.supabase.co/evaluate-alerts',
     headers := jsonb_build_object('Content-Type', 'application/json')
   );
   $$
