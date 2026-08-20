@@ -53,7 +53,7 @@ export async function generateBriefing(userId: string): Promise<BriefingContent>
   let summary: string;
   if (symbols.length === 0) {
     summary =
-      "No holdings or watchlist symbols yet — add some to get a personalized relevance ranking, or ask the assistant about any market/sector/ticker directly.";
+      "No holdings or watchlist symbols yet - add some to get a personalized relevance ranking, or ask the assistant about any market/sector/ticker directly.";
   } else if (analysisList.length === 0 && eventList.length === 0) {
     summary = `No new research or upcoming events for your ${symbols.length} tracked symbol${symbols.length === 1 ? "" : "s"} since your last briefing.`;
   } else {

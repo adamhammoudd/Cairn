@@ -15,7 +15,12 @@ export async function getSectorHeatmap(): Promise<SectorMapNode[]> {
       .select("symbol, ts, close")
       .in("symbol", symbols)
       .order("ts", { ascending: false })
-      .limit(symbols.length * 2),
+      // The cap applies to the whole interleaved result, not per symbol, so
+      // symbols.length * 2 only worked when every symbol had a bar on exactly
+      // the same two dates. One missing day and a symbol got zero closes and
+      // silently dropped to changePct = null. Six days of slack covers a long
+      // weekend plus a stale feed.
+      .limit(symbols.length * 6),
     supabase.from("fundamentals").select("symbol, sector, shares_outstanding").in("symbol", symbols),
   ]);
 
@@ -44,5 +49,15 @@ export async function getSectorHeatmap(): Promise<SectorMapNode[]> {
     bySector.set(sectorName, children);
   }
 
-  return Array.from(bySector.entries()).map(([name, children]) => ({ name, children }));
+  // Named sectors first (largest by combined tile area), "Unclassified" last:
+  // it is a coverage gap, not a sector, and shouldn't outrank real ones just
+  // because it happens to hold the most symbols.
+  return Array.from(bySector.entries())
+    .map(([name, children]) => ({ name, children }))
+    .sort((a, b) => {
+      if (a.name === "Unclassified") return 1;
+      if (b.name === "Unclassified") return -1;
+      const size = (n: SectorMapNode) => n.children.reduce((sum, c) => sum + c.size, 0);
+      return size(b) - size(a);
+    });
 }

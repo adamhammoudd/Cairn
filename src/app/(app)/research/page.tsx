@@ -26,7 +26,7 @@ export default async function ResearchPage() {
 
       {analyses.length === 0 ? (
         <div className="rounded-card border border-dashed border-line px-6 py-16 text-center text-[13px] text-muted">
-          No analyses yet. Request one above — market, sector, or ticker level only.
+          No analyses yet. Request one above - market, sector, or ticker level only.
         </div>
       ) : (
         <div className="flex flex-col gap-4">

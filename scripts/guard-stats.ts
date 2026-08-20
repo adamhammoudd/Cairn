@@ -10,7 +10,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 async function main() {
   const admin = createAdminClient();
 
-  // Real events only — the adversarial suite marks its own rows is_test so
+  // Real events only - the adversarial suite marks its own rows is_test so
   // synthetic violations never distort this (see migration 0015).
   const { data: rows, error } = await admin
     .from("ai_scope_guard_log")
@@ -70,7 +70,7 @@ async function main() {
     console.log(`\nChat rewrite rate: ${chatFlagged}/${chatTotal} real chat turns (${rate}%)`);
     console.log(
       "This is the number that decides whether the deployed model is strong enough. A high rate " +
-        "means users are frequently getting the templated fallback instead of a real answer — the " +
+        "means users are frequently getting the templated fallback instead of a real answer - the " +
         "fix for that is a larger model, never a looser guard.",
     );
   }

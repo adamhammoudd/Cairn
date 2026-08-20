@@ -1,5 +1,5 @@
 // Lightweight keyword tagging so ticker/sector-scoped analysis (Phase 4) has
-// something to filter on. Not NLP — word-boundary matching against a small
+// something to filter on. Not NLP - word-boundary matching against a small
 // tracked list. Extend TRACKED_SYMBOLS as more symbols get ingested via
 // ingest-market-data; a name here with no matching symbol still tags fine,
 // it just won't join against historical_prices for that ticker yet.

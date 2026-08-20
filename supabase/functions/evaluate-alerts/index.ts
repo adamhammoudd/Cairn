@@ -2,7 +2,7 @@
 // ingested data and records deliveries.
 //
 // The evaluation logic mirrors src/lib/alerts.ts. The two are duplicated
-// deliberately — one runs in Deno, the other in Node, and there is no shared
+// deliberately - one runs in Deno, the other in Node, and there is no shared
 // module across that boundary. Any change to a condition's semantics has to be
 // made in both places.
 
@@ -59,7 +59,7 @@ function evaluate(alert: AlertRow, series: Series | undefined, analyses: Analysi
     return (
       `${alert.scope_value}: a ${match.confidence_level}-confidence ${match.analysis_type.replace(/_/g, " ")} ` +
       `analysis (${match.probability_low}–${match.probability_high}%) is available. ` +
-      `Market-level analysis only — not advice about any position.`
+      `Market-level analysis only - not advice about any position.`
     );
   }
 
@@ -140,7 +140,7 @@ Deno.serve(async (req) => {
     return Response.json({ evaluated: 0, triggered: 0, results: [] }, { headers: corsHeaders });
   }
 
-  // Pull once for all symbols rather than per-alert — several alerts commonly
+  // Pull once for all symbols rather than per-alert - several alerts commonly
   // watch the same ticker.
   const symbols = Array.from(new Set(rows.map((a) => a.scope_value)));
   const { data: prices } = await supabase

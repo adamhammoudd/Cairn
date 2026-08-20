@@ -1,5 +1,5 @@
 // Types and constants for the calendar module. Kept out of
-// lib/actions/calendar.ts for the same reason as lib/screener.ts — a
+// lib/actions/calendar.ts for the same reason as lib/screener.ts - a
 // "use server" module may only export async functions.
 
 export interface CalendarEvent {

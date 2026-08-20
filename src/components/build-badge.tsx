@@ -1,6 +1,6 @@
 import { getBuildId, getBuildTime } from "@/lib/build-id";
 
-// ui-reset-v2: small, unobtrusive corner marker — check this first before
+// ui-reset-v2: small, unobtrusive corner marker - check this first before
 // assuming a stale render is a design bug. Position/size is functional
 // (has to sit in a fixed corner to be checkable), not decorative.
 export function BuildBadge() {

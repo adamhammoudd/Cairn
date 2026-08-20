@@ -4,6 +4,13 @@ import { SectorTreemap } from "@/components/sector-map/sector-treemap";
 export default async function SectorMapPage() {
   const data = await getSectorHeatmap();
 
+  // Coverage is stated on the page rather than left to be inferred from the
+  // tiles: classification comes from SEC EDGAR sicDescription, which is SIC
+  // industry classification, not GICS. Anything EDGAR does not classify (ETF
+  // trusts, non-US listings) lands in "Unclassified" and is named as a gap.
+  const classified = data.filter((s) => s.name !== "Unclassified");
+  const unclassified = data.find((s) => s.name === "Unclassified");
+
   return (
     <div className="animate-page-in">
       <div className="mb-5">
@@ -23,7 +30,23 @@ export default async function SectorMapPage() {
           </p>
         </div>
       ) : (
-        <SectorTreemap data={data} />
+        <>
+          <SectorTreemap data={data} />
+          <p className="mt-4 max-w-[720px] text-[12px] leading-relaxed text-dim text-pretty">
+            Coverage: {classified.length} classified {classified.length === 1 ? "sector" : "sectors"} from SEC EDGAR
+            (SIC industry classification, not GICS)
+            {classified.length > 0 && <> - {classified.map((s) => s.name).join(", ")}</>}.
+            {unclassified && (
+              <>
+                {" "}
+                {unclassified.children.length}{" "}
+                {unclassified.children.length === 1 ? "symbol has" : "symbols have"} no EDGAR sector: ETF trusts and
+                crypto are not covered by SIC, so they stay unclassified rather than being assigned a sector Cairn
+                cannot source.
+              </>
+            )}
+          </p>
+        </>
       )}
     </div>
   );

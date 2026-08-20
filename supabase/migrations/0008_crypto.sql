@@ -4,7 +4,7 @@
 -- equity's, and Phase 4's engine silently assumed equity.
 
 -- 1. Point-in-time crypto market metrics. Deliberately NOT folded into
---    `fundamentals` — that table holds SEC-reported per-share accounting
+--    `fundamentals` - that table holds SEC-reported per-share accounting
 --    figures, and circulating supply / 24h volume are neither per-share nor
 --    reported. Overloading it would make "shares_outstanding" mean two
 --    different things depending on asset type.
@@ -29,7 +29,7 @@ alter table crypto_metrics enable row level security;
 drop policy if exists "public read" on crypto_metrics;
 create policy "public read" on crypto_metrics for select using (true);
 
--- 2. Crypto has no earnings, splits, or dividends — the only event types
+-- 2. Crypto has no earnings, splits, or dividends - the only event types
 --    historical_events accepted. That meant every crypto analysis failed
 --    Phase 4's completeness gate (which requires at least one historical
 --    analog) and was rejected before storage.

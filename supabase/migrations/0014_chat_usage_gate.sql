@@ -1,4 +1,4 @@
--- Phase 5/12: chat had no usage gate at all — ai_usage_events only ever
+-- Phase 5/12: chat had no usage gate at all - ai_usage_events only ever
 -- counted analysis-generation requests (see lib/actions/billing.ts,
 -- checkAiUsageAllowed), so Free-tier's "capped daily message count" on chat
 -- was unenforced. Separate table rather than a `kind` discriminator column

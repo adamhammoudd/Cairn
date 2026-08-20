@@ -1,4 +1,4 @@
--- ai_scope_guard_log is the compliance audit trail — the table a reviewer or
+-- ai_scope_guard_log is the compliance audit trail - the table a reviewer or
 -- regulator would read to see every output the guard rejected or rewrote.
 -- The adversarial suite (scripts/tests/adversarial-scope-guard.ts) exercises
 -- the real production path on purpose, which means it was writing synthetic

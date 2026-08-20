@@ -7,7 +7,7 @@ import { computeGoalProgress, type GoalProgress, type ScenarioHolding } from "@/
 import { latestCloseBySymbol } from "@/lib/portfolio";
 
 // Duplicates the holdings + latest-close fetch already in the Portfolio page
-// and the Comparison action — accepted small duplication, same pattern used
+// and the Comparison action - accepted small duplication, same pattern used
 // there, rather than threading a shared fetcher through unrelated features.
 async function getCurrentPortfolioValue(): Promise<{ value: number; holdings: ScenarioHolding[] }> {
   const supabase = await createClient();

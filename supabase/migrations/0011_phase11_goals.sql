@@ -1,4 +1,4 @@
--- Phase 11: planning tools — goal/target tracking storage.
+-- Phase 11: planning tools - goal/target tracking storage.
 --
 -- Position sizing and scenario modeling are pure client-side math over data
 -- already in holdings/historical_prices, so they need no new tables. Goal

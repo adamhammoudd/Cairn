@@ -7,13 +7,13 @@ import { EMPTY_FILTERS, type SavedScreen, type ScreenerFilters, type ScreenerRow
 
 // Market cap, P/E, and dividend yield are derived here from SEC XBRL
 // fundamentals (shares outstanding, TTM EPS, TTM dividends) against the latest
-// close — never stored, so they can't go stale as prices move. A symbol with no
-// fundamentals row (ETFs, funds — anything that doesn't file these XBRL
+// close - never stored, so they can't go stale as prices move. A symbol with no
+// fundamentals row (ETFs, funds - anything that doesn't file these XBRL
 // concepts) keeps null for all three and is excluded by those filters rather
 // than being given a fabricated value.
 export async function runScreen(rawFilters: ScreenerFilters): Promise<ScreenerRow[]> {
   // Screens saved before the fundamentals fields existed have `undefined` for
-  // them, and `undefined !== null` — so coalesce before any comparison.
+  // them, and `undefined !== null` - so coalesce before any comparison.
   const filters: ScreenerFilters = { ...EMPTY_FILTERS, ...rawFilters };
   const supabase = await createClient();
 
@@ -55,7 +55,7 @@ export async function runScreen(rawFilters: ScreenerFilters): Promise<ScreenerRo
       volume: e.volume,
       trend: [...e.closes].reverse(),
       marketCap: price !== null && f?.shares_outstanding ? price * f.shares_outstanding : null,
-      // A negative or zero TTM EPS has no meaningful P/E — leave it null rather
+      // A negative or zero TTM EPS has no meaningful P/E - leave it null rather
       // than reporting a negative multiple that would sort nonsensically.
       pe: price !== null && f?.eps_ttm && f.eps_ttm > 0 ? price / f.eps_ttm : null,
       dividendYield: price !== null && price > 0 && f?.dividends_ttm ? (f.dividends_ttm / price) * 100 : null,

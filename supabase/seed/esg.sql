@@ -1,6 +1,6 @@
 -- Phase 10: illustrative ESG sample data.
 --
--- No live ESG data vendor is integrated this phase — these are hand-entered
+-- No live ESG data vendor is integrated this phase - these are hand-entered
 -- sample scores for the current 7-symbol universe (same list as
 -- providers.sql's market_data config), so the ESG Score Panel has something
 -- to render. source = 'demo_illustrative' is surfaced in the UI as a

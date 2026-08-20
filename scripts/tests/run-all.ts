@@ -1,6 +1,6 @@
 // Orchestrates all three Section 7 checks into one combined, readable
 // report. Exit code reflects only the gating suites (adversarial scope-guard,
-// citation freshness) — methodology substance is advisory per spec and never
+// citation freshness) - methodology substance is advisory per spec and never
 // fails the run, only flags for human review.
 import "./env";
 import { writeReport, suitePassed } from "./report";
@@ -26,14 +26,14 @@ async function main() {
     const flag = suite.cases.filter((c) => c.status === "flag").length;
     const skip = suite.cases.filter((c) => c.status === "skip").length;
     console.log(
-      `${suitePassed(suite) ? "PASS" : "FAIL"} — ${suite.suiteName} (${suite.gating ? "gating" : "advisory"}): ` +
+      `${suitePassed(suite) ? "PASS" : "FAIL"} - ${suite.suiteName} (${suite.gating ? "gating" : "advisory"}): ` +
         `${pass} passed, ${fail} failed, ${flag} flagged, ${skip} skipped.`,
     );
   }
 
   const gatingFailed = allSuites.filter((s) => s.gating).some((s) => !suitePassed(s));
   if (gatingFailed) {
-    console.error("\nFAIL — one or more gating suites did not pass. See report for details.");
+    console.error("\nFAIL - one or more gating suites did not pass. See report for details.");
     process.exit(1);
   }
   console.log("\nAll gating suites passed.");

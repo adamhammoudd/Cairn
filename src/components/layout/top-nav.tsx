@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Logo } from "@/components/logo";
+import { GlobalSearch } from "@/components/layout/global-search";
 import { NAV_ITEMS, isNavGroup, type NavGroup } from "@/lib/nav-items";
 import { signOut } from "@/lib/actions/auth";
 
@@ -36,8 +37,8 @@ const ACCOUNT_MENU = [
 export function TopNav({ displayName, plan }: TopNavProps) {
   const pathname = usePathname();
   // A group menu opens on hover *and* toggles on click. `pinned` is the
-  // click-opened group, `hovered` the pointer-opened one, and `suppressed`
-  // remembers a group the user clicked shut while the pointer is still on it —
+  // click-opened group, `hovered` the pointer-opened one, and `suppressed`-
+  // remembers a group the user clicked shut while the pointer is still on it -
   // without it, the hover that's still active would immediately reopen it.
   const [pinned, setPinned] = useState<string | null>(null);
   const [hovered, setHovered] = useState<string | null>(null);
@@ -47,12 +48,11 @@ export function TopNav({ displayName, plan }: TopNavProps) {
   const [lastPathname, setLastPathname] = useState(pathname);
   // Touch devices synthesise a mouseenter immediately before the click, so
   // hover-to-open would open the menu and the tap would toggle it straight back
-  // shut — the nav reads as dead under a finger. Only wire hover where there's
+  // shut - the nav reads as dead under a finger. Only wire hover where there's
   // a real pointer; touch gets plain tap-to-toggle.
   const [canHover, setCanHover] = useState(false);
   const navRef = useRef<HTMLElement>(null);
   const drawerRef = useRef<HTMLDivElement>(null);
-  const searchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const mq = window.matchMedia("(hover: hover) and (pointer: fine)");
@@ -73,7 +73,7 @@ export function TopNav({ displayName, plan }: TopNavProps) {
   function toggleGroup(label: string) {
     if (isGroupOpen(label)) {
       setPinned(null);
-      setSuppressed(label); // pointer is still over it — don't let hover reopen
+      setSuppressed(label); // pointer is still over it - don't let hover reopen
     } else {
       setPinned(label);
       setSuppressed(null);
@@ -133,19 +133,6 @@ export function TopNav({ displayName, plan }: TopNavProps) {
     };
   }, [mobileNavOpen]);
 
-  useEffect(() => {
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.key !== "/" || !searchRef.current) return;
-      const target = e.target as HTMLElement | null;
-      const editing = target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable);
-      if (editing) return;
-      e.preventDefault();
-      searchRef.current.focus();
-    }
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, []);
-
   return (
     <>
       <header ref={navRef} className="sticky top-0 z-30 shrink-0 border-b border-line bg-canvas/95 backdrop-blur">
@@ -154,17 +141,7 @@ export function TopNav({ displayName, plan }: TopNavProps) {
           <Logo size={24} />
         </Link>
 
-        <div className="flex w-full min-w-0 items-center gap-2 rounded-lg border border-line px-2.75 py-1.75 transition-colors duration-base ease-standard hover:border-[#3A3A3A] min-[900px]:hidden">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6A6A6A" strokeWidth="2" className="shrink-0">
-            <circle cx="11" cy="11" r="7" />
-            <line x1="21" y1="21" x2="16.65" y2="16.65" />
-          </svg>
-          <input
-            type="text"
-            placeholder="Search"
-            className="w-full min-w-0 bg-transparent text-[12.5px] text-primary placeholder:text-dim outline-none"
-          />
-        </div>
+        <GlobalSearch className="w-full min-w-0 min-[900px]:hidden" />
 
         <nav className="hidden min-w-0 flex-1 items-center gap-0.5 overflow-visible min-[900px]:flex">
           {NAV_ITEMS.map((entry) => {
@@ -255,19 +232,7 @@ export function TopNav({ displayName, plan }: TopNavProps) {
         </nav>
 
         <div className="flex shrink-0 items-center gap-2.5">
-          <div className="hidden w-[180px] items-center gap-2 rounded-lg border border-line bg-transparent px-2.5 py-1.5 transition-colors duration-base ease-standard hover:border-[#3A3A3A] min-[1080px]:flex min-[1300px]:w-[230px]">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6A6A6A" strokeWidth="2" className="shrink-0">
-              <circle cx="11" cy="11" r="7" />
-              <line x1="21" y1="21" x2="16.65" y2="16.65" />
-            </svg>
-            <input
-              ref={searchRef}
-              type="text"
-              placeholder="Search tickers, news"
-              className="w-full min-w-0 bg-transparent text-[12.5px] text-primary placeholder:text-dim outline-none"
-            />
-            <span className="rounded border border-line px-1 py-0.5 font-mono text-[10px] text-[#4A4A4A]">/</span>
-          </div>
+          <GlobalSearch className="hidden w-[180px] bg-transparent min-[1080px]:flex min-[1300px]:w-[230px]" />
 
           {plan === "free" && (
             <Link

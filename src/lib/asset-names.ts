@@ -1,5 +1,5 @@
 // The mock shows a company name under every symbol. Nothing in the schema
-// carries one for equities — crypto_metrics.name covers crypto only — so the
+// carries one for equities - crypto_metrics.name covers crypto only - so the
 // tracked equity/ETF universe is mapped here, and anything unmapped falls back
 // to a caller-supplied label (asset type) rather than rendering an empty line.
 const ASSET_NAMES: Record<string, string> = {

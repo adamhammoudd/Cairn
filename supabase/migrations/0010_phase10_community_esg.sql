@@ -2,7 +2,7 @@
 --
 -- discussion_threads and esg_scores were designed ahead of schedule in
 -- schema.sql (see "PHASE 10: discussion, ESG") but never migrated into a
--- live database — this file actually creates them, matching schema.sql's
+-- live database - this file actually creates them, matching schema.sql's
 -- column set and RLS exactly, plus discussion_votes (not in schema.sql,
 -- needed for per-user vote tracking) and fundamentals.sector/sic (for the
 -- Sector Heat Map).
@@ -38,7 +38,7 @@ create table if not exists esg_scores (
 
 -- Per-user vote ledger. discussion_threads.upvotes/downvotes stay plain
 -- counters, recomputed from this table by the voteThread server action
--- (src/lib/actions/discussion.ts) on every vote — not a trigger, matching
+-- (src/lib/actions/discussion.ts) on every vote - not a trigger, matching
 -- this codebase's preference for action-side mutation logic over DB
 -- triggers (the one existing trigger, handle_new_user, exists only because
 -- Supabase Auth signup has no server-action hook to run instead).

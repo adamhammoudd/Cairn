@@ -12,7 +12,7 @@ export default function SignupPage() {
 
   return (
     <>
-      <AuthHeader eyebrow="Account" title="Create your account" blurb="Free to start — no card required." />
+      <AuthHeader eyebrow="Account" title="Create your account" blurb="Free to start - no card required." />
 
       {error && <AuthError>{error}</AuthError>}
 

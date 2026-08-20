@@ -66,7 +66,7 @@ export function CalendarPanel({ events }: { events: CalendarEvent[] }) {
     year: "numeric",
   });
 
-  // Flat, date-ascending list (not grouped by day) — matches the "Next up" list in the mock.
+  // Flat, date-ascending list (not grouped by day) - matches the "Next up" list in the mock.
   const upcoming = useMemo(
     () => filtered.filter((e) => e.event_date >= todayIso).sort((a, b) => a.event_date.localeCompare(b.event_date)),
     [filtered, todayIso],
@@ -130,7 +130,7 @@ export function CalendarPanel({ events }: { events: CalendarEvent[] }) {
                     {e.event_type} · {formatDayLabel(e.event_date, todayIso)}
                   </div>
                   <div className="mt-1.5 text-[13px] text-primary">
-                    {e.symbol ? `${e.symbol} — ${e.title}` : e.title}
+                    {e.symbol ? `${e.symbol} - ${e.title}` : e.title}
                   </div>
                 </div>
               </div>

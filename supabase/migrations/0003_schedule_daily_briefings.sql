@@ -4,7 +4,7 @@
 --   supabase functions deploy generate-daily-briefings --no-verify-jwt
 --
 -- Before running this file: replace <project-ref> below. pg_cron/pg_net are
--- already enabled by 0002_schedule_ingestion.sql — safe to re-run `create
+-- already enabled by 0002_schedule_ingestion.sql - safe to re-run `create
 -- extension if not exists` here too in case this file runs standalone.
 
 create extension if not exists pg_cron;

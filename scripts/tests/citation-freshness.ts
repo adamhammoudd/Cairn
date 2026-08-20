@@ -1,5 +1,5 @@
 // Section 7, test 3: citation freshness check (gating on the "impossible
-// timestamp" case — a cited source published after its own analysis is a
+// timestamp" case - a cited source published after its own analysis is a
 // hard hallucination signal; staleness beyond the recency window is
 // reported but non-gating, since an old article can still be a legitimate
 // input to a historical-pattern analysis in edge cases).
@@ -27,7 +27,7 @@ export async function runCitationFreshnessSuite(): Promise<SuiteResult> {
   const tickers = Array.from(new Set((scopeRows ?? []).map((r) => r.scope_value))).slice(0, SAMPLE_TICKER_LIMIT);
 
   if (tickers.length === 0) {
-    notes.push("No validated ticker-level analyses exist yet — nothing to sample for citation freshness.");
+    notes.push("No validated ticker-level analyses exist yet - nothing to sample for citation freshness.");
   }
 
   for (const ticker of tickers) {
@@ -53,7 +53,7 @@ export async function runCitationFreshnessSuite(): Promise<SuiteResult> {
       cases.push({
         name: `${ticker} (${analysis.id})`,
         status: "fail",
-        detail: "No cited sources to check — checkCompleteness should have rejected this at generation time.",
+        detail: "No cited sources to check - checkCompleteness should have rejected this at generation time.",
       });
       continue;
     }
@@ -71,7 +71,7 @@ export async function runCitationFreshnessSuite(): Promise<SuiteResult> {
       cases.push({
         name: `${ticker} (${analysis.id})`,
         status: "fail",
-        detail: `${impossible.length} cited source(s) published AFTER the analysis was created — impossible/hallucinated citation.`,
+        detail: `${impossible.length} cited source(s) published AFTER the analysis was created - impossible/hallucinated citation.`,
         attachment: JSON.stringify(impossible, null, 2),
       });
       continue;
@@ -81,7 +81,7 @@ export async function runCitationFreshnessSuite(): Promise<SuiteResult> {
       cases.push({
         name: `${ticker} (${analysis.id})`,
         status: "flag",
-        detail: `${stale.length}/${newsItems?.length ?? 0} cited source(s) are older than the ${RECENCY_WINDOW_DAYS}-day recency window — review for staleness.`,
+        detail: `${stale.length}/${newsItems?.length ?? 0} cited source(s) are older than the ${RECENCY_WINDOW_DAYS}-day recency window - review for staleness.`,
         attachment: JSON.stringify(stale, null, 2),
       });
       continue;
@@ -106,7 +106,7 @@ async function main() {
       `${suite.cases.filter((c) => c.status === "flag").length} flagged, out of ${suite.cases.length}.`,
   );
   if (suite.cases.some((c) => c.status === "fail")) {
-    console.error("FAIL — at least one impossible/hallucinated citation timestamp found.");
+    console.error("FAIL - at least one impossible/hallucinated citation timestamp found.");
     process.exit(1);
   }
 }
