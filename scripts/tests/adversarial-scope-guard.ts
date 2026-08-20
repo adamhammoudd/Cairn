@@ -190,8 +190,12 @@ async function main() {
   const [tierA, tierB] = await runAdversarialScopeGuardSuites();
   const reportPath = writeReport([tierA, tierB]);
 
-  const aPass = tierA.cases.every((c) => c.status === "pass");
-  const bPass = tierB.cases.length === 0 || tierB.cases.every((c) => c.status === "pass");
+  // `tierB.cases.length === 0 || ...` used to make an unrun Tier B count as a
+  // pass, which is how a 20%-catch-rate guard sat under a green CI signal.
+  // Not-run is now its own outcome and is not success.
+  const aPass = tierA.cases.length > 0 && tierA.cases.every((c) => c.status === "pass");
+  const bRan = tierB.cases.some((c) => c.status === "pass" || c.status === "fail");
+  const bPass = bRan && tierB.cases.every((c) => c.status === "pass");
 
   console.log(`Report written to ${reportPath}`);
   console.log(
@@ -205,9 +209,14 @@ async function main() {
     );
   }
 
-  if (!aPass || !bPass) {
+  if (!aPass) {
     console.error("FAIL - zero tolerance not met. See report for details.");
     process.exit(1);
+  }
+  if (!bPass) {
+    console.error("INCOMPLETE - Tier A passed, but the live tier never ran, so end-to-end");
+    console.error("             guard behaviour against a real model is unproven. Not a pass.");
+    process.exit(2);
   }
   console.log("PASS - all adversarial cases handled correctly.");
 }

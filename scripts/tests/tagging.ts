@@ -8,6 +8,7 @@
 // Run: npx tsx scripts/tests/tagging.ts
 
 import { tagContent, type CryptoUniverseEntry } from "../../supabase/functions/_shared/tagging";
+import type { SuiteResult, TestCase } from "./report";
 
 // A slice of the live top-25 universe, including the collision-prone symbols.
 const UNIVERSE: CryptoUniverseEntry[] = [
@@ -90,6 +91,28 @@ const CASES: Case[] = [
   },
 ];
 
+// Exposed as a SuiteResult so run-all.ts can gate on it. This suite existed
+// but was wired into nothing -- not run-all, not package.json -- so the crypto
+// tagging that unblocks every crypto analysis had no CI coverage at all.
+export function runTaggingSuite(): SuiteResult {
+  const cases: TestCase[] = CASES.map((c) => {
+    const { tickers, sectors } = tagContent(c.title, c.body ?? null, UNIVERSE);
+    const problems: string[] = [];
+    for (const t of c.expectTickers ?? []) if (!tickers.includes(t)) problems.push(`missing ticker ${t}`);
+    for (const t of c.expectNotTickers ?? []) if (tickers.includes(t)) problems.push(`unexpected ticker ${t}`);
+    for (const sec of c.expectSectors ?? []) if (!sectors.includes(sec)) problems.push(`missing sector ${sec}`);
+    for (const sec of c.expectNotSectors ?? []) if (sectors.includes(sec)) problems.push(`unexpected sector ${sec}`);
+    return {
+      name: c.name,
+      status: problems.length === 0 ? ("pass" as const) : ("fail" as const),
+      detail: problems.length === 0 ? "tagged as expected" : problems.join("; "),
+      attachment: problems.length === 0 ? undefined : `tickers=[${tickers.join(",")}] sectors=[${sectors.join(",")}]`,
+    };
+  });
+
+  return { suiteName: "News tagging", gating: true, cases };
+}
+
 function run(): number {
   let failures = 0;
 
@@ -116,5 +139,9 @@ function run(): number {
   return failures;
 }
 
-const failed = run();
-process.exit(failed === 0 ? 0 : 1);
+// Only self-execute when invoked directly (npm run test:tagging); importing
+// this module from run-all.ts must not call process.exit.
+if (process.argv[1] && process.argv[1].endsWith("tagging.ts")) {
+  const failed = run();
+  process.exit(failed === 0 ? 0 : 1);
+}

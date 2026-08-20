@@ -23,9 +23,32 @@ export interface SuiteResult {
   notes?: string[];
 }
 
+export type SuiteVerdict = "pass" | "fail" | "incomplete";
+
+/**
+ * A gating suite passes only if it actually ran something and nothing failed.
+ *
+ * The previous implementation was `cases.every(c => pass || skip)`, which
+ * returns true for an empty array -- so a suite that executed zero tests was
+ * reported as passing, and `run-all` rolled it into "All gating suites
+ * passed." Three of five suites were in that state: the live scope-guard tier
+ * with no model server, and both suites that need analyses to exist when
+ * ai_analyses had no rows. A suite that did not run is not a suite that
+ * passed, so it now reports `incomplete` and is non-passing.
+ */
+export function suiteVerdict(suite: SuiteResult): SuiteVerdict {
+  const failed = suite.cases.some((c) => c.status === "fail");
+  const executed = suite.cases.filter((c) => c.status === "pass" || c.status === "fail").length;
+
+  if (!suite.gating) return failed ? "fail" : "pass";
+  if (failed) return "fail";
+  if (executed === 0) return "incomplete";
+  if (suite.cases.some((c) => c.status === "skip")) return "incomplete";
+  return "pass";
+}
+
 export function suitePassed(suite: SuiteResult): boolean {
-  if (!suite.gating) return true;
-  return suite.cases.every((c) => c.status === "pass" || c.status === "skip");
+  return suiteVerdict(suite) === "pass";
 }
 
 function renderCase(c: TestCase): string {
@@ -48,7 +71,7 @@ export function renderMarkdown(suites: SuiteResult[]): string {
     const failCount = suite.cases.filter((c) => c.status === "fail").length;
     const flagCount = suite.cases.filter((c) => c.status === "flag").length;
     const skipCount = suite.cases.filter((c) => c.status === "skip").length;
-    const overall = suitePassed(suite) ? "PASS" : "FAIL";
+    const overall = suiteVerdict(suite).toUpperCase();
 
     lines.push(`## ${suite.suiteName} - ${overall} (${suite.gating ? "gating" : "advisory"})`);
     lines.push(

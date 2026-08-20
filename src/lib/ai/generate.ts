@@ -25,6 +25,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { checkScopeGuard, checkCompleteness } from "@/lib/ai/scope-guard";
+import { classifyScope, classifierMode, resolveUnavailable } from "@/lib/ai/scope-classifier";
 import { computeHistoricalStats, computeSimilarityScore, computeProbabilityBand, ELEVATED_MOVE_THRESHOLD_PCT } from "@/lib/ai/analytics";
 import { llmCompleteJson, llmModel } from "@/lib/ai/llm";
 import type { ScopeType } from "@/lib/supabase/types";
@@ -211,7 +212,25 @@ Respond with only a JSON object matching the required schema.`,
     sample_size: band.sampleCount,
   });
 
-  const failure = !contentCheck.passed ? contentCheck : !completenessCheck.passed ? completenessCheck : null;
+  let failure = !contentCheck.passed ? contentCheck : !completenessCheck.passed ? completenessCheck : null;
+
+  // Layer 3: semantic second pass over the model's prose, same as the chat
+  // path. A stored analysis is the more durable artifact of the two, so a
+  // directive that reaches ai_analyses is worse than one that reaches a single
+  // chat turn - this runs before the insert, not after.
+  if (!failure) {
+    const verdict = await classifyScope(prose.reasoning_text);
+    if (verdict.status === "flagged") {
+      failure = { passed: false, reason: verdict.reason, evidence: verdict.rationale };
+    } else if (verdict.status === "unavailable") {
+      const resolution = resolveUnavailable(classifierMode(), verdict.detail);
+      if (resolution.blocked) {
+        failure = { passed: false, reason: "classifier_unavailable_strict_mode", evidence: verdict.detail };
+      } else {
+        console.warn(`[scope-guard] ${resolution.note}`);
+      }
+    }
+  }
 
   if (failure) {
     await admin.from("ai_scope_guard_log").insert({
