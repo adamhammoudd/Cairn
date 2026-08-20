@@ -555,6 +555,22 @@ export interface Database {
         Update: never;
         Relationships: [];
       };
+      auth_attempts: {
+        Row: {
+          id: number;
+          identifier_hash: string;
+          kind: "sign_in" | "sign_up" | "password_reset";
+          succeeded: boolean;
+          attempted_at: string;
+        };
+        Insert: {
+          identifier_hash: string;
+          kind: "sign_in" | "sign_up" | "password_reset";
+          succeeded?: boolean;
+        };
+        Update: never;
+        Relationships: [];
+      };
       chat_usage_events: {
         Row: { id: string; user_id: string; created_at: string };
         Insert: { user_id: string };

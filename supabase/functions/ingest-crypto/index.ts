@@ -19,6 +19,7 @@
 
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
+import { requireCronSecret } from "../_shared/auth.ts";
 
 const TOP_N = 25;
 const HISTORY_DAYS = 365;
@@ -135,6 +136,9 @@ function deriveVolatilityRegimes(dates: string[], closes: number[]): DerivedRegi
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  // Scheduled callers must present the shared secret; see _shared/auth.ts.
+  const unauthorized = requireCronSecret(req);
+  if (unauthorized) return unauthorized;
 
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,

@@ -8,6 +8,7 @@
 
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
+import { requireCronSecret } from "../_shared/auth.ts";
 
 type Comparator = "above" | "below";
 type ConfidenceLevel = "low" | "medium" | "high";
@@ -126,6 +127,9 @@ function evaluate(alert: AlertRow, series: Series | undefined, analyses: Analysi
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  // Scheduled callers must present the shared secret; see _shared/auth.ts.
+  const unauthorized = requireCronSecret(req);
+  if (unauthorized) return unauthorized;
 
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,

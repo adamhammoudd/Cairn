@@ -23,6 +23,7 @@
 
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
+import { requireCronSecret } from "../_shared/auth.ts";
 
 const UA_YAHOO = "Mozilla/5.0 (cairn-ingest/1.0)";
 const UA_NASDAQ = "Mozilla/5.0 (compatible; cairn-ingest/1.0)";
@@ -160,6 +161,9 @@ function reactionWindow(
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  // Scheduled callers must present the shared secret; see _shared/auth.ts.
+  const unauthorized = requireCronSecret(req);
+  if (unauthorized) return unauthorized;
 
   const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
