@@ -7,7 +7,7 @@
 //
 // Run: npx tsx scripts/tests/tagging.ts
 
-import { tagContent, type CryptoUniverseEntry } from "../../supabase/functions/_shared/tagging.ts";
+import { tagContent, type CryptoUniverseEntry } from "../../supabase/functions/_shared/tagging";
 
 // A slice of the live top-25 universe, including the collision-prone symbols.
 const UNIVERSE: CryptoUniverseEntry[] = [
