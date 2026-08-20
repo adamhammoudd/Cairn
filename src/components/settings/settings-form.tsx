@@ -245,7 +245,7 @@ export function SettingsForm({ settings, activeTab }: SettingsFormProps) {
 // only page whose rows did not line up with its own border.
 function Row({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
-    <div className="flex flex-wrap items-center justify-between gap-x-5 gap-y-2.5 border-b border-[#171717] px-4.5 py-3.75 last:border-b-0">
+    <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2.5 py-3.5 first:pt-0 last:pb-0">
       <div className="min-w-0 max-sm:w-full">
         <div className="text-[13px] text-primary">{label}</div>
         {hint && <div className="mt-1 max-w-[440px] text-[11.5px] leading-relaxed text-muted text-pretty">{hint}</div>}

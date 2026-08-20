@@ -155,12 +155,12 @@ export function ComparisonCharts({ rows, timeframe }: { rows: ComparisonRow[]; t
         </LineChart>
       </ResponsiveContainer>
 
-      {missing.length > 0 && (
-        <p className="mt-2.5 text-[11.5px] text-dim">
-          No price history inside this window for {missing.join(", ")} - widen the timeframe to plot{" "}
-          {missing.length === 1 ? "it" : "them"}.
-        </p>
-      )}
+export function ComparisonCharts({ rows, timeframe }: { rows: ComparisonRow[]; timeframe: ChartView }) {
+  return (
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      {rows.map((row, i) => (
+        <MiniChart key={row.symbol} row={row} timeframe={timeframe} color={COMPARISON_COLORS[i % COMPARISON_COLORS.length]} />
+      ))}
     </div>
   );
 }

@@ -144,7 +144,7 @@ export function HoldingsTable({
                       <div
                         className={`mt-0.75 text-[12.5px] tabular-nums ${positive ? "text-accent" : "text-negative"}`}
                       >
-                        {m.gainPct === null ? "-" : `${m.gainPct >= 0 ? "+" : ""}${m.gainPct.toFixed(1)}%`}
+                        {m.gainPct === null ? "—" : `${m.gainPct >= 0 ? "+" : ""}${m.gainPct.toFixed(1)}%`}
                       </div>
                     </div>
                   </div>

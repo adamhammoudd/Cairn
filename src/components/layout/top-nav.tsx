@@ -53,14 +53,7 @@ export function TopNav({ displayName, plan }: TopNavProps) {
   const [canHover, setCanHover] = useState(false);
   const navRef = useRef<HTMLElement>(null);
   const drawerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const mq = window.matchMedia("(hover: hover) and (pointer: fine)");
-    const sync = () => setCanHover(mq.matches);
-    sync();
-    mq.addEventListener("change", sync);
-    return () => mq.removeEventListener("change", sync);
-  }, []);
+  const searchRef = useRef<HTMLInputElement>(null);
 
   const isGroupOpen = (label: string) => pinned === label || (hovered === label && suppressed !== label);
 
@@ -102,7 +95,7 @@ export function TopNav({ displayName, plan }: TopNavProps) {
   }
 
   useEffect(() => {
-    function onClickAway(e: Event) {
+    function onClickAway(e: MouseEvent) {
       const target = e.target as Node;
       const inside =
         (navRef.current && navRef.current.contains(target)) ||
@@ -133,6 +126,19 @@ export function TopNav({ displayName, plan }: TopNavProps) {
     };
   }, [mobileNavOpen]);
 
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key !== "/" || !searchRef.current) return;
+      const target = e.target as HTMLElement | null;
+      const editing = target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable);
+      if (editing) return;
+      e.preventDefault();
+      searchRef.current.focus();
+    }
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, []);
+
   return (
     <>
       <header ref={navRef} className="sticky top-0 z-30 shrink-0 border-b border-line bg-canvas/95 backdrop-blur">
@@ -141,7 +147,17 @@ export function TopNav({ displayName, plan }: TopNavProps) {
           <Logo size={24} />
         </Link>
 
-        <GlobalSearch className="w-full min-w-0 min-[900px]:hidden" />
+        <div className="flex w-full min-w-0 items-center gap-2 rounded-lg border border-line px-2.75 py-1.75 transition-colors duration-base ease-standard hover:border-[#3A3A3A] min-[900px]:hidden">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6A6A6A" strokeWidth="2" className="shrink-0">
+            <circle cx="11" cy="11" r="7" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+          <input
+            type="text"
+            placeholder="Search"
+            className="w-full min-w-0 bg-transparent text-[12.5px] text-primary placeholder:text-dim outline-none"
+          />
+        </div>
 
         <nav className="hidden min-w-0 flex-1 items-center gap-0.5 overflow-visible min-[900px]:flex">
           {NAV_ITEMS.map((entry) => {
@@ -232,7 +248,19 @@ export function TopNav({ displayName, plan }: TopNavProps) {
         </nav>
 
         <div className="flex shrink-0 items-center gap-2.5">
-          <GlobalSearch className="hidden w-[180px] bg-transparent min-[1080px]:flex min-[1300px]:w-[230px]" />
+          <div className="hidden w-[180px] items-center gap-2 rounded-lg border border-line bg-transparent px-2.5 py-1.5 transition-colors duration-base ease-standard hover:border-[#3A3A3A] min-[1080px]:flex min-[1300px]:w-[230px]">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6A6A6A" strokeWidth="2" className="shrink-0">
+              <circle cx="11" cy="11" r="7" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            <input
+              ref={searchRef}
+              type="text"
+              placeholder="Search tickers, news"
+              className="w-full min-w-0 bg-transparent text-[12.5px] text-primary placeholder:text-dim outline-none"
+            />
+            <span className="rounded border border-line px-1 py-0.5 font-mono text-[10px] text-[#4A4A4A]">/</span>
+          </div>
 
           {plan === "free" && (
             <Link
@@ -290,7 +318,7 @@ export function TopNav({ displayName, plan }: TopNavProps) {
             onClick={() => setMobileNavOpen((prev) => !prev)}
             aria-label="Toggle navigation"
             aria-expanded={mobileNavOpen}
-            className={`flex h-8 w-8.5 shrink-0 touch-manipulation flex-col justify-center gap-1 rounded-lg border bg-transparent px-1.75 transition-colors duration-fast ease-standard hover:border-[#3A3A3A] min-[900px]:hidden ${
+            className={`flex h-8 w-8.5 shrink-0 flex-col justify-center gap-1 rounded-lg border bg-transparent px-1.75 transition-colors duration-fast ease-standard hover:border-[#3A3A3A] min-[900px]:hidden ${
               mobileNavOpen ? "border-accent" : "border-line"
             }`}
           >
