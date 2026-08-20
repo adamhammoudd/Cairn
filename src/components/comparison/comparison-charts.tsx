@@ -154,7 +154,7 @@ export function ComparisonCharts({ rows, timeframe }: { rows: ComparisonRow[]; t
           ))}
         </LineChart>
       </ResponsiveContainer>
-
+    </div>
 export function ComparisonCharts({ rows, timeframe }: { rows: ComparisonRow[]; timeframe: ChartView }) {
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
