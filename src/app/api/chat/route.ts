@@ -12,12 +12,15 @@ export async function POST(req: Request) {
   const { sessionId, message } = (await req.json()) as { sessionId: string; message: string };
   if (!sessionId || !message?.trim()) return new Response("Missing sessionId or message", { status: 400 });
 
-  // Verify the session belongs to this user (RLS would also block the insert, this gives a clean 404)
+  // Verify the session belongs to this user. Scoped on user_id here rather
+  // than left to RLS: the authorization decision belongs in the route, and the
+  // policy is the backstop (see supabase/tests/rls_idor.sql).
   const { data: session } = await supabase
     .from("chat_sessions")
     .select("id, title, use_portfolio_context")
     .eq("id", sessionId)
-    .single();
+    .eq("user_id", user.id)
+    .maybeSingle();
   if (!session) return new Response("Chat session not found", { status: 404 });
 
   const gate = await checkChatUsageAllowed(user.id);
@@ -25,12 +28,20 @@ export async function POST(req: Request) {
 
   // Fetched before the insert below, so it's prior turns only - runChatTurn
   // builds the current turn's content itself (grounding context + question).
-  const { data: priorHistory } = await supabase
+  //
+  // Newest-first at the DB so the LIMIT keeps the most *recent* 20 turns, then
+  // reversed back to chronological order for the model. Ordering ascending
+  // under a LIMIT returned the oldest 20 instead: past twenty messages the
+  // assistant re-read the opening of the conversation on every turn and never
+  // saw anything recent, which reads as the model forgetting what was just
+  // said. Same defect class as the ticker/compare stale-price bug.
+  const { data: recentHistoryDesc } = await supabase
     .from("chat_messages")
     .select("role, content")
     .eq("session_id", sessionId)
-    .order("created_at", { ascending: true })
+    .order("created_at", { ascending: false })
     .limit(20);
+  const priorHistory = (recentHistoryDesc ?? []).slice().reverse();
 
   await supabase.from("chat_messages").insert({ session_id: sessionId, role: "user", content: message });
 
@@ -61,7 +72,7 @@ export async function POST(req: Request) {
   const result = await runChatTurn({
     userId: user.id,
     message,
-    history: (priorHistory ?? []) as ChatHistoryMessage[],
+    history: priorHistory as ChatHistoryMessage[],
     usePortfolioContext,
   });
 

@@ -13,7 +13,8 @@
     "test:citations": "tsx scripts/tests/citation-freshness.ts",
     "test:ai-suite": "tsx scripts/tests/run-all.ts",
     "check-db": "tsx scripts/check-db.ts",
-    "guard-stats": "tsx scripts/guard-stats.ts"
+    "guard-stats": "tsx scripts/guard-stats.ts",
+    "test:db": "bash scripts/db-tests.sh"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.4",

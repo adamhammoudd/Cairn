@@ -134,8 +134,19 @@ export async function addWatchlistItem(_prevState: string | null, formData: Form
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  // RLS on watchlist_items joins through watchlists.user_id, so a foreign
-  // watchlist_id is rejected by the database rather than trusted here.
+  // Ownership is established here, in the action, rather than left to RLS
+  // alone. RLS does join watchlist_items through watchlists.user_id and does
+  // reject a foreign id -- verified in supabase/tests/rls_idor.sql -- but a
+  // policy is a backstop, not the authorization decision. Checking here also
+  // turns a silent zero-row no-op into an explicit denial the caller can see.
+  const { data: owned } = await supabase
+    .from("watchlists")
+    .select("id")
+    .eq("id", watchlistId)
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (!owned) return "That watchlist doesn't exist.";
+
   const { count } = await supabase
     .from("watchlist_items")
     .select("*", { count: "exact", head: true })
@@ -152,7 +163,21 @@ export async function addWatchlistItem(_prevState: string | null, formData: Form
 
 export async function removeWatchlistItem(id: string) {
   const supabase = await createClient();
-  await supabase.from("watchlist_items").delete().eq("id", id);
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  // Deletes only where the parent watchlist is the caller's. This was the one
+  // mutating action in the file with no auth.getUser() call at all, relying
+  // entirely on RLS to stop a foreign (or anonymous) id.
+  const { data: ownedIds } = await supabase.from("watchlists").select("id").eq("user_id", user.id);
+  await supabase
+    .from("watchlist_items")
+    .delete()
+    .eq("id", id)
+    .in("watchlist_id", (ownedIds ?? []).map((w) => w.id));
+
   revalidatePath("/watchlists");
 }
 
@@ -163,8 +188,16 @@ export async function reorderWatchlistItems(orderedIds: string[]) {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
+  // Same reasoning as removeWatchlistItem: constrain every update to items
+  // whose parent watchlist belongs to the caller, so a forged id list cannot
+  // reshuffle someone else's watchlist even if a policy regresses.
+  const { data: ownedIds } = await supabase.from("watchlists").select("id").eq("user_id", user.id);
+  const owned = (ownedIds ?? []).map((w) => w.id);
+
   await Promise.all(
-    orderedIds.map((id, index) => supabase.from("watchlist_items").update({ sort_order: index }).eq("id", id)),
+    orderedIds.map((id, index) =>
+      supabase.from("watchlist_items").update({ sort_order: index }).eq("id", id).in("watchlist_id", owned),
+    ),
   );
 
   revalidatePath("/watchlists");
