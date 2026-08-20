@@ -180,9 +180,18 @@ Deno.serve(async (req) => {
       (providers ?? [])
         .filter((p: { config: Record<string, unknown> }) => (p.config?.asset_type ?? "equity") !== "crypto")
         .flatMap((p: { config: Record<string, unknown> }) =>
-          Array.isArray(p.config?.symbols) ? (p.config.symbols as string[]) : [],
+          Array.isArray(p.config?.symbols) ? (p.config.symbols as unknown[]) : [],
         )
-        .map((s) => s.toUpperCase()),
+        // 0020_asset_type_per_symbol rewrote config.symbols into a mixed array:
+        // plain strings for symbols taking the provider default, and
+        // { symbol, asset_type } objects for the ones that override it. Reading
+        // it as string[] threw on the first object entry and cost the whole run.
+        .map((entry) => {
+          if (typeof entry === "string") return entry.toUpperCase();
+          const sym = (entry as Record<string, unknown>)?.symbol;
+          return typeof sym === "string" ? sym.toUpperCase() : null;
+        })
+        .filter((s): s is string => s !== null),
     ),
   );
 
