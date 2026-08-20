@@ -208,10 +208,10 @@ export function MarketsPanel({ rows, cryptoRows, defaultFilter = "all" }: Market
                   )}
                 </div>
               </Link>
-            </div>
-          </div>
-        }
-      />
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
