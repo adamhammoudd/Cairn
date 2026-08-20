@@ -42,14 +42,18 @@ export async function getTickerDetail(symbolRaw: string): Promise<TickerData | n
   const symbol = symbolRaw.toUpperCase();
   const supabase = await createClient();
 
-  const { data: bars } = await supabase
+  // Newest-first at the DB so the LIMIT keeps the most recent 400 bars, then
+  // reversed to ascending for the chart series and the `bars[last]` reads
+  // below. Ordering ascending here silently returned the *oldest* 400 rows.
+  const { data: recentBarsDesc } = await supabase
     .from("historical_prices")
     .select("ts, open, high, low, close, volume, asset_type")
     .eq("symbol", symbol)
-    .order("ts", { ascending: true })
+    .order("ts", { ascending: false })
     .limit(400);
 
-  if (!bars || bars.length === 0) return null;
+  if (!recentBarsDesc || recentBarsDesc.length === 0) return null;
+  const bars = recentBarsDesc.slice().reverse();
 
   const latest = bars[bars.length - 1];
 
@@ -95,7 +99,12 @@ export async function getTickerDetail(symbolRaw: string): Promise<TickerData | n
   const yearAgo = new Date();
   yearAgo.setDate(yearAgo.getDate() - 365);
   const yearIso = yearAgo.toISOString().slice(0, 10);
-  const yearCloses = bars.filter((b) => b.ts >= yearIso && b.close !== null).map((b) => Number(b.close));
+  // Range over intraday high/low, the convention every quote page uses --
+  // deriving it from closes understates the band (it reported a 340.08 high
+  // on a symbol that traded to 344.57).
+  const yearBars = bars.filter((b) => b.ts >= yearIso);
+  const yearHighs = yearBars.filter((b) => b.high !== null).map((b) => Number(b.high));
+  const yearLows = yearBars.filter((b) => b.low !== null).map((b) => Number(b.low));
 
   const recent = bars.slice(-31).filter((b) => b.close !== null).map((b) => Number(b.close));
   let volatility30d: number | null = null;
@@ -121,8 +130,8 @@ export async function getTickerDetail(symbolRaw: string): Promise<TickerData | n
     open: latest.open === null ? null : Number(latest.open),
     dayHigh: latest.high === null ? null : Number(latest.high),
     dayLow: latest.low === null ? null : Number(latest.low),
-    week52High: yearCloses.length > 0 ? Math.max(...yearCloses) : null,
-    week52Low: yearCloses.length > 0 ? Math.min(...yearCloses) : null,
+    week52High: yearHighs.length > 0 ? Math.max(...yearHighs) : null,
+    week52Low: yearLows.length > 0 ? Math.min(...yearLows) : null,
     volatility30d,
     nextEvent: nextEvent ?? null,
   };

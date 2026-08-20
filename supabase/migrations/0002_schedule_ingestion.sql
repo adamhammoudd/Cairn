@@ -8,7 +8,7 @@
 -- internally to write to the DB — --no-verify-jwt only means the *caller*
 -- (pg_cron) doesn't need to authenticate to invoke them.
 --
--- Before running: replace <project-ref> below. Adjust schedules to taste.
+-- Before running: replace vvferejzawkhzlmvvaog below. Adjust schedules to taste.
 
 create extension if not exists pg_cron;
 create extension if not exists pg_net;
@@ -18,7 +18,7 @@ select cron.schedule(
   '*/15 * * * *',
   $$
   select net.http_post(
-    url := 'https://<project-ref>.functions.supabase.co/ingest-news',
+    url := 'https://vvferejzawkhzlmvvaog.functions.supabase.co/ingest-news',
     headers := jsonb_build_object('Content-Type', 'application/json')
   );
   $$
@@ -29,7 +29,7 @@ select cron.schedule(
   '0 22 * * 1-5', -- 22:00 UTC weekdays, after US market close
   $$
   select net.http_post(
-    url := 'https://<project-ref>.functions.supabase.co/ingest-market-data',
+    url := 'https://vvferejzawkhzlmvvaog.functions.supabase.co/ingest-market-data',
     headers := jsonb_build_object('Content-Type', 'application/json')
   );
   $$

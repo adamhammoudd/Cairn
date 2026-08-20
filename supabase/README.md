@@ -9,8 +9,10 @@ Run against your project's SQL editor (or `psql`), in order:
    weights, enable/disable, or add rows directly in `data_providers` — no
    code deploy needed for that part)
 3. `migrations/0002_schedule_ingestion.sql` — pg_cron schedule for the two
-   ingestion Edge Functions (edit the `<project-ref>` placeholder and set
-   `app.settings.service_role_key` first, see comment in the file)
+   ingestion Edge Functions. The function URLs are written out with this
+   project's real ref; forking to another Supabase project means replacing
+   `vvferejzawkhzlmvvaog` throughout `migrations/`. Set
+   `app.settings.service_role_key` first, see comment in the file.
 4. Remaining numbered migrations in order, including `0013_scope_guard_hardening.sql`
    (adds `ai_scope_guard_log.corrected_output`/`source_surface`, needed by the
    restructured chat scope-guard in `lib/ai/chat-generate.ts`) and

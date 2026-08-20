@@ -32,13 +32,22 @@ export async function getComparisonData(symbols: string[]): Promise<ComparisonRo
   if (symbols.length === 0) return [];
   const supabase = await createClient();
 
-  const [{ data: bars }, { data: fundamentals }] = await Promise.all([
-    supabase
-      .from("historical_prices")
-      .select("symbol, asset_type, ts, close, volume")
-      .in("symbol", symbols)
-      .order("ts", { ascending: true })
-      .limit(400 * symbols.length),
+  // One query per symbol, newest-first, then reversed to ascending. A single
+  // .in() query with a shared LIMIT has two failure modes: ordered ascending
+  // it returns the *oldest* rows (so `price` was a months-stale bar), and
+  // ordered descending a symbol with a longer history starves the others of
+  // rows entirely. Symbol count on the Compare page is small.
+  const [barResults, { data: fundamentals }] = await Promise.all([
+    Promise.all(
+      symbols.map((symbol) =>
+        supabase
+          .from("historical_prices")
+          .select("symbol, asset_type, ts, close, volume")
+          .eq("symbol", symbol)
+          .order("ts", { ascending: false })
+          .limit(400),
+      ),
+    ),
     supabase.from("fundamentals").select("symbol, shares_outstanding, eps_ttm, dividends_ttm").in("symbol", symbols),
   ]);
 
@@ -46,11 +55,16 @@ export async function getComparisonData(symbols: string[]): Promise<ComparisonRo
   const barsBySymbol = new Map<string, { ts: string; close: number | null }[]>();
   const metaBySymbol = new Map<string, { assetType: string; volume: number | null }>();
 
-  for (const b of bars ?? []) {
-    const arr = barsBySymbol.get(b.symbol) ?? [];
-    arr.push({ ts: b.ts, close: b.close });
-    barsBySymbol.set(b.symbol, arr);
-    metaBySymbol.set(b.symbol, { assetType: b.asset_type, volume: b.volume });
+  for (const { data: rowsDesc } of barResults) {
+    if (!rowsDesc || rowsDesc.length === 0) continue;
+    const rows = rowsDesc.slice().reverse();
+    const symbol = rows[0].symbol;
+    barsBySymbol.set(
+      symbol,
+      rows.map((b) => ({ ts: b.ts, close: b.close })),
+    );
+    const newest = rowsDesc[0];
+    metaBySymbol.set(symbol, { assetType: newest.asset_type, volume: newest.volume });
   }
 
   return symbols
