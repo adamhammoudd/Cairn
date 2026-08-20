@@ -1,52 +1,52 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
-#/node_modules
-#/.pnp
-#.pnp.*
-#.yarn/*
-#!.yarn/patches
-#!.yarn/plugins
-#!.yarn/releases
-#!.yarn/versions
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
 
 # testing
-#/coverage
+/coverage
 
 # next.js
-#/.next/
-#/out/
+/.next/
+/out/
 
 # production
-#/build
+/build
 
 # misc
-#.DS_Store
-#*.pem
+.DS_Store
+*.pem
 
 # debug
-#npm-debug.log*
-#yarn-debug.log*
-#yarn-error.log*
-#.pnpm-debug.log*
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
 
 # env files (can opt-in for committing if needed)
-#.env.local
-#!.env.local.example
+.env.local
+!.env.local.example
 
 # vercel
-#.vercel
+.vercel
 
 # typescript
-#*.tsbuildinfo
-#next-env.d.ts
+*.tsbuildinfo
+next-env.d.ts
 
 # supabase CLI local cache
-#supabase/.temp/
+supabase/.temp/
 
 # local tooling, not app code
-#.mcp.json
-#graphify-out/
+.mcp.json
+graphify-out/
 
 # Generated test reports - a new timestamped file per run (see scripts/tests/
 # run-all.ts). The report is meant to be read by a human after a run, not
@@ -56,4 +56,4 @@ scripts/tests/report/
 # Sibling tooling/skill checkouts some contributors keep in-tree. Not part of
 # the app, but tsconfig's **/*.ts include would otherwise type-check them and
 # fail the build (also excluded in tsconfig.json).
-#external/
+external/
