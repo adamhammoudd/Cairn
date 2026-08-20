@@ -1,4 +1,4 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+## # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
 /node_modules
@@ -57,3 +57,4 @@ scripts/tests/report/
 # the app, but tsconfig's **/*.ts include would otherwise type-check them and
 # fail the build (also excluded in tsconfig.json).
 external/
+##
