@@ -563,7 +563,14 @@ export interface Database {
       };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      // Prefix search limited by DISTINCT symbol rather than by price row -
+      // see supabase/migrations/0021_search_symbols_distinct.sql.
+      search_symbols: {
+        Args: { prefix: string; max_results?: number };
+        Returns: { symbol: string; asset_type: string }[];
+      };
+    };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
   };

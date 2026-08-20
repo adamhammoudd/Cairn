@@ -20,19 +20,19 @@ export async function searchSymbols(query: string): Promise<SymbolSearchResult[]
 
   const supabase = await createClient();
 
-  const { data: prices } = await supabase
-    .from("historical_prices")
-    .select("symbol, asset_type")
-    .ilike("symbol", `${q}%`)
-    .order("symbol", { ascending: true })
-    .limit(200);
+  // Limited by DISTINCT symbol in SQL, not by price row. The previous version
+  // selected 200 price rows and de-duplicated in JS, so a symbol with a long
+  // history (AAPL: 509 rows) consumed the entire result set and every other
+  // match for the same prefix was invisible. Row counts grow daily, so a
+  // row-based limit was a bug with a timer on it.
+  const { data: prices } = await supabase.rpc("search_symbols", { prefix: q, max_results: 8 });
 
   const bySymbol = new Map<string, AssetType>();
   for (const p of prices ?? []) {
-    if (!bySymbol.has(p.symbol)) bySymbol.set(p.symbol, p.asset_type);
+    if (!bySymbol.has(p.symbol)) bySymbol.set(p.symbol, p.asset_type as AssetType);
   }
 
-  const symbols = Array.from(bySymbol.keys()).slice(0, 8);
+  const symbols = Array.from(bySymbol.keys());
   if (symbols.length === 0) return [];
 
   const { data: names } = await supabase.from("crypto_metrics").select("symbol, name").in("symbol", symbols);
