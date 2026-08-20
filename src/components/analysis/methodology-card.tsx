@@ -91,36 +91,11 @@ export function MethodologyCard({
       <div className={pad}>
         <p className="mb-3.5 text-[13px] leading-[1.65] text-primary text-pretty">{analysis.reasoning_text}</p>
 
-      {isTopLine ? (
-        <div className="mb-3 text-[12px] text-muted">
-          {analysis.sources.length} source{analysis.sources.length === 1 ? "" : "s"} ·{" "}
-          {analysis.sample_size} historical analog{analysis.sample_size === 1 ? "" : "s"}
-          <span className="text-dim"> · Full sources, analogs, and match detail on Premium</span>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div>
-            <div className="mb-2 text-[11px] tracking-[0.06em] text-muted uppercase">
-              Sources ({analysis.sources.length})
-            </div>
-            {analysis.sources.length === 0 ? (
-              <div className="text-[12.5px] text-dim">None cited</div>
-            ) : (
-              <ul className="flex flex-col gap-1.5">
-                {analysis.sources.map((s) => (
-                  <li key={s.id} className="text-[12.5px] text-muted">
-                    {s.url ? (
-                      <a href={s.url} target="_blank" rel="noreferrer" className="text-accent">
-                        {s.title}
-                      </a>
-                    ) : (
-                      <span className="text-accent">{s.title}</span>
-                    )}
-                    <span className="text-dim"> · {s.source_name}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
+        {isTopLine ? (
+          <div className="mb-3 text-[12px] text-muted">
+            {analysis.sources.length} source{analysis.sources.length === 1 ? "" : "s"} ·{" "}
+            {analysis.sample_size} historical analog{analysis.sample_size === 1 ? "" : "s"}
+            <span className="text-dim"> · Full sources, analogs, and match detail on Premium</span>
           </div>
         ) : (
           <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-4.5">
