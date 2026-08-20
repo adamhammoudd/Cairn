@@ -95,7 +95,7 @@ export function TopNav({ displayName, plan }: TopNavProps) {
   }
 
   useEffect(() => {
-    function onClickAway(e: MouseEvent) {
+    function onClickAway(e: MouseEvent | TouchEvent) {
       const target = e.target as Node;
       const inside =
         (navRef.current && navRef.current.contains(target)) ||
