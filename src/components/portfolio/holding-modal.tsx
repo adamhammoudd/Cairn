@@ -6,6 +6,7 @@ import { SubmitButton } from "@/components/auth/submit-button";
 import { SymbolTypeahead } from "@/components/symbol-typeahead";
 import type { Holding } from "@/lib/portfolio";
 import type { AssetType } from "@/lib/supabase/types";
+import { FIELD_LABEL } from "@/components/field-label";
 
 const ASSET_TYPES = ["equity", "etf", "crypto", "forex", "future"] as const;
 
@@ -154,7 +155,7 @@ export function HoldingModal({ holding, initialSymbol, onClose }: HoldingModalPr
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block">
-      <span className="mb-1.5 block text-[12.5px] text-muted">{label}</span>
+      <span className={FIELD_LABEL}>{label}</span>
       {children}
     </label>
   );
