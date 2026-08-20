@@ -60,6 +60,12 @@ export default function PrivacyPolicyPage() {
         <section>
           <h2>How the AI assistant handles your data</h2>
           <p>
+            <strong>Cairn uses artificial intelligence to generate analysis and chat content.</strong>{" "}
+            The research write-ups, the methodology explanations, and every assistant reply are
+            produced by a language model. They are not written or reviewed by a human before you
+            see them, and they can be wrong.
+          </p>
+          <p>
             Chat messages are processed by a model running on Cairn&apos;s own infrastructure. They
             are not sent to any external model provider and are not used to train any model.
           </p>
