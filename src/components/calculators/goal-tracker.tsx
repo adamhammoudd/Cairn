@@ -17,7 +17,7 @@ export function GoalTracker({ goals }: { goals: GoalProgress[] }) {
     <div className="flex flex-col gap-3.5">
       <CalcCard
         title="Goal tracking"
-        blurb="Set a target portfolio value and date. Progress and required annual return are computed from your current portfolio value — not a prediction of whether you'll get there."
+        blurb="Set a target portfolio value and date. Progress and required annual return are computed from your current portfolio value - not a prediction of whether you'll get there."
       >
         <form action={formAction} className="grid grid-cols-1 items-end gap-2.75 sm:grid-cols-2">
           <CalcField label="Goal name">
@@ -95,9 +95,9 @@ export function GoalTracker({ goals }: { goals: GoalProgress[] }) {
                   <div className="text-[11.5px] text-muted">Required annual return to hit the target on time</div>
                   <div className="mt-1.75 font-serif text-[22px] tabular-nums text-primary">
                     {g.yearsRemaining === null
-                      ? "—"
+                      ? "-"
                       : g.requiredAnnualReturnPct === null
-                        ? "—"
+                        ? "-"
                         : `${g.requiredAnnualReturnPct.toFixed(1)}%`}
                   </div>
                   <div className="mt-1.5 text-[11px] leading-relaxed text-dim text-pretty">
@@ -105,7 +105,7 @@ export function GoalTracker({ goals }: { goals: GoalProgress[] }) {
                       ? "Target date has passed."
                       : g.requiredAnnualReturnPct === null
                         ? "No current portfolio value to project from."
-                        : "Solved from compound growth on today's value. Not a forecast — just the rate the arithmetic requires."}
+                        : "Solved from compound growth on today's value. Not a forecast - just the rate the arithmetic requires."}
                   </div>
                 </div>
               </div>

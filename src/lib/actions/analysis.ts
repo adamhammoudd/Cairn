@@ -63,7 +63,7 @@ export interface AnalysisWithMethodology {
 type BareAnalysis = Omit<AnalysisWithMethodology, "sources" | "analogs">;
 
 // Shared by every surface that renders MethodologyCard (research page, daily
-// briefing, chat citations) — Phase 6 requires the same component with the
+// briefing, chat citations) - Phase 6 requires the same component with the
 // same data everywhere, so the enrichment query lives in exactly one place.
 async function attachMethodology(
   supabase: Awaited<ReturnType<typeof createClient>>,

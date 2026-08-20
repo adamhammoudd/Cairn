@@ -5,7 +5,7 @@
 --
 -- Cadence note: CoinGecko's free tier only tolerates a handful of history
 -- calls per invocation (see HISTORY_COINS_PER_RUN in the function), so this
--- runs every 2 hours rather than once daily — coverage across all 25 tracked
+-- runs every 2 hours rather than once daily - coverage across all 25 tracked
 -- coins fills in over several runs via the function's own staleness-first
 -- ordering, not in a single pass.
 

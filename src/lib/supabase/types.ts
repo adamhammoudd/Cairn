@@ -9,6 +9,9 @@ export type ScopeType = "market" | "sector" | "ticker";
 export type ConfidenceLevel = "low" | "medium" | "high";
 export type AnalysisStatus = "validated" | "rejected" | "pending_review";
 export type SubscriptionTier = "free" | "premium";
+/** Markets/Screener category filter, including the "all" pseudo-type. */
+export type AssetFilter = "all" | AssetType;
+export type AlertChannelName = "in_app" | "push" | "email";
 
 export interface Database {
   public: {
@@ -43,6 +46,11 @@ export interface Database {
           extended_hours: boolean;
           notification_thresholds: Record<string, unknown>;
           dashboard_layout: string[];
+          default_asset_filter: AssetFilter;
+          default_alert_channels: AlertChannelName[];
+          default_comparison_timeframe: ChartView;
+          assistant_expand_methodology: boolean;
+          assistant_use_portfolio_context: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -56,6 +64,11 @@ export interface Database {
           extended_hours?: boolean;
           notification_thresholds?: Record<string, unknown>;
           dashboard_layout?: string[];
+          default_asset_filter?: AssetFilter;
+          default_alert_channels?: AlertChannelName[];
+          default_comparison_timeframe?: ChartView;
+          assistant_expand_methodology?: boolean;
+          assistant_use_portfolio_context?: boolean;
         };
         Update: {
           default_chart_view?: ChartView;
@@ -66,6 +79,11 @@ export interface Database {
           extended_hours?: boolean;
           notification_thresholds?: Record<string, unknown>;
           dashboard_layout?: string[];
+          default_asset_filter?: AssetFilter;
+          default_alert_channels?: AlertChannelName[];
+          default_comparison_timeframe?: ChartView;
+          assistant_expand_methodology?: boolean;
+          assistant_use_portfolio_context?: boolean;
         };
         Relationships: [];
       };
@@ -286,9 +304,20 @@ export interface Database {
         Relationships: [];
       };
       chat_sessions: {
-        Row: { id: string; user_id: string; title: string | null; created_at: string };
+        Row: {
+          id: string;
+          user_id: string;
+          title: string | null;
+          created_at: string;
+          expand_methodology: boolean | null;
+          use_portfolio_context: boolean | null;
+        };
         Insert: { user_id: string; title?: string | null };
-        Update: { title?: string | null };
+        Update: {
+          title?: string | null;
+          expand_methodology?: boolean | null;
+          use_portfolio_context?: boolean | null;
+        };
         Relationships: [];
       };
       chat_messages: {
@@ -405,6 +434,8 @@ export interface Database {
           channels?: string[];
         };
         Update: {
+          alert_type?: string;
+          scope_value?: string;
           condition?: Record<string, unknown>;
           cooldown_seconds?: number;
           enabled?: boolean;

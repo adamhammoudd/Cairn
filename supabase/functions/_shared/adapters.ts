@@ -1,6 +1,6 @@
 // Adapter registry: each maps one provider's native response shape to a
 // common NormalizedItem[]. Re-weighting or disabling a provider needs no
-// code change — only adding a genuinely new response shape does.
+// code change - only adding a genuinely new response shape does.
 
 export interface NormalizedItem {
   external_id: string | null;
@@ -82,7 +82,7 @@ async function fetchSecEdgarFulltext(provider: ProviderRow): Promise<NormalizedI
     const cik = Array.isArray(s.ciks) ? (s.ciks as string[])[0] : "";
     return {
       external_id: hit._id,
-      title: `${s.form ?? "Filing"} — ${names || "SEC filer"}`,
+      title: `${s.form ?? "Filing"} - ${names || "SEC filer"}`,
       body: String(s.file_description ?? ""),
       url: cik && adsh ? `https://www.sec.gov/Archives/edgar/data/${cik}/${adsh}` : null,
       source_name: "SEC EDGAR",

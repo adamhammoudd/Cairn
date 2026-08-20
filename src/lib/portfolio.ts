@@ -141,7 +141,7 @@ export function computeTimelineSeries(holdings: Holding[], prices: PriceBar[], t
     dates = allDates.filter((d) => d >= cutoffStr);
   }
   if (timeframe === "1D") {
-    dates = allDates.slice(-2); // no intraday feed yet — most recent two closes only
+    dates = allDates.slice(-2); // no intraday feed yet - most recent two closes only
   }
 
   const cursor = new Map<string, number>(); // symbol -> pointer into its price array

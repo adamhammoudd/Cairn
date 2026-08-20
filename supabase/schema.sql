@@ -77,7 +77,7 @@ create table historical_prices (
 );
 create index on historical_prices (symbol, ts desc);
 
--- Fundamentals from SEC EDGAR XBRL. Raw reported figures only — market cap,
+-- Fundamentals from SEC EDGAR XBRL. Raw reported figures only - market cap,
 -- P/E, and dividend yield are derived at query time against historical_prices
 -- so they don't go stale as prices move.
 create table fundamentals (

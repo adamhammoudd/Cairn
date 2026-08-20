@@ -13,13 +13,17 @@ export async function POST(req: Request) {
   if (!sessionId || !message?.trim()) return new Response("Missing sessionId or message", { status: 400 });
 
   // Verify the session belongs to this user (RLS would also block the insert, this gives a clean 404)
-  const { data: session } = await supabase.from("chat_sessions").select("id, title").eq("id", sessionId).single();
+  const { data: session } = await supabase
+    .from("chat_sessions")
+    .select("id, title, use_portfolio_context")
+    .eq("id", sessionId)
+    .single();
   if (!session) return new Response("Chat session not found", { status: 404 });
 
   const gate = await checkChatUsageAllowed(user.id);
   if (!gate.allowed) return new Response(gate.message ?? "Daily chat limit reached.", { status: 429 });
 
-  // Fetched before the insert below, so it's prior turns only — runChatTurn
+  // Fetched before the insert below, so it's prior turns only - runChatTurn
   // builds the current turn's content itself (grounding context + question).
   const { data: priorHistory } = await supabase
     .from("chat_messages")
@@ -40,14 +44,25 @@ export async function POST(req: Request) {
   }
 
   // Hard gate: runChatTurn buffers the full model response, runs the scope
-  // guard, and rewrites it if flagged — nothing unvalidated leaves this call.
+  // guard, and rewrites it if flagged - nothing unvalidated leaves this call.
   // Compare to the old implementation, which streamed raw model output
   // straight to the client and only ran the guard afterward as a post-hoc,
   // non-blocking audit.
+  // Per-conversation override wins; null falls back to the account-level
+  // Settings > AI Assistant preference, which itself defaults to on.
+  const { data: settings } = await supabase
+    .from("user_settings")
+    .select("assistant_use_portfolio_context")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  const usePortfolioContext =
+    session.use_portfolio_context ?? settings?.assistant_use_portfolio_context ?? true;
+
   const result = await runChatTurn({
     userId: user.id,
     message,
     history: (priorHistory ?? []) as ChatHistoryMessage[],
+    usePortfolioContext,
   });
 
   await supabase.from("chat_messages").insert({
@@ -64,7 +79,7 @@ export async function POST(req: Request) {
 
   // The text below is already fully validated (and rewritten, if flagged) by
   // this point. Chunking is purely for a responsive typing-style UI via the
-  // client's existing incremental-render loop — it is not, and cannot be, a
+  // client's existing incremental-render loop - it is not, and cannot be, a
   // vector for unvalidated content, since nothing reaches this stream until
   // runChatTurn has already returned.
   const body = new ReadableStream({
@@ -74,7 +89,7 @@ export async function POST(req: Request) {
       }
       // Trailing sentinel carrying the analyses actually offered as context this
       // turn, so the client can render the same MethodologyCard used everywhere
-      // else — never parsed as visible text (stripped client-side before display).
+      // else - never parsed as visible text (stripped client-side before display).
       if (result.analysisIds.length > 0) {
         controller.enqueue(encoder.encode(` CAIRN_REFS:${JSON.stringify(result.analysisIds)}`));
       }

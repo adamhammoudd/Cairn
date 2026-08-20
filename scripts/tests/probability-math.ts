@@ -40,7 +40,7 @@ export function runProbabilityMathSuite(): SuiteResult {
     check(
       "wilson: stays within [0,1] at the extremes",
       wilsonInterval(0, 3).low >= 0 && wilsonInterval(3, 3).high <= 1,
-      "no out-of-range bounds for 0/3 or 3/3 — the reason Wilson is used over the normal approximation",
+      "no out-of-range bounds for 0/3 or 3/3 - the reason Wilson is used over the normal approximation",
     ),
   );
 
@@ -50,7 +50,7 @@ export function runProbabilityMathSuite(): SuiteResult {
     check(
       "wilson: interval widens as sample shrinks",
       wide.high - wide.low > narrow.high - narrow.low,
-      `n=4 width ${(wide.high - wide.low).toFixed(3)} > n=100 width ${(narrow.high - narrow.low).toFixed(3)} — ` +
+      `n=4 width ${(wide.high - wide.low).toFixed(3)} > n=100 width ${(narrow.high - narrow.low).toFixed(3)} - ` +
         "this is what makes honest uncertainty automatic",
     ),
   );
@@ -72,7 +72,7 @@ export function runProbabilityMathSuite(): SuiteResult {
     check(
       "3 unanimous analogs still report low confidence",
       unanimousTiny.confidence === "low",
-      `n=3, all cleared the threshold, confidence=${unanimousTiny.confidence} (must be low — small samples never earn high confidence)`,
+      `n=3, all cleared the threshold, confidence=${unanimousTiny.confidence} (must be low - small samples never earn high confidence)`,
       JSON.stringify(unanimousTiny),
     ),
   );
@@ -125,7 +125,7 @@ function main() {
   console.log(`Report written to ${reportPath}`);
   const failed = suite.cases.filter((c) => c.status === "fail");
   console.log(`${suite.cases.length - failed.length}/${suite.cases.length} passed.`);
-  for (const f of failed) console.error(`FAIL: ${f.name} — ${f.detail}`);
+  for (const f of failed) console.error(`FAIL: ${f.name} - ${f.detail}`);
   if (failed.length > 0) process.exit(1);
 }
 

@@ -1,5 +1,5 @@
 // Scheduled Edge Function: generates today's briefing for every user, mirroring
-// src/lib/ai/briefing.ts's deterministic templating (no LLM call here either —
+// src/lib/ai/briefing.ts's deterministic templating (no LLM call here either -
 // same reasoning: everything referenced already passed the scope guard when it
 // was generated in Phase 4, so templating it can't introduce a new claim).
 // The on-demand path in the app duplicates this logic in TypeScript rather than
@@ -71,7 +71,7 @@ Deno.serve(async (req) => {
       let summary: string;
       if (symbols.length === 0) {
         summary =
-          "No holdings or watchlist symbols yet — add some to get a personalized relevance ranking, or ask the assistant about any market/sector/ticker directly.";
+          "No holdings or watchlist symbols yet - add some to get a personalized relevance ranking, or ask the assistant about any market/sector/ticker directly.";
       } else if (analysisList.length === 0 && eventList.length === 0) {
         summary = `No new research or upcoming events for your ${symbols.length} tracked symbol${symbols.length === 1 ? "" : "s"} since your last briefing.`;
       } else {

@@ -21,7 +21,7 @@ export function BriefingCard({ briefing, analyses, analysisDepth }: BriefingCard
   return (
     <div className="flex flex-col gap-3.5">
       <div className="relative overflow-hidden rounded-card border border-line bg-gradient-to-b from-[#121212] to-panel p-5">
-        {/* Soft accent bloom, purely atmospheric — sits behind the content. */}
+        {/* Soft accent bloom, purely atmospheric - sits behind the content. */}
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0"
@@ -51,7 +51,7 @@ export function BriefingCard({ briefing, analyses, analysisDepth }: BriefingCard
 
         {!briefing ? (
           <p className="relative mt-3 text-[13px] text-muted text-pretty">
-            Generate one above and Cairn summarises the day across your holdings and watchlist — with sources on
+            Generate one above and Cairn summarises the day across your holdings and watchlist - with sources on
             every claim.
           </p>
         ) : (

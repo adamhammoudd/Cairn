@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Logo } from "@/components/logo";
+import { GlobalSearch } from "@/components/layout/global-search";
 import { NAV_ITEMS, isNavGroup, type NavGroup } from "@/lib/nav-items";
 import { signOut } from "@/lib/actions/auth";
 
@@ -36,8 +37,8 @@ const ACCOUNT_MENU = [
 export function TopNav({ displayName, plan }: TopNavProps) {
   const pathname = usePathname();
   // A group menu opens on hover *and* toggles on click. `pinned` is the
-  // click-opened group, `hovered` the pointer-opened one, and `suppressed`
-  // remembers a group the user clicked shut while the pointer is still on it —
+  // click-opened group, `hovered` the pointer-opened one, and `suppressed`-
+  // remembers a group the user clicked shut while the pointer is still on it -
   // without it, the hover that's still active would immediately reopen it.
   const [pinned, setPinned] = useState<string | null>(null);
   const [hovered, setHovered] = useState<string | null>(null);
@@ -47,20 +48,12 @@ export function TopNav({ displayName, plan }: TopNavProps) {
   const [lastPathname, setLastPathname] = useState(pathname);
   // Touch devices synthesise a mouseenter immediately before the click, so
   // hover-to-open would open the menu and the tap would toggle it straight back
-  // shut — the nav reads as dead under a finger. Only wire hover where there's
+  // shut - the nav reads as dead under a finger. Only wire hover where there's
   // a real pointer; touch gets plain tap-to-toggle.
   const [canHover, setCanHover] = useState(false);
   const navRef = useRef<HTMLElement>(null);
   const drawerRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    const mq = window.matchMedia("(hover: hover) and (pointer: fine)");
-    const sync = () => setCanHover(mq.matches);
-    sync();
-    mq.addEventListener("change", sync);
-    return () => mq.removeEventListener("change", sync);
-  }, []);
 
   const isGroupOpen = (label: string) => pinned === label || (hovered === label && suppressed !== label);
 
@@ -73,7 +66,7 @@ export function TopNav({ displayName, plan }: TopNavProps) {
   function toggleGroup(label: string) {
     if (isGroupOpen(label)) {
       setPinned(null);
-      setSuppressed(label); // pointer is still over it — don't let hover reopen
+      setSuppressed(label); // pointer is still over it - don't let hover reopen
     } else {
       setPinned(label);
       setSuppressed(null);
@@ -102,7 +95,7 @@ export function TopNav({ displayName, plan }: TopNavProps) {
   }
 
   useEffect(() => {
-    function onClickAway(e: Event) {
+    function onClickAway(e: MouseEvent) {
       const target = e.target as Node;
       const inside =
         (navRef.current && navRef.current.contains(target)) ||
@@ -325,7 +318,7 @@ export function TopNav({ displayName, plan }: TopNavProps) {
             onClick={() => setMobileNavOpen((prev) => !prev)}
             aria-label="Toggle navigation"
             aria-expanded={mobileNavOpen}
-            className={`flex h-8 w-8.5 shrink-0 touch-manipulation flex-col justify-center gap-1 rounded-lg border bg-transparent px-1.75 transition-colors duration-fast ease-standard hover:border-[#3A3A3A] min-[900px]:hidden ${
+            className={`flex h-8 w-8.5 shrink-0 flex-col justify-center gap-1 rounded-lg border bg-transparent px-1.75 transition-colors duration-fast ease-standard hover:border-[#3A3A3A] min-[900px]:hidden ${
               mobileNavOpen ? "border-accent" : "border-line"
             }`}
           >

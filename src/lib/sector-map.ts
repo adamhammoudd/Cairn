@@ -8,7 +8,7 @@ function opacityForChange(pct: number): number {
 }
 
 // Reuses the app's existing green/red hex convention (see ticker-chart.tsx)
-// rather than introducing a new palette — opacity scales with move size so
+// rather than introducing a new palette - opacity scales with move size so
 // bigger daily moves read as more saturated boxes.
 export function colorForChange(pct: number | null): string {
   if (pct === null) return "rgba(138, 138, 138, 0.25)"; // neutral border-line gray

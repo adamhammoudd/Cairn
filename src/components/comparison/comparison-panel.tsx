@@ -7,12 +7,13 @@ import { ComparisonCharts } from "@/components/comparison/comparison-charts";
 import { ComparisonTable } from "@/components/comparison/comparison-table";
 import { COMPARISON_COLORS, MAX_COMPARE, seriesFor, type ComparisonRow } from "@/lib/comparison";
 import { Sparkline } from "@/components/sparkline";
+import { SymbolTypeahead } from "@/components/symbol-typeahead";
 import type { ChartView } from "@/lib/supabase/types";
 
 const TIMEFRAMES: ChartView[] = ["1D", "1W", "1M", "3M", "1Y", "ALL"];
 
 function fmtCurrency(n: number | null) {
-  if (n === null) return "—";
+  if (n === null) return "-";
   return n.toLocaleString(undefined, { style: "currency", currency: "USD" });
 }
 
@@ -20,13 +21,16 @@ export function ComparisonPanel({
   universe,
   selected,
   rows,
+  defaultTimeframe = "3M",
 }: {
   universe: string[];
   selected: string[];
   rows: ComparisonRow[];
+  /** Settings > Display default; which timeframe the page opens on. */
+  defaultTimeframe?: ChartView;
 }) {
   const router = useRouter();
-  const [timeframe, setTimeframe] = useState<ChartView>("3M");
+  const [timeframe, setTimeframe] = useState<ChartView>(defaultTimeframe);
 
   function updateSelection(next: string[]) {
     router.push(next.length > 0 ? `/comparison?symbols=${next.join(",")}` : "/comparison");
@@ -130,7 +134,7 @@ export function ComparisonPanel({
                   <div className="mt-3 flex items-baseline gap-2.5">
                     <span className="font-serif text-[22px] tabular-nums text-primary">{fmtCurrency(row.price)}</span>
                     <span className={`text-[12px] tabular-nums ${row.changePct === null ? "text-muted" : positive ? "text-accent" : "text-negative"}`}>
-                      {row.changePct === null ? "—" : `${positive ? "+" : ""}${row.changePct.toFixed(2)}%`}
+                      {row.changePct === null ? "-" : `${positive ? "+" : ""}${row.changePct.toFixed(2)}%`}
                     </span>
                   </div>
 

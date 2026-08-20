@@ -23,7 +23,7 @@ const SPAM_PHRASES = [
   "whatsapp me",
 ];
 
-// No ML/third-party moderation — a small pattern heuristic consistent with
+// No ML/third-party moderation - a small pattern heuristic consistent with
 // this codebase's current maturity. Flagged posts stay visible to their
 // author but are hidden from the public feed; nothing here auto-deletes.
 export function isLikelySpam(body: string): boolean {

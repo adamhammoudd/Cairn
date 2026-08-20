@@ -9,7 +9,7 @@ import type { SectorMapNode } from "@/lib/sector-map";
 const MAX_TILES = 6;
 
 function fmtPct(pct: number | null) {
-  if (pct === null) return "—";
+  if (pct === null) return "-";
   return `${pct >= 0 ? "+" : ""}${pct.toFixed(2)}%`;
 }
 

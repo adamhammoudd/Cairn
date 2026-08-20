@@ -9,7 +9,7 @@ import type { Holding, HoldingMetrics } from "@/lib/portfolio";
 const COLS = "grid-cols-[1.5fr_0.7fr_0.9fr_1fr_1fr_1.1fr_96px_72px]";
 
 function fmtCurrency(n: number | null) {
-  if (n === null) return "—";
+  if (n === null) return "-";
   return n.toLocaleString(undefined, { style: "currency", currency: "USD" });
 }
 
@@ -21,7 +21,7 @@ export function HoldingsTable({
   metrics: HoldingMetrics[];
   /** 30-day close series per symbol, for the inline trend column. */
   sparklines?: Record<string, number[]>;
-  /** Slotted between the page header and the table — the mock puts the stat
+  /** Slotted between the page header and the table - the mock puts the stat
       cards and value chart there, and the header owns this component's
       "Add holding" modal state, so they render through rather than around. */
   children?: ReactNode;
@@ -202,7 +202,7 @@ export function HoldingsTable({
 
                     <div className="flex flex-col gap-0.5">
                       <span className={`text-[12.5px] tabular-nums ${positive ? "text-accent" : "text-negative"}`}>
-                        {m.gain === null ? "—" : `${positive ? "+" : ""}${fmtCurrency(m.gain)}`}
+                        {m.gain === null ? "-" : `${positive ? "+" : ""}${fmtCurrency(m.gain)}`}
                       </span>
                       <span
                         className={`text-[11px] tabular-nums opacity-70 ${positive ? "text-accent" : "text-negative"}`}

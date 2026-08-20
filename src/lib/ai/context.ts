@@ -3,7 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/types";
 
 // Same tracked list as supabase/functions/_shared/tagging.ts (kept in sync
-// manually — one runs in Deno, the other in Node, no shared module between them).
+// manually - one runs in Deno, the other in Node, no shared module between them).
 const TRACKED: { symbol: string; aliases: string[] }[] = [
   { symbol: "AAPL", aliases: ["apple"] },
   { symbol: "MSFT", aliases: ["microsoft"] },
@@ -29,12 +29,12 @@ export interface ChatContext {
   relevantSymbols: string[];
 }
 
-// Relevance ranking only — never used to shape what's said, only which stored
+// Relevance ranking only - never used to shape what's said, only which stored
 // analyses are worth surfacing. Shared by chat context and the daily briefing.
 //
 // `client` is optional and only meant for contexts with no Next.js request
 // scope to grab the request-scoped client from (the Section 7 test suite,
-// which calls runChatTurn directly) — every real request path leaves it
+// which calls runChatTurn directly) - every real request path leaves it
 // unset and gets the normal request-scoped client.
 export async function getUserSymbols(userId: string, client?: SupabaseClient<Database>): Promise<string[]> {
   const supabase = client ?? (await createClient());
@@ -59,11 +59,18 @@ export async function buildChatContext(
   userMessage: string,
   userId: string,
   client?: SupabaseClient<Database>,
+  // Settings > AI Assistant "Portfolio context", overridable per conversation.
+  // Off means holdings and watchlists are never read for relevance -- an
+  // unprompted question then falls back to the newest validated analyses and
+  // news rather than the user's own symbols. This only changes WHICH stored
+  // analyses surface; it cannot change what the assistant is allowed to say,
+  // which the scope guard enforces server-side either way.
+  usePortfolioContext = true,
 ): Promise<ChatContext> {
   const supabase = client ?? (await createClient());
 
   const mentioned = detectTickers(userMessage);
-  const portfolioSymbols = await getUserSymbols(userId, client);
+  const portfolioSymbols = usePortfolioContext ? await getUserSymbols(userId, client) : [];
 
   // explicit mention in the message wins; otherwise fall back to portfolio symbols for relevance
   const relevantSymbols = mentioned.length > 0 ? mentioned : portfolioSymbols;

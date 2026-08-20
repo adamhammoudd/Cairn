@@ -3,7 +3,7 @@
 import { useActionState, useEffect, useRef, useState } from "react";
 import { addHolding, updateHolding } from "@/lib/actions/holdings";
 import { SubmitButton } from "@/components/auth/submit-button";
-import { SymbolTypeahead } from "@/components/portfolio/symbol-typeahead";
+import { SymbolTypeahead } from "@/components/symbol-typeahead";
 import type { Holding } from "@/lib/portfolio";
 import type { AssetType } from "@/lib/supabase/types";
 

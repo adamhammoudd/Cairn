@@ -2,7 +2,7 @@
 // split dates from Nasdaq's public calendar API into calendar_events.
 //
 // Keyless, but it is an undocumented public endpoint rather than a contracted
-// API — it rejects requests without a browser-like User-Agent and could change
+// API - it rejects requests without a browser-like User-Agent and could change
 // shape without notice, so every row is defensively parsed and a failed day is
 // reported rather than aborting the run.
 //
@@ -61,7 +61,7 @@ async function fetchEarnings(date: string): Promise<EventRow[]> {
       symbol: r.symbol.toUpperCase(),
       event_type: "earnings",
       event_date: date,
-      title: `${r.name ?? r.symbol} — quarterly earnings`,
+      title: `${r.name ?? r.symbol} - quarterly earnings`,
       metadata: { source: "nasdaq", eps_forecast: r.epsForecast ?? null, time: r.time ?? null },
     }));
 }
@@ -76,7 +76,7 @@ async function fetchDividends(date: string): Promise<EventRow[]> {
       symbol: r.symbol.toUpperCase(),
       event_type: "dividend",
       event_date: normalizeDate(r.dividend_Ex_Date, date),
-      title: `${r.companyName ?? r.symbol} — ex-dividend`,
+      title: `${r.companyName ?? r.symbol} - ex-dividend`,
       metadata: { source: "nasdaq", rate: r.dividend_Rate ?? null, payment_date: r.payment_Date ?? null },
     }));
 }
@@ -91,7 +91,7 @@ async function fetchSplits(): Promise<EventRow[]> {
       symbol: r.symbol.toUpperCase(),
       event_type: "split",
       event_date: normalizeDate(r.executionDate, today),
-      title: `${r.name ?? r.symbol} — ${r.ratio ?? "stock"} split effective`,
+      title: `${r.name ?? r.symbol} - ${r.ratio ?? "stock"} split effective`,
       metadata: { source: "nasdaq", ratio: r.ratio ?? null },
     }))
     .filter((e) => e.event_date >= today);
@@ -105,7 +105,7 @@ Deno.serve(async (req) => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
 
-  // Only track symbols the app actually has price history for — Nasdaq returns
+  // Only track symbols the app actually has price history for - Nasdaq returns
   // hundreds of names per day and the calendar is only useful next to data we hold.
   const { data: providers } = await supabase
     .from("data_providers")

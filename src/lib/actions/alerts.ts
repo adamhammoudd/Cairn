@@ -21,6 +21,37 @@ export async function listAlerts(): Promise<Alert[]> {
   return (data ?? []) as unknown as Alert[];
 }
 
+// Each alert type carries its own condition shape -- build it explicitly
+// rather than dumping the whole form, so a stray field can't end up stored
+// as part of the condition and silently change how it evaluates. Shared by
+// create and update so an edited alert is validated exactly like a new one.
+function buildCondition(alertType: AlertType, formData: FormData): Record<string, unknown> | string {
+  switch (alertType) {
+    case "price":
+    case "pct_change": {
+      const value = Number(formData.get("value"));
+      if (!Number.isFinite(value)) return "Enter a numeric threshold.";
+      return { comparator: String(formData.get("comparator") ?? "above"), value };
+    }
+    case "volume_spike": {
+      const multiplier = Number(formData.get("multiplier"));
+      if (!Number.isFinite(multiplier) || multiplier <= 0) return "Enter a volume multiplier above 0.";
+      return { multiplier };
+    }
+    case "technical_crossover": {
+      const fastDays = Number(formData.get("fastDays"));
+      const slowDays = Number(formData.get("slowDays"));
+      if (!Number.isFinite(fastDays) || !Number.isFinite(slowDays)) return "Enter both SMA windows.";
+      if (fastDays >= slowDays) return "The fast SMA window must be shorter than the slow one.";
+      return { fastDays, slowDays, direction: String(formData.get("direction") ?? "above") };
+    }
+    case "ai_confidence":
+      return { minLevel: String(formData.get("minLevel") ?? "medium") };
+    default:
+      return "Unknown alert type.";
+  }
+}
+
 export async function createAlert(_prevState: string | null, formData: FormData) {
   const supabase = await createClient();
   const {
@@ -30,41 +61,10 @@ export async function createAlert(_prevState: string | null, formData: FormData)
 
   const alertType = String(formData.get("alert_type") ?? "") as AlertType;
   const scopeValue = String(formData.get("scope_value") ?? "").trim().toUpperCase();
-  if (!scopeValue) return "Enter a ticker or sector to watch.";
+  if (!scopeValue) return "Pick a ticker or sector to watch.";
 
-  // Each alert type carries its own condition shape — build it explicitly
-  // rather than dumping the whole form, so a stray field can't end up stored
-  // as part of the condition and silently change how it evaluates.
-  let condition: Record<string, unknown>;
-  switch (alertType) {
-    case "price":
-    case "pct_change": {
-      const value = Number(formData.get("value"));
-      if (!Number.isFinite(value)) return "Enter a numeric threshold.";
-      condition = { comparator: String(formData.get("comparator") ?? "above"), value };
-      break;
-    }
-    case "volume_spike": {
-      const multiplier = Number(formData.get("multiplier"));
-      if (!Number.isFinite(multiplier) || multiplier <= 0) return "Enter a volume multiplier above 0.";
-      condition = { multiplier };
-      break;
-    }
-    case "technical_crossover": {
-      const fastDays = Number(formData.get("fastDays"));
-      const slowDays = Number(formData.get("slowDays"));
-      if (!Number.isFinite(fastDays) || !Number.isFinite(slowDays)) return "Enter both SMA windows.";
-      if (fastDays >= slowDays) return "The fast SMA window must be shorter than the slow one.";
-      condition = { fastDays, slowDays, direction: String(formData.get("direction") ?? "above") };
-      break;
-    }
-    case "ai_confidence": {
-      condition = { minLevel: String(formData.get("minLevel") ?? "medium") };
-      break;
-    }
-    default:
-      return "Unknown alert type.";
-  }
+  const condition = buildCondition(alertType, formData);
+  if (typeof condition === "string") return condition;
 
   const channels = (formData.getAll("channels") as string[]).filter(Boolean);
 
@@ -76,6 +76,47 @@ export async function createAlert(_prevState: string | null, formData: FormData)
     cooldown_seconds: Number(formData.get("cooldown_seconds")) || 3600,
     channels: channels.length > 0 ? channels : ["in_app"],
   });
+  if (error) return error.message;
+
+  revalidatePath("/alerts");
+  return "saved";
+}
+
+// Editing an alert in place: type, threshold, cooldown and delivery channels
+// are all rewritten together. last_triggered_at is deliberately cleared --
+// the stored timestamp gates the cooldown for the *old* condition, and
+// leaving it would keep a freshly-edited alert silent for up to a day.
+export async function updateAlert(_prevState: string | null, formData: FormData) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const id = String(formData.get("id") ?? "");
+  if (!id) return "Missing alert id.";
+
+  const alertType = String(formData.get("alert_type") ?? "") as AlertType;
+  const scopeValue = String(formData.get("scope_value") ?? "").trim().toUpperCase();
+  if (!scopeValue) return "Pick a ticker or sector to watch.";
+
+  const condition = buildCondition(alertType, formData);
+  if (typeof condition === "string") return condition;
+
+  const channels = (formData.getAll("channels") as string[]).filter(Boolean);
+
+  const { error } = await supabase
+    .from("alerts")
+    .update({
+      alert_type: alertType,
+      scope_value: scopeValue,
+      condition,
+      cooldown_seconds: Number(formData.get("cooldown_seconds")) || 3600,
+      channels: channels.length > 0 ? channels : ["in_app"],
+      last_triggered_at: null,
+    })
+    .eq("id", id)
+    .eq("user_id", user.id);
   if (error) return error.message;
 
   revalidatePath("/alerts");

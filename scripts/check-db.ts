@@ -1,4 +1,4 @@
-// Verifies the database actually has everything the app expects — most
+// Verifies the database actually has everything the app expects - most
 // usefully, whether the pending migrations have been applied. Run with:
 //   npx tsx scripts/check-db.ts
 //
@@ -45,7 +45,7 @@ async function main() {
     });
   }
 
-  // Columns added by 0013 — a missing one breaks scope-guard audit logging.
+  // Columns added by 0013 - a missing one breaks scope-guard audit logging.
   const { error: guardColsError } = await admin
     .from("ai_scope_guard_log")
     .select("corrected_output, source_surface")
@@ -57,7 +57,7 @@ async function main() {
     fix: guardColsError ? "supabase/migrations/0013_scope_guard_hardening.sql" : undefined,
   });
 
-  // Column added by 0015 — without it, test runs pollute the compliance audit trail.
+  // Column added by 0015 - without it, test runs pollute the compliance audit trail.
   const { error: isTestError } = await admin.from("ai_scope_guard_log").select("is_test").limit(1);
   checks.push({
     label: "ai_scope_guard_log.is_test",
@@ -82,10 +82,10 @@ async function main() {
   let failed = 0;
   for (const c of checks) {
     if (c.ok) {
-      console.log(`  OK   ${c.label} — ${c.detail}`);
+      console.log(`  OK   ${c.label} - ${c.detail}`);
     } else {
       failed++;
-      console.error(`  FAIL ${c.label} — ${c.detail}`);
+      console.error(`  FAIL ${c.label} - ${c.detail}`);
       if (c.fix) console.error(`       fix: run ${c.fix}`);
     }
   }

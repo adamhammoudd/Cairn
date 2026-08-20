@@ -11,7 +11,7 @@ interface SparklineProps {
 // ResponsiveContainer is heavy at that multiplicity.
 export function Sparkline({ values, positive, className = "h-7 w-[90px]", delayMs = 0 }: SparklineProps) {
   if (values.length < 2) {
-    return <div className={`${className} text-[11px] text-dim`}>—</div>;
+    return <div className={`${className} text-[11px] text-dim`}>-</div>;
   }
 
   const min = Math.min(...values);

@@ -105,7 +105,7 @@ export default async function PortfolioPage() {
         </div>
       </HoldingsTable>
 
-      {/* Not in the mock, which stops at the holdings table — kept below it so the
+      {/* Not in the mock, which stops at the holdings table - kept below it so the
           allocation breakdown stays available without displacing the chart. */}
       <div className="mt-3.5">
         <AllocationPanel byDimension={allocationByDimension} />

@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { fetchIntradaySeries, isMarketDataProviderConfigured } from "@/lib/market-data/provider";
 import type { TimelinePoint } from "@/lib/portfolio";
 
-// 1D and 1W are the only ranges where a daily-close series is visibly wrong —
+// 1D and 1W are the only ranges where a daily-close series is visibly wrong -
 // one or five points instead of a curve. Both are served straight from the
 // provider rather than the daily `historical_prices` store, so the shape of
 // the data matches the label on the button.

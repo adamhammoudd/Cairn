@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { ComparisonRow } from "@/lib/comparison";
 
 // The app's tracked-symbol universe lives on data_providers.config.symbols
-// (jsonb array on the enabled market_data provider row) — there's no
+// (jsonb array on the enabled market_data provider row) - there's no
 // separate tickers/assets table. Shared by the Comparison View (symbol
 // picker) and the Sector Heat Map (plot universe).
 export async function getTrackedSymbols(): Promise<string[]> {
@@ -25,7 +25,7 @@ export async function getTrackedSymbols(): Promise<string[]> {
 }
 
 // Derives marketCap/pe/dividendYield the same way runScreen() and
-// ticker-workspace.tsx already do independently — accepted small
+// ticker-workspace.tsx already do independently - accepted small
 // duplication, the formula is already computed in three places in this
 // codebase.
 export async function getComparisonData(symbols: string[]): Promise<ComparisonRow[]> {
@@ -66,6 +66,7 @@ export async function getComparisonData(symbols: string[]): Promise<ComparisonRo
     const newest = rowsDesc[0];
     metaBySymbol.set(symbol, { assetType: newest.asset_type, volume: newest.volume });
   }
+  for (const arr of barsBySymbol.values()) arr.reverse(); // back to oldest-first
 
   return symbols
     .map((symbol) => {

@@ -1,12 +1,12 @@
 # Cairn Terms of Service
 
-> **DRAFT — NOT LEGAL ADVICE.** This is a first-pass, non-lawyer draft written to establish
+> **DRAFT - NOT LEGAL ADVICE.** This is a first-pass, non-lawyer draft written to establish
 > structure and scope, not a final document. Do not treat this as launch-ready. It must be
 > reviewed and revised by a licensed attorney qualified in the relevant jurisdiction(s) before
 > Cairn is made available to real users, and re-reviewed whenever the AI analysis engine's scope
 > or output changes materially.
 
-_Last drafted: Phase 6 build. Effective date: not set — do not publish until legal review is complete._
+_Last drafted: Phase 6 build. Effective date: not set - do not publish until legal review is complete._
 
 ## 1. What Cairn is
 
@@ -21,13 +21,13 @@ patterns").
 - **Not a broker-dealer.** Cairn does not execute trades, hold custody of assets, or connect to
   brokerage accounts. Holdings are self-reported by the user for tracking purposes only.
 - **Not investment advice.** Every output from the AI analysis engine is informational and
-  analytical, scoped to a market, sector, or ticker — never to a specific user's position,
+  analytical, scoped to a market, sector, or ticker - never to a specific user's position,
   portfolio, or personal financial situation. Cairn's AI is built with a technical guard that
   rejects any generated output resolving to a personalized directive (e.g. "you should buy/sell/
-  hold"), but this guard is a best-effort filter, not a guarantee — see Section 5.
+  hold"), but this guard is a best-effort filter, not a guarantee - see Section 5.
 - **Not a registered investment adviser.** Cairn does not provide personalized investment advice
   and is not held out as doing so. _[Legal review required: confirm this positioning holds up
-  under the jurisdiction(s) Cairn operates in — see the jurisdictional checklist.]_
+  under the jurisdiction(s) Cairn operates in - see the jurisdictional checklist.]_
 
 ## 3. Eligibility and accounts
 
@@ -42,16 +42,16 @@ Cairn stores this data to provide the service (portfolio calculations, chat hist
 relevance ranking for the daily briefing) and does not sell it. See the Privacy Policy for full
 detail.
 
-## 5. AI analysis engine — specific disclosures
+## 5. AI analysis engine - specific disclosures
 
 - Every probability output is accompanied by its underlying sources (news items) and historical
-  analog(s) it was pattern-matched against — never a bare number. This is a structural property
+  analog(s) it was pattern-matched against - never a bare number. This is a structural property
   of the product, not just a policy.
 - Outputs express confidence/uncertainty (confidence level, sample size of historical analogs) and
   low-confidence outputs are flagged explicitly rather than hidden.
 - A server-side scope-guard rejects/logs any generated output that resolves to a personal
   directive before it is ever stored or shown to a user. This is a technical control, and like any
-  automated filter it is not infallible — users should not treat the absence of a rejection as a
+  automated filter it is not infallible - users should not treat the absence of a rejection as a
   guarantee of suitability for their situation.
 - The AI analysis engine may be wrong, outdated, or based on an incomplete news/historical sample.
   Users should independently verify sources and consult a licensed financial advisor before making
@@ -59,7 +59,7 @@ detail.
 
 ## 6. Subscription and billing
 
-_[Placeholder — Phase 12 introduces paid tiers via Stripe. This section needs to be written once
+_[Placeholder - Phase 12 introduces paid tiers via Stripe. This section needs to be written once
 that phase's terms (refunds, cancellation, tier changes, failed-payment downgrade behavior) are
 finalized, and reviewed alongside it.]_
 
@@ -67,7 +67,7 @@ finalized, and reviewed alongside it.]_
 
 _[Standard SaaS disclaimer language + limitation-of-liability clause to be drafted by counsel.
 Given the AI analysis engine's regulatory profile, this section carries more weight than it would
-for a pure news-aggregation product — do not reuse generic boilerplate without review.]_
+for a pure news-aggregation product - do not reuse generic boilerplate without review.]_
 
 ## 8. Termination
 
@@ -76,7 +76,7 @@ account and data at any time via Settings → Export & delete (Phase 1).
 
 ## 9. Governing law and disputes
 
-_[Placeholder — depends on the jurisdiction(s) Cairn is launched in; see the jurisdictional
+_[Placeholder - depends on the jurisdiction(s) Cairn is launched in; see the jurisdictional
 checklist for open questions that affect this section specifically.]_
 
 ## 10. Changes to these terms

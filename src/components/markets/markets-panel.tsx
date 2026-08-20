@@ -2,48 +2,44 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { ASSET_TYPE_LABEL, ASSET_TYPE_TAG_CLASS, ASSET_TYPES, formatVolume, type ScreenerRow } from "@/lib/screener";
-import { assetName } from "@/lib/asset-names";
+import { ASSET_TYPE_LABEL, ASSET_TYPES, type ScreenerRow } from "@/lib/screener";
 import type { CryptoRow } from "@/lib/crypto";
-import { CryptoTable } from "@/components/crypto/crypto-table";
+import { TickerList } from "@/components/markets/ticker-list";
+import type { AssetFilter } from "@/lib/supabase/types";
 
 interface MarketsPanelProps {
   rows: ScreenerRow[];
   cryptoRows: CryptoRow[];
+  /** Settings › Display default; which category the page opens on. */
+  defaultFilter?: AssetFilter;
 }
 
 const TABS = ["all", ...ASSET_TYPES] as const;
 
-function initialsOf(symbol: string) {
-  return symbol.slice(0, 2).toUpperCase();
-}
-
-function trendPoints(values: number[], width: number, height: number) {
-  if (values.length < 2) return "";
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  const span = max - min || 1;
-  return values
-    .map((v, i) => {
-      const x = (i / (values.length - 1)) * width;
-      const y = height - ((v - min) / span) * height;
-      return `${x.toFixed(1)},${y.toFixed(1)}`;
-    })
-    .join(" ");
-}
-
-export function MarketsPanel({ rows, cryptoRows }: MarketsPanelProps) {
-  const [tab, setTab] = useState<(typeof TABS)[number]>("all");
+export function MarketsPanel({ rows, cryptoRows, defaultFilter = "all" }: MarketsPanelProps) {
+  const [tab, setTab] = useState<AssetFilter>(defaultFilter);
   const [query, setQuery] = useState("");
 
-  // "all" excludes crypto's generic screener row so it isn't listed twice --
-  // crypto gets its own richer table (rank, 24h change, supply) below.
+  // crypto_metrics carries the display name and a market cap the fundamentals
+  // table can't derive (no shares outstanding for a coin). Merged in here so
+  // crypto rows keep that detail while still rendering through the one list.
+  const { names, marketCaps } = useMemo(() => {
+    const names: Record<string, string> = {};
+    const marketCaps: Record<string, number | null> = {};
+    for (const c of cryptoRows) {
+      names[c.symbol] = c.name;
+      marketCaps[c.symbol] = c.marketCap;
+    }
+    return { names, marketCaps };
+  }, [cryptoRows]);
+
   const filtered = useMemo(() => {
-    if (tab === "crypto") return [];
-    const base = tab === "all" ? rows.filter((r) => r.assetType !== "crypto") : rows.filter((r) => r.assetType === tab);
+    const base = tab === "all" ? rows : rows.filter((r) => r.assetType === tab);
     const q = query.trim().toUpperCase();
-    return q ? base.filter((r) => r.symbol.toUpperCase().includes(q)) : base;
-  }, [rows, tab, query]);
+    return q
+      ? base.filter((r) => r.symbol.toUpperCase().includes(q) || (names[r.symbol] ?? "").toUpperCase().includes(q))
+      : base;
+  }, [rows, tab, query, names]);
 
   const activeFilterLabel = tab === "all" ? "the full universe" : `${tab} symbols`;
 
@@ -129,9 +125,7 @@ export function MarketsPanel({ rows, cryptoRows }: MarketsPanelProps) {
                       </div>
                       <div className="min-w-0">
                         <div className="text-[14px] text-primary">{r.symbol}</div>
-                        <div className="truncate text-[11px] text-muted">
-                          {assetName(r.symbol, ASSET_TYPE_LABEL[r.assetType] ?? r.assetType)}
-                        </div>
+                        <div className="truncate text-[11px] text-muted capitalize">{r.assetType}</div>
                       </div>
                     </div>
                     <div className="shrink-0 text-right">
@@ -175,12 +169,7 @@ export function MarketsPanel({ rows, cryptoRows }: MarketsPanelProps) {
                   >
                     {initialsOf(r.symbol)}
                   </div>
-                  <div className="min-w-0">
-                    <div className="text-[13px] text-primary">{r.symbol}</div>
-                    <div className="truncate text-[11px] text-muted">
-                      {assetName(r.symbol, ASSET_TYPE_LABEL[r.assetType] ?? r.assetType)}
-                    </div>
-                  </div>
+                  <div className="min-w-0 text-sm text-primary">{r.symbol}</div>
                 </div>
                 <div className="hidden sm:block">
                   <span
@@ -219,40 +208,10 @@ export function MarketsPanel({ rows, cryptoRows }: MarketsPanelProps) {
                   )}
                 </div>
               </Link>
-            );
-          })}
-          {filtered.length === 0 && (
-            <div className="px-6 py-16 text-center">
-              <div className="mb-4.5 flex items-end justify-center gap-1.25">
-                <span className="h-2.25 w-8.5 rounded-full bg-[#1E1E1E]" />
-                <span className="h-2.25 w-6.5 rounded-full bg-[#1E1E1E]" />
-                <span className="h-2.25 w-4.5 rounded-full bg-[#262626]" />
-              </div>
-              <div className="font-serif text-[21px] text-primary">No marker here</div>
-              <p className="mx-auto mt-2 mb-4.5 max-w-[400px] text-[13px] text-muted text-pretty">
-                {query
-                  ? `Nothing matches "${query}" in ${activeFilterLabel}. Try another asset type, or search the full universe.`
-                  : `Nothing tracked yet in ${activeFilterLabel}.`}
-              </p>
-              <div className="flex flex-wrap justify-center gap-2">
-                <button
-                  type="button"
-                  onClick={clearFilters}
-                  className="rounded-[10px] bg-gradient-to-br from-accent-light to-accent-dark px-4 py-2.25 text-[12.5px] font-semibold text-canvas"
-                >
-                  Clear filters
-                </button>
-                <Link
-                  href="/assistant"
-                  className="rounded-[10px] border border-line px-4 py-2.25 text-[12.5px] text-primary transition-colors duration-base ease-standard hover:border-[#3A3A3A]"
-                >
-                  Ask the assistant
-                </Link>
-              </div>
             </div>
-          )}
-        </div>
-      )}
+          </div>
+        }
+      />
     </div>
   );
 }

@@ -17,7 +17,7 @@ export function BillingPanel({ summary }: { summary: UsageSummary }) {
       <div>
         <h2 className="font-serif text-2xl text-primary">Billing</h2>
         <p className="mt-1 text-[13px] text-muted">
-          No real payment processor is wired up yet — this is a pre-launch build. Switching plans below is
+          No real payment processor is wired up yet - this is a pre-launch build. Switching plans below is
           free and instant; it exists so AI-tier gating can be tested before real billing goes live.
         </p>
       </div>

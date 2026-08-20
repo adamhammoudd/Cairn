@@ -1,15 +1,15 @@
 // Free-tier market data provider for the ingestion layer. This is a fetch
-// client only — it does not write to Supabase itself. Historical prices
+// client only - it does not write to Supabase itself. Historical prices
 // still come from `historical_prices` (see lib/actions/screener.ts,
 // lib/actions/ticker.ts); this is the documented, ready-to-wire path for
 // keeping that table fresh, gated behind an env var so the app runs fine
 // against seeded/existing data with no key configured.
 //
-// Provider: Twelve Data free tier (twelvedata.com) — 800 requests/day,
+// Provider: Twelve Data free tier (twelvedata.com) - 800 requests/day,
 // 8 requests/minute, covers equities/ETFs/forex/crypto on one API, which is
 // why it's picked over stitching together multiple single-asset-class free
 // APIs. LEGAL: flagged for cfo-legal-advisor ToS review before any
-// production ingestion job is scheduled against it — this module is not
+// production ingestion job is scheduled against it - this module is not
 // wired into a cron/edge function yet.
 
 export interface QuoteResult {
@@ -56,7 +56,7 @@ export interface IntradayBar {
 }
 
 // Minute-resolution history for the 1D/1W chart ranges. `historical_prices`
-// stores one row per day, so intraday can only come from the provider — with
+// stores one row per day, so intraday can only come from the provider - with
 // no key configured this returns null and callers fall back to daily closes.
 export async function fetchIntradaySeries(symbol: string, interval: "1min" | "15min", outputsize: number): Promise<IntradayBar[] | null> {
   const apiKey = process.env.TWELVE_DATA_API_KEY;

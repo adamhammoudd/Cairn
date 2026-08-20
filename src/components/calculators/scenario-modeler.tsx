@@ -7,7 +7,7 @@ import { CALC_INPUT, CalcCard, CalcField, CalcStat } from "@/components/calculat
 const COLS = "grid-cols-[0.8fr_0.9fr_0.8fr_0.9fr_0.9fr_0.9fr]";
 
 function fmtCurrency(n: number | null) {
-  if (n === null) return "—";
+  if (n === null) return "-";
   return n.toLocaleString(undefined, { style: "currency", currency: "USD" });
 }
 
