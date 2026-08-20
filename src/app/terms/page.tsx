@@ -49,7 +49,53 @@ export default function TermsofServicePage() {
           </p>
         </section>
         <section>
-          <h2>6–10. Billing, liability, termination, governing law, changes</h2>
+          <h2>6. User-submitted content and takedown</h2>
+          <p>
+            Cairn hosts user-submitted text in per-ticker discussion threads. You retain ownership
+            of what you post and grant Cairn a non-exclusive licence to display it within the
+            service. You are responsible for what you submit, and you must not post content that
+            is unlawful, infringes someone else&apos;s rights, or is intended to manipulate the
+            price of a security.
+          </p>
+          <p>
+            If you believe content on Cairn infringes your rights or otherwise breaches these
+            terms, send us notice identifying the content, its location, and the basis of your
+            complaint. We may remove or restrict access to user-submitted content that we
+            reasonably believe breaches these terms, and we may suspend accounts that repeatedly
+            do so. Current discussion features accept text only; if file or image uploads are
+            added later, this clause is intended to cover them as well.
+          </p>
+        </section>
+        <section>
+          <h2>7. Dispute resolution and arbitration</h2>
+          <p>
+            <strong>Draft clause - specifically flagged for legal review.</strong> The intent is
+            that disputes arising out of these terms or your use of Cairn are resolved by binding
+            individual arbitration rather than in court, and that claims are brought individually
+            rather than as part of a class or representative action, with a small-claims carve-out
+            and an opt-out window for users who prefer not to be bound by it.
+          </p>
+          <p>
+            Enforceability of arbitration and class-waiver clauses varies substantially by
+            jurisdiction, and a clause of this kind can read as sound while being unenforceable or
+            void where a user actually lives. The seat, governing rules, allocation of fees, and
+            the opt-out mechanism are deliberately left unspecified here rather than guessed at.
+            This clause must be drafted or reviewed by a qualified lawyer for each target market
+            before Cairn relies on it.
+          </p>
+        </section>
+        <section>
+          <h2>8. Use of AI</h2>
+          <p>
+            Cairn uses artificial intelligence to generate analysis and chat content. Probability
+            figures are computed in code from the historical records shown alongside them; the
+            model writes the explanatory text around those numbers. AI output can be wrong,
+            incomplete, or based on a small sample, and it is never a personal recommendation. See
+            the Privacy Policy for what data is involved.
+          </p>
+        </section>
+        <section>
+          <h2>9–12. Billing, liability, termination, governing law, changes</h2>
           <p>Placeholders pending legal review - see the full draft in the repository.</p>
         </section>
     </LegalShell>

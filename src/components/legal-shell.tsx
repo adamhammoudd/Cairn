@@ -8,11 +8,17 @@ export function LegalShell({
   eyebrow,
   title,
   updated,
+  // The draft banner belongs on the policies awaiting legal review. The
+  // accessibility statement is a factual account of what was tested, not a
+  // legal draft, and labelling it "not legal advice" would be noise that
+  // teaches readers to skip the banner where it does matter.
+  draft = true,
   children,
 }: {
   eyebrow: string;
   title: string;
   updated: string;
+  draft?: boolean;
   children: React.ReactNode;
 }) {
   return (
@@ -32,10 +38,12 @@ export function LegalShell({
       </header>
 
       <main className="mx-auto max-w-[760px] px-6 py-12">
-        <div className="mb-6 rounded-[10px] border border-warning/40 bg-warning/8 px-3.5 py-3 text-[12.5px] leading-[1.55] text-warning">
-          <strong className="font-semibold">Draft - not legal advice.</strong> This is a first-pass, non-lawyer
-          draft. It has not been reviewed by a licensed attorney and is not launch-ready.
-        </div>
+        {draft ? (
+          <div className="mb-6 rounded-[10px] border border-warning/40 bg-warning/8 px-3.5 py-3 text-[12.5px] leading-[1.55] text-warning">
+            <strong className="font-semibold">Draft - not legal advice.</strong> This is a first-pass, non-lawyer
+            draft. It has not been reviewed by a licensed attorney and is not launch-ready.
+          </div>
+        ) : null}
 
         <div className="font-mono text-[10px] tracking-[0.16em] text-muted uppercase">{eyebrow}</div>
         <h1 className="mt-2 font-serif text-[32px] leading-[1.15] font-normal text-primary">{title}</h1>
@@ -51,6 +59,9 @@ export function LegalShell({
           </Link>
           <Link href="/privacy" className="transition-colors duration-base ease-standard hover:text-accent">
             Privacy
+          </Link>
+          <Link href="/accessibility" className="transition-colors duration-base ease-standard hover:text-accent">
+            Accessibility
           </Link>
           <span className="ml-auto">Cairn is informational only - not a broker and not investment advice.</span>
         </div>
