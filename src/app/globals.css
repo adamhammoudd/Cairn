@@ -7,7 +7,14 @@
   --color-line: #2a2a2a;
   --color-primary: #f5f5f5;
   --color-muted: #8a8a8a;
-  --color-dim: #6a6a6a;
+  /* Raised from #6a6a6a, which measured 3.66:1 against the canvas and 3.54:1
+     against panel - below the WCAG AA 4.5:1 floor for normal text, and this
+     token is used at 9.5-11px where the large-text allowance does not apply.
+     axe-core flagged it as a serious violation on every page it could reach.
+     #7b7b7b is the lightest-touch fix: 4.68:1 on canvas, 4.53:1 on panel, and
+     still clearly recessive against muted #8a8a8a so the hierarchy is intact.
+     Neutral only - no gain/loss semantics are affected. */
+  --color-dim: #7b7b7b;
   --color-accent: #2fc685;
   --color-accent-light: #5ee6a6;
   --color-accent-dark: #22b573;

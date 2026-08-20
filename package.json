@@ -18,7 +18,9 @@
     "test:tagging": "tsx --conditions=react-server scripts/tests/tagging.ts",
     "test:guard-probe": "tsx --conditions=react-server scripts/tests/scope-guard-probe.ts",
     "test:classifier": "tsx --conditions=react-server scripts/tests/scope-classifier.ts",
-    "test:market-hours": "tsx --conditions=react-server scripts/tests/market-hours.ts"
+    "test:market-hours": "tsx --conditions=react-server scripts/tests/market-hours.ts",
+    "test:contrast": "tsx --conditions=react-server scripts/tests/contrast.ts",
+    "test:a11y": "tsx --conditions=react-server scripts/a11y-audit.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.4",
@@ -32,6 +34,7 @@
     "tailwind-merge": "^3.6.0"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
@@ -39,6 +42,7 @@
     "dotenv": "^17.4.2",
     "eslint": "^9",
     "eslint-config-next": "16.3.0",
+    "playwright": "^1.62.1",
     "tailwindcss": "^4",
     "tsx": "^4.23.12",
     "typescript": "^5"

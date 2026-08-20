@@ -20,6 +20,7 @@ import { runTaggingSuite } from "./tagging";
 import { runScopeGuardProbeSuite } from "./scope-guard-probe";
 import { runScopeClassifierSuite } from "./scope-classifier";
 import { runMarketHoursSuite } from "./market-hours";
+import { runContrastSuite } from "./contrast";
 
 // A suite that throws (missing credentials, unreachable service) must surface
 // as a hard failure of that suite, not take the whole run down with a stack
@@ -54,6 +55,7 @@ async function main() {
     probeSuites,
     classifierSuites,
     marketHoursSuites,
+    contrastSuites,
   ] = await Promise.all([
     guarded("Adversarial scope guard", runAdversarialScopeGuardSuites),
     guarded("Methodology substance", async () => [await runMethodologySubstanceSuite()]),
@@ -62,6 +64,7 @@ async function main() {
     guarded("Scope guard probe", () => [runScopeGuardProbeSuite()]),
     guarded("Scope classifier", () => [runScopeClassifierSuite()]),
     guarded("Market hours", () => [runMarketHoursSuite()]),
+    guarded("Palette contrast", () => [runContrastSuite()]),
   ]);
 
   const allSuites = [
@@ -73,6 +76,7 @@ async function main() {
     ...probeSuites,
     ...classifierSuites,
     ...marketHoursSuites,
+    ...contrastSuites,
   ];
   const reportPath = writeReport(allSuites);
 
