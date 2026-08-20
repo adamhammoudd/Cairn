@@ -7,6 +7,7 @@ import { useActionState } from "react";
 import { updateDashboardLayout } from "@/lib/actions/dashboard";
 import { DashboardSummaryCard } from "@/components/dashboard/dashboard-summary-card";
 import { decodeEntities } from "@/lib/news";
+import { TimeAgo } from "@/components/time-ago";
 
 export type ModuleKey = "portfolio" | "markets" | "watchlist" | "news" | "assistant";
 export const MODULE_KEYS: ModuleKey[] = ["portfolio", "markets", "watchlist", "news", "assistant"];
@@ -62,15 +63,6 @@ function sparklinePoints(values: number[], width: number, height: number) {
       return `${x.toFixed(1)},${y.toFixed(1)}`;
     })
     .join(" ");
-}
-
-function timeAgo(iso: string) {
-  const ms = Date.now() - new Date(iso).getTime();
-  const mins = Math.round(ms / 60000);
-  if (mins < 60) return `${mins}m ago`;
-  const hours = Math.round(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
-  return `${Math.round(hours / 24)}d ago`;
 }
 
 const NEWS_TINT: Record<"accent" | "violet" | "warning", string> = {
@@ -254,7 +246,7 @@ export function DashboardHome({
                     <div>
                       <div className="text-[12.5px] leading-normal text-primary">{decodeEntities(item.title)}</div>
                       <div className="mt-1 text-[11px] text-dim">
-                        {item.source} · {timeAgo(item.publishedAt)}
+                        {item.source} · <TimeAgo iso={item.publishedAt} />
                       </div>
                     </div>
                   </div>
