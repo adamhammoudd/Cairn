@@ -3,16 +3,7 @@
 import { useActionState, useTransition } from "react";
 import { postComment, voteThread } from "@/lib/actions/discussion";
 import type { DiscussionComment } from "@/lib/discussion";
-
-function timeAgo(iso: string) {
-  const ms = Date.now() - new Date(iso).getTime();
-  const mins = Math.floor(ms / 60_000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
-  return `${Math.floor(hours / 24)}d ago`;
-}
+import { TimeAgo } from "@/components/time-ago";
 
 function CommentRow({ comment, symbol }: { comment: DiscussionComment; symbol: string }) {
   const [, startVote] = useTransition();
@@ -22,7 +13,7 @@ function CommentRow({ comment, symbol }: { comment: DiscussionComment; symbol: s
       <div className="flex items-center gap-2 text-[12px] text-muted">
         <span className="text-primary">{comment.authorName}</span>
         <span>·</span>
-        <span>{timeAgo(comment.createdAt)}</span>
+        <TimeAgo iso={comment.createdAt} />
         {comment.flagged && comment.isOwn && (
           <span className="rounded-md border border-line px-1.5 py-0.5 text-[10.5px] text-negative">
             Flagged for review
