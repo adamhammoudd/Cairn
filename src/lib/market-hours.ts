@@ -1,0 +1,106 @@
+// Real US equity market session state.
+//
+// The dashboard eyebrow rendered the literal string "markets open" on every
+// render, so it said markets open at 3am on a Sunday. That is the app's
+// "confident and wrong" failure mode in one line: a user has no way to tell a
+// hardcoded claim from a computed one, so a wrong claim costs the credibility
+// of the right ones next to it.
+//
+// Regular session is 09:30-16:00 America/New_York, Monday to Friday. DST is
+// handled by resolving the wall clock in that zone rather than by offsetting
+// UTC, so this does not need a twice-yearly correction.
+//
+// Holidays are the NYSE/Nasdaq full-day closures. They need extending each
+// year; `marketHolidaysCoverUntil()` exists so a caller can tell when the list
+// has run out instead of silently reporting "open" on Thanksgiving 2028.
+
+export type MarketPhase = "open" | "pre" | "after" | "closed" | "holiday" | "weekend";
+
+export interface MarketStatus {
+  phase: MarketPhase;
+  /** Short label for the UI. */
+  label: string;
+  isOpen: boolean;
+}
+
+// NYSE full-day closures. Half-days (early close 13:00) are deliberately not
+// modelled - treating a half day as a normal session is a 3-hour error at the
+// end of the day, while treating it as closed would be a 3.5-hour error at the
+// start, and the label is not load-bearing enough to justify the table.
+const HOLIDAYS_2026 = [
+  "2026-01-01", "2026-01-19", "2026-02-16", "2026-04-03", "2026-05-25",
+  "2026-06-19", "2026-07-03", "2026-09-07", "2026-11-26", "2026-12-25",
+];
+const HOLIDAYS_2027 = [
+  "2027-01-01", "2027-01-18", "2027-02-15", "2027-03-26", "2027-05-31",
+  "2027-06-18", "2027-07-05", "2027-09-06", "2027-11-25", "2027-12-24",
+];
+
+const HOLIDAYS = new Set([...HOLIDAYS_2026, ...HOLIDAYS_2027]);
+
+export function marketHolidaysCoverUntil(): string {
+  return "2027-12-31";
+}
+
+interface ZonedParts {
+  year: number;
+  month: number;
+  day: number;
+  hour: number;
+  minute: number;
+  weekday: number; // 0 = Sunday
+}
+
+const WEEKDAY_INDEX: Record<string, number> = {
+  Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6,
+};
+
+// Reads the wall clock in New York directly. Intl does the DST arithmetic, so
+// there is no offset table here to drift.
+function nyParts(at: Date): ZonedParts {
+  const fmt = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/New_York",
+    year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", weekday: "short",
+    hour12: false,
+  });
+  const parts = Object.fromEntries(fmt.formatToParts(at).map((p) => [p.type, p.value]));
+  return {
+    year: Number(parts.year),
+    month: Number(parts.month),
+    day: Number(parts.day),
+    // "24" appears at midnight under hour12:false in some runtimes.
+    hour: Number(parts.hour) % 24,
+    minute: Number(parts.minute),
+    weekday: WEEKDAY_INDEX[parts.weekday as string] ?? 0,
+  };
+}
+
+export function getMarketStatus(at: Date = new Date()): MarketStatus {
+  const p = nyParts(at);
+  const iso = `${p.year}-${String(p.month).padStart(2, "0")}-${String(p.day).padStart(2, "0")}`;
+  const minutes = p.hour * 60 + p.minute;
+
+  if (p.weekday === 0 || p.weekday === 6) {
+    return { phase: "weekend", label: "Markets closed · weekend", isOpen: false };
+  }
+  if (HOLIDAYS.has(iso)) {
+    return { phase: "holiday", label: "Markets closed · holiday", isOpen: false };
+  }
+
+  const OPEN = 9 * 60 + 30;
+  const CLOSE = 16 * 60;
+  const PRE_OPEN = 4 * 60;
+  const AFTER_CLOSE = 20 * 60;
+
+  if (minutes >= OPEN && minutes < CLOSE) {
+    return { phase: "open", label: "Markets open", isOpen: true };
+  }
+  if (minutes >= PRE_OPEN && minutes < OPEN) {
+    return { phase: "pre", label: "Pre-market", isOpen: false };
+  }
+  if (minutes >= CLOSE && minutes < AFTER_CLOSE) {
+    return { phase: "after", label: "After hours", isOpen: false };
+  }
+  return { phase: "closed", label: "Markets closed", isOpen: false };
+}

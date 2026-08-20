@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { SymbolTypeahead } from "@/components/symbol-typeahead";
 import { useActionState, useMemo, useState, useTransition } from "react";
 import {
   addWatchlistItem,
@@ -102,10 +103,24 @@ export function WatchlistPanel({ watchlists }: { watchlists: WatchlistWithItems[
         <>
           <form action={addAction} className="flex flex-wrap items-center gap-2">
             <input type="hidden" name="watchlist_id" value={active.id} />
-            <input
+            {/* Was a plain text input that accepted any string: a beta tester
+                typed "ZZQQ9!!" and it was stored, rendering a permanent dead
+                row of "- - -". SymbolTypeahead is selection-only - the
+                submitted value can only ever come from picking a real
+                market-data row - and it is the same picker Add Holding,
+                Alerts and Compare use, so this is no longer a second search
+                experience for the same task. */}
+            <SymbolTypeahead
               name="symbol"
+              required
+              clearOnSelect
+              // The hidden `symbol` field carries the pick into the form
+              // action; nothing extra is needed on selection here.
+              onSelect={() => {}}
               placeholder="Add symbol (e.g. NVDA)"
-              className="w-52 rounded-lg border border-line bg-transparent px-3 py-2 text-[13px] text-primary uppercase outline-none transition-colors duration-base ease-standard hover:border-[#3A3A3A] focus:border-[#3A3A3A]"
+              exclude={active.items.map((i) => i.symbol)}
+              className="w-52"
+              inputClassName="w-full rounded-lg border border-line bg-transparent px-3 py-2 text-[13px] text-primary uppercase outline-none transition-colors duration-base ease-standard hover:border-[#3A3A3A] focus:border-[#3A3A3A]"
             />
             <button
               type="submit"

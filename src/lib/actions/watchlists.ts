@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { readDisplayPrefs, type DisplayPrefs, type WatchlistWithItems } from "@/lib/watchlists";
+import { validateSymbol, validateText } from "@/lib/validation";
 
 export type { WatchlistWithItems } from "@/lib/watchlists";
 
@@ -77,10 +78,13 @@ export async function listWatchlists(): Promise<WatchlistWithItems[]> {
 }
 
 export async function createWatchlist(_prevState: string | null, formData: FormData) {
-  const name = String(formData.get("name") ?? "").trim();
-  if (!name) return "Enter a name for the list.";
+  const parsedName = validateText(formData.get("name"), "Name", { max: 80, min: 1 });
+  if (!parsedName.ok) return parsedName.error ?? "Enter a name.";
+  const name = parsedName.value;
 
-  const description = String(formData.get("description") ?? "").trim() || null;
+  const parsedDescription = validateText(formData.get("description") ?? "", "Description", { max: 280 });
+  if (!parsedDescription.ok) return parsedDescription.error ?? "Description is too long.";
+  const description = parsedDescription.value || null;
   const displayPrefs: DisplayPrefs = {
     sortBy: readDisplayPrefs({ sortBy: formData.get("sort_by") }).sortBy,
     showSparkline: formData.get("show_sparkline") === "on",
@@ -125,8 +129,15 @@ export async function deleteWatchlist(id: string) {
 
 export async function addWatchlistItem(_prevState: string | null, formData: FormData) {
   const watchlistId = String(formData.get("watchlist_id") ?? "");
-  const symbol = String(formData.get("symbol") ?? "").trim().toUpperCase();
-  if (!watchlistId || !symbol) return "Enter a symbol.";
+  if (!watchlistId) return "Enter a symbol.";
+
+  // Shape validation happens here, not only in the picker. A server action is
+  // an HTTP endpoint - the component is not in the way of a POST. "ZZQQ9!!"
+  // was accepted and stored as a permanent dead row precisely because nothing
+  // checked on this side.
+  const parsed = validateSymbol(formData.get("symbol"));
+  if (!parsed.ok) return parsed.error ?? "Enter a valid symbol.";
+  const symbol = parsed.value;
 
   const supabase = await createClient();
   const {
@@ -146,6 +157,18 @@ export async function addWatchlistItem(_prevState: string | null, formData: Form
     .eq("user_id", user.id)
     .maybeSingle();
   if (!owned) return "That watchlist doesn't exist.";
+
+  // A well-formed but untracked symbol renders the same dead row, so it is
+  // rejected too - with a message that distinguishes the two cases. Ordered
+  // after the auth and ownership checks so an unauthenticated caller cannot
+  // use this action to probe which symbols exist.
+  const { data: tracked } = await supabase
+    .from("historical_prices")
+    .select("symbol")
+    .eq("symbol", symbol)
+    .limit(1)
+    .maybeSingle();
+  if (!tracked) return `${symbol} isn't tracked yet, so it has no price history to show.`;
 
   const { count } = await supabase
     .from("watchlist_items")

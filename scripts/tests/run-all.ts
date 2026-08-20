@@ -19,6 +19,7 @@ import { runProbabilityMathSuite } from "./probability-math";
 import { runTaggingSuite } from "./tagging";
 import { runScopeGuardProbeSuite } from "./scope-guard-probe";
 import { runScopeClassifierSuite } from "./scope-classifier";
+import { runMarketHoursSuite } from "./market-hours";
 
 // A suite that throws (missing credentials, unreachable service) must surface
 // as a hard failure of that suite, not take the whole run down with a stack
@@ -45,15 +46,23 @@ async function guarded(name: string, fn: () => Promise<SuiteResult[]> | SuiteRes
 }
 
 async function main() {
-  const [adversarialSuites, methodologySuites, citationSuites, taggingSuites, probeSuites, classifierSuites] =
-    await Promise.all([
+  const [
+    adversarialSuites,
+    methodologySuites,
+    citationSuites,
+    taggingSuites,
+    probeSuites,
+    classifierSuites,
+    marketHoursSuites,
+  ] = await Promise.all([
     guarded("Adversarial scope guard", runAdversarialScopeGuardSuites),
     guarded("Methodology substance", async () => [await runMethodologySubstanceSuite()]),
     guarded("Citation freshness", async () => [await runCitationFreshnessSuite()]),
     guarded("News tagging", () => [runTaggingSuite()]),
     guarded("Scope guard probe", () => [runScopeGuardProbeSuite()]),
     guarded("Scope classifier", () => [runScopeClassifierSuite()]),
-    ]);
+    guarded("Market hours", () => [runMarketHoursSuite()]),
+  ]);
 
   const allSuites = [
     runProbabilityMathSuite(),
@@ -63,6 +72,7 @@ async function main() {
     ...taggingSuites,
     ...probeSuites,
     ...classifierSuites,
+    ...marketHoursSuites,
   ];
   const reportPath = writeReport(allSuites);
 

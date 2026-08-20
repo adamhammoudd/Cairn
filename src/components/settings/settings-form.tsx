@@ -115,7 +115,7 @@ export function SettingsForm({ settings, activeTab }: SettingsFormProps) {
           </select>
         </Row>
 
-        <Row label="Refresh rate" hint="How often live prices update">
+        <Row label="Refresh rate" hint="How often the dashboard refetches prices, while the market is open and this tab is in the foreground">
           <select name="refresh_rate_seconds" defaultValue={settings.refresh_rate_seconds} className={SELECT_CLASS}>
             {REFRESH_RATES.map((r) => (
               <option key={r.value} value={r.value} className="bg-panel">

@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { getMarketStatus } from "@/lib/market-hours";
+import { useLiveRefresh } from "@/components/use-live-refresh";
 import { useActionState } from "react";
 import { updateDashboardLayout } from "@/lib/actions/dashboard";
 import { DashboardSummaryCard } from "@/components/dashboard/dashboard-summary-card";
@@ -12,6 +14,8 @@ export const MODULE_KEYS: ModuleKey[] = ["portfolio", "markets", "watchlist", "n
 interface DashboardHomeProps {
   initialLayout: ModuleKey[];
   today: string;
+  /** From user_settings.refresh_rate_seconds - written by the settings form and, until now, read by nothing. */
+  refreshRateSeconds?: number;
   portfolio: {
     totalValue: string;
     totalGain: string;
@@ -85,16 +89,29 @@ const MODULES: { key: ModuleKey; label: string; href: string; cta: string; tint:
 
 const DEFAULT_LAYOUT: ModuleKey[] = ["portfolio", "markets", "watchlist", "news", "assistant"];
 
-export function DashboardHome({ initialLayout, today, portfolio, markets, watchlist, news, assistant }: DashboardHomeProps) {
+export function DashboardHome({
+  initialLayout,
+  today,
+  portfolio,
+  markets,
+  watchlist,
+  news,
+  assistant,
+  refreshRateSeconds = 30,
+}: DashboardHomeProps) {
   const [layout, setLayout] = useState<ModuleKey[]>(initialLayout.length ? initialLayout : DEFAULT_LAYOUT);
   const [arranging, setArranging] = useState(false);
   // Portfolio ships double-width, as in the mock - its sparkline sits beside
   // the value rather than wrapping under it.
   const [wideKeys, setWideKeys] = useState<Set<ModuleKey>>(new Set<ModuleKey>(["portfolio"]));
-  const [live, setLive] = useState(true);
+  // Was `useState(true)` wired to nothing, next to prices that never changed.
+  // Now reflects a timer that actually runs - and only runs when refreshing
+  // would tell the user something new.
+  const marketStatus = getMarketStatus();
+  const { active: live, paused, setPaused } = useLiveRefresh(refreshRateSeconds, marketStatus.isOpen);
   const [result, formAction] = useActionState(updateDashboardLayout, null);
 
-  const moduleMap = new Map(MODULES.map((module) => [module.key, module]));
+  const moduleMap = new Map(MODULES.map((m) => [m.key, m]));
   const hidden = MODULE_KEYS.filter((key) => !layout.includes(key));
 
   function moveModule(key: ModuleKey, direction: -1 | 1) {
@@ -126,8 +143,10 @@ export function DashboardHome({ initialLayout, today, portfolio, markets, watchl
   }
 
   function renderCard(key: ModuleKey, index: number) {
-    const module = moduleMap.get(key);
-    if (!module) return null;
+    // Named `module` previously, which shadows the CommonJS binding and is a
+    // hard @next/next/no-assign-module-variable error.
+    const card = moduleMap.get(key);
+    if (!card) return null;
     const delay = index * 40;
     const arrangeProps = {
       wide: wideKeys.has(key),
@@ -141,7 +160,7 @@ export function DashboardHome({ initialLayout, today, portfolio, markets, watchl
     switch (key) {
       case "portfolio":
         return (
-          <DashboardSummaryCard key={key} title={module.label} href={module.href} ctaLabel={module.cta} tint={module.tint} delay={delay} {...arrangeProps}>
+          <DashboardSummaryCard key={key} title={card.label} href={card.href} ctaLabel={card.cta} tint={card.tint} delay={delay} {...arrangeProps}>
             <div className="flex flex-wrap items-end justify-between gap-4">
               <div>
                 <div className="font-serif text-[30px] leading-none text-primary">{portfolio.totalValue}</div>
@@ -185,7 +204,7 @@ export function DashboardHome({ initialLayout, today, portfolio, markets, watchl
         );
       case "markets":
         return (
-          <DashboardSummaryCard key={key} title={module.label} href={module.href} ctaLabel={module.cta} tint={module.tint} delay={delay} {...arrangeProps}>
+          <DashboardSummaryCard key={key} title={card.label} href={card.href} ctaLabel={card.cta} tint={card.tint} delay={delay} {...arrangeProps}>
             <div className="flex flex-col gap-2.5">
               {markets.top.map((r) => (
                 <div key={r.symbol} className="flex items-center justify-between gap-3">
@@ -204,7 +223,7 @@ export function DashboardHome({ initialLayout, today, portfolio, markets, watchl
         );
       case "watchlist":
         return (
-          <DashboardSummaryCard key={key} title={module.label} href={module.href} ctaLabel={module.cta} tint={module.tint} delay={delay} {...arrangeProps}>
+          <DashboardSummaryCard key={key} title={card.label} href={card.href} ctaLabel={card.cta} tint={card.tint} delay={delay} {...arrangeProps}>
             <div className="mb-3 text-[12.5px] text-muted">
               {watchlist.lists} lists · {watchlist.symbols} symbols ·{" "}
               {watchlist.alertsPastThreshold > 0 ? `${watchlist.alertsPastThreshold} past an alert threshold` : "none past an alert threshold"}
@@ -224,7 +243,7 @@ export function DashboardHome({ initialLayout, today, portfolio, markets, watchl
         );
       case "news":
         return (
-          <DashboardSummaryCard key={key} title={module.label} href={module.href} ctaLabel={module.cta} tint={module.tint} delay={delay} {...arrangeProps}>
+          <DashboardSummaryCard key={key} title={card.label} href={card.href} ctaLabel={card.cta} tint={card.tint} delay={delay} {...arrangeProps}>
             {news.items.length === 0 ? (
               <div className="text-[12.5px] text-muted">No headlines yet</div>
             ) : (
@@ -246,7 +265,7 @@ export function DashboardHome({ initialLayout, today, portfolio, markets, watchl
         );
       case "assistant":
         return (
-          <DashboardSummaryCard key={key} title={module.label} href={module.href} ctaLabel={module.cta} tint={module.tint} delay={delay} {...arrangeProps}>
+          <DashboardSummaryCard key={key} title={card.label} href={card.href} ctaLabel={card.cta} tint={card.tint} delay={delay} {...arrangeProps}>
             {assistant.latestAnalysis ? (
               <>
                 <div className="text-[13px] leading-relaxed text-primary">{assistant.latestAnalysis.quote}</div>
@@ -276,7 +295,9 @@ export function DashboardHome({ initialLayout, today, portfolio, markets, watchl
     <div className="animate-page-in">
       <div className="mb-5.5 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <div className="mb-2 font-mono text-[10.5px] tracking-[0.16em] text-muted uppercase">{today} · markets open</div>
+          <div className="mb-2 font-mono text-[10.5px] tracking-[0.16em] text-muted uppercase">
+            {today} · {marketStatus.label}
+          </div>
           <h1 className="font-serif text-[34px] leading-[1.1] font-normal text-primary">Base Camp</h1>
           <p className="mt-1.75 max-w-[560px] text-[13.5px] text-muted text-pretty">
             Your marker for the day - portfolio, markets, and what the assistant flagged while you were away.
@@ -286,13 +307,20 @@ export function DashboardHome({ initialLayout, today, portfolio, markets, watchl
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() => setLive((prev) => !prev)}
+            onClick={() => setPaused(!paused)}
+            title={
+              paused
+                ? "Auto-refresh paused"
+                : marketStatus.isOpen
+                  ? `Refreshing every ${Math.max(15, refreshRateSeconds)}s while this tab is open`
+                  : `${marketStatus.label} - prices refresh when the session reopens`
+            }
             className="flex items-center gap-1.75 rounded-lg border border-line px-3 py-2 text-[12.5px] text-primary transition-colors duration-base ease-standard hover:border-[#3A3A3A]"
           >
             <span
               className={`animate-breathe h-1.5 w-1.5 rounded-full ${live ? "bg-accent" : "bg-dim"}`}
             />
-            {live ? "Live" : "Paused"}
+            {live ? "Live" : paused ? "Paused" : marketStatus.isOpen ? "Idle" : "Closed"}
           </button>
           <form action={formAction} className="flex items-center gap-2">
             {layout.map((key) => (

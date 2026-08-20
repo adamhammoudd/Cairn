@@ -18,7 +18,7 @@ export default async function DashboardPage() {
   if (!user) redirect("/login");
 
   const [settingsRes, holdingsRes, watchlistsRes, newsRes, sessionsRes, alertsRes, analysesRes] = await Promise.all([
-    supabase.from("user_settings").select("dashboard_layout").eq("user_id", user.id).maybeSingle(),
+    supabase.from("user_settings").select("dashboard_layout, refresh_rate_seconds").eq("user_id", user.id).maybeSingle(),
     supabase.from("holdings").select("*").eq("user_id", user.id).order("created_at", { ascending: true }),
     supabase.from("watchlists").select("id, name").eq("user_id", user.id).order("sort_order", { ascending: true }),
     supabase
@@ -123,6 +123,7 @@ export default async function DashboardPage() {
 
   return (
     <DashboardHome
+      refreshRateSeconds={settingsRes.data?.refresh_rate_seconds ?? 30}
       initialLayout={initialLayout}
       today={today}
       portfolio={{
