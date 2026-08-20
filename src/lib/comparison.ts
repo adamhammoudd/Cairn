@@ -20,7 +20,7 @@ export interface ComparisonRow {
 }
 
 export function seriesFor(row: ComparisonRow): TimelinePoint[] {
-  // `close` is a Postgres numeric — a string over PostgREST. Coerce, or the
+  // `close` is a Postgres numeric - a string over PostgREST. Coerce, or the
   // chart plots only its endpoints.
   return row.bars
     .filter((b): b is { ts: string; close: number } => b.close !== null)

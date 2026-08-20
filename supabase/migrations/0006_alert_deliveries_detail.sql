@@ -2,7 +2,7 @@
 --
 -- alert_deliveries originally stored only (alert_id, channel, sent_at, status).
 -- An in-app notification has to render *what* fired and whether it's been seen,
--- and reconstructing that from the alert row alone is wrong — the alert's
+-- and reconstructing that from the alert row alone is wrong - the alert's
 -- condition can be edited after a delivery, which would retroactively rewrite
 -- the text of a past notification. So the message is snapshotted at send time.
 

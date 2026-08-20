@@ -1,18 +1,18 @@
 // Self-hosted inference client. Cairn does not call any third-party model
-// API — this talks to a model you run yourself (Ollama, vLLM, llama.cpp
+// API - this talks to a model you run yourself (Ollama, vLLM, llama.cpp
 // server, LM Studio, text-generation-webui), all of which expose an
 // OpenAI-compatible /chat/completions endpoint.
 //
 // Configuration (see .env.local.example):
 //   LLM_BASE_URL   e.g. http://127.0.0.1:11434/v1   (Ollama's OpenAI-compat path)
 //   LLM_MODEL      e.g. qwen2.5:7b-instruct
-//   LLM_API_KEY    optional — only if you've put auth on your inference server
-//   LLM_TIMEOUT_MS optional — CPU-only boxes are slow; default is generous
+//   LLM_API_KEY    optional - only if you've put auth on your inference server
+//   LLM_TIMEOUT_MS optional - CPU-only boxes are slow; default is generous
 //
 // Design note: everything downstream of this module is written assuming a
 // SMALL local model (3B-7B), not a frontier one. That's why the analysis
 // engine computes its own probabilities (lib/ai/analytics.ts) and only asks
-// the model for prose — see the comment at the top of lib/ai/generate.ts.
+// the model for prose - see the comment at the top of lib/ai/generate.ts.
 
 const DEFAULT_BASE_URL = "http://127.0.0.1:11434/v1";
 const DEFAULT_MODEL = "qwen2.5:7b-instruct";
@@ -43,7 +43,7 @@ export function llmModel(): string {
 
 /**
  * Whether a self-hosted endpoint is configured. Note this is a config check,
- * not a reachability check — use `llmHealthCheck()` when you need to know the
+ * not a reachability check - use `llmHealthCheck()` when you need to know the
  * server is actually up (the test suite does).
  */
 export function isLlmConfigured(): boolean {
@@ -86,7 +86,7 @@ async function postChatCompletion(body: Record<string, unknown>): Promise<Respon
 }
 
 /**
- * Single completion against the self-hosted model. Returns raw text — callers
+ * Single completion against the self-hosted model. Returns raw text - callers
  * are responsible for validating it (and in this codebase, for running it
  * through the scope guard in lib/ai/scope-guard.ts before it is stored or
  * shown to anyone).
@@ -116,7 +116,7 @@ export async function llmComplete(req: LlmRequest): Promise<string> {
   let res = await postChatCompletion(body);
 
   // Structured-output support varies across self-hosted servers and versions.
-  // If json_schema is rejected, fall back to plain JSON mode — the caller
+  // If json_schema is rejected, fall back to plain JSON mode - the caller
   // validates the parsed result either way, so this degrades safely rather
   // than hard-failing on an older Ollama/llama.cpp build.
   if (!res.ok && req.jsonSchema && (res.status === 400 || res.status === 422)) {

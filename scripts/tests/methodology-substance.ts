@@ -1,4 +1,4 @@
-// Section 7, test 2: methodology substance check (semi-automated, advisory —
+// Section 7, test 2: methodology substance check (semi-automated, advisory -
 // not gating). For a sample of 10-15 generated analyses: asserts cited
 // sources exist and are relevant to the analysis's scope, and flags (for
 // human review, not an automatic fail) any sample whose confidence framing
@@ -26,7 +26,7 @@ export async function runMethodologySubstanceSuite(): Promise<SuiteResult> {
   const sample = analyses ?? [];
   if (sample.length < MIN_SAMPLE_FOR_CONFIDENCE_CHECK) {
     notes.push(
-      `Only ${sample.length} validated analyses exist in this database — below the 10-15 sample the spec calls for. ` +
+      `Only ${sample.length} validated analyses exist in this database - below the 10-15 sample the spec calls for. ` +
         `Run ingestion + generate a few analyses via the Research page, then re-run this check for a meaningful sample.`,
     );
   }
@@ -54,7 +54,7 @@ export async function runMethodologySubstanceSuite(): Promise<SuiteResult> {
       cases.push({
         name: `${analysis.scope_type}/${analysis.scope_value} (${analysis.id})`,
         status: "fail",
-        detail: "No cited sources found — checkCompleteness should have rejected this at generation time.",
+        detail: "No cited sources found - checkCompleteness should have rejected this at generation time.",
       });
       continue;
     }
@@ -64,7 +64,7 @@ export async function runMethodologySubstanceSuite(): Promise<SuiteResult> {
       cases.push({
         name: `${analysis.scope_type}/${analysis.scope_value} (${analysis.id})`,
         status: "fail",
-        detail: `${missing.length} cited source id(s) don't exist in news_items — hallucinated or orphaned citation.`,
+        detail: `${missing.length} cited source id(s) don't exist in news_items - hallucinated or orphaned citation.`,
         attachment: JSON.stringify(missing, null, 2),
       });
       continue;
@@ -83,7 +83,7 @@ export async function runMethodologySubstanceSuite(): Promise<SuiteResult> {
       status: irrelevant.length > 0 ? "flag" : "pass",
       detail:
         irrelevant.length > 0
-          ? `${irrelevant.length}/${links.length} cited source(s) don't obviously tag this scope — human review recommended.`
+          ? `${irrelevant.length}/${links.length} cited source(s) don't obviously tag this scope - human review recommended.`
           : `${links.length} source(s) cited, all tagged to this scope.`,
       attachment: irrelevant.length > 0 ? JSON.stringify(irrelevant, null, 2) : undefined,
     });
@@ -96,7 +96,7 @@ export async function runMethodologySubstanceSuite(): Promise<SuiteResult> {
         name: "confidence-level distribution",
         status: "flag",
         detail:
-          `Zero of ${sample.length} sampled analyses are "low" confidence — flagged for human review per spec ` +
+          `Zero of ${sample.length} sampled analyses are "low" confidence - flagged for human review per spec ` +
           `("flag any analysis whose confidence framing looks uniformly high rather than honestly varied"). ` +
           `Not an automatic failure: it may be genuinely warranted by the data, but is worth a manual look.`,
       });
@@ -104,7 +104,7 @@ export async function runMethodologySubstanceSuite(): Promise<SuiteResult> {
       cases.push({
         name: "confidence-level distribution",
         status: "pass",
-        detail: `${lowCount}/${sample.length} sampled analyses are "low" confidence — some variation present.`,
+        detail: `${lowCount}/${sample.length} sampled analyses are "low" confidence - some variation present.`,
       });
     }
   }

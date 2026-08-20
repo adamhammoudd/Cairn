@@ -1,6 +1,7 @@
 import { getTrackedSymbols, getComparisonData } from "@/lib/actions/comparison";
 import { MAX_COMPARE } from "@/lib/comparison";
 import { ComparisonPanel } from "@/components/comparison/comparison-panel";
+import { getUserSettings } from "@/lib/actions/settings";
 
 export default async function ComparisonPage({
   searchParams,
@@ -14,7 +15,18 @@ export default async function ComparisonPage({
     .filter(Boolean)
     .slice(0, MAX_COMPARE);
 
-  const [universe, rows] = await Promise.all([getTrackedSymbols(), getComparisonData(selected)]);
+  const [universe, rows, settings] = await Promise.all([
+    getTrackedSymbols(),
+    getComparisonData(selected),
+    getUserSettings(),
+  ]);
 
-  return <ComparisonPanel universe={universe} selected={selected} rows={rows} />;
+  return (
+    <ComparisonPanel
+      universe={universe}
+      selected={selected}
+      rows={rows}
+      defaultTimeframe={settings?.default_comparison_timeframe ?? "3M"}
+    />
+  );
 }

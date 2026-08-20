@@ -13,7 +13,7 @@
   --color-accent-dark: #22b573;
   --color-negative: #d96c6c;
 
-  /* Secondary/tertiary accents — never used for gain/loss. Gain stays accent green,
+  /* Secondary/tertiary accents - never used for gain/loss. Gain stays accent green,
      loss/destructive stays negative red, everywhere. */
   --color-warning: #d9a441;
   --color-info: #5b8def;
@@ -158,6 +158,21 @@
   animation: cn-draw 700ms var(--ease-standard) both;
 }
 
+/* Methodology-card analog match bars: grow left-to-right, 620ms with a 70ms
+   stagger, per the AI Assistant motion spec in the mock. */
+@keyframes cn-grow {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.animate-grow-x {
+  animation: cn-grow 620ms var(--ease-standard) both;
+}
+
 .animate-breathe {
   animation: cn-breathe 2.4s ease-in-out infinite;
 }
@@ -185,8 +200,26 @@ input::placeholder {
   color: var(--color-dim);
 }
 
+/* Touch input: skip the double-tap-zoom wait so taps register immediately, and
+   stand in for the hover states a finger never triggers - without feedback the
+   controls read as dead even when they fire. */
+button,
+a,
+select,
+[role="button"] {
+  touch-action: manipulation;
+}
+
+@media (hover: none) {
+  button:active,
+  a:active,
+  [role="button"]:active {
+    opacity: 0.72;
+  }
+}
+
 /* Purposeful motion only: hover/focus states, view transitions, loading states.
-   Respect reduced-motion preference — never force animation on users who opt out. */
+   Respect reduced-motion preference - never force animation on users who opt out. */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

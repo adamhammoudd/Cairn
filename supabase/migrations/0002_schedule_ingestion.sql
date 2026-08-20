@@ -5,7 +5,7 @@
 --   supabase functions deploy ingest-news --no-verify-jwt
 --   supabase functions deploy ingest-market-data --no-verify-jwt
 -- The functions still use their own env-injected SUPABASE_SERVICE_ROLE_KEY
--- internally to write to the DB — --no-verify-jwt only means the *caller*
+-- internally to write to the DB - --no-verify-jwt only means the *caller*
 -- (pg_cron) doesn't need to authenticate to invoke them.
 --
 -- Before running: replace <project-ref> below. Adjust schedules to taste.

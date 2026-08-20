@@ -15,7 +15,7 @@ const STEPS: Step[] = [
   {
     key: "holding",
     label: "Add your first holding",
-    desc: "Quantity and entry price — Cairn works out value, gain, and news relevance from there.",
+    desc: "Quantity and entry price - Cairn works out value, gain, and news relevance from there.",
     cta: "Add holding",
     href: "/portfolio",
   },
@@ -56,7 +56,7 @@ const EMPTY_PREVIEWS = [
   },
 ];
 
-// Stacking stone dots above the welcome heading — widths shrink top to bottom,
+// Stacking stone dots above the welcome heading - widths shrink top to bottom,
 // echoing the cairn mark used across the brand.
 const STONES = [
   { width: "w-8.5", delay: "200ms", glow: "rgba(47,198,133,0.25)" },
@@ -95,7 +95,7 @@ export function OnboardingSteps() {
           Welcome to Cairn
         </h1>
         <p className="relative mx-auto mt-2.5 max-w-[480px] text-[14px] leading-relaxed text-muted text-pretty">
-          Three steps and Base Camp fills in with your own numbers. Nothing here is a recommendation — Cairn shows
+          Three steps and Base Camp fills in with your own numbers. Nothing here is a recommendation - Cairn shows
           sourced context and lets you draw the conclusion.
         </p>
 

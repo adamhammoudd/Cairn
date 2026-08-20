@@ -18,11 +18,11 @@ export default async function SettingsPage() {
   ]);
 
   if (!settings) {
-    throw new Error("No user_settings row found — the on_auth_user_created trigger may not be installed.");
+    throw new Error("No user_settings row found - the on_auth_user_created trigger may not be installed.");
   }
 
   return (
-    <div className="animate-page-in">
+    <div className="animate-page-in mx-auto max-w-[1060px]">
       <div className="mb-5.5">
         <div className="mb-2 font-mono text-[10.5px] tracking-[0.16em] text-muted uppercase">Account · Settings</div>
         <h1 className="font-serif text-[30px] leading-[1.1] font-normal text-primary">Settings</h1>
@@ -47,7 +47,7 @@ export default async function SettingsPage() {
           premiumLabel: TIER_LIMITS.premium.label,
           premiumAnalyses: TIER_LIMITS.premium.monthlyAiAnalyses,
         }}
- />
+      />
     </div>
   );
 }

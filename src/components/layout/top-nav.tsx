@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Logo } from "@/components/logo";
+import { GlobalSearch } from "@/components/layout/global-search";
 import { NAV_ITEMS, isNavGroup, type NavGroup } from "@/lib/nav-items";
 import { signOut } from "@/lib/actions/auth";
 
@@ -36,8 +37,8 @@ const ACCOUNT_MENU = [
 export function TopNav({ displayName, plan }: TopNavProps) {
   const pathname = usePathname();
   // A group menu opens on hover *and* toggles on click. `pinned` is the
-  // click-opened group, `hovered` the pointer-opened one, and `suppressed`
-  // remembers a group the user clicked shut while the pointer is still on it —
+  // click-opened group, `hovered` the pointer-opened one, and `suppressed`-
+  // remembers a group the user clicked shut while the pointer is still on it -
   // without it, the hover that's still active would immediately reopen it.
   const [pinned, setPinned] = useState<string | null>(null);
   const [hovered, setHovered] = useState<string | null>(null);
@@ -45,6 +46,11 @@ export function TopNav({ displayName, plan }: TopNavProps) {
   const [accountOpen, setAccountOpen] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [lastPathname, setLastPathname] = useState(pathname);
+  // Touch devices synthesise a mouseenter immediately before the click, so
+  // hover-to-open would open the menu and the tap would toggle it straight back
+  // shut - the nav reads as dead under a finger. Only wire hover where there's
+  // a real pointer; touch gets plain tap-to-toggle.
+  const [canHover, setCanHover] = useState(false);
   const navRef = useRef<HTMLElement>(null);
   const drawerRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
@@ -60,7 +66,7 @@ export function TopNav({ displayName, plan }: TopNavProps) {
   function toggleGroup(label: string) {
     if (isGroupOpen(label)) {
       setPinned(null);
-      setSuppressed(label); // pointer is still over it — don't let hover reopen
+      setSuppressed(label); // pointer is still over it - don't let hover reopen
     } else {
       setPinned(label);
       setSuppressed(null);
@@ -102,7 +108,13 @@ export function TopNav({ displayName, plan }: TopNavProps) {
       }
     }
     document.addEventListener("mousedown", onClickAway);
-    return () => document.removeEventListener("mousedown", onClickAway);
+    // iOS doesn't always deliver mousedown for taps outside an interactive
+    // element, so listen for the touch too.
+    document.addEventListener("touchstart", onClickAway);
+    return () => {
+      document.removeEventListener("mousedown", onClickAway);
+      document.removeEventListener("touchstart", onClickAway);
+    };
   }, []);
 
   useEffect(() => {
@@ -131,7 +143,7 @@ export function TopNav({ displayName, plan }: TopNavProps) {
     <>
       <header ref={navRef} className="sticky top-0 z-30 shrink-0 border-b border-line bg-canvas/95 backdrop-blur">
       <div className="mx-auto flex h-15 max-w-[1560px] items-center gap-6.5 px-5.5">
-        <Link href="/" className="shrink-0">
+        <Link href="/" className="shrink-0 pr-1">
           <Logo size={24} />
         </Link>
 
@@ -177,8 +189,8 @@ export function TopNav({ displayName, plan }: TopNavProps) {
               <div
                 key={entry.label}
                 className="relative"
-                onMouseEnter={() => enterGroup(entry.label)}
-                onMouseLeave={() => leaveGroup(entry.label)}
+                onMouseEnter={canHover ? () => enterGroup(entry.label) : undefined}
+                onMouseLeave={canHover ? () => leaveGroup(entry.label) : undefined}
               >
                 <button
                   type="button"

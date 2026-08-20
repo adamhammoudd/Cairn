@@ -2,7 +2,7 @@
 //
 // Kept out of lib/actions/alerts.ts because a "use server" module may only
 // export async functions. The scheduled evaluator duplicates evaluateAlert in
-// Deno (supabase/functions/evaluate-alerts) — the two must stay in sync; there
+// Deno (supabase/functions/evaluate-alerts) - the two must stay in sync; there
 // is no shared module across the Node/Deno boundary.
 
 export type AlertType = "price" | "pct_change" | "volume_spike" | "technical_crossover" | "ai_confidence";
@@ -100,7 +100,7 @@ export function evaluateAlert({ alert, series, analyses }: EvaluationInput): Eva
       message:
         `${alert.scope_value}: a ${match.confidence_level}-confidence ${match.analysis_type.replace(/_/g, " ")} ` +
         `analysis (${match.probability_low}–${match.probability_high}%) is available. ` +
-        `Market-level analysis only — not advice about any position.`,
+        `Market-level analysis only - not advice about any position.`,
     };
   }
 
@@ -163,7 +163,7 @@ export function evaluateAlert({ alert, series, analyses }: EvaluationInput): Eva
       const slowPrev = sma(series.closes, slowDays, 1);
       if (fastNow === null || slowNow === null || fastPrev === null || slowPrev === null) return notTriggered;
 
-      // Only fire on the bar the lines actually cross — comparing current
+      // Only fire on the bar the lines actually cross - comparing current
       // position alone would re-fire every day the trend persists.
       const up = (c.direction as Comparator) === "above";
       const crossed = up ? fastPrev <= slowPrev && fastNow > slowNow : fastPrev >= slowPrev && fastNow < slowNow;
@@ -194,6 +194,6 @@ export function describeCondition(alertType: AlertType, condition: Record<string
     case "ai_confidence":
       return `AI confidence reaches ${condition.minLevel}`;
     default:
-      return "—";
+      return "-";
   }
 }

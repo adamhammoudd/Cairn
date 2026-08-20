@@ -13,7 +13,7 @@ import { tintForWatchlist } from "@/lib/watchlists";
 import { Sparkline } from "@/components/sparkline";
 
 function fmtCurrency(n: number | null) {
-  if (n === null) return "—";
+  if (n === null) return "-";
   return n.toLocaleString(undefined, { style: "currency", currency: "USD" });
 }
 
@@ -192,7 +192,7 @@ export function WatchlistPanel({ watchlists }: { watchlists: WatchlistWithItems[
                           }`}
                         >
                           {item.changePct === null
-                            ? "—"
+                            ? "-"
                             : `${item.changePct >= 0 ? "+" : ""}${item.changePct.toFixed(2)}%`}
                         </div>
 

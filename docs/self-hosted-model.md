@@ -14,16 +14,16 @@ Worth knowing before picking a model size, because it's less than you'd expect:
 
 | Task | Who does it |
 |---|---|
-| Probability range (`probability_low`/`high`) | **Code** — Wilson score interval over historical analogs (`src/lib/ai/analytics.ts`) |
-| Confidence level | **Code** — graded on sample size + interval width |
-| Sample size | **Code** — count of analogs with usable price data |
-| Which sources/analogs are cited | **Code** — the rows actually fed into the computation |
+| Probability range (`probability_low`/`high`) | **Code** - Wilson score interval over historical analogs (`src/lib/ai/analytics.ts`) |
+| Confidence level | **Code** - graded on sample size + interval width |
+| Sample size | **Code** - count of analogs with usable price data |
+| Which sources/analogs are cited | **Code** - the rows actually fed into the computation |
 | `analysis_type` label + `reasoning_text` prose | **Model** |
 | Chat responses | **Model** |
 
 So the model never picks a number and never chooses a citation. It paraphrases
 figures it was handed, and it holds a conversation. Both are jobs a 3B–7B model
-can do acceptably — which is why this design works on a modest VPS.
+can do acceptably - which is why this design works on a modest VPS.
 
 ## 2. Install Ollama and pull a model
 
@@ -38,10 +38,10 @@ Model sizing, assuming CPU-only (most rented VPSs):
 |---|---|---|
 | 4 GB | `qwen2.5:1.5b-instruct` | Usable for chat; prose quality is noticeably thin |
 | 8 GB | `qwen2.5:3b-instruct` | Reasonable floor for the analysis prose |
-| 16 GB | `qwen2.5:7b-instruct` | **Recommended default** — good instruction-following |
+| 16 GB | `qwen2.5:7b-instruct` | **Recommended default** - good instruction-following |
 | 32 GB+ | `qwen2.5:14b-instruct` | Better prose; slow on CPU (expect 30s+ per response) |
 
-With an NVIDIA GPU, use vLLM instead and go straight to a 7B–14B — you'll get
+With an NVIDIA GPU, use vLLM instead and go straight to a 7B–14B - you'll get
 responses in a couple of seconds rather than tens of seconds.
 
 Qwen2.5-Instruct is the default recommendation because it follows JSON-output
@@ -58,7 +58,7 @@ LLM_MODEL=qwen2.5:7b-instruct
 LLM_TIMEOUT_MS=180000
 ```
 
-Note the `/v1` — that's Ollama's OpenAI-compatible path, not its native `/api`.
+Note the `/v1` - that's Ollama's OpenAI-compatible path, not its native `/api`.
 
 Verify Cairn can reach it:
 
@@ -71,7 +71,7 @@ tier rather than silently passing.
 
 ## 4. Securing it (important if the VPS is internet-facing)
 
-Ollama binds `127.0.0.1:11434` by default, which is what you want — the Next.js
+Ollama binds `127.0.0.1:11434` by default, which is what you want - the Next.js
 app talks to it over loopback. **Do not** set `OLLAMA_HOST=0.0.0.0` without
 putting auth in front of it; an open Ollama port is an open, unmetered model
 endpoint for anyone who finds it.
@@ -85,7 +85,7 @@ A small local model complies with adversarial prompts (“should I sell my
 position?”) more readily than a large one does. That is expected and handled:
 `src/lib/ai/chat-generate.ts` buffers the full response, runs the guard, and
 replaces any violation with a deterministic template built from stored,
-already-validated analyses — before anything is streamed to the user or written
+already-validated analyses - before anything is streamed to the user or written
 to `chat_messages`.
 
 The consequence is a real product tradeoff worth knowing: with a weaker model
@@ -102,7 +102,7 @@ order by 3 desc;
 ```
 
 If the rewrite rate is high enough to hurt the experience, moving up a model
-size is the fix — not loosening the guard.
+size is the fix - not loosening the guard.
 
 ## 6. Ongoing cost and privacy consequences
 

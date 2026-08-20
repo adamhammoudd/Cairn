@@ -1,20 +1,24 @@
 "use client";
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { createChatSession, listChatSessions, listChatMessages, type ChatSession } from "@/lib/actions/chat";
-import { getAnalysesByIds, type AnalysisWithMethodology } from "@/lib/actions/analysis";
+import {
+  createChatSession,
+  listChatSessions,
+  listChatMessages,
+  type ChatSession,
+} from "@/lib/actions/chat";
+import { getAnalysesByIds } from "@/lib/actions/analysis";
+import type { ChatMessageData } from "@/components/chat/chat-message";
 import { getUserPlan } from "@/lib/actions/billing";
 import { TIER_LIMITS } from "@/lib/billing";
-import { MethodologyCard } from "@/components/analysis/methodology-card";
+import Link from "next/link";
 import { Disclosure } from "@/components/compliance/disclosure";
+import { ChatMessage } from "@/components/chat/chat-message";
 
 const MESSAGES_PAGE_SIZE = 30;
 
-interface Message {
-  role: "user" | "assistant";
-  content: string;
-  analyses?: AnalysisWithMethodology[];
-}
+// The message shape lives with the component that renders it.
+type Message = ChatMessageData;
 
 const REFS_MARKER = /\sCAIRN_REFS:(\[[^\]]*\])$/;
 
@@ -29,14 +33,23 @@ function splitRefs(raw: string): { text: string; ids: string[] } {
 }
 
 function sessionLabel(session: ChatSession): string {
-  return session.title?.trim() || `Chat — ${new Date(session.created_at).toLocaleDateString()}`;
+  return session.title?.trim() || `Chat - ${new Date(session.created_at).toLocaleDateString()}`;
 }
 
 function sessionWhen(session: ChatSession): string {
   return new Date(session.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
-export function ChatThread({ compact = false, briefing }: { compact?: boolean; briefing?: ReactNode }) {
+export function ChatThread({
+  compact = false,
+  briefing,
+  expandMethodology = true,
+}: {
+  compact?: boolean;
+  briefing?: ReactNode;
+  /** Settings > AI Assistant default for expanding the methodology card. */
+  expandMethodology?: boolean;
+}) {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -189,7 +202,7 @@ export function ChatThread({ compact = false, briefing }: { compact?: boolean; b
       <div ref={scrollRef} className={`flex-1 overflow-y-auto ${compact ? "px-3 py-3" : "p-5"}`}>
         {messages.length === 0 ? (
           <p className="text-[13px] text-muted">
-            Ask about a ticker, sector, or market trend — I&apos;ll answer from stored research only.
+            Ask about a ticker, sector, or market trend - I&apos;ll answer from stored research only.
           </p>
         ) : (
           <div className="flex flex-col gap-3.5">
@@ -204,34 +217,14 @@ export function ChatThread({ compact = false, briefing }: { compact?: boolean; b
               </button>
             )}
             {messages.map((m, i) => (
-              <div key={i} className={`flex flex-col gap-2 ${m.role === "user" ? "items-end" : "items-start"}`}>
-                <div
-                  className={`max-w-[88%] rounded-xl px-4 py-2.5 text-[13.5px] leading-relaxed whitespace-pre-wrap ${
-                    m.role === "user" ? "bg-active text-primary" : "border border-line bg-panel text-primary"
-                  }`}
-                >
-                  {m.content}
-                  {streaming && m.role === "assistant" && i === messages.length - 1 && (
-                    <span className="ml-0.5 inline-block h-[15px] w-[7px] translate-y-[2px] animate-blink bg-accent align-middle" />
-                  )}
-                </div>
-                {/* Every assistant response gets its own attached disclosure, not
-                    just ones that happen to cite a MethodologyCard (which already
-                    embeds one) — the panel-level Disclosure below the composer
-                    isn't enough on its own for a plain-text reply. */}
-                {m.role === "assistant" && m.content && (!m.analyses || m.analyses.length === 0) && (
-                  <div className="w-[92%]">
-                    <Disclosure />
-                  </div>
-                )}
-                {m.analyses && m.analyses.length > 0 && (
-                  <div className="flex w-[92%] flex-col gap-2">
-                    {m.analyses.map((a) => (
-                      <MethodologyCard key={a.id} analysis={a} dense depth={depth} />
-                    ))}
-                  </div>
-                )}
-              </div>
+              <ChatMessage
+                key={i}
+                message={m}
+                streaming={streaming && m.role === "assistant" && i === messages.length - 1}
+                depth={depth}
+                expandMethodology={expandMethodology}
+                dense={compact}
+              />
             ))}
           </div>
         )}
@@ -261,7 +254,7 @@ export function ChatThread({ compact = false, briefing }: { compact?: boolean; b
     </>
   );
 
-  // Full page: the mock's "232px 1fr" grid — a persistent history rail beside
+  // Full page: the mock's "232px 1fr" grid - a persistent history rail beside
   // the briefing + conversation column. The compact floating panel has no room
   // for a rail, so it keeps history in a dropdown.
   if (!compact) {
@@ -282,18 +275,38 @@ export function ChatThread({ compact = false, briefing }: { compact?: boolean; b
             {sessions.length === 0 ? (
               <div className="px-2.5 py-2 text-[12px] text-dim">No conversations yet.</div>
             ) : (
-              sessions.map((s) => (
-                <button
-                  key={s.id}
-                  type="button"
-                  onClick={() => loadSession(s.id)}
-                  className={`mb-0.5 block w-full rounded-[9px] px-2.5 py-2.25 text-left transition-colors duration-fast ease-standard hover:bg-[#171717] ${
-                    s.id === sessionId ? "bg-active text-primary" : "text-muted"
+              sessions.map((sess) => (
+                <div
+                  key={sess.id}
+                  className={`group mb-0.5 flex items-center gap-1 rounded-[9px] pr-1 transition-colors duration-fast ease-standard hover:bg-[#171717] ${
+                    sess.id === sessionId ? "bg-active" : ""
                   }`}
                 >
-                  <div className="truncate text-[12.5px]">{sessionLabel(s)}</div>
-                  <div className="mt-0.75 text-[10.5px] text-dim">{sessionWhen(s)}</div>
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => loadSession(sess.id)}
+                    className={`min-w-0 flex-1 px-2.5 py-2.25 text-left ${
+                      sess.id === sessionId ? "text-primary" : "text-muted"
+                    }`}
+                  >
+                    <div className="truncate text-[12.5px]">{sessionLabel(sess)}</div>
+                    <div className="mt-0.75 text-[10.5px] text-dim">{sessionWhen(sess)}</div>
+                  </button>
+                  {/* Managing a conversation is its own page, not an inline
+                      form: rename, per-chat assistant preferences and delete
+                      all live at /assistant/[sessionId]/settings. */}
+                  <Link
+                    href={`/assistant/${sess.id}/settings`}
+                    aria-label={`Manage ${sessionLabel(sess)}`}
+                    title="Manage conversation"
+                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-dim opacity-0 transition-opacity duration-fast ease-standard group-hover:opacity-100 focus-visible:opacity-100 hover:text-primary max-[900px]:opacity-100"
+                  >
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <circle cx="12" cy="12" r="3" />
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z" />
+                      </svg>
+                  </Link>
+                </div>
               ))
             )}
           </div>
@@ -342,18 +355,33 @@ export function ChatThread({ compact = false, briefing }: { compact?: boolean; b
               {filteredSessions.length === 0 ? (
                 <div className="px-3 py-2 text-[12px] text-dim">No conversations found.</div>
               ) : (
-                filteredSessions.map((s) => (
-                  <button
-                    key={s.id}
-                    type="button"
-                    onClick={() => loadSession(s.id)}
-                    className={`block w-full truncate rounded-lg px-3 py-2 text-left transition-colors duration-fast ease-standard hover:bg-active ${
-                      s.id === sessionId ? "text-primary" : "text-muted"
-                    }`}
+                filteredSessions.map((sess) => (
+                  <div
+                    key={sess.id}
+                    className="group flex items-center gap-1 rounded-lg pr-1 transition-colors duration-fast ease-standard hover:bg-active"
                   >
-                    <div className="truncate text-[12.5px]">{sessionLabel(s)}</div>
-                    <div className="mt-0.5 text-[10.5px] text-dim">{sessionWhen(s)}</div>
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => loadSession(sess.id)}
+                      className={`min-w-0 flex-1 px-3 py-2 text-left ${
+                        sess.id === sessionId ? "text-primary" : "text-muted"
+                      }`}
+                    >
+                      <div className="truncate text-[12.5px]">{sessionLabel(sess)}</div>
+                      <div className="mt-0.5 text-[10.5px] text-dim">{sessionWhen(sess)}</div>
+                    </button>
+                    <Link
+                      href={`/assistant/${sess.id}/settings`}
+                      aria-label={`Manage ${sessionLabel(sess)}`}
+                      title="Manage conversation"
+                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-dim hover:text-primary"
+                    >
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <circle cx="12" cy="12" r="3" />
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z" />
+                      </svg>
+                    </Link>
+                  </div>
                 ))
               )}
             </div>

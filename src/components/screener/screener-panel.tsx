@@ -241,7 +241,7 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
             <div className="px-6 py-15 text-center">
               <div className="font-serif text-[20px] text-primary">No asset clears every filter</div>
               <p className="mx-auto mt-2 mb-4.5 max-w-[380px] text-[13px] text-muted text-pretty">
-                Loosen one constraint at a time — price and change are usually the binding pair.
+                Loosen one constraint at a time - price and change are usually the binding pair.
               </p>
               <button
                 type="button"
@@ -275,22 +275,22 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
                     {r.assetType}
                   </div>
                   <div className="text-[12.5px] tabular-nums text-primary">
-                    {r.price === null ? "—" : r.price.toLocaleString(undefined, { style: "currency", currency: "USD" })}
+                    {r.price === null ? "-" : r.price.toLocaleString(undefined, { style: "currency", currency: "USD" })}
                   </div>
                   <div
                     className={`text-[12.5px] tabular-nums ${
                       r.changePct === null ? "text-muted" : r.changePct >= 0 ? "text-accent" : "text-negative"
                     }`}
                   >
-                    {r.changePct === null ? "—" : `${r.changePct >= 0 ? "+" : ""}${r.changePct.toFixed(2)}%`}
+                    {r.changePct === null ? "-" : `${r.changePct >= 0 ? "+" : ""}${r.changePct.toFixed(2)}%`}
                   </div>
                   <div className="text-[12.5px] tabular-nums text-muted">
                     {formatVolume(r.volume)}
                   </div>
                   <div className="text-[12.5px] tabular-nums text-primary">{formatMarketCap(r.marketCap)}</div>
-                  <div className="text-[12.5px] tabular-nums text-muted">{r.pe === null ? "—" : `${r.pe.toFixed(1)}00d7`}</div>
+                  <div className="text-[12.5px] tabular-nums text-muted">{r.pe === null ? "-" : `${r.pe.toFixed(1)}00d7`}</div>
                   <div className="text-[12.5px] tabular-nums text-muted">
-                    {r.dividendYield === null ? "—" : `${r.dividendYield.toFixed(2)}%`}
+                    {r.dividendYield === null ? "-" : `${r.dividendYield.toFixed(2)}%`}
                   </div>
                 </Link>
               ))}

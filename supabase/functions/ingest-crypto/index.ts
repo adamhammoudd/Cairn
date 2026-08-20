@@ -1,9 +1,9 @@
 // Scheduled Edge Function: ingests crypto market data from CoinGecko.
 //
 // Writes three things:
-//   1. crypto_metrics      — point-in-time overview (cap, 24h volume, supply)
-//   2. historical_prices   — daily closes, asset_type 'crypto'
-//   3. historical_events   — derived volatility regimes (see below)
+//   1. crypto_metrics      - point-in-time overview (cap, 24h volume, supply)
+//   2. historical_prices   - daily closes, asset_type 'crypto'
+//   3. historical_events   - derived volatility regimes (see below)
 //
 // Why (3) exists: Phase 4's engine requires at least one historical analog
 // before an analysis passes its completeness gate. For equities those analogs
@@ -12,7 +12,7 @@
 // storage. Rather than weakening the gate, we derive analogs from the price
 // history we actually ingested: windows where realized volatility was
 // unusually high relative to the asset's own baseline. Those are computed
-// from real closes — nothing is asserted or invented.
+// from real closes - nothing is asserted or invented.
 //
 // CoinGecko's free tier is keyless but rate-limited (roughly 10-30 req/min),
 // so this walks the coin list serially with a delay rather than in parallel.
@@ -81,7 +81,7 @@ interface DerivedRegime {
 
 /**
  * Flag windows where 30-day realized vol ran materially above the asset's own
- * median. Threshold is relative to the asset itself, not an absolute number —
+ * median. Threshold is relative to the asset itself, not an absolute number -
  * an absolute equity-style threshold would mark essentially all of crypto as
  * "elevated" and carry no information.
  */
@@ -114,7 +114,7 @@ function deriveVolatilityRegimes(dates: string[], closes: number[]): DerivedRegi
       startIdx = i;
     } else if (inRegime && v <= threshold) {
       inRegime = false;
-      // Only keep regimes that persisted — a single day over the line is noise.
+      // Only keep regimes that persisted - a single day over the line is noise.
       if (i - startIdx >= 5) {
         regimes.push({
           event_date: dates[startIdx],
@@ -129,7 +129,7 @@ function deriveVolatilityRegimes(dates: string[], closes: number[]): DerivedRegi
     }
   }
 
-  // Keep the most recent handful — older regimes add little for pattern matching.
+  // Keep the most recent handful - older regimes add little for pattern matching.
   return regimes.slice(-8);
 }
 
@@ -253,7 +253,7 @@ Deno.serve(async (req) => {
 
     const regimes = deriveVolatilityRegimes(dates, closes);
     // Replace this symbol's derived regimes rather than accumulating duplicates
-    // across runs — they're recomputed from the full window each time.
+    // across runs - they're recomputed from the full window each time.
     await supabase.from("historical_events").delete().eq("symbol", symbol).eq("event_type", "volatility_regime");
 
     if (regimes.length > 0) {
