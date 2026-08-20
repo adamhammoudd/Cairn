@@ -1,24 +1,11 @@
-import Link from "next/link";
-import { Logo } from "@/components/logo";
+import { LegalShell } from "@/components/legal-shell";
 
 export const metadata = { title: "Privacy Policy - Cairn" };
 
-export default function PrivacyPage() {
+export default function PrivacyPolicyPage() {
   return (
-    <div>
-      <div>
-        <Logo size={30} />
-      </div>
-
-      <div>
-        <span>Draft - not legal advice.</span> This is a first-pass,
-        non-lawyer draft. It has not been reviewed by a licensed attorney and is not launch-ready.
-      </div>
-
-      <h1>Privacy Policy</h1>
-
-      <div>
-        <section>
+    <LegalShell eyebrow="Legal" title="Privacy Policy" updated="20 August 2026">
+<section>
           <h2>What we collect</h2>
           <p>
             Account data (email, hashed password, display name), portfolio data (holdings,
@@ -55,11 +42,6 @@ export default function PrivacyPage() {
           <h2>Your data, your control</h2>
           <p>Export your data or delete your account at any time from Settings.</p>
         </section>
-      </div>
-
-      <Link href="/login">
-        ← Back to sign in
-      </Link>
-    </div>
+    </LegalShell>
   );
 }

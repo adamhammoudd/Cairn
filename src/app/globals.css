@@ -230,3 +230,71 @@ select,
     scroll-behavior: auto !important;
   }
 }
+
+/* Typography for the Terms and Privacy documents. These pages previously had
+   no styling whatsoever - raw browser defaults on a white background, reached
+   from the footer of a dark product. Scoped to .legal-prose rather than
+   applied to bare h2/p globally, so it cannot leak into the app surfaces. */
+.legal-prose section + section {
+  margin-top: 2rem;
+}
+
+.legal-prose h2 {
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 18px;
+  line-height: 1.3;
+  font-weight: 400;
+  color: var(--color-primary);
+  margin-bottom: 0.6rem;
+}
+
+.legal-prose h3 {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--color-primary);
+  margin-top: 1.1rem;
+  margin-bottom: 0.4rem;
+}
+
+.legal-prose p {
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: var(--color-muted);
+  text-wrap: pretty;
+}
+
+.legal-prose p + p {
+  margin-top: 0.75rem;
+}
+
+.legal-prose ul,
+.legal-prose ol {
+  margin-top: 0.6rem;
+  padding-left: 1.15rem;
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: var(--color-muted);
+}
+
+.legal-prose ul {
+  list-style: disc;
+}
+
+.legal-prose ol {
+  list-style: decimal;
+}
+
+.legal-prose li + li {
+  margin-top: 0.3rem;
+}
+
+.legal-prose strong {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.legal-prose a {
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}

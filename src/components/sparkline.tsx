@@ -5,11 +5,18 @@ interface SparklineProps {
   className?: string;
   /** Stagger the draw-in when many render down a table. */
   delayMs?: number;
+  /**
+   * Explicit stroke, for contexts where colour encodes series identity rather
+   * than direction (the Compare page, where the chart below colours the same
+   * series by position). Omit it and the sparkline colours by gain/loss, which
+   * is what a watchlist or markets row wants.
+   */
+  color?: string;
 }
 
 // Inline SVG rather than Recharts: these render once per row and Recharts'
 // ResponsiveContainer is heavy at that multiplicity.
-export function Sparkline({ values, positive, className = "h-7 w-[90px]", delayMs = 0 }: SparklineProps) {
+export function Sparkline({ values, positive, className = "h-7 w-[90px]", delayMs = 0, color }: SparklineProps) {
   if (values.length < 2) {
     return <div className={`${className} text-[11px] text-dim`}>-</div>;
   }
@@ -28,7 +35,7 @@ export function Sparkline({ values, positive, className = "h-7 w-[90px]", delayM
       <polyline
         points={points}
         fill="none"
-        stroke={positive ? "var(--color-accent)" : "var(--color-negative)"}
+        stroke={color ?? (positive ? "var(--color-accent)" : "var(--color-negative)")}
         strokeWidth={1.8}
         strokeLinejoin="round"
         pathLength="1"

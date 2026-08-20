@@ -1,24 +1,11 @@
-import Link from "next/link";
-import { Logo } from "@/components/logo";
+import { LegalShell } from "@/components/legal-shell";
 
 export const metadata = { title: "Terms of Service - Cairn" };
 
-export default function TermsPage() {
+export default function TermsofServicePage() {
   return (
-    <div>
-      <div>
-        <Logo size={30} />
-      </div>
-
-      <div>
-        <span>Draft - not legal advice.</span> This is a first-pass,
-        non-lawyer draft. It has not been reviewed by a licensed attorney and is not launch-ready.
-      </div>
-
-      <h1>Terms of Service</h1>
-
-      <div>
-        <section>
+    <LegalShell eyebrow="Legal" title="Terms of Service" updated="20 August 2026">
+<section>
           <h2>1. What Cairn is</h2>
           <p>
             Cairn is a portfolio-tracking and market-research application. It aggregates market
@@ -65,11 +52,6 @@ export default function TermsPage() {
           <h2>6–10. Billing, liability, termination, governing law, changes</h2>
           <p>Placeholders pending legal review - see the full draft in the repository.</p>
         </section>
-      </div>
-
-      <Link href="/login">
-        ← Back to sign in
-      </Link>
-    </div>
+    </LegalShell>
   );
 }
