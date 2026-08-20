@@ -67,6 +67,19 @@ export async function getChatUsageSummary(): Promise<ChatUsageSummary> {
   return computeChatUsageSummary(subscription?.tier ?? "free", count ?? 0);
 }
 
+// There is no billing processor in this build. Until there is, upgrading is
+// refused HERE, on the server, rather than by hiding the button: a form POST
+// straight to this action was a free, unlimited upgrade to premium for any
+// signed-in user, and hiding the control in the UI would leave that intact
+// for anyone who opened devtools once.
+//
+// Flag rather than a hard-coded false so that wiring Stripe is a config
+// change plus a webhook, not a hunt for the place upgrades were disabled.
+// Absent env var means disabled -- the safe direction.
+function billingEnabled(): boolean {
+  return process.env.BILLING_ENABLED === "true";
+}
+
 // Self-serve, no payment - this build has no real billing processor yet
 // (see migration 0012's header note). Explicitly disclosed as such in the
 // Billing UI so it never reads as a real purchase flow.
@@ -79,6 +92,13 @@ export async function setTier(_prevState: string | null, formData: FormData) {
 
   const tier = String(formData.get("tier") ?? "");
   if (tier !== "free" && tier !== "premium") return "Invalid plan.";
+
+  // Downgrading stays available even with billing off: a user must always be
+  // able to leave a plan, and refusing that is the failure mode regulators
+  // care about. Only the upgrade is gated.
+  if (tier === "premium" && !billingEnabled()) {
+    return "Premium isn't available yet - payments aren't set up. Nothing has been charged or changed.";
+  }
 
   const { error } = await supabase.from("subscriptions").upsert({ user_id: user.id, tier });
   if (error) return error.message;
