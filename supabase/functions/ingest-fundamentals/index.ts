@@ -2,7 +2,7 @@
 // SEC EDGAR's XBRL API for every symbol tracked by an enabled market_data
 // provider, so the screener can filter on market cap / P/E / dividend yield.
 //
-// Keyless — SEC requires only a declared User-Agent. Stores raw reported
+// Keyless - SEC requires only a declared User-Agent. Stores raw reported
 // figures; market cap, P/E, and yield are derived at query time against
 // historical_prices so they don't go stale as prices move.
 
@@ -31,7 +31,7 @@ function factsFor(doc: unknown, unit: string): ConceptFact[] {
 
 // Sum the four most recent non-overlapping quarterly periods to get a TTM
 // figure. SEC reports both quarterly and cumulative year-to-date rows for the
-// same concept, so filter to ~quarter-length windows before summing — adding
+// same concept, so filter to ~quarter-length windows before summing - adding
 // a YTD row to quarterly rows would double-count.
 function trailingTwelveMonths(facts: ConceptFact[]): number | null {
   const quarterly = facts

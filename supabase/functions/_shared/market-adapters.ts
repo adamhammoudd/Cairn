@@ -1,4 +1,4 @@
-// Market-data adapters produce OHLCV bars (distinct shape from news adapters —
+// Market-data adapters produce OHLCV bars (distinct shape from news adapters -
 // this feeds historical_prices, the Phase 4 pattern-matching trend store).
 
 export interface PriceBar {
@@ -15,7 +15,7 @@ export interface PriceBar {
 // Yahoo Finance's chart endpoint is free and keyless. Stooq's CSV endpoint
 // (the original choice here) now sits behind a JS proof-of-work bot check
 // that a server-side fetch can't solve, so it's not usable from an Edge
-// Function — this replaced it after that was confirmed against the live API.
+// Function - this replaced it after that was confirmed against the live API.
 export async function fetchYahooFinanceDaily(
   symbol: string,
   assetType: PriceBar["asset_type"],

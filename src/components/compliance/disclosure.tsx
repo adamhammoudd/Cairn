@@ -3,7 +3,7 @@ interface DisclosureProps {
 }
 
 // The one component every probability output and chat response touching
-// market analysis renders through — Phase 6 requires this be literally the
+// market analysis renders through - Phase 6 requires this be literally the
 // same component everywhere (dashboard, briefing, chat, research), not
 // separately-worded copies that can drift out of sync.
 export function Disclosure({ variant = "inline" }: DisclosureProps) {
@@ -11,7 +11,7 @@ export function Disclosure({ variant = "inline" }: DisclosureProps) {
     return (
       <div className="rounded-card border border-line bg-panel px-4 py-3 text-[12.5px] leading-relaxed text-muted">
         <span className="font-semibold text-primary">Informational only, not investment advice.</span>{" "}
-        Cairn&apos;s analysis is market/sector/ticker-level output — it never resolves to a
+        Cairn&apos;s analysis is market/sector/ticker-level output - it never resolves to a
         personalized buy, hold, or sell recommendation. Always verify sources and consult a
         licensed advisor before making financial decisions.
       </div>

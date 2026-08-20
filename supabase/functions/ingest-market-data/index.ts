@@ -1,6 +1,6 @@
 // Scheduled Edge Function: backfills/updates historical_prices (daily OHLCV)
 // for every symbol listed in each enabled market_data provider's config.
-// Separate concern from live quotes — this feeds Phase 4's pattern matching,
+// Separate concern from live quotes - this feeds Phase 4's pattern matching,
 // not the dashboard's real-time price display.
 
 import { createClient } from "jsr:@supabase/supabase-js@2";

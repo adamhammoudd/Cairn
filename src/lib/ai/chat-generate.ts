@@ -1,7 +1,7 @@
 // The chat surface's generate-then-validate core, extracted out of
 // app/api/chat/route.ts so it (a) has no HTTP/session/streaming concerns and
 // is directly callable from the Section 7 test suite, and (b) is the single
-// place the hard scope-guard gate runs for chat — nothing produced here
+// place the hard scope-guard gate runs for chat - nothing produced here
 // leaves this function until it has already passed or been rewritten.
 //
 // Mirrors lib/ai/generate.ts's validate-before-storage discipline: that
@@ -18,15 +18,15 @@ import type { Database } from "@/lib/supabase/types";
 
 const SYSTEM_PROMPT = `You are Cairn's conversational research assistant. You answer questions about
 markets, sectors, and tickers using ONLY the stored analyses and news items provided in each turn's
-context block below — you never invent a new probability, percentage, or confidence figure of your
+context block below - you never invent a new probability, percentage, or confidence figure of your
 own. If the provided context doesn't cover the question, say so plainly and suggest the person
-request a fresh analysis on the Research page — do not guess or estimate a number yourself.
+request a fresh analysis on the Research page - do not guess or estimate a number yourself.
 
 Hard rules, no exceptions:
 - Never phrase anything as a personal directive ("you should buy/sell/hold", "consider trimming",
   "add to your position"). The user's holdings/watchlist are used only to decide which stored
-  analyses are relevant to surface — never to shape advice about their specific position.
-- When you cite a stored analysis, keep its probability range and confidence level as given —
+  analyses are relevant to surface - never to shape advice about their specific position.
+- When you cite a stored analysis, keep its probability range and confidence level as given -
   don't round it into false precision or restate it more confidently than it was stored.
 - Plain language, cite sources/analogs when you reference them.`;
 
@@ -38,11 +38,11 @@ export interface ChatHistoryMessage {
 export interface ChatTurnInput {
   userId: string;
   message: string;
-  /** Prior turns only — must NOT include the current `message`. */
+  /** Prior turns only - must NOT include the current `message`. */
   history: ChatHistoryMessage[];
   /**
    * Optional override for the request-scoped Supabase client that
-   * buildChatContext otherwise creates itself — needed by callers with no
+   * buildChatContext otherwise creates itself - needed by callers with no
    * Next.js request scope (the Section 7 test suite passes an admin client).
    * Real HTTP requests (app/api/chat/route.ts) leave this unset.
    */
@@ -54,21 +54,29 @@ export interface ChatTurnInput {
    * produced. Only the test harness sets this.
    */
   isTest?: boolean;
+  /**
+   * Settings > AI Assistant "Portfolio context", or the per-conversation
+   * override on chat_sessions. Off means holdings/watchlists are not read when
+   * choosing which stored analyses and news are relevant. It never widens what
+   * the assistant may say - the scope guard still rejects anything that
+   * resolves to advice about a personal position, on either setting.
+   */
+  usePortfolioContext?: boolean;
 }
 
 export interface ChatTurnResult {
-  /** Validated (and rewritten, if flagged) text — the only thing safe to store or show. */
+  /** Validated (and rewritten, if flagged) text - the only thing safe to store or show. */
   displayText: string;
   flagged: boolean;
   flagReason: string | null;
-  /** Raw model output — kept only for the audit log, never shown to the user when flagged. */
+  /** Raw model output - kept only for the audit log, never shown to the user when flagged. */
   rawOutput: string;
   analysisIds: string[];
   context: ChatContext;
 }
 
 function buildContextBlock(context: ChatContext): string {
-  return `Context for this turn (stored, already-validated data — do not invent beyond this):
+  return `Context for this turn (stored, already-validated data - do not invent beyond this):
 
 Relevant stored analyses:
 ${context.analyses.length === 0 ? "(none found)" : JSON.stringify(context.analyses, null, 2)}
@@ -83,8 +91,9 @@ export async function runChatTurn({
   history,
   supabaseClient,
   isTest = false,
+  usePortfolioContext = true,
 }: ChatTurnInput): Promise<ChatTurnResult> {
-  const context = await buildChatContext(message, userId, supabaseClient);
+  const context = await buildChatContext(message, userId, supabaseClient, usePortfolioContext);
   const contextBlock = buildContextBlock(context);
 
   const rawOutput = await llmComplete({

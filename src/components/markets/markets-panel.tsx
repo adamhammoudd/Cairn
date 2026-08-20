@@ -2,48 +2,44 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { ASSET_TYPE_LABEL, ASSET_TYPE_TAG_CLASS, ASSET_TYPES, formatVolume, type ScreenerRow } from "@/lib/screener";
-import { assetName } from "@/lib/asset-names";
+import { ASSET_TYPE_LABEL, ASSET_TYPES, type ScreenerRow } from "@/lib/screener";
 import type { CryptoRow } from "@/lib/crypto";
-import { CryptoTable } from "@/components/crypto/crypto-table";
+import { TickerList } from "@/components/markets/ticker-list";
+import type { AssetFilter } from "@/lib/supabase/types";
 
 interface MarketsPanelProps {
   rows: ScreenerRow[];
   cryptoRows: CryptoRow[];
+  /** Settings › Display default; which category the page opens on. */
+  defaultFilter?: AssetFilter;
 }
 
 const TABS = ["all", ...ASSET_TYPES] as const;
 
-function initialsOf(symbol: string) {
-  return symbol.slice(0, 2).toUpperCase();
-}
-
-function trendPoints(values: number[], width: number, height: number) {
-  if (values.length < 2) return "";
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  const span = max - min || 1;
-  return values
-    .map((v, i) => {
-      const x = (i / (values.length - 1)) * width;
-      const y = height - ((v - min) / span) * height;
-      return `${x.toFixed(1)},${y.toFixed(1)}`;
-    })
-    .join(" ");
-}
-
-export function MarketsPanel({ rows, cryptoRows }: MarketsPanelProps) {
-  const [tab, setTab] = useState<(typeof TABS)[number]>("all");
+export function MarketsPanel({ rows, cryptoRows, defaultFilter = "all" }: MarketsPanelProps) {
+  const [tab, setTab] = useState<AssetFilter>(defaultFilter);
   const [query, setQuery] = useState("");
 
-  // "all" excludes crypto's generic screener row so it isn't listed twice --
-  // crypto gets its own richer table (rank, 24h change, supply) below.
+  // crypto_metrics carries the display name and a market cap the fundamentals
+  // table can't derive (no shares outstanding for a coin). Merged in here so
+  // crypto rows keep that detail while still rendering through the one list.
+  const { names, marketCaps } = useMemo(() => {
+    const names: Record<string, string> = {};
+    const marketCaps: Record<string, number | null> = {};
+    for (const c of cryptoRows) {
+      names[c.symbol] = c.name;
+      marketCaps[c.symbol] = c.marketCap;
+    }
+    return { names, marketCaps };
+  }, [cryptoRows]);
+
   const filtered = useMemo(() => {
-    if (tab === "crypto") return [];
-    const base = tab === "all" ? rows.filter((r) => r.assetType !== "crypto") : rows.filter((r) => r.assetType === tab);
+    const base = tab === "all" ? rows : rows.filter((r) => r.assetType === tab);
     const q = query.trim().toUpperCase();
-    return q ? base.filter((r) => r.symbol.toUpperCase().includes(q)) : base;
-  }, [rows, tab, query]);
+    return q
+      ? base.filter((r) => r.symbol.toUpperCase().includes(q) || (names[r.symbol] ?? "").toUpperCase().includes(q))
+      : base;
+  }, [rows, tab, query, names]);
 
   const activeFilterLabel = tab === "all" ? "the full universe" : `${tab} symbols`;
 
@@ -92,167 +88,41 @@ export function MarketsPanel({ rows, cryptoRows }: MarketsPanelProps) {
         </div>
       </div>
 
-      {tab === "crypto" ? (
-        <CryptoTable rows={cryptoRows} />
-      ) : (
-        <div className="overflow-hidden rounded-card border border-line bg-panel">
-          <div className="hidden grid-cols-[1.6fr_0.9fr_1fr_0.9fr_1fr_100px] gap-3 border-b border-[#1E1E1E] px-5 py-2.75 font-mono text-[9.5px] tracking-[0.12em] text-dim uppercase sm:grid">
-            <div>Asset</div>
-            <div>Type</div>
-            <div>Price</div>
-            <div>24h</div>
-            <div>Volume</div>
-            <div>Trend</div>
-          </div>
-          {filtered.map((r) => {
-            const changeColor = r.changePct === null ? "var(--color-muted)" : r.changePct >= 0 ? "var(--color-accent)" : "var(--color-negative)";
-            return (
-              <Link
-                key={r.symbol}
-                href={`/ticker/${r.symbol}`}
-                className="block border-b border-[#171717] transition-colors duration-fast ease-standard last:border-b-0 hover:bg-active sm:grid sm:grid-cols-[1.6fr_0.9fr_1fr_0.9fr_1fr_100px] sm:items-center sm:gap-3 sm:px-5 sm:py-3"
-              >
-                {/* Phone (<640px): the mock collapses the row into a card. */}
-                <div className="flex flex-col gap-2 px-4 py-3.5 sm:hidden">
-                  <div className="flex items-center justify-between gap-2.5">
-                    <div className="flex min-w-0 items-center gap-2.5">
-                      <div
-                        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg font-mono text-[10px] text-canvas"
-                        style={{
-                          backgroundImage:
-                            r.changePct === null || r.changePct >= 0
-                              ? "linear-gradient(135deg, var(--color-accent-light), var(--color-accent-dark))"
-                              : "linear-gradient(135deg, #E39B9B, #C25A5A)",
-                        }}
-                      >
-                        {initialsOf(r.symbol)}
-                      </div>
-                      <div className="min-w-0">
-                        <div className="text-[14px] text-primary">{r.symbol}</div>
-                        <div className="truncate text-[11px] text-muted">
-                          {assetName(r.symbol, ASSET_TYPE_LABEL[r.assetType] ?? r.assetType)}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="shrink-0 text-right">
-                      <div className="text-[13px] tabular-nums text-primary">
-                        {r.price === null ? "—" : r.price.toLocaleString(undefined, { style: "currency", currency: "USD" })}
-                      </div>
-                      <div
-                        className={`mt-0.75 text-[11.5px] tabular-nums ${
-                          r.changePct === null ? "text-muted" : r.changePct >= 0 ? "text-accent" : "text-negative"
-                        }`}
-                      >
-                        {r.changePct === null ? "—" : `${r.changePct >= 0 ? "+" : ""}${r.changePct.toFixed(2)}%`}
-                      </div>
-                    </div>
-                  </div>
-                  {r.trend.length > 1 && (
-                    <svg viewBox="0 0 100 28" preserveAspectRatio="none" className="block h-7.5 w-full">
-                      <polyline
-                        points={trendPoints(r.trend, 100, 28)}
-                        fill="none"
-                        stroke={changeColor}
-                        strokeWidth={1.6}
-                        vectorEffect="non-scaling-stroke"
-                        pathLength="1"
-                        strokeDasharray="1"
-                        className="animate-draw"
-                      />
-                    </svg>
-                  )}
-                </div>
-
-                <div className="hidden min-w-0 items-center gap-2.5 sm:flex">
-                  <div
-                    className="flex h-6.5 w-6.5 shrink-0 items-center justify-center rounded-lg font-mono text-[9.5px] text-canvas"
-                    style={{
-                      backgroundImage:
-                        r.changePct === null || r.changePct >= 0
-                          ? "linear-gradient(135deg, var(--color-accent-light), var(--color-accent-dark))"
-                          : "linear-gradient(135deg, #E39B9B, #C25A5A)",
-                    }}
-                  >
-                    {initialsOf(r.symbol)}
-                  </div>
-                  <div className="min-w-0">
-                    <div className="text-[13px] text-primary">{r.symbol}</div>
-                    <div className="truncate text-[11px] text-muted">
-                      {assetName(r.symbol, ASSET_TYPE_LABEL[r.assetType] ?? r.assetType)}
-                    </div>
-                  </div>
-                </div>
-                <div className="hidden sm:block">
-                  <span
-                    className={`rounded-full border px-2 py-0.75 font-mono text-[9.5px] tracking-[0.1em] uppercase ${
-                      ASSET_TYPE_TAG_CLASS[r.assetType] ?? "text-muted border-line"
-                    }`}
-                  >
-                    {r.assetType}
-                  </span>
-                </div>
-                <div className="hidden text-[12.5px] tabular-nums text-primary sm:block">
-                  {r.price === null ? "—" : r.price.toLocaleString(undefined, { style: "currency", currency: "USD" })}
-                </div>
-                <div
-                  className={`hidden text-[12.5px] tabular-nums sm:block ${
-                    r.changePct === null ? "text-muted" : r.changePct >= 0 ? "text-accent" : "text-negative"
-                  }`}
-                >
-                  {r.changePct === null ? "—" : `${r.changePct >= 0 ? "+" : ""}${r.changePct.toFixed(2)}%`}
-                </div>
-                <div className="hidden text-[12.5px] tabular-nums text-muted sm:block">{formatVolume(r.volume)}</div>
-                <div className="hidden sm:block">
-                  {r.trend.length > 1 && (
-                    <svg viewBox="0 0 100 28" preserveAspectRatio="none" className="block h-6.5 w-23.5">
-                      <polyline
-                        points={trendPoints(r.trend, 100, 28)}
-                        fill="none"
-                        stroke={changeColor}
-                        strokeWidth={1.6}
-                        vectorEffect="non-scaling-stroke"
-                        pathLength="1"
-                        strokeDasharray="1"
-                        className="animate-draw"
-                      />
-                    </svg>
-                  )}
-                </div>
-              </Link>
-            );
-          })}
-          {filtered.length === 0 && (
-            <div className="px-6 py-16 text-center">
-              <div className="mb-4.5 flex items-end justify-center gap-1.25">
-                <span className="h-2.25 w-8.5 rounded-full bg-[#1E1E1E]" />
-                <span className="h-2.25 w-6.5 rounded-full bg-[#1E1E1E]" />
-                <span className="h-2.25 w-4.5 rounded-full bg-[#262626]" />
-              </div>
-              <div className="font-serif text-[21px] text-primary">No marker here</div>
-              <p className="mx-auto mt-2 mb-4.5 max-w-[400px] text-[13px] text-muted text-pretty">
-                {query
-                  ? `Nothing matches "${query}" in ${activeFilterLabel}. Try another asset type, or search the full universe.`
-                  : `Nothing tracked yet in ${activeFilterLabel}.`}
-              </p>
-              <div className="flex flex-wrap justify-center gap-2">
-                <button
-                  type="button"
-                  onClick={clearFilters}
-                  className="rounded-[10px] bg-gradient-to-br from-accent-light to-accent-dark px-4 py-2.25 text-[12.5px] font-semibold text-canvas"
-                >
-                  Clear filters
-                </button>
-                <Link
-                  href="/assistant"
-                  className="rounded-[10px] border border-line px-4 py-2.25 text-[12.5px] text-primary transition-colors duration-base ease-standard hover:border-[#3A3A3A]"
-                >
-                  Ask the assistant
-                </Link>
-              </div>
+      <TickerList
+        rows={filtered}
+        names={names}
+        marketCaps={marketCaps}
+        emptyState={
+          <div className="px-6 py-16 text-center">
+            <div className="mb-4.5 flex items-end justify-center gap-1.25">
+              <span className="h-2.25 w-8.5 rounded-full bg-[#1E1E1E]" />
+              <span className="h-2.25 w-6.5 rounded-full bg-[#1E1E1E]" />
+              <span className="h-2.25 w-4.5 rounded-full bg-[#262626]" />
             </div>
-          )}
-        </div>
-      )}
+            <div className="font-serif text-[21px] text-primary">No marker here</div>
+            <p className="mx-auto mt-2 mb-4.5 max-w-[400px] text-[13px] text-muted text-pretty">
+              {query
+                ? `Nothing matches "${query}" in ${activeFilterLabel}. Try another asset type, or search the full universe.`
+                : `Nothing tracked yet in ${activeFilterLabel}.`}
+            </p>
+            <div className="flex flex-wrap justify-center gap-2">
+              <button
+                type="button"
+                onClick={clearFilters}
+                className="rounded-[10px] bg-gradient-to-br from-accent-light to-accent-dark px-4 py-2.25 text-[12.5px] font-semibold text-canvas"
+              >
+                Clear filters
+              </button>
+              <Link
+                href="/assistant"
+                className="rounded-[10px] border border-line px-4 py-2.25 text-[12.5px] text-primary transition-colors duration-base ease-standard hover:border-[#3A3A3A]"
+              >
+                Ask the assistant
+              </Link>
+            </div>
+          </div>
+        }
+      />
     </div>
   );
 }

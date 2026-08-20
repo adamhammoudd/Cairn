@@ -1,5 +1,5 @@
 // The probability engine. Runs against a SELF-HOSTED model (see lib/ai/llm.ts)
-// — Cairn calls no third-party model API.
+// - Cairn calls no third-party model API.
 //
 // Division of labour, which is the important design decision in this file:
 //
@@ -14,7 +14,7 @@
 //     - reasoning_text  (plain-language prose explaining the computed figures)
 //
 // The model therefore cannot invent a probability, overstate confidence, or
-// cite a document that doesn't exist — those failure modes are removed
+// cite a document that doesn't exist - those failure modes are removed
 // structurally rather than caught after the fact. That matters generally, and
 // it matters especially with a small local model, which is far weaker at
 // calibrated estimation than at paraphrasing numbers it was handed.
@@ -37,7 +37,7 @@ historical data. You do not choose them. Your job is to explain, in plain langua
 figures mean and what in the current news flow and historical record supports them.
 
 Hard rules, no exceptions:
-- Write about the market, sector, or ticker itself — never a specific person's position, portfolio, or
+- Write about the market, sector, or ticker itself - never a specific person's position, portfolio, or
   holdings. You have no knowledge of any user's holdings and must never imply one.
 - Never phrase anything as a directive ("you should buy/sell/hold", "consider trimming", "add to your
   position"). Describe likelihoods and patterns, not actions for the reader to take.
@@ -50,7 +50,7 @@ const CRYPTO_PROMPT_ADDENDUM = `
 
 This scope is a crypto asset. Its data profile is materially different from an equity:
 - There are no earnings, guidance, splits, dividends, or regulatory filings for this asset. The
-  historical analogs are volatility regimes derived from its own realized price history — statistical
+  historical analogs are volatility regimes derived from its own realized price history - statistical
   windows, not scheduled corporate events. Do not reason about an earnings cycle or company fundamentals.
 - Crypto's baseline volatility is several times that of equities. "Elevated" must mean elevated
   relative to THIS asset's own history, not relative to a stock.
@@ -127,7 +127,7 @@ export async function generateAnalysis({ scopeType, scopeValue }: GenerateAnalys
 
   if (newsList.length === 0 && eventsList.length === 0) {
     throw new Error(
-      `No news or historical event data for "${scopeValue}" yet — ingestion may not have run for this scope.`,
+      `No news or historical event data for "${scopeValue}" yet - ingestion may not have run for this scope.`,
     );
   }
 
@@ -144,12 +144,12 @@ export async function generateAnalysis({ scopeType, scopeValue }: GenerateAnalys
 
   if (analogIds.length === 0) {
     throw new Error(
-      `No historical analogs with usable before/after prices for "${scopeValue}" — cannot compute a probability band. ` +
+      `No historical analogs with usable before/after prices for "${scopeValue}" - cannot compute a probability band. ` +
         `Ingestion may not have populated price_before/price_after for this scope yet.`,
     );
   }
   if (sourceIds.length === 0) {
-    throw new Error(`No news items for "${scopeValue}" — an analysis must cite at least one source.`);
+    throw new Error(`No news items for "${scopeValue}" - an analysis must cite at least one source.`);
   }
 
   const statsBlock =
@@ -160,9 +160,9 @@ Average move: ${stats.avgMovePct!.toFixed(2)}%
 Median move: ${stats.medianMovePct!.toFixed(2)}%
 Share that moved positive: ${(stats.positiveRatio! * 100).toFixed(0)}%`;
 
-  const computedBlock = `COMPUTED FIGURES (calculated statistically in code — use these exactly, do not alter them):
+  const computedBlock = `COMPUTED FIGURES (calculated statistically in code - use these exactly, do not alter them):
 Probability of an elevated move (>=${ELEVATED_MOVE_THRESHOLD_PCT}% in absolute terms): ${band.low}% to ${band.high}%
-  (observed base rate ${band.pointEstimate}% — ${band.hitCount} of ${band.sampleCount} historical analogs cleared that threshold;
+  (observed base rate ${band.pointEstimate}% - ${band.hitCount} of ${band.sampleCount} historical analogs cleared that threshold;
    the range is a 95% Wilson score interval, which widens when the sample is small)
 Confidence level: ${band.confidence}
 Sample size: ${band.sampleCount} historical analogs`;
@@ -176,7 +176,7 @@ Sample size: ${band.sampleCount} historical analogs`;
       messages: [
         {
           role: "user",
-          content: `Scope: ${scopeType} — ${scopeValue}
+          content: `Scope: ${scopeType} - ${scopeValue}
 
 ${computedBlock}
 
@@ -200,7 +200,7 @@ Respond with only a JSON object matching the required schema.`,
   const admin = createAdminClient();
 
   // The scope guard still runs on the model's prose before anything is stored
-  // — unchanged from the previous implementation. Completeness is now
+  // - unchanged from the previous implementation. Completeness is now
   // guaranteed by construction (sources/analogs are code-selected and checked
   // non-empty above), but the gate stays as a defense-in-depth assertion.
   const contentCheck = checkScopeGuard(prose.reasoning_text);

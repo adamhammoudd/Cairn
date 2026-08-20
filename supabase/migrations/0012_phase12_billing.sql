@@ -3,7 +3,7 @@
 -- No real payment processor is integrated yet (pre-launch build, per the
 -- project's own stated plan: build and test first, add real billing and
 -- security hardening before going live). This is the tier/limit/usage
--- scaffolding a real Stripe integration would plug into later — tier
+-- scaffolding a real Stripe integration would plug into later - tier
 -- changes here are self-serve and free, clearly disclosed as such in the
 -- Billing UI.
 
@@ -21,7 +21,7 @@ create policy "own subscription" on subscriptions for all
 
 -- One row per successful AI analysis request. Written only by the
 -- service-role client from the analysis action (system-recorded usage, not
--- user-writable) — same admin-client-for-derived-data pattern as discussion
+-- user-writable) - same admin-client-for-derived-data pattern as discussion
 -- vote counters (see discussion.ts). Monthly usage is counted from this
 -- table by calendar month, so it needs no separate period-reset job.
 create table if not exists ai_usage_events (

@@ -4,11 +4,11 @@
 
 Run against your project's SQL editor (or `psql`), in order:
 
-1. `schema.sql` — full table set + RLS policies + `handle_new_user` trigger
-2. `seed/providers.sql` — example news/market-data/filings providers (edit
-   weights, enable/disable, or add rows directly in `data_providers` — no
+1. `schema.sql` - full table set + RLS policies + `handle_new_user` trigger
+2. `seed/providers.sql` - example news/market-data/filings providers (edit
+   weights, enable/disable, or add rows directly in `data_providers` - no
    code deploy needed for that part)
-3. `migrations/0002_schedule_ingestion.sql` — pg_cron schedule for the two
+3. `migrations/0002_schedule_ingestion.sql` - pg_cron schedule for the two
    ingestion Edge Functions (edit the `<project-ref>` placeholder and set
    `app.settings.service_role_key` first, see comment in the file)
 4. Remaining numbered migrations in order, including `0013_scope_guard_hardening.sql`
@@ -16,7 +16,7 @@ Run against your project's SQL editor (or `psql`), in order:
    restructured chat scope-guard in `lib/ai/chat-generate.ts`) and
    `0014_chat_usage_gate.sql` (adds `chat_usage_events`, needed by the chat
    daily-message cap in `lib/actions/billing.ts`). Re-run `seed/providers.sql`
-   too — it now also seeds the CoinGecko provider row `ingest-crypto` reads
+   too - it now also seeds the CoinGecko provider row `ingest-crypto` reads
    from instead of a hardcoded URL.
 
 ## 2. Edge Functions
@@ -30,7 +30,7 @@ supabase functions deploy generate-daily-briefings --no-verify-jwt
 supabase functions deploy evaluate-alerts --no-verify-jwt
 ```
 
-`--no-verify-jwt` lets pg_cron invoke these without presenting a secret — the
+`--no-verify-jwt` lets pg_cron invoke these without presenting a secret - the
 functions still use their own env-injected service-role key internally.
 
 Test either one manually before relying on the cron schedule:
@@ -50,8 +50,8 @@ Each returns a per-provider `{ fetched, inserted }` (or `error`) summary.
 | `ingest-market-data` | Yahoo Finance chart API | yes | `historical_prices` |
 | `ingest-fundamentals` | SEC EDGAR XBRL `companyconcept` | yes (User-Agent required) | `fundamentals` |
 | `ingest-calendar` | Nasdaq public calendar API | yes (browser User-Agent required) | `calendar_events` |
-| `generate-daily-briefings` | internal (no external call) | — | `daily_briefings` |
-| `evaluate-alerts` | internal (no external call) | — | `alert_deliveries`, `alerts.last_triggered_at` |
+| `generate-daily-briefings` | internal (no external call) | - | `daily_briefings` |
+| `evaluate-alerts` | internal (no external call) | - | `alert_deliveries`, `alerts.last_triggered_at` |
 
 Two caveats worth knowing before relying on these:
 
@@ -61,16 +61,16 @@ Two caveats worth knowing before relying on these:
   ETFs and funds don't file those XBRL concepts, so they get no row and are
   excluded by those screener filters rather than given fabricated values.
 - **`evaluate-alerts`** evaluates against daily OHLCV bars, so it's scheduled
-  around the market-data ingest rather than continuously — running more often
+  around the market-data ingest rather than continuously - running more often
   would re-read the same bar. Only `in_app` deliveries actually reach the user;
   `push` and `email` rows are written with status `unconfigured` because no
   provider is wired. Its condition logic is duplicated from `src/lib/alerts.ts`
-  (Deno vs Node, no shared module) — change both together.
+  (Deno vs Node, no shared module) - change both together.
 - **`ingest-calendar`** covers earnings, ex-dividend, and split dates only.
   Nasdaq's IPO endpoint returned nothing usable for a forward window, and no
   keyless economic-calendar feed was found (the Fed's `calendar.json` is a
   historical archive), so the `economic` and `ipo` event types stay empty until
-  a provider is added. It also relies on an undocumented public endpoint — if it
+  a provider is added. It also relies on an undocumented public endpoint - if it
   starts returning zero rows, check whether the response shape changed.
 
 ## 3. Adding a new source
@@ -84,6 +84,6 @@ Two caveats worth knowing before relying on these:
 
 ## 4. NewsAPI.org
 
-The seeded NewsAPI.org row is `enabled: false` with an empty `api_key` — get
+The seeded NewsAPI.org row is `enabled: false` with an empty `api_key` - get
 a free key at newsapi.org, set `config.api_key`, and flip `enabled` to
 `true` to turn it on. The RSS and SEC EDGAR sources need no key.

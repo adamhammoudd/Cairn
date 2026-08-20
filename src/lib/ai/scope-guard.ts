@@ -3,14 +3,14 @@
 // user. Two independent layers:
 //
 // 1. Structural: the generator's input/output types never carry a user_id,
-//    holding_id, or any portfolio reference (see ai/generate.ts) — a
+//    holding_id, or any portfolio reference (see ai/generate.ts) - a
 //    personalized recommendation is architecturally impossible to *request*,
 //    not just filtered after the fact.
 // 2. Content: regex-based detection of personal-directive language in the
 //    generated text, run against the actual output regardless of what the
 //    model was instructed to do. A prompt can be ignored; this can't.
 //
-// This is a best-effort linguistic filter, not a proof — see the false-
+// This is a best-effort linguistic filter, not a proof - see the false-
 // negative note below. It is deliberately over-inclusive (biased toward
 // flagging borderline cases) since the cost of a false reject is low
 // (regenerate) and the cost of a false accept is a compliance failure.
@@ -20,11 +20,11 @@ export interface ScopeGuardResult {
   reason: string | null;
 }
 
-// "you should/could/might want to/need to <action>" — direct second-person advice
+// "you should/could/might want to/need to <action>" - direct second-person advice
 const SECOND_PERSON_DIRECTIVE =
   /\byou\s+(should|could|might want to|need to|ought to|may want to)\b[^.!?]{0,60}\b(buy|sell|hold|purchase|invest|add|trim|reduce|increase|exit|liquidate|short|close|rebalance)\b/i;
 
-// "your position/portfolio/holding/shares/stake/account" — personalization reference,
+// "your position/portfolio/holding/shares/stake/account" - personalization reference,
 // regardless of the verb around it
 const PERSONAL_POSSESSION = /\byour\s+(position|portfolio|holding|holdings|shares|stake|account|investment)\b/i;
 
@@ -34,7 +34,7 @@ const FIRST_PERSON_ADVICE = /\bi\s+(recommend|suggest|advise)\b/i;
 // Bare imperative aimed at the reader: "Buy the dip here.", "Sell now."
 // Scoped to sentence-start, with an exclusion list for the financial-jargon
 // compounds that would otherwise false-positive here ("sell-side", "buy-side",
-// "sell off risk assets", "hold rates steady" — all real, common, non-advice
+// "sell off risk assets", "hold rates steady" - all real, common, non-advice
 // usages confirmed against hand-written test cases before this was settled on).
 const IMPERATIVE_SENTENCE_START =
   /(^|[.!?]\s+)(buy|sell|hold)(?!-)\s+(?!(rates|steady|off|out|back|up|down|firm|flat|its|the line|pressure|signal|volume|orders?|rating|call|recommendation|side))/i;
@@ -55,7 +55,7 @@ export function checkScopeGuard(text: string): ScopeGuardResult {
   return { passed: true, reason: null };
 }
 
-// Completeness gate — separate from the personal-directive check above.
+// Completeness gate - separate from the personal-directive check above.
 // "Never a bare number" (Phase 4 spec): an analysis with no sources, no
 // historical analogs, or no plain-language reasoning is rejected outright,
 // independent of whether its text happens to pass the directive check.
@@ -123,11 +123,11 @@ export function checkNoFreelancedProbability(
 
 // ---------------------------------------------------------------------------
 // Deterministic rewrite for a flagged chat response. Never a second model
-// call — built only from already-validated ai_analyses fields (which passed
+// call - built only from already-validated ai_analyses fields (which passed
 // this same guard at generation time in generate.ts) plus fixed boilerplate,
 // so it cannot itself contain a fresh, unvalidated claim. The boilerplate is
 // hand-checked against every rule above, and re-verified at runtime as a
-// defense-in-depth measure — this function must never return text that would
+// defense-in-depth measure - this function must never return text that would
 // itself fail checkScopeGuard.
 // ---------------------------------------------------------------------------
 
@@ -141,9 +141,9 @@ export interface AnalysisForRewrite {
 }
 
 const REWRITE_INTRO =
-  "This assistant describes markets, sectors, and tickers at a general level only — it does not give personal buy, sell, or hold guidance for an individual reader.";
+  "This assistant describes markets, sectors, and tickers at a general level only - it does not give personal buy, sell, or hold guidance for an individual reader.";
 const REWRITE_FALLBACK_NO_CONTEXT =
-  `${REWRITE_INTRO} There's no stored analysis on record yet for what was asked — a fresh one can be requested from the Research page.`;
+  `${REWRITE_INTRO} There's no stored analysis on record yet for what was asked - a fresh one can be requested from the Research page.`;
 const REWRITE_ULTRA_SAFE_FALLBACK =
   "This assistant only describes markets, sectors, and tickers in general terms and cannot respond to that request. Please rephrase, or visit the Research page for stored analyses.";
 
@@ -154,7 +154,7 @@ export function rewriteForScopeGuard(contextAnalyses: AnalysisForRewrite[]): str
   } else {
     const lines = contextAnalyses.map(
       (a) =>
-        `- ${a.scope_type} · ${a.scope_value}: ${a.probability_low}-${a.probability_high}% (${a.confidence_level} confidence) — ${a.reasoning_text}`,
+        `- ${a.scope_type} · ${a.scope_value}: ${a.probability_low}-${a.probability_high}% (${a.confidence_level} confidence) - ${a.reasoning_text}`,
     );
     text = `${REWRITE_INTRO} Here's what's already on record at the market/sector/ticker level:\n\n${lines.join("\n")}`;
   }

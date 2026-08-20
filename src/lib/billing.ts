@@ -9,7 +9,7 @@ export interface TierConfig {
   monthlyAiAnalyses: number;
   /** null = unlimited (Premium). */
   dailyChatMessages: number | null;
-  /** Content depth for MethodologyCard — see components/analysis/methodology-card.tsx.
+  /** Content depth for MethodologyCard - see components/analysis/methodology-card.tsx.
    * Never affects confidence_level/reasoning_text/low-confidence honesty, only
    * how much of the sources/analogs detail is shown. */
   analysisDepth: "top_line" | "full";
@@ -51,7 +51,7 @@ export function computeChatUsageSummary(tier: SubscriptionTier, used: number): C
   return { tier, limit, used, remaining: limit === null ? null : Math.max(limit - used, 0) };
 }
 
-// Calendar-month boundary — usage resets naturally each month with no
+// Calendar-month boundary - usage resets naturally each month with no
 // separate period-reset job needed, since it's just a WHERE created_at >=
 // this filter on ai_usage_events.
 export function startOfCurrentMonthIso(): string {

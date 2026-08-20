@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { CryptoRow } from "@/lib/crypto";
 
 // Price isn't stored on crypto_metrics (it's an overview snapshot: cap,
-// volume, supply, rank) — derive it from the latest ingested daily close so
+// volume, supply, rank) - derive it from the latest ingested daily close so
 // the overview and the ticker chart never disagree on price.
 export async function getCryptoOverview(): Promise<CryptoRow[]> {
   const supabase = await createClient();

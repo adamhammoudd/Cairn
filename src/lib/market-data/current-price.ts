@@ -1,7 +1,7 @@
 // The live-quote layer, structurally separate from historical_prices (the
 // Phase 4 pattern-matching trend store, see lib/ai/generate.ts and
 // lib/ai/analytics.ts). Historical/trend queries keep reading
-// historical_prices directly — this module exists only for "what is this
+// historical_prices directly - this module exists only for "what is this
 // worth right now" reads (ticker headline price, holdings valuation), which
 // were previously just taking the trend store's latest row and presenting
 // it as current.
@@ -64,7 +64,7 @@ export async function getCurrentPrice(symbol: string): Promise<CurrentPrice> {
 }
 
 // Drop-in replacement for `latestCloseBySymbol(historical_prices rows)` used
-// by portfolio valuation — same {latest, prev} shape, so lib/portfolio.ts's
+// by portfolio valuation - same {latest, prev} shape, so lib/portfolio.ts's
 // pure functions need no changes, only the data source at the call site.
 export async function getLatestCloses(symbols: string[]): Promise<Map<string, { latest: number | null; prev: number | null }>> {
   const result = new Map<string, { latest: number | null; prev: number | null }>();
@@ -72,7 +72,7 @@ export async function getLatestCloses(symbols: string[]): Promise<Map<string, { 
 
   const bySymbol = await lastCloseRows(symbols);
 
-  // Twelve Data's free tier is 8 req/min — only worth attempting live
+  // Twelve Data's free tier is 8 req/min - only worth attempting live
   // fetches for a small symbol set (a user's own holdings), never a
   // screener-sized batch, which keeps reading the trend store's daily
   // change directly (that's what a screener conventionally shows anyway).

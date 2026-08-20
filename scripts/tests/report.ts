@@ -1,4 +1,4 @@
-// Shared report format for Section 7's three checks — one readable Markdown
+// Shared report format for Section 7's three checks - one readable Markdown
 // file with pass/fail per test and the actual output attached for anything
 // that failed, per the spec ("not a bare pass count").
 import fs from "node:fs";
@@ -19,7 +19,7 @@ export interface SuiteResult {
   /** Whether this suite's failures are gating (zero-tolerance) or advisory. */
   gating: boolean;
   cases: TestCase[];
-  /** Top-level notes, e.g. "skipped — self-hosted inference server unreachable". */
+  /** Top-level notes, e.g. "skipped - self-hosted inference server unreachable". */
   notes?: string[];
 }
 
@@ -30,7 +30,7 @@ export function suitePassed(suite: SuiteResult): boolean {
 
 function renderCase(c: TestCase): string {
   const icon = { pass: "PASS", fail: "FAIL", flag: "FLAG", skip: "SKIP" }[c.status];
-  let out = `- **[${icon}]** ${c.name} — ${c.detail}`;
+  let out = `- **[${icon}]** ${c.name} - ${c.detail}`;
   if (c.attachment && (c.status === "fail" || c.status === "flag")) {
     out += `\n\n  \`\`\`\n  ${c.attachment.replace(/\n/g, "\n  ")}\n  \`\`\``;
   }
@@ -39,7 +39,7 @@ function renderCase(c: TestCase): string {
 
 export function renderMarkdown(suites: SuiteResult[]): string {
   const lines: string[] = [];
-  lines.push(`# Cairn AI Assistant — Test Report`);
+  lines.push(`# Cairn AI Assistant - Test Report`);
   lines.push(`Generated ${new Date().toISOString()}`);
   lines.push("");
 
@@ -50,7 +50,7 @@ export function renderMarkdown(suites: SuiteResult[]): string {
     const skipCount = suite.cases.filter((c) => c.status === "skip").length;
     const overall = suitePassed(suite) ? "PASS" : "FAIL";
 
-    lines.push(`## ${suite.suiteName} — ${overall} (${suite.gating ? "gating" : "advisory"})`);
+    lines.push(`## ${suite.suiteName} - ${overall} (${suite.gating ? "gating" : "advisory"})`);
     lines.push(
       `${passCount} passed, ${failCount} failed, ${flagCount} flagged for review, ${skipCount} skipped, ${suite.cases.length} total.`,
     );

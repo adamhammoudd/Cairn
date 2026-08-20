@@ -4,7 +4,7 @@ import { formatMarketCap } from "@/lib/screener";
 import type { ComparisonRow } from "@/lib/comparison";
 
 function fmtCurrency(n: number | null) {
-  if (n === null) return "—";
+  if (n === null) return "-";
   return n.toLocaleString(undefined, { style: "currency", currency: "USD" });
 }
 
@@ -26,25 +26,25 @@ const METRICS: { label: string; cell: (row: ComparisonRow) => Cell }[] = [
     label: "24h change",
     cell: (r) =>
       r.changePct === null
-        ? { text: "—", tone: "muted" }
+        ? { text: "-", tone: "muted" }
         : {
             text: `${r.changePct >= 0 ? "+" : ""}${r.changePct.toFixed(2)}%`,
             tone: r.changePct >= 0 ? "positive" : "negative",
           },
   },
   { label: "Market cap", cell: (r) => ({ text: formatMarketCap(r.marketCap), tone: r.marketCap === null ? "muted" : "primary" }) },
-  { label: "P/E", cell: (r) => ({ text: r.pe === null ? "—" : r.pe.toFixed(1), tone: r.pe === null ? "muted" : "primary" }) },
+  { label: "P/E", cell: (r) => ({ text: r.pe === null ? "-" : r.pe.toFixed(1), tone: r.pe === null ? "muted" : "primary" }) },
   {
     label: "Div. yield",
     cell: (r) => ({
-      text: r.dividendYield === null ? "—" : `${r.dividendYield.toFixed(2)}%`,
+      text: r.dividendYield === null ? "-" : `${r.dividendYield.toFixed(2)}%`,
       tone: r.dividendYield === null ? "muted" : "primary",
     }),
   },
   {
     label: "Volume",
     cell: (r) => ({
-      text: r.volume === null ? "—" : r.volume.toLocaleString(),
+      text: r.volume === null ? "-" : r.volume.toLocaleString(),
       tone: r.volume === null ? "muted" : "primary",
     }),
   },

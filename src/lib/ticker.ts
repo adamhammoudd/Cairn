@@ -1,5 +1,5 @@
 // Single-symbol chart series builder for the ticker detail page. Kept
-// separate from computeTimelineSeries in lib/portfolio.ts — that function is
+// separate from computeTimelineSeries in lib/portfolio.ts - that function is
 // quantity-weighted across multiple holdings with purchase-date gating; this
 // is one symbol's own close price, a simpler shape that would only add
 // unused parameters to the portfolio version.
@@ -23,7 +23,7 @@ export function buildPriceSeries(bars: { ts: string; close: number | null }[], t
 
   let rows = sorted;
   if (timeframe === "1D") {
-    rows = sorted.slice(-2); // no intraday feed yet — most recent two closes only
+    rows = sorted.slice(-2); // no intraday feed yet - most recent two closes only
   } else if (timeframe !== "ALL") {
     const today = sorted[sorted.length - 1].ts;
     const cutoff = new Date(today);
@@ -32,7 +32,7 @@ export function buildPriceSeries(bars: { ts: string; close: number | null }[], t
     rows = sorted.filter((b) => b.ts >= cutoffStr);
   }
 
-  // `close` is a Postgres numeric, which PostgREST serialises as a string —
+  // `close` is a Postgres numeric, which PostgREST serialises as a string -
   // charts need real numbers or the series degenerates to its endpoints.
   return rows.map((b) => ({ date: b.ts, value: Number(b.close) }));
 }

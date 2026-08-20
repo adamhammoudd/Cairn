@@ -35,7 +35,7 @@ export interface TickerData {
 }
 
 // Asset type is read off the ingested price history rather than a hardcoded
-// list, same as the AI engine's crypto detection in lib/ai/generate.ts — a
+// list, same as the AI engine's crypto detection in lib/ai/generate.ts - a
 // newly-tracked symbol of any type routes correctly the moment its price
 // history lands, with no second place to update.
 export async function getTickerDetail(symbolRaw: string): Promise<TickerData | null> {

@@ -75,7 +75,7 @@ export async function postComment(_prevState: string | null, formData: FormData)
     .eq("user_id", user.id)
     .gte("created_at", new Date(Date.now() - RATE_LIMIT_WINDOW_MS).toISOString());
   if ((count ?? 0) >= RATE_LIMIT_COUNT) {
-    return "You're posting too quickly — wait a couple of minutes and try again.";
+    return "You're posting too quickly - wait a couple of minutes and try again.";
   }
 
   const flagged = isLikelySpam(body);
@@ -94,7 +94,7 @@ export async function postComment(_prevState: string | null, formData: FormData)
 }
 
 // Recomputing upvotes/downvotes writes a counter on a thread the voter may
-// not own, which "update own" RLS would reject — this goes through the
+// not own, which "update own" RLS would reject - this goes through the
 // admin/service-role client (src/lib/supabase/admin.ts) precisely because
 // it's a narrowly-scoped, server-only recompute of a derived counter, not a
 // new trust boundary.

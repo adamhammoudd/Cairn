@@ -88,7 +88,7 @@ const DEFAULT_LAYOUT: ModuleKey[] = ["portfolio", "markets", "watchlist", "news"
 export function DashboardHome({ initialLayout, today, portfolio, markets, watchlist, news, assistant }: DashboardHomeProps) {
   const [layout, setLayout] = useState<ModuleKey[]>(initialLayout.length ? initialLayout : DEFAULT_LAYOUT);
   const [arranging, setArranging] = useState(false);
-  // Portfolio ships double-width, as in the mock — its sparkline sits beside
+  // Portfolio ships double-width, as in the mock - its sparkline sits beside
   // the value rather than wrapping under it.
   const [wideKeys, setWideKeys] = useState<Set<ModuleKey>>(new Set<ModuleKey>(["portfolio"]));
   const [live, setLive] = useState(true);
@@ -279,7 +279,7 @@ export function DashboardHome({ initialLayout, today, portfolio, markets, watchl
           <div className="mb-2 font-mono text-[10.5px] tracking-[0.16em] text-muted uppercase">{today} · markets open</div>
           <h1 className="font-serif text-[34px] leading-[1.1] font-normal text-primary">Base Camp</h1>
           <p className="mt-1.75 max-w-[560px] text-[13.5px] text-muted text-pretty">
-            Your marker for the day — portfolio, markets, and what the assistant flagged while you were away.
+            Your marker for the day - portfolio, markets, and what the assistant flagged while you were away.
           </p>
         </div>
 

@@ -48,7 +48,7 @@ supabase/.temp/
 .mcp.json
 graphify-out/
 
-# Generated test reports — a new timestamped file per run (see scripts/tests/
+# Generated test reports - a new timestamped file per run (see scripts/tests/
 # run-all.ts). The report is meant to be read by a human after a run, not
 # version-controlled; committing them is pure churn.
 scripts/tests/report/

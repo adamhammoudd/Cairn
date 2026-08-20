@@ -4,7 +4,24 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import type { ChartView, MetricStyle } from "@/lib/supabase/types";
+import type { AlertChannelName, AssetFilter, ChartView, Database, MetricStyle } from "@/lib/supabase/types";
+
+type UserSettings = Database["public"]["Tables"]["user_settings"]["Row"];
+
+// Single read point for the preferences other pages need at render time
+// (Markets default filter, Alerts default channels, Comparison default
+// timeframe, assistant behaviour). Returns null when unauthenticated so
+// callers can fall back to hard defaults rather than throwing.
+export async function getUserSettings(): Promise<UserSettings | null> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const { data } = await supabase.from("user_settings").select("*").eq("user_id", user.id).single();
+  return data ?? null;
+}
 
 export async function updateSettings(_prevState: string | null, formData: FormData) {
   const supabase = await createClient();
@@ -14,6 +31,9 @@ export async function updateSettings(_prevState: string | null, formData: FormDa
   if (!user) redirect("/login");
 
   const priceMoveThreshold = Number(formData.get("price_move_threshold") ?? 5);
+  const alertChannels = (formData.getAll("default_alert_channels") as string[]).filter(
+    Boolean,
+  ) as AlertChannelName[];
 
   const { error } = await supabase
     .from("user_settings")
@@ -25,12 +45,24 @@ export async function updateSettings(_prevState: string | null, formData: FormDa
       compact_mode: formData.get("compact_mode") === "on",
       extended_hours: formData.get("extended_hours") === "on",
       notification_thresholds: { price_move_percent: priceMoveThreshold },
+      default_asset_filter: (formData.get("default_asset_filter") as AssetFilter) || "all",
+      // An all-unchecked channel group submits nothing at all; falling back to
+      // in-app keeps a new alert deliverable rather than silently undeliverable.
+      default_alert_channels:
+        alertChannels.length > 0 ? alertChannels : (["in_app"] as AlertChannelName[]),
+      default_comparison_timeframe: (formData.get("default_comparison_timeframe") as ChartView) || "3M",
+      assistant_expand_methodology: formData.get("assistant_expand_methodology") === "on",
+      assistant_use_portfolio_context: formData.get("assistant_use_portfolio_context") === "on",
     })
     .eq("user_id", user.id);
 
   if (error) return error.message;
 
-  revalidatePath("/settings");
+  // These preferences change how other pages render on first paint, so their
+  // cached RSC payloads have to go too -- not just /settings.
+  for (const path of ["/settings", "/alerts", "/markets", "/comparison", "/assistant"]) {
+    revalidatePath(path);
+  }
   return "saved";
 }
 

@@ -1,5 +1,5 @@
 // Types and constants for the screener. Kept out of lib/actions/screener.ts
-// because a "use server" module may only export async functions — a plain
+// because a "use server" module may only export async functions - a plain
 // object export there is a build error.
 
 export interface ScreenerFilters {
@@ -77,7 +77,7 @@ export const ASSET_TYPE_LABEL: Record<string, string> = {
 
 /** Share volume, compacted the way the mock shows it ("22.4M"). */
 export function formatVolume(n: number | null): string {
-  if (n === null) return "—";
+  if (n === null) return "-";
   if (n >= 1e9) return `${(n / 1e9).toFixed(1)}B`;
   if (n >= 1e6) return `${(n / 1e6).toFixed(1)}M`;
   if (n >= 1e3) return `${(n / 1e3).toFixed(1)}K`;
@@ -85,7 +85,7 @@ export function formatVolume(n: number | null): string {
 }
 
 export function formatMarketCap(n: number | null): string {
-  if (n === null) return "—";
+  if (n === null) return "-";
   if (n >= 1e12) return `$${(n / 1e12).toFixed(2)}T`;
   if (n >= 1e9) return `$${(n / 1e9).toFixed(1)}B`;
   if (n >= 1e6) return `$${(n / 1e6).toFixed(0)}M`;

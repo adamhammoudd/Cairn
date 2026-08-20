@@ -37,7 +37,7 @@ export function TickerWorkspace({
   const isCrypto = data.assetType === "crypto";
   const positive = (data.changePct ?? 0) >= 0;
 
-  // Derived the same way the screener does — from fundamentals + latest
+  // Derived the same way the screener does - from fundamentals + latest
   // close, never stored, so it can't go stale as the price moves.
   const marketCap =
     data.price !== null && data.fundamentals?.shares_outstanding
@@ -65,8 +65,8 @@ export function TickerWorkspace({
     .filter(Boolean)
     .join(" · ");
 
-  const money = (n: number | null) => (n === null ? "—" : n.toLocaleString(undefined, { style: "currency", currency: "USD" }));
-  const range = (lo: number | null, hi: number | null) => (lo === null || hi === null ? "—" : `${money(lo)} – ${money(hi)}`);
+  const money = (n: number | null) => (n === null ? "-" : n.toLocaleString(undefined, { style: "currency", currency: "USD" }));
+  const range = (lo: number | null, hi: number | null) => (lo === null || hi === null ? "-" : `${money(lo)} – ${money(hi)}`);
 
   const stats: { label: string; value: string | number }[] = isCrypto
     ? [
@@ -75,11 +75,11 @@ export function TickerWorkspace({
         { label: "52w range", value: range(data.week52Low, data.week52High) },
         { label: "Volume", value: formatVolume(data.volume) },
         { label: "Market cap", value: formatMarketCap(data.cryptoMetrics?.market_cap ?? null) },
-        { label: "Market cap rank", value: data.cryptoMetrics?.market_cap_rank ?? "—" },
-        { label: "Volatility 30d", value: data.volatility30d === null ? "—" : `${data.volatility30d.toFixed(0)}%` },
+        { label: "Market cap rank", value: data.cryptoMetrics?.market_cap_rank ?? "-" },
+        { label: "Volatility 30d", value: data.volatility30d === null ? "-" : `${data.volatility30d.toFixed(0)}%` },
         {
           label: "Circulating supply",
-          value: data.cryptoMetrics ? `${formatSupply(data.cryptoMetrics.circulating_supply)} ${data.symbol}` : "—",
+          value: data.cryptoMetrics ? `${formatSupply(data.cryptoMetrics.circulating_supply)} ${data.symbol}` : "-",
         },
       ]
     : [
@@ -90,8 +90,8 @@ export function TickerWorkspace({
         { label: "Market cap", value: formatMarketCap(marketCap) },
         // The mock labels this P/E (fwd); no forward estimates are ingested,
         // so it stays trailing rather than presenting TTM as a forecast.
-        { label: "P/E (TTM)", value: pe === null ? "—" : `${pe.toFixed(1)}x` },
-        { label: "Volatility 30d", value: data.volatility30d === null ? "—" : `${data.volatility30d.toFixed(0)}%` },
+        { label: "P/E (TTM)", value: pe === null ? "-" : `${pe.toFixed(1)}x` },
+        { label: "Volatility 30d", value: data.volatility30d === null ? "-" : `${data.volatility30d.toFixed(0)}%` },
         {
           label: "Next event",
           value: data.nextEvent
@@ -123,7 +123,7 @@ export function TickerWorkspace({
         <div className="flex flex-wrap items-center gap-5.5">
           <div className="text-right">
             <div className="font-serif text-[30px] leading-none tabular-nums text-primary">
-              {data.price === null ? "—" : data.price.toLocaleString(undefined, { style: "currency", currency: "USD" })}
+              {data.price === null ? "-" : data.price.toLocaleString(undefined, { style: "currency", currency: "USD" })}
             </div>
             <div
               className={`mt-1.5 text-[12.5px] tabular-nums ${
@@ -131,7 +131,7 @@ export function TickerWorkspace({
               }`}
             >
               {data.changePct === null
-                ? "—"
+                ? "-"
                 : `${positive ? "+" : ""}${data.changePct.toFixed(2)}%${
                     changeAbs === null
                       ? ""
@@ -166,7 +166,7 @@ export function TickerWorkspace({
 
       {!isCrypto && !data.fundamentals && (
         <p className="mb-4 text-[12px] text-dim">
-          No SEC fundamentals filed for this symbol (common for ETFs and funds) — cap, P/E, and yield stay blank
+          No SEC fundamentals filed for this symbol (common for ETFs and funds) - cap, P/E, and yield stay blank
           rather than being estimated.
         </p>
       )}
@@ -208,7 +208,7 @@ export function TickerWorkspace({
           <TickerAnalysisRequest symbol={data.symbol} />
           {analyses.length === 0 ? (
             <div className="rounded-card border border-dashed border-line p-10 text-center text-sm text-muted">
-              No Cairn analysis for {data.symbol} yet. Request one above — every answer shows its sources, historical
+              No Cairn analysis for {data.symbol} yet. Request one above - every answer shows its sources, historical
               analogs, and confidence.
             </div>
           ) : (
@@ -220,10 +220,10 @@ export function TickerWorkspace({
               <div className="mb-3 font-mono text-[10px] tracking-[0.14em] text-muted uppercase">ESG scores</div>
               <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-4">
                 {[
-                  { label: "Environmental", value: data.esg.environmental ?? "—" },
-                  { label: "Social", value: data.esg.social ?? "—" },
-                  { label: "Governance", value: data.esg.governance ?? "—" },
-                  { label: "Total", value: data.esg.total ?? "—" },
+                  { label: "Environmental", value: data.esg.environmental ?? "-" },
+                  { label: "Social", value: data.esg.social ?? "-" },
+                  { label: "Governance", value: data.esg.governance ?? "-" },
+                  { label: "Total", value: data.esg.total ?? "-" },
                 ].map((s) => (
                   <div key={s.label}>
                     <div className="font-mono text-[9.5px] tracking-[0.12em] text-dim uppercase">{s.label}</div>

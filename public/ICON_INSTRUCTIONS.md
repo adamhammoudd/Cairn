@@ -1,10 +1,10 @@
 Place your PNG (the one you provided) into this folder and name it `source-icon.png`.
 
 Recommended generated files and filenames (place these in `public/`):
-- `apple-touch-icon.png` — Apple touch icon (180x180)
-- `favicon-32x32.png` — favicon (32x32)
-- `favicon-16x16.png` — favicon (16x16)
-- `favicon.ico` — multi-size .ico (optional)
+- `apple-touch-icon.png` - Apple touch icon (180x180)
+- `favicon-32x32.png` - favicon (32x32)
+- `favicon-16x16.png` - favicon (16x16)
+- `favicon.ico` - multi-size .ico (optional)
 
 Quick ImageMagick commands to create the PNG sizes (run in this repo root):
 
