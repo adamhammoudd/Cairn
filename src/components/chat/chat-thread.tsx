@@ -18,6 +18,17 @@ import { ChatMessage } from "@/components/chat/chat-message";
 
 const MESSAGES_PAGE_SIZE = 30;
 
+// Mock-up parity (Context/mockups/Cairn.dc.html, the assistant screen's
+// `prompts` sc-for): quick-start suggestions under the composer. The mock's
+// three examples, kept verbatim - they exercise the three scopes the guard
+// allows (portfolio-relevant, ticker, concentration/sector), which is exactly
+// what a first-run user should be shown is possible.
+const SUGGESTED_PROMPTS = [
+  "How is my portfolio doing today?",
+  "What's the drawdown risk on NVDA?",
+  "Am I too concentrated in semis?",
+];
+
 // The message shape lives with the component that renders it.
 type Message = ChatMessageData;
 
@@ -133,8 +144,8 @@ export function ChatThread({
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
   }, [messages]);
 
-  async function send() {
-    const text = input.trim();
+  async function send(override?: string) {
+    const text = (override ?? input).trim();
     if (!text || streaming) return;
 
     setInput("");
@@ -285,13 +296,28 @@ export function ChatThread({
         />
         <button
           type="button"
-          onClick={send}
+          onClick={() => send()}
           disabled={streaming || !input.trim()}
           className="rounded-lg bg-gradient-to-br from-accent-light to-accent-dark px-3.5 py-2 text-[13px] font-semibold text-canvas disabled:opacity-50"
         >
           Send
         </button>
       </div>
+      {!compact && (
+        <div className="flex flex-wrap gap-1.5 px-3 pb-3">
+          {SUGGESTED_PROMPTS.map((p) => (
+            <button
+              key={p}
+              type="button"
+              onClick={() => send(p)}
+              disabled={streaming}
+              className="rounded-full border border-line px-2.75 py-1.5 text-[11.5px] text-muted transition-colors duration-fast ease-standard hover:border-accent hover:text-primary disabled:opacity-50"
+            >
+              {p}
+            </button>
+          ))}
+        </div>
+      )}
       <div className="px-3 pb-2">
         <Disclosure />
       </div>
