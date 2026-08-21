@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
   createChatSession,
+  deleteChatSession,
   listChatSessions,
   listChatMessages,
   type ChatSession,
@@ -55,6 +56,10 @@ export function ChatThread({
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
   const [sessions, setSessions] = useState<ChatSession[]>([]);
+  // Distinguishes "we haven't looked yet" from "we looked and there is
+  // nothing". Rendering the empty state during the fetch told returning users
+  // their history was gone.
+  const [sessionsLoading, setSessionsLoading] = useState(true);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [depth, setDepth] = useState<"top_line" | "full">("full");
@@ -98,25 +103,27 @@ export function ChatThread({
     }
   }
 
-  async function startNewChat() {
-    const created = await createChatSession();
-    setSessions((prev) => [created, ...prev]);
-    setSessionId(created.id);
+  // Clears to an unsaved draft thread rather than writing a row. The session
+  // is created on the first send (see `send`), so opening the assistant and
+  // walking away no longer litters history with empty conversations.
+  function startNewChat() {
+    setSessionId(null);
     setMessages([]);
     setHistoryOpen(false);
+    setPage(0);
+    setHasMore(false);
   }
 
   useEffect(() => {
     (async () => {
-      const [list, plan] = await Promise.all([listChatSessions(), getUserPlan()]);
-      setDepth(TIER_LIMITS[plan].analysisDepth);
-      setSessions(list);
-      if (list.length > 0) {
-        await loadSession(list[0].id);
-      } else {
-        const created = await createChatSession();
-        setSessions([created]);
-        setSessionId(created.id);
+      try {
+        const [list, plan] = await Promise.all([listChatSessions(), getUserPlan()]);
+        setDepth(TIER_LIMITS[plan].analysisDepth);
+        setSessions(list);
+        // No session is created here. An empty thread is a UI state, not a row.
+        if (list.length > 0) await loadSession(list[0].id);
+      } finally {
+        setSessionsLoading(false);
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -128,26 +135,43 @@ export function ChatThread({
 
   async function send() {
     const text = input.trim();
-    if (!text || !sessionId || streaming) return;
+    if (!text || streaming) return;
 
     setInput("");
     setMessages((prev) => [...prev, { role: "user", content: text }, { role: "assistant", content: "" }]);
     setStreaming(true);
 
+    // The session row is created here, on the first real message, rather than
+    // on mount. `createdNow` is remembered so a failed first turn can take the
+    // empty session back out with it instead of leaving a stub in history.
+    let activeSessionId = sessionId;
+    let createdNow = false;
     try {
+      if (!activeSessionId) {
+        const created = await createChatSession();
+        activeSessionId = created.id;
+        createdNow = true;
+        setSessionId(created.id);
+        setSessions((prev) => [created, ...prev]);
+      }
+
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId, message: text }),
+        body: JSON.stringify({ sessionId: activeSessionId, message: text }),
       });
 
       if (!res.ok) {
+        // 503 carries the "temporarily busy" line; other statuses carry their
+        // own plain-language reason. Either way the server persisted nothing,
+        // so this bubble is a transient failed-turn state, not history.
         const errorText = (await res.text()) || "Something went wrong. Try again.";
         setMessages((prev) => {
           const next = [...prev];
-          next[next.length - 1] = { role: "assistant", content: errorText };
+          next[next.length - 1] = { role: "assistant", content: errorText, failed: true };
           return next;
         });
+        if (createdNow && activeSessionId) await discardEmptySession(activeSessionId);
         return;
       }
 
@@ -180,18 +204,38 @@ export function ChatThread({
 
       // First send in a fresh session gives it a title server-side -- refresh
       // the list so it shows up as something other than a bare date.
-      const wasUntitled = sessions.find((s) => s.id === sessionId)?.title == null;
+      const wasUntitled = createdNow || sessions.find((s) => s.id === activeSessionId)?.title == null;
       if (wasUntitled) {
         setSessions(await listChatSessions());
       }
     } catch {
       setMessages((prev) => {
         const next = [...prev];
-        next[next.length - 1] = { role: "assistant", content: "Something went wrong. Try again." };
+        next[next.length - 1] = {
+          role: "assistant",
+          content: "The assistant could not be reached. Nothing was saved - please try again.",
+          failed: true,
+        };
         return next;
       });
+      if (createdNow && activeSessionId) await discardEmptySession(activeSessionId);
     } finally {
       setStreaming(false);
+    }
+  }
+
+  /**
+   * Removes a session that was created for a turn that then failed. Best
+   * effort: if the delete itself fails the worst case is one empty thread in
+   * history, which is strictly better than losing the user's place.
+   */
+  async function discardEmptySession(id: string) {
+    try {
+      await deleteChatSession(id);
+      setSessions((prev) => prev.filter((s) => s.id !== id));
+      setSessionId(null);
+    } catch {
+      // leave it; nothing user-visible depends on the cleanup succeeding
     }
   }
 
@@ -272,7 +316,17 @@ export function ChatThread({
           </div>
           <div className="px-2 py-2.5">
             <div className="px-2 pt-1 pb-2 font-mono text-[9.5px] tracking-[0.14em] text-dim uppercase">History</div>
-            {sessions.length === 0 ? (
+            {sessionsLoading ? (
+              // Three inert bars, not the empty-state copy. Saying "no
+              // conversations yet" before the fetch resolves told returning
+              // users their history had been lost.
+              <div className="px-2.5 py-2" aria-busy="true" aria-live="polite">
+                <span className="sr-only">Loading conversations…</span>
+                {[0, 1, 2].map((i) => (
+                  <div key={i} className="mb-2 h-[13px] animate-pulse rounded-[4px] bg-[#171717]" aria-hidden="true" />
+                ))}
+              </div>
+            ) : sessions.length === 0 ? (
               <div className="px-2.5 py-2 text-[12px] text-dim">No conversations yet.</div>
             ) : (
               sessions.map((sess) => (
@@ -352,7 +406,11 @@ export function ChatThread({
             </div>
             <div className="px-3 pt-2 pb-1 font-mono text-[9.5px] tracking-[0.14em] text-dim uppercase">History</div>
             <div className="max-h-64 overflow-y-auto py-1">
-              {filteredSessions.length === 0 ? (
+              {sessionsLoading ? (
+                <div className="px-3 py-2 text-[12px] text-dim" aria-busy="true" aria-live="polite">
+                  Loading conversations…
+                </div>
+              ) : filteredSessions.length === 0 ? (
                 <div className="px-3 py-2 text-[12px] text-dim">No conversations found.</div>
               ) : (
                 filteredSessions.map((sess) => (

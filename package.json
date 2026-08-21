@@ -16,6 +16,8 @@
     "guard-stats": "tsx --conditions=react-server scripts/guard-stats.ts",
     "test:db": "bash scripts/db-tests.sh",
     "test:tagging": "tsx --conditions=react-server scripts/tests/tagging.ts",
+    "test:editorial": "tsx --conditions=react-server scripts/tests/editorial.ts",
+    "test:backoff": "tsx --conditions=react-server scripts/tests/llm-backoff.ts",
     "test:guard-probe": "tsx --conditions=react-server scripts/tests/scope-guard-probe.ts",
     "test:classifier": "tsx --conditions=react-server scripts/tests/scope-classifier.ts",
     "test:market-hours": "tsx --conditions=react-server scripts/tests/market-hours.ts",

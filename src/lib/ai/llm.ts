@@ -1,22 +1,58 @@
-// Self-hosted inference client. Cairn does not call any third-party model
-// API - this talks to a model you run yourself (Ollama, vLLM, llama.cpp
-// server, LM Studio, text-generation-webui), all of which expose an
-// OpenAI-compatible /chat/completions endpoint.
+// Hosted inference client, OpenAI-compatible.
+//
+// Provider: Groq. Cairn previously pointed at a self-hosted OpenAI-compatible
+// server on localhost, which cannot work from Vercel by construction - a
+// deployed function has no route to the developer's laptop. That is now
+// settled: Groq is the provider, reached over its OpenAI-compatible surface,
+// so this file stays a thin fetch wrapper rather than an SDK dependency.
 //
 // Configuration (see .env.local.example):
-//   LLM_BASE_URL   e.g. http://127.0.0.1:11434/v1   (Ollama's OpenAI-compat path)
-//   LLM_MODEL      e.g. qwen2.5:7b-instruct
-//   LLM_API_KEY    optional - only if you've put auth on your inference server
-//   LLM_TIMEOUT_MS optional - CPU-only boxes are slow; default is generous
+//   LLM_BASE_URL    https://api.groq.com/openai/v1
+//   LLM_MODEL       openai/gpt-oss-120b
+//   GROQ_API_KEY    required - set in .env.local AND in Vercel env vars.
+//                   Never committed, never hardcoded, never NEXT_PUBLIC_*.
+//   LLM_TIMEOUT_MS  optional; default below.
 //
-// Design note: everything downstream of this module is written assuming a
-// SMALL local model (3B-7B), not a frontier one. That's why the analysis
-// engine computes its own probabilities (lib/ai/analytics.ts) and only asks
-// the model for prose - see the comment at the top of lib/ai/generate.ts.
+// Model choice, checked rather than assumed (2026-08-20): Groq deprecated
+// `llama-3.3-70b-versatile` and `llama-3.1-8b-instant` on 2026-08-16 and names
+// `openai/gpt-oss-120b` as the replacement for the 70B tier. Defaulting to a
+// Llama model here would have shipped a dead model id.
+//
+// Design note: everything downstream is written assuming the model writes
+// PROSE ONLY. Probabilities are computed in lib/ai/analytics.ts from real
+// historical analogs; the model never produces a number that reaches a user.
 
-const DEFAULT_BASE_URL = "http://127.0.0.1:11434/v1";
-const DEFAULT_MODEL = "qwen2.5:7b-instruct";
-const DEFAULT_TIMEOUT_MS = 180_000;
+const DEFAULT_BASE_URL = "https://api.groq.com/openai/v1";
+const DEFAULT_MODEL = "openai/gpt-oss-120b";
+const DEFAULT_TIMEOUT_MS = 60_000;
+
+// Groq's free tier enforces real per-minute request and token limits. These
+// are transient by definition, so they are retried rather than surfaced.
+const MAX_ATTEMPTS = 4;
+const BASE_BACKOFF_MS = 600;
+const MAX_BACKOFF_MS = 8_000;
+const RETRYABLE_STATUS = new Set([408, 409, 425, 429, 500, 502, 503, 504, 529]);
+
+/** The single user-facing string for "the provider is rate-limiting us". */
+export const BUSY_MESSAGE =
+  "The assistant is temporarily busy and could not complete that request. Please try again shortly.";
+
+/**
+ * Raised when the provider was reachable but would not serve us right now
+ * (rate limit, overload, upstream 5xx) after the retry budget was spent.
+ * Callers translate this into BUSY_MESSAGE - never a raw provider error, and
+ * never a silent hang.
+ */
+export class LlmBusyError extends Error {
+  readonly status: number;
+  readonly attempts: number;
+  constructor(status: number, attempts: number, detail: string) {
+    super(`Model provider unavailable after ${attempts} attempt(s) (HTTP ${status}): ${detail}`);
+    this.name = "LlmBusyError";
+    this.status = status;
+    this.attempts = attempts;
+  }
+}
 
 export interface LlmMessage {
   role: "user" | "assistant";
@@ -41,16 +77,25 @@ export function llmModel(): string {
   return process.env.LLM_MODEL || DEFAULT_MODEL;
 }
 
+export function llmApiKey(): string | undefined {
+  // GROQ_API_KEY is the documented name; LLM_API_KEY stays accepted so a
+  // different OpenAI-compatible host can be swapped in without a code change.
+  return process.env.GROQ_API_KEY || process.env.LLM_API_KEY || undefined;
+}
+
 /**
- * Whether a self-hosted endpoint is configured. Note this is a config check,
- * not a reachability check - use `llmHealthCheck()` when you need to know the
- * server is actually up (the test suite does).
+ * Whether a usable endpoint is configured. A hosted provider without a key is
+ * NOT configured - treating it as configured is how the old localhost default
+ * turned into "chat returns Something went wrong" instead of a clear cause.
  */
 export function isLlmConfigured(): boolean {
-  return Boolean(process.env.LLM_BASE_URL || process.env.LLM_MODEL);
+  return Boolean(llmApiKey());
 }
 
 export async function llmHealthCheck(): Promise<{ ok: boolean; detail: string }> {
+  if (!isLlmConfigured()) {
+    return { ok: false, detail: "GROQ_API_KEY is not set - no model provider is configured." };
+  }
   try {
     const res = await fetch(`${llmBaseUrl()}/models`, {
       headers: authHeaders(),
@@ -65,7 +110,7 @@ export async function llmHealthCheck(): Promise<{ ok: boolean; detail: string }>
 
 function authHeaders(): Record<string, string> {
   const headers: Record<string, string> = { "Content-Type": "application/json" };
-  const key = process.env.LLM_API_KEY;
+  const key = llmApiKey();
   if (key) headers.Authorization = `Bearer ${key}`;
   return headers;
 }
@@ -74,6 +119,33 @@ interface ChatCompletionResponse {
   choices?: { message?: { content?: string } }[];
   error?: { message?: string };
 }
+
+/**
+ * How long to wait before retry N. Prefers the provider's own Retry-After
+ * (Groq sends it on 429, sometimes as fractional seconds), otherwise
+ * exponential backoff with jitter so concurrent requests don't re-collide in
+ * lockstep. Exported for the unit test - the arithmetic is worth pinning down.
+ */
+export function backoffDelayMs(attempt: number, retryAfterHeader?: string | null): number {
+  if (retryAfterHeader) {
+    const seconds = Number(retryAfterHeader);
+    if (Number.isFinite(seconds) && seconds >= 0) {
+      return Math.min(Math.ceil(seconds * 1000), MAX_BACKOFF_MS);
+    }
+    const asDate = Date.parse(retryAfterHeader);
+    if (!Number.isNaN(asDate)) {
+      return Math.min(Math.max(asDate - Date.now(), 0), MAX_BACKOFF_MS);
+    }
+  }
+  const ceiling = Math.min(BASE_BACKOFF_MS * 2 ** attempt, MAX_BACKOFF_MS);
+  return Math.floor(ceiling / 2 + Math.random() * (ceiling / 2));
+}
+
+export function isRetryableStatus(status: number): boolean {
+  return RETRYABLE_STATUS.has(status);
+}
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function postChatCompletion(body: Record<string, unknown>): Promise<Response> {
   const timeout = Number(process.env.LLM_TIMEOUT_MS || DEFAULT_TIMEOUT_MS);
@@ -86,18 +158,58 @@ async function postChatCompletion(body: Record<string, unknown>): Promise<Respon
 }
 
 /**
- * Single completion against the self-hosted model. Returns raw text - callers
+ * POST with retry-with-backoff for transient provider conditions. Non-retryable
+ * responses (400, 401, 404, 422...) are returned to the caller untouched so a
+ * real configuration error surfaces immediately instead of being retried into a
+ * timeout.
+ */
+async function postWithRetry(body: Record<string, unknown>): Promise<Response> {
+  let lastStatus = 0;
+  let lastDetail = "";
+
+  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+    let res: Response;
+    try {
+      res = await postChatCompletion(body);
+    } catch (err) {
+      // Network error or client-side timeout: transient by the same logic.
+      lastStatus = 0;
+      lastDetail = err instanceof Error ? err.message : String(err);
+      if (attempt === MAX_ATTEMPTS - 1) break;
+      await sleep(backoffDelayMs(attempt));
+      continue;
+    }
+
+    if (res.ok || !isRetryableStatus(res.status)) return res;
+
+    lastStatus = res.status;
+    lastDetail = (await res.text().catch(() => "")).slice(0, 300);
+    if (attempt === MAX_ATTEMPTS - 1) break;
+    await sleep(backoffDelayMs(attempt, res.headers.get("retry-after")));
+  }
+
+  throw new LlmBusyError(lastStatus, MAX_ATTEMPTS, lastDetail || "no response body");
+}
+
+/**
+ * Single completion against the configured provider. Returns raw text - callers
  * are responsible for validating it (and in this codebase, for running it
  * through the scope guard in lib/ai/scope-guard.ts before it is stored or
  * shown to anyone).
  */
 export async function llmComplete(req: LlmRequest): Promise<string> {
+  if (!isLlmConfigured()) {
+    throw new Error(
+      "No model provider configured: set GROQ_API_KEY (and LLM_BASE_URL/LLM_MODEL) in .env.local and in Vercel.",
+    );
+  }
+
   const base: Record<string, unknown> = {
     model: llmModel(),
     messages: [{ role: "system", content: req.system }, ...req.messages],
     max_tokens: req.maxTokens ?? 1024,
     // Low but non-zero: deterministic enough to be reviewable, not so rigid
-    // that a small model loops on repeated phrasing.
+    // that the model loops on repeated phrasing.
     temperature: req.temperature ?? 0.3,
     stream: false,
   };
@@ -113,40 +225,38 @@ export async function llmComplete(req: LlmRequest): Promise<string> {
     };
   }
 
-  let res = await postChatCompletion(body);
+  let res = await postWithRetry(body);
 
-  // Structured-output support varies across self-hosted servers and versions.
-  // If json_schema is rejected, fall back to plain JSON mode - the caller
-  // validates the parsed result either way, so this degrades safely rather
-  // than hard-failing on an older Ollama/llama.cpp build.
+  // Structured-output support varies by model on Groq. If json_schema is
+  // rejected, fall back to plain JSON mode - the caller validates the parsed
+  // result either way, so this degrades safely rather than hard-failing.
   if (!res.ok && req.jsonSchema && (res.status === 400 || res.status === 422)) {
-    res = await postChatCompletion({ ...base, response_format: { type: "json_object" } });
+    res = await postWithRetry({ ...base, response_format: { type: "json_object" } });
   }
 
   if (!res.ok) {
     const detail = await res.text().catch(() => "");
     throw new Error(
-      `Self-hosted model request failed (HTTP ${res.status}) at ${llmBaseUrl()}. ` +
-        `Check that your inference server is running and LLM_MODEL="${llmModel()}" is pulled. ${detail.slice(0, 300)}`,
+      `Model request failed (HTTP ${res.status}) at ${llmBaseUrl()} for model "${llmModel()}". ` +
+        `Check GROQ_API_KEY and that the model id is still current. ${detail.slice(0, 300)}`,
     );
   }
 
   const data = (await res.json()) as ChatCompletionResponse;
-  if (data.error?.message) throw new Error(`Self-hosted model error: ${data.error.message}`);
+  if (data.error?.message) throw new Error(`Model error: ${data.error.message}`);
 
   const content = data.choices?.[0]?.message?.content;
   if (typeof content !== "string" || content.trim() === "") {
-    throw new Error("Self-hosted model returned an empty response.");
+    throw new Error("Model returned an empty response.");
   }
   return content;
 }
 
 /**
- * JSON completion with a bounded retry. Small local models fairly often emit
- * prose around their JSON or trail a stray token, so we strip code fences and
- * isolate the outermost object before parsing, then retry once with a
- * corrective nudge rather than failing the whole generation on a formatting
- * slip.
+ * JSON completion with a bounded retry. Models fairly often emit prose around
+ * their JSON or trail a stray token, so we strip code fences and isolate the
+ * outermost object before parsing, then retry once with a corrective nudge
+ * rather than failing the whole generation on a formatting slip.
  */
 export async function llmCompleteJson<T>(req: LlmRequest, validate: (parsed: unknown) => parsed is T): Promise<T> {
   const attempt = async (messages: LlmMessage[]): Promise<{ parsed: T | null; raw: string }> => {
@@ -170,9 +280,7 @@ export async function llmCompleteJson<T>(req: LlmRequest, validate: (parsed: unk
   ]);
   if (second.parsed) return second.parsed;
 
-  throw new Error(
-    `Self-hosted model did not return schema-valid JSON after a retry. Last response: ${second.raw.slice(0, 500)}`,
-  );
+  throw new Error(`Model did not return schema-valid JSON after a retry. Last response: ${second.raw.slice(0, 500)}`);
 }
 
 function tryParseJson(raw: string): unknown {

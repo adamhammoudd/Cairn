@@ -1,7 +1,82 @@
 # Decision needed: which model serves the assistant
 
 **Owner:** chief-of-staff + founder · **Raised by:** dev-lead · **Date:** 2026-08-20
-**Status:** open — blocking every live-generation verification
+**Status:** RESOLVED 2026-08-21 in part — one sub-decision still open
+
+---
+
+## Resolution (2026-08-21)
+
+The founder settled the primary question in the consolidated AI spec: **Groq,
+hosted, over its OpenAI-compatible API.** Not self-hosted, not Ollama. That is
+now implemented, and the rest of this memo is retained as the reasoning that
+led here, not as a live question.
+
+What shipped against that decision:
+
+- `LLM_BASE_URL=https://api.groq.com/openai/v1`, `LLM_MODEL=openai/gpt-oss-120b`.
+- The model id was **checked, not assumed**, and the check mattered: Groq
+  deprecated `llama-3.3-70b-versatile` and `llama-3.1-8b-instant` on
+  **2026-08-16**, five days before this was written, and names
+  `openai/gpt-oss-120b` as the replacement for that tier. Picking the obvious
+  Llama default would have shipped a dead model id.
+- `GROQ_API_KEY` is read server-side only. It must be set in `.env.local` **and**
+  in Vercel → Settings → Environment Variables for Production, Preview and
+  Development. It is never committed and never `NEXT_PUBLIC_*`.
+- Retry-with-backoff on 429/5xx, honouring `Retry-After`, four attempts, jittered
+  and capped at 8s. Non-retryable statuses (400/401/403/404/422) surface
+  immediately rather than being retried into a timeout.
+- On exhaustion the user sees one fixed line — *"The assistant is temporarily
+  busy and could not complete that request. Please try again shortly."* — served
+  as `503` with `Retry-After`. Never a raw provider error; never a silent hang.
+- Covered by `npm run test:backoff` (22 gating cases).
+
+### The load-bearing assumption below has changed
+
+This memo argues downstream code assumes a small 3B–7B local model. On Groq's
+`gpt-oss-120b` that assumption is now conservative rather than wrong: the
+engine still computes every probability in code and the model still only
+narrates. **That should not be relaxed.** The architecture's honesty guarantee —
+that a cited source is a row that was actually retrieved — comes from the model
+never being asked for a number or a citation, and a more capable model is a
+reason to keep that property, not to spend it.
+
+---
+
+## STILL OPEN: fallback provider for rate-limited periods
+
+**This one is not mine to decide, and I have not decided it.**
+
+Groq's free tier has real per-minute request and token limits. The retry policy
+above absorbs a brief burst. It cannot absorb a sustained limit — after four
+attempts the user gets the "temporarily busy" line and the turn does not happen.
+
+Two options:
+
+| | Configure a second paid provider as fallback | Accept temporary unavailability |
+|---|---|---|
+| User impact under load | Assistant stays up | Assistant intermittently unavailable |
+| Cost | A second vendor relationship + per-token spend, mostly idle | None |
+| Code | The client is already provider-agnostic (`LLM_BASE_URL` + `LLM_API_KEY`), so a fallback is a routing change, not a rewrite | None |
+| Compliance surface | A second processor of user chat content to disclose | Unchanged |
+| Honest framing to users | "Assistant is up" | "Assistant is busy" — which is at least true |
+
+**My recommendation, for chief-of-staff to accept or reject:** accept temporary
+unavailability for now. Cairn is pre-launch with no paying users, the failure is
+visible and honestly worded rather than silent, and a second processor of chat
+content is a compliance item worth deferring until there is load to justify it.
+Revisit the moment real usage produces a measurable rate of busy responses —
+`ai_usage_events` plus the `[chat] provider unavailable` log lines are enough to
+measure it without new instrumentation.
+
+**What I need:** a yes/no on that recommendation. Until then the code accepts
+unavailability, because that is the behaviour that ships if nobody decides.
+
+---
+
+## Original memo (2026-08-20) — retained for reasoning
+
+**Status at time of writing:** open — blocking every live-generation verification
 
 ## Correcting the premise in the remediation brief
 

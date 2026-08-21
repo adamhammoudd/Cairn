@@ -70,12 +70,51 @@ async function fetchNewsApiOrg(provider: ProviderRow): Promise<NormalizedItem[]>
   }));
 }
 
+/** Default lookback for EDGAR full-text search, in days. Override per-provider
+ *  with config.lookback_days. */
+const EDGAR_DEFAULT_LOOKBACK_DAYS = 14;
+
+function isoDay(d: Date): string {
+  return d.toISOString().slice(0, 10); // YYYY-MM-DD, the format EDGAR expects
+}
+
+/**
+ * SEC EDGAR full-text search.
+ *
+ * EDGAR's FTS endpoint ranks by RELEVANCE, not recency, and applies no date
+ * bound of its own. Queried bare - as this provider was - it happily returns
+ * filings from months back interleaved with today's, which then land in a feed
+ * the product presents as current news. That silently degrades the "current"
+ * promise of every other source in the feed.
+ *
+ * Two changes make it honest:
+ *   1. A bounded date window is pushed into the query (dateRange=custom +
+ *      startdt/enddt), so the server never considers stale filings at all.
+ *   2. Results are re-sorted newest-first and anything outside the window is
+ *      dropped locally, because relevance still governs the order *within* the
+ *      window and a hit with a missing file_date would otherwise be silently
+ *      stamped with "now".
+ *
+ * An endpoint that already carries its own startdt is left alone - that is an
+ * operator deliberately overriding the default from the data_providers row.
+ */
 async function fetchSecEdgarFulltext(provider: ProviderRow): Promise<NormalizedItem[]> {
-  const res = await fetch(provider.endpoint, { headers: { "User-Agent": "cairn-ingest contact@example.com" } });
+  const lookbackDays = Number(provider.config.lookback_days ?? EDGAR_DEFAULT_LOOKBACK_DAYS);
+  const now = new Date();
+  const windowStart = new Date(now.getTime() - lookbackDays * 24 * 60 * 60 * 1000);
+
+  const url = new URL(provider.endpoint);
+  if (!url.searchParams.has("startdt")) {
+    url.searchParams.set("dateRange", "custom");
+    url.searchParams.set("startdt", isoDay(windowStart));
+    url.searchParams.set("enddt", isoDay(now));
+  }
+
+  const res = await fetch(url.toString(), { headers: { "User-Agent": "cairn-ingest contact@example.com" } });
   if (!res.ok) throw new Error(`${provider.name}: HTTP ${res.status}`);
   const json = await res.json();
 
-  return (json.hits?.hits ?? []).map((hit: { _id: string; _source: Record<string, unknown> }) => {
+  const items: NormalizedItem[] = (json.hits?.hits ?? []).map((hit: { _id: string; _source: Record<string, unknown> }) => {
     const s = hit._source;
     const names = Array.isArray(s.display_names) ? (s.display_names as string[]).join(", ") : "";
     const adsh = String(s.adsh ?? "").replace(/-/g, "");
@@ -86,9 +125,21 @@ async function fetchSecEdgarFulltext(provider: ProviderRow): Promise<NormalizedI
       body: String(s.file_description ?? ""),
       url: cik && adsh ? `https://www.sec.gov/Archives/edgar/data/${cik}/${adsh}` : null,
       source_name: "SEC EDGAR",
-      published_at: s.file_date ? new Date(String(s.file_date)).toISOString() : new Date().toISOString(),
+      // No fallback to "now". A filing with no file_date used to be stamped
+      // with the ingest time, which is exactly how a stale filing became a
+      // fresh-looking headline. Undated hits are dropped just below instead.
+      published_at: s.file_date ? new Date(String(s.file_date)).toISOString() : "",
     };
   });
+
+  const cutoff = windowStart.getTime();
+  return items
+    .filter((item) => {
+      if (!item.published_at) return false;
+      const t = Date.parse(item.published_at);
+      return Number.isFinite(t) && t >= cutoff;
+    })
+    .sort((a, b) => Date.parse(b.published_at) - Date.parse(a.published_at));
 }
 
 export const ADAPTERS: Record<string, Adapter> = {

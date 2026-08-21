@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { runChatTurn, type ChatHistoryMessage } from "@/lib/ai/chat-generate";
 import { checkChatUsageAllowed, recordChatUsage } from "@/lib/actions/billing";
+import { BUSY_MESSAGE, LlmBusyError } from "@/lib/ai/llm";
 
 export async function POST(req: Request) {
   const supabase = await createClient();
@@ -43,16 +44,12 @@ export async function POST(req: Request) {
     .limit(20);
   const priorHistory = (recentHistoryDesc ?? []).slice().reverse();
 
-  await supabase.from("chat_messages").insert({ session_id: sessionId, role: "user", content: message });
-
-  // First message in a session titles it, so chat history has something more
-  // useful to list/search than a bare timestamp.
-  if (!session.title) {
-    await supabase
-      .from("chat_sessions")
-      .update({ title: message.trim().slice(0, 60) })
-      .eq("id", sessionId);
-  }
+  // NOTE: the user's message is deliberately NOT written here. It used to be,
+  // and when generation then failed the route 500'd with the user turn already
+  // committed - history reloaded showing a question with no answer, which reads
+  // as the assistant having silently dropped it. The turn is now persisted as a
+  // unit, after generation succeeds (below), so a failed turn leaves nothing
+  // behind to explain. `priorHistory` above is prior-turns-only either way.
 
   // Hard gate: runChatTurn buffers the full model response, runs the scope
   // guard, and rewrites it if flagged - nothing unvalidated leaves this call.
@@ -69,20 +66,53 @@ export async function POST(req: Request) {
   const usePortfolioContext =
     session.use_portfolio_context ?? settings?.assistant_use_portfolio_context ?? true;
 
-  const result = await runChatTurn({
-    userId: user.id,
-    message,
-    history: priorHistory as ChatHistoryMessage[],
-    usePortfolioContext,
-  });
+  let result: Awaited<ReturnType<typeof runChatTurn>>;
+  try {
+    result = await runChatTurn({
+      userId: user.id,
+      message,
+      history: priorHistory as ChatHistoryMessage[],
+      usePortfolioContext,
+    });
+  } catch (err) {
+    // Provider rate-limited or overloaded us past the retry budget. The user
+    // gets the plain "try again shortly" line, never the provider's raw error;
+    // 503 + Retry-After is the honest status for "ask again later".
+    if (err instanceof LlmBusyError) {
+      console.error("[chat] provider unavailable:", err.message);
+      return new Response(BUSY_MESSAGE, { status: 503, headers: { "Retry-After": "20" } });
+    }
+    // Anything else is a real fault. Still no raw internals to the client, and
+    // still nothing persisted - the turn simply did not happen.
+    console.error("[chat] turn failed:", err);
+    return new Response("The assistant could not complete that request. Nothing was saved - please try again.", {
+      status: 500,
+    });
+  }
 
-  await supabase.from("chat_messages").insert({
-    session_id: sessionId,
-    role: "assistant",
-    content: result.displayText,
-    referenced_analysis_ids: result.analysisIds,
-  });
+  // Both halves of the turn land together, so history can never hold a user
+  // message without its reply.
+  await supabase.from("chat_messages").insert([
+    { session_id: sessionId, role: "user", content: message, referenced_analysis_ids: [] },
+    {
+      session_id: sessionId,
+      role: "assistant",
+      content: result.displayText,
+      referenced_analysis_ids: result.analysisIds,
+    },
+  ]);
 
+  // First message in a session titles it, so chat history has something more
+  // useful to list/search than a bare timestamp. After the insert for the same
+  // reason: a session that never got a turn should not look like it did.
+  if (!session.title) {
+    await supabase
+      .from("chat_sessions")
+      .update({ title: message.trim().slice(0, 60) })
+      .eq("id", sessionId);
+  }
+
+  // Only successful turns count against the daily allowance.
   await recordChatUsage(user.id);
 
   const encoder = new TextEncoder();

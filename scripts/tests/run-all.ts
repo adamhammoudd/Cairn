@@ -21,6 +21,8 @@ import { runScopeGuardProbeSuite } from "./scope-guard-probe";
 import { runScopeClassifierSuite } from "./scope-classifier";
 import { runMarketHoursSuite } from "./market-hours";
 import { runContrastSuite } from "./contrast";
+import { runEditorialSuite } from "./editorial";
+import { runLlmBackoffSuite } from "./llm-backoff";
 
 // A suite that throws (missing credentials, unreachable service) must surface
 // as a hard failure of that suite, not take the whole run down with a stack
@@ -56,6 +58,8 @@ async function main() {
     classifierSuites,
     marketHoursSuites,
     contrastSuites,
+    editorialSuites,
+    backoffSuites,
   ] = await Promise.all([
     guarded("Adversarial scope guard", runAdversarialScopeGuardSuites),
     guarded("Methodology substance", async () => [await runMethodologySubstanceSuite()]),
@@ -65,6 +69,8 @@ async function main() {
     guarded("Scope classifier", () => [runScopeClassifierSuite()]),
     guarded("Market hours", () => [runMarketHoursSuite()]),
     guarded("Palette contrast", () => [runContrastSuite()]),
+    guarded("News editorial gate", () => [runEditorialSuite()]),
+    guarded("LLM rate-limit retry policy", () => [runLlmBackoffSuite()]),
   ]);
 
   const allSuites = [
@@ -77,6 +83,8 @@ async function main() {
     ...classifierSuites,
     ...marketHoursSuites,
     ...contrastSuites,
+    ...editorialSuites,
+    ...backoffSuites,
   ];
   const reportPath = writeReport(allSuites);
 
