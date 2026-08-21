@@ -10,6 +10,7 @@ import { requireCronSecret } from "../_shared/auth.ts";
 import { ADAPTERS, type ProviderRow } from "../_shared/adapters.ts";
 import { dedupHash } from "../_shared/dedup.ts";
 import { tagContent, type CryptoUniverseEntry } from "../_shared/tagging.ts";
+import { editorialVerdict } from "../_shared/editorial.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -52,10 +53,21 @@ Deno.serve(async (req) => {
     try {
       const items = await adapter(provider);
       let inserted = 0;
+      const dropped: Record<string, number> = {};
 
       for (const item of items) {
         const hash = await dedupHash(item.title, item.published_at);
         const { tickers, sectors } = tagContent(item.title, item.body, cryptoUniverse);
+
+        // Editorial gate: the market-wide feed is market/sector/ticker news.
+        // Items tagged to a tracked symbol always pass, so this can never drop
+        // something a user's holdings-relevance ranking would have surfaced.
+        const verdict = editorialVerdict(item.title, item.body, tickers, sectors);
+        if (!verdict.keep) {
+          dropped[verdict.reason] = (dropped[verdict.reason] ?? 0) + 1;
+          continue;
+        }
+
         const { error: upsertError } = await supabase
           .from("news_items")
           .upsert(
@@ -78,7 +90,10 @@ Deno.serve(async (req) => {
         if (!upsertError) inserted++;
       }
 
-      results.push({ provider: provider.name, fetched: items.length, inserted });
+      // `dropped` is reported per run rather than swallowed: a source that is
+      // mostly consumer service journalism should be visible as such, so the
+      // decision to re-weight or disable it is made on numbers.
+      results.push({ provider: provider.name, fetched: items.length, inserted, dropped });
     } catch (err) {
       results.push({ provider: provider.name, error: err instanceof Error ? err.message : String(err) });
     }
