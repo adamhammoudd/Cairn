@@ -1,0 +1,57 @@
+
+> cairn@0.1.0 dev
+> next dev
+
+[1m[38;2;173;127;168m▲ Next.js 16.3.0[39m[22m (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://172.24.0.1:3000
+- Environments: .env.local
+[32m[1m✓[22m[39m Ready in 2.0s
+[32m[1m✓[22m[39m Running next.config.ts took 165ms
+
+[32m[1m✓[22m[39m Generated AGENTS.md for AI agents. Set `agentRules: false` in next.config to disable.
+ GET / [34m307[39m in 1592ms[2m (next.js: 388ms, proxy.ts: 507ms, application-code: 696ms)[22m
+ GET /assistant [34m307[39m in 500ms[2m (next.js: 92ms, proxy.ts: 14ms, application-code: 395ms)[22m
+ GET /assistant [34m307[39m in 536ms[2m (next.js: 20ms, proxy.ts: 20ms, application-code: 496ms)[22m
+ GET /assistant [32m200[39m in 2.5s[2m (next.js: 26ms, proxy.ts: 678ms, application-code: 1836ms)[22m
+ POST /assistant [32m200[39m in 1941ms[2m (next.js: 23ms, proxy.ts: 953ms, application-code: 965ms)[22m
+  └─ ƒ listChatSessions() in 915ms [2msrc/lib/actions/chat.ts[22m
+ POST /assistant [32m200[39m in 608ms[2m (next.js: 18ms, proxy.ts: 235ms, application-code: 355ms)[22m
+  └─ ƒ getUserPlan() in 328ms [2msrc/lib/actions/billing.ts[22m
+ POST /assistant [32m200[39m in 622ms[2m (next.js: 33ms, proxy.ts: 231ms, application-code: 357ms)[22m
+  └─ ƒ listChatSessions() in 317ms [2msrc/lib/actions/chat.ts[22m
+ POST /assistant [32m200[39m in 532ms[2m (next.js: 18ms, proxy.ts: 160ms, application-code: 355ms)[22m
+  └─ ƒ getUserPlan() in 323ms [2msrc/lib/actions/billing.ts[22m
+ POST /assistant [32m200[39m in 816ms[2m (next.js: 15ms, proxy.ts: 189ms, application-code: 612ms)[22m
+  └─ ƒ listChatMessages("abf3744b-1012-4a7f-b208-969940c59a93", 0) in 571ms [2msrc/lib/actions/chat.ts[22m
+ POST /assistant [32m200[39m in 691ms[2m (next.js: 16ms, proxy.ts: 175ms, application-code: 499ms)[22m
+  └─ ƒ listChatMessages("abf3744b-1012-4a7f-b208-969940c59a93", 0) in 457ms [2msrc/lib/actions/chat.ts[22m
+ POST /api/chat [32m200[39m in 4.3s[2m (next.js: 562ms, proxy.ts: 374ms, application-code: 3.3s)[22m
+ POST /api/chat [32m200[39m in 4.8s[2m (next.js: 21ms, proxy.ts: 435ms, application-code: 4.4s)[22m
+ POST /api/chat [32m200[39m in 3.6s[2m (next.js: 10ms, proxy.ts: 355ms, application-code: 3.2s)[22m
+ POST /assistant [32m200[39m in 1987ms[2m (next.js: 17ms, proxy.ts: 746ms, application-code: 1224ms)[22m
+  └─ ƒ listChatMessages("abf3744b-1012-4a7f-b208-969940c59a93", 0) in 1189ms [2msrc/lib/actions/chat.ts[22m
+[37m[1m○[22m[39m Compiling /assistant/[sessionId]/settings ...
+ GET /assistant/abf3744b-1012-4a7f-b208-969940c59a93/settings [32m200[39m in 12.7s[2m (next.js: 9.2s, proxy.ts: 675ms, application-code: 2.8s)[22m
+ POST /assistant/abf3744b-1012-4a7f-b208-969940c59a93/settings [32m200[39m in 777ms[2m (next.js: 82ms, proxy.ts: 316ms, application-code: 379ms)[22m
+  └─ ƒ deleteChatSession("abf3744b-1012-4a7f-b208-969940c59a93") in 340ms [2msrc/lib/actions/chat.ts[22m
+ GET /assistant [32m200[39m in 1355ms[2m (next.js: 280ms, proxy.ts: 171ms, application-code: 903ms)[22m
+ POST /assistant [32m200[39m in 627ms[2m (next.js: 28ms, proxy.ts: 188ms, application-code: 412ms)[22m
+  └─ ƒ listChatSessions() in 368ms [2msrc/lib/actions/chat.ts[22m
+ POST /assistant [32m200[39m in 549ms[2m (next.js: 17ms, proxy.ts: 166ms, application-code: 366ms)[22m
+  └─ ƒ getUserPlan() in 340ms [2msrc/lib/actions/billing.ts[22m
+ POST /assistant [32m200[39m in 640ms[2m (next.js: 16ms, proxy.ts: 230ms, application-code: 395ms)[22m
+  └─ ƒ listChatSessions() in 370ms [2msrc/lib/actions/chat.ts[22m
+ POST /assistant [32m200[39m in 522ms[2m (next.js: 15ms, proxy.ts: 174ms, application-code: 333ms)[22m
+  └─ ƒ getUserPlan() in 312ms [2msrc/lib/actions/billing.ts[22m
+[32m[1m✓[22m[39m Finished filesystem cache database compaction in 21.6s
+ GET /assistant [32m200[39m in 4.0s[2m (next.js: 22ms, proxy.ts: 351ms, application-code: 3.6s)[22m
+ POST /assistant [32m200[39m in 1862ms[2m (next.js: 29ms, proxy.ts: 738ms, application-code: 1095ms)[22m
+  └─ ƒ listChatSessions() in 1017ms [2msrc/lib/actions/chat.ts[22m
+ POST /assistant [32m200[39m in 928ms[2m (next.js: 23ms, proxy.ts: 278ms, application-code: 627ms)[22m
+  └─ ƒ getUserPlan() in 591ms [2msrc/lib/actions/billing.ts[22m
+ POST /assistant [32m200[39m in 968ms[2m (next.js: 23ms, proxy.ts: 290ms, application-code: 654ms)[22m
+  └─ ƒ listChatSessions() in 622ms [2msrc/lib/actions/chat.ts[22m
+ POST /assistant [32m200[39m in 745ms[2m (next.js: 32ms, proxy.ts: 304ms, application-code: 410ms)[22m
+  └─ ƒ getUserPlan() in 377ms [2msrc/lib/actions/billing.ts[22m
+[32m[1m✓[22m[39m Compiled in 3.9s
