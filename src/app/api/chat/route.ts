@@ -1,6 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
 import { runChatTurn, type ChatHistoryMessage } from "@/lib/ai/chat-generate";
-import { checkChatUsageAllowed, recordChatUsage } from "@/lib/actions/billing";
+import { checkChatUsageAllowed, recordChatUsage, getBillingSummary } from "@/lib/actions/billing";
+import { findMissingAnalysisScope, runAnalysisGeneration } from "@/lib/actions/analysis";
+import { TIER_LIMITS } from "@/lib/billing";
+import type { ChatGenerationState } from "@/lib/chat-state";
+import { nextResetLabel } from "@/lib/chat-state";
 import { BUSY_MESSAGE, LlmBusyError } from "@/lib/ai/llm";
 
 export async function POST(req: Request) {
@@ -65,6 +69,48 @@ export async function POST(req: Request) {
     .maybeSingle();
   const usePortfolioContext =
     session.use_portfolio_context ?? settings?.assistant_use_portfolio_context ?? true;
+
+  // --- Second entry point into the generation pipeline (Section 3). ---
+  //
+  // When the question names a scope we hold nothing on, generate it here
+  // rather than dead-ending the user at the Research page. This calls
+  // runAnalysisGeneration - the exact function the Research page's "Generate
+  // analysis" button calls - so quota accounting, the scope guard and storage
+  // are literally the same code path. There is no chat-specific generator, no
+  // chat-specific table and no chat-specific column: an analysis produced here
+  // is indistinguishable from one produced on the Research page and shows up
+  // in that page's library with no special handling.
+  //
+  // Runs BEFORE runChatTurn so the new analysis is already stored when
+  // buildChatContext reads. The reply is then grounded in the real generated
+  // record, and its id rides the normal CAIRN_REFS sentinel so the client
+  // renders the same MethodologyCard as every other surface.
+  let generatedState: ChatGenerationState | null = null;
+  try {
+    const missing = await findMissingAnalysisScope(message);
+    if (missing) {
+      const outcome = await runAnalysisGeneration(missing.scopeType, missing.scopeValue);
+      if (!outcome.ok && outcome.kind !== "error") {
+        // Quota and thin-data are states the UI renders, in Stage 1's wording -
+        // not raw errors, and not a reason to fail the turn.
+        generatedState = { kind: outcome.kind, scope: missing.scopeValue };
+        if (outcome.kind === "quota") {
+          const summary = await getBillingSummary();
+          generatedState.quota = {
+            used: summary.used,
+            limit: summary.limit,
+            planLabel: TIER_LIMITS[summary.tier].label,
+            resetLabel: nextResetLabel(),
+          };
+        }
+      }
+      // outcome.kind === "error" is a genuine fault in generation, not a
+      // product state. The turn still proceeds and answers from whatever
+      // context exists; nothing half-written is presented as an analysis.
+    }
+  } catch (err) {
+    console.error("[chat] inline generation failed:", err);
+  }
 
   let result: Awaited<ReturnType<typeof runChatTurn>>;
   try {
@@ -133,6 +179,12 @@ export async function POST(req: Request) {
       // else - never parsed as visible text (stripped client-side before display).
       if (result.analysisIds.length > 0) {
         controller.enqueue(encoder.encode(` CAIRN_REFS:${JSON.stringify(result.analysisIds)}`));
+      }
+      // Quota-reached / not-enough-history from a chat-triggered generation.
+      // Carried as data so the client can render Stage 1's own panels rather
+      // than the model paraphrasing the situation in its own words.
+      if (generatedState) {
+        controller.enqueue(encoder.encode(` CAIRN_STATE:${JSON.stringify(generatedState)}`));
       }
       controller.close();
     },

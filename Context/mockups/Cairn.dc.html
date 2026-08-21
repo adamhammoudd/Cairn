@@ -33,7 +33,7 @@
 </style>
 </helmet>
 
-<div style="min-height: 100vh; background: #0A0A0A; display: flex; flex-direction: column;">
+<div style="min-height: 100vh; background: #0A0A0A; display: flex; flex-direction: column; max-width: 100vw; overflow-x: hidden;">
 
   <header style="position: sticky; top: 0; z-index: 40; border-bottom: 1px solid #2A2A2A; background: rgba(10,10,10,0.92); backdrop-filter: blur(12px);">
     <div style="display: flex; align-items: center; gap: 26px; height: 60px; padding: 0 22px; max-width: 1560px; margin: 0 auto;">
@@ -46,15 +46,42 @@
         <span style="font-family: Newsreader, Georgia, serif; font-size: 20px; letter-spacing: 0.01em; color: #F5F5F5; line-height: 1;">Cairn</span>
       </div>
 
-      <sc-if value="{{ showBurger }}">
-        <button type="button" onClick="{{ toggleMobileNav }}" style="display: flex; flex-direction: column; gap: 4px; justify-content: center; width: 34px; height: 32px; padding: 0 7px; border: 1px solid #2A2A2A; border-radius: 9px; background: transparent; cursor: pointer; flex-shrink: 0;" style-hover="border-color: #3A3A3A;">
-          <span style="display: block; height: 1.5px; border-radius: 2px; background: #F5F5F5;"></span>
-          <span style="display: block; height: 1.5px; border-radius: 2px; background: #F5F5F5;"></span>
-          <span style="display: block; height: 1.5px; border-radius: 2px; background: #8A8A8A;"></span>
-        </button>
-      </sc-if>
-
       <nav style="display: flex; align-items: center; gap: 2px; flex: 1 1 auto; min-width: 0; overflow: visible;">
+        <sc-if value="{{ showBurger }}">
+          <div style="display: flex; align-items: center; gap: 8px; width: 100%; padding: 7px 11px; border: 1px solid {{ searchBorder }}; border-radius: 9px; transition: border-color 160ms cubic-bezier(0.4,0,0.2,1);">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6A6A6A" stroke-width="2" style="flex-shrink: 0;"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <input type="text" value="{{ searchQuery }}" onChange="{{ onSearchQuery }}" onFocus="{{ openSearch }}" placeholder="Search" style="width: 100%; min-width: 0; border: 0; outline: none; background: transparent; font-size: 12.5px; color: #F5F5F5;" />
+          </div>
+          <sc-if value="{{ searchOpen }}">
+            <div onClick="{{ stopP }}" style="margin-top: 8px; padding: 8px; border: 1px solid #2A2A2A; border-radius: 13px; background: #0F0F0F; animation: cn-menu 150ms cubic-bezier(0.4,0,0.2,1) both;">
+              <sc-if value="{{ searchEmpty }}" hint-placeholder-val="{{ true }}">
+                <div style="display: flex; flex-direction: column; gap: 4px; max-height: 300px; overflow-y: auto;">
+                  <sc-for list="{{ searchResults }}" as="r" hint-placeholder-count="4">
+                    <div onClick="{{ r.onClick }}" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px; border-radius: 9px; cursor: pointer;">
+                      <div style="display: flex; align-items: center; gap: 10px; min-width: 0;">
+                        <span style="padding: 2px 7px; border-radius: 99px; border: 1px solid #262626; font-family: 'IBM Plex Mono', monospace; font-size: 8.5px; letter-spacing: 0.1em; text-transform: uppercase; color: {{ r.tagColor }}; flex-shrink: 0;">{{ r.kind }}</span>
+                        <div style="min-width: 0;">
+                          <div style="font-size: 12.5px; color: #F5F5F5;">{{ r.title }}</div>
+                          <div style="margin-top: 2px; font-size: 11px; color: #8A8A8A; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px;">{{ r.sub }}</div>
+                        </div>
+                      </div>
+                      <span style="flex-shrink: 0; font-size: 11.5px; color: #8A8A8A;">{{ r.meta }}</span>
+                    </div>
+                  </sc-for>
+                  <sc-if value="{{ noSearchResults }}">
+                    <div style="padding: 20px 10px; text-align: center; font-size: 12.5px; color: #6A6A6A;">No match for “{{ searchQuery }}”</div>
+                  </sc-if>
+                </div>
+              </sc-if>
+              <sc-if value="{{ showRecent }}">
+                <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: #6A6A6A; padding: 6px 8px 4px;">Recent</div>
+                <sc-for list="{{ searchRecent }}" as="r" hint-placeholder-count="3">
+                  <div onClick="{{ r.onClick }}" style="padding: 9px 10px; border-radius: 9px; font-size: 12.5px; color: #8A8A8A; cursor: pointer;">{{ r.label }}</div>
+                </sc-for>
+              </sc-if>
+            </div>
+          </sc-if>
+        </sc-if>
         <sc-if value="{{ showInlineNav }}" hint-placeholder-val="{{ true }}">
         <sc-for list="{{ nav }}" as="entry" hint-placeholder-count="5">
           <div onMouseEnter="{{ entry.onEnter }}" onMouseLeave="{{ entry.onLeave }}" style="position: relative;">
@@ -89,71 +116,132 @@
 
       <div style="display: flex; align-items: center; gap: 10px; flex-shrink: 0;">
         <sc-if value="{{ showSearch }}" hint-placeholder-val="{{ true }}">
-          <div style="display: flex; align-items: center; gap: 8px; width: {{ searchWidth }}; padding: 7px 11px; border: 1px solid #2A2A2A; border-radius: 9px; transition: border-color 160ms cubic-bezier(0.4,0,0.2,1);" style-hover="border-color: #3A3A3A;">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6A6A6A" stroke-width="2" style="flex-shrink: 0;"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-            <input type="text" placeholder="Search tickers, news" style="width: 100%; min-width: 0; border: 0; outline: none; background: transparent; font-size: 12.5px; color: #F5F5F5;" />
-            <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #4A4A4A; border: 1px solid #262626; border-radius: 4px; padding: 1px 4px;">/</span>
+          <div style="position: relative; width: {{ searchWidth }};">
+            <div style="display: flex; align-items: center; gap: 8px; width: 100%; padding: 7px 11px; border: 1px solid {{ searchBorder }}; border-radius: 9px; transition: border-color 160ms cubic-bezier(0.4,0,0.2,1);">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6A6A6A" stroke-width="2" style="flex-shrink: 0;"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+              <input type="text" value="{{ searchQuery }}" onChange="{{ onSearchQuery }}" onFocus="{{ openSearch }}" placeholder="Search tickers, news, holdings" style="width: 100%; min-width: 0; border: 0; outline: none; background: transparent; font-size: 12.5px; color: #F5F5F5;" />
+              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #4A4A4A; border: 1px solid #262626; border-radius: 4px; padding: 1px 4px;">/</span>
+            </div>
+            <sc-if value="{{ searchOpen }}">
+              <div onClick="{{ stopP }}" style="position: absolute; top: calc(100% + 8px); left: 0; width: 380px; max-width: 90vw; z-index: 55; padding: 8px; border: 1px solid #2A2A2A; border-radius: 13px; background: #0F0F0F; box-shadow: 0 20px 44px rgba(0,0,0,0.6); animation: cn-menu 150ms cubic-bezier(0.4,0,0.2,1) both;">
+                <sc-if value="{{ searchEmpty }}" hint-placeholder-val="{{ true }}">
+                  <div style="display: flex; flex-direction: column; gap: 4px; max-height: 340px; overflow-y: auto;">
+                    <sc-for list="{{ searchResults }}" as="r" hint-placeholder-count="4">
+                      <div onClick="{{ r.onClick }}" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 10px; border-radius: 9px; cursor: pointer; transition: background 120ms cubic-bezier(0.4,0,0.2,1);" style-hover="background: #171717;">
+                        <div style="display: flex; align-items: center; gap: 10px; min-width: 0;">
+                          <span style="padding: 2px 7px; border-radius: 99px; border: 1px solid #262626; font-family: 'IBM Plex Mono', monospace; font-size: 8.5px; letter-spacing: 0.1em; text-transform: uppercase; color: {{ r.tagColor }}; flex-shrink: 0;">{{ r.kind }}</span>
+                          <div style="min-width: 0;">
+                            <div style="font-size: 12.5px; color: #F5F5F5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ r.title }}</div>
+                            <div style="margin-top: 2px; font-size: 11px; color: #8A8A8A; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px;">{{ r.sub }}</div>
+                          </div>
+                        </div>
+                        <span style="flex-shrink: 0; font-size: 11.5px; font-variant-numeric: tabular-nums; color: #8A8A8A;">{{ r.meta }}</span>
+                      </div>
+                    </sc-for>
+                    <sc-if value="{{ noSearchResults }}">
+                      <div style="padding: 24px 10px; text-align: center; font-size: 12.5px; color: #6A6A6A;">No match for “{{ searchQuery }}”</div>
+                    </sc-if>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ showRecent }}">
+                  <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: #6A6A6A; padding: 6px 8px 4px;">Recent</div>
+                  <sc-for list="{{ searchRecent }}" as="r" hint-placeholder-count="3">
+                    <div onClick="{{ r.onClick }}" style="padding: 9px 10px; border-radius: 9px; font-size: 12.5px; color: #8A8A8A; cursor: pointer; transition: background 120ms cubic-bezier(0.4,0,0.2,1), color 120ms cubic-bezier(0.4,0,0.2,1);" style-hover="background: #171717; color: #F5F5F5;">{{ r.label }}</div>
+                  </sc-for>
+                </sc-if>
+              </div>
+            </sc-if>
           </div>
-        </sc-if>
-        <sc-if value="{{ showBurger }}">
-          <button type="button" style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border: 1px solid #2A2A2A; border-radius: 9px; background: transparent; cursor: pointer;" style-hover="border-color: #3A3A3A;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8A8A8A" stroke-width="2"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-          </button>
         </sc-if>
         <sc-if value="{{ showUpgrade }}">
           <div style="padding: 7px 13px; border-radius: 9px; background: linear-gradient(135deg, #5EE6A6, #22B573); font-size: 12.5px; font-weight: 600; color: #0A0A0A; white-space: nowrap; cursor: pointer; transition: box-shadow 180ms cubic-bezier(0.4,0,0.2,1), transform 180ms cubic-bezier(0.4,0,0.2,1);" style-hover="box-shadow: 0 0 22px rgba(47,198,133,0.35); transform: translateY(-1px);">Upgrade</div>
         </sc-if>
-        <div style="position: relative;">
-          <button type="button" onClick="{{ toggleAccount }}" style="display: flex; align-items: center; gap: 8px; padding: 4px 8px 4px 4px; border: 0; border-radius: 9px; background: transparent; cursor: pointer; transition: background 120ms cubic-bezier(0.4,0,0.2,1);" style-hover="background: #141414;">
-            <div style="width: 28px; height: 28px; flex-shrink: 0; border-radius: 99px; background: linear-gradient(135deg, #5EE6A6, #22B573); display: flex; align-items: center; justify-content: center; font-size: 11.5px; font-weight: 600; color: #0A0A0A;">AH</div>
-            <sc-if value="{{ showAccountName }}" hint-placeholder-val="{{ true }}">
-              <div style="display: flex; flex-direction: column; align-items: flex-start;">
-                <span style="font-size: 12.5px; line-height: 1.25; white-space: nowrap; color: #F5F5F5;">Adam H.</span>
-                <span style="font-size: 10.5px; line-height: 1.25; white-space: nowrap; color: #8A8A8A;">Free plan</span>
+
+        <sc-if value="{{ showInlineNav }}" hint-placeholder-val="{{ true }}">
+          <div style="position: relative;">
+            <button type="button" onClick="{{ toggleAccount }}" style="display: flex; align-items: center; gap: 8px; padding: 4px 8px 4px 4px; border: 0; border-radius: 9px; background: transparent; cursor: pointer; transition: background 120ms cubic-bezier(0.4,0,0.2,1);" style-hover="background: #141414;">
+              <div style="width: 28px; height: 28px; flex-shrink: 0; border-radius: 99px; background: linear-gradient(135deg, #5EE6A6, #22B573); display: flex; align-items: center; justify-content: center; font-size: 11.5px; font-weight: 600; color: #0A0A0A;">AH</div>
+              <sc-if value="{{ showAccountName }}" hint-placeholder-val="{{ true }}">
+                <div style="display: flex; flex-direction: column; align-items: flex-start;">
+                  <span style="font-size: 12.5px; line-height: 1.25; white-space: nowrap; color: #F5F5F5;">Adam H.</span>
+                  <span style="font-size: 10.5px; line-height: 1.25; white-space: nowrap; color: #8A8A8A;">Free plan</span>
+                </div>
+              </sc-if>
+            </button>
+            <sc-if value="{{ accountOpen }}">
+              <div style="position: absolute; top: calc(100% + 10px); right: 0; min-width: 200px; padding: 5px; border: 1px solid #2A2A2A; border-radius: 12px; background: #0F0F0F; box-shadow: 0 18px 40px rgba(0,0,0,0.6); animation: cn-menu 150ms cubic-bezier(0.4,0,0.2,1) both;">
+                <sc-for list="{{ accountMenu }}" as="item" hint-placeholder-count="4">
+                  <div onClick="{{ item.onClick }}" style="display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; border-radius: 8px; cursor: pointer; transition: background 120ms cubic-bezier(0.4,0,0.2,1);" style-hover="background: #191919;">
+                    <span style="font-size: 13px; color: {{ item.color }};">{{ item.label }}</span>
+                    <sc-if value="{{ item.soon }}">
+                      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: 0.1em; text-transform: uppercase; color: #6A6A6A; border: 1px solid #262626; border-radius: 5px; padding: 2px 5px;">next</span>
+                    </sc-if>
+                  </div>
+                </sc-for>
               </div>
             </sc-if>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ showBurger }}">
+          <button type="button" onClick="{{ toggleMobileNav }}" style="display: flex; flex-direction: column; gap: 4px; justify-content: center; width: 34px; height: 32px; padding: 0 7px; border: 1px solid {{ mobileNavBorder }}; border-radius: 9px; background: transparent; cursor: pointer; flex-shrink: 0;" style-hover="border-color: #3A3A3A;">
+            <span style="display: block; height: 1.5px; border-radius: 2px; background: #F5F5F5;"></span>
+            <span style="display: block; height: 1.5px; border-radius: 2px; background: #F5F5F5;"></span>
+            <span style="display: block; height: 1.5px; border-radius: 2px; background: #8A8A8A;"></span>
           </button>
-          <sc-if value="{{ accountOpen }}">
-            <div style="position: absolute; top: calc(100% + 10px); right: 0; min-width: 200px; padding: 5px; border: 1px solid #2A2A2A; border-radius: 12px; background: #0F0F0F; box-shadow: 0 18px 40px rgba(0,0,0,0.6); animation: cn-menu 150ms cubic-bezier(0.4,0,0.2,1) both;">
-              <sc-for list="{{ accountMenu }}" as="item" hint-placeholder-count="4">
-                <div onClick="{{ item.onClick }}" style="display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; border-radius: 8px; cursor: pointer; transition: background 120ms cubic-bezier(0.4,0,0.2,1);" style-hover="background: #191919;">
-                  <span style="font-size: 13px; color: {{ item.color }};">{{ item.label }}</span>
-                  <sc-if value="{{ item.soon }}">
-                    <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: 0.1em; text-transform: uppercase; color: #6A6A6A; border: 1px solid #262626; border-radius: 5px; padding: 2px 5px;">next</span>
-                  </sc-if>
-                </div>
-              </sc-for>
-            </div>
-          </sc-if>
-        </div>
+        </sc-if>
       </div>
     </div>
-
-    <sc-if value="{{ mobileNavOpen }}">
-      <div style="border-top: 1px solid #2A2A2A; background: #0C0C0C; padding: 10px 14px 16px; animation: cn-menu 180ms cubic-bezier(0.4,0,0.2,1) both;">
-        <sc-for list="{{ mobileNav }}" as="item" hint-placeholder-count="6">
-          <div onClick="{{ item.onClick }}" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: {{ item.pad }}; border-radius: 9px; cursor: {{ item.cursor }}; transition: background 120ms cubic-bezier(0.4,0,0.2,1);">
-            <span style="font-size: {{ item.size }}px; font-family: {{ item.family }}; letter-spacing: {{ item.tracking }}; text-transform: {{ item.transform }}; color: {{ item.color }};">{{ item.label }}</span>
-            <sc-if value="{{ item.soon }}">
-              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: 0.1em; text-transform: uppercase; color: #6A6A6A; border: 1px solid #262626; border-radius: 5px; padding: 2px 5px;">next</span>
-            </sc-if>
-          </div>
-        </sc-for>
-      </div>
-    </sc-if>
   </header>
+  <sc-if value="{{ mobileNavOpen }}">
+    <div style="position: fixed; top: 60px; left: 0; right: 0; bottom: 0; z-index: 45; background: #0A0A0A; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; padding: 12px 14px 16px; animation: cn-menu 180ms cubic-bezier(0.4,0,0.2,1) both;">
+      <div style="margin-bottom: 8px;">
+        <button type="button" onClick="{{ toggleAccount }}" style="display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px; border: 0; border-radius: 9px; background: transparent; cursor: pointer; transition: background 120ms cubic-bezier(0.4,0,0.2,1);" style-hover="background: #151515;">
+          <div style="width: 32px; height: 32px; flex-shrink: 0; border-radius: 99px; background: linear-gradient(135deg, #5EE6A6, #22B573); display: flex; align-items: center; justify-content: center; font-size: 12.5px; font-weight: 600; color: #0A0A0A;">AH</div>
+          <div style="flex: 1; min-width: 0; text-align: left;">
+            <div style="font-size: 13.5px; color: #F5F5F5;">Adam H.</div>
+            <div style="margin-top: 2px; font-size: 11px; color: #8A8A8A;">Free plan</div>
+          </div>
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#8A8A8A" stroke-width="3" style="flex-shrink: 0; transition: transform 160ms cubic-bezier(0.4,0,0.2,1); transform: rotate({{ mobileAccountCaret }}deg);">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </button>
+        <sc-if value="{{ accountOpen }}">
+          <div style="display: flex; flex-direction: column; padding: 4px 4px 4px 44px; animation: cn-menu 150ms cubic-bezier(0.4,0,0.2,1) both;">
+            <sc-for list="{{ accountMenu }}" as="item" hint-placeholder-count="4">
+              <div onClick="{{ item.onClick }}" style="display: flex; align-items: center; justify-content: space-between; padding: 9px 8px; border-radius: 9px; cursor: pointer; transition: background 120ms cubic-bezier(0.4,0,0.2,1);" style-hover="background: #151515;">
+                <span style="font-size: 13px; color: {{ item.color }};">{{ item.label }}</span>
+                <sc-if value="{{ item.soon }}">
+                  <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: 0.1em; text-transform: uppercase; color: #6A6A6A; border: 1px solid #262626; border-radius: 5px; padding: 2px 5px;">next</span>
+                </sc-if>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+      </div>
+      <div style="border-top: 1px solid #1E1E1E; margin-bottom: 4px;"></div>
+      <sc-for list="{{ mobileNav }}" as="item" hint-placeholder-count="6">
+        <div onClick="{{ item.onClick }}" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: {{ item.pad }}; border-radius: 9px; cursor: {{ item.cursor }}; transition: background 120ms cubic-bezier(0.4,0,0.2,1);">
+          <span style="font-size: {{ item.size }}px; font-family: {{ item.family }}; letter-spacing: {{ item.tracking }}; text-transform: {{ item.transform }}; color: {{ item.color }};">{{ item.label }}</span>
+          <sc-if value="{{ item.soon }}">
+            <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: 0.1em; text-transform: uppercase; color: #6A6A6A; border: 1px solid #262626; border-radius: 5px; padding: 2px 5px;">next</span>
+          </sc-if>
+        </div>
+      </sc-for>
+    </div>
+  </sc-if>
 
   <main style="flex: 1; width: 100%; max-width: 1560px; margin: 0 auto; padding: 26px 22px 60px;">
 
     <sc-if value="{{ isBase }}" hint-placeholder-val="{{ true }}">
       <div style="animation: cn-page 260ms cubic-bezier(0.4,0,0.2,1) both;">
         <div style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 22px;">
-          <div>
+          <div style="min-width: 0;">
             <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: 0.16em; text-transform: uppercase; color: #8A8A8A; margin-bottom: 8px;">{{ today }} · markets open</div>
             <h1 style="margin: 0; font-family: Newsreader, Georgia, serif; font-size: 34px; font-weight: 400; line-height: 1.1; color: #F5F5F5;">Base Camp</h1>
-            <p style="margin: 7px 0 0; font-size: 13.5px; color: #8A8A8A; max-width: 560px; text-wrap: pretty;">Your marker for the day - portfolio, markets, and what the assistant flagged while you were away.</p>
+            <p style="margin: 7px 0 0; font-size: 13.5px; color: #8A8A8A; max-width: 560px; text-wrap: pretty;">Your marker for the day — portfolio, markets, and what the assistant flagged while you were away.</p>
           </div>
-          <div style="display: flex; align-items: center; gap: 8px;">
+          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
             <button type="button" onClick="{{ toggleLive }}" style="display: flex; align-items: center; gap: 7px; padding: 8px 12px; border: 1px solid #2A2A2A; border-radius: 9px; background: transparent; font-size: 12.5px; color: #F5F5F5; cursor: pointer; transition: border-color 160ms cubic-bezier(0.4,0,0.2,1);" style-hover="border-color: #3A3A3A;">
               <span style="width: 6px; height: 6px; border-radius: 99px; background: {{ liveDot }}; animation: cn-breathe 2.4s ease-in-out infinite;"></span>
               {{ liveLabel }}
@@ -162,9 +250,9 @@
           </div>
         </div>
 
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); gap: 14px;">
           <sc-for list="{{ modules }}" as="m" hint-placeholder-count="5">
-            <div style="grid-column: span {{ m.span }}; position: relative; padding: 18px; border: 1px solid #2A2A2A; border-radius: 14px; background: #0F0F0F; animation: cn-rise 320ms cubic-bezier(0.4,0,0.2,1) both; animation-delay: {{ m.delay }}ms; transition: border-color 200ms cubic-bezier(0.4,0,0.2,1), transform 200ms cubic-bezier(0.4,0,0.2,1), box-shadow 200ms cubic-bezier(0.4,0,0.2,1);" style-hover="border-color: #3A3A3A; transform: translateY(-2px); box-shadow: 0 12px 30px rgba(0,0,0,0.45);">
+            <div style="grid-column: span {{ m.span }}; min-width: 0; overflow: hidden; position: relative; padding: 18px; border: 1px solid #2A2A2A; border-radius: 14px; background: #0F0F0F; animation: cn-rise 320ms cubic-bezier(0.4,0,0.2,1) both; animation-delay: {{ m.delay }}ms; transition: border-color 200ms cubic-bezier(0.4,0,0.2,1), transform 200ms cubic-bezier(0.4,0,0.2,1), box-shadow 200ms cubic-bezier(0.4,0,0.2,1);" style-hover="border-color: #3A3A3A; transform: translateY(-2px); box-shadow: 0 12px 30px rgba(0,0,0,0.45);">
               <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px;">
                 <div style="display: flex; align-items: center; gap: 9px;">
                   <span style="width: 5px; height: 14px; border-radius: 3px; background: {{ m.tint }};"></span>
@@ -202,7 +290,7 @@
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px 22px; font-size: 12px; line-height: 1.6; color: #8A8A8A;">
               <div>Cards rise + fade in on mount, 320ms ease-standard, 40ms stagger by slot.</div>
               <div>Card hover: 2px lift + border to #3A3A3A + soft shadow, 200ms.</div>
-              <div>Price ticks: value cross-fades 180ms, flash tint (green/red) fades out over 900ms. No layout shift - tabular figures.</div>
+              <div>Price ticks: value cross-fades 180ms, flash tint (green/red) fades out over 900ms. No layout shift — tabular figures.</div>
               <div>Sparklines draw left-to-right on first paint, 600ms, dash-offset.</div>
               <div>Arrange mode: controls fade in 140ms; reorder animates position 220ms.</div>
               <div>Reduced motion: all of the above collapse to instant state changes.</div>
@@ -262,9 +350,38 @@
             <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: #8A8A8A;">{{ holdingCount }} positions</span>
             <span style="font-size: 11.5px; color: #6A6A6A;">Sorted by value</span>
           </div>
+          <sc-if value="{{ isDesktopTable }}" hint-placeholder-val="{{ true }}">
           <div style="display: grid; grid-template-columns: 1.5fr 0.7fr 0.9fr 1fr 1fr 1.1fr 96px 72px; gap: 12px; padding: 10px 18px; border-bottom: 1px solid #1E1E1E; font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: 0.12em; text-transform: uppercase; color: #6A6A6A;">
             <div>Holding</div><div>Qty</div><div>Price</div><div>Cost basis</div><div>Value</div><div>Gain / loss</div><div>30d</div><div></div>
           </div>
+          </sc-if>
+          <sc-if value="{{ isPhone }}">
+            <sc-for list="{{ holdings }}" as="h" hint-placeholder-count="6">
+              <div style="display: flex; flex-direction: column; gap: 10px; padding: 14px 16px; border-bottom: 1px solid #171717;">
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                  <div style="display: flex; align-items: center; gap: 10px; min-width: 0;">
+                    <div style="width: 30px; height: 30px; flex-shrink: 0; border-radius: 8px; background: {{ h.chip }}; display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #0A0A0A;">{{ h.initials }}</div>
+                    <div style="min-width: 0;">
+                      <div style="font-size: 14px; color: #F5F5F5;">{{ h.symbol }}</div>
+                      <div style="font-size: 11.5px; color: #8A8A8A; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ h.name }}</div>
+                    </div>
+                  </div>
+                  <button type="button" onClick="{{ h.remove }}" style="width: 30px; height: 30px; flex-shrink: 0; border: 0; border-radius: 8px; background: transparent; color: #D96C6C; cursor: pointer;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"></path><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path></svg>
+                  </button>
+                </div>
+                <svg viewBox="0 0 100 28" preserveAspectRatio="none" style="width: 100%; height: 34px; display: block;">
+                  <polyline points="{{ h.points }}" fill="none" stroke="{{ h.gainColor }}" stroke-width="1.6" vector-effect="non-scaling-stroke" pathLength="1" stroke-dasharray="1" style="animation: cn-draw 700ms cubic-bezier(0.4,0,0.2,1) both; animation-delay: {{ h.delay }}ms;"></polyline>
+                </svg>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+                  <div><div style="font-size: 10px; color: #6A6A6A;">Value</div><div style="margin-top: 3px; font-size: 12.5px; font-variant-numeric: tabular-nums; color: #F5F5F5;">{{ h.value }}</div></div>
+                  <div><div style="font-size: 10px; color: #6A6A6A;">Price</div><div style="margin-top: 3px; font-size: 12.5px; font-variant-numeric: tabular-nums; color: {{ h.priceColor }};">{{ h.price }}</div></div>
+                  <div><div style="font-size: 10px; color: #6A6A6A;">Gain / loss</div><div style="margin-top: 3px; font-size: 12.5px; font-variant-numeric: tabular-nums; color: {{ h.gainColor }};">{{ h.gainPct }}</div></div>
+                </div>
+              </div>
+            </sc-for>
+          </sc-if>
+          <sc-if value="{{ isDesktopTable }}">
           <sc-for list="{{ holdings }}" as="h" hint-placeholder-count="6">
             <div style="display: grid; grid-template-columns: 1.5fr 0.7fr 0.9fr 1fr 1fr 1.1fr 96px 72px; gap: 12px; align-items: center; padding: 13px 18px; border-bottom: 1px solid #171717; transition: background 140ms cubic-bezier(0.4,0,0.2,1);" style-hover="background: #141414;">
               <div style="display: flex; align-items: center; gap: 10px; min-width: 0;">
@@ -297,6 +414,7 @@
               </div>
             </div>
           </sc-for>
+          </sc-if>
           <sc-if value="{{ noHoldings }}">
             <div style="padding: 60px 24px; text-align: center;">
               <div style="font-family: Newsreader, Georgia, serif; font-size: 20px; color: #F5F5F5;">No stones stacked yet</div>
@@ -312,7 +430,7 @@
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px 22px; font-size: 12px; line-height: 1.6; color: #8A8A8A;">
               <div>Stat cards rise 300ms, 50ms stagger.</div>
               <div>Row sparklines draw in 700ms, 60ms stagger down the table.</div>
-              <div>Row hover: background to #141414 in 140ms - no movement, keeps scanning stable.</div>
+              <div>Row hover: background to #141414 in 140ms — no movement, keeps scanning stable.</div>
               <div>Delete: row collapses height + fades 200ms; icon tints red on hover only.</div>
               <div>Add-holding modal: scrim fades 160ms, sheet rises 8px + scales 0.98→1 in 220ms.</div>
               <div>Type-ahead: dropdown reveals 140ms; matched substring highlights instantly, no per-item animation.</div>
@@ -343,9 +461,34 @@
         </div>
 
         <div style="border: 1px solid #2A2A2A; border-radius: 14px; background: #0F0F0F; overflow: hidden;">
+          <sc-if value="{{ isDesktopTable }}" hint-placeholder-val="{{ true }}">
           <div style="display: grid; grid-template-columns: 1.6fr 0.9fr 1fr 0.9fr 1fr 100px; gap: 12px; padding: 11px 18px; border-bottom: 1px solid #1E1E1E; font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: 0.12em; text-transform: uppercase; color: #6A6A6A;">
             <div>Asset</div><div>Type</div><div>Price</div><div>24h</div><div>Volume</div><div>Trend</div>
           </div>
+          </sc-if>
+          <sc-if value="{{ isPhone }}">
+            <sc-for list="{{ marketRows }}" as="r" hint-placeholder-count="8">
+              <div onClick="{{ r.open }}" style="display: flex; flex-direction: column; gap: 8px; padding: 14px 16px; border-bottom: 1px solid #171717; cursor: pointer;">
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                  <div style="display: flex; align-items: center; gap: 10px; min-width: 0;">
+                    <div style="width: 28px; height: 28px; flex-shrink: 0; border-radius: 8px; background: {{ r.chip }}; display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #0A0A0A;">{{ r.initials }}</div>
+                    <div style="min-width: 0;">
+                      <div style="font-size: 14px; color: #F5F5F5;">{{ r.symbol }}</div>
+                      <div style="font-size: 11px; color: #8A8A8A; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ r.name }}</div>
+                    </div>
+                  </div>
+                  <div style="text-align: right;">
+                    <div style="font-size: 13px; font-variant-numeric: tabular-nums; color: {{ r.priceColor }};">{{ r.price }}</div>
+                    <div style="margin-top: 3px; font-size: 11.5px; font-variant-numeric: tabular-nums; color: {{ r.changeColor }};">{{ r.change }}</div>
+                  </div>
+                </div>
+                <svg viewBox="0 0 100 28" preserveAspectRatio="none" style="width: 100%; height: 30px; display: block;">
+                  <polyline points="{{ r.points }}" fill="none" stroke="{{ r.changeColor }}" stroke-width="1.6" vector-effect="non-scaling-stroke" pathLength="1" stroke-dasharray="1" style="animation: cn-draw 700ms cubic-bezier(0.4,0,0.2,1) both; animation-delay: {{ r.delay }}ms;"></polyline>
+                </svg>
+              </div>
+            </sc-for>
+          </sc-if>
+          <sc-if value="{{ isDesktopTable }}">
           <sc-for list="{{ marketRows }}" as="r" hint-placeholder-count="8">
             <div onClick="{{ r.open }}" style="display: grid; grid-template-columns: 1.6fr 0.9fr 1fr 0.9fr 1fr 100px; gap: 12px; align-items: center; padding: 12px 18px; border-bottom: 1px solid #171717; cursor: pointer; animation: cn-rise 260ms cubic-bezier(0.4,0,0.2,1) both; animation-delay: {{ r.delay }}ms; transition: background 140ms cubic-bezier(0.4,0,0.2,1);" style-hover="background: #141414;">
               <div style="display: flex; align-items: center; gap: 10px; min-width: 0;">
@@ -368,6 +511,7 @@
               </div>
             </div>
           </sc-for>
+          </sc-if>
           <sc-if value="{{ marketsEmpty }}">
             <div style="padding: 64px 24px; text-align: center;">
               <div style="display: flex; justify-content: center; gap: 5px; align-items: flex-end; height: 42px; margin-bottom: 18px;">
@@ -390,7 +534,7 @@
             <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: #2FC685; margin-bottom: 10px;">Motion spec · Markets</div>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px 22px; font-size: 12px; line-height: 1.6; color: #8A8A8A;">
               <div>Filter switch: pill background slides 160ms; rows re-enter with 20ms stagger, capped at 12 rows.</div>
-              <div>Typing filters synchronously - no debounce spinner, no skeleton flash under 200ms.</div>
+              <div>Typing filters synchronously — no debounce spinner, no skeleton flash under 200ms.</div>
               <div>Empty state fades in 200ms; the three stones settle in sequence, 60ms apart.</div>
               <div>Row click → ticker detail: shared-element fade of the symbol block, 220ms.</div>
             </div>
@@ -482,7 +626,7 @@
                       </div>
                       <div style="display: flex; align-items: center; gap: 9px; margin-top: 14px; padding: 10px 12px; border: 1px solid #262626; border-radius: 10px; background: #101010;">
                         <span style="width: 5px; height: 26px; border-radius: 3px; background: #D9A441; flex-shrink: 0;"></span>
-                        <span style="font-size: 11.5px; line-height: 1.55; color: #8A8A8A; text-wrap: pretty;">Market-level context assembled from the sources above - not a personalised recommendation to buy, hold, or sell. Free plan shows top-line depth; Premium expands analog detail. Caveats never differ by plan.</span>
+                        <span style="font-size: 11.5px; line-height: 1.55; color: #8A8A8A; text-wrap: pretty;">Market-level context assembled from the sources above — not a personalised recommendation to buy, hold, or sell. Free plan shows top-line depth; Premium expands analog detail. Caveats never differ by plan.</span>
                       </div>
                     </div>
                   </div>
@@ -510,7 +654,7 @@
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px 22px; font-size: 12px; line-height: 1.6; color: #8A8A8A;">
               <div>Response streams word-by-word at ~28ms/token with a blinking 7px accent caret; container height grows without scroll-jump.</div>
               <div>Methodology card unfolds after the stream settles: 280ms rise, analog match bars grow left-to-right 620ms, 70ms stagger.</div>
-              <div>Briefing card mounts with the accent glow fading up over 500ms - once per session, not on every visit.</div>
+              <div>Briefing card mounts with the accent glow fading up over 500ms — once per session, not on every visit.</div>
               <div>Docked panel (other pages): slides in from right 260ms; the same thread state, no re-fetch.</div>
               <div>Send button: gentle glow on hover, label swaps to “Stop” while streaming.</div>
             </div>
@@ -621,7 +765,7 @@
               </div>
               <div style="display: flex; align-items: center; gap: 9px; margin-top: 15px; padding: 10px 12px; border: 1px solid #262626; border-radius: 10px; background: #101010;">
                 <span style="width: 5px; height: 26px; border-radius: 3px; background: #D9A441; flex-shrink: 0;"></span>
-                <span style="font-size: 11.5px; line-height: 1.55; color: #8A8A8A; text-wrap: pretty;">Market-level context assembled from the sources above - not a personalised recommendation to buy, hold, or sell. Free plan shows top-line depth; Premium expands analog detail. Caveats never differ by plan.</span>
+                <span style="font-size: 11.5px; line-height: 1.55; color: #8A8A8A; text-wrap: pretty;">Market-level context assembled from the sources above — not a personalised recommendation to buy, hold, or sell. Free plan shows top-line depth; Premium expands analog detail. Caveats never differ by plan.</span>
               </div>
             </div>
           </div>
@@ -632,9 +776,9 @@
             <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: #2FC685; margin-bottom: 10px;">Motion spec · Ticker detail</div>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px 22px; font-size: 12px; line-height: 1.6; color: #8A8A8A;">
               <div>Main chart line draws 900ms; the area gradient fades in behind it starting at 320ms.</div>
-              <div>Range switch: pill slides 160ms, chart re-draws at 500ms (shorter than first paint - it's a change, not an arrival).</div>
+              <div>Range switch: pill slides 160ms, chart re-draws at 500ms (shorter than first paint — it's a change, not an arrival).</div>
               <div>Header price ticks in place, 180ms cross-fade with a 900ms tint decay.</div>
-              <div>Analysis section is present on load - no expand animation, nothing to discover.</div>
+              <div>Analysis section is present on load — no expand animation, nothing to discover.</div>
               <div>Add holding opens the shared modal: 220ms rise, same as Portfolio.</div>
             </div>
           </div>
@@ -758,7 +902,7 @@
           <div style="margin-top: 26px; padding: 16px 18px; border: 1px solid #262626; border-left: 1px solid #2FC685; border-radius: 12px; background: #0D0D0D;">
             <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: #2FC685; margin-bottom: 10px;">Motion spec · Compare</div>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px 22px; font-size: 12px; line-height: 1.6; color: #8A8A8A;">
-              <div>All mini-charts draw simultaneously per column with a 60ms offset - the eye reads them as one set.</div>
+              <div>All mini-charts draw simultaneously per column with a 60ms offset — the eye reads them as one set.</div>
               <div>Hovering any chart shows a synchronised crosshair across all four at the same date index, no animation delay.</div>
               <div>Adding a ticker: column enters 300ms; the metric table re-flows its grid over 220ms.</div>
               <div>Removing: column fades 160ms, remaining columns settle 220ms.</div>
@@ -825,7 +969,7 @@
             <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: #2FC685; margin-bottom: 10px;">Motion spec · Watchlist</div>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px 22px; font-size: 12px; line-height: 1.6; color: #8A8A8A;">
               <div>Switching lists: rows re-enter 280ms with 50ms stagger; sparklines redraw with them.</div>
-              <div>Primary action sits below the list - it lifts 1px and glows on hover, 180ms.</div>
+              <div>Primary action sits below the list — it lifts 1px and glows on hover, 180ms.</div>
               <div>Remove: row collapses + fades 200ms, red tint only on the icon's own hover.</div>
               <div>New watchlist opens as a full page, entering with the standard 260ms page transition.</div>
             </div>
@@ -900,7 +1044,7 @@
           <div style="margin-top: 26px; padding: 16px 18px; border: 1px solid #262626; border-left: 1px solid #2FC685; border-radius: 12px; background: #0D0D0D;">
             <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: #2FC685; margin-bottom: 10px;">Motion spec · New watchlist</div>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px 22px; font-size: 12px; line-height: 1.6; color: #8A8A8A;">
-              <div>Preview panel updates as you type - no transition on the text, 160ms cross-fade on the colour tag.</div>
+              <div>Preview panel updates as you type — no transition on the text, 160ms cross-fade on the colour tag.</div>
               <div>Chip selection: border and background shift 160ms; no scale bounce.</div>
               <div>Create: button shows an inline 14px spinner, then the page exits with the standard 260ms transition into the new list.</div>
             </div>
@@ -961,7 +1105,7 @@
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px 22px; font-size: 12px; line-height: 1.6; color: #8A8A8A;">
               <div>Category switch: rows rise 240ms with 30ms stagger; the sidebar accent bar cross-fades 160ms.</div>
               <div>Toggle knob travels 180ms with the track colour; a saved tick fades in beside the label for 1.2s.</div>
-              <div>Destructive action requires a confirm step - no animation shortcuts around it.</div>
+              <div>Destructive action requires a confirm step — no animation shortcuts around it.</div>
             </div>
           </div>
         </sc-if>
@@ -978,7 +1122,7 @@
             <span style="width: 18px; height: 9px; border-radius: 99px; background: linear-gradient(135deg, #5EE6A6, #22B573); animation: cn-rise 420ms cubic-bezier(0.4,0,0.2,1) both; box-shadow: 0 0 14px rgba(47,198,133,0.15);"></span>
           </div>
           <h1 style="position: relative; margin: 0; font-family: Newsreader, Georgia, serif; font-size: 34px; font-weight: 400; line-height: 1.15; color: #F5F5F5;">Welcome to Cairn</h1>
-          <p style="position: relative; margin: 10px auto 0; max-width: 480px; font-size: 14px; line-height: 1.6; color: #8A8A8A; text-wrap: pretty;">Three steps and Base Camp fills in with your own numbers. Nothing here is a recommendation - Cairn shows sourced context and lets you draw the conclusion.</p>
+          <p style="position: relative; margin: 10px auto 0; max-width: 480px; font-size: 14px; line-height: 1.6; color: #8A8A8A; text-wrap: pretty;">Three steps and Base Camp fills in with your own numbers. Nothing here is a recommendation — Cairn shows sourced context and lets you draw the conclusion.</p>
           <div style="position: relative; max-width: 300px; margin: 22px auto 0;">
             <div style="height: 4px; border-radius: 3px; background: #1C1C1C; overflow: hidden;">
               <div style="height: 100%; width: {{ onboardProgress }}; border-radius: 3px; background: linear-gradient(90deg, #5EE6A6, #22B573); transition: width 340ms cubic-bezier(0.4,0,0.2,1);"></div>
@@ -1027,9 +1171,9 @@
           <div style="margin-top: 26px; padding: 16px 18px; border: 1px solid #262626; border-left: 1px solid #2FC685; border-radius: 12px; background: #0D0D0D;">
             <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: #2FC685; margin-bottom: 10px;">Motion spec · Onboarding</div>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px 22px; font-size: 12px; line-height: 1.6; color: #8A8A8A;">
-              <div>The three stones stack bottom-up on load, 420ms each, 100ms apart - the only ornamental motion in the app, and it plays once.</div>
+              <div>The three stones stack bottom-up on load, 420ms each, 100ms apart — the only ornamental motion in the app, and it plays once.</div>
               <div>Step completion: number swaps to a tick, border warms to accent, progress bar grows 340ms.</div>
-              <div>Empty-state cards stay static - they're reference, not action.</div>
+              <div>Empty-state cards stay static — they're reference, not action.</div>
               <div>Completing all three transitions to Base Camp with the standard 260ms page fade.</div>
             </div>
           </div>
@@ -1098,7 +1242,7 @@
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px 22px; font-size: 12px; line-height: 1.6; color: #8A8A8A;">
               <div>Rows rise 280ms, 40ms stagger.</div>
               <div>Enable toggle: knob travels 180ms, card border and symbol dim in the same beat.</div>
-              <div>A newly delivered alert arrives at the top of the panel with a 240ms slide and one accent dot pulse - no sound, no toast stack.</div>
+              <div>A newly delivered alert arrives at the top of the panel with a 240ms slide and one accent dot pulse — no sound, no toast stack.</div>
             </div>
           </div>
         </sc-if>
@@ -1156,7 +1300,7 @@
             <sc-if value="{{ scrEmpty }}">
               <div style="padding: 60px 24px; text-align: center;">
                 <div style="font-family: Newsreader, Georgia, serif; font-size: 20px; color: #F5F5F5;">No asset clears every filter</div>
-                <p style="margin: 8px auto 18px; max-width: 380px; font-size: 13px; color: #8A8A8A; text-wrap: pretty;">Loosen one constraint at a time - price and change are usually the binding pair.</p>
+                <p style="margin: 8px auto 18px; max-width: 380px; font-size: 13px; color: #8A8A8A; text-wrap: pretty;">Loosen one constraint at a time — price and change are usually the binding pair.</p>
                 <button type="button" onClick="{{ scrReset }}" style="padding: 9px 16px; border: 0; border-radius: 10px; background: linear-gradient(135deg, #5EE6A6, #22B573); font-size: 12.5px; font-weight: 600; color: #0A0A0A; cursor: pointer;">Reset filters</button>
               </div>
             </sc-if>
@@ -1168,7 +1312,7 @@
             <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: #2FC685; margin-bottom: 10px;">Motion spec · Screener</div>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px 22px; font-size: 12px; line-height: 1.6; color: #8A8A8A;">
               <div>Filters apply as you type; result rows re-enter 240ms with a 25ms stagger.</div>
-              <div>Match count cross-fades 140ms rather than counting up - the number matters, the animation doesn't.</div>
+              <div>Match count cross-fades 140ms rather than counting up — the number matters, the animation doesn't.</div>
               <div>Saving a screen slides it into the sidebar list at 200ms.</div>
             </div>
           </div>
@@ -1215,7 +1359,7 @@
             <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: #2FC685; margin-bottom: 10px;">Motion spec · Sector map</div>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px 22px; font-size: 12px; line-height: 1.6; color: #8A8A8A;">
               <div>Sector groups rise 300ms, 50ms stagger; tiles inside do not animate individually.</div>
-              <div>Tile hover: 2px lift + shadow, 180ms. Colour never animates - it encodes data.</div>
+              <div>Tile hover: 2px lift + shadow, 180ms. Colour never animates — it encodes data.</div>
               <div>Live re-colour on new prices: 400ms background transition, no size change intraday.</div>
             </div>
           </div>
@@ -1228,7 +1372,7 @@
         <div style="margin-bottom: 20px;">
           <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: 0.16em; text-transform: uppercase; color: #8A8A8A; margin-bottom: 8px;">Planning · Calculators</div>
           <h1 style="margin: 0; font-family: Newsreader, Georgia, serif; font-size: 32px; font-weight: 400; line-height: 1.1; color: #F5F5F5;">Calculators</h1>
-          <p style="margin: 7px 0 0; font-size: 13.5px; color: #8A8A8A; max-width: 580px; text-wrap: pretty;">Arithmetic on numbers you supply - none of this is a recommendation about any position.</p>
+          <p style="margin: 7px 0 0; font-size: 13.5px; color: #8A8A8A; max-width: 580px; text-wrap: pretty;">Arithmetic on numbers you supply — none of this is a recommendation about any position.</p>
         </div>
 
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: 14px;">
@@ -1328,7 +1472,7 @@
             <div style="margin-top: 16px; padding: 13px; border: 1px solid #232323; border-radius: 11px; background: #0B0B0B;">
               <div style="font-size: 11.5px; color: #8A8A8A;">Required annual return to hit the target on time</div>
               <div style="margin-top: 7px; font-family: Newsreader, Georgia, serif; font-size: 22px; font-variant-numeric: tabular-nums; color: #F5F5F5;">{{ goalRequired }}</div>
-              <div style="margin-top: 8px; font-size: 11px; line-height: 1.55; color: #6A6A6A; text-wrap: pretty;">Solved from compound growth on today's value. Not a forecast - just the rate the arithmetic requires.</div>
+              <div style="margin-top: 8px; font-size: 11px; line-height: 1.55; color: #6A6A6A; text-wrap: pretty;">Solved from compound growth on today's value. Not a forecast — just the rate the arithmetic requires.</div>
             </div>
           </div>
         </div>
@@ -1337,7 +1481,7 @@
           <div style="margin-top: 26px; padding: 16px 18px; border: 1px solid #262626; border-left: 1px solid #2FC685; border-radius: 12px; background: #0D0D0D;">
             <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: #2FC685; margin-bottom: 10px;">Motion spec · Calculators</div>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px 22px; font-size: 12px; line-height: 1.6; color: #8A8A8A;">
-              <div>Results recompute on every keystroke - the output number cross-fades 140ms, never counts up.</div>
+              <div>Results recompute on every keystroke — the output number cross-fades 140ms, never counts up.</div>
               <div>Scenario slider drives the table live; deltas re-tint 200ms as they cross zero.</div>
               <div>Goal progress bar grows 620ms on mount, then transitions to new widths over 340ms.</div>
             </div>
@@ -1396,7 +1540,7 @@
           <div style="margin-top: 26px; padding: 16px 18px; border: 1px solid #262626; border-left: 1px solid #2FC685; border-radius: 12px; background: #0D0D0D;">
             <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: #2FC685; margin-bottom: 10px;">Motion spec · Calendar</div>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px 22px; font-size: 12px; line-height: 1.6; color: #8A8A8A;">
-              <div>Month change slides the grid horizontally 240ms; day cells don't stagger - the grid moves as one object.</div>
+              <div>Month change slides the grid horizontally 240ms; day cells don't stagger — the grid moves as one object.</div>
               <div>Today's cell keeps a static accent border; no pulse.</div>
               <div>Hovering a day lifts its border only, 160ms; clicking expands an inline day detail over 200ms.</div>
             </div>
@@ -1405,7 +1549,397 @@
       </div>
     </sc-if>
 
+    <sc-if value="{{ isResearch }}">
+      <div style="animation: cn-page 260ms cubic-bezier(0.4,0,0.2,1) both;">
+
+        <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 18px; padding: 8px 10px; border: 1px dashed #262626; border-radius: 11px;">
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: #6A6A6A;">State</span>
+          <sc-for list="{{ rStateChips }}" as="c" hint-placeholder-count="5">
+            <button type="button" onClick="{{ c.onClick }}" style="padding: 5px 11px; border: 1px solid {{ c.border }}; border-radius: 99px; background: {{ c.bg }}; font-size: 11.5px; color: {{ c.color }}; cursor: pointer; transition: border-color 160ms cubic-bezier(0.4,0,0.2,1), background 160ms cubic-bezier(0.4,0,0.2,1);" style-hover="border-color: #3A3A3A;">{{ c.label }}</button>
+          </sc-for>
+          <span style="width: 1px; height: 18px; background: #232323; margin: 0 4px;"></span>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: #6A6A6A;">Tier</span>
+          <div style="display: flex; gap: 4px; padding: 3px; border: 1px solid #232323; border-radius: 99px;">
+            <sc-for list="{{ rTierChips }}" as="c" hint-placeholder-count="2">
+              <button type="button" onClick="{{ c.onClick }}" style="padding: 4px 11px; border: 0; border-radius: 99px; background: {{ c.bg }}; font-size: 11.5px; color: {{ c.color }}; cursor: pointer; transition: background 160ms cubic-bezier(0.4,0,0.2,1), color 160ms cubic-bezier(0.4,0,0.2,1);">{{ c.label }}</button>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 18px; margin-bottom: 20px;">
+          <div style="min-width: 0;">
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: 0.16em; text-transform: uppercase; color: #8A8A8A; margin-bottom: 8px;">Assistant · Research</div>
+            <h1 style="margin: 0; font-family: Newsreader, Georgia, serif; font-size: 34px; font-weight: 400; line-height: 1.1; color: #F5F5F5;">Research</h1>
+            <p style="margin: 7px 0 0; font-size: 13.5px; color: #8A8A8A; max-width: 560px; text-wrap: pretty;">Probability analysis with its inputs shown — sources, historical analogs, and a stated confidence level on every run.</p>
+          </div>
+
+          <div style="min-width: 250px; padding: 14px 16px; border: 1px solid {{ rQuotaBorderColor }}; border-radius: 13px; background: #0F0F0F;">
+            <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px;">
+              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: #6A6A6A;">This month</span>
+              <span style="font-size: 12.5px; font-variant-numeric: tabular-nums; color: {{ rQuotaTint }};">{{ rQuotaUsed }} of {{ rQuotaTotal }} used</span>
+            </div>
+            <div style="margin-top: 10px; height: 4px; border-radius: 3px; background: #1C1C1C; overflow: hidden;">
+              <div style="height: 100%; width: {{ rQuotaPct }}; border-radius: 3px; background: {{ rQuotaBar }}; transform-origin: left; transition: width 340ms cubic-bezier(0.4,0,0.2,1);"></div>
+            </div>
+            <sc-if value="{{ rQuotaWarn }}">
+              <div style="margin-top: 11px;">
+                <div style="font-size: 11.5px; line-height: 1.55; color: #8A8A8A; text-wrap: pretty;">{{ rQuotaMsg }}</div>
+                <button type="button" style="margin-top: 10px; padding: 7px 13px; border: 0; border-radius: 9px; background: linear-gradient(135deg, #5EE6A6, #22B573); font-size: 12px; font-weight: 600; color: #0A0A0A; cursor: pointer; transition: box-shadow 180ms cubic-bezier(0.4,0,0.2,1);" style-hover="box-shadow: 0 0 22px rgba(47,198,133,0.35);">Upgrade to Premium</button>
+              </div>
+            </sc-if>
+          </div>
+        </div>
+
+        <div style="padding: 16px 18px; border: 1px solid #2A2A2A; border-radius: 14px; background: #0F0F0F; margin-bottom: 22px;">
+          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: #6A6A6A; margin-bottom: 10px;">What should Cairn research?</div>
+          <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px;">
+            <div style="position: relative; flex: 1; min-width: 260px;">
+              <sc-if value="{{ rHasScope }}">
+                <div style="display: flex; align-items: center; gap: 10px; padding: 11px 13px; border: 1px solid rgba(47,198,133,0.4); border-radius: 10px; background: #0B0B0B;">
+                  <span style="padding: 3px 8px; border-radius: 99px; border: 1px solid #262626; font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: #2FC685; flex-shrink: 0;">{{ rScopeKind }}</span>
+                  <div style="flex: 1; min-width: 0;">
+                    <div style="font-size: 13.5px; color: #F5F5F5;">{{ rScopeLabel }}</div>
+                    <div style="margin-top: 2px; font-size: 11px; color: #8A8A8A; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ rScopeSub }}</div>
+                  </div>
+                  <button type="button" onClick="{{ rClearScope }}" style="width: 26px; height: 26px; flex-shrink: 0; border: 0; border-radius: 7px; background: transparent; color: #8A8A8A; font-size: 15px; cursor: pointer;" style-hover="background: #1C1C1C; color: #F5F5F5;">×</button>
+                </div>
+              </sc-if>
+              <sc-if value="{{ rNoScope }}" hint-placeholder-val="{{ true }}">
+                <div style="display: flex; align-items: center; gap: 9px; padding: 11px 13px; border: 1px solid #2A2A2A; border-radius: 10px; background: #0B0B0B; transition: border-color 160ms cubic-bezier(0.4,0,0.2,1);" style-focus="border-color: #2FC685;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6A6A6A" stroke-width="2" style="flex-shrink: 0;"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                  <input type="text" value="{{ rQuery }}" onChange="{{ onRQuery }}" placeholder="A ticker, a sector, or “market-wide”" style="flex: 1; min-width: 0; border: 0; outline: none; background: transparent; font-size: 13.5px; color: #F5F5F5;" />
+                </div>
+                <sc-if value="{{ rShowSuggestions }}">
+                  <div style="position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 20; max-height: 250px; overflow-y: auto; padding: 5px; border: 1px solid #2A2A2A; border-radius: 11px; background: #121212; box-shadow: 0 20px 40px rgba(0,0,0,0.6); animation: cn-menu 140ms cubic-bezier(0.4,0,0.2,1) both;">
+                    <sc-for list="{{ rSuggestions }}" as="sg" hint-placeholder-count="4">
+                      <div onClick="{{ sg.pick }}" style="display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 8px; cursor: pointer; transition: background 120ms cubic-bezier(0.4,0,0.2,1);" style-hover="background: #1A1A1A;">
+                        <span style="padding: 2px 7px; border-radius: 99px; border: 1px solid #262626; font-family: 'IBM Plex Mono', monospace; font-size: 8.5px; letter-spacing: 0.1em; text-transform: uppercase; color: {{ sg.tagColor }}; flex-shrink: 0;">{{ sg.kind }}</span>
+                        <div style="min-width: 0;">
+                          <div style="font-size: 12.5px; color: #F5F5F5;">{{ sg.label }}</div>
+                          <div style="margin-top: 2px; font-size: 11px; color: #8A8A8A; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ sg.sub }}</div>
+                        </div>
+                      </div>
+                    </sc-for>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ rNoSuggestions }}">
+                  <div style="position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 20; padding: 14px 12px; border: 1px solid #2A2A2A; border-radius: 11px; background: #121212; text-align: center; font-size: 12px; color: #6A6A6A;">Nothing matches “{{ rQuery }}”. Try a ticker symbol, a sector name, or “market-wide”.</div>
+                </sc-if>
+              </sc-if>
+            </div>
+            <button type="button" onClick="{{ rGenerate }}" style="padding: 12px 20px; border: 0; border-radius: 10px; background: {{ rGenerateBg }}; font-size: 13px; font-weight: 600; color: {{ rGenerateColor }}; cursor: {{ rGenerateCursor }}; white-space: nowrap; transition: box-shadow 180ms cubic-bezier(0.4,0,0.2,1), transform 180ms cubic-bezier(0.4,0,0.2,1);" style-hover="box-shadow: 0 0 24px rgba(47,198,133,0.28); transform: translateY(-1px);">{{ rGenerateLabel }}</button>
+          </div>
+        </div>
+
+        <div style="margin-bottom: 24px;">
+          <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 12px;">
+            <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: #8A8A8A;">Relevant to your portfolio</span>
+            <span style="font-size: 11.5px; color: #6A6A6A;">Analyses touching what you hold</span>
+          </div>
+          <sc-if value="{{ rHasPortfolioCards }}" hint-placeholder-val="{{ true }}">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr)); gap: 12px;">
+              <sc-for list="{{ rPortfolioCards }}" as="p" hint-placeholder-count="3">
+                <div onClick="{{ p.open }}" style="min-width: 0; padding: 16px; border: 1px solid #232323; border-radius: 13px; background: #0F0F0F; cursor: pointer; animation: cn-rise 300ms cubic-bezier(0.4,0,0.2,1) both; animation-delay: {{ p.delay }}ms; transition: border-color 200ms cubic-bezier(0.4,0,0.2,1), transform 200ms cubic-bezier(0.4,0,0.2,1);" style-hover="border-color: #3A3A3A; transform: translateY(-2px);">
+                  <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                    <span style="font-size: 14px; color: #F5F5F5;">{{ p.scope }}</span>
+                    <span style="padding: 3px 8px; border-radius: 99px; border: 1px solid {{ p.confBorder }}; background: {{ p.confBg }}; font-family: 'IBM Plex Mono', monospace; font-size: 8.5px; letter-spacing: 0.08em; text-transform: uppercase; color: {{ p.confTint }}; white-space: nowrap;">{{ p.confLabel }}</span>
+                  </div>
+                  <div style="margin-top: 9px; font-size: 12px; color: #8A8A8A;">{{ p.question }}</div>
+                  <sc-if value="{{ p.hasRange }}">
+                    <div style="margin-top: 10px; font-family: Newsreader, Georgia, serif; font-size: 24px; font-variant-numeric: tabular-nums; color: #F5F5F5;">{{ p.range }}</div>
+                  </sc-if>
+                  <div style="margin-top: 10px; font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: 0.1em; text-transform: uppercase; color: #6A6A6A;">{{ p.when }}</div>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+          <sc-if value="{{ rNoPortfolioCards }}">
+            <div style="padding: 40px 24px; text-align: center; border: 1px dashed #262626; border-radius: 13px;">
+              <div style="font-family: Newsreader, Georgia, serif; font-size: 19px; color: #F5F5F5;">No analyses on your holdings yet</div>
+              <p style="margin: 8px auto 16px; max-width: 400px; font-size: 12.5px; color: #8A8A8A; text-wrap: pretty;">Pick a ticker you own above and generate the first one — it'll show up here afterwards.</p>
+            </div>
+          </sc-if>
+        </div>
+
+        <div style="display: grid; grid-template-columns: {{ researchGrid }}; gap: 16px; align-items: start;">
+
+          <div style="min-width: 0; border: 1px solid #2A2A2A; border-radius: 14px; background: #0F0F0F; overflow: hidden;">
+            <div style="padding: 14px 16px; border-bottom: 1px solid #1E1E1E;">
+              <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: #8A8A8A;">Library · {{ rLibraryCount }}</div>
+              <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 11px;">
+                <sc-for list="{{ rFilters }}" as="f" hint-placeholder-count="4">
+                  <button type="button" onClick="{{ f.onClick }}" style="padding: 5px 10px; border: 0; border-radius: 7px; background: {{ f.bg }}; font-size: 11.5px; color: {{ f.color }}; cursor: pointer; transition: background 160ms cubic-bezier(0.4,0,0.2,1), color 160ms cubic-bezier(0.4,0,0.2,1);" style-hover="color: #F5F5F5;">{{ f.label }}</button>
+                </sc-for>
+              </div>
+              <div style="display: flex; align-items: center; gap: 6px; margin-top: 8px;">
+                <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: #6A6A6A;">Sort</span>
+                <sc-for list="{{ rSorts }}" as="f" hint-placeholder-count="2">
+                  <button type="button" onClick="{{ f.onClick }}" style="padding: 4px 9px; border: 0; border-radius: 7px; background: {{ f.bg }}; font-size: 11px; color: {{ f.color }}; cursor: pointer; transition: background 160ms cubic-bezier(0.4,0,0.2,1), color 160ms cubic-bezier(0.4,0,0.2,1);" style-hover="color: #F5F5F5;">{{ f.label }}</button>
+                </sc-for>
+              </div>
+            </div>
+            <sc-for list="{{ rLibrary }}" as="a" hint-placeholder-count="5">
+              <div onClick="{{ a.open }}" style="padding: 14px 16px; border-bottom: 1px solid #171717; cursor: pointer; animation: cn-rise 260ms cubic-bezier(0.4,0,0.2,1) both; animation-delay: {{ a.delay }}ms; transition: background 140ms cubic-bezier(0.4,0,0.2,1);" style-hover="background: #141414;">
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                  <div style="display: flex; align-items: center; gap: 8px; min-width: 0;">
+                    <span style="font-size: 13px; color: #F5F5F5;">{{ a.scope }}</span>
+                    <span style="font-family: 'IBM Plex Mono', monospace; font-size: 8.5px; letter-spacing: 0.1em; text-transform: uppercase; color: #6A6A6A;">{{ a.kind }}</span>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 2px; flex-shrink: 0;" title="{{ a.confLabel }}">
+                    <span style="width: 3px; height: 7px; border-radius: 1px; background: {{ a.bar1 }};"></span>
+                    <span style="width: 3px; height: 10px; border-radius: 1px; background: {{ a.bar2 }};"></span>
+                    <span style="width: 3px; height: 13px; border-radius: 1px; background: {{ a.bar3 }};"></span>
+                  </div>
+                </div>
+                <div style="margin-top: 7px; font-size: 12px; line-height: 1.5; color: #8A8A8A; text-wrap: pretty;">{{ a.finding }}</div>
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 9px;">
+                  <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: 0.1em; text-transform: uppercase; color: {{ a.confTint }};">{{ a.confLabel }}</span>
+                  <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: 0.1em; text-transform: uppercase; color: #6A6A6A;">{{ a.when }}</span>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+
+          <div style="min-width: 0;">
+
+            <sc-if value="{{ rIsGenerating }}">
+              <div style="padding: 44px 26px; border: 1px solid #262626; border-radius: 14px; background: #0C0C0C; text-align: center;">
+                <div style="display: flex; justify-content: center; gap: 6px; align-items: flex-end; height: 40px; margin-bottom: 20px;">
+                  <span style="width: 32px; height: 9px; border-radius: 99px; background: linear-gradient(135deg, #5EE6A6, #22B573); animation: cn-breathe 1.4s ease-in-out infinite;"></span>
+                  <span style="width: 24px; height: 9px; border-radius: 99px; background: linear-gradient(135deg, #5EE6A6, #22B573); animation: cn-breathe 1.4s ease-in-out infinite; animation-delay: 200ms;"></span>
+                  <span style="width: 17px; height: 9px; border-radius: 99px; background: linear-gradient(135deg, #5EE6A6, #22B573); animation: cn-breathe 1.4s ease-in-out infinite; animation-delay: 400ms;"></span>
+                </div>
+                <div style="font-family: Newsreader, Georgia, serif; font-size: 21px; color: #F5F5F5;">Building the analysis</div>
+                <p style="margin: 9px auto 20px; max-width: 380px; font-size: 12.5px; line-height: 1.6; color: #8A8A8A; text-wrap: pretty;">Reading sources, matching historical analogs, and computing the confidence range. Usually under ten seconds.</p>
+                <div style="max-width: 300px; margin: 0 auto; height: 4px; border-radius: 3px; background: #1C1C1C; overflow: hidden;">
+                  <div style="height: 100%; width: 100%; border-radius: 3px; background: linear-gradient(90deg, #5EE6A6, #22B573); transform-origin: left; animation: cn-grow 2600ms cubic-bezier(0.4,0,0.2,1) both;"></div>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 7px; max-width: 300px; margin: 18px auto 0; text-align: left;">
+                  <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: #2FC685;">✓ 4 sources read</div>
+                  <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: #2FC685;">✓ 34 analogs matched</div>
+                  <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: #6A6A6A; animation: cn-blink 1s steps(1) infinite;">· computing range</div>
+                </div>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ rNeedsPick }}">
+              <div style="padding: 60px 26px; border: 1px dashed #262626; border-radius: 14px; text-align: center;">
+                <div style="display: flex; justify-content: center; gap: 5px; align-items: flex-end; height: 40px; margin-bottom: 18px;">
+                  <span style="width: 32px; height: 9px; border-radius: 99px; background: #1E1E1E;"></span>
+                  <span style="width: 24px; height: 9px; border-radius: 99px; background: #1E1E1E;"></span>
+                  <span style="width: 17px; height: 9px; border-radius: 99px; background: #262626;"></span>
+                </div>
+                <div style="font-family: Newsreader, Georgia, serif; font-size: 22px; color: #F5F5F5;">Pick an analysis to read it in full</div>
+                <p style="margin: 9px auto 20px; max-width: 400px; font-size: 13px; line-height: 1.6; color: #8A8A8A; text-wrap: pretty;">Choose any entry from the library, or set a scope above and generate a new one. Every analysis opens with its sources, its historical analogs, and a stated confidence level.</p>
+                <button type="button" onClick="{{ rGenerate }}" style="padding: 11px 20px; border: 0; border-radius: 10px; background: linear-gradient(135deg, #5EE6A6, #22B573); font-size: 13px; font-weight: 600; color: #0A0A0A; cursor: pointer; transition: box-shadow 180ms cubic-bezier(0.4,0,0.2,1);" style-hover="box-shadow: 0 0 26px rgba(47,198,133,0.35);">Generate analysis</button>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ rIsEmpty }}">
+              <div style="padding: 60px 26px; border: 1px dashed #262626; border-radius: 14px; text-align: center;">
+                <div style="display: flex; justify-content: center; gap: 5px; align-items: flex-end; height: 40px; margin-bottom: 18px;">
+                  <span style="width: 32px; height: 9px; border-radius: 99px; background: #1E1E1E;"></span>
+                  <span style="width: 24px; height: 9px; border-radius: 99px; background: #1E1E1E;"></span>
+                  <span style="width: 17px; height: 9px; border-radius: 99px; background: #262626;"></span>
+                </div>
+                <div style="font-family: Newsreader, Georgia, serif; font-size: 22px; color: #F5F5F5;">No analysis for this scope yet</div>
+                <p style="margin: 9px auto 20px; max-width: 400px; font-size: 13px; line-height: 1.6; color: #8A8A8A; text-wrap: pretty;">Pick a ticker, sector, or market-wide scope above and generate one. Every run shows its sources, its analogs, and how confident it is.</p>
+                <button type="button" onClick="{{ rGenerate }}" style="padding: 11px 20px; border: 0; border-radius: 10px; background: linear-gradient(135deg, #5EE6A6, #22B573); font-size: 13px; font-weight: 600; color: #0A0A0A; cursor: pointer; transition: box-shadow 180ms cubic-bezier(0.4,0,0.2,1);" style-hover="box-shadow: 0 0 26px rgba(47,198,133,0.35);">Generate analysis</button>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ rIsUnavailable }}">
+              <div style="padding: 44px 26px; border: 1px solid #262626; border-radius: 14px; background: #0C0C0C; text-align: center;">
+                <div style="width: 40px; height: 40px; margin: 0 auto 18px; border: 1px solid #2A2A2A; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                  <span style="width: 18px; height: 2px; border-radius: 2px; background: #8A8A8A;"></span>
+                </div>
+                <div style="font-family: Newsreader, Georgia, serif; font-size: 21px; color: #F5F5F5;">Not enough history for a reliable read</div>
+                <p style="margin: 9px auto 20px; max-width: 420px; font-size: 13px; line-height: 1.6; color: #8A8A8A; text-wrap: pretty;">There are only 4 comparable situations in the record for this scope — too few to put a confidence range on. Rather than show you a number we don't trust, we'd rather say so. Try a broader scope, like the sector or market-wide view.</p>
+                <div style="display: flex; justify-content: center; gap: 8px; flex-wrap: wrap;">
+                  <button type="button" onClick="{{ rClearScope }}" style="padding: 10px 17px; border: 0; border-radius: 10px; background: linear-gradient(135deg, #5EE6A6, #22B573); font-size: 12.5px; font-weight: 600; color: #0A0A0A; cursor: pointer;">Try a broader scope</button>
+                  <button type="button" onClick="{{ rGoAssistant }}" style="padding: 10px 17px; border: 1px solid #2A2A2A; border-radius: 10px; background: transparent; font-size: 12.5px; color: #F5F5F5; cursor: pointer;" style-hover="border-color: #3A3A3A;">Ask the assistant instead</button>
+                </div>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ rIsQuota }}">
+              <div style="padding: 44px 26px; border: 1px solid rgba(217,164,65,0.35); border-radius: 14px; background: #0C0C0C; text-align: center;">
+                <div style="display: inline-flex; align-items: center; gap: 8px; padding: 5px 12px; margin-bottom: 18px; border: 1px solid rgba(217,164,65,0.35); border-radius: 99px; background: rgba(217,164,65,0.1);">
+                  <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: #D9A441;">Free plan · 5 of 5 used</span>
+                </div>
+                <div style="font-family: Newsreader, Georgia, serif; font-size: 22px; color: #F5F5F5;">You've used this month's analyses</div>
+                <p style="margin: 9px auto 20px; max-width: 400px; font-size: 13px; line-height: 1.6; color: #8A8A8A; text-wrap: pretty;">Your Free-plan runs reset on 1 September. Everything you've already generated stays readable in the library — nothing is locked away.</p>
+                <div style="display: flex; justify-content: center; gap: 8px; flex-wrap: wrap;">
+                  <button type="button" style="padding: 11px 20px; border: 0; border-radius: 10px; background: linear-gradient(135deg, #5EE6A6, #22B573); font-size: 13px; font-weight: 600; color: #0A0A0A; cursor: pointer; transition: box-shadow 180ms cubic-bezier(0.4,0,0.2,1);" style-hover="box-shadow: 0 0 26px rgba(47,198,133,0.35);">Upgrade for unlimited</button>
+                  <button type="button" onClick="{{ rdCloseDetail }}" style="padding: 11px 18px; border: 1px solid #2A2A2A; border-radius: 10px; background: transparent; font-size: 12.5px; color: #F5F5F5; cursor: pointer;" style-hover="border-color: #3A3A3A;">Browse the library</button>
+                </div>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ rHasDetail }}">
+              <div style="border: 1px solid #262626; border-radius: 14px; background: #0C0C0C; overflow: hidden; animation: cn-rise 280ms cubic-bezier(0.4,0,0.2,1) both;">
+                <div style="padding: 20px; border-bottom: 1px solid #1E1E1E; background: linear-gradient(180deg, #121212, #0C0C0C);">
+                  <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 12px;">
+                    <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: #8A8A8A;">{{ rdKind }} · {{ rdScope }}</span>
+                    <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: 0.1em; text-transform: uppercase; color: #6A6A6A;">{{ rdWhen }}</span>
+                  </div>
+                  <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: #2FC685; margin-bottom: 10px;">{{ rdQuestion }}</div>
+                  <h2 style="margin: 0; font-family: Newsreader, Georgia, serif; font-size: 25px; font-weight: 400; line-height: 1.25; color: #F5F5F5; text-wrap: pretty;">{{ rdFinding }}</h2>
+                  <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 16px; margin-top: 16px;">
+                    <sc-if value="{{ rdHasRange }}">
+                      <div>
+                        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: #6A6A6A;">Probability range</div>
+                        <div style="margin-top: 5px; font-family: Newsreader, Georgia, serif; font-size: 32px; line-height: 1; font-variant-numeric: tabular-nums; color: #F5F5F5;">{{ rdRange }}</div>
+                      </div>
+                    </sc-if>
+                    <div style="display: flex; align-items: center; gap: 9px; padding: 9px 13px; border: 1px solid {{ rdConfBorder }}; border-radius: 10px; background: {{ rdConfBg }};">
+                      <div style="display: flex; align-items: flex-end; gap: 2px;">
+                        <span style="width: 3px; height: 8px; border-radius: 1px; background: {{ rdBar1 }};"></span>
+                        <span style="width: 3px; height: 12px; border-radius: 1px; background: {{ rdBar2 }};"></span>
+                        <span style="width: 3px; height: 16px; border-radius: 1px; background: {{ rdBar3 }};"></span>
+                      </div>
+                      <span style="font-size: 12.5px; color: {{ rdConfTint }};">{{ rdConfLabel }}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div style="padding: 20px;">
+                  <p style="margin: 0 0 20px; font-size: 13.5px; line-height: 1.7; color: #F5F5F5; text-wrap: pretty;">{{ rdBody }}</p>
+
+                  <div style="margin-bottom: 20px;">
+                    <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: #8A8A8A; margin-bottom: 11px;">Sources · {{ rdSourceCount }}</div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr)); gap: 8px;">
+                      <sc-for list="{{ rdSources }}" as="src" hint-placeholder-count="4">
+                        <div style="min-width: 0; padding: 13px 14px; border: 1px solid #232323; border-radius: 11px; background: #101010; cursor: pointer; transition: border-color 180ms cubic-bezier(0.4,0,0.2,1), transform 180ms cubic-bezier(0.4,0,0.2,1);" style-hover="border-color: #3A3A3A; transform: translateY(-1px);">
+                          <div style="font-size: 12.5px; line-height: 1.5; color: #F5F5F5; text-wrap: pretty;">{{ src.title }}</div>
+                          <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 8px;">
+                            <span style="font-size: 11px; color: #2FC685;">{{ src.outlet }}</span>
+                            <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: 0.08em; text-transform: uppercase; color: #6A6A6A;">{{ src.when }}</span>
+                          </div>
+                        </div>
+                      </sc-for>
+                    </div>
+                  </div>
+
+                  <div style="padding: 16px; border: 1px solid #1E1E1E; border-radius: 12px; background: #0A0A0A; margin-bottom: 18px;">
+                    <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 12px;">
+                      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: #8A8A8A;">Historical analogs</span>
+                      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: 0.1em; text-transform: uppercase; color: #6A6A6A;">{{ rdAnalogShown }} of {{ rdAnalogCount }} shown</span>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                      <sc-for list="{{ rdAnalogs }}" as="an" hint-placeholder-count="3">
+                        <div style="animation: cn-rise 260ms cubic-bezier(0.4,0,0.2,1) both; animation-delay: {{ an.delay }}ms;">
+                          <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                            <span style="font-size: 12.5px; color: #F5F5F5;">{{ an.symbol }} <span style="color: #8A8A8A;">· {{ an.date }}</span></span>
+                            <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-variant-numeric: tabular-nums; color: #8A8A8A;">{{ an.match }} match</span>
+                          </div>
+                          <div style="margin-top: 6px; height: 3px; border-radius: 2px; background: #1C1C1C; overflow: hidden;">
+                            <div style="height: 100%; width: {{ an.match }}; border-radius: 2px; background: linear-gradient(90deg, #5EE6A6, #22B573); transform-origin: left; animation: cn-grow 620ms cubic-bezier(0.4,0,0.2,1) both; animation-delay: {{ an.delay }}ms;"></div>
+                          </div>
+                          <div style="margin-top: 7px; font-size: 11.5px; line-height: 1.55; color: #8A8A8A; text-wrap: pretty;">{{ an.note }}</div>
+                        </div>
+                      </sc-for>
+                    </div>
+                    <sc-if value="{{ rdHasHidden }}">
+                      <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-top: 14px; padding: 12px 13px; border: 1px solid #232323; border-radius: 10px; background: #101010;">
+                        <div style="min-width: 0;">
+                          <div style="font-size: 12px; color: #F5F5F5;">Premium shows all {{ rdAnalogCount }} analogs</div>
+                          <div style="margin-top: 4px; font-size: 11.5px; line-height: 1.5; color: #8A8A8A; text-wrap: pretty;">Same analysis, same confidence range, same caveats — more of the underlying comparisons visible.</div>
+                        </div>
+                        <button type="button" style="flex-shrink: 0; padding: 8px 14px; border: 1px solid #2A2A2A; border-radius: 9px; background: transparent; font-size: 12px; color: #F5F5F5; cursor: pointer; transition: border-color 160ms cubic-bezier(0.4,0,0.2,1);" style-hover="border-color: #2FC685;">See all analogs</button>
+                      </div>
+                    </sc-if>
+                  </div>
+
+                  <div style="display: flex; align-items: center; gap: 9px; padding: 10px 12px; border: 1px solid #262626; border-radius: 10px; background: #101010;">
+                    <span style="width: 5px; align-self: stretch; border-radius: 3px; background: #D9A441; flex-shrink: 0;"></span>
+                    <span style="font-size: 11.5px; line-height: 1.55; color: #8A8A8A; text-wrap: pretty;">Market-level context assembled from the sources above — informational, and not a personalised recommendation to buy, hold, or sell any position. Historical analogs describe what happened before, not what will happen next. Free and Premium differ only in how much methodology detail is shown; the analysis, its confidence range, and these caveats are identical on both.</span>
+                  </div>
+                </div>
+              </div>
+            </sc-if>
+          </div>
+        </div>
+
+        <sc-if value="{{ showNotes }}">
+          <div style="margin-top: 26px; padding: 16px 18px; border: 1px solid #262626; border-left: 1px solid #2FC685; border-radius: 12px; background: #0D0D0D;">
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: #2FC685; margin-bottom: 10px;">Motion spec · Research</div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px 22px; font-size: 12px; line-height: 1.6; color: #8A8A8A;">
+              <div>Generating: three stones breathe on a 1.4s loop, 200ms apart, while the progress bar grows over the real request duration — checkmarks land as each stage completes, so progress is legible, never silent.</div>
+              <div>Empty → populated: the detail panel replaces the empty state with a single 280ms rise; no crossfade stacking, no skeleton flash.</div>
+              <div>Library card → detail: 260ms rise in the right column, library row stays highlighted so the origin is never lost.</div>
+              <div>Analog match bars grow left-to-right 620ms, 70ms stagger — after the text has already painted.</div>
+              <div>Confidence bars and tints never animate: they encode data.</div>
+              <div>Quota bar transitions width 340ms when a run is consumed.</div>
+            </div>
+          </div>
+        </sc-if>
+      </div>
+    </sc-if>
+
   </main>
+
+  <sc-if value="{{ searchOpen }}">
+    <div onClick="{{ closeSearch }}" style="position: fixed; inset: 0; z-index: 44; background: transparent;"></div>
+  </sc-if>
+
+  <sc-if value="{{ hasSearchModal }}">
+    <div onClick="{{ closeSearchModal }}" style="position: fixed; inset: 0; z-index: 60; display: flex; align-items: flex-start; justify-content: center; padding: 90px 20px 20px; background: rgba(5,5,5,0.72); backdrop-filter: blur(3px); animation: cn-menu 160ms cubic-bezier(0.4,0,0.2,1) both;">
+      <div onClick="{{ stopP }}" style="width: 100%; max-width: 620px; border: 1px solid #2A2A2A; border-radius: 16px; background: #0F0F0F; box-shadow: 0 30px 80px rgba(0,0,0,0.7); overflow: hidden; max-height: 86vh; overflow-y: auto; animation: cn-rise 240ms cubic-bezier(0.4,0,0.2,1) both;">
+        <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; padding: 18px 20px; border-bottom: 1px solid #2A2A2A;">
+          <div>
+            <div style="display: flex; align-items: baseline; gap: 10px;">
+              <h2 style="margin: 0; font-family: Newsreader, Georgia, serif; font-size: 22px; color: #F5F5F5;">{{ smSymbol }}</h2>
+              <span style="font-size: 12px; color: #8A8A8A;">{{ smName }}</span>
+            </div>
+            <div style="margin-top: 5px; font-size: 11.5px; color: #6A6A6A;">{{ smHeld }}</div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="text-align: right;">
+              <div style="font-family: Newsreader, Georgia, serif; font-size: 20px; font-variant-numeric: tabular-nums; color: #F5F5F5;">{{ smPrice }}</div>
+              <div style="font-size: 11.5px; font-variant-numeric: tabular-nums; color: {{ smColor }};">{{ smChange }}</div>
+            </div>
+            <button type="button" onClick="{{ closeSearchModal }}" style="width: 28px; height: 28px; flex-shrink: 0; border: 0; border-radius: 8px; background: transparent; color: #8A8A8A; font-size: 15px; cursor: pointer;" style-hover="background: #1C1C1C; color: #F5F5F5;">×</button>
+          </div>
+        </div>
+
+        <div style="padding: 16px 18px 8px;">
+          <svg viewBox="0 0 600 180" preserveAspectRatio="none" style="width: 100%; height: 160px; display: block;">
+            <defs>
+              <linearGradient id="cn-smarea" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="{{ smColor }}" stop-opacity="0.22"></stop>
+                <stop offset="100%" stop-color="{{ smColor }}" stop-opacity="0"></stop>
+              </linearGradient>
+            </defs>
+            <path d="{{ smArea }}" fill="url(#cn-smarea)" style="animation: cn-menu 700ms cubic-bezier(0.4,0,0.2,1) both; animation-delay: 260ms;"></path>
+            <polyline points="{{ smLine }}" fill="none" stroke="{{ smColor }}" stroke-width="2" stroke-linejoin="round" pathLength="1" stroke-dasharray="1" style="animation: cn-draw 800ms cubic-bezier(0.4,0,0.2,1) both;"></polyline>
+          </svg>
+        </div>
+
+        <div style="padding: 4px 18px 18px;">
+          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: #6A6A6A; margin-bottom: 8px;">News</div>
+          <sc-for list="{{ smNews }}" as="n" hint-placeholder-count="3">
+            <div style="padding: 10px 0; border-bottom: 1px solid #171717;">
+              <div style="font-size: 12.5px; line-height: 1.5; color: #F5F5F5;">{{ n.title }}</div>
+              <div style="margin-top: 4px; font-size: 11px; color: #6A6A6A;">{{ n.outlet }} · {{ n.when }}</div>
+            </div>
+          </sc-for>
+        </div>
+
+        <div style="margin: 0 18px 18px; padding: 15px 16px; border: 1px solid #262626; border-radius: 12px; background: #0C0C0C;">
+          <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 10px;">
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: #2FC685;">Cairn analysis · drawdown probability</div>
+            <div style="text-align: right; flex-shrink: 0;">
+              <div style="font-family: Newsreader, Georgia, serif; font-size: 18px; font-variant-numeric: tabular-nums; color: #F5F5F5;">18–24%</div>
+              <div style="font-size: 10.5px; color: #2FC685;">High confidence</div>
+            </div>
+          </div>
+          <p style="margin: 0 0 12px; font-size: 12.5px; line-height: 1.6; color: #8A8A8A; text-wrap: pretty;">Based on 34 historical analogs and the sources shown on the full ticker page. Market-level context only — not a recommendation about this position.</p>
+          <button type="button" onClick="{{ smOpenFull }}" style="padding: 9px 15px; border: 1px solid #2A2A2A; border-radius: 9px; background: transparent; font-size: 12.5px; color: #F5F5F5; cursor: pointer; transition: border-color 160ms cubic-bezier(0.4,0,0.2,1);" style-hover="border-color: #2FC685;">Open full analysis →</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
 
   <sc-if value="{{ addOpen }}">
     <div onClick="{{ closeAdd }}" style="position: fixed; inset: 0; z-index: 60; display: flex; align-items: flex-start; justify-content: center; padding: 90px 20px 20px; background: rgba(5,5,5,0.72); backdrop-filter: blur(3px); animation: cn-menu 160ms cubic-bezier(0.4,0,0.2,1) both;">
@@ -1420,7 +1954,7 @@
         <div style="padding: 19px;">
           <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: 0.12em; text-transform: uppercase; color: #6A6A6A; margin-bottom: 8px;">Symbol</div>
           <div style="position: relative;">
-            <input type="text" value="{{ addQuery }}" onChange="{{ onAddQuery }}" placeholder="Start typing - NVDA, Vanguard, bitcoin…" style="width: 100%; padding: 12px 13px; border: 1px solid #2A2A2A; border-radius: 10px; background: #0B0B0B; font-size: 13.5px; color: #F5F5F5; outline: none; transition: border-color 160ms cubic-bezier(0.4,0,0.2,1);" style-focus="border-color: #2FC685;" />
+            <input type="text" value="{{ addQuery }}" onChange="{{ onAddQuery }}" placeholder="Start typing — NVDA, Vanguard, bitcoin…" style="width: 100%; padding: 12px 13px; border: 1px solid #2A2A2A; border-radius: 10px; background: #0B0B0B; font-size: 13.5px; color: #F5F5F5; outline: none; transition: border-color 160ms cubic-bezier(0.4,0,0.2,1);" style-focus="border-color: #2FC685;" />
             <sc-if value="{{ showTypeahead }}">
               <div style="position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 5; max-height: 230px; overflow-y: auto; padding: 5px; border: 1px solid #2A2A2A; border-radius: 11px; background: #121212; box-shadow: 0 20px 40px rgba(0,0,0,0.6); animation: cn-menu 140ms cubic-bezier(0.4,0,0.2,1) both;">
                 <sc-for list="{{ matches }}" as="m" hint-placeholder-count="4">
@@ -1480,10 +2014,10 @@ const UNIVERSE = [
   { symbol: "QQQ", name: "Invesco QQQ Trust", type: "etf", price: 604.8, change: 0.64, volume: "31.7M" },
   { symbol: "BTC", name: "Bitcoin", type: "crypto", price: 118400, change: 1.94, volume: "$34.2B" },
   { symbol: "ETH", name: "Ethereum", type: "crypto", price: 4210, change: -1.12, volume: "$18.9B" },
-  { symbol: "EURUSD", name: "Euro / US Dollar", type: "forex", price: 1.0942, change: -0.18, volume: "-" },
-  { symbol: "USDJPY", name: "US Dollar / Japanese Yen", type: "forex", price: 148.62, change: 0.31, volume: "-" },
-  { symbol: "SPX", name: "S&P 500 Index", type: "index", price: 6218.4, change: 0.29, volume: "-" },
-  { symbol: "NDX", name: "Nasdaq 100 Index", type: "index", price: 22940.7, change: 0.71, volume: "-" }
+  { symbol: "EURUSD", name: "Euro / US Dollar", type: "forex", price: 1.0942, change: -0.18, volume: "—" },
+  { symbol: "USDJPY", name: "US Dollar / Japanese Yen", type: "forex", price: 148.62, change: 0.31, volume: "—" },
+  { symbol: "SPX", name: "S&P 500 Index", type: "index", price: 6218.4, change: 0.29, volume: "—" },
+  { symbol: "NDX", name: "Nasdaq 100 Index", type: "index", price: 22940.7, change: 0.71, volume: "—" }
 ];
 
 const HOLDINGS = [
@@ -1500,10 +2034,10 @@ const NAV = [
   { label: "Markets", items: [{ label: "Markets", route: "markets" }, { label: "News", route: "news" }, { label: "Compare", route: "compare" }, { label: "Sector map", route: "sectors" }, { label: "Screener", route: "screener" }] },
   { label: "Portfolio", items: [{ label: "Holdings", route: "portfolio" }, { label: "Watchlists", route: "watchlists" }, { label: "Alerts", route: "alerts" }] },
   { label: "Planning", items: [{ label: "Calculators", route: "calculators" }, { label: "Calendar", route: "calendar" }] },
-  { label: "Assistant", route: "assistant" }
+  { label: "Assistant", items: [{ label: "Chat", route: "assistant" }, { label: "Research", route: "research" }] }
 ];
 
-const REPLY = "Your portfolio is up 1.24% today - $1,417 on $115,686. NVDA (+2.8%) and AMD (+3.2%) contributed nearly all of it; VTI is the only drag at -0.21%.\n\nAMD remains your one position underwater on cost basis, -11.0% against an average entry of $189.20. Below is the market-level probability context for the NVDA move, with its inputs shown.";
+const REPLY = "Your portfolio is up 1.24% today — $1,417 on $115,686. NVDA (+2.8%) and AMD (+3.2%) contributed nearly all of it; VTI is the only drag at -0.21%.\n\nAMD remains your one position underwater on cost basis, -11.0% against an average entry of $189.20. Below is the market-level probability context for the NVDA move, with its inputs shown.";
 
 const NEWS = [
   { title: "Two suppliers lift datacenter guidance, citing accelerator demand", outlet: "Reuters", when: "38m ago", rel: "holding", tickers: ["NVDA", "AMD"], summary: "Both flagged shorter lead times on advanced packaging, the constraint that capped shipments through H1." },
@@ -1537,9 +2071,9 @@ const CMP_METRICS = [
 
 const CMP_DATA = {
   NVDA: { cap: "$4.48T", pe: "38.2×", vol: "42%", held: "40 sh" }, AMD: { cap: "$272B", pe: "31.6×", vol: "48%", held: "55 sh" },
-  VTI: { cap: "-", pe: "22.4×", vol: "14%", held: "85 sh" }, MSFT: { cap: "$3.70T", pe: "29.8×", vol: "19%", held: "18 sh" },
-  AAPL: { cap: "$3.42T", pe: "27.1×", vol: "21%", held: "60 sh" }, BTC: { cap: "$2.34T", pe: "-", vol: "51%", held: "0.42" },
-  QQQ: { cap: "-", pe: "27.9×", vol: "22%", held: "-" }, ETH: { cap: "$508B", pe: "-", vol: "58%", held: "-" }
+  VTI: { cap: "—", pe: "22.4×", vol: "14%", held: "85 sh" }, MSFT: { cap: "$3.70T", pe: "29.8×", vol: "19%", held: "18 sh" },
+  AAPL: { cap: "$3.42T", pe: "27.1×", vol: "21%", held: "60 sh" }, BTC: { cap: "$2.34T", pe: "—", vol: "51%", held: "0.42" },
+  QQQ: { cap: "—", pe: "27.9×", vol: "22%", held: "—" }, ETH: { cap: "$508B", pe: "—", vol: "58%", held: "—" }
 };
 
 const ALERTS = [
@@ -1552,13 +2086,13 @@ const ALERTS = [
 
 const DELIVERIES = [
   { symbol: "AMD", msg: "AMD moved +3.16% on the last close, above the 3% threshold.", channel: "In-app", when: "2h ago", unread: true },
-  { symbol: "TSM", msg: "TSM: a high-confidence drawdown analysis (12–19%) is available. Market-level analysis only - not advice about any position.", channel: "In-app", when: "Yesterday", unread: false },
+  { symbol: "TSM", msg: "TSM: a high-confidence drawdown analysis (12–19%) is available. Market-level analysis only — not advice about any position.", channel: "In-app", when: "Yesterday", unread: false },
   { symbol: "BTC", msg: "BTC volume was 3.4× its 30-day average (threshold 3×).", channel: "Push", when: "Aug 11", unread: false }
 ];
 
 const SCREENER = [
   { symbol: "NVDA", type: "equity", price: 182.4, chg: 2.81, vol: "241.8M", cap: 4.48e12, pe: 38.2, dy: "0.03%" },
-  { symbol: "AMD", type: "equity", price: 168.3, chg: 3.16, vol: "74.6M", cap: 2.72e11, pe: 31.6, dy: "-" },
+  { symbol: "AMD", type: "equity", price: 168.3, chg: 3.16, vol: "74.6M", cap: 2.72e11, pe: 31.6, dy: "—" },
   { symbol: "MSFT", type: "equity", price: 498.1, chg: 0.88, vol: "22.4M", cap: 3.7e12, pe: 29.8, dy: "0.62%" },
   { symbol: "AAPL", type: "equity", price: 231.2, chg: 0.42, vol: "58.2M", cap: 3.42e12, pe: 27.1, dy: "0.44%" },
   { symbol: "AVGO", type: "equity", price: 342.6, chg: 0.94, vol: "18.1M", cap: 1.61e12, pe: 34.7, dy: "1.12%" },
@@ -1566,9 +2100,9 @@ const SCREENER = [
   { symbol: "QQQ", type: "etf", price: 604.8, chg: 0.64, vol: "31.7M", cap: null, pe: 27.9, dy: "0.51%" },
   { symbol: "VTI", type: "etf", price: 312.55, chg: -0.21, vol: "4.1M", cap: null, pe: 22.4, dy: "1.24%" },
   { symbol: "XLU", type: "etf", price: 84.12, chg: -1.08, vol: "9.4M", cap: null, pe: 18.2, dy: "2.91%" },
-  { symbol: "BTC", type: "crypto", price: 118400, chg: 1.94, vol: "$34.2B", cap: 2.34e12, pe: null, dy: "-" },
-  { symbol: "ETH", type: "crypto", price: 4210, chg: -1.12, vol: "$18.9B", cap: 5.08e11, pe: null, dy: "-" },
-  { symbol: "SOL", type: "crypto", price: 214.8, chg: -2.41, vol: "$6.1B", cap: 1.04e11, pe: null, dy: "-" }
+  { symbol: "BTC", type: "crypto", price: 118400, chg: 1.94, vol: "$34.2B", cap: 2.34e12, pe: null, dy: "—" },
+  { symbol: "ETH", type: "crypto", price: 4210, chg: -1.12, vol: "$18.9B", cap: 5.08e11, pe: null, dy: "—" },
+  { symbol: "SOL", type: "crypto", price: 214.8, chg: -2.41, vol: "$6.1B", cap: 1.04e11, pe: null, dy: "—" }
 ];
 
 const SECTORS = [
@@ -1591,7 +2125,7 @@ const CAL_EVENTS = {
 const EVENT_TINT = { earnings: "#2FC685", economic: "#D9A441", dividend: "#5B8DEF", ipo: "#9B8CE0", split: "#8A8A8A" };
 
 function fmtCap(n) {
-  if (n === null || n === undefined) return "-";
+  if (n === null || n === undefined) return "—";
   if (n >= 1e12) return "$" + (n / 1e12).toFixed(2) + "T";
   if (n >= 1e9) return "$" + (n / 1e9).toFixed(1) + "B";
   return "$" + (n / 1e6).toFixed(0) + "M";
@@ -1600,6 +2134,69 @@ function sectorColor(pct) {
   const opacity = 0.15 + Math.min(Math.abs(pct) / 5, 1) * 0.85;
   return pct >= 0 ? "rgba(47, 198, 133, " + opacity.toFixed(2) + ")" : "rgba(217, 108, 108, " + opacity.toFixed(2) + ")";
 }
+
+const ANALYSES = [
+  { id: "a1", scope: "NVDA", kind: "Ticker", held: true, finding: "A 10%+ drawdown followed this setup in roughly one case in five", range: "18–24%", conf: "high", when: "38m ago", question: "Drawdown probability · next 30 days",
+    body: "Across 34 historical analogs where a semiconductor leader gapped up more than 6% into a datacenter guidance revision, a 10%+ drawdown followed within 30 sessions in roughly one case in five. Dispersion widens when the move happens on below-average volume, which is the case here.",
+    sources: [
+      { title: "Supplier lifts datacenter outlook on accelerator demand", outlet: "Reuters", when: "38m ago" },
+      { title: "Accelerator lead times shorten as packaging capacity comes online", outlet: "Bloomberg", when: "3h ago" },
+      { title: "Q2 semiconductor shipment report", outlet: "SIA", when: "Aug 11" },
+      { title: "Rate path and the multiple on growth", outlet: "Financial Times", when: "Aug 12" }
+    ],
+    analogs: [
+      { symbol: "NVDA", date: "May 2024", match: "91%", note: "Gapped 8.4% on a datacenter raise, then gave back 11% over 22 sessions." },
+      { symbol: "AMD", date: "Feb 2024", match: "84%", note: "Similar guidance revision on light volume; drew down 13% within a month." },
+      { symbol: "AVGO", date: "Dec 2023", match: "76%", note: "Comparable setup, but held — no 10% drawdown in the window." }
+    ] },
+  { id: "a2", scope: "AMD", kind: "Ticker", held: true, finding: "Recovery to cost basis is more likely than not within two quarters", range: "54–61%", conf: "medium", when: "2h ago", question: "Recovery probability · 2 quarters",
+    body: "In 21 analogs where a large-cap semiconductor traded 10–13% below a three-month average entry with improving sector shipment data, price recovered to that level within two quarters in a small majority of cases. The sample is thin enough that the range is wide.",
+    sources: [
+      { title: "Accelerator lead times shorten as packaging capacity comes online", outlet: "Bloomberg", when: "3h ago" },
+      { title: "Taiwan foundry utilisation reaches 96%", outlet: "DigiTimes", when: "8h ago" },
+      { title: "Q2 semiconductor shipment report", outlet: "SIA", when: "Aug 11" }
+    ],
+    analogs: [
+      { symbol: "AMD", date: "Oct 2022", match: "82%", note: "Recovered the level in 7 weeks as shipment data turned." },
+      { symbol: "MU", date: "Jul 2023", match: "71%", note: "Took a full two quarters; drew down further first." }
+    ] },
+  { id: "a3", scope: "Semiconductors", kind: "Sector", held: false, finding: "Sector dispersion is unusually wide going into earnings", range: "—", conf: "medium", when: "Yesterday", question: "Sector dispersion · earnings window",
+    body: "Constituent dispersion sits in the top quintile of the last five years. Historically that has meant index-level moves understate what individual names do — the sector average has been a poor guide to any single position in these windows.",
+    sources: [
+      { title: "Chip earnings preview: the gap between winners widens", outlet: "Financial Times", when: "1d ago" },
+      { title: "Q2 semiconductor shipment report", outlet: "SIA", when: "Aug 11" }
+    ],
+    analogs: [
+      { symbol: "SOX", date: "Jan 2024", match: "88%", note: "Index moved 2%; constituents ranged from −14% to +21%." },
+      { symbol: "SOX", date: "Aug 2022", match: "74%", note: "Similar dispersion; index masked two double-digit drawdowns." }
+    ] },
+  { id: "a4", scope: "BTC", kind: "Ticker", held: true, finding: "ETF flow reversals of this size have not reliably marked a direction change", range: "44–52%", conf: "low", when: "Aug 12", question: "Direction after flow reversal · 30 days",
+    body: "Only 9 comparable flow reversals exist since the ETF complex launched. In that small sample the 30-day direction was close to a coin flip, so this analysis is offered with low confidence — the honest read is that this signal has not been informative.",
+    sources: [
+      { title: "Bitcoin ETF flows turn positive after three-week outflow streak", outlet: "CoinDesk", when: "2h ago" },
+      { title: "Digital asset fund flows weekly", outlet: "CoinShares", when: "Aug 11" }
+    ],
+    analogs: [
+      { symbol: "BTC", date: "Mar 2024", match: "69%", note: "Flows flipped positive; price fell 8% over the next month." },
+      { symbol: "BTC", date: "Oct 2024", match: "64%", note: "Flows flipped positive; price rose 14%." }
+    ] },
+  { id: "a5", scope: "Market-wide", kind: "Market", held: false, finding: "Breadth has narrowed while the index has held its level", range: "—", conf: "high", when: "Aug 10", question: "Breadth divergence · current",
+    body: "The share of index constituents above their 50-day average has fallen for six consecutive weeks while the index itself is flat. In 41 prior instances this divergence resolved through rotation rather than a drawdown about two thirds of the time.",
+    sources: [
+      { title: "Market breadth narrows to a two-year low", outlet: "Bloomberg", when: "1d ago" },
+      { title: "10-year yield backs up 6bp ahead of CPI", outlet: "Bloomberg", when: "1h ago" }
+    ],
+    analogs: [
+      { symbol: "SPX", date: "Jun 2023", match: "86%", note: "Resolved through rotation into laggards; no index drawdown." },
+      { symbol: "SPX", date: "Sep 2021", match: "79%", note: "Resolved through a 5% index drawdown over five weeks." }
+    ] }
+];
+
+const CONF_STYLE = {
+  high: { label: "High confidence", tint: "#2FC685", bg: "rgba(47,198,133,0.12)", border: "rgba(47,198,133,0.4)", bars: 3 },
+  medium: { label: "Medium confidence", tint: "#D9A441", bg: "rgba(217,164,65,0.12)", border: "rgba(217,164,65,0.4)", bars: 2 },
+  low: { label: "Low confidence", tint: "#8A8A8A", bg: "rgba(138,138,138,0.12)", border: "rgba(138,138,138,0.35)", bars: 1 }
+};
 
 const SETTINGS = {
   display: [
@@ -1622,7 +2219,7 @@ const SETTINGS = {
     { label: "Product updates", desc: "Occasional notes on what shipped.", on: false }
   ],
   billing: [
-    { label: "Plan", desc: "Free - capped daily assistant messages, top-line analysis depth.", value: "Free" },
+    { label: "Plan", desc: "Free — capped daily assistant messages, top-line analysis depth.", value: "Free" },
     { label: "Payment method", desc: "No card on file.", value: "Add card" },
     { label: "Invoices", desc: "Downloadable PDFs for the last 24 months.", value: "View" }
   ],
@@ -1683,6 +2280,8 @@ class Component extends DCLogic {
     sent: false,
     w: typeof window !== "undefined" ? window.innerWidth : 1440,
     mobileNavOpen: false,
+    mobileSearchOpen: false,
+    mobileQuery: "",
     ticker: "NVDA",
     range: "3M",
     newsFilter: "all",
@@ -1704,7 +2303,18 @@ class Component extends DCLogic {
     psEntry: 182.4,
     psStop: 168,
     shock: -10,
-    goalTarget: 250000
+    goalTarget: 250000,
+    searchQuery: "",
+    searchOpen: false,
+    searchSymbol: null,
+    rQuery: "",
+    rScope: null,
+    rOpen: null,
+    rState: "populated",
+    rTier: "free",
+    rFilter: "all",
+    rSort: "date",
+    rQuotaUsed: 3
   };
 
   componentDidMount() {
@@ -1725,9 +2335,28 @@ class Component extends DCLogic {
       this.fade = setTimeout(() => this.setState({ flash: {} }), 900);
     }, 2200);
   }
-  componentWillUnmount() { clearInterval(this.timer); clearTimeout(this.fade); clearInterval(this.stream); window.removeEventListener("resize", this.onResize); }
+  componentWillUnmount() { clearInterval(this.timer); clearTimeout(this.fade); clearInterval(this.stream); window.removeEventListener("resize", this.onResize); document.body.style.overflow = ""; }
 
-  go = (route) => { if (route) this.setState({ route: route, openGroup: null, accountOpen: false, mobileNavOpen: false }); };
+  setBodyLock = (locked) => {
+    const b = document.body;
+    if (locked) {
+      this._scrollY = window.scrollY;
+      b.style.position = "fixed";
+      b.style.top = "-" + this._scrollY + "px";
+      b.style.left = "0";
+      b.style.right = "0";
+      b.style.width = "100%";
+    } else {
+      b.style.position = "";
+      b.style.top = "";
+      b.style.left = "";
+      b.style.right = "";
+      b.style.width = "";
+      window.scrollTo(0, this._scrollY || 0);
+    }
+  };
+
+  go = (route) => { if (route) { this.setBodyLock(false); this.setState({ route: route, openGroup: null, accountOpen: false, mobileNavOpen: false }); } };
 
   runStream = (text) => {
     clearInterval(this.stream);
@@ -1830,6 +2459,168 @@ class Component extends DCLogic {
     );
   };
 
+  researchVals() {
+    const s = this.state, self = this;
+    const QUOTA = 5;
+    const used = s.rQuotaUsed;
+    const atCap = used >= QUOTA;
+    const nearCap = used === QUOTA - 1;
+    const premium = s.rTier === "premium";
+
+    const scopeSuggestions = (function () {
+      const q = s.rQuery.trim().toLowerCase();
+      if (!q) return [];
+      const out = [];
+      UNIVERSE.forEach(function (u) {
+        if (u.symbol.toLowerCase().indexOf(q) !== -1 || u.name.toLowerCase().indexOf(q) !== -1) {
+          out.push({ kind: "Ticker", tagColor: TYPE_COLOR[u.type] || C.muted, label: u.symbol, sub: u.name, pick: () => self.setState({ rScope: { kind: "Ticker", label: u.symbol, sub: u.name }, rQuery: "" }) });
+        }
+      });
+      ["Semiconductors", "Financials", "Energy", "Utilities", "Health care"].forEach(function (sec) {
+        if (sec.toLowerCase().indexOf(q) !== -1) out.push({ kind: "Sector", tagColor: C.info, label: sec, sub: "Sector-level analysis", pick: () => self.setState({ rScope: { kind: "Sector", label: sec, sub: "Sector-level analysis" }, rQuery: "" }) });
+      });
+      if ("market-wide".indexOf(q) !== -1 || "market".indexOf(q) !== -1) out.push({ kind: "Market", tagColor: C.violet, label: "Market-wide", sub: "Breadth, dispersion, and regime", pick: () => self.setState({ rScope: { kind: "Market", label: "Market-wide", sub: "Breadth, dispersion, and regime" }, rQuery: "" }) });
+      return out.slice(0, 6);
+    })();
+
+    const filters = [["all", "All"], ["Ticker", "Tickers"], ["Sector", "Sectors"], ["Market", "Market-wide"]];
+    const confRank = { high: 3, medium: 2, low: 1 };
+    const library = ANALYSES.filter(a => s.rFilter === "all" || a.kind === s.rFilter)
+      .slice()
+      .sort(function (a, b) { return s.rSort === "confidence" ? confRank[b.conf] - confRank[a.conf] : ANALYSES.indexOf(a) - ANALYSES.indexOf(b); })
+      .map(function (a, i) {
+        const cs = CONF_STYLE[a.conf];
+        return {
+          id: a.id, scope: a.scope, kind: a.kind, question: a.question, finding: a.finding, range: a.range, when: a.when, delay: i * 40,
+          hasRange: a.range !== "—",
+          confLabel: cs.label, confTint: cs.tint, confBg: cs.bg, confBorder: cs.border,
+          bar1: cs.bars >= 1 ? cs.tint : "#232323", bar2: cs.bars >= 2 ? cs.tint : "#232323", bar3: cs.bars >= 3 ? cs.tint : "#232323",
+          open: () => self.setState({ rOpen: a.id, rState: "populated" })
+        };
+      });
+
+    const portfolioCards = ANALYSES.filter(a => a.held).map(function (a, i) {
+      const cs = CONF_STYLE[a.conf];
+      return {
+        scope: a.scope, question: a.question, range: a.range, hasRange: a.range !== "—", when: a.when, delay: i * 50,
+        confLabel: cs.label, confTint: cs.tint, confBg: cs.bg, confBorder: cs.border,
+        open: () => self.setState({ rOpen: a.id, rState: "populated" })
+      };
+    });
+
+    const detail = ANALYSES.find(a => a.id === s.rOpen) || null;
+    const dcs = detail ? CONF_STYLE[detail.conf] : CONF_STYLE.high;
+
+    return {
+      rQuery: s.rQuery,
+      onRQuery: (e) => this.setState({ rQuery: e.target.value }),
+      rSuggestions: scopeSuggestions,
+      rShowSuggestions: s.rQuery.trim().length > 0 && scopeSuggestions.length > 0,
+      rNoSuggestions: s.rQuery.trim().length > 0 && scopeSuggestions.length === 0,
+      rScopeLabel: s.rScope ? s.rScope.label : "",
+      rScopeSub: s.rScope ? s.rScope.sub : "",
+      rScopeKind: s.rScope ? s.rScope.kind : "",
+      rHasScope: !!s.rScope,
+      rNoScope: !s.rScope,
+      rNoPortfolioCards: portfolioCards.length === 0,
+      rQuotaBorderColor: atCap ? "rgba(217,164,65,0.35)" : "#2A2A2A",
+      researchGrid: s.w >= 1100 ? "340px 1fr" : "1fr",
+      rClearScope: () => this.setState({ rScope: null, rQuery: "" }),
+      rGenerate: () => { if (atCap) { this.setState({ rState: "quota" }); return; } this.setState({ rState: "generating" }); clearTimeout(this._gen); this._gen = setTimeout(() => this.setState({ rState: "populated", rOpen: "a1", rQuotaUsed: Math.min(QUOTA, this.state.rQuotaUsed + 1) }), 2600); },
+      rGenerateLabel: atCap ? "Monthly limit reached" : "Generate analysis",
+      rGenerateBg: (s.rScope && !atCap) ? "linear-gradient(135deg, #5EE6A6, #22B573)" : "#1A1A1A",
+      rGenerateColor: (s.rScope && !atCap) ? "#0A0A0A" : "#6A6A6A",
+      rGenerateCursor: (s.rScope && !atCap) ? "pointer" : "not-allowed",
+
+      rQuotaUsed: String(used),
+      rQuotaTotal: String(QUOTA),
+      rQuotaPct: Math.min((used / QUOTA) * 100, 100) + "%",
+      rQuotaBar: atCap ? C.warn : "linear-gradient(90deg, #5EE6A6, #22B573)",
+      rQuotaTint: atCap ? C.warn : C.muted,
+      rQuotaWarn: atCap || nearCap,
+      rQuotaMsg: atCap ? "You've used all 5 analyses on the Free plan this month. They reset on 1 September — or upgrade for unlimited runs and full methodology detail." : "One analysis left this month on the Free plan. Upgrade for unlimited runs and full methodology detail.",
+
+      rTierFree: !premium,
+      rTierPremium: premium,
+      rTierChips: [["free", "Free tier"], ["premium", "Premium"]].map(function (t) {
+        const on = s.rTier === t[0];
+        return { label: t[1], bg: on ? "#1C1C1C" : "transparent", color: on ? C.primary : C.muted, onClick: () => self.setState({ rTier: t[0] }) };
+      }),
+      rStateChips: [["populated", "Populated"], ["empty", "Empty"], ["generating", "Generating"], ["unavailable", "Unavailable"], ["quota", "Quota reached"]].map(function (t) {
+        const on = s.rState === t[0];
+        return { label: t[1], bg: on ? "#1C1C1C" : "transparent", border: on ? "#3A3A3A" : "#232323", color: on ? C.primary : C.muted, onClick: () => self.setState({ rState: t[0], rOpen: t[0] === "populated" ? (self.state.rOpen || "a1") : null }) };
+      }),
+
+      rIsPopulated: s.rState === "populated",
+      rIsEmpty: s.rState === "empty",
+      rIsGenerating: s.rState === "generating",
+      rIsUnavailable: s.rState === "unavailable",
+      rIsQuota: s.rState === "quota",
+
+      rFilters: filters.map(function (f) {
+        const on = s.rFilter === f[0];
+        return { label: f[1], bg: on ? "#1C1C1C" : "transparent", color: on ? C.primary : C.muted, onClick: () => self.setState({ rFilter: f[0] }) };
+      }),
+      rSorts: [["date", "Newest"], ["confidence", "Confidence"]].map(function (f) {
+        const on = s.rSort === f[0];
+        return { label: f[1], bg: on ? "#1C1C1C" : "transparent", color: on ? C.primary : C.muted, onClick: () => self.setState({ rSort: f[0] }) };
+      }),
+      rLibrary: library,
+      rLibraryCount: library.length,
+      rPortfolioCards: portfolioCards,
+      rHasPortfolioCards: portfolioCards.length > 0,
+
+      rHasDetail: !!detail && s.rState === "populated",
+      rNeedsPick: s.rState === "populated" && !detail,
+      rdScope: detail ? detail.scope : "",
+      rdKind: detail ? detail.kind : "",
+      rdQuestion: detail ? detail.question : "",
+      rdFinding: detail ? detail.finding : "",
+      rdBody: detail ? detail.body : "",
+      rdRange: detail ? detail.range : "",
+      rdHasRange: detail ? detail.range !== "—" : false,
+      rdWhen: detail ? detail.when : "",
+      rdConfLabel: dcs.label,
+      rdConfTint: dcs.tint,
+      rdConfBg: dcs.bg,
+      rdConfBorder: dcs.border,
+      rdBar1: dcs.bars >= 1 ? dcs.tint : "#232323",
+      rdBar2: dcs.bars >= 2 ? dcs.tint : "#232323",
+      rdBar3: dcs.bars >= 3 ? dcs.tint : "#232323",
+      rdSources: detail ? detail.sources : [],
+      rdSourceCount: detail ? String(detail.sources.length) : "0",
+      rdAnalogs: detail ? (premium ? detail.analogs : detail.analogs.slice(0, 1)).map(function (a, i) { return { symbol: a.symbol, date: a.date, match: a.match, note: a.note, delay: i * 70 }; }) : [],
+      rdAnalogCount: detail ? String(detail.analogs.length) : "0",
+      rdAnalogShown: detail ? String(premium ? detail.analogs.length : Math.min(1, detail.analogs.length)) : "0",
+      rdAnalogHidden: detail ? (premium ? 0 : Math.max(0, detail.analogs.length - 1)) : 0,
+      rdHasHidden: detail ? (!premium && detail.analogs.length > 1) : false,
+      rdCloseDetail: () => this.setState({ rOpen: null }),
+      rGoAssistant: () => this.setState({ route: "assistant" })
+    };
+  }
+
+  searchModalVals() {
+    const s = this.state, self = this;
+    if (!s.searchSymbol) return { hasSearchModal: false };
+    const u = UNIVERSE.find(x => x.symbol === s.searchSymbol) || UNIVERSE[0];
+    const price = this.priceOf(u.symbol);
+    const line = toPointsSized(seedNoise(9, u.change >= 0, 50), 600, 180);
+    const color = u.change >= 0 ? C.accent : C.neg;
+    const held = HOLDINGS.find(h => h.symbol === u.symbol);
+    return {
+      hasSearchModal: true,
+      smSymbol: u.symbol, smName: u.name,
+      smPrice: money(price, u.price > 1000 ? 0 : 2),
+      smChange: (u.change >= 0 ? "+" : "") + u.change.toFixed(2) + "%",
+      smColor: color,
+      smLine: line,
+      smArea: "M0,180 L" + line.split(" ").join(" L") + " L600,180 Z",
+      smHeld: held ? held.qty + " held · " + money(held.buy, 2) + " avg" : "Not in your portfolio",
+      smNews: NEWS.filter(n => n.tickers.indexOf(u.symbol) !== -1).slice(0, 3).map(n => ({ title: n.title, outlet: n.outlet, when: n.when })),
+      smOpenFull: () => self.setState({ route: "ticker", ticker: u.symbol, searchSymbol: null })
+    };
+  }
+
   pageVals() {
     const s = this.state, self = this, w = s.w;
 
@@ -1855,8 +2646,8 @@ class Component extends DCLogic {
       const d = CMP_DATA[sym] || {};
       if (key === "price") return { text: money(m.price, m.price > 1000 ? 0 : 2), color: C.primary };
       if (key === "change") return { text: (m.change >= 0 ? "+" : "") + m.change.toFixed(2) + "%", color: m.change >= 0 ? C.accent : C.neg };
-      if (key === "held") return { text: d.held || "-", color: d.held && d.held !== "-" ? C.primary : C.dim };
-      return { text: d[key] || "-", color: C.muted };
+      if (key === "held") return { text: d.held || "—", color: d.held && d.held !== "—" ? C.primary : C.dim };
+      return { text: d[key] || "—", color: C.muted };
     };
 
     // Watchlists
@@ -1867,7 +2658,7 @@ class Component extends DCLogic {
     const rows = SETTINGS[s.settingsTab] || [];
 
     const steps = [
-      { key: "holding", label: "Add your first holding", desc: "Quantity and entry price - Cairn works out value, gain, and news relevance from there.", cta: "Add holding" },
+      { key: "holding", label: "Add your first holding", desc: "Quantity and entry price — Cairn works out value, gain, and news relevance from there.", cta: "Add holding" },
       { key: "watchlist", label: "Build a watchlist", desc: "Group the tickers you're tracking but don't own yet.", cta: "New watchlist" },
       { key: "briefing", label: "Meet the assistant", desc: "Ask one question and see how sources and analogs are shown.", cta: "Open assistant" }
     ];
@@ -1891,8 +2682,8 @@ class Component extends DCLogic {
       tStats: [
         { label: "Open", value: money(tPrice * 0.994, 2) }, { label: "Day range", value: money(tPrice * 0.988, 2) + " – " + money(tPrice * 1.008, 2) },
         { label: "52w range", value: money(tPrice * 0.61, 2) + " – " + money(tPrice * 1.04, 2) }, { label: "Volume", value: u.volume },
-        { label: "Market cap", value: (CMP_DATA[u.symbol] || {}).cap || "-" }, { label: "P/E (fwd)", value: (CMP_DATA[u.symbol] || {}).pe || "-" },
-        { label: "Volatility 30d", value: (CMP_DATA[u.symbol] || {}).vol || "-" }, { label: "Next event", value: "Earnings · Aug 27" }
+        { label: "Market cap", value: (CMP_DATA[u.symbol] || {}).cap || "—" }, { label: "P/E (fwd)", value: (CMP_DATA[u.symbol] || {}).pe || "—" },
+        { label: "Volatility 30d", value: (CMP_DATA[u.symbol] || {}).vol || "—" }, { label: "Next event", value: "Earnings · Aug 27" }
       ],
       tNews: NEWS.filter(n => n.tickers.indexOf(u.symbol) !== -1).slice(0, 3).map(n => ({ title: n.title, outlet: n.outlet, when: n.when })),
       goTicker: (sym) => this.setState({ route: "ticker", ticker: sym }),
@@ -2093,7 +2884,7 @@ class Component extends DCLogic {
           chg: (r.chg >= 0 ? "+" : "") + r.chg.toFixed(2) + "%",
           color: r.chg >= 0 ? C.accent : C.neg,
           tagColor: TYPE_COLOR[r.type] || C.muted,
-          vol: r.vol, cap: fmtCap(r.cap), pe: r.pe === null ? "-" : r.pe.toFixed(1) + "×", dy: r.dy,
+          vol: r.vol, cap: fmtCap(r.cap), pe: r.pe === null ? "—" : r.pe.toFixed(1) + "×", dy: r.dy,
           open: () => self.setState({ route: "ticker", ticker: r.symbol })
         };
       }),
@@ -2145,6 +2936,38 @@ class Component extends DCLogic {
 
       calCells: cal,
       calDows: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(d => ({ label: d })),
+      searchQuery: s.searchQuery,
+      onSearchQuery: (e) => this.setState({ searchQuery: e.target.value }),
+      searchResults: (function () {
+        const q = s.searchQuery.trim().toLowerCase();
+        if (!q) return [];
+        const assets = UNIVERSE.filter(u => u.symbol.toLowerCase().indexOf(q) !== -1 || u.name.toLowerCase().indexOf(q) !== -1).slice(0, 6).map(function (u) {
+          return { kind: "Asset", tagColor: TYPE_COLOR[u.type], title: u.symbol, sub: u.name, meta: money(self.priceOf(u.symbol) || u.price, u.price > 1000 ? 0 : 2), onClick: () => self.setState({ searchSymbol: u.symbol, searchOpen: false, searchQuery: "" }) };
+        });
+        const news = NEWS.filter(n => n.title.toLowerCase().indexOf(q) !== -1).slice(0, 4).map(function (n) {
+          return { kind: "News", tagColor: C.warn, title: n.title, sub: n.outlet + " · " + n.when, meta: "", onClick: () => self.setState({ route: "news", searchOpen: false, searchQuery: "" }) };
+        });
+        const holdMatch = self.holdingRows().filter(h => h.symbol.toLowerCase().indexOf(q) !== -1 || h.name.toLowerCase().indexOf(q) !== -1).slice(0, 4).map(function (h) {
+          return { kind: "Holding", tagColor: C.accent, title: h.symbol, sub: h.qty + " shares · " + money(h.value, 0), meta: (h.pct >= 0 ? "+" : "") + h.pct.toFixed(1) + "%", onClick: () => self.setState({ searchSymbol: h.symbol, searchOpen: false, searchQuery: "" }) };
+        });
+        return holdMatch.concat(assets).concat(news);
+      })(),
+      searchEmpty: s.searchQuery.trim().length > 0,
+      showRecent: s.searchQuery.trim().length === 0,
+      noSearchResults: s.searchQuery.trim().length > 0 && (function () {
+        const q = s.searchQuery.trim().toLowerCase();
+        const hasAsset = UNIVERSE.some(u => u.symbol.toLowerCase().indexOf(q) !== -1 || u.name.toLowerCase().indexOf(q) !== -1);
+        const hasNews = NEWS.some(n => n.title.toLowerCase().indexOf(q) !== -1);
+        return !hasAsset && !hasNews;
+      })(),
+      searchRecent: [
+        { label: "NVDA", onClick: () => self.setState({ searchSymbol: "NVDA", searchOpen: false, searchQuery: "" }) },
+        { label: "How is my portfolio doing today?", onClick: () => self.setState({ route: "assistant", searchOpen: false, searchQuery: "" }) },
+        { label: "CPI print", onClick: () => self.setState({ route: "calendar", searchOpen: false, searchQuery: "" }) }
+      ],
+      ...this.searchModalVals(),
+      ...this.researchVals(),
+      isResearch: s.route === "research",
       calUpcoming: [
         { when: "Thu 20 Aug", type: "Economic", tint: EVENT_TINT.economic, title: "US CPI print", note: "3 of your positions are rate-sensitive" },
         { when: "Tue 25 Aug", type: "Earnings", tint: EVENT_TINT.earnings, title: "AMD Q3 results", note: "Your only position under cost basis" },
@@ -2199,7 +3022,7 @@ class Component extends DCLogic {
       const m = MODULES[k];
       return {
         key: k, label: m.label, tint: m.tint, cta: m.cta, delay: idx * 40,
-        span: s.wide.indexOf(k) !== -1 ? 2 : 1,
+        span: (s.wide.indexOf(k) !== -1 && s.w >= 700) ? 2 : 1,
         body: self.moduleBody(k),
         openPage: () => self.go(m.route),
         up: () => self.setState(st => { const o = st.order.slice(); const i = o.indexOf(k); if (i > 0) { o[i] = o[i - 1]; o[i - 1] = k; } return { order: o }; }),
@@ -2238,7 +3061,7 @@ class Component extends DCLogic {
       messages.push({ text: s.lastQuestion || "How is my portfolio doing today?", justify: "flex-end", bg: "#151515", border: "#2A2A2A", streaming: false });
       messages.push({ text: s.streamed, justify: "flex-start", bg: "#0C0C0C", border: "#232323", streaming: s.streaming });
     } else {
-      messages.push({ text: "Ask about your holdings, a ticker, or today's move. I already have your portfolio and watchlist in context - every answer shows its sources.", justify: "flex-start", bg: "#0C0C0C", border: "#232323", streaming: false });
+      messages.push({ text: "Ask about your holdings, a ticker, or today's move. I already have your portfolio and watchlist in context — every answer shows its sources.", justify: "flex-start", bg: "#0C0C0C", border: "#232323", streaming: false });
     }
 
     const sessionTitles = [
@@ -2247,170 +3070,4 @@ class Component extends DCLogic {
       { title: "Is my allocation too semi-heavy?", when: "Tue" },
       { title: "What moved VTI last week?", when: "Aug 6" },
       { title: "Crypto exposure vs. equity beta", when: "Jul 29" }
-    ];
-
-    const w = s.w;
-    return {
-      today: "Fri 14 Aug",
-      nav: nav,
-      assistantGrid: w >= 900 ? "232px 1fr" : "1fr",
-      sideGrid: w >= 900 ? "300px 1fr" : "1fr",
-      showInlineNav: w >= 900,
-      showBurger: w < 900,
-      showSearch: w >= 1080,
-      showUpgrade: w >= 1240,
-      showAccountName: w >= 1000,
-      searchWidth: w >= 1300 ? "230px" : "180px",
-      mobileNavOpen: s.mobileNavOpen,
-      toggleMobileNav: () => this.setState(st => ({ mobileNavOpen: !st.mobileNavOpen, openGroup: null, accountOpen: false })),
-      mobileNav: NAV.reduce(function (acc, e) {
-        const leaf = { size: 13.5, family: "inherit", tracking: "normal", transform: "none", pad: "10px 8px", cursor: "pointer" };
-        if (e.items) {
-          acc.push(Object.assign({}, leaf, { label: e.label, soon: false, color: C.dim, size: 10, family: "'IBM Plex Mono', monospace", tracking: "0.14em", transform: "uppercase", pad: "14px 8px 4px", cursor: "default", onClick: () => {} }));
-          e.items.forEach(function (i) { acc.push(Object.assign({}, leaf, { label: i.label, soon: !i.route, color: i.route === s.route ? C.primary : i.route ? C.muted : C.dim, onClick: () => self.go(i.route) })); });
-        } else {
-          acc.push(Object.assign({}, leaf, { label: e.label, soon: false, color: e.route === s.route ? C.primary : C.muted, onClick: () => self.go(e.route) }));
-        }
-        return acc;
-      }, []),
-      accountOpen: s.accountOpen,
-      toggleAccount: () => this.setState(st => ({ accountOpen: !st.accountOpen, openGroup: null })),
-      accountMenu: [
-        { label: "Settings", color: C.muted, soon: false, onClick: () => self.setState({ route: "settings", accountOpen: false }) },
-        { label: "Billing", color: C.muted, soon: false, onClick: () => self.setState({ route: "settings", settingsTab: "billing", accountOpen: false }) },
-        { label: "First-run walkthrough", color: C.muted, soon: false, onClick: () => self.setState({ route: "onboarding", accountOpen: false }) },
-        { label: "Sign out", color: C.muted, soon: false, onClick: () => {} }
-      ],
-      goHome: () => this.go("basecamp"),
-      goAssistant: () => this.go("assistant"),
-      isBase: s.route === "basecamp",
-      isPortfolio: s.route === "portfolio",
-      isMarkets: s.route === "markets",
-      isAssistant: s.route === "assistant",
-      isTicker: s.route === "ticker",
-      isNews: s.route === "news",
-      isCompare: s.route === "compare",
-      isWatchlists: s.route === "watchlists",
-      isNewWatchlist: s.route === "newwatchlist",
-      isSettings: s.route === "settings",
-      isOnboarding: s.route === "onboarding",
-      isAlerts: s.route === "alerts",
-      isScreener: s.route === "screener",
-      isSectors: s.route === "sectors",
-      isCalculators: s.route === "calculators",
-      isCalendar: s.route === "calendar",
-      showNotes: this.props.showMotionNotes !== false,
-      ...this.pageVals(),
-
-      live: s.live,
-      liveDot: s.live ? C.accent : C.dim,
-      liveLabel: s.live ? "Live" : "Paused",
-      toggleLive: () => this.setState(st => ({ live: !st.live })),
-      arranging: s.arranging,
-      notArranging: notArranging,
-      arrangeBg: s.arranging ? "#171717" : "transparent",
-      arrangeLabel: s.arranging ? "Done" : "Arrange",
-      toggleArrange: () => this.setState(st => ({ arranging: !st.arranging })),
-      modules: modules,
-      hasHidden: s.hidden.length > 0,
-      hiddenModules: s.hidden.map(k => ({ label: MODULES[k].label, show: () => self.setState(st => ({ hidden: st.hidden.filter(x => x !== k) })) })),
-
-      stats: [
-        { label: "Total value", value: money(t.value, 0), sub: t.n + " positions", color: C.primary, delay: 0 },
-        { label: "Unrealised gain", value: (t.gain >= 0 ? "+" : "") + money(t.gain, 0), sub: (t.pct >= 0 ? "+" : "") + t.pct.toFixed(2) + "% on cost", color: t.gain >= 0 ? C.accent : C.neg, delay: 50 },
-        { label: "Today", value: "+1.24%", sub: "+$1,417 since open", color: C.accent, delay: 100 },
-        { label: "Cost basis", value: money(t.cost, 0), sub: "Across 4 asset types", color: C.primary, delay: 150 }
-      ],
-      pfRanges: ["1W", "1M", "3M", "1Y", "All"].map(function (r) {
-        const on = s.pfRange === r;
-        return { label: r, bg: on ? "#1C1C1C" : "transparent", color: on ? C.primary : C.muted, onClick: () => self.setState({ pfRange: r }) };
-      }),
-      pfLine: (function () {
-        const vals = seedNoise(3, t.gain >= 0, 60);
-        return toPointsSized(vals, 900, 220);
-      })(),
-      pfArea: (function () {
-        const line = toPointsSized(seedNoise(3, t.gain >= 0, 60), 900, 220);
-        return "M0,220 L" + line.split(" ").join(" L") + " L900,220 Z";
-      })(),
-      pfColor: t.gain >= 0 ? C.accent : C.neg,
-      holdings: holdings,
-      holdingCount: t.n,
-      noHoldings: t.n === 0,
-      addOpen: s.addOpen,
-      openAdd: () => this.setState({ addOpen: true, addQuery: "" }),
-      closeAdd: () => this.setState({ addOpen: false }),
-      stop: (e) => e.stopPropagation(),
-      addQuery: s.addQuery,
-      onAddQuery: (e) => this.setState({ addQuery: e.target.value }),
-      showTypeahead: addQ.length > 0,
-      noMatches: addQ.length > 0 && matches.length === 0,
-      matches: matches.map(m => ({
-        symbol: m.symbol, name: m.name, type: m.type, initials: m.symbol.slice(0, 2),
-        tagColor: TYPE_COLOR[m.type],
-        chip: "linear-gradient(135deg, #5EE6A6, #22B573)",
-        pick: () => self.setState({ addQuery: m.symbol })
-      })),
-
-      marketFilters: filters.map(function (f) {
-        const on = s.marketFilter === f[0];
-        return { label: f[1], bg: on ? "#1C1C1C" : "transparent", color: on ? C.primary : C.muted, onClick: () => self.setState({ marketFilter: f[0] }) };
-      }),
-      marketQuery: s.marketQuery,
-      onMarketQuery: (e) => this.setState({ marketQuery: e.target.value }),
-      activeFilterLabel: (filters.find(f => f[0] === s.marketFilter) || filters[0])[1],
-      clearMarket: () => this.setState({ marketQuery: "", marketFilter: "all" }),
-      marketsEmpty: filtered.length === 0,
-      marketRows: filtered.map(function (r, i) {
-        const price = self.priceOf(r.symbol);
-        return {
-          symbol: r.symbol, name: r.name, initials: r.symbol.slice(0, 2), type: r.type,
-          chip: r.change >= 0 ? "linear-gradient(135deg, #5EE6A6, #22B573)" : "linear-gradient(135deg, #E39B9B, #C25A5A)",
-          tagColor: TYPE_COLOR[r.type], tagBorder: "#262626",
-          price: money(price, r.type === "forex" ? 4 : price > 1000 ? 0 : 2),
-          priceColor: s.flash[r.symbol] || C.primary,
-          change: (r.change >= 0 ? "+" : "") + r.change.toFixed(2) + "%",
-          changeColor: r.change >= 0 ? C.accent : C.neg,
-          volume: r.volume, points: toPoints(seedNoise(i + 5, r.change >= 0, 30)), delay: i * 20,
-          open: () => self.setState({ route: "ticker", ticker: r.symbol })
-        };
-      }),
-
-      sessions: sessionTitles.map(function (x, i) {
-        return { title: x.title, when: x.when, bg: i === s.session ? "#171717" : "transparent", color: i === s.session ? C.primary : C.muted, onClick: () => self.setState({ session: i }) };
-      }),
-      newSession: () => this.setState({ sent: false, streamed: "", session: 0 }),
-      briefingItems: [
-        { kind: "Your holdings", tint: C.accent, text: "NVDA +2.8%, AMD +3.2% on supplier guidance", meta: "2 sources · 38m ago" },
-        { kind: "Watch", tint: C.warn, text: "CPI print Thursday - 3 of your positions are rate-sensitive", meta: "Calendar · Aug 20" },
-        { kind: "Crypto", tint: C.violet, text: "BTC ETF flows positive after a three-week streak", meta: "CoinDesk · 2h ago" }
-      ],
-      messages: messages,
-      showAnalysis: s.sent && !s.streaming,
-      sources: [
-        { title: "Supplier lifts datacenter outlook", outlet: "Reuters", when: "38m" },
-        { title: "Accelerator lead times shorten", outlet: "Bloomberg", when: "3h" },
-        { title: "Q2 semiconductor shipments", outlet: "SIA", when: "Aug 11" },
-        { title: "Rate path and growth multiples", outlet: "FT", when: "Aug 12" }
-      ],
-      analogs: [
-        { symbol: "NVDA", date: "May 2024", match: "91%", delay: 0 },
-        { symbol: "AMD", date: "Feb 2024", match: "84%", delay: 70 },
-        { symbol: "AVGO", date: "Dec 2023", match: "76%", delay: 140 }
-      ],
-      draft: s.draft,
-      onDraft: (e) => this.setState({ draft: e.target.value }),
-      onKey: (e) => { if (e.key === "Enter") { const q = (self.state.draft || "How is my portfolio doing today?"); self.setState({ lastQuestion: q, draft: "" }); self.runStream(REPLY); } },
-      send: () => { if (s.streaming) { clearInterval(self.stream); self.setState({ streaming: false }); return; } const q = (s.draft || "How is my portfolio doing today?"); self.setState({ lastQuestion: q, draft: "" }); self.runStream(REPLY); },
-      sendLabel: s.streaming ? "Stop" : "Send",
-      prompts: [
-        { label: "How is my portfolio doing today?", onClick: () => { self.setState({ lastQuestion: "How is my portfolio doing today?" }); self.runStream(REPLY); } },
-        { label: "What's the drawdown risk on NVDA?", onClick: () => { self.setState({ lastQuestion: "What's the drawdown risk on NVDA?" }); self.runStream(REPLY); } },
-        { label: "Am I too concentrated in semis?", onClick: () => { self.setState({ lastQuestion: "Am I too concentrated in semis?" }); self.runStream(REPLY); } }
-      ]
-    };
-  }
-}
-</script>
-</body>
-</html>
+  

@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "test:scope-guard": "tsx --conditions=react-server scripts/tests/adversarial-scope-guard.ts",
+    "test:chat-generation-guard": "tsx --conditions=react-server scripts/tests/chat-inline-generation-guard.ts",
     "test:probability": "tsx --conditions=react-server scripts/tests/probability-math.ts",
     "test:methodology": "tsx --conditions=react-server scripts/tests/methodology-substance.ts",
     "test:citations": "tsx --conditions=react-server scripts/tests/citation-freshness.ts",

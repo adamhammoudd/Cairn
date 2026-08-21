@@ -14,7 +14,10 @@ const TRACKED: { symbol: string; aliases: string[] }[] = [
   { symbol: "SPY", aliases: [] },
 ];
 
-function detectTickers(text: string): string[] {
+// Exported so the chat-triggered generation path decides "which scope did they
+// actually ask about" with the very same detection that decides which stored
+// analyses are relevant. Two notions of "mentioned" would drift apart.
+export function detectTickers(text: string): string[] {
   const found = new Set<string>();
   for (const t of TRACKED) {
     const terms = [t.symbol, ...t.aliases];

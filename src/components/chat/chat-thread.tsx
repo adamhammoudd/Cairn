@@ -8,7 +8,13 @@ import {
   listChatMessages,
   type ChatSession,
 } from "@/lib/actions/chat";
-import { getAnalysesByIds } from "@/lib/actions/analysis";
+import { findMissingAnalysisScope, getAnalysesByIds } from "@/lib/actions/analysis";
+import { CHAT_STATE_MARKER, type ChatGenerationState } from "@/lib/chat-state";
+import {
+  GeneratingPanel,
+  QuotaReachedPanel,
+  UnavailablePanel,
+} from "@/components/analysis/research-states";
 import type { ChatMessageData } from "@/components/chat/chat-message";
 import { getUserPlan } from "@/lib/actions/billing";
 import { TIER_LIMITS } from "@/lib/billing";
@@ -34,13 +40,29 @@ type Message = ChatMessageData;
 
 const REFS_MARKER = /\sCAIRN_REFS:(\[[^\]]*\])$/;
 
-function splitRefs(raw: string): { text: string; ids: string[] } {
-  const match = raw.match(REFS_MARKER);
-  if (!match) return { text: raw, ids: [] };
+// CAIRN_STATE is emitted after CAIRN_REFS, so it is stripped first and the
+// refs parser then sees the same shape it always did.
+function splitStream(raw: string): { text: string; ids: string[]; state: ChatGenerationState | null } {
+  let rest = raw;
+  let state: ChatGenerationState | null = null;
+
+  const stateMatch = rest.match(CHAT_STATE_MARKER);
+  if (stateMatch) {
+    try {
+      state = JSON.parse(stateMatch[1]) as ChatGenerationState;
+      rest = rest.slice(0, stateMatch.index);
+    } catch {
+      // Malformed sentinel: leave the text alone rather than truncating a
+      // real reply on a parse failure.
+    }
+  }
+
+  const refsMatch = rest.match(REFS_MARKER);
+  if (!refsMatch) return { text: rest, ids: [], state };
   try {
-    return { text: raw.slice(0, match.index), ids: JSON.parse(match[1]) };
+    return { text: rest.slice(0, refsMatch.index), ids: JSON.parse(refsMatch[1]), state };
   } catch {
-    return { text: raw, ids: [] };
+    return { text: rest, ids: [], state };
   }
 }
 
@@ -66,6 +88,11 @@ export function ChatThread({
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
+  // Set when this turn named a scope with nothing on file, so the reader sees
+  // the generation happening rather than a silent pause. Turn-local: never
+  // written to chat_messages, so no chat-specific storage exists.
+  const [generatingScope, setGeneratingScope] = useState<string | null>(null);
+  const [turnState, setTurnState] = useState<ChatGenerationState | null>(null);
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   // Distinguishes "we haven't looked yet" from "we looked and there is
   // nothing". Rendering the empty state during the fetch told returning users
@@ -151,6 +178,20 @@ export function ChatThread({
     setInput("");
     setMessages((prev) => [...prev, { role: "user", content: text }, { role: "assistant", content: "" }]);
     setStreaming(true);
+    setTurnState(null);
+    setGeneratingScope(null);
+
+    // Ask the same question the route is about to ask - findMissingAnalysisScope
+    // is one function, so the panel below can never claim a generation the
+    // server isn't actually running. This only decides what the reader sees
+    // while they wait; the route decides what actually happens, and the
+    // generation itself is the route's single runAnalysisGeneration call.
+    try {
+      const missing = await findMissingAnalysisScope(text);
+      if (missing) setGeneratingScope(missing.scopeValue);
+    } catch {
+      // A failed probe just means no generating panel - never a failed turn.
+    }
 
     // The session row is created here, on the first real message, rather than
     // on mount. `createdNow` is remembered so a failed first turn can take the
@@ -195,7 +236,7 @@ export function ChatThread({
         const { done, value } = await reader.read();
         if (done) break;
         raw += decoder.decode(value, { stream: true });
-        const { text: displayText } = splitRefs(raw);
+        const { text: displayText } = splitStream(raw);
         setMessages((prev) => {
           const next = [...prev];
           next[next.length - 1] = { role: "assistant", content: displayText };
@@ -203,7 +244,11 @@ export function ChatThread({
         });
       }
 
-      const { ids } = splitRefs(raw);
+      const { ids, state } = splitStream(raw);
+      // Generation is over either way - drop the in-flight panel before
+      // showing what came of it.
+      setGeneratingScope(null);
+      setTurnState(state);
       if (ids.length > 0) {
         const analyses = await getAnalysesByIds(ids);
         setMessages((prev) => {
@@ -232,6 +277,7 @@ export function ChatThread({
       if (createdNow && activeSessionId) await discardEmptySession(activeSessionId);
     } finally {
       setStreaming(false);
+      setGeneratingScope(null);
     }
   }
 
@@ -281,6 +327,30 @@ export function ChatThread({
                 dense={compact}
               />
             ))}
+
+            {/* Chat-triggered generation, shown inline. These are the Research
+                page's own panels, not chat-specific copies - the wording of a
+                quota block or a thin-data refusal cannot drift between the two
+                entry points because there is only one of each component. */}
+            {generatingScope && (
+              <div>
+                <p className="mb-2.5 text-[13px] leading-relaxed text-muted text-pretty">
+                  No analysis on record yet for {generatingScope} — generating one now…
+                </p>
+                <GeneratingPanel scopeLabel={generatingScope} />
+              </div>
+            )}
+
+            {turnState?.kind === "unavailable" && <UnavailablePanel />}
+
+            {turnState?.kind === "quota" && turnState.quota && (
+              <QuotaReachedPanel
+                used={turnState.quota.used}
+                limit={turnState.quota.limit}
+                planLabel={turnState.quota.planLabel}
+                resetLabel={turnState.quota.resetLabel}
+              />
+            )}
           </div>
         )}
       </div>

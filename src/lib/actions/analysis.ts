@@ -5,34 +5,111 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { generateAnalysis } from "@/lib/ai/generate";
 import { checkAiUsageAllowed, recordAiUsage } from "@/lib/actions/billing";
+import { UNAVAILABLE_MESSAGE, type GenerateOutcome } from "@/lib/analysis";
+import { detectTickers } from "@/lib/ai/context";
 import type { ScopeType } from "@/lib/supabase/types";
 
-export async function requestAnalysis(_prevState: string | null, formData: FormData) {
+/**
+ * The single generation pipeline. Both entry points - the Research page's
+ * "Generate analysis" button and a chat-triggered inline generation - call
+ * runAnalysisGeneration below, so quota accounting, the scope guard, storage
+ * and the user-facing failure language cannot drift between them. Do not add
+ * a second path.
+ */
+
+// Failures from lib/ai/generate.ts that mean "the record is too thin here",
+// as opposed to something actually broken. Matched against the shapes that
+// module throws; anything else stays an "error" and is reported as such
+// rather than being dressed up as a data gap.
+function isThinDataFailure(message: string): boolean {
+  return (
+    message.includes("No news or historical event data") ||
+    message.includes("No historical analogs with usable before/after prices") ||
+    message.includes("an analysis must cite at least one source")
+  );
+}
+
+export async function runAnalysisGeneration(
+  scopeType: ScopeType,
+  rawScopeValue: string,
+): Promise<GenerateOutcome> {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const scopeType = formData.get("scope_type") as ScopeType;
-  const scopeValue = String(formData.get("scope_value") ?? "").trim();
-
-  if (!scopeValue) return "Enter a market, sector, or ticker to analyze.";
+  const scopeValue = scopeType === "ticker" ? rawScopeValue.trim().toUpperCase() : rawScopeValue.trim();
+  if (!scopeValue) {
+    return { ok: false, kind: "error", message: "Enter a market, sector, or ticker to analyze." };
+  }
 
   const gate = await checkAiUsageAllowed(user.id);
-  if (!gate.allowed) return gate.message ?? "AI analysis limit reached for this plan.";
+  if (!gate.allowed) {
+    return { ok: false, kind: "quota", message: gate.message ?? "AI analysis limit reached for this plan." };
+  }
 
+  let analysisId: string;
   try {
-    await generateAnalysis({ scopeType, scopeValue: scopeType === "ticker" ? scopeValue.toUpperCase() : scopeValue });
+    // generateAnalysis runs the scope guard internally and refuses to store a
+    // flagged output - a chat-triggered run gets that same guard precisely
+    // because it comes through here rather than around it.
+    const analysis = await generateAnalysis({ scopeType, scopeValue });
+    analysisId = analysis.id;
   } catch (err) {
-    return err instanceof Error ? err.message : "Failed to generate analysis.";
+    const message = err instanceof Error ? err.message : "Failed to generate analysis.";
+    if (isThinDataFailure(message)) {
+      return { ok: false, kind: "unavailable", message: UNAVAILABLE_MESSAGE };
+    }
+    return { ok: false, kind: "error", message };
   }
 
   await recordAiUsage(user.id);
 
   revalidatePath("/research");
-  if (scopeType === "ticker") revalidatePath(`/ticker/${scopeValue.toUpperCase()}`);
-  return "saved";
+  if (scopeType === "ticker") revalidatePath(`/ticker/${scopeValue}`);
+
+  return { ok: true, analysisId };
+}
+
+/**
+ * "Did they ask about a scope we have nothing on file for?"
+ *
+ * Deliberately the same existence check the Research page's library runs -
+ * getAnalysesForScope returning nothing - rather than a second, chat-specific
+ * notion of missing. Scope detection is chat's own detectTickers, so what
+ * counts as "the scope they asked about" matches what the assistant already
+ * uses to pick relevant context.
+ *
+ * Returns null when the message names no single scope, or when something is
+ * already on file. Only ever offers ticker scopes: sector and market-wide
+ * research stays a deliberate Research-page action.
+ *
+ * Called from both the chat route (which acts on it) and the chat client
+ * (which shows the generating state while the route works), so the two can
+ * never disagree about whether a generation is happening.
+ */
+export async function findMissingAnalysisScope(
+  message: string,
+): Promise<{ scopeType: ScopeType; scopeValue: string } | null> {
+  const mentioned = detectTickers(message);
+  // More than one ticker in the question is ambiguous - generating for a guess
+  // would be the silent auto-generation this is explicitly not meant to do.
+  if (mentioned.length !== 1) return null;
+
+  const scopeValue = mentioned[0];
+  const existing = await getAnalysesForScope("ticker", scopeValue);
+  if (existing.length > 0) return null;
+
+  return { scopeType: "ticker", scopeValue };
+}
+
+export async function requestAnalysis(_prevState: string | null, formData: FormData) {
+  const scopeType = formData.get("scope_type") as ScopeType;
+  const scopeValue = String(formData.get("scope_value") ?? "");
+
+  const outcome = await runAnalysisGeneration(scopeType, scopeValue);
+  return outcome.ok ? "saved" : outcome.message;
 }
 
 export interface AnalysisWithMethodology {
