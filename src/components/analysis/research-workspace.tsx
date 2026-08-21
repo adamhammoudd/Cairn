@@ -414,7 +414,8 @@ export function ResearchWorkspace({
       </div>
 
       {/* Library rail + detail column */}
-      <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-[340px_1fr]">
+      {/* The mock's researchGrid switches at w >= 1100, not at Tailwind's xl. */}
+      <div className="grid grid-cols-1 items-start gap-4 min-[1100px]:grid-cols-[340px_1fr]">
         <div className="min-w-0 overflow-hidden rounded-[14px] border border-line bg-panel">
           <div className="border-b border-[#1E1E1E] px-4 py-3.5">
             <div className="font-mono text-[10px] tracking-[0.14em] text-muted uppercase">Library · {library.length}</div>
