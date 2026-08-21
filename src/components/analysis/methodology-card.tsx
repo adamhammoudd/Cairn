@@ -1,6 +1,10 @@
 import type { AnalysisWithMethodology } from "@/lib/actions/analysis";
 import type { CalendarEvent } from "@/lib/calendar";
 import { Disclosure } from "@/components/compliance/disclosure";
+// RSS titles arrive HTML-escaped, so a cited source rendered raw shows
+// "Nvidia&#x2019;s" verbatim in the sources list. The news panel already
+// decodes at display time; this is the same helper, not a second one.
+import { decodeEntities } from "@/lib/news";
 
 // Structure taken from the assistant panel in Context/mockups/Cairn.dc.html
 // (the `showAnalysis` block): a bordered header strip carrying scope, subject,
@@ -109,10 +113,10 @@ export function MethodologyCard({
                     <li key={s.id} className="mb-1.5 text-[12px] leading-relaxed text-muted last:mb-0">
                       {s.url ? (
                         <a href={s.url} target="_blank" rel="noreferrer" className="text-accent hover:underline">
-                          {s.title}
+                          {decodeEntities(s.title)}
                         </a>
                       ) : (
-                        <span className="text-accent">{s.title}</span>
+                        <span className="text-accent">{decodeEntities(s.title)}</span>
                       )}{" "}
                       · {s.source_name}
                       <span className="text-dim" suppressHydrationWarning>
