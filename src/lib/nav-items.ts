@@ -41,5 +41,14 @@ export const NAV_ITEMS: NavEntry[] = [
       { label: "Calendar", route: "/calendar" },
     ],
   },
-  { label: "Assistant", route: "/assistant" },
+  // Grouped per the mock's own nav definition in Context/mockups/Cairn.dc.html:
+  // { label: "Assistant", items: [Chat -> assistant, Research -> research] }.
+  // Research was previously reachable only by typing the URL.
+  {
+    label: "Assistant",
+    items: [
+      { label: "Chat", route: "/assistant" },
+      { label: "Research", route: "/research" },
+    ],
+  },
 ];
