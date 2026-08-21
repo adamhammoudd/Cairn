@@ -2,10 +2,17 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { listAnalyses } from "@/lib/actions/analysis";
 import { getEventsForScopes } from "@/lib/actions/calendar";
-import { getUserPlan } from "@/lib/actions/billing";
+import { getBillingSummary } from "@/lib/actions/billing";
 import { TIER_LIMITS } from "@/lib/billing";
-import { RequestForm } from "@/components/analysis/request-form";
-import { MethodologyCard } from "@/components/analysis/methodology-card";
+import { ResearchWorkspace } from "@/components/analysis/research-workspace";
+
+// First of next month, spelled the way the mockup's quota copy spells it
+// ("1 September") - the same boundary startOfCurrentMonthIso() counts from.
+function nextResetLabel(): string {
+  const now = new Date();
+  const next = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+  return `${next.getDate()} ${next.toLocaleDateString(undefined, { month: "long" })}`;
+}
 
 export default async function ResearchPage() {
   const supabase = await createClient();
@@ -14,27 +21,37 @@ export default async function ResearchPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const [analyses, plan] = await Promise.all([listAnalyses(), getUserPlan()]);
-  const depth = TIER_LIMITS[plan].analysisDepth;
+  const [analyses, usage, { data: holdings }, { data: fundamentals }] = await Promise.all([
+    listAnalyses(),
+    // Same shared plan gate every billing-gated feature routes through -
+    // getBillingSummary() reads getUserPlan()'s tier plus this month's
+    // ai_usage_events count, so the quota shown here is the quota enforced.
+    getBillingSummary(),
+    supabase.from("holdings").select("symbol").eq("user_id", user.id),
+    supabase.from("fundamentals").select("sector"),
+  ]);
+
+  const depth = TIER_LIMITS[usage.tier].analysisDepth;
+
   const eventsByScope = await getEventsForScopes(
     Array.from(new Set(analyses.filter((a) => a.scope_type === "ticker").map((a) => a.scope_value))),
   );
 
-  return (
-    <div className="animate-page-in flex flex-col gap-4">
-      <RequestForm />
+  const heldSymbols = Array.from(new Set((holdings ?? []).map((h) => h.symbol)));
+  const sectors = Array.from(
+    new Set((fundamentals ?? []).map((f) => f.sector).filter((s): s is string => !!s)),
+  ).sort();
 
-      {analyses.length === 0 ? (
-        <div className="rounded-card border border-dashed border-line px-6 py-16 text-center text-[13px] text-muted">
-          No analyses yet. Request one above - market, sector, or ticker level only.
-        </div>
-      ) : (
-        <div className="flex flex-col gap-4">
-          {analyses.map((a) => (
-            <MethodologyCard key={a.id} analysis={a} depth={depth} upcomingEvents={eventsByScope[a.scope_value] ?? []} />
-          ))}
-        </div>
-      )}
-    </div>
+  return (
+    <ResearchWorkspace
+      analyses={analyses}
+      eventsByScope={eventsByScope}
+      heldSymbols={heldSymbols}
+      sectors={sectors}
+      depth={depth}
+      planLabel={TIER_LIMITS[usage.tier].label}
+      usage={{ used: usage.used, limit: usage.limit }}
+      resetLabel={nextResetLabel()}
+    />
   );
 }

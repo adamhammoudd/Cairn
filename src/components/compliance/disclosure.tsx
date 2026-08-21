@@ -19,9 +19,12 @@ export function Disclosure({ variant = "inline" }: DisclosureProps) {
   }
 
   if (variant === "callout") {
+    // Box values taken from the Research artboard's disclaimer strip in
+    // Context/mockups/Cairn.dc.html: 1px #262626 border, #101010 fill, 10px
+    // radius, and a 5px warning rule stretched to the text height.
     return (
-      <div className="flex items-center gap-2.25 rounded-lg border border-line bg-canvas/40 px-3 py-2.5">
-        <span aria-hidden className="h-6.5 w-1.25 flex-shrink-0 rounded-sm bg-warning" />
+      <div className="flex items-stretch gap-2.25 rounded-[10px] border border-[#262626] bg-[#101010] px-3 py-2.5">
+        <span aria-hidden className="w-1.25 flex-shrink-0 self-stretch rounded-sm bg-warning" />
         <p className="text-[11.5px] leading-relaxed text-muted text-pretty">
           Market/sector/ticker-level analytical output, not personalized financial advice. Not a
           recommendation to buy, hold, or sell anything.
