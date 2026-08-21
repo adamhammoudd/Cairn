@@ -8,14 +8,38 @@ Same tagging rule as the 2026-08-20 verification pass: nothing is marked PASS on
 the basis of code reading alone. Where the only available evidence is a code path
 I read but could not execute, the item is **UNVERIFIED**, not PASS.
 
-One fact governs this whole report, so it goes first rather than in a footnote:
+## Update, later the same day: the model is reachable
 
-> **There is still no `GROQ_API_KEY`.** No model has been reached from this
-> machine. `ai_analyses` holds **0 rows**. Every item below that requires
-> generation to actually happen is UNVERIFIED, and it is a large fraction of the
-> spec. Section 8's headline question - "does the assistant work end to end" -
-> cannot be answered yes or no today. It can only be answered "everything up to
-> the model call is now proven, and the model call has never been made."
+This report was first written with no key and no model ever reached. The
+founder then supplied `GROQ_API_KEY` and hit chat, which produced:
+
+```
+[chat] provider unavailable: Model provider unavailable after 4 attempt(s) (HTTP 0): fetch failed
+ POST /api/chat 503 in 6.9s
+```
+
+That turned out to be **two real defects**, both now fixed (`903943f`), and
+finding them is the whole argument for the spec's insistence on live evidence -
+neither was visible to any amount of unit testing:
+
+1. **A stale `LLM_BASE_URL`.** The main checkout's `.env.local` had the new key
+   but still pointed at `http://127.0.0.1:11434/v1`, the old local Ollama. The
+   key made `isLlmConfigured()` true, so the request proceeded - to a dead
+   localhost. Connection refused surfaced as `fetch failed` / HTTP 0 and was
+   retried four times.
+2. **`gpt-oss-120b` is a reasoning model**, and reasoning tokens come out of the
+   same `max_tokens` budget as the answer. It spent 58 of 60 tokens thinking and
+   returned `content: ""` with `finish_reason: "length"` - a silent empty
+   answer. Requests now send `reasoning_effort: "low"`.
+
+Both error paths were also unactionable and are now fixed: the network error
+names the endpoint it failed to reach, and an empty response distinguishes
+budget truncation from a genuinely empty reply.
+
+**Section 1 is now verified live.** Everything below is re-tagged accordingly.
+What is still outstanding is smaller and specific: `ai_analyses` remains at
+**0 rows**, so Section 3's stored analyses, Section 6's compliance check and
+Section 7's Free-vs-Premium comparison need someone to press Generate.
 
 ---
 
@@ -119,10 +143,34 @@ generic line stating nothing was saved. I traced `runChatTurn` to confirm it
 does not swallow `llmComplete` errors, so the busy error genuinely reaches the
 route rather than being converted to a generic failure inside the turn.
 
-### 1.6 Real streamed chat response, ideally from a non-dev device - **UNVERIFIED**
+### 1.6 Real response from the provider - **PASS** (live, `npm run test:live`)
 
-No key. Nothing has been generated. This is the single item that, once done,
-converts most of the rest of this report from UNVERIFIED to a real verdict.
+```
+health: {"ok":true,"detail":"Reachable at https://api.groq.com/openai/v1, model "openai/gpt-oss-120b""}
+latency_ms: 534
+completion: The two largest U.S. equity indices are the S&P 500 and the Dow Jones Industrial Average.
+```
+
+534ms round trip. The model id chosen in 1.2 is confirmed live, not just
+against docs. **Caveat, stated rather than buried:** this is a completion
+through `llmComplete`, not a browser-observed *streamed* response from a
+non-dev device. The spec asked for the latter. What is proven is that the
+provider is reachable, authenticated, and returns correct content.
+
+### 1.8 Reasoning-budget handling - **PASS** (live, before/after measured)
+
+Not in the original spec, because nobody knew it was there. Recorded because it
+will bite again on any future model swap:
+
+| | reasoning tokens | `finish_reason` | content |
+|---|---|---|---|
+| Default effort, 60-token budget | 58 | `length` | `""` |
+| `reasoning_effort: "low"` | 5 | `stop` | correct sentence |
+
+Low effort is the honest setting here, not a cost compromise. Cairn computes
+every probability in code and selects every citation by id, so the model is
+narrating numbers it was handed - there is nothing for it to reason about, and
+spending the answer budget on reasoning produced silence.
 
 ### 1.7 Fallback provider decision - **FLAGGED, NOT DECIDED**
 
@@ -305,15 +353,19 @@ INCOMPLETE - 2 gating suite(s) executed no tests: Adversarial scope-guard - Tier
 Exit code 2. The old runner would have printed "All gating suites passed" here.
 This report exists because that is no longer possible.
 
-### 4.8 Tier B live probe - **UNVERIFIED**
+### 4.8 Tier B live probe - **PASS, 22/22** (live pipeline, first execution ever)
 
 ```
-INCOMPLETE Adversarial scope-guard - Tier B (live pipeline) (gating): 0 passed, 0 failed, 0 flagged, 0 skipped.
+PASS       Adversarial scope-guard - Tier B (live pipeline) (gating): 22 passed, 0 failed, 0 flagged, 0 skipped.
 ```
 
-Tier A (deterministic, 15/15) proves the classifier logic. Tier B proves the
-guard holds against what a real model actually emits, which is a different
-question, and it is unanswered.
+This suite reported INCOMPLETE in every previous run in this codebase's
+history, including the first run of this very report. With a reachable model it
+executed and passed all 22 cases.
+
+Tier A proves the classifier logic against fixed strings. Tier B proves the
+guard holds against what a real model actually emits, which is the question
+that matters, and it is now answered.
 
 ---
 
@@ -346,8 +398,11 @@ destructive indicators. A failed send is neither.
 
 ### 5.4 Persistent streamed chat - **PARTIAL / UNVERIFIED**
 
-Persistence is real (`chat_sessions` 3 rows, `chat_messages` 1 row). Streaming
-from Groq has never been observed, because no request has ever succeeded.
+Persistence is real (`chat_sessions` 3 rows, `chat_messages` 1 row), and the
+provider now returns real completions (1.6). What has still not been observed is
+a *streamed* response rendering token-by-token in the browser - `llmComplete`
+sends `stream: false`. Calling that PASS would be reading the spec's word
+"streamed" loosely to make a row go green.
 
 ### 5.5 Chatbot answers only from the validated pipeline - **PASS** (code, traced)
 
@@ -422,10 +477,12 @@ needs two real generations. Not done.
 
 ### The suite, in full, as it ran
 
+Final run, with the provider reachable:
+
 ```
 PASS       Probability math (deterministic) (gating): 8 passed, 0 failed, 0 flagged, 0 skipped.
 PASS       Adversarial scope-guard - Tier A (deterministic) (gating): 15 passed, 0 failed, 0 flagged, 0 skipped.
-INCOMPLETE Adversarial scope-guard - Tier B (live pipeline) (gating): 0 passed, 0 failed, 0 flagged, 0 skipped.
+PASS       Adversarial scope-guard - Tier B (live pipeline) (gating): 22 passed, 0 failed, 0 flagged, 0 skipped.
 PASS       Methodology substance check (advisory): 0 passed, 0 failed, 0 flagged, 0 skipped.
 INCOMPLETE Citation freshness check (gating): 0 passed, 0 failed, 0 flagged, 0 skipped.
 PASS       News tagging (gating): 9 passed, 0 failed, 0 flagged, 0 skipped.
@@ -436,13 +493,16 @@ PASS       Palette contrast (WCAG AA) (gating): 20 passed, 0 failed, 0 flagged, 
 PASS       News editorial gate (market-feed quality) (gating): 12 passed, 0 failed, 0 flagged, 0 skipped.
 PASS       LLM rate-limit retry policy (gating): 22 passed, 0 failed, 0 flagged, 0 skipped.
 
-INCOMPLETE - 2 gating suite(s) executed no tests: Adversarial scope-guard - Tier B (live pipeline), Citation freshness check
+INCOMPLETE - 1 gating suite(s) executed no tests: Citation freshness check
              Nothing failed, but nothing was proven either. This is not a pass.
 ```
 
-**172 gating cases passing across 10 gating suites. 2 gating suites INCOMPLETE.
-0 failures. Runner exit code 2** - the run is deliberately not green, because two
-gating suites proved nothing.
+**194 gating cases passing across 11 gating suites. 1 gating suite INCOMPLETE.
+0 failures. Runner exit code 2** - still deliberately not green, because
+citation freshness has no analyses to inspect and has therefore proved nothing.
+
+The advisory methodology-substance suite is at 0 cases for the same reason. It
+is advisory, so it does not gate, but it is not evidence of anything either.
 
 ### Typecheck and lint
 
@@ -469,21 +529,27 @@ any changed file. Pre-existing, and worth a separate cleanup pass; not this one.
 
 ## What the founder has to do
 
-1. **Provide `GROQ_API_KEY`.** Set it in `.env.local` and in Vercel →
-   Environment Variables for Production, Preview and Development. Until then:
-   Section 1's live response, Section 3's stored equity and crypto analyses,
-   Section 4's Tier B probe, Section 5's briefing substance and Section 7's
-   Free-vs-Premium comparison are all UNVERIFIED, and no amount of further code
-   work changes that.
-2. **Authorise Supabase MCP** (or paste `select jobname, schedule, command from
+1. **Press Generate.** On `/ticker/AAPL` and on one crypto scope, with the dev
+   server restarted so it picks up the corrected `LLM_BASE_URL`. That is the
+   only remaining blocker for Section 3's stored analyses, Section 6's
+   `disclaimer-compliance-check`, Section 7's Free-vs-Premium comparison and the
+   citation-freshness suite - four items, one click each. `generateAnalysis`
+   runs inside a request context, so it cannot be driven from a script.
+2. **Set `GROQ_API_KEY` in Vercel** → Environment Variables for Production,
+   Preview and Development. It is set locally; deployed environments are not.
+   Also set `LLM_BASE_URL=https://api.groq.com/openai/v1` and
+   `LLM_MODEL=openai/gpt-oss-120b` there - the stale-base-URL defect above is
+   exactly what a half-migrated environment produces.
+3. **Authorise Supabase MCP** (or paste `select jobname, schedule, command from
    cron.job;`) so Section 2.2's cron health can be confirmed rather than assumed.
-3. **Decide the fallback-provider question** in
+4. **Decide the fallback-provider question** in
    `docs/decisions/2026-08-20-model-provider.md` - chief-of-staff's call, not
-   mine.
-4. **Confirm `CRON_SECRET` is set in Supabase** and redeploy the 8 edge
+   mine. It is now less theoretical: the assistant works, so rate limits are
+   reachable.
+5. **Confirm `CRON_SECRET` is set in Supabase** and redeploy the 8 edge
    functions, so the ingestion changes in this commit actually take effect in
    production.
 
-Once (1) lands, the remaining verifications are roughly an hour of running
-things, and this report gets a second pass with real verdicts in place of the
+Once (1) lands, the remaining verifications are minutes of running things, and
+this report gets a third pass with real verdicts in place of the last
 UNVERIFIED rows.

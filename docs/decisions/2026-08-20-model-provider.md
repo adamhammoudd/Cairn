@@ -61,6 +61,20 @@ Two options:
 | Compliance surface | A second processor of user chat content to disclose | Unchanged |
 | Honest framing to users | "Assistant is up" | "Assistant is busy" — which is at least true |
 
+### First real data point (2026-08-21)
+
+This stopped being hypothetical the day the key landed. Running the full test
+suite, whose live tier issues ~44 model calls concurrently (22 chat turns, each
+with a layer-3 classifier pass), the Tier B suite reported INCOMPLETE - the
+provider was rate-limited and the health check failed. Re-run on its own,
+immediately after: **22/22 passed**.
+
+Nothing was broken; the capacity simply was not there for a burst. That is the
+exact failure this decision is about, and it is now measurable rather than
+theoretical. It also means CI running the full suite will be intermittently
+INCOMPLETE on the free tier - a second, smaller decision hiding inside the
+first.
+
 **My recommendation, for chief-of-staff to accept or reject:** accept temporary
 unavailability for now. Cairn is pre-launch with no paying users, the failure is
 visible and honestly worded rather than silent, and a second processor of chat

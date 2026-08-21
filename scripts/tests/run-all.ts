@@ -23,6 +23,7 @@ import { runMarketHoursSuite } from "./market-hours";
 import { runContrastSuite } from "./contrast";
 import { runEditorialSuite } from "./editorial";
 import { runLlmBackoffSuite } from "./llm-backoff";
+import { runReplyFormatSuite } from "./reply-format";
 
 // A suite that throws (missing credentials, unreachable service) must surface
 // as a hard failure of that suite, not take the whole run down with a stack
@@ -60,6 +61,7 @@ async function main() {
     contrastSuites,
     editorialSuites,
     backoffSuites,
+    replyFormatSuites,
   ] = await Promise.all([
     guarded("Adversarial scope guard", runAdversarialScopeGuardSuites),
     guarded("Methodology substance", async () => [await runMethodologySubstanceSuite()]),
@@ -71,6 +73,7 @@ async function main() {
     guarded("Palette contrast", () => [runContrastSuite()]),
     guarded("News editorial gate", () => [runEditorialSuite()]),
     guarded("LLM rate-limit retry policy", () => [runLlmBackoffSuite()]),
+    guarded("Chat reply formatting", () => [runReplyFormatSuite()]),
   ]);
 
   const allSuites = [
@@ -85,6 +88,7 @@ async function main() {
     ...contrastSuites,
     ...editorialSuites,
     ...backoffSuites,
+    ...replyFormatSuites,
   ];
   const reportPath = writeReport(allSuites);
 

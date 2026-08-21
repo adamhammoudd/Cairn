@@ -15,6 +15,7 @@ import { buildChatContext, type ChatContext } from "@/lib/ai/context";
 import { checkScopeGuard, checkNoFreelancedProbability, rewriteForScopeGuard } from "@/lib/ai/scope-guard";
 import { classifyScope, classifierMode, resolveUnavailable } from "@/lib/ai/scope-classifier";
 import { llmComplete } from "@/lib/ai/llm";
+import { toPlainProse } from "@/lib/ai/reply-format";
 import type { Database } from "@/lib/supabase/types";
 
 const SYSTEM_PROMPT = `You are Cairn's conversational research assistant. You answer questions about
@@ -29,7 +30,39 @@ Hard rules, no exceptions:
   analyses are relevant to surface - never to shape advice about their specific position.
 - When you cite a stored analysis, keep its probability range and confidence level as given -
   don't round it into false precision or restate it more confidently than it was stored.
-- Plain language, cite sources/analogs when you reference them.`;
+- Plain language, cite sources/analogs when you reference them.
+
+How the answer must be written - a fixed format, not a preference:
+- Plain prose sentences ONLY. No markdown whatsoever: no tables, no pipe
+  characters, no bullet or numbered lists, no headings, no bold or italics.
+  The chat bubble renders text literally, so a markdown table reaches the user
+  as rows of "|" characters. There is never a reason to emit one.
+- One or two short paragraphs separated by a single blank line, 40-90 words in
+  total. If the answer will not fit in that, the excess is detail that belongs
+  in the analysis card, not the reply.
+- Lead with the direct answer and its concrete figures - the actual range, the
+  actual move, the actual percentage. No preamble about what you do or do not
+  have on file.
+- Never list headlines one by one. Say what they collectively indicate, in a
+  sentence.
+- When stored analyses are attached to this turn, close by pointing to the card
+  beneath the reply instead of restating its numbers, e.g. "Below is the
+  market-level probability context for the move, with its inputs shown."
+- News items and stored analyses are separate. If news items are present but no
+  stored analysis is, do NOT say you have nothing - give one or two sentences on
+  what those items collectively indicate, then note in the same breath that a
+  probability range needs a fresh analysis on the Research page. Claim nothing
+  is available only when both are empty, and then in ONE sentence naming what
+  would answer it. Not a paragraph, and never an apology.
+
+This is the exact shape and length expected:
+
+Your portfolio is up 1.24% today - $1,417 on $115,686. NVDA (+2.8%) and AMD
+(+3.2%) contributed nearly all of it; VTI is the only drag at -0.21%.
+
+AMD remains your one position underwater on cost basis, -11.0% against an
+average entry of $189.20. Below is the market-level probability context for the
+NVDA move, with its inputs shown.`;
 
 export interface ChatHistoryMessage {
   role: "user" | "assistant";
@@ -77,7 +110,18 @@ export interface ChatTurnResult {
 }
 
 function buildContextBlock(context: ChatContext): string {
+  // The card-attached line is stated as a fact about this turn, not left for
+  // the model to infer from an empty array. It got this wrong when it was only
+  // implied: with zero analyses it still wrote "Below is the market-level
+  // probability context...", pointing the user at a card that was not rendered.
+  const cardNote =
+    context.analyses.length === 0
+      ? "NO analysis card is rendered beneath your reply this turn. Do NOT write \"Below is...\" or refer to anything shown below - there is nothing there."
+      : `An analysis card IS rendered beneath your reply this turn (${context.analyses.length}). Close by pointing to it instead of restating its numbers.`;
+
   return `Context for this turn (stored, already-validated data - do not invent beyond this):
+
+${cardNote}
 
 Relevant stored analyses:
 ${context.analyses.length === 0 ? "(none found)" : JSON.stringify(context.analyses, null, 2)}
@@ -130,7 +174,10 @@ export async function runChatTurn({
   }
 
   if (!failure) {
-    return { displayText: rawOutput, flagged: false, flagReason: null, rawOutput, analysisIds, context };
+    // Formatting only - the guard above ran on rawOutput, and toPlainProse
+    // changes no wording, so the check it just passed still describes what the
+    // user sees. rawOutput is stored and logged unmodified.
+    return { displayText: toPlainProse(rawOutput), flagged: false, flagReason: null, rawOutput, analysisIds, context };
   }
 
   const corrected = rewriteForScopeGuard(context.analyses);
