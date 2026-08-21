@@ -28,7 +28,8 @@ import { checkScopeGuard, checkCompleteness } from "@/lib/ai/scope-guard";
 import { classifyScope, classifierMode, resolveUnavailable } from "@/lib/ai/scope-classifier";
 import { computeHistoricalStats, computeSimilarityScore, computeProbabilityBand, ELEVATED_MOVE_THRESHOLD_PCT } from "@/lib/ai/analytics";
 import { llmCompleteJson, llmModel } from "@/lib/ai/llm";
-import type { ScopeType } from "@/lib/supabase/types";
+import type { ScopeType, Database } from "@/lib/supabase/types";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 const SYSTEM_PROMPT = `You are Cairn's market analysis engine. You write the plain-language explanation
 that accompanies an already-calculated, probability-weighted analysis of a market, sector, or ticker.
@@ -61,6 +62,14 @@ This scope is a crypto asset. Its data profile is materially different from an e
 interface GenerateAnalysisInput {
   scopeType: ScopeType;
   scopeValue: string;
+  /**
+   * Optional override for the request-scoped Supabase client this otherwise
+   * creates itself - the same escape hatch runChatTurn already provides, and
+   * for the same reason: a script or test harness has no Next.js request
+   * scope, so createClient()'s cookies() call throws there. Only the READS use
+   * it; every write below already goes through the admin client.
+   */
+  supabaseClient?: SupabaseClient<Database>;
 }
 
 interface ModelProse {
@@ -91,8 +100,8 @@ function isModelProse(value: unknown): value is ModelProse {
   return typeof v.analysis_type === "string" && typeof v.reasoning_text === "string";
 }
 
-export async function generateAnalysis({ scopeType, scopeValue }: GenerateAnalysisInput) {
-  const supabase = await createClient();
+export async function generateAnalysis({ scopeType, scopeValue, supabaseClient }: GenerateAnalysisInput) {
+  const supabase = supabaseClient ?? (await createClient());
 
   let newsQuery = supabase
     .from("news_items")
