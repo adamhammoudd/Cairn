@@ -5,14 +5,9 @@ import { getEventsForScopes } from "@/lib/actions/calendar";
 import { getBillingSummary } from "@/lib/actions/billing";
 import { TIER_LIMITS } from "@/lib/billing";
 import { ResearchWorkspace } from "@/components/analysis/research-workspace";
-
-// First of next month, spelled the way the mockup's quota copy spells it
-// ("1 September") - the same boundary startOfCurrentMonthIso() counts from.
-function nextResetLabel(): string {
-  const now = new Date();
-  const next = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-  return `${next.getDate()} ${next.toLocaleDateString(undefined, { month: "long" })}`;
-}
+// Shared with the chat quota panel so both surfaces name the reset date the
+// same way - see lib/chat-state.ts.
+import { nextResetLabel } from "@/lib/chat-state";
 
 export default async function ResearchPage() {
   const supabase = await createClient();

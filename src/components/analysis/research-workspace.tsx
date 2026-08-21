@@ -165,7 +165,15 @@ export function ResearchWorkspace({
       scopeInput.current?.focus();
       return;
     }
-    if (atCap || pending) return;
+    // At cap, explain rather than doing nothing. The button reads as
+    // unavailable but still responds, so the quota-reached panel (with its
+    // reset date and upgrade CTA) is actually reachable - a silently inert
+    // control would leave the reader with no explanation at all.
+    if (atCap) {
+      setPhase("quota");
+      return;
+    }
+    if (pending) return;
     setError(null);
     setPhase("generating");
     startTransition(async () => {
@@ -349,7 +357,7 @@ export function ResearchWorkspace({
           <button
             type="button"
             onClick={generate}
-            disabled={!generateEnabled}
+            aria-disabled={!generateEnabled}
             className={`rounded-[10px] px-5 py-3 text-[13px] font-semibold whitespace-nowrap transition-[box-shadow,transform] duration-[180ms] ease-[cubic-bezier(0.4,0,0.2,1)] ${
               generateEnabled
                 ? "bg-gradient-to-br from-accent-light to-accent-dark text-canvas hover:-translate-y-px hover:shadow-[0_0_24px_rgba(47,198,133,0.28)]"
@@ -529,9 +537,9 @@ export function ResearchWorkspace({
           ) : open ? (
             <MethodologyCard analysis={open} depth={depth} upcomingEvents={eventsByScope[open.scope_value] ?? []} />
           ) : analyses.length === 0 ? (
-            <EmptyPanel onGenerate={atCap ? undefined : generate} />
+            <EmptyPanel onGenerate={generate} />
           ) : (
-            <NeedsPickPanel onGenerate={atCap ? undefined : generate} />
+            <NeedsPickPanel onGenerate={generate} />
           )}
         </div>
       </div>

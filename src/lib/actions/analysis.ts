@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { generateAnalysis } from "@/lib/ai/generate";
 import { checkAiUsageAllowed, recordAiUsage } from "@/lib/actions/billing";
 import { UNAVAILABLE_MESSAGE, type GenerateOutcome } from "@/lib/analysis";
+import { detectTickers } from "@/lib/ai/context";
 import type { ScopeType } from "@/lib/supabase/types";
 
 /**
@@ -69,6 +70,38 @@ export async function runAnalysisGeneration(
   if (scopeType === "ticker") revalidatePath(`/ticker/${scopeValue}`);
 
   return { ok: true, analysisId };
+}
+
+/**
+ * "Did they ask about a scope we have nothing on file for?"
+ *
+ * Deliberately the same existence check the Research page's library runs -
+ * getAnalysesForScope returning nothing - rather than a second, chat-specific
+ * notion of missing. Scope detection is chat's own detectTickers, so what
+ * counts as "the scope they asked about" matches what the assistant already
+ * uses to pick relevant context.
+ *
+ * Returns null when the message names no single scope, or when something is
+ * already on file. Only ever offers ticker scopes: sector and market-wide
+ * research stays a deliberate Research-page action.
+ *
+ * Called from both the chat route (which acts on it) and the chat client
+ * (which shows the generating state while the route works), so the two can
+ * never disagree about whether a generation is happening.
+ */
+export async function findMissingAnalysisScope(
+  message: string,
+): Promise<{ scopeType: ScopeType; scopeValue: string } | null> {
+  const mentioned = detectTickers(message);
+  // More than one ticker in the question is ambiguous - generating for a guess
+  // would be the silent auto-generation this is explicitly not meant to do.
+  if (mentioned.length !== 1) return null;
+
+  const scopeValue = mentioned[0];
+  const existing = await getAnalysesForScope("ticker", scopeValue);
+  if (existing.length > 0) return null;
+
+  return { scopeType: "ticker", scopeValue };
 }
 
 export async function requestAnalysis(_prevState: string | null, formData: FormData) {
