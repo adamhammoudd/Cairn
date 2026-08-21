@@ -116,7 +116,7 @@ function authHeaders(): Record<string, string> {
 }
 
 interface ChatCompletionResponse {
-  choices?: { message?: { content?: string } }[];
+  choices?: { message?: { content?: string }; finish_reason?: string }[];
   error?: { message?: string };
 }
 
@@ -174,7 +174,10 @@ async function postWithRetry(body: Record<string, unknown>): Promise<Response> {
     } catch (err) {
       // Network error or client-side timeout: transient by the same logic.
       lastStatus = 0;
-      lastDetail = err instanceof Error ? err.message : String(err);
+      // Name the endpoint. A bare "fetch failed" with no URL is unactionable,
+      // and the first real failure in the wild was exactly this: a stale
+      // LLM_BASE_URL still pointing at a local Ollama that was not running.
+      lastDetail = `${llmBaseUrl()}: ${err instanceof Error ? err.message : String(err)}`;
       if (attempt === MAX_ATTEMPTS - 1) break;
       await sleep(backoffDelayMs(attempt));
       continue;
@@ -211,6 +214,19 @@ export async function llmComplete(req: LlmRequest): Promise<string> {
     // Low but non-zero: deterministic enough to be reviewable, not so rigid
     // that the model loops on repeated phrasing.
     temperature: req.temperature ?? 0.3,
+    // gpt-oss is a REASONING model, and reasoning tokens are drawn from the
+    // same max_tokens budget as the answer. At the default effort a short
+    // request spends the entire budget thinking and returns content: "" with
+    // finish_reason: "length" - a live check against Groq did exactly that,
+    // burning 58 of 60 tokens on reasoning and answering nothing.
+    //
+    // Cairn's model does not need to reason: every probability is computed in
+    // code and every citation is a row selected by id, so the model is only
+    // narrating numbers it was handed. "low" is therefore the honest setting,
+    // not a cost compromise - it took the same request from 58 reasoning
+    // tokens and an empty answer to 5 and a correct one. Overridable for a
+    // provider whose model ignores the field.
+    reasoning_effort: process.env.LLM_REASONING_EFFORT || "low",
     stream: false,
   };
 
@@ -245,9 +261,20 @@ export async function llmComplete(req: LlmRequest): Promise<string> {
   const data = (await res.json()) as ChatCompletionResponse;
   if (data.error?.message) throw new Error(`Model error: ${data.error.message}`);
 
-  const content = data.choices?.[0]?.message?.content;
+  const choice = data.choices?.[0];
+  const content = choice?.message?.content;
   if (typeof content !== "string" || content.trim() === "") {
-    throw new Error("Model returned an empty response.");
+    // Distinguish the two ways "empty" happens. Truncation is a budget bug we
+    // can fix; anything else is the provider behaving unexpectedly. Reporting
+    // both as "empty response" is what made the first occurrence take a raw
+    // API dump to diagnose.
+    if (choice?.finish_reason === "length") {
+      throw new Error(
+        `Model "${llmModel()}" hit the ${body.max_tokens}-token budget before producing any answer ` +
+          `(finish_reason: length). On a reasoning model, raise maxTokens or lower LLM_REASONING_EFFORT.`,
+      );
+    }
+    throw new Error(`Model "${llmModel()}" returned an empty response (finish_reason: ${choice?.finish_reason ?? "none"}).`);
   }
   return content;
 }
