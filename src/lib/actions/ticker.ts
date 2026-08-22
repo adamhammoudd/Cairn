@@ -66,15 +66,28 @@ export async function loadTicker(symbolRaw: string): Promise<TickerData | Ticker
   const symbol = symbolRaw.trim().toUpperCase();
   const supabase = await createClient();
 
-  // Newest-first at the DB so the LIMIT keeps the most recent 400 bars, then
+  // How many daily bars this page ships to the client. Must stay above the
+  // longest range the chart and the Technicals tab offer (ALL over a 2y
+  // ingest, ~505 bars) so a range button never silently shows less than it
+  // says. Not exported - "use server" modules may only export async functions.
+  const CHART_BAR_LIMIT = 2000;
+
+  // Newest-first at the DB so the LIMIT keeps the most RECENT bars, then
   // reversed to ascending for the chart series and the `bars[last]` reads
-  // below. Ordering ascending here silently returned the *oldest* 400 rows.
+  // below. Ordering ascending here silently returned the *oldest* rows.
+  //
+  // The cap has to exceed the longest window any chart on this page offers, or
+  // the cap becomes the window: at 400 bars the chart's ALL and 2Y buttons
+  // both drew the same ~19 months on a symbol with 505 stored, and the
+  // Technicals tab's 200-day average could not start until a third of the way
+  // into a 1-year view. CHART_BAR_LIMIT is deliberately well clear of the 2y
+  // range the ingest pulls, so ALL means all of what is stored.
   let { data: recentBarsDesc } = await supabase
     .from("historical_prices")
     .select("ts, open, high, low, close, volume, asset_type")
     .eq("symbol", symbol)
     .order("ts", { ascending: false })
-    .limit(400);
+    .limit(CHART_BAR_LIMIT);
 
   if (!recentBarsDesc || recentBarsDesc.length === 0) {
     // First time anyone has asked for this symbol: fetch it now.
@@ -91,7 +104,7 @@ export async function loadTicker(symbolRaw: string): Promise<TickerData | Ticker
       .select("ts, open, high, low, close, volume, asset_type")
       .eq("symbol", ingested.symbol)
       .order("ts", { ascending: false })
-      .limit(400));
+      .limit(CHART_BAR_LIMIT));
     if (!recentBarsDesc || recentBarsDesc.length === 0) {
       return { symbol, reason: "unavailable", detail: `No market data available for ${symbol}.` };
     }

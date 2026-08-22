@@ -162,3 +162,27 @@ export async function deleteAccount() {
   await supabase.auth.signOut();
   redirect("/login");
 }
+
+
+/**
+ * Record whether the user wants to be told when two-factor authentication
+ * ships. It is a mailing-list flag, not a security control - see
+ * components/settings/two-factor-panel.tsx for why the placeholder holds real
+ * state instead of a switch that does nothing.
+ */
+export async function setTwoFactorInterest(_prevState: string | null, formData: FormData): Promise<string | null> {
+  const next = String(formData.get("two_factor_status") ?? "");
+  if (next !== "requested" && next !== "not_enrolled") return "Unknown value.";
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const { error } = await supabase.from("user_settings").update({ two_factor_status: next }).eq("user_id", user.id);
+  if (error) return error.message;
+
+  revalidatePath("/settings");
+  return next;
+}

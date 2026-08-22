@@ -2,12 +2,18 @@
 
 import { createClient } from "@/lib/supabase/server";
 import type { NewsFeedItem, NewsRelevance } from "@/lib/news";
+import { normalizeSectorsForMatching } from "@/lib/sectors";
 
 // Relevance ranking: holdings/watchlist tickers first, then sectors the user
 // has explicitly typed onto a holding (the closest thing to a stated
 // interest that exists in the schema today), then everything else by
 // recency. No separate "preferences" table exists yet -- holdings.sector is
 // real, user-entered data, not a fabricated signal.
+//
+// Both sides go through lib/sectors.ts before they are compared. They used to
+// be compared as raw strings, so a holding typed as "Technology" never matched
+// a story the tagger wrote as "technology", and the whole "Your sectors" filter
+// worked only when the user happened to type the tagger's exact slug.
 export async function getNewsFeed(): Promise<NewsFeedItem[]> {
   const supabase = await createClient();
   const {
@@ -29,13 +35,16 @@ export async function getNewsFeed(): Promise<NewsFeedItem[]> {
   const holdingSymbols = new Set((holdingsRes.data ?? []).map((h) => h.symbol));
   const watchlistSymbols = new Set((watchlistItemsRes.data ?? []).map((w) => w.symbol));
   const trackedSymbols = new Set([...holdingSymbols, ...watchlistSymbols]);
-  const statedSectors = new Set(
-    (holdingsRes.data ?? []).map((h) => h.sector).filter((s): s is string => Boolean(s)),
-  );
+  const statedSectors = normalizeSectorsForMatching((holdingsRes.data ?? []).map((h) => h.sector));
 
   const scored = (articles ?? []).map((a) => {
     const tickerMatches = (a.tickers ?? []).filter((t) => trackedSymbols.has(t));
-    const sectorMatches = (a.sectors ?? []).filter((s) => statedSectors.has(s));
+    // Compared slug-to-slug, and the *original* tag is what gets reported as
+    // the match so the reason shown to the reader is the story's own wording.
+    const sectorMatches = (a.sectors ?? []).filter((s) => {
+      const normalized = normalizeSectorsForMatching([s]);
+      return [...normalized].some((n) => statedSectors.has(n));
+    });
 
     let relevance: NewsRelevance = "general";
     let matchedOn: string[] = [];

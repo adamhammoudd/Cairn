@@ -1,12 +1,67 @@
 "use client";
 
-import { useActionState, useTransition } from "react";
-import { postComment, voteThread } from "@/lib/actions/discussion";
-import type { DiscussionComment } from "@/lib/discussion";
+import { useActionState, useState, useTransition } from "react";
+import { postComment, reportComment, voteThread } from "@/lib/actions/discussion";
+import { REPORT_REASONS, type DiscussionComment } from "@/lib/discussion";
 import { TimeAgo } from "@/components/time-ago";
+
+// The manual half of moderation. Spam filtering is automatic and hides a
+// comment from everyone but its author; this lets a reader raise one the
+// filter did not catch. It never deletes and never notifies the author -
+// enough distinct reports hide the comment pending an admin decision.
+function ReportForm({ comment, symbol, onDone }: { comment: DiscussionComment; symbol: string; onDone: () => void }) {
+  const [result, formAction, pending] = useActionState(reportComment, null);
+  if (result === "reported") {
+    return (
+      <p className="mt-2 text-[12px] text-muted">
+        Reported. It stays visible until enough people report it or a moderator reviews it.
+      </p>
+    );
+  }
+  return (
+    <form action={formAction} className="mt-2.5 flex flex-col gap-2 rounded-lg border border-line bg-active p-3">
+      <input type="hidden" name="thread_id" value={comment.id} />
+      <input type="hidden" name="symbol" value={symbol} />
+      <label className="font-mono text-[9.5px] tracking-[0.12em] text-dim uppercase" htmlFor={`reason-${comment.id}`}>
+        Reason
+      </label>
+      <select
+        id={`reason-${comment.id}`}
+        name="reason"
+        defaultValue="spam"
+        className="rounded-lg border border-line bg-panel px-2.5 py-1.75 text-[12.5px] text-primary outline-none"
+      >
+        {REPORT_REASONS.map((r) => (
+          <option key={r.id} value={r.id}>
+            {r.label}
+          </option>
+        ))}
+      </select>
+      <input
+        name="detail"
+        placeholder="Anything a moderator should know (optional)"
+        className="rounded-lg border border-line bg-panel px-2.5 py-1.75 text-[12.5px] text-primary outline-none"
+      />
+      {result && result !== "reported" && <p className="text-[12px] text-negative">{result}</p>}
+      <div className="flex items-center justify-end gap-2">
+        <button type="button" onClick={onDone} className="rounded-lg px-3 py-1.5 text-[12.5px] text-muted hover:text-primary">
+          Cancel
+        </button>
+        <button
+          type="submit"
+          disabled={pending}
+          className="rounded-lg border border-line px-3 py-1.5 text-[12.5px] text-primary disabled:opacity-60"
+        >
+          {pending ? "Sending…" : "Submit report"}
+        </button>
+      </div>
+    </form>
+  );
+}
 
 function CommentRow({ comment, symbol }: { comment: DiscussionComment; symbol: string }) {
   const [, startVote] = useTransition();
+  const [reporting, setReporting] = useState(false);
 
   return (
     <div className="border-b border-line py-4 last:border-b-0">
@@ -17,6 +72,11 @@ function CommentRow({ comment, symbol }: { comment: DiscussionComment; symbol: s
         {comment.flagged && comment.isOwn && (
           <span className="rounded-md border border-line px-1.5 py-0.5 text-[10.5px] text-negative">
             Flagged for review
+          </span>
+        )}
+        {comment.reportCount > 0 && comment.isOwn && !comment.flagged && (
+          <span className="rounded-md border border-line px-1.5 py-0.5 text-[10.5px] text-muted">
+            {comment.reportCount} {comment.reportCount === 1 ? "report" : "reports"}
           </span>
         )}
       </div>
@@ -36,12 +96,37 @@ function CommentRow({ comment, symbol }: { comment: DiscussionComment; symbol: s
         >
           ▼ {comment.downvotes}
         </button>
+        {!comment.isOwn &&
+          (comment.reportedByMe ? (
+            <span className="text-[12px] text-dim">Reported</span>
+          ) : (
+            <button
+              type="button"
+              aria-label={`Report comment by ${comment.authorName}`}
+              onClick={() => setReporting((v) => !v)}
+              className="text-[12px] text-dim transition-colors duration-base ease-standard hover:text-primary"
+            >
+              Report
+            </button>
+          ))}
       </div>
+      {reporting && !comment.reportedByMe && (
+        <ReportForm comment={comment} symbol={symbol} onDone={() => setReporting(false)} />
+      )}
     </div>
   );
 }
 
-export function DiscussionPanel({ symbol, comments }: { symbol: string; comments: DiscussionComment[] }) {
+export function DiscussionPanel({
+  symbol,
+  comments,
+  canModerate = false,
+}: {
+  symbol: string;
+  comments: DiscussionComment[];
+  /** Admins get a line through to the moderation queue from where reports are raised. */
+  canModerate?: boolean;
+}) {
   const [error, formAction] = useActionState(postComment, null);
 
   const topLevel = comments.filter((c) => c.parentId === null);
@@ -93,6 +178,12 @@ export function DiscussionPanel({ symbol, comments }: { symbol: string; comments
           ))
         )}
       </div>
+
+      {canModerate && (
+        <a href="/admin#moderation" className="mt-3 inline-block text-[12px] text-muted hover:text-primary">
+          Open the moderation queue →
+        </a>
+      )}
     </div>
   );
 }

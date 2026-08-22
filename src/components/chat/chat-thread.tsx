@@ -24,15 +24,20 @@ import { ChatMessage } from "@/components/chat/chat-message";
 
 const MESSAGES_PAGE_SIZE = 30;
 
-// Mock-up parity (Context/mockups/Cairn.dc.html, the assistant screen's
-// `prompts` sc-for): quick-start suggestions under the composer. The mock's
-// three examples, kept verbatim - they exercise the three scopes the guard
-// allows (portfolio-relevant, ticker, concentration/sector), which is exactly
-// what a first-run user should be shown is possible.
+// Quick-start suggestions under the composer.
+//
+// The mock's three examples were kept verbatim, and two of them - "How is my
+// portfolio doing today?" and "Am I too concentrated in semis?" - ask about
+// the user's own position, which is exactly what the scope guard exists to
+// refuse. The product was advertising prompts it is built to reject, teaching
+// a first-run user the wrong shape of question and burning a message to do it.
+//
+// These three ask the same underlying things at market/sector/ticker scope,
+// which is what the engine actually answers.
 const SUGGESTED_PROMPTS = [
-  "How is my portfolio doing today?",
-  "What's the drawdown risk on NVDA?",
-  "Am I too concentrated in semis?",
+  "What's moving semiconductors this week?",
+  "What's the volatility outlook on NVDA?",
+  "How have past rate decisions moved this market?",
 ];
 
 // The message shape lives with the component that renders it.

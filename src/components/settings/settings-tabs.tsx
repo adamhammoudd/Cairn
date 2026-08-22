@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { SettingsForm, type SettingsTabId } from "@/components/settings/settings-form";
 import { ChangePasswordForm } from "@/components/settings/change-password-form";
+import { TwoFactorPanel } from "@/components/settings/two-factor-panel";
 import { DangerZone } from "@/components/settings/danger-zone";
 import type { Database } from "@/lib/supabase/types";
 
@@ -89,6 +90,9 @@ export function SettingsTabs({ settings, displayName, email, billing, assistantC
           </div>
           <div className={ROW}>
             <ChangePasswordForm />
+          </div>
+          <div className={ROW}>
+            <TwoFactorPanel status={settings?.two_factor_status ?? "not_enrolled"} />
           </div>
           {/* Destructive actions stay on Account only. The mock pins them to
               the bottom of every category card; a Delete account button on the

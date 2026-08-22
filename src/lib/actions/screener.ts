@@ -27,14 +27,20 @@ export async function runScreen(rawFilters: ScreenerFilters): Promise<ScreenerRo
   // whose last ingest is older than the newest 2000 rows. On-demand ingestion
   // makes N unbounded, so the budget has to be per symbol: recent_prices_all()
   // applies the LIMIT inside a lateral join.
-  const [{ data: prices }, { data: fundamentals }, { data: directory }] = await Promise.all([
+  const [{ data: prices }, { data: fundamentals }, { data: directory }, { data: ranges }] = await Promise.all([
     supabase.rpc("recent_prices_all", { per_symbol: 12 }),
     supabase.from("fundamentals").select("symbol, shares_outstanding, eps_ttm, dividends_ttm"),
     supabase.from("symbol_directory").select("symbol, asset_type, name").eq("status", "available"),
+    // Aggregated at the database - see symbol_52w_range() in migration 0028.
+    // The 12 bars above are a fortnight; a 52-week screen needs 52 weeks.
+    supabase.rpc("symbol_52w_range"),
   ]);
 
   const fundamentalsBySymbol = new Map((fundamentals ?? []).map((f) => [f.symbol, f]));
   const directoryBySymbol = new Map((directory ?? []).map((d) => [d.symbol, d]));
+  const rangeBySymbol = new Map(
+    ((ranges ?? []) as { symbol: string; week52_high: number | null; week52_low: number | null }[]).map((r) => [r.symbol, r]),
+  );
 
   const bySymbol = new Map<string, { assetType: string; closes: number[]; volume: number | null; asOf: string | null }>();
   for (const p of (prices ?? []) as { symbol: string; asset_type: string; ts: string; close: number | null; volume: number | null }[]) {
@@ -79,6 +85,12 @@ export async function runScreen(rawFilters: ScreenerFilters): Promise<ScreenerRo
       // than reporting a negative multiple that would sort nonsensically.
       pe: price !== null && f?.eps_ttm && f.eps_ttm > 0 ? price / f.eps_ttm : null,
       dividendYield: price !== null && price > 0 && f?.dividends_ttm ? (f.dividends_ttm / price) * 100 : null,
+      week52High: rangeBySymbol.get(symbol)?.week52_high === undefined || rangeBySymbol.get(symbol)?.week52_high === null
+        ? null
+        : Number(rangeBySymbol.get(symbol)!.week52_high),
+      week52Low: rangeBySymbol.get(symbol)?.week52_low === undefined || rangeBySymbol.get(symbol)?.week52_low === null
+        ? null
+        : Number(rangeBySymbol.get(symbol)!.week52_low),
     };
   });
 

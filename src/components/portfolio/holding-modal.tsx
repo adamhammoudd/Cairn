@@ -7,6 +7,7 @@ import { SymbolTypeahead } from "@/components/symbol-typeahead";
 import type { Holding } from "@/lib/portfolio";
 import type { AssetType } from "@/lib/supabase/types";
 import { FIELD_LABEL } from "@/components/field-label";
+import { SECTOR_SUGGESTIONS } from "@/lib/sectors";
 
 const ASSET_TYPES = ["equity", "etf", "crypto", "forex", "future"] as const;
 
@@ -26,6 +27,16 @@ export function HoldingModal({ holding, initialSymbol, onClose }: HoldingModalPr
   useEffect(() => {
     if (result === "saved") onClose();
   }, [result, onClose]);
+
+  // Clicking the scrim closed the sheet but Escape did nothing, which is the
+  // one key people reach for first. Both now do the same thing.
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [onClose]);
 
   return (
     <div
@@ -107,11 +118,21 @@ export function HoldingModal({ holding, initialSymbol, onClose }: HoldingModalPr
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <Field label="Sector">
+              {/* Suggestions, not a fixed list: free text still submits, and
+                  lib/sectors.ts normalises whatever is typed before news
+                  relevance compares it to the tagger's slugs. Offering the
+                  canonical spellings just makes a match more likely. */}
               <input
                 name="sector"
+                list="sector-suggestions"
                 defaultValue={holding?.sector ?? ""}
                 className="w-full rounded-lg border border-line bg-active px-3 py-2 text-sm text-primary outline-none"
               />
+              <datalist id="sector-suggestions">
+                {SECTOR_SUGGESTIONS.map((label) => (
+                  <option key={label} value={label} />
+                ))}
+              </datalist>
             </Field>
             <Field label="Asset class">
               <input

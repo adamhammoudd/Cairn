@@ -71,7 +71,7 @@ export default async function TickerPage({ params }: { params: Promise<{ symbol:
   const data = await loadTicker(symbol);
   if ("reason" in data) return <Unavailable symbol={data.symbol} reason={data.reason} detail={data.detail} />;
 
-  const [analyses, discussion, plan, holdingRows, watchlistRows] = await Promise.all([
+  const [analyses, discussion, plan, holdingRows, watchlistRows, profileRow] = await Promise.all([
     getAnalysesForScope("ticker", data.symbol),
     listThreadsForSymbol(data.symbol),
     getUserPlan(),
@@ -79,6 +79,9 @@ export default async function TickerPage({ params }: { params: Promise<{ symbol:
     // needs the user lists to add to. Both are RLS-scoped to this user.
     supabase.from("holdings").select("quantity, purchase_price").eq("symbol", data.symbol),
     listWatchlists(),
+    // Drives the moderation link under the discussion panel; the queue itself
+    // re-checks the role server-side, this only decides whether to offer it.
+    supabase.from("profiles").select("role").eq("user_id", user.id).maybeSingle(),
   ]);
 
   const held = holdingRows.data ?? [];
@@ -104,6 +107,7 @@ export default async function TickerPage({ params }: { params: Promise<{ symbol:
       heldQuantity={heldQuantity}
       avgCost={avgCost}
       watchlists={watchlists}
+      canModerate={profileRow.data?.role === "admin"}
     />
   );
 }

@@ -108,6 +108,16 @@ function takeToken(): boolean {
   return true;
 }
 
+/**
+ * The same budget, for the reference-data fetchers in ./reference.ts. Profile,
+ * statement and options calls go to the same provider as the price bars, so
+ * they have to draw on one bucket - two independent ceilings would add up to
+ * double the rate we told ourselves we would use.
+ */
+export function reserveProviderCall(): boolean {
+  return takeToken();
+}
+
 // ------------------------------------------------------------ symbol shaping
 // Index tickers lead with a caret (^GSPC), so the first character cannot be
 // restricted to alphanumerics or the Indices asset class is unreachable.
