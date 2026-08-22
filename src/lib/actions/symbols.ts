@@ -1,46 +1,80 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { ensureSymbolIngested, normalizeSymbol } from "@/lib/market-data/ingest";
 import type { AssetType } from "@/lib/supabase/types";
 
 export interface SymbolSearchResult {
   symbol: string;
   assetType: AssetType;
   name: string | null;
+  /**
+   * `tracked`   already in the price store, selectable immediately
+   * `available` not stored yet, but the provider has it -- selecting it ingests
+   * `unavailable` the provider has no data for it (delisted, typo, uncovered)
+   */
+  availability?: "tracked" | "available" | "unavailable";
+  /** Why an `unavailable` result is unavailable, in the provider's words. */
+  detail?: string | null;
 }
 
-// Type-ahead source for "Add Holding" -- pulls from the same market data
-// layer (historical_prices) everything else on Markets/Screener reads, so a
-// symbol is only selectable here if it's a real, tracked instrument. Crypto
-// rows get their display name from crypto_metrics; equities/ETFs don't have
-// a names table yet, so they show symbol-only.
+// Type-ahead source for Add Holding, Alerts, Compare, the header search and
+// the Research scope picker. Reads symbol_directory (one row per symbol, with
+// the provider's own display name), so a name search works and the result set
+// is limited by symbol rather than by price row.
+//
+// This is the *local* half of search. It never touches the provider, so it
+// stays fast on every keystroke; lookupSymbol() below is the on-demand half.
 export async function searchSymbols(query: string): Promise<SymbolSearchResult[]> {
-  const q = query.trim().toUpperCase();
+  const q = query.trim();
   if (!q) return [];
 
   const supabase = await createClient();
+  const { data } = await supabase.rpc("search_symbols", { prefix: q, max_results: 8 });
 
-  // Limited by DISTINCT symbol in SQL, not by price row. The previous version
-  // selected 200 price rows and de-duplicated in JS, so a symbol with a long
-  // history (AAPL: 509 rows) consumed the entire result set and every other
-  // match for the same prefix was invisible. Row counts grow daily, so a
-  // row-based limit was a bug with a timer on it.
-  const { data: prices } = await supabase.rpc("search_symbols", { prefix: q, max_results: 8 });
+  return (data ?? []).map((row) => ({
+    symbol: row.symbol,
+    assetType: row.asset_type as AssetType,
+    name: row.name,
+    availability: "tracked" as const,
+  }));
+}
 
-  const bySymbol = new Map<string, AssetType>();
-  for (const p of prices ?? []) {
-    if (!bySymbol.has(p.symbol)) bySymbol.set(p.symbol, p.asset_type as AssetType);
+/**
+ * The on-demand half: ask the provider about a symbol the local store does not
+ * have, ingest it if it exists, and report honestly if it does not.
+ *
+ * Called from the type-ahead only when the typed text looks like a ticker and
+ * local search produced no exact match, so ordinary typing does not generate
+ * outbound requests. Repeat lookups inside the cache window are answered from
+ * symbol_directory without touching the provider.
+ */
+export async function lookupSymbol(query: string): Promise<SymbolSearchResult | null> {
+  const symbol = normalizeSymbol(query);
+  if (!symbol) return null;
+
+  const result = await ensureSymbolIngested(symbol);
+  if (result.status === "available") {
+    return {
+      symbol: result.symbol,
+      assetType: (result.assetType ?? "equity") as AssetType,
+      name: result.name,
+      availability: result.cached ? "tracked" : "available",
+    };
   }
 
-  const symbols = Array.from(bySymbol.keys());
-  if (symbols.length === 0) return [];
-
-  const { data: names } = await supabase.from("crypto_metrics").select("symbol, name").in("symbol", symbols);
-  const nameBySymbol = new Map((names ?? []).map((n) => [n.symbol, n.name]));
-
-  return symbols.map((symbol) => ({
-    symbol,
-    assetType: bySymbol.get(symbol)!,
-    name: nameBySymbol.get(symbol) ?? null,
-  }));
+  return {
+    symbol: result.symbol,
+    assetType: (result.assetType ?? "equity") as AssetType,
+    name: result.name,
+    availability: "unavailable",
+    detail:
+      result.status === "rate_limited"
+        ? result.selfThrottled
+          ? "Too many symbol lookups right now - try again in a few seconds."
+          : "The market data provider is rate-limiting Cairn right now - try again shortly."
+        : result.status === "error"
+          ? `Couldn't reach the market data provider (${result.detail ?? "unknown error"}).`
+          : `No market data available for ${result.symbol}.`,
+  };
 }

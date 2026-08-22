@@ -8,6 +8,7 @@ import { ComparisonTable } from "@/components/comparison/comparison-table";
 import { COMPARISON_COLORS, MAX_COMPARE, seriesFor, type ComparisonRow } from "@/lib/comparison";
 import { Sparkline } from "@/components/sparkline";
 import { SymbolTypeahead } from "@/components/symbol-typeahead";
+import { DataFreshness } from "@/components/data-freshness";
 import type { ChartView } from "@/lib/supabase/types";
 
 const TIMEFRAMES: ChartView[] = ["1D", "1W", "1M", "3M", "1Y", "ALL"];
@@ -59,7 +60,21 @@ export function ComparisonPanel({
         {canAdd && (
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-[11.5px] text-dim">Add up to {MAX_COMPARE}:</span>
-            {available.slice(0, 4).map((symbol) => (
+            {/* Was a fixed dropdown of the tracked universe, so a symbol Cairn
+                had not ingested could not be compared at all. The shared
+                type-ahead searches the directory and falls through to the
+                provider, ingesting on selection. */}
+            <SymbolTypeahead
+              name={null}
+              clearOnSelect
+              required={false}
+              exclude={selected}
+              placeholder="Add a ticker to compare…"
+              onSelect={(r) => addSymbol(r.symbol)}
+              className="min-w-[220px]"
+              inputClassName="w-full rounded-full border border-dashed border-line bg-transparent px-3.25 py-1.75 font-mono text-[11px] text-muted uppercase outline-none transition-colors duration-base ease-standard placeholder:normal-case hover:border-accent focus:border-accent focus:text-primary"
+            />
+            {available.slice(0, 3).map((symbol) => (
               <button
                 key={symbol}
                 type="button"
@@ -69,22 +84,6 @@ export function ComparisonPanel({
                 + {symbol}
               </button>
             ))}
-            {available.length > 4 && (
-              <select
-                value=""
-                onChange={(e) => addSymbol(e.target.value)}
-                className="rounded-full border border-dashed border-line bg-transparent px-3 py-1.5 font-mono text-[11px] text-muted outline-none transition-colors duration-base ease-standard hover:border-accent hover:text-primary"
-              >
-                <option value="" disabled>
-                  + More…
-                </option>
-                {available.slice(4).map((symbol) => (
-                  <option key={symbol} value={symbol}>
-                    {symbol}
-                  </option>
-                ))}
-              </select>
-            )}
           </div>
         )}
       </div>
@@ -117,8 +116,8 @@ export function ComparisonPanel({
                         <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: color }} />
                         {row.symbol}
                       </Link>
-                      <div className="mt-0.75 truncate font-mono text-[10.5px] tracking-[0.08em] text-muted uppercase">
-                        {row.assetType}
+                      <div className="mt-0.75 truncate text-[11px] text-muted">
+                        {row.name ?? <span className="font-mono tracking-[0.08em] uppercase">{row.assetType}</span>}
                       </div>
                     </div>
                     <button
@@ -146,14 +145,15 @@ export function ComparisonPanel({
                       identity colour. Direction is still carried by the
                       change figure above, which stays green/red. */}
                   <Sparkline
-                    values={seriesFor(row).map((p) => p.value)}
+                    values={seriesFor(row, timeframe).map((p) => p.value)}
                     positive={positive}
                     color={color}
                     className="mt-2.5 h-[70px] w-full"
                     delayMs={i * 60}
                   />
-                  <div className="mt-1.5 font-mono text-[9.5px] tracking-[0.1em] text-dim uppercase">
-                    Indexed · {timeframe}
+                  <div className="mt-1.5 flex items-center justify-between gap-2">
+                    <span className="font-mono text-[9.5px] tracking-[0.1em] text-dim uppercase">{timeframe} · same window as the chart</span>
+                    <DataFreshness source="last_close" asOf={row.asOf} className="text-[9.5px]" />
                   </div>
                 </div>
               );

@@ -21,13 +21,13 @@ async function getCurrentPortfolioValue(): Promise<{ value: number; holdings: Sc
   if (rows.length === 0) return { value: 0, holdings: [] };
 
   const symbols = Array.from(new Set(rows.map((h) => h.symbol)));
-  const { data: prices } = await supabase
-    .from("historical_prices")
-    .select("*")
-    .in("symbol", symbols)
-    .order("ts", { ascending: true });
+  // Two bars per symbol is all latestCloseBySymbol() needs, and it has to be
+  // the NEWEST two. Ordered ascending with no limit, this returned the oldest
+  // rows under PostgREST's row cap, so the calculators valued a portfolio at
+  // prices from whenever ingestion started.
+  const { data: prices } = await supabase.rpc("recent_prices", { symbols, per_symbol: 2 });
 
-  const closes = latestCloseBySymbol(prices ?? []);
+  const closes = latestCloseBySymbol((prices ?? []) as Parameters<typeof latestCloseBySymbol>[0]);
   const scenarioHoldings: ScenarioHolding[] = rows.map((h) => ({
     symbol: h.symbol,
     quantity: h.quantity,

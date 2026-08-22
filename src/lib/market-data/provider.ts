@@ -18,6 +18,13 @@ export interface QuoteResult {
   changePercent: number | null;
   volume: number | null;
   fetchedAt: string;
+  // Session figures from the same quote. Without these a live headline price
+  // was displayed next to an "Open" and "Day range" read off the stored daily
+  // bar, which is how /ticker/AAPL came to show a price outside its own day
+  // range. Any surface showing both must take both from one source.
+  open: number | null;
+  dayHigh: number | null;
+  dayLow: number | null;
 }
 
 const TWELVE_DATA_BASE = "https://api.twelvedata.com";
@@ -40,12 +47,17 @@ export async function fetchQuote(symbol: string): Promise<QuoteResult | null> {
   const data = (await res.json()) as Record<string, unknown>;
   if (data.status === "error" || data.code) return null;
 
+  const numeric = (key: string) => (data[key] === undefined || data[key] === null ? null : Number(data[key]));
+
   return {
     symbol: symbol.toUpperCase(),
-    price: data.close !== undefined ? Number(data.close) : null,
-    changePercent: data.percent_change !== undefined ? Number(data.percent_change) : null,
-    volume: data.volume !== undefined ? Number(data.volume) : null,
+    price: numeric("close"),
+    changePercent: numeric("percent_change"),
+    volume: numeric("volume"),
     fetchedAt: new Date().toISOString(),
+    open: numeric("open"),
+    dayHigh: numeric("high"),
+    dayLow: numeric("low"),
   };
 }
 

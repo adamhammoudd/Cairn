@@ -31,6 +31,10 @@ const UA_NASDAQ = "Mozilla/5.0 (compatible; cairn-ingest/1.0)";
 // Matches the 2y of daily bars ingest-market-data pulls. Reaching further back
 // would produce events with no bars to measure them against.
 const EVENTS_RANGE = "2y";
+// Upper bound on the bars read per symbol when deriving volatility regimes.
+// 2y of daily bars is ~505; 1500 leaves headroom for a longer backfill without
+// ever depending on an unbounded read.
+const MAX_BARS = 1500;
 
 interface PriceBar {
   ts: string;
@@ -199,13 +203,18 @@ Deno.serve(async (req) => {
 
   for (const symbol of symbols) {
     try {
+      // Newest-first with an explicit bound, then reversed: ordered ascending
+      // with no limit, what comes back is whatever PostgREST's row cap allows
+      // - the OLDEST rows - so the regimes derived here would be computed from
+      // the start of the history and silently stop tracking recent ones.
       const { data: bars } = await supabase
         .from("historical_prices")
         .select("ts, close, volume")
         .eq("symbol", symbol)
-        .order("ts", { ascending: true });
+        .order("ts", { ascending: false })
+        .limit(MAX_BARS);
 
-      const priceBars = (bars ?? []) as PriceBar[];
+      const priceBars = ((bars ?? []) as PriceBar[]).slice().reverse();
       if (priceBars.length === 0) {
         results.push({ symbol, error: "no price history to measure events against" });
         continue;

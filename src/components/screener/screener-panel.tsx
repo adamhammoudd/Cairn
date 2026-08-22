@@ -14,6 +14,7 @@ import {
   type ScreenerFilters,
   type ScreenerRow,
 } from "@/lib/screener";
+import { DataFreshness } from "@/components/data-freshness";
 
 function numOrNull(v: string): number | null {
   const trimmed = v.trim();
@@ -40,6 +41,8 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
   const [savedScreens, setSavedScreens] = useState<SavedScreen[]>(initialSavedScreens);
   const [loading, setLoading] = useState(false);
   const [, startMutate] = useTransition();
+  // Newest bar behind any row currently on screen.
+  const asOf = rows.reduce<string | null>((newest, r) => (r.asOf && (!newest || r.asOf > newest) ? r.asOf : newest), null);
 
   // Debounced re-query: filters are typed into, so fire 300ms after the last
   // keystroke rather than on every character.
@@ -226,6 +229,9 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
               {loading ? "Filtering…" : `${rows.length} match${rows.length === 1 ? "" : "es"}`}
             </span>
             <div className="flex items-center gap-3">
+              {/* Same numbers as Markets and the ticker page, so the same
+                  freshness statement. */}
+              <DataFreshness source="last_close" asOf={asOf} className="hidden sm:inline" />
               <span className="hidden text-[11.5px] text-dim sm:inline">Market cap derived at query time</span>
               <button
                 type="button"
@@ -288,7 +294,7 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
                     {formatVolume(r.volume)}
                   </div>
                   <div className="text-[12.5px] tabular-nums text-primary">{formatMarketCap(r.marketCap)}</div>
-                  <div className="text-[12.5px] tabular-nums text-muted">{r.pe === null ? "-" : `${r.pe.toFixed(1)}00d7`}</div>
+                  <div className="text-[12.5px] tabular-nums text-muted">{r.pe === null ? "-" : `${r.pe.toFixed(1)}\u00d7`}</div>
                   <div className="text-[12.5px] tabular-nums text-muted">
                     {r.dividendYield === null ? "-" : `${r.dividendYield.toFixed(2)}%`}
                   </div>

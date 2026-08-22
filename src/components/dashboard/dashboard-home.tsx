@@ -8,15 +8,21 @@ import { updateDashboardLayout } from "@/lib/actions/dashboard";
 import { DashboardSummaryCard } from "@/components/dashboard/dashboard-summary-card";
 import { decodeEntities } from "@/lib/news";
 import { TimeAgo } from "@/components/time-ago";
+import { MODULE_KEYS, type ModuleKey } from "@/lib/dashboard-modules";
+import { DataFreshness } from "@/components/data-freshness";
 
-export type ModuleKey = "portfolio" | "markets" | "watchlist" | "news" | "assistant";
-export const MODULE_KEYS: ModuleKey[] = ["portfolio", "markets", "watchlist", "news", "assistant"];
+// MODULE_KEYS / ModuleKey now live in lib/dashboard-modules.ts. The dashboard
+// page is a Server Component and imported them from this "use client" module,
+// which hands back a client reference rather than the array itself - so
+// `MODULE_KEYS.includes(...)` threw and the dashboard 500'd.
 
 interface DashboardHomeProps {
   initialLayout: ModuleKey[];
   today: string;
   /** From user_settings.refresh_rate_seconds - written by the settings form and, until now, read by nothing. */
   refreshRateSeconds?: number;
+  /** Date of the newest close behind every price on this page. */
+  dataAsOf?: string | null;
   portfolio: {
     totalValue: string;
     totalGain: string;
@@ -24,6 +30,9 @@ interface DashboardHomeProps {
     positive: boolean;
     positions: number;
     sparkline: number[];
+    /** Direction of the sparkline's own window, not of all-time gain. */
+    sparklinePositive: boolean;
+    sparklineTimeframe: string;
     topHoldings: { symbol: string; gainPct: number }[];
   };
   markets: {
@@ -90,6 +99,7 @@ export function DashboardHome({
   news,
   assistant,
   refreshRateSeconds = 30,
+  dataAsOf = null,
 }: DashboardHomeProps) {
   const [layout, setLayout] = useState<ModuleKey[]>(initialLayout.length ? initialLayout : DEFAULT_LAYOUT);
   const [arranging, setArranging] = useState(false);
@@ -166,10 +176,13 @@ export function DashboardHome({
               </div>
               {portfolio.sparkline.length > 1 && (
                 <svg viewBox="0 0 180 46" width={180} height={46} className="shrink-0">
+                  {/* Was always the accent green. It plots the last month of
+                      portfolio value, so it has to be red when that month is
+                      down - the same rule the table rows follow. */}
                   <polyline
                     points={sparklinePoints(portfolio.sparkline, 180, 46)}
                     fill="none"
-                    stroke="var(--color-accent)"
+                    stroke={portfolio.sparklinePositive ? "var(--color-accent)" : "var(--color-negative)"}
                     strokeWidth={1.8}
                     strokeLinejoin="round"
                     pathLength="1"
@@ -178,6 +191,11 @@ export function DashboardHome({
                   />
                 </svg>
               )}
+            </div>
+            <div className="mt-1.5 flex items-center gap-2">
+              <span className="font-mono text-[9.5px] tracking-[0.1em] text-dim uppercase">
+                {portfolio.sparklineTimeframe} · same series as the portfolio chart
+              </span>
             </div>
             {portfolio.topHoldings.length > 0 && (
               <div className="mt-4 flex flex-col gap-2">
@@ -287,8 +305,14 @@ export function DashboardHome({
     <div className="animate-page-in">
       <div className="mb-5.5 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <div className="mb-2 font-mono text-[10.5px] tracking-[0.16em] text-muted uppercase">
-            {today} · {marketStatus.label}
+          <div className="mb-2 flex flex-wrap items-center gap-2 font-mono text-[10.5px] tracking-[0.16em] text-muted uppercase">
+            <span>
+              {today} · {marketStatus.label}
+            </span>
+            <span className="text-dim">·</span>
+            {/* Every number on this page is a stored daily close; the page used
+                to say so nowhere while showing a green "Live" dot. */}
+            <DataFreshness source="last_close" asOf={dataAsOf} className="text-[10.5px]" />
           </div>
           <h1 className="font-serif text-[34px] leading-[1.1] font-normal text-primary">Base Camp</h1>
           <p className="mt-1.75 max-w-[560px] text-[13.5px] text-muted text-pretty">
@@ -304,15 +328,17 @@ export function DashboardHome({
               paused
                 ? "Auto-refresh paused"
                 : marketStatus.isOpen
-                  ? `Refreshing every ${Math.max(15, refreshRateSeconds)}s while this tab is open`
-                  : `${marketStatus.label} - prices refresh when the session reopens`
+                  ? `Re-running this page's queries every ${Math.max(15, refreshRateSeconds)}s while this tab is open. The prices themselves are daily closes, not a live feed.`
+                  : `${marketStatus.label} - the page refetches when the session reopens`
             }
             className="flex items-center gap-1.75 rounded-lg border border-line px-3 py-2 text-[12.5px] text-primary transition-colors duration-base ease-standard hover:border-[#3A3A3A]"
           >
             <span
               className={`animate-breathe h-1.5 w-1.5 rounded-full ${live ? "bg-accent" : "bg-dim"}`}
             />
-            {live ? "Live" : paused ? "Paused" : marketStatus.isOpen ? "Idle" : "Closed"}
+            {/* Said "Live" beside delayed prices. It reports what it actually
+                controls: whether this page is re-fetching on a timer. */}
+            {live ? `Auto-refresh · ${Math.max(15, refreshRateSeconds)}s` : paused ? "Auto-refresh paused" : marketStatus.isOpen ? "Idle" : "Market closed"}
           </button>
           <form action={formAction} className="flex items-center gap-2">
             {layout.map((key) => (

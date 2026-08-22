@@ -4,7 +4,9 @@
 
 export type ChartView = "1D" | "1W" | "1M" | "3M" | "1Y" | "ALL";
 export type MetricStyle = "percent" | "absolute";
-export type AssetType = "equity" | "etf" | "crypto" | "forex" | "future";
+// `index` was added in migration 0027. Before it, the Markets "Indices" tab
+// filtered on `future`, so an index and a future were the same stored value.
+export type AssetType = "equity" | "etf" | "crypto" | "forex" | "index" | "future";
 export type ScopeType = "market" | "sector" | "ticker";
 export type ConfidenceLevel = "low" | "medium" | "high";
 export type AnalysisStatus = "validated" | "rejected" | "pending_review";
@@ -12,6 +14,18 @@ export type SubscriptionTier = "free" | "premium";
 /** Markets/Screener category filter, including the "all" pseudo-type. */
 export type AssetFilter = "all" | AssetType;
 export type AlertChannelName = "in_app" | "push" | "email";
+
+/** Shape returned by the recent_prices / recent_prices_all functions. */
+export interface PriceBarRow {
+  symbol: string;
+  asset_type: AssetType;
+  ts: string;
+  open: number | null;
+  high: number | null;
+  low: number | null;
+  close: number | null;
+  volume: number | null;
+}
 
 export interface Database {
   public: {
@@ -458,8 +472,30 @@ export interface Database {
           market_cap_rank: number | null;
           updated_at: string;
         };
-        Insert: never;
-        Update: never;
+        // Written by ingest-crypto and, since on-demand ingestion, by
+        // lib/market-data/ingest.ts when a coin is fetched for the first time.
+        Insert: {
+          symbol: string;
+          coingecko_id: string;
+          name: string;
+          market_cap?: number | null;
+          total_volume_24h?: number | null;
+          circulating_supply?: number | null;
+          max_supply?: number | null;
+          price_change_24h_pct?: number | null;
+          market_cap_rank?: number | null;
+          updated_at?: string;
+        };
+        Update: {
+          name?: string;
+          market_cap?: number | null;
+          total_volume_24h?: number | null;
+          circulating_supply?: number | null;
+          max_supply?: number | null;
+          price_change_24h_pct?: number | null;
+          market_cap_rank?: number | null;
+          updated_at?: string;
+        };
         Relationships: [];
       };
       alert_deliveries: {
@@ -577,14 +613,67 @@ export interface Database {
         Update: never;
         Relationships: [];
       };
+      // Everything Cairn has ever been asked about, and what came back -
+      // the registry behind on-demand ingestion (migration 0027).
+      symbol_directory: {
+        Row: {
+          symbol: string;
+          asset_type: AssetType;
+          name: string | null;
+          status: "available" | "unavailable" | "rate_limited" | "error";
+          provider: string;
+          bars: number;
+          detail: string | null;
+          first_seen_at: string;
+          last_checked_at: string;
+          last_success_at: string | null;
+          last_requested_at: string;
+          request_count: number;
+        };
+        Insert: {
+          symbol: string;
+          asset_type: string;
+          name?: string | null;
+          status: string;
+          provider?: string;
+          bars?: number;
+          detail?: string | null;
+          last_checked_at?: string;
+          last_success_at?: string;
+          last_requested_at?: string;
+          request_count?: number;
+        };
+        Update: {
+          asset_type?: string;
+          name?: string | null;
+          status?: string;
+          bars?: number;
+          detail?: string | null;
+          last_checked_at?: string;
+          last_success_at?: string;
+          last_requested_at?: string;
+          request_count?: number;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
-      // Prefix search limited by DISTINCT symbol rather than by price row -
-      // see supabase/migrations/0021_search_symbols_distinct.sql.
+      // Prefix/name search over symbol_directory, limited by symbol -
+      // see supabase/migrations/0027_on_demand_ingestion.sql.
       search_symbols: {
         Args: { prefix: string; max_results?: number };
-        Returns: { symbol: string; asset_type: string }[];
+        Returns: { symbol: string; asset_type: string; name: string | null; status: string }[];
+      };
+      // Newest N bars per symbol, with the LIMIT applied per symbol rather
+      // than across the whole result - see 0027.
+      recent_prices: {
+        Args: { symbols: string[]; per_symbol?: number };
+        Returns: PriceBarRow[];
+      };
+      recent_prices_all: {
+        Args: { per_symbol?: number; asset_types?: string[] };
+        Returns: PriceBarRow[];
       };
     };
     Enums: Record<string, never>;

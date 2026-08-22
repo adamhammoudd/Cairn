@@ -5,8 +5,9 @@ import {
   computeHoldingMetrics,
   computeTimelineSeries,
   computeTotals,
+  type PriceBar,
 } from "@/lib/portfolio";
-import { getLatestCloses } from "@/lib/market-data/current-price";
+import { getLatestCloses, latestDataDate } from "@/lib/market-data/current-price";
 import type { ChartView } from "@/lib/supabase/types";
 import { StatCard } from "@/components/portfolio/stat-card";
 import { PortfolioChart } from "@/components/portfolio/portfolio-chart";
@@ -38,12 +39,20 @@ export default async function PortfolioPage() {
   const rows = holdings ?? [];
   const symbols = Array.from(new Set(rows.map((h) => h.symbol)));
 
+  // Per-symbol history for the timeline. The previous query ordered every row
+  // for every held symbol ASCENDING with no limit, which leaves what comes
+  // back to PostgREST's row cap - i.e. the OLDEST rows, the same defect that
+  // made the ticker page quote a five-month-old price. recent_prices() takes
+  // the newest N per symbol; computeTimelineSeries sorts them itself.
   const { data: prices } =
     symbols.length > 0
-      ? await supabase.from("historical_prices").select("*").in("symbol", symbols).order("ts", { ascending: true })
+      ? await supabase.rpc("recent_prices", { symbols, per_symbol: 1500 })
       : { data: [] };
 
-  const priceRows = prices ?? [];
+  // recent_prices() returns newest-first within a symbol; everything below
+  // wants oldest-first, so sort once here rather than relying on the order the
+  // rows happen to arrive in.
+  const priceRows = ((prices ?? []) as PriceBar[]).slice().sort((a, b) => (a.ts < b.ts ? -1 : a.ts > b.ts ? 1 : 0));
   const closes = await getLatestCloses(symbols);
   const metrics = computeHoldingMetrics(rows, closes);
   const totals = computeTotals(metrics, closes);
@@ -58,7 +67,10 @@ export default async function PortfolioPage() {
     geography: computeAllocation(metrics, "geography"),
   };
 
-  // Last 30 closes per symbol, for the holdings table's inline trend column.
+  // Last 30 closes per symbol, oldest-first, for the holdings table's inline
+  // trend column. priceRows is sorted ascending above, so slice(-30) is the
+  // most recent 30 - it is only correct because of that sort, which is why the
+  // sort is not left to chance.
   const sparklines: Record<string, number[]> = {};
   for (const symbol of symbols) {
     sparklines[symbol] = priceRows
@@ -66,6 +78,8 @@ export default async function PortfolioPage() {
       .slice(-30)
       .map((p) => Number(p.close));
   }
+
+  const asOf = await latestDataDate(symbols);
 
   const assetTypeCount = new Set(rows.map((h) => h.asset_type)).size;
 
@@ -101,7 +115,7 @@ export default async function PortfolioPage() {
         </div>
 
         <div className="mb-3.5">
-          <PortfolioChart seriesByTimeframe={seriesByTimeframe} hasHoldings={rows.length > 0} />
+          <PortfolioChart seriesByTimeframe={seriesByTimeframe} hasHoldings={rows.length > 0} asOf={asOf} />
         </div>
       </HoldingsTable>
 

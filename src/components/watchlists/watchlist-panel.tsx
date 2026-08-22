@@ -12,6 +12,7 @@ import {
 } from "@/lib/actions/watchlists";
 import { tintForWatchlist } from "@/lib/watchlists";
 import { Sparkline } from "@/components/sparkline";
+import { DataFreshness } from "@/components/data-freshness";
 
 function fmtCurrency(n: number | null) {
   if (n === null) return "-";
@@ -40,6 +41,9 @@ export function WatchlistPanel({ watchlists }: { watchlists: WatchlistWithItems[
         return items; // manual -- already sort_order from the query
     }
   }, [active]);
+
+  // Newest bar behind any row in this list.
+  const listAsOf = sortedItems.reduce<string | null>((newest, i) => (i.asOf && (!newest || i.asOf > newest) ? i.asOf : newest), null);
 
   const manualSort = active?.displayPrefs.sortBy === "manual";
   const showSparkline = active?.displayPrefs.showSparkline ?? false;
@@ -151,6 +155,14 @@ export function WatchlistPanel({ watchlists }: { watchlists: WatchlistWithItems[
             </div>
           ) : (
             <div className="overflow-hidden rounded-card border border-line bg-panel">
+              {/* The same stored closes Markets and the ticker page show, so
+                  the same freshness statement rather than none at all. */}
+              <div className="flex items-center justify-between gap-3 border-b border-line px-4.5 py-2.75">
+                <span className="font-mono text-[10px] tracking-[0.14em] text-muted uppercase">
+                  {sortedItems.length} {sortedItems.length === 1 ? "symbol" : "symbols"}
+                </span>
+                <DataFreshness source="last_close" asOf={listAsOf} />
+              </div>
               <div className="overflow-x-auto">
                 <div className="min-w-[640px]">
                   <div

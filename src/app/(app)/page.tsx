@@ -2,9 +2,16 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { runScreen } from "@/lib/actions/screener";
 import { EMPTY_FILTERS } from "@/lib/screener";
-import { DashboardHome, MODULE_KEYS, type ModuleKey } from "@/components/dashboard/dashboard-home";
-import { computeHoldingMetrics, computeTimelineSeries, computeTotals } from "@/lib/portfolio";
-import { getLatestCloses } from "@/lib/market-data/current-price";
+import { DashboardHome } from "@/components/dashboard/dashboard-home";
+import { MODULE_KEYS, type ModuleKey } from "@/lib/dashboard-modules";
+import { computeHoldingMetrics, computeTimelineSeries, computeTotals, type PriceBar } from "@/lib/portfolio";
+import { getLatestCloses, latestDataDate } from "@/lib/market-data/current-price";
+
+
+// The Portfolio page's chart opens on 1M; the dashboard's summary sparkline
+// plots the same window from the same series so a reader moving between them
+// sees the same shape.
+const DASHBOARD_SPARKLINE_TIMEFRAME = "1M" as const;
 
 function fmtCurrency(n: number) {
   return n.toLocaleString(undefined, { style: "currency", currency: "USD" });
@@ -55,11 +62,21 @@ export default async function DashboardPage() {
   const metrics = computeHoldingMetrics(holdings, closes);
   const totals = computeTotals(metrics, closes);
 
+  // Same per-symbol window the Portfolio page uses, and the same timeframe, so
+  // the dashboard's summary sparkline and the full chart cannot disagree about
+  // the same portfolio. (Ordered ascending with no limit, this returned the
+  // OLDEST rows under PostgREST's cap.)
   const { data: priceRows } =
     symbols.length > 0
-      ? await supabase.from("historical_prices").select("*").in("symbol", symbols).order("ts", { ascending: true })
+      ? await supabase.rpc("recent_prices", { symbols, per_symbol: 1500 })
       : { data: [] };
-  const sparkline = computeTimelineSeries(holdings, priceRows ?? [], "1M").map((p) => p.value);
+  const sparklineSeries = computeTimelineSeries(holdings, (priceRows ?? []) as PriceBar[], DASHBOARD_SPARKLINE_TIMEFRAME);
+  const sparkline = sparklineSeries.map((p) => p.value);
+
+  // Direction of the sparkline itself, so the dashboard's line is coloured by
+  // what it draws (1M) rather than by all-time gain, which is a different
+  // number and was the only one this card had.
+  const sparklinePositive = sparkline.length > 1 ? sparkline[sparkline.length - 1] >= sparkline[0] : true;
 
   const topHoldings = [...metrics]
     .filter((m) => m.value !== null)
@@ -120,10 +137,14 @@ export default async function DashboardPage() {
   const initialLayout = rawLayout.filter((key): key is ModuleKey => (MODULE_KEYS as string[]).includes(key));
 
   const today = new Date().toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+  // One freshness statement for the whole dashboard, from the same store every
+  // card reads.
+  const dataAsOf = await latestDataDate(Array.from(new Set([...symbols, ...watchlistSymbols, ...topMarketRows.map((r) => r.symbol)])));
 
   return (
     <DashboardHome
       refreshRateSeconds={settingsRes.data?.refresh_rate_seconds ?? 30}
+      dataAsOf={dataAsOf}
       initialLayout={initialLayout}
       today={today}
       portfolio={{
@@ -133,6 +154,8 @@ export default async function DashboardPage() {
         positive: totals.totalGain >= 0,
         positions: holdings.length,
         sparkline,
+        sparklinePositive,
+        sparklineTimeframe: DASHBOARD_SPARKLINE_TIMEFRAME,
         topHoldings,
       }}
       markets={{

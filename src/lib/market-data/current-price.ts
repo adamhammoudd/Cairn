@@ -8,8 +8,9 @@
 //
 // Falls back to that same latest-row read when no live feed is configured
 // (TWELVE_DATA_API_KEY unset) or the live call fails, but every result is
-// tagged with its actual source so a fallback read is never presented to a
-// user as live.
+// tagged with its actual source AND the date it is as of, so a fallback read
+// is never presented to a user as live and every surface can say how old it
+// is in the same words.
 
 import { createClient } from "@/lib/supabase/server";
 import { fetchQuote, isMarketDataProviderConfigured } from "@/lib/market-data/provider";
@@ -20,40 +21,70 @@ export interface CurrentPrice {
   changePct: number | null;
   volume: number | null;
   source: "live" | "last_close";
+  /** Date of the bar (or quote) this price came from, YYYY-MM-DD. */
+  asOf: string | null;
+  /**
+   * Session figures from the SAME source as `price`. Mixing a live price with
+   * the stored daily bar is what produced a headline price outside its own
+   * "day range" on the ticker page.
+   */
+  open: number | null;
+  dayHigh: number | null;
+  dayLow: number | null;
 }
 
-async function lastCloseRows(
-  symbols: string[],
-): Promise<Map<string, { close: number | null; volume: number | null; asset_type: string }[]>> {
-  const supabase = await createClient();
-  const { data: bars } = await supabase
-    .from("historical_prices")
-    .select("symbol, ts, close, volume, asset_type")
-    .in("symbol", symbols)
-    .order("ts", { ascending: false });
+interface Bar {
+  symbol: string;
+  ts: string;
+  open: number | null;
+  high: number | null;
+  low: number | null;
+  close: number | null;
+  volume: number | null;
+  asset_type: string;
+}
 
-  const bySymbol = new Map<string, { close: number | null; volume: number | null; asset_type: string }[]>();
-  for (const b of bars ?? []) {
-    const arr = bySymbol.get(b.symbol) ?? [];
-    if (arr.length < 2) arr.push({ close: b.close, volume: b.volume, asset_type: b.asset_type });
-    bySymbol.set(b.symbol, arr);
+// Two most recent bars per symbol, with a per-symbol limit. The previous
+// version ordered every row for every symbol by ts and let PostgREST's row cap
+// decide what came back: a symbol whose last ingest is older than the others
+// falls off the end of that shared window entirely and reads as having no
+// price at all. recent_prices() gives each symbol its own LIMIT.
+async function lastBars(symbols: string[], perSymbol = 2): Promise<Map<string, Bar[]>> {
+  const bySymbol = new Map<string, Bar[]>();
+  if (symbols.length === 0) return bySymbol;
+
+  const supabase = await createClient();
+  const { data } = await supabase.rpc("recent_prices", { symbols, per_symbol: perSymbol });
+
+  for (const row of (data ?? []) as Bar[]) {
+    const arr = bySymbol.get(row.symbol) ?? [];
+    arr.push(row);
+    bySymbol.set(row.symbol, arr);
   }
+  // recent_prices returns newest-first within a symbol; make that explicit
+  // rather than relying on it.
+  for (const arr of bySymbol.values()) arr.sort((a, b) => (a.ts < b.ts ? 1 : -1));
   return bySymbol;
 }
 
-function toLastClosePrice(
-  symbol: string,
-  rows: { close: number | null; volume: number | null; asset_type?: string }[],
-): CurrentPrice {
+const num = (v: number | null | undefined) => (v == null ? null : Number(v));
+
+function toLastClosePrice(symbol: string, rows: Bar[]): CurrentPrice {
   // numeric columns arrive as strings over PostgREST; coerce before any math.
-  const latest = rows[0]?.close == null ? null : Number(rows[0].close);
-  const prev = rows[1]?.close == null ? null : Number(rows[1].close);
+  const latest = rows[0];
+  const prev = rows[1];
+  const price = num(latest?.close);
+  const prevClose = num(prev?.close);
   return {
     symbol,
-    price: latest,
-    changePct: latest !== null && prev !== null && prev !== 0 ? ((latest - prev) / prev) * 100 : null,
-    volume: rows[0]?.volume ?? null,
+    price,
+    changePct: price !== null && prevClose !== null && prevClose !== 0 ? ((price - prevClose) / prevClose) * 100 : null,
+    volume: latest?.volume ?? null,
     source: "last_close",
+    asOf: latest?.ts ?? null,
+    open: num(latest?.open),
+    dayHigh: num(latest?.high),
+    dayLow: num(latest?.low),
   };
 }
 
@@ -67,36 +98,47 @@ function toLastClosePrice(
 // The rolling figure wins for crypto, because a close-to-close delta on a
 // market that never closes is an arbitrary midnight-to-midnight slice. Equities
 // keep close-to-close, which is what a daily change means for a session-based
-// market.
-async function cryptoRolling24h(symbol: string): Promise<number | null> {
+// market. Every surface now routes through cryptoRolling24hFor() so the choice
+// is made once.
+export async function cryptoRolling24hFor(symbols: string[]): Promise<Map<string, number>> {
+  const out = new Map<string, number>();
+  if (symbols.length === 0) return out;
   const supabase = await createClient();
-  const { data } = await supabase
-    .from("crypto_metrics")
-    .select("price_change_24h_pct")
-    .eq("symbol", symbol)
-    .maybeSingle();
-  const raw = data?.price_change_24h_pct;
-  return raw == null ? null : Number(raw);
+  const { data } = await supabase.from("crypto_metrics").select("symbol, price_change_24h_pct").in("symbol", symbols);
+  for (const row of data ?? []) {
+    if (row.price_change_24h_pct != null) out.set(row.symbol, Number(row.price_change_24h_pct));
+  }
+  return out;
 }
 
 export async function getCurrentPrice(symbol: string): Promise<CurrentPrice> {
   if (isMarketDataProviderConfigured()) {
     const quote = await fetchQuote(symbol);
     if (quote && quote.price !== null) {
-      return { symbol: quote.symbol, price: quote.price, changePct: quote.changePercent, volume: quote.volume, source: "live" };
+      return {
+        symbol: quote.symbol,
+        price: quote.price,
+        changePct: quote.changePercent,
+        volume: quote.volume,
+        source: "live",
+        asOf: quote.fetchedAt.slice(0, 10),
+        // From the quote itself: a live price with a stored day range can
+        // contradict itself, which is exactly what /ticker/AAPL displayed.
+        open: quote.open,
+        dayHigh: quote.dayHigh,
+        dayLow: quote.dayLow,
+      };
     }
   }
-  const rows = (await lastCloseRows([symbol])).get(symbol) ?? [];
-  const base = toLastClosePrice(symbol, rows);
 
-  // asset_type rides along on the rows already fetched, so equities never pay
-  // for a crypto_metrics round trip they cannot use.
+  const rows = (await lastBars([symbol])).get(symbol) ?? [];
+  const base = toLastClosePrice(symbol, rows);
   if (rows[0]?.asset_type !== "crypto") return base;
 
   // Falls back to close-to-close when the coin has no metrics row yet, so a
-  // newly-tracked symbol still shows a change rather than a blank.
-  const rolling = await cryptoRolling24h(symbol);
-  return rolling === null ? base : { ...base, changePct: rolling };
+  // newly-ingested symbol still shows a change rather than a blank.
+  const rolling = (await cryptoRolling24hFor([symbol])).get(symbol);
+  return rolling === undefined ? base : { ...base, changePct: rolling };
 }
 
 // Drop-in replacement for `latestCloseBySymbol(historical_prices rows)` used
@@ -106,7 +148,7 @@ export async function getLatestCloses(symbols: string[]): Promise<Map<string, { 
   const result = new Map<string, { latest: number | null; prev: number | null }>();
   if (symbols.length === 0) return result;
 
-  const bySymbol = await lastCloseRows(symbols);
+  const bySymbol = await lastBars(symbols);
 
   // Twelve Data's free tier is 8 req/min - only worth attempting live
   // fetches for a small symbol set (a user's own holdings), never a
@@ -119,12 +161,26 @@ export async function getLatestCloses(symbols: string[]): Promise<Map<string, { 
     if (tryLive) {
       const quote = await fetchQuote(symbol);
       if (quote && quote.price !== null) {
-        result.set(symbol, { latest: quote.price, prev: rows[0]?.close == null ? null : Number(rows[0].close) });
+        result.set(symbol, { latest: quote.price, prev: num(rows[0]?.close) });
         continue;
       }
     }
     const fallback = toLastClosePrice(symbol, rows);
-    result.set(symbol, { latest: fallback.price, prev: rows[1]?.close == null ? null : Number(rows[1].close) });
+    result.set(symbol, { latest: fallback.price, prev: num(rows[1]?.close) });
   }
   return result;
+}
+
+/**
+ * The as-of date of the newest bar the app holds for these symbols, for the
+ * shared freshness label. Null when none of them have any history.
+ */
+export async function latestDataDate(symbols: string[]): Promise<string | null> {
+  const bySymbol = await lastBars(symbols, 1);
+  let newest: string | null = null;
+  for (const rows of bySymbol.values()) {
+    const ts = rows[0]?.ts ?? null;
+    if (ts && (newest === null || ts > newest)) newest = ts;
+  }
+  return newest;
 }

@@ -21,7 +21,12 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 import { requireCronSecret } from "../_shared/auth.ts";
 
-const TOP_N = 25;
+// Was a hardcoded 25 - a self-imposed cap on a keyless API, not a provider
+// limit. It is now the provider row's `config.top_n` (default 250, CoinGecko's
+// max page size), and coins ingested on demand are refreshed alongside it
+// however they rank, so the cron set follows what people actually look at.
+const DEFAULT_TOP_N = 250;
+const COINGECKO_MAX_PAGE_SIZE = 250;
 const HISTORY_DAYS = 365;
 // CoinGecko's free tier starts refusing after roughly three history calls in
 // quick succession, so pace hard and take only a few coins per run. Successive
@@ -163,12 +168,48 @@ Deno.serve(async (req) => {
   }
   const baseUrl = provider.endpoint;
 
-  const coins = await cg<MarketCoin[]>(
-    baseUrl,
-    `/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=${TOP_N}&page=1`,
-  );
-  if (!coins || !Array.isArray(coins)) {
+  const configuredTopN = Number((provider.config as Record<string, unknown> | null)?.top_n ?? DEFAULT_TOP_N);
+  const topN = Number.isFinite(configuredTopN) && configuredTopN > 0 ? Math.floor(configuredTopN) : DEFAULT_TOP_N;
+
+  const coins: MarketCoin[] = [];
+  const pages = Math.ceil(topN / COINGECKO_MAX_PAGE_SIZE);
+  for (let page = 1; page <= pages; page++) {
+    const perPage = Math.min(COINGECKO_MAX_PAGE_SIZE, topN - coins.length);
+    if (perPage <= 0) break;
+    const batch = await cg<MarketCoin[]>(
+      baseUrl,
+      `/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=${perPage}&page=${page}`,
+    );
+    if (!batch || !Array.isArray(batch)) break;
+    coins.push(...batch);
+    if (batch.length < perPage) break; // ran out of coins
+  }
+  if (coins.length === 0) {
     return Response.json({ error: "CoinGecko markets request failed" }, { status: 502, headers: corsHeaders });
+  }
+
+  // Coins someone searched for that rank below the top N still need their
+  // metrics refreshed, or their 24h change and market cap freeze at whatever
+  // the on-demand fetch stored.
+  const { data: onDemandCoins } = await supabase
+    .from("symbol_directory")
+    .select("symbol")
+    .eq("asset_type", "crypto")
+    .eq("status", "available");
+
+  const covered = new Set(coins.map((c) => c.symbol.toUpperCase()));
+  const missing = (onDemandCoins ?? []).map((r) => r.symbol.toUpperCase()).filter((s) => !covered.has(s));
+  if (missing.length > 0) {
+    // /coins/markets takes ids, not symbols; resolve through the coin list.
+    const { data: knownIds } = await supabase.from("crypto_metrics").select("symbol, coingecko_id").in("symbol", missing);
+    const ids = (knownIds ?? []).map((r) => r.coingecko_id).filter(Boolean);
+    for (let i = 0; i < ids.length; i += 50) {
+      const batch = await cg<MarketCoin[]>(
+        baseUrl,
+        `/coins/markets?vs_currency=usd&ids=${ids.slice(i, i + 50).join(",")}&per_page=50&page=1`,
+      );
+      if (batch && Array.isArray(batch)) coins.push(...batch);
+    }
   }
 
   const metricsRows = coins.map((c) => ({
@@ -194,11 +235,11 @@ Deno.serve(async (req) => {
   // Pick the stalest coins for the history pass. Without this, a rate-limited
   // run always burns its budget on the same top-ranked coins and the rest
   // never get history at all.
-  const { data: existing } = await supabase
-    .from("historical_prices")
-    .select("symbol, ts")
-    .eq("asset_type", "crypto")
-    .order("ts", { ascending: false });
+  // One bar per coin, per symbol. Reading every crypto row ordered by date and
+  // taking the first per symbol gave the right answer only while every coin
+  // was inside the row cap; a coin that stopped updating fell out of the window
+  // and read as "never ingested".
+  const { data: existing } = await supabase.rpc("recent_prices_all", { per_symbol: 1, asset_types: ["crypto"] });
 
   const freshestBySymbol = new Map<string, string>();
   for (const row of existing ?? []) {

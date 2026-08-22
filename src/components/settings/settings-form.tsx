@@ -11,8 +11,10 @@ export type SettingsTabId = "display" | "account" | "notifications" | "billing" 
 
 const CHART_VIEWS: ChartView[] = ["1D", "1W", "1M", "3M", "1Y", "ALL"];
 const CURRENCIES = ["USD", "EUR", "GBP", "JPY", "CAD"];
+// 15s is the floor useLiveRefresh() enforces; offering 10 here meant the
+// setting said one thing and the timer did another.
 const REFRESH_RATES = [
-  { value: 10, label: "10 seconds" },
+  { value: 15, label: "15 seconds" },
   { value: 30, label: "30 seconds" },
   { value: 60, label: "1 minute" },
   { value: 300, label: "5 minutes" },
@@ -26,7 +28,9 @@ const ASSET_FILTERS: { value: AssetFilter; label: string }[] = [
   { value: "etf", label: "ETFs" },
   { value: "crypto", label: "Crypto" },
   { value: "forex", label: "Forex" },
-  { value: "future", label: "Indices" },
+  // `index` is a real asset type since migration 0027; this used to say
+  // Indices while storing `future`.
+  { value: "index", label: "Indices" },
 ];
 
 const ALERT_CHANNELS: { value: AlertChannelName; label: string; hint?: string }[] = [
@@ -115,7 +119,16 @@ export function SettingsForm({ settings, activeTab }: SettingsFormProps) {
           </select>
         </Row>
 
-        <Row label="Refresh rate" hint="How often the dashboard refetches prices, while the market is open and this tab is in the foreground">
+        {/* The claim this control makes has to match what the code does. It
+            re-runs Base Camp's queries on a timer while the market is open and
+            the tab is focused - it does not make prices live, because no
+            live-quote provider is configured; every price in Cairn is the last
+            daily close. Saying "how often live prices update" (the previous
+            copy) was a promise nothing in the codebase kept. */}
+        <Row
+          label="Refresh rate"
+          hint="How often Base Camp re-runs its queries, while the market is open and this tab is in the foreground. Prices are last-close figures, not a live feed, so this refetches the same daily closes - it does not make them live."
+        >
           <select name="refresh_rate_seconds" defaultValue={settings.refresh_rate_seconds} className={SELECT_CLASS}>
             {REFRESH_RATES.map((r) => (
               <option key={r.value} value={r.value} className="bg-panel">
