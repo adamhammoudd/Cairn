@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ASSET_TYPE_LABEL, ASSET_TYPE_TAG_CLASS, formatMarketCap, formatVolume, type ScreenerRow } from "@/lib/screener";
 import { assetName } from "@/lib/asset-names";
+import { Sparkline } from "@/components/sparkline";
 
 // The one ticker list. Every asset type on Markets renders through this --
 // crypto used to get its own seven-column table, so switching the category
@@ -22,20 +23,6 @@ const GRID = "sm:grid-cols-[1.6fr_0.9fr_1fr_0.9fr_1fr_1fr_100px]";
 
 function initialsOf(symbol: string) {
   return symbol.slice(0, 2).toUpperCase();
-}
-
-function trendPoints(values: number[], width: number, height: number) {
-  if (values.length < 2) return "";
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  const span = max - min || 1;
-  return values
-    .map((v, i) => {
-      const x = (i / (values.length - 1)) * width;
-      const y = height - ((v - min) / span) * height;
-      return `${x.toFixed(1)},${y.toFixed(1)}`;
-    })
-    .join(" ");
 }
 
 function money(n: number | null) {
@@ -110,18 +97,7 @@ export function TickerList({ rows, names, marketCaps, emptyState }: TickerListPr
                 </div>
               </div>
               {r.trend.length > 1 && (
-                <svg viewBox="0 0 100 28" preserveAspectRatio="none" className="block h-7.5 w-full">
-                  <polyline
-                    points={trendPoints(r.trend, 100, 28)}
-                    fill="none"
-                    stroke={changeColor}
-                    strokeWidth={1.6}
-                    vectorEffect="non-scaling-stroke"
-                    pathLength="1"
-                    strokeDasharray="1"
-                    className="animate-draw"
-                  />
-                </svg>
+                <Sparkline values={r.trend} positive={(r.changePct ?? 0) >= 0} color={changeColor} className="h-7.5 w-full" />
               )}
             </div>
 
@@ -163,18 +139,7 @@ export function TickerList({ rows, names, marketCaps, emptyState }: TickerListPr
             <div className="hidden text-[12.5px] tabular-nums text-muted sm:block">{formatVolume(r.volume)}</div>
             <div className="hidden sm:block">
               {r.trend.length > 1 && (
-                <svg viewBox="0 0 100 28" preserveAspectRatio="none" className="block h-6.5 w-23.5">
-                  <polyline
-                    points={trendPoints(r.trend, 100, 28)}
-                    fill="none"
-                    stroke={changeColor}
-                    strokeWidth={1.6}
-                    vectorEffect="non-scaling-stroke"
-                    pathLength="1"
-                    strokeDasharray="1"
-                    className="animate-draw"
-                  />
-                </svg>
+                <Sparkline values={r.trend} positive={(r.changePct ?? 0) >= 0} color={changeColor} className="h-6.5 w-23.5" />
               )}
             </div>
           </Link>

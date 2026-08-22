@@ -14,6 +14,9 @@ export type SubscriptionTier = "free" | "premium";
 /** Markets/Screener category filter, including the "all" pseudo-type. */
 export type AssetFilter = "all" | AssetType;
 export type AlertChannelName = "in_app" | "push" | "email";
+// Two-factor is not implemented; this records whether the user has asked to be
+// enrolled when it ships, so the Settings placeholder holds real state.
+export type TwoFactorStatus = "not_enrolled" | "requested";
 
 /** Shape returned by the recent_prices / recent_prices_all functions. */
 export interface PriceBarRow {
@@ -35,6 +38,7 @@ export interface Database {
           user_id: string;
           display_name: string | null;
           avatar_url: string | null;
+          role: "member" | "admin";
           created_at: string;
           updated_at: string;
         };
@@ -65,6 +69,7 @@ export interface Database {
           default_comparison_timeframe: ChartView;
           assistant_expand_methodology: boolean;
           assistant_use_portfolio_context: boolean;
+          two_factor_status: TwoFactorStatus;
           created_at: string;
           updated_at: string;
         };
@@ -83,6 +88,7 @@ export interface Database {
           default_comparison_timeframe?: ChartView;
           assistant_expand_methodology?: boolean;
           assistant_use_portfolio_context?: boolean;
+          two_factor_status?: TwoFactorStatus;
         };
         Update: {
           default_chart_view?: ChartView;
@@ -98,6 +104,7 @@ export interface Database {
           default_comparison_timeframe?: ChartView;
           assistant_expand_methodology?: boolean;
           assistant_use_portfolio_context?: boolean;
+          two_factor_status?: TwoFactorStatus;
         };
         Relationships: [];
       };
@@ -615,6 +622,132 @@ export interface Database {
       };
       // Everything Cairn has ever been asked about, and what came back -
       // the registry behind on-demand ingestion (migration 0027).
+      symbol_profiles: {
+        Row: {
+          symbol: string;
+          long_name: string | null;
+          summary: string | null;
+          sector: string | null;
+          industry: string | null;
+          website: string | null;
+          country: string | null;
+          city: string | null;
+          employees: number | null;
+          exchange: string | null;
+          currency: string | null;
+          quote_type: string | null;
+          first_trade_date: string | null;
+          source: string;
+          as_of: string;
+        };
+        Insert: {
+          symbol: string;
+          long_name?: string | null;
+          summary?: string | null;
+          sector?: string | null;
+          industry?: string | null;
+          website?: string | null;
+          country?: string | null;
+          city?: string | null;
+          employees?: number | null;
+          exchange?: string | null;
+          currency?: string | null;
+          quote_type?: string | null;
+          first_trade_date?: string | null;
+          source?: string;
+          as_of?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["symbol_profiles"]["Insert"]>;
+        Relationships: [];
+      };
+      financial_statements: {
+        Row: {
+          id: number;
+          symbol: string;
+          statement: "income" | "balance" | "cash_flow";
+          period_type: "annual" | "quarterly";
+          period_end: string;
+          currency: string | null;
+          line_items: Record<string, number>;
+          source: string;
+          updated_at: string;
+        };
+        Insert: {
+          symbol: string;
+          statement: string;
+          period_type: string;
+          period_end: string;
+          currency?: string | null;
+          line_items?: Record<string, number>;
+          source?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["financial_statements"]["Insert"]>;
+        Relationships: [];
+      };
+      option_contracts: {
+        Row: {
+          id: number;
+          symbol: string;
+          expiry: string;
+          option_type: "call" | "put";
+          strike: number;
+          last_price: number | null;
+          bid: number | null;
+          ask: number | null;
+          change_pct: number | null;
+          volume: number | null;
+          open_interest: number | null;
+          implied_volatility: number | null;
+          in_the_money: boolean | null;
+          contract_symbol: string | null;
+          as_of: string;
+        };
+        Insert: {
+          symbol: string;
+          expiry: string;
+          option_type: string;
+          strike: number;
+          last_price?: number | null;
+          bid?: number | null;
+          ask?: number | null;
+          change_pct?: number | null;
+          volume?: number | null;
+          open_interest?: number | null;
+          implied_volatility?: number | null;
+          in_the_money?: boolean | null;
+          contract_symbol?: string | null;
+          as_of?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["option_contracts"]["Insert"]>;
+        Relationships: [];
+      };
+      discussion_reports: {
+        Row: {
+          id: string;
+          thread_id: string;
+          reporter_id: string;
+          reason: "spam" | "abuse" | "misinformation" | "off_topic" | "other";
+          detail: string | null;
+          status: "open" | "upheld" | "dismissed";
+          resolved_by: string | null;
+          resolved_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          thread_id: string;
+          reporter_id: string;
+          reason: string;
+          detail?: string | null;
+          status?: string;
+        };
+        Update: {
+          status?: string;
+          resolved_by?: string | null;
+          resolved_at?: string | null;
+        };
+        Relationships: [];
+      };
       symbol_directory: {
         Row: {
           symbol: string;
@@ -657,7 +790,14 @@ export interface Database {
         Relationships: [];
       };
     };
-    Views: Record<string, never>;
+    Views: {
+      // Open manual-report count per comment. A view rather than a column so
+      // the count is always derived from the report rows and cannot drift.
+      discussion_report_counts: {
+        Row: { thread_id: string; open_reports: number };
+        Relationships: [];
+      };
+    };
     Functions: {
       // Prefix/name search over symbol_directory, limited by symbol -
       // see supabase/migrations/0027_on_demand_ingestion.sql.
@@ -670,6 +810,10 @@ export interface Database {
       recent_prices: {
         Args: { symbols: string[]; per_symbol?: number };
         Returns: PriceBarRow[];
+      };
+      symbol_52w_range: {
+        Args: Record<string, never>;
+        Returns: { symbol: string; week52_high: number | null; week52_low: number | null }[];
       };
       recent_prices_all: {
         Args: { per_symbol?: number; asset_types?: string[] };

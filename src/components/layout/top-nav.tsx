@@ -11,6 +11,8 @@ import { signOut } from "@/lib/actions/auth";
 interface TopNavProps {
   displayName: string;
   plan: "free" | "premium";
+  /** Adds the internal Operations link to the account menu. */
+  isAdmin?: boolean;
 }
 
 function isRouteActive(pathname: string, route: string) {
@@ -33,6 +35,11 @@ const ACCOUNT_MENU = [
   { label: "Billing", href: "/billing" },
   { label: "First-run walkthrough", href: "/onboarding" },
 ];
+
+// Internal route, offered only to accounts carrying the admin role and kept out
+// of the main nav entirely. The route itself 404s for everyone else - this is
+// the affordance, not the gate.
+const ADMIN_MENU_ITEM = { label: "Operations (internal)", href: "/admin" };
 
 
 // Module scope so the subscribe/snapshot identities are stable across renders;
@@ -58,7 +65,7 @@ function getHoverServerSnapshot(): boolean {
   return false;
 }
 
-export function TopNav({ displayName, plan }: TopNavProps) {
+export function TopNav({ displayName, plan, isAdmin = false }: TopNavProps) {
   const pathname = usePathname();
   // A group menu opens on hover *and* toggles on click. `pinned` is the
   // click-opened group, `hovered` the pointer-opened one, and `suppressed`-
@@ -163,17 +170,12 @@ export function TopNav({ displayName, plan }: TopNavProps) {
           <Logo size={24} />
         </Link>
 
-        <div className="flex w-full min-w-0 items-center gap-2 rounded-lg border border-line px-2.75 py-1.75 transition-colors duration-base ease-standard hover:border-[#3A3A3A] min-[900px]:hidden">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6A6A6A" strokeWidth="2" className="shrink-0">
-            <circle cx="11" cy="11" r="7" />
-            <line x1="21" y1="21" x2="16.65" y2="16.65" />
-          </svg>
-          <input
-            type="text"
-            placeholder="Search"
-            className="w-full min-w-0 bg-transparent text-[12.5px] text-primary placeholder:text-dim outline-none"
-          />
-        </div>
+        {/* The narrow-viewport search. This was a bare <input> wired to
+            nothing - no handler, no state, no navigation - so on a phone the
+            only search control in the product did nothing at all, while the
+            working one was hidden until 1080px. Both are now the same
+            component. */}
+        <GlobalSearch className="w-full min-w-0 min-[900px]:hidden" />
 
         <nav className="hidden min-w-0 flex-1 items-center gap-0.5 overflow-visible min-[900px]:flex">
           {NAV_ITEMS.map((entry) => {
@@ -269,7 +271,9 @@ export function TopNav({ displayName, plan }: TopNavProps) {
               nothing, complete with a "/" shortcut badge that did focus it and
               then did nothing else. GlobalSearch was already written and
               imported here; it was simply never rendered. */}
-          <GlobalSearch className="hidden w-[180px] min-[1080px]:flex min-[1300px]:w-[230px]" />
+          {/* Shown from 900px, where the mobile one stops: between 900 and
+              1080 there had been no search box on screen at all. */}
+          <GlobalSearch className="hidden w-[150px] min-[900px]:flex min-[1080px]:w-[180px] min-[1300px]:w-[230px]" />
 
           {plan === "free" && (
             <Link
@@ -300,7 +304,7 @@ export function TopNav({ displayName, plan }: TopNavProps) {
 
             {accountOpen && (
               <div className="animate-menu-in absolute top-[calc(100%+10px)] right-0 min-w-50 rounded-xl border border-line bg-panel p-1.5 shadow-2xl">
-                {ACCOUNT_MENU.map((item) => (
+                {(isAdmin ? [...ACCOUNT_MENU, ADMIN_MENU_ITEM] : ACCOUNT_MENU).map((item) => (
                   <Link
                     key={item.href}
                     href={item.href}

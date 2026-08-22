@@ -26,7 +26,10 @@ const TRACKED: TrackedSymbol[] = [
   { symbol: "SPY", aliases: ["s&p 500", "s&p500"], sectors: [] },
 ];
 
-const SECTOR_KEYWORDS: Record<string, string[]> = {
+// Exported so scripts/tests/sector-vocabulary.ts can assert every slug here is
+// known to src/lib/sectors.ts - the two vocabularies drifting apart in silence
+// is what broke the "Your sectors" news filter.
+export const SECTOR_KEYWORDS: Record<string, string[]> = {
   semiconductors: ["semiconductor", "chip maker", "chipmaker", "foundry"],
   technology: ["tech stocks", "software company", "cloud computing", "artificial intelligence", "ai chip"],
   automotive: ["automaker", "electric vehicle", "ev maker"],

@@ -13,14 +13,14 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   if (!user) redirect("/login");
 
   const [{ data: profile }, plan] = await Promise.all([
-    supabase.from("profiles").select("display_name").eq("user_id", user.id).single(),
+    supabase.from("profiles").select("display_name, role").eq("user_id", user.id).single(),
     getUserPlan(),
   ]);
 
   const displayName = profile?.display_name || user.email || "Account";
 
   return (
-    <AppShell displayName={displayName} plan={plan}>
+    <AppShell displayName={displayName} plan={plan} isAdmin={profile?.role === "admin"}>
       {children}
     </AppShell>
   );

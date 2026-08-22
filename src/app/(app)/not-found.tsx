@@ -17,8 +17,8 @@ export default function NotFound() {
       <div className="font-mono text-[10px] tracking-[0.16em] text-muted uppercase">Not found</div>
       <h1 className="mt-2 font-serif text-[28px] leading-[1.15] font-normal text-primary">Nothing here</h1>
       <p className="mt-2.5 text-[13.5px] leading-[1.6] text-muted text-pretty">
-        That ticker or market route doesn&apos;t exist, or Cairn doesn&apos;t cover it yet. Cairn tracks a defined
-        set of symbols rather than the whole market - try another symbol, or browse what&apos;s covered.
+        That page doesn&apos;t exist. Symbols themselves are fetched on demand, so if you were after a ticker, try
+        searching for it from the header rather than typing the URL.
       </p>
 
       <div className="mt-7 flex flex-wrap items-center justify-center gap-2.5">

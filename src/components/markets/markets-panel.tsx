@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { ASSET_TYPE_LABEL, ASSET_TYPES, type ScreenerRow } from "@/lib/screener";
 import type { CryptoRow } from "@/lib/crypto";
 import { TickerList } from "@/components/markets/ticker-list";
+import { TrendingDeck } from "@/components/markets/trending-deck";
 import { DataFreshness } from "@/components/data-freshness";
 import type { AssetFilter } from "@/lib/supabase/types";
 
@@ -13,11 +14,13 @@ interface MarketsPanelProps {
   cryptoRows: CryptoRow[];
   /** Settings › Display default; which category the page opens on. */
   defaultFilter?: AssetFilter;
+  /** symbol -> request_count from symbol_directory, for the Most searched deck. */
+  requestCounts?: Record<string, number>;
 }
 
 const TABS = ["all", ...ASSET_TYPES] as const;
 
-export function MarketsPanel({ rows, cryptoRows, defaultFilter = "all" }: MarketsPanelProps) {
+export function MarketsPanel({ rows, cryptoRows, defaultFilter = "all", requestCounts = {} }: MarketsPanelProps) {
   const [tab, setTab] = useState<AssetFilter>(defaultFilter);
   const [query, setQuery] = useState("");
 
@@ -67,6 +70,8 @@ export function MarketsPanel({ rows, cryptoRows, defaultFilter = "all" }: Market
           <DataFreshness source="last_close" asOf={asOf} />
         </div>
       </div>
+
+      <TrendingDeck rows={rows} requestCounts={requestCounts} names={names} />
 
       <div className="mb-4 flex flex-wrap items-center gap-2.5">
         <div className="flex flex-wrap gap-1.5 rounded-[11px] border border-line bg-panel p-1">

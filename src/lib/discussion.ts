@@ -11,7 +11,28 @@ export interface DiscussionComment {
   authorName: string;
   isOwn: boolean;
   myVote: 1 | -1 | null;
+  /** Open manual reports on this comment, and whether this reader filed one. */
+  reportCount: number;
+  reportedByMe: boolean;
 }
+
+/**
+ * How many distinct people have to report a comment before it is hidden
+ * pending review. One report is a disagreement; a handful from unrelated
+ * accounts is a signal. Deliberately not 1 - a single reader must not be able
+ * to remove someone else's comment.
+ */
+export const REPORT_HIDE_THRESHOLD = 3;
+
+export const REPORT_REASONS = [
+  { id: "spam", label: "Spam or advertising" },
+  { id: "abuse", label: "Abuse or harassment" },
+  { id: "misinformation", label: "Misleading market claim" },
+  { id: "off_topic", label: "Off topic" },
+  { id: "other", label: "Something else" },
+] as const;
+
+export type ReportReason = (typeof REPORT_REASONS)[number]["id"];
 
 const SPAM_PHRASES = [
   "click here",

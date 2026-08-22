@@ -10,6 +10,7 @@ import { decodeEntities } from "@/lib/news";
 import { TimeAgo } from "@/components/time-ago";
 import { MODULE_KEYS, type ModuleKey } from "@/lib/dashboard-modules";
 import { DataFreshness } from "@/components/data-freshness";
+import { Sparkline } from "@/components/sparkline";
 
 // MODULE_KEYS / ModuleKey now live in lib/dashboard-modules.ts. The dashboard
 // page is a Server Component and imported them from this "use client" module,
@@ -58,20 +59,6 @@ interface DashboardHomeProps {
       confidenceLevel: string;
     } | null;
   };
-}
-
-function sparklinePoints(values: number[], width: number, height: number) {
-  if (values.length < 2) return "";
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  const span = max - min || 1;
-  return values
-    .map((v, i) => {
-      const x = (i / (values.length - 1)) * width;
-      const y = height - ((v - min) / span) * height;
-      return `${x.toFixed(1)},${y.toFixed(1)}`;
-    })
-    .join(" ");
 }
 
 const NEWS_TINT: Record<"accent" | "violet" | "warning", string> = {
@@ -175,21 +162,16 @@ export function DashboardHome({
                 </div>
               </div>
               {portfolio.sparkline.length > 1 && (
-                <svg viewBox="0 0 180 46" width={180} height={46} className="shrink-0">
-                  {/* Was always the accent green. It plots the last month of
-                      portfolio value, so it has to be red when that month is
-                      down - the same rule the table rows follow. */}
-                  <polyline
-                    points={sparklinePoints(portfolio.sparkline, 180, 46)}
-                    fill="none"
-                    stroke={portfolio.sparklinePositive ? "var(--color-accent)" : "var(--color-negative)"}
-                    strokeWidth={1.8}
-                    strokeLinejoin="round"
-                    pathLength="1"
-                    strokeDasharray="1"
-                    className="animate-draw"
-                  />
-                </svg>
+                /* Was always the accent green. It plots the last month of
+                   portfolio value, so it has to be red when that month is
+                   down - the same rule the table rows follow. */
+                <Sparkline
+                  values={portfolio.sparkline}
+                  positive={portfolio.sparklinePositive}
+                  width={180}
+                  height={46}
+                  className="shrink-0"
+                />
               )}
             </div>
             <div className="mt-1.5 flex items-center gap-2">

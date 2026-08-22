@@ -1,7 +1,17 @@
+// One sparkline, used by every surface that draws one.
+//
+// There were three: this component, `trendPoints()` in the markets ticker list
+// and `sparklinePoints()` in the dashboard - the latter two byte-identical to
+// each other and subtly different from this one, so the same series drew with
+// different insets depending on which screen you were looking at. A sparkline
+// is a chart; three implementations of it is three places for a chart bug to
+// live independently, which is exactly what the chart-accuracy pass found
+// elsewhere in this codebase.
+
 interface SparklineProps {
   values: number[];
   positive: boolean;
-  /** Tailwind width class; rows use the default, wider contexts can override. */
+  /** Tailwind size class; rows use the default, wider contexts override it. */
   className?: string;
   /** Stagger the draw-in when many render down a table. */
   delayMs?: number;
@@ -12,32 +22,72 @@ interface SparklineProps {
    * is what a watchlist or markets row wants.
    */
   color?: string;
+  /** Fixed pixel size instead of a CSS-sized, aspect-stretched box. */
+  width?: number;
+  height?: number;
+  /** Let the box stretch to its container rather than preserving aspect. */
+  stretch?: boolean;
+}
+
+const VIEW_W = 100;
+const VIEW_H = 28;
+// Half the stroke width, so the extreme points are drawn inside the box
+// instead of being clipped along the top and bottom edges.
+const PAD = 1;
+
+/**
+ * Map a series onto an SVG polyline within `width` x `height`, insetting by
+ * `pad` so the stroke is not clipped at the extremes. Exported because a few
+ * callers draw into a fixed-size box of their own.
+ */
+export function sparklinePoints(values: number[], width: number, height: number, pad = PAD): string {
+  if (values.length < 2) return "";
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const span = max - min || 1;
+  const usable = height - pad * 2;
+  return values
+    .map((v, i) => {
+      const x = (i / (values.length - 1)) * width;
+      const y = pad + (1 - (v - min) / span) * usable;
+      return `${x.toFixed(2)},${y.toFixed(2)}`;
+    })
+    .join(" ");
 }
 
 // Inline SVG rather than Recharts: these render once per row and Recharts'
 // ResponsiveContainer is heavy at that multiplicity.
-export function Sparkline({ values, positive, className = "h-7 w-[90px]", delayMs = 0, color }: SparklineProps) {
+export function Sparkline({
+  values,
+  positive,
+  className = "h-7 w-[90px]",
+  delayMs = 0,
+  color,
+  width,
+  height,
+  stretch = false,
+}: SparklineProps) {
   if (values.length < 2) {
     return <div className={`${className} text-[11px] text-dim`}>-</div>;
   }
 
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  const range = max - min || 1;
-  const stepX = 100 / (values.length - 1);
-
-  const points = values
-    .map((v, i) => `${(i * stepX).toFixed(2)},${(24 - ((v - min) / range) * 22).toFixed(2)}`)
-    .join(" ");
+  const w = width ?? VIEW_W;
+  const h = height ?? VIEW_H;
 
   return (
-    <svg viewBox="0 0 100 28" className={`block ${className}`} preserveAspectRatio="none">
+    <svg
+      viewBox={`0 0 ${w} ${h}`}
+      {...(width && height ? { width, height } : {})}
+      className={`block ${className}`}
+      preserveAspectRatio={stretch || !width ? "none" : "xMidYMid meet"}
+    >
       <polyline
-        points={points}
+        points={sparklinePoints(values, w, h)}
         fill="none"
         stroke={color ?? (positive ? "var(--color-accent)" : "var(--color-negative)")}
         strokeWidth={1.8}
         strokeLinejoin="round"
+        vectorEffect="non-scaling-stroke"
         pathLength="1"
         strokeDasharray="1"
         className="animate-draw"
