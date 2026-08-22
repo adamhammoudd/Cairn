@@ -41,5 +41,13 @@ export const NAV_ITEMS: NavEntry[] = [
       { label: "Calendar", route: "/calendar" },
     ],
   },
-  { label: "Assistant", route: "/assistant" },
+  {
+    label: "Assistant",
+    items: [
+      { label: "Chat", route: "/assistant" },
+      // The Research workspace had no nav entry at all - it was reachable only
+      // by typing the URL or following a link from an analysis.
+      { label: "Research", route: "/research" },
+    ],
+  },
 ];
