@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { readDisplayPrefs, type DisplayPrefs, type WatchlistWithItems } from "@/lib/watchlists";
 import { validateSymbol, validateText } from "@/lib/validation";
+import { ensureSymbolIngested } from "@/lib/market-data/ingest";
 
 export type { WatchlistWithItems } from "@/lib/watchlists";
 
@@ -168,17 +169,25 @@ export async function addWatchlistItem(_prevState: string | null, formData: Form
     .maybeSingle();
   if (!owned) return "That watchlist doesn't exist.";
 
-  // A well-formed but untracked symbol renders the same dead row, so it is
-  // rejected too - with a message that distinguishes the two cases. Ordered
+  // A symbol with no price history renders a dead row of "- - -", so it is
+  // rejected - but "not tracked yet" is no longer a reason on its own: the
+  // symbol is fetched on the spot, exactly as the search box does. Ordered
   // after the auth and ownership checks so an unauthenticated caller cannot
-  // use this action to probe which symbols exist.
+  // use this action to make Cairn issue outbound requests.
   const { data: tracked } = await supabase
-    .from("historical_prices")
+    .from("symbol_directory")
     .select("symbol")
     .eq("symbol", symbol)
-    .limit(1)
+    .eq("status", "available")
     .maybeSingle();
-  if (!tracked) return `${symbol} isn't tracked yet, so it has no price history to show.`;
+  if (!tracked) {
+    const ingested = await ensureSymbolIngested(symbol);
+    if (ingested.status !== "available") {
+      return ingested.status === "rate_limited"
+        ? `Couldn't check ${symbol} just now - the market data provider is rate-limiting. Try again shortly.`
+        : `No market data is available for ${symbol}, so it has no price history to show.`;
+    }
+  }
 
   const { count } = await supabase
     .from("watchlist_items")

@@ -147,12 +147,11 @@ Deno.serve(async (req) => {
   // Pull once for all symbols rather than per-alert - several alerts commonly
   // watch the same ticker.
   const symbols = Array.from(new Set(rows.map((a) => a.scope_value)));
-  const { data: prices } = await supabase
-    .from("historical_prices")
-    .select("symbol, ts, close, volume")
-    .in("symbol", symbols)
-    .order("ts", { ascending: false })
-    .limit(symbols.length * 250);
+  // symbols.length * 250 looks per-symbol but is not: the rows interleave by
+  // date, so a symbol whose last bar is older than the others gets fewer bars
+  // - or none - and its alerts quietly stop evaluating. recent_prices() puts
+  // the limit inside a lateral join, one per symbol.
+  const { data: prices } = await supabase.rpc("recent_prices", { symbols, per_symbol: 250 });
 
   const seriesBySymbol = new Map<string, Series>();
   for (const p of prices ?? []) {

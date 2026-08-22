@@ -75,6 +75,77 @@ select '52w high is drawn from recent bars, and is >= today''s close',
        max(high) >= (select close from historical_prices where symbol='ZTEST' and ts=current_date)
 from fixed where ts >= current_date - 365;
 
+-- ---------------------------------------------------------------------------
+-- Second defect class: a LIMIT shared across symbols.
+--
+-- Markets/Screener took `order by ts desc limit 2000` across every symbol at
+-- once, watchlists `symbols.length * 30`, the sector map `symbols.length * 6`.
+-- Because rows interleave by date, the depth each symbol actually gets is the
+-- budget divided by the number of symbols -- and a symbol whose newest bar is
+-- older than the others (any symbol ingested on demand and not refreshed
+-- since, or one that simply does not trade at the weekend) falls out of the
+-- window entirely and renders with NO sparkline and a null % change, silently.
+-- recent_prices()/recent_prices_all() put the LIMIT inside a lateral join.
+
+-- ZFRESH trades every day; ZSTALE stopped 40 days ago. Same shape as a coin
+-- (weekends) next to an equity, or a lazily-ingested symbol next to a cron one.
+insert into historical_prices (symbol, asset_type, ts, open, high, low, close, volume)
+select 'ZFRESH', 'crypto', (current_date - g)::date, 10, 10, 10, 10 + g, 1 from generate_series(0, 200) g;
+insert into historical_prices (symbol, asset_type, ts, open, high, low, close, volume)
+select 'ZSTALE', 'equity', (current_date - 40 - g)::date, 20, 20, 20, 20 + g, 1 from generate_series(0, 200) g;
+
+-- The defect, reproduced: the call site asks for "30 bars each" by passing a
+-- shared budget of symbols * 30 = 60. Ordered by date across both symbols, the
+-- newest 30 rows are all ZFRESH (it has a bar on every one of the last 30
+-- days), so ZSTALE gets 10 of its 30 -- and with a slightly larger gap, none.
+with shared_budget as (
+  select symbol, ts, close from historical_prices
+  where symbol in ('ZFRESH', 'ZSTALE') order by ts desc limit 30
+)
+insert into results
+select 'shared limit starves the symbol with older bars (the defect)',
+       '0 of 30', count(*) filter (where symbol = 'ZSTALE')::text || ' of 30',
+       count(*) filter (where symbol = 'ZSTALE') = 0
+from shared_budget;
+
+-- The fix: each symbol gets its own 30.
+insert into results
+select 'recent_prices() gives every symbol its own limit',
+       '30 / 30',
+       count(*) filter (where symbol = 'ZFRESH')::text || ' / ' || count(*) filter (where symbol = 'ZSTALE')::text,
+       count(*) filter (where symbol = 'ZFRESH') = 30 and count(*) filter (where symbol = 'ZSTALE') = 30
+from public.recent_prices(array['ZFRESH', 'ZSTALE'], 30);
+
+-- ... and returns each symbol newest-first, which every caller relies on to
+-- read row 0 as "latest" and row 1 as "previous close".
+insert into results
+select 'recent_prices() returns newest-first within a symbol',
+       (current_date)::text || ' / ' || (current_date - 40)::text,
+       (select max(ts)::text from public.recent_prices(array['ZFRESH'], 30)) || ' / ' ||
+       (select max(ts)::text from public.recent_prices(array['ZSTALE'], 30)),
+       (select max(ts) from public.recent_prices(array['ZFRESH'], 30)) = current_date
+       and (select max(ts) from public.recent_prices(array['ZSTALE'], 30)) = current_date - 40;
+
+-- recent_prices_all() covers a universe that cannot be enumerated up front,
+-- which is what on-demand ingestion produces.
+insert into results
+select 'recent_prices_all() covers every ingested symbol',
+       'ZFRESH and ZSTALE present',
+       string_agg(distinct symbol, ', ' order by symbol),
+       count(*) filter (where symbol = 'ZFRESH') = 12 and count(*) filter (where symbol = 'ZSTALE') = 12
+from public.recent_prices_all(12) where symbol in ('ZFRESH', 'ZSTALE');
+
+-- The asset_type filter is what the crypto surfaces pass.
+insert into results
+select 'recent_prices_all() honours the asset_type filter',
+       'ZFRESH', string_agg(distinct symbol, ', '), string_agg(distinct symbol, ', ') = 'ZFRESH'
+from public.recent_prices_all(5, array['crypto']) where symbol in ('ZFRESH', 'ZSTALE');
+
+-- The per-symbol limit is clamped rather than trusted.
+insert into results
+select 'recent_prices() clamps per_symbol to at least 1', '1', count(*)::text, count(*) = 1
+from public.recent_prices(array['ZFRESH'], 0);
+
 -- Same defect class, third site: /api/chat fed the model its history with
 -- ascending + limit(20), i.e. the OLDEST twenty turns of the session. Past
 -- twenty messages the assistant never saw anything recently said.

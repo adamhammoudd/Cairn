@@ -235,11 +235,11 @@ Deno.serve(async (req) => {
   // Pick the stalest coins for the history pass. Without this, a rate-limited
   // run always burns its budget on the same top-ranked coins and the rest
   // never get history at all.
-  const { data: existing } = await supabase
-    .from("historical_prices")
-    .select("symbol, ts")
-    .eq("asset_type", "crypto")
-    .order("ts", { ascending: false });
+  // One bar per coin, per symbol. Reading every crypto row ordered by date and
+  // taking the first per symbol gave the right answer only while every coin
+  // was inside the row cap; a coin that stopped updating fell out of the window
+  // and read as "never ingested".
+  const { data: existing } = await supabase.rpc("recent_prices_all", { per_symbol: 1, asset_types: ["crypto"] });
 
   const freshestBySymbol = new Map<string, string>();
   for (const row of existing ?? []) {

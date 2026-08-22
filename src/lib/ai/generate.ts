@@ -112,14 +112,14 @@ export async function generateAnalysis({ scopeType, scopeValue, supabaseClient }
   else if (scopeType === "sector") newsQuery = newsQuery.contains("sectors", [scopeValue]);
   const { data: news } = await newsQuery;
 
-  // Asset type is read off the ingested price history rather than a hardcoded
-  // list, so a newly-tracked coin is treated as crypto the moment its price
-  // history lands.
+  // Asset type comes from the symbol directory rather than a hardcoded list,
+  // so a newly-ingested coin is treated as crypto the moment it lands. (It
+  // used to read an arbitrary historical_prices row - one row of many, with no
+  // ordering, which is only correct while every row agrees.)
   const { data: assetRow } = await supabase
-    .from("historical_prices")
+    .from("symbol_directory")
     .select("asset_type")
     .eq("symbol", scopeValue)
-    .limit(1)
     .maybeSingle();
   const isCrypto = scopeType === "ticker" && assetRow?.asset_type === "crypto";
 
