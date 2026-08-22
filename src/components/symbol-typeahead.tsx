@@ -192,7 +192,10 @@ export function SymbolTypeahead({
       />
 
       {open && query.trim() && !selected && (
-        <div className="animate-menu-in absolute top-full left-0 z-30 mt-1 w-full overflow-hidden rounded-lg border border-line bg-panel py-1 shadow-lg">
+        // min-w: the header search input is deliberately narrow, and a result
+        // row inside a 160px menu had its symbol clipped to nothing by the
+        // badge beside it. The menu may be wider than the input it hangs off.
+        <div className="animate-menu-in absolute top-full left-0 z-30 mt-1 w-full min-w-[260px] overflow-hidden rounded-lg border border-line bg-panel py-1 shadow-lg">
           {visible.map((r) => (
             <button
               key={r.symbol}
@@ -200,9 +203,10 @@ export function SymbolTypeahead({
               onClick={() => pick(r)}
               className="flex w-full items-center justify-between px-3.5 py-2 text-left text-[13px] text-muted transition-colors duration-fast ease-standard hover:bg-active hover:text-primary"
             >
-              <span className="min-w-0 truncate">
-                <span className="text-primary">{highlightMatch(r.symbol, query)}</span>
-                {r.name && <span className="ml-2 text-[12px] text-muted">{highlightMatch(r.name, query)}</span>}
+              <span className="flex min-w-0 flex-1 items-baseline gap-2">
+                {/* The ticker never truncates; the name gives way first. */}
+                <span className="shrink-0 text-primary">{highlightMatch(r.symbol, query)}</span>
+                {r.name && <span className="truncate text-[12px] text-muted">{highlightMatch(r.name, query)}</span>}
               </span>
               <span className="ml-2 shrink-0 text-[11px] text-dim capitalize">{r.assetType}</span>
             </button>
@@ -214,9 +218,9 @@ export function SymbolTypeahead({
               onClick={() => pick(newlyAvailable)}
               className="flex w-full items-center justify-between border-t border-line px-3.5 py-2 text-left text-[13px] text-muted transition-colors duration-fast ease-standard hover:bg-active hover:text-primary"
             >
-              <span className="min-w-0 truncate">
-                <span className="text-primary">{highlightMatch(newlyAvailable.symbol, query)}</span>
-                {newlyAvailable.name && <span className="ml-2 text-[12px] text-muted">{newlyAvailable.name}</span>}
+              <span className="flex min-w-0 flex-1 items-baseline gap-2">
+                <span className="shrink-0 text-primary">{highlightMatch(newlyAvailable.symbol, query)}</span>
+                {newlyAvailable.name && <span className="truncate text-[12px] text-muted">{newlyAvailable.name}</span>}
               </span>
               <span className="ml-2 shrink-0 rounded-full border border-accent/40 px-1.75 py-0.5 font-mono text-[9px] tracking-[0.1em] text-accent uppercase">
                 Just added
