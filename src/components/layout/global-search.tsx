@@ -46,7 +46,7 @@ export function GlobalSearch({ className = "" }: { className?: string }) {
         name={null}
         clearOnSelect
         placeholder="Search tickers, news"
-        onSelect={(r) => router.push(`/ticker/${r.symbol}`)}
+        onSelect={(r) => router.push(`/ticker/${encodeURIComponent(r.symbol)}`)}
         className="min-w-0 flex-1"
         inputClassName="w-full min-w-0 bg-transparent text-[12.5px] text-primary placeholder:text-dim outline-none"
       />

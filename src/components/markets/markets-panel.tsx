@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { ASSET_TYPE_LABEL, ASSET_TYPES, type ScreenerRow } from "@/lib/screener";
 import type { CryptoRow } from "@/lib/crypto";
 import { TickerList } from "@/components/markets/ticker-list";
+import { DataFreshness } from "@/components/data-freshness";
 import type { AssetFilter } from "@/lib/supabase/types";
 
 interface MarketsPanelProps {
@@ -43,6 +44,9 @@ export function MarketsPanel({ rows, cryptoRows, defaultFilter = "all" }: Market
 
   const activeFilterLabel = tab === "all" ? "the full universe" : `${tab} symbols`;
 
+  // Newest bar behind any row on screen.
+  const asOf = useMemo(() => rows.reduce<string | null>((newest, r) => (r.asOf && (!newest || r.asOf > newest) ? r.asOf : newest), null), [rows]);
+
   function clearFilters() {
     setTab("all");
     setQuery("");
@@ -54,8 +58,14 @@ export function MarketsPanel({ rows, cryptoRows, defaultFilter = "all" }: Market
         <div className="mb-2 font-mono text-[10.5px] tracking-[0.16em] text-muted uppercase">Markets</div>
         <h1 className="font-serif text-[32px] leading-[1.1] font-normal text-primary">The whole board</h1>
         <p className="mt-1.75 max-w-[560px] text-[13.5px] text-muted text-pretty">
-          Equities, ETFs, crypto, forex and indices in one filterable view.
+          Equities, ETFs, crypto, forex and indices in one filterable view. Any symbol the data provider carries is
+          fetched the first time it is searched for.
         </p>
+        {/* Every price in this table is a stored daily close. The ticker page
+            said so; this one did not, and the two are the same numbers. */}
+        <div className="mt-2.5">
+          <DataFreshness source="last_close" asOf={asOf} />
+        </div>
       </div>
 
       <div className="mb-4 flex flex-wrap items-center gap-2.5">

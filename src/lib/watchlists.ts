@@ -7,6 +7,8 @@ export interface WatchlistItemWithData {
   symbol: string;
   sort_order: number;
   latestClose: number | null;
+  /** Date of the close behind `latestClose`, YYYY-MM-DD. */
+  asOf?: string | null;
   changePct: number | null;
   sparkline: number[];
 }

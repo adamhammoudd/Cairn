@@ -3,6 +3,7 @@
 import { formatMarketCap, formatVolume } from "@/lib/screener";
 import { formatSupply } from "@/lib/crypto";
 import { assetName } from "@/lib/asset-names";
+import { DataFreshness } from "@/components/data-freshness";
 import { decodeEntities } from "@/lib/news";
 import type { TickerData } from "@/lib/actions/ticker";
 import type { AnalysisWithMethodology } from "@/lib/actions/analysis";
@@ -54,7 +55,10 @@ export function TickerWorkspace({
       ? data.price - data.price / (1 + data.changePct / 100)
       : null;
 
-  const name = isCrypto && data.cryptoMetrics ? data.cryptoMetrics.name : assetName(data.symbol, data.assetType);
+  // The provider's own display name, stored on symbol_directory at ingest.
+  // assetName() is a seven-symbol hardcoded map and is now only the fallback
+  // for rows ingested before the directory existed.
+  const name = data.name ?? (isCrypto && data.cryptoMetrics ? data.cryptoMetrics.name : assetName(data.symbol, data.assetType));
   const subline = [
     name,
     heldQuantity === null || heldQuantity === 0 ? "not in your portfolio" : `${heldQuantity} held`,
@@ -139,7 +143,10 @@ export function TickerWorkspace({
                           style: "currency",
                           currency: "USD",
                         })}`
-                  } today`}
+                  } ${data.priceSource === "live" ? "today" : "on the last close"}`}
+            </div>
+            <div className="mt-1">
+              <DataFreshness source={data.priceSource} asOf={data.priceAsOf} />
             </div>
           </div>
           <div className="flex gap-2">
@@ -150,7 +157,7 @@ export function TickerWorkspace({
       </div>
 
       <div className="mb-3.5">
-        <TickerChart symbol={data.symbol} bars={data.bars} positive={positive} priceSource={data.priceSource} />
+        <TickerChart symbol={data.symbol} bars={data.bars} priceSource={data.priceSource} priceAsOf={data.priceAsOf} />
       </div>
 
       {stats.length > 0 && (

@@ -35,23 +35,31 @@ export async function listWatchlists(): Promise<WatchlistWithItems[]> {
   const symbols = Array.from(new Set((items ?? []).map((i) => i.symbol)));
 
   // 30 most recent closes per symbol drive both the sparkline and the % change.
+  //
+  // `.limit(symbols.length * 30)` looked per-symbol but was not: the rows
+  // interleave by date, so a coin with a bar every weekend day consumes the
+  // budget and an equity in the same list ends up with fewer than 30 - or, at
+  // the tail, none, which renders as a flat "-" with no error. recent_prices()
+  // puts the LIMIT inside a lateral join, one per symbol.
   const { data: prices } =
     symbols.length > 0
-      ? await supabase
-          .from("historical_prices")
-          .select("symbol, ts, close")
-          .in("symbol", symbols)
-          .order("ts", { ascending: false })
-          .limit(symbols.length * 30)
+      ? await supabase.rpc("recent_prices", { symbols, per_symbol: 30 })
       : { data: [] };
 
   const bySymbol = new Map<string, number[]>();
-  for (const p of prices ?? []) {
+  const asOfBySymbol = new Map<string, string>();
+  for (const p of (prices ?? []) as { symbol: string; ts: string; close: number | null }[]) {
     if (p.close === null) continue;
     const arr = bySymbol.get(p.symbol) ?? [];
-    if (arr.length < 30) arr.push(p.close);
+    if (arr.length === 0) asOfBySymbol.set(p.symbol, p.ts);
+    if (arr.length < 30) arr.push(Number(p.close));
     bySymbol.set(p.symbol, arr);
   }
+
+  // Crypto items carry CoinGecko's rolling 24h change, the same figure Markets
+  // and the ticker page show, instead of a close-to-close delta.
+  const { data: coinRows } = await supabase.from("crypto_metrics").select("symbol, price_change_24h_pct").in("symbol", symbols);
+  const rolling = new Map((coinRows ?? []).filter((c) => c.price_change_24h_pct != null).map((c) => [c.symbol, Number(c.price_change_24h_pct)]));
 
   return lists.map((l) => ({
     id: l.id,
@@ -65,12 +73,14 @@ export async function listWatchlists(): Promise<WatchlistWithItems[]> {
         const desc = bySymbol.get(i.symbol) ?? [];
         const latestClose = desc[0] ?? null;
         const prev = desc[1] ?? null;
+        const closeToClose = latestClose !== null && prev !== null && prev !== 0 ? ((latestClose - prev) / prev) * 100 : null;
         return {
           id: i.id,
           symbol: i.symbol,
           sort_order: i.sort_order,
           latestClose,
-          changePct: latestClose !== null && prev !== null && prev !== 0 ? ((latestClose - prev) / prev) * 100 : null,
+          changePct: rolling.get(i.symbol) ?? closeToClose,
+          asOf: asOfBySymbol.get(i.symbol) ?? null,
           sparkline: [...desc].reverse(),
         };
       }),

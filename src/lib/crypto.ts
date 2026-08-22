@@ -7,6 +7,8 @@ export interface CryptoRow {
   name: string;
   rank: number | null;
   price: number | null;
+  /** Date of the close behind `price`, YYYY-MM-DD. */
+  asOf?: string | null;
   changePct24h: number | null;
   marketCap: number | null;
   volume24h: number | null;

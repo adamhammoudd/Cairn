@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { cryptoRolling24hFor } from "@/lib/market-data/current-price";
 import { EMPTY_FILTERS, type SavedScreen, type ScreenerFilters, type ScreenerRow } from "@/lib/screener";
 
 // Market cap, P/E, and dividend yield are derived here from SEC XBRL
@@ -17,42 +18,61 @@ export async function runScreen(rawFilters: ScreenerFilters): Promise<ScreenerRo
   const filters: ScreenerFilters = { ...EMPTY_FILTERS, ...rawFilters };
   const supabase = await createClient();
 
-  // Two most recent closes per symbol give price + day change; volume comes
-  // from the latest bar.
-  const [{ data: prices }, { data: fundamentals }] = await Promise.all([
-    supabase
-      .from("historical_prices")
-      .select("symbol, asset_type, ts, close, volume")
-      .order("ts", { ascending: false })
-      .limit(2000),
+  // Twelve most recent closes per symbol: the first 2 drive price/changePct,
+  // all 12 feed the Trend sparkline.
+  //
+  // This was one `order by ts desc limit 2000` across every symbol at once.
+  // Because the rows interleave by date, the per-symbol depth was really
+  // 2000/N - fine at 33 symbols, three bars each at 600, and zero for a symbol
+  // whose last ingest is older than the newest 2000 rows. On-demand ingestion
+  // makes N unbounded, so the budget has to be per symbol: recent_prices_all()
+  // applies the LIMIT inside a lateral join.
+  const [{ data: prices }, { data: fundamentals }, { data: directory }] = await Promise.all([
+    supabase.rpc("recent_prices_all", { per_symbol: 12 }),
     supabase.from("fundamentals").select("symbol, shares_outstanding, eps_ttm, dividends_ttm"),
+    supabase.from("symbol_directory").select("symbol, asset_type, name").eq("status", "available"),
   ]);
 
   const fundamentalsBySymbol = new Map((fundamentals ?? []).map((f) => [f.symbol, f]));
+  const directoryBySymbol = new Map((directory ?? []).map((d) => [d.symbol, d]));
 
-  const bySymbol = new Map<string, { assetType: string; closes: number[]; volume: number | null }>();
-  for (const p of prices ?? []) {
-    const entry = bySymbol.get(p.symbol) ?? { assetType: p.asset_type, closes: [], volume: null };
-    // rows are ordered ts desc, so closes accumulates most-recent-first; the
-    // first 2 drive price/changePct, up to 12 feed the Trend sparkline.
+  const bySymbol = new Map<string, { assetType: string; closes: number[]; volume: number | null; asOf: string | null }>();
+  for (const p of (prices ?? []) as { symbol: string; asset_type: string; ts: string; close: number | null; volume: number | null }[]) {
+    const entry = bySymbol.get(p.symbol) ?? { assetType: p.asset_type, closes: [], volume: null, asOf: null };
+    // newest-first within a symbol
     if (entry.closes.length < 12 && p.close !== null) {
-      if (entry.closes.length === 0) entry.volume = p.volume;
+      if (entry.closes.length === 0) {
+        entry.volume = p.volume;
+        entry.asOf = p.ts;
+      }
       entry.closes.push(Number(p.close));
     }
     bySymbol.set(p.symbol, entry);
   }
 
+  // Crypto's headline 24h change is CoinGecko's rolling figure everywhere in
+  // the app; a close-to-close delta on a market that never closes is an
+  // arbitrary midnight slice, and showing one here and the other on the ticker
+  // page is how BTC came to read +5.70% on Markets and -0.15% on its own page.
+  const cryptoSymbols = Array.from(bySymbol.entries())
+    .filter(([, e]) => e.assetType === "crypto")
+    .map(([symbol]) => symbol);
+  const rolling = await cryptoRolling24hFor(cryptoSymbols);
+
   const rows: ScreenerRow[] = Array.from(bySymbol.entries()).map(([symbol, e]) => {
     const price = e.closes[0] ?? null;
     const prev = e.closes[1] ?? null;
     const f = fundamentalsBySymbol.get(symbol);
+    const closeToClose = price !== null && prev !== null && prev !== 0 ? ((price - prev) / prev) * 100 : null;
 
     return {
       symbol,
-      assetType: e.assetType,
+      assetType: directoryBySymbol.get(symbol)?.asset_type ?? e.assetType,
+      name: directoryBySymbol.get(symbol)?.name ?? null,
       price,
-      changePct: price !== null && prev !== null && prev !== 0 ? ((price - prev) / prev) * 100 : null,
+      changePct: rolling.get(symbol) ?? closeToClose,
       volume: e.volume,
+      asOf: e.asOf,
       trend: [...e.closes].reverse(),
       marketCap: price !== null && f?.shares_outstanding ? price * f.shares_outstanding : null,
       // A negative or zero TTM EPS has no meaningful P/E - leave it null rather

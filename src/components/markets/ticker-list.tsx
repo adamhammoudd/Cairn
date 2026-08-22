@@ -64,7 +64,12 @@ export function TickerList({ rows, names, marketCaps, emptyState }: TickerListPr
             : r.changePct >= 0
               ? "var(--color-accent)"
               : "var(--color-negative)";
-        const displayName = names?.[r.symbol] ?? assetName(r.symbol, ASSET_TYPE_LABEL[r.assetType] ?? r.assetType);
+        // Name resolution, most specific first: crypto_metrics (passed in),
+        // then the provider's own longName stored on symbol_directory at
+        // ingest, then the seven-symbol static map, then the asset type. Before
+        // the directory existed, every symbol outside that static map rendered
+        // its asset type where a company name belongs.
+        const displayName = names?.[r.symbol] ?? r.name ?? assetName(r.symbol, ASSET_TYPE_LABEL[r.assetType] ?? r.assetType);
         const marketCap = marketCaps && r.symbol in marketCaps ? marketCaps[r.symbol] : r.marketCap;
 
         return (

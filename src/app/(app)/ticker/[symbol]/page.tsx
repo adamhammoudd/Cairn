@@ -1,6 +1,7 @@
-import { notFound, redirect } from "next/navigation";
+import Link from "next/link";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { getTickerDetail } from "@/lib/actions/ticker";
+import { loadTicker } from "@/lib/actions/ticker";
 import { getAnalysesForScope } from "@/lib/actions/analysis";
 import { listThreadsForSymbol } from "@/lib/actions/discussion";
 import { listWatchlists } from "@/lib/actions/watchlists";
@@ -8,8 +9,58 @@ import { getUserPlan } from "@/lib/actions/billing";
 import { TIER_LIMITS } from "@/lib/billing";
 import { TickerWorkspace } from "@/components/ticker/ticker-workspace";
 
+function safeDecode(value: string): string {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
+
+// A symbol Cairn has never fetched is not an error - loadTicker() ingests it on
+// the spot. This page only renders the unavailable state when the provider
+// itself has nothing (or is refusing), and it says which, because "that ticker
+// doesn't exist" and "we are being rate-limited" call for different actions
+// from the reader.
+function Unavailable({ symbol, reason, detail }: { symbol: string; reason: "unavailable" | "rate_limited" | "error"; detail: string }) {
+  const heading =
+    reason === "rate_limited" ? "Market data is rate-limited right now" : reason === "error" ? "Couldn't reach the market data provider" : `No market data for ${symbol}`;
+
+  return (
+    <div className="animate-page-in mx-auto max-w-[560px] px-6 py-20 text-center">
+      <div className="mb-2 font-mono text-[10.5px] tracking-[0.16em] text-muted uppercase">{symbol}</div>
+      <h1 className="font-serif text-[28px] leading-[1.15] text-primary">{heading}</h1>
+      <p className="mx-auto mt-3 max-w-[440px] text-[13.5px] text-muted text-pretty">{detail}</p>
+      <p className="mx-auto mt-2 max-w-[440px] text-[12.5px] text-dim text-pretty">
+        {reason === "unavailable"
+          ? "Cairn fetches any symbol its data provider carries the first time it's asked for, so this one is either delisted, not a listed symbol, or outside the provider's coverage. Nothing is shown rather than a placeholder price."
+          : "Nothing is shown rather than a stale or placeholder price. Try again shortly."}
+      </p>
+      <div className="mt-6 flex flex-wrap justify-center gap-2">
+        <Link
+          href="/markets"
+          className="rounded-[10px] bg-gradient-to-br from-accent-light to-accent-dark px-4 py-2.25 text-[12.5px] font-semibold text-canvas"
+        >
+          Browse markets
+        </Link>
+        <Link
+          href="/assistant"
+          className="rounded-[10px] border border-line px-4 py-2.25 text-[12.5px] text-primary transition-colors duration-base ease-standard hover:border-[#3A3A3A]"
+        >
+          Ask the assistant
+        </Link>
+      </div>
+    </div>
+  );
+}
+
 export default async function TickerPage({ params }: { params: Promise<{ symbol: string }> }) {
-  const { symbol } = await params;
+  const { symbol: rawSymbol } = await params;
+  // Index tickers carry a caret (^GSPC) and forex pairs an equals sign, so the
+  // route segment arrives percent-encoded. Without decoding, the page looked
+  // up the literal string "%5EGSPC" and reported a symbol it had just
+  // ingested as unavailable.
+  const symbol = safeDecode(rawSymbol);
 
   const supabase = await createClient();
   const {
@@ -17,8 +68,8 @@ export default async function TickerPage({ params }: { params: Promise<{ symbol:
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const data = await getTickerDetail(symbol);
-  if (!data) notFound();
+  const data = await loadTicker(symbol);
+  if ("reason" in data) return <Unavailable symbol={data.symbol} reason={data.reason} detail={data.detail} />;
 
   const [analyses, discussion, plan, holdingRows, watchlistRows] = await Promise.all([
     getAnalysesForScope("ticker", data.symbol),

@@ -3,6 +3,7 @@
 import { useMemo, useRef, useState } from "react";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, YAxis } from "recharts";
 import { buildPriceSeries } from "@/lib/ticker";
+import { DataFreshness } from "@/components/data-freshness";
 import { getIntradaySeries } from "@/lib/actions/intraday";
 import type { TimelinePoint } from "@/lib/portfolio";
 import type { ChartView } from "@/lib/supabase/types";
@@ -12,12 +13,13 @@ const TIMEFRAMES: ChartView[] = ["1D", "1W", "1M", "3M", "1Y", "ALL"];
 interface TickerChartProps {
   symbol: string;
   bars: { ts: string; close: number | null }[];
-  positive: boolean;
   /** Drives the card label the mock shows where it reads "Delayed 15m". */
   priceSource?: "live" | "last_close";
+  /** Date of the most recent bar, for the same label. */
+  priceAsOf?: string | null;
 }
 
-export function TickerChart({ symbol, bars, positive, priceSource = "last_close" }: TickerChartProps) {
+export function TickerChart({ symbol, bars, priceSource = "last_close", priceAsOf = null }: TickerChartProps) {
   const [timeframe, setTimeframe] = useState<ChartView>("3M");
   // 1D and 1W plot provider bars (1 min / 15 min); the rest are daily closes.
   const [intraday, setIntraday] = useState<{ points: TimelinePoint[]; available: boolean } | null>(null);
@@ -50,7 +52,12 @@ export function TickerChart({ symbol, bars, positive, priceSource = "last_close"
   const daily = useMemo(() => buildPriceSeries(bars, timeframe), [bars, timeframe]);
   const intradayPoints = isIntraday && intraday?.points.length ? intraday.points : null;
   const points = intradayPoints ?? (timeframe === "1D" ? [] : daily);
-  const color = positive ? "#2FC685" : "#D96C6C";
+  // Coloured by the move the chart actually draws, not by today's change. A 1Y
+  // view of a stock down 30% over the year was rendering green because the
+  // last session happened to close up - green here has to mean "this line is
+  // up over this window", the same thing red means on every other surface.
+  const rangeChange = points.length > 1 ? points[points.length - 1].value - points[0].value : 0;
+  const color = rangeChange >= 0 ? "#2FC685" : "#D96C6C";
 
   return (
     <div className="overflow-hidden rounded-card border border-line bg-panel">
@@ -69,15 +76,13 @@ export function TickerChart({ symbol, bars, positive, priceSource = "last_close"
             </button>
           ))}
         </div>
-        <span className="font-mono text-[10px] tracking-[0.12em] text-dim uppercase">
-          {intradayPoints
-            ? timeframe === "1D"
-              ? "Live · 1 min bars"
-              : "Live · 15 min bars"
-            : priceSource === "live"
-              ? "Live · daily closes"
-              : "Delayed · daily closes"}
-        </span>
+        {intradayPoints ? (
+          <span className="font-mono text-[10px] tracking-[0.12em] text-dim uppercase">
+            {timeframe === "1D" ? "Live · 1 min bars" : "Live · 15 min bars"}
+          </span>
+        ) : (
+          <DataFreshness source={priceSource} asOf={priceAsOf} detail="daily closes" />
+        )}
       </div>
 
       <div className="px-2 pt-3.5 pb-2">

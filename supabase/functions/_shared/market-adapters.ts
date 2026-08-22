@@ -3,7 +3,7 @@
 
 export interface PriceBar {
   symbol: string;
-  asset_type: "equity" | "etf" | "crypto" | "forex" | "future";
+  asset_type: "equity" | "etf" | "crypto" | "forex" | "index" | "future";
   ts: string; // YYYY-MM-DD
   open: number | null;
   high: number | null;

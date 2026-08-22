@@ -25,7 +25,20 @@ interface TrackedSymbol {
   assetType: PriceBar["asset_type"];
 }
 
-const VALID_ASSET_TYPES = ["equity", "etf", "crypto", "forex", "future"] as const;
+const VALID_ASSET_TYPES = ["equity", "etf", "crypto", "forex", "index", "future"] as const;
+
+// Symbols ingested on demand join this job's set, so a symbol someone searched
+// for last week is still current this week. Bounded three ways: only symbols
+// requested inside DEMAND_WINDOW_DAYS, at most MAX_ON_DEMAND_SYMBOLS of them
+// (stalest first), and paced by REQUEST_DELAY_MS like every other call here.
+// Without the pacing this loop was ~500 sequential unthrottled requests
+// against a feed that publishes no quota - the same "broken and quiet" shape
+// as the cron bug it was meant to fix.
+const DEMAND_WINDOW_DAYS = 30;
+const MAX_ON_DEMAND_SYMBOLS = 150;
+const REQUEST_DELAY_MS = 400;
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 function readSymbols(config: Record<string, unknown> | null, fallback: PriceBar["asset_type"]): TrackedSymbol[] {
   const raw = Array.isArray(config?.symbols) ? (config.symbols as unknown[]) : [];
@@ -75,6 +88,14 @@ Deno.serve(async (req) => {
 
   const results = [];
 
+  // What the configured provider rows already cover, so a symbol is not
+  // fetched twice in one run.
+  const configured = new Set<string>();
+  for (const provider of providers ?? []) {
+    const providerAssetType = (provider.config?.asset_type as PriceBar["asset_type"]) ?? "equity";
+    for (const { symbol } of readSymbols(provider.config, providerAssetType)) configured.add(symbol.toUpperCase());
+  }
+
   for (const provider of providers ?? []) {
     const adapterName = String(provider.config?.adapter ?? "");
     const providerAssetType = (provider.config?.asset_type as PriceBar["asset_type"]) ?? "equity";
@@ -87,6 +108,7 @@ Deno.serve(async (req) => {
 
     for (const { symbol, assetType } of symbols) {
       try {
+        await sleep(REQUEST_DELAY_MS);
         const bars = await fetchYahooFinanceDaily(symbol, assetType);
         if (bars.length === 0) {
           results.push({ provider: provider.name, symbol, error: "no data returned" });
@@ -107,6 +129,44 @@ Deno.serve(async (req) => {
       } catch (err) {
         results.push({ provider: provider.name, symbol, error: err instanceof Error ? err.message : String(err) });
       }
+    }
+  }
+
+  // Second pass: on-demand symbols, refreshed by demand and staleness.
+  const since = new Date(Date.now() - DEMAND_WINDOW_DAYS * 24 * 60 * 60 * 1000).toISOString();
+  const { data: onDemand } = await supabase
+    .from("symbol_directory")
+    .select("symbol, asset_type, last_success_at")
+    .eq("status", "available")
+    .gte("last_requested_at", since)
+    // Crypto history comes from ingest-crypto's CoinGecko pass, not this one.
+    .neq("asset_type", "crypto")
+    .order("last_success_at", { ascending: true, nullsFirst: true })
+    .limit(MAX_ON_DEMAND_SYMBOLS);
+
+  for (const row of onDemand ?? []) {
+    const symbol = row.symbol.toUpperCase();
+    if (configured.has(symbol)) continue;
+    try {
+      await sleep(REQUEST_DELAY_MS);
+      // Storage symbols drop the provider's suffix (BTC-USD -> BTC); forex and
+      // indices keep theirs, so re-derive the provider form here.
+      const providerSymbol = row.asset_type === "forex" ? `${symbol}=X` : symbol;
+      const bars = await fetchYahooFinanceDaily(providerSymbol, row.asset_type as PriceBar["asset_type"]);
+      if (bars.length === 0) {
+        results.push({ provider: "on_demand", symbol, error: "no data returned" });
+        continue;
+      }
+      const { error: upsertError } = await supabase
+        .from("historical_prices")
+        .upsert(bars.map((b) => ({ ...b, symbol })), { onConflict: "symbol,ts", ignoreDuplicates: false });
+      await supabase
+        .from("symbol_directory")
+        .update({ last_success_at: new Date().toISOString(), last_checked_at: new Date().toISOString(), bars: bars.length })
+        .eq("symbol", symbol);
+      results.push({ provider: "on_demand", symbol, asset_type: row.asset_type, bars: bars.length, error: upsertError?.message });
+    } catch (err) {
+      results.push({ provider: "on_demand", symbol, error: err instanceof Error ? err.message : String(err) });
     }
   }
 

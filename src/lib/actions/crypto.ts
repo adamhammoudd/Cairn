@@ -9,19 +9,23 @@ import type { CryptoRow } from "@/lib/crypto";
 export async function getCryptoOverview(): Promise<CryptoRow[]> {
   const supabase = await createClient();
 
+  // One bar per coin, with a per-symbol LIMIT. The previous query took the
+  // newest 2000 crypto rows across all coins at once: at 25 coins that is 80
+  // days each, but the cap is shared, so a coin whose history stops earlier
+  // than the others (anything ingested on demand and not since refreshed)
+  // falls outside the window and renders with no price at all.
   const [{ data: metrics }, { data: prices }] = await Promise.all([
     supabase.from("crypto_metrics").select("*").order("market_cap_rank", { ascending: true, nullsFirst: false }),
-    supabase
-      .from("historical_prices")
-      .select("symbol, ts, close")
-      .eq("asset_type", "crypto")
-      .order("ts", { ascending: false })
-      .limit(2000),
+    supabase.rpc("recent_prices_all", { per_symbol: 1, asset_types: ["crypto"] }),
   ]);
 
   const latestClose = new Map<string, number>();
-  for (const p of prices ?? []) {
-    if (!latestClose.has(p.symbol) && p.close !== null) latestClose.set(p.symbol, p.close);
+  const asOf = new Map<string, string>();
+  for (const p of (prices ?? []) as { symbol: string; ts: string; close: number | null }[]) {
+    if (!latestClose.has(p.symbol) && p.close !== null) {
+      latestClose.set(p.symbol, Number(p.close));
+      asOf.set(p.symbol, p.ts);
+    }
   }
 
   return (metrics ?? []).map((m) => ({
@@ -29,6 +33,7 @@ export async function getCryptoOverview(): Promise<CryptoRow[]> {
     name: m.name,
     rank: m.market_cap_rank,
     price: latestClose.get(m.symbol) ?? null,
+    asOf: asOf.get(m.symbol) ?? null,
     changePct24h: m.price_change_24h_pct,
     marketCap: m.market_cap,
     volume24h: m.total_volume_24h,

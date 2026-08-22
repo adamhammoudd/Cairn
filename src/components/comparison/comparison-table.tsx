@@ -23,7 +23,10 @@ const TONE_CLASS: Record<Cell["tone"], string> = {
 const METRICS: { label: string; cell: (row: ComparisonRow) => Cell }[] = [
   { label: "Price", cell: (r) => ({ text: fmtCurrency(r.price), tone: r.price === null ? "muted" : "primary" }) },
   {
-    label: "24h change",
+    // Crypto carries CoinGecko's rolling 24h figure and session-based markets
+    // the last two closes - the same rule every other surface follows. The
+    // footnote below the table says so rather than one label implying both.
+    label: "Change",
     cell: (r) =>
       r.changePct === null
         ? { text: "-", tone: "muted" }
@@ -95,6 +98,11 @@ export function ComparisonTable({ rows }: { rows: ComparisonRow[] }) {
           ))}
         </div>
       </div>
+
+      <p className="border-t border-line px-4.5 py-2.75 text-[11.5px] text-dim">
+        Change is CoinGecko&apos;s rolling 24 hours for crypto and the last two daily closes for session-based markets -
+        the same figure each asset shows on its own page. Prices are last closes, not live quotes.
+      </p>
     </div>
   );
 }

@@ -9,27 +9,24 @@ export async function getSectorHeatmap(): Promise<SectorMapNode[]> {
   if (symbols.length === 0) return [];
 
   const supabase = await createClient();
-  const [{ data: prices }, { data: fundamentals }] = await Promise.all([
-    supabase
-      .from("historical_prices")
-      .select("symbol, ts, close")
-      .in("symbol", symbols)
-      .order("ts", { ascending: false })
-      // The cap applies to the whole interleaved result, not per symbol, so
-      // symbols.length * 2 only worked when every symbol had a bar on exactly
-      // the same two dates. One missing day and a symbol got zero closes and
-      // silently dropped to changePct = null. Six days of slack covers a long
-      // weekend plus a stale feed.
-      .limit(symbols.length * 6),
+  const [{ data: prices }, { data: fundamentals }, { data: coinRows }] = await Promise.all([
+    // Two bars per symbol, guaranteed per symbol. The shared-cap version
+    // (`limit(symbols.length * 6)`) relied on every symbol printing bars on
+    // the same days: one gap and a symbol got zero closes and silently became
+    // a grey "-" tile. That is also unfixable by raising the multiplier once
+    // the universe is on-demand.
+    supabase.rpc("recent_prices", { symbols, per_symbol: 2 }),
     supabase.from("fundamentals").select("symbol, sector, shares_outstanding").in("symbol", symbols),
+    supabase.from("crypto_metrics").select("symbol, price_change_24h_pct, market_cap").in("symbol", symbols),
   ]);
 
   const fundamentalsBySymbol = new Map((fundamentals ?? []).map((f) => [f.symbol, f]));
+  const coinBySymbol = new Map((coinRows ?? []).map((c) => [c.symbol, c]));
   const closesBySymbol = new Map<string, number[]>();
-  for (const p of prices ?? []) {
+  for (const p of (prices ?? []) as { symbol: string; ts: string; close: number | null }[]) {
     if (p.close === null) continue;
     const arr = closesBySymbol.get(p.symbol) ?? [];
-    if (arr.length < 2) arr.push(p.close);
+    if (arr.length < 2) arr.push(Number(p.close));
     closesBySymbol.set(p.symbol, arr);
   }
 
@@ -38,11 +35,20 @@ export async function getSectorHeatmap(): Promise<SectorMapNode[]> {
     const closes = closesBySymbol.get(symbol) ?? [];
     const price = closes[0] ?? null;
     const prev = closes[1] ?? null;
-    const changePct = price !== null && prev !== null && prev !== 0 ? ((price - prev) / prev) * 100 : null;
+    const coin = coinBySymbol.get(symbol);
+    const closeToClose = price !== null && prev !== null && prev !== 0 ? ((price - prev) / prev) * 100 : null;
+    // Same rule as every other surface: rolling 24h for coins, close-to-close
+    // for session-based markets.
+    const changePct = coin?.price_change_24h_pct != null ? Number(coin.price_change_24h_pct) : closeToClose;
 
     const f = fundamentalsBySymbol.get(symbol);
-    const marketCap = price !== null && f?.shares_outstanding ? price * f.shares_outstanding : null;
-    const sectorName = f?.sector ?? "Unclassified";
+    const marketCap =
+      coin?.market_cap != null
+        ? Number(coin.market_cap)
+        : price !== null && f?.shares_outstanding
+          ? price * f.shares_outstanding
+          : null;
+    const sectorName = f?.sector ?? (coin ? "Digital assets" : "Unclassified");
 
     const children = bySector.get(sectorName) ?? [];
     children.push({ name: symbol, size: marketCap ?? 1, changePct });

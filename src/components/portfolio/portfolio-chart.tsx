@@ -5,15 +5,18 @@ import { Area, AreaChart, ResponsiveContainer, Tooltip, YAxis } from "recharts";
 import type { TimelinePoint } from "@/lib/portfolio";
 import { getIntradayPortfolioSeries } from "@/lib/actions/intraday";
 import type { ChartView } from "@/lib/supabase/types";
+import { DataFreshness } from "@/components/data-freshness";
 
 const TIMEFRAMES: ChartView[] = ["1D", "1W", "1M", "3M", "1Y", "ALL"];
 
 interface PortfolioChartProps {
   seriesByTimeframe: Record<ChartView, TimelinePoint[]>;
   hasHoldings: boolean;
+  /** Date of the newest close behind the series, for the freshness label. */
+  asOf?: string | null;
 }
 
-export function PortfolioChart({ seriesByTimeframe, hasHoldings }: PortfolioChartProps) {
+export function PortfolioChart({ seriesByTimeframe, hasHoldings, asOf = null }: PortfolioChartProps) {
   const [timeframe, setTimeframe] = useState<ChartView>("1M");
   // 1D and 1W come from the live provider (minute and quarter-hour bars);
   // every other range is the daily series computed on the server.
@@ -49,6 +52,13 @@ export function PortfolioChart({ seriesByTimeframe, hasHoldings }: PortfolioChar
   const intradayPoints = isIntraday && intraday?.points.length ? intraday.points : null;
   const points = intradayPoints ?? (timeframe === "1D" ? [] : seriesByTimeframe[timeframe]);
 
+  // The line and its fill were hardcoded to the accent green whatever the
+  // portfolio did over the selected window - a portfolio down 12% on the year
+  // still drew green, in a product where red means loss and nothing else.
+  const rangeChange = points.length > 1 ? points[points.length - 1].value - points[0].value : 0;
+  const positive = rangeChange >= 0;
+  const color = positive ? "#2FC685" : "#D96C6C";
+
   return (
     <div className="overflow-hidden rounded-card border border-line bg-panel">
       <div className="flex items-center justify-between gap-3 border-b border-[#1E1E1E] px-4 py-3">
@@ -66,13 +76,13 @@ export function PortfolioChart({ seriesByTimeframe, hasHoldings }: PortfolioChar
             </button>
           ))}
         </div>
-        <span className="font-mono text-[10px] tracking-[0.12em] text-dim uppercase">
-          {intradayPoints
-            ? timeframe === "1D"
-              ? "Combined value · 1 min"
-              : "Combined value · 15 min"
-            : "Combined holdings value"}
-        </span>
+        {intradayPoints ? (
+          <span className="font-mono text-[10px] tracking-[0.12em] text-dim uppercase">
+            {timeframe === "1D" ? "Combined value · 1 min" : "Combined value · 15 min"}
+          </span>
+        ) : (
+          <DataFreshness source="last_close" asOf={asOf} detail="combined holdings value" />
+        )}
       </div>
 
       <div className="px-2 pt-3.5 pb-2">
@@ -95,8 +105,8 @@ export function PortfolioChart({ seriesByTimeframe, hasHoldings }: PortfolioChar
           <AreaChart data={points} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
             <defs>
               <linearGradient id="portfolioFill" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#2FC685" stopOpacity={0.22} />
-                <stop offset="100%" stopColor="#2FC685" stopOpacity={0} />
+                <stop offset="0%" stopColor={color} stopOpacity={0.22} />
+                <stop offset="100%" stopColor={color} stopOpacity={0} />
               </linearGradient>
             </defs>
             <YAxis hide domain={["dataMin", "dataMax"]} />
@@ -110,7 +120,7 @@ export function PortfolioChart({ seriesByTimeframe, hasHoldings }: PortfolioChar
               contentStyle={{ background: "#0F0F0F", border: "1px solid #2A2A2A", borderRadius: 8, fontSize: 12 }}
               labelStyle={{ color: "#8A8A8A" }}
             />
-            <Area type="monotone" dataKey="value" stroke="#2FC685" strokeWidth={2} fill="url(#portfolioFill)" isAnimationActive={false} />
+            <Area type="monotone" dataKey="value" stroke={color} strokeWidth={2} fill="url(#portfolioFill)" isAnimationActive={false} />
           </AreaChart>
         </ResponsiveContainer>
       )}

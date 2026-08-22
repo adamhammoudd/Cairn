@@ -20,9 +20,13 @@ export interface ScreenerFilters {
 export interface ScreenerRow {
   symbol: string;
   assetType: string;
+  /** Provider display name, from symbol_directory. */
+  name: string | null;
   price: number | null;
   changePct: number | null;
   volume: number | null;
+  /** Date of the most recent bar behind `price`, YYYY-MM-DD. */
+  asOf: string | null;
   /** Up to the 12 most recent closes, oldest first, for a Trend sparkline. */
   trend: number[];
   /** Derived at query time from fundamentals + latest close, never stored. */
@@ -51,16 +55,16 @@ export const EMPTY_FILTERS: ScreenerFilters = {
   minDividendYield: null,
 };
 
-export const ASSET_TYPES = ["equity", "etf", "crypto", "forex", "future"] as const;
+export const ASSET_TYPES = ["equity", "etf", "crypto", "forex", "index"] as const;
 
 // Shared asset-type tag treatment for Markets + Screener rows: equity reads as
-// primary (default/plain), etf=info, crypto=violet, forex=warning, and
-// "future" (this app has no separate "index" type) takes the muted/index tone.
+// primary (default/plain), etf=info, crypto=violet, forex=warning, index muted.
 export const ASSET_TYPE_TAG_CLASS: Record<string, string> = {
   equity: "text-primary border-line",
   etf: "text-info border-info/30",
   crypto: "text-violet border-violet/30",
   forex: "text-warning border-warning/30",
+  index: "text-muted border-line",
   future: "text-muted border-line",
 };
 
@@ -71,8 +75,11 @@ export const ASSET_TYPE_LABEL: Record<string, string> = {
   etf: "ETFs",
   crypto: "Crypto",
   forex: "Forex",
-  // The mock labels this filter Indices; the stored asset_type is future.
-  future: "Indices",
+  // `index` is now a real stored asset_type (migration 0027). It used to be
+  // mapped onto `future`, so an index and a future were indistinguishable and
+  // the Indices tab could only ever be as right as that guess.
+  index: "Indices",
+  future: "Futures",
 };
 
 /** Share volume, compacted the way the mock shows it ("22.4M"). */
