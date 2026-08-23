@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { MIGRATIONS, unwrap } from "@/lib/supabase/read";
 import { getCurrentPrice } from "@/lib/market-data/current-price";
 import { ensureSymbolIngested } from "@/lib/market-data/ingest";
 import type { AssetType } from "@/lib/supabase/types";
@@ -122,7 +123,7 @@ export async function loadTicker(symbolRaw: string): Promise<TickerData | Ticker
   yearAgo.setDate(yearAgo.getDate() - 365);
   const yearIso = yearAgo.toISOString().slice(0, 10);
 
-  const [currentPrice, { data: yearRange }, { data: directory }, { data: fundamentals }, { data: cryptoMetrics }, { data: news }, { data: nextEvent }, { data: esg }] =
+  const [currentPrice, { data: yearRange }, directoryRes, { data: fundamentals }, { data: cryptoMetrics }, { data: news }, { data: nextEvent }, { data: esg }] =
     await Promise.all([
       getCurrentPrice(symbol),
       // Range over intraday high/low, the convention every quote page uses --
@@ -164,6 +165,11 @@ export async function loadTicker(symbolRaw: string): Promise<TickerData | Ticker
         .limit(1)
         .maybeSingle(),
     ]);
+
+  // The provider name and asset type for the stat block. A missing
+  // symbol_directory (0027 not applied) is a broken deployment, not a symbol
+  // Cairn happens to know nothing about, and must not read as the latter.
+  const directory = unwrap("Ticker profile (symbol_directory)", directoryRes, MIGRATIONS.onDemandIngestion);
 
   const yearHighs = (yearRange ?? []).filter((b) => b.high !== null).map((b) => Number(b.high));
   const yearLows = (yearRange ?? []).filter((b) => b.low !== null).map((b) => Number(b.low));

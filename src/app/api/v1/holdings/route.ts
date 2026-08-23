@@ -20,9 +20,13 @@ export async function GET(req: Request) {
   const symbols = Array.from(new Set((holdings ?? []).map((h) => h.symbol)));
   // One bar per symbol through the lateral-join RPC, not a shared LIMIT across
   // all of them - the same reason every other surface uses recent_prices().
-  const { data: prices } = symbols.length
+  // The holdings read above returns 500 on error; this one used to drop its
+  // error and hand back every position with `price: null`, which a consumer
+  // cannot tell apart from a symbol Cairn genuinely has no bar for.
+  const { data: prices, error: pricesError } = symbols.length
     ? await supabase.rpc("recent_prices", { symbols, per_symbol: 1 })
-    : { data: [] };
+    : { data: [], error: null };
+  if (pricesError) return apiError(500, "query_failed", pricesError.message);
   const latest = new Map(
     ((prices ?? []) as { symbol: string; ts: string; close: number | null }[]).map((p) => [p.symbol, p]),
   );

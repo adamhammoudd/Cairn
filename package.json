@@ -28,7 +28,8 @@
     "test:a11y": "tsx --conditions=react-server scripts/a11y-audit.ts",
     "test:auth-rate-limit": "tsx --conditions=react-server scripts/tests/auth-rate-limit.ts",
     "backfill:news-tags": "tsx --conditions=react-server scripts/backfill-news-tags.ts",
-    "test:sectors": "tsx --conditions=react-server scripts/tests/sector-vocabulary.ts"
+    "test:sectors": "tsx --conditions=react-server scripts/tests/sector-vocabulary.ts",
+    "test:read-errors": "tsx --conditions=react-server scripts/tests/read-errors.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.4",
