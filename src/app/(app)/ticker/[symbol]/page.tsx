@@ -8,6 +8,13 @@ import { listWatchlists } from "@/lib/actions/watchlists";
 import { getUserPlan } from "@/lib/actions/billing";
 import { TIER_LIMITS } from "@/lib/billing";
 import { TickerWorkspace } from "@/components/ticker/ticker-workspace";
+import { guardReads } from "@/components/data-unavailable";
+
+// A failed market-data read renders the panel instead of throwing into a
+// minified React error; anything else propagates as before.
+export default async function TickerPage({ params }: { params: Promise<{ symbol: string }> }) {
+  return guardReads(() => TickerBody({ params }));
+}
 
 function safeDecode(value: string): string {
   try {
@@ -54,7 +61,7 @@ function Unavailable({ symbol, reason, detail }: { symbol: string; reason: "unav
   );
 }
 
-export default async function TickerPage({ params }: { params: Promise<{ symbol: string }> }) {
+async function TickerBody({ params }: { params: Promise<{ symbol: string }> }) {
   const { symbol: rawSymbol } = await params;
   // Index tickers carry a caret (^GSPC) and forex pairs an equals sign, so the
   // route segment arrives percent-encoded. Without decoding, the page looked

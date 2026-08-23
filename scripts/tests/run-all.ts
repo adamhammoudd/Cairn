@@ -79,7 +79,7 @@ async function main() {
     guarded("LLM rate-limit retry policy", () => [runLlmBackoffSuite()]),
     guarded("Chat reply formatting", () => [runReplyFormatSuite()]),
     guarded("Sector vocabulary", () => [runSectorVocabularySuite()]),
-    guarded("Supabase read errors", () => [runReadErrorsSuite()]),
+    guarded("Supabase read errors", async () => [await runReadErrorsSuite()]),
   ]);
 
   const allSuites = [

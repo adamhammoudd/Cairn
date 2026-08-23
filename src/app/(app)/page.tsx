@@ -7,6 +7,15 @@ import { MODULE_KEYS, type ModuleKey } from "@/lib/dashboard-modules";
 import { computeHoldingMetrics, computeTimelineSeries, computeTotals, type PriceBar } from "@/lib/portfolio";
 import { getLatestCloses, latestDataDate } from "@/lib/market-data/current-price";
 
+import { guardReads } from "@/components/data-unavailable";
+
+// A failed market-data read renders the panel instead of throwing into a
+// minified React error; anything else propagates as before.
+export default async function DashboardPage() {
+  return guardReads(DashboardBody);
+}
+
+
 
 // The Portfolio page's chart opens on 1M; the dashboard's summary sparkline
 // plots the same window from the same series so a reader moving between them
@@ -17,7 +26,7 @@ function fmtCurrency(n: number) {
   return n.toLocaleString(undefined, { style: "currency", currency: "USD" });
 }
 
-export default async function DashboardPage() {
+async function DashboardBody() {
   const supabase = await createClient();
   const {
     data: { user },
