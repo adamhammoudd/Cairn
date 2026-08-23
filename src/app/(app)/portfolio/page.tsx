@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { MIGRATIONS, unwrap, unwrapRows } from "@/lib/supabase/read";
 import {
   computeAllocation,
   computeHoldingMetrics,
@@ -30,13 +31,16 @@ export default async function PortfolioPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: holdings } = await supabase
+  // A read failure here (an RLS change, a rotated key) must not render as
+  // "you own nothing" - an empty portfolio and an unreadable one look identical
+  // on screen and mean completely different things to someone checking a balance.
+  const holdingsRes = await supabase
     .from("holdings")
     .select("*")
     .eq("user_id", user.id)
     .order("created_at", { ascending: true });
 
-  const rows = holdings ?? [];
+  const rows = unwrapRows("Portfolio holdings", holdingsRes);
   const symbols = Array.from(new Set(rows.map((h) => h.symbol)));
 
   // Per-symbol history for the timeline. The previous query ordered every row
@@ -44,10 +48,11 @@ export default async function PortfolioPage() {
   // back to PostgREST's row cap - i.e. the OLDEST rows, the same defect that
   // made the ticker page quote a five-month-old price. recent_prices() takes
   // the newest N per symbol; computeTimelineSeries sorts them itself.
-  const { data: prices } =
+  const pricesRes =
     symbols.length > 0
       ? await supabase.rpc("recent_prices", { symbols, per_symbol: 1500 })
-      : { data: [] };
+      : { data: [], error: null };
+  const prices = unwrap("Portfolio price history (recent_prices)", pricesRes, MIGRATIONS.onDemandIngestion);
 
   // recent_prices() returns newest-first within a symbol; everything below
   // wants oldest-first, so sort once here rather than relying on the order the

@@ -13,6 +13,7 @@
 // is in the same words.
 
 import { createClient } from "@/lib/supabase/server";
+import { MIGRATIONS, unwrapRows } from "@/lib/supabase/read";
 import { fetchQuote, isMarketDataProviderConfigured } from "@/lib/market-data/provider";
 
 export interface CurrentPrice {
@@ -54,9 +55,12 @@ async function lastBars(symbols: string[], perSymbol = 2): Promise<Map<string, B
   if (symbols.length === 0) return bySymbol;
 
   const supabase = await createClient();
-  const { data } = await supabase.rpc("recent_prices", { symbols, per_symbol: perSymbol });
+  // This is the read behind every headline price in the app, the portfolio's
+  // total, and the ticker's stat block. Swallowing its error is what turned a
+  // missing 0027 into "$0" on Portfolio instead of an error.
+  const res = await supabase.rpc("recent_prices", { symbols, per_symbol: perSymbol });
 
-  for (const row of (data ?? []) as Bar[]) {
+  for (const row of unwrapRows("Latest prices (recent_prices)", res, MIGRATIONS.onDemandIngestion) as Bar[]) {
     const arr = bySymbol.get(row.symbol) ?? [];
     arr.push(row);
     bySymbol.set(row.symbol, arr);

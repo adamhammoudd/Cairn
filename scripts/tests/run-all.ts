@@ -25,6 +25,7 @@ import { runEditorialSuite } from "./editorial";
 import { runLlmBackoffSuite } from "./llm-backoff";
 import { runReplyFormatSuite } from "./reply-format";
 import { runSectorVocabularySuite } from "./sector-vocabulary";
+import { runReadErrorsSuite } from "./read-errors";
 
 // A suite that throws (missing credentials, unreachable service) must surface
 // as a hard failure of that suite, not take the whole run down with a stack
@@ -64,6 +65,7 @@ async function main() {
     backoffSuites,
     replyFormatSuites,
     sectorVocabularySuites,
+    readErrorSuites,
   ] = await Promise.all([
     guarded("Adversarial scope guard", runAdversarialScopeGuardSuites),
     guarded("Methodology substance", async () => [await runMethodologySubstanceSuite()]),
@@ -77,6 +79,7 @@ async function main() {
     guarded("LLM rate-limit retry policy", () => [runLlmBackoffSuite()]),
     guarded("Chat reply formatting", () => [runReplyFormatSuite()]),
     guarded("Sector vocabulary", () => [runSectorVocabularySuite()]),
+    guarded("Supabase read errors", () => [runReadErrorsSuite()]),
   ]);
 
   const allSuites = [
@@ -93,6 +96,7 @@ async function main() {
     ...backoffSuites,
     ...replyFormatSuites,
     ...sectorVocabularySuites,
+    ...readErrorSuites,
   ];
   const reportPath = writeReport(allSuites);
 

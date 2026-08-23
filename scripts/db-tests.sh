@@ -31,10 +31,37 @@ psql -q -d "$CAIRN_TEST_DB" -v ON_ERROR_STOP=1 -f supabase/schema.sql
 # pg_cron/pg_net are Supabase-managed and not installable locally; the harness
 # provides stand-ins, so the CREATE EXTENSION lines are dropped for this run
 # only. Everything else in each migration executes verbatim.
+#
+# Migration errors used to be sent to a log nobody read and swallowed with
+# `|| true`, so a migration that failed to apply looked exactly like one that
+# applied cleanly. That is the same blind spot that let an unapplied 0027 reach
+# a deploy: the objects the app reads were simply absent, and nothing said so.
+# Errors are now printed, and anything outside BENIGN_MIGRATION_ERRORS fails
+# the run.
+#
+# Benign here means "expected against this harness", not "expected in Supabase":
+#   - fundamentals is created by schema.sql, so 0004 re-creating it conflicts
+#   - app.settings.cron_secret is a Supabase database setting, unset locally
+#   - rls_auto_enable() is Supabase-managed and absent from a plain Postgres
+BENIGN_MIGRATION_ERRORS='relation "fundamentals" already exists|policy "public read" for table "fundamentals" already exists|app.settings.cron_secret is not set|function public.rls_auto_enable\(\) does not exist'
+
+migration_failures=0
 for m in supabase/migrations/*.sql; do
   sed '/create extension/d' "$m" > /tmp/cairn-mig.sql
   psql -q -d "$CAIRN_TEST_DB" -f /tmp/cairn-mig.sql >/tmp/cairn-mig.log 2>&1 || true
+  if unexpected=$(grep -E '^psql.*ERROR|^ERROR' /tmp/cairn-mig.log | grep -Ev "$BENIGN_MIGRATION_ERRORS"); then
+    echo "!! $(basename "$m") did not apply cleanly:" >&2
+    echo "$unexpected" | sed 's/^/     /' >&2
+    migration_failures=1
+  fi
 done
+
+if [ "$migration_failures" -ne 0 ]; then
+  echo >&2
+  echo "One or more migrations failed to apply; the tests below would be running" >&2
+  echo "against a database that does not match the committed schema." >&2
+  exit 1
+fi
 psql -q -d "$CAIRN_TEST_DB" -v ON_ERROR_STOP=1 -f supabase/tests/harness/02_grants.sql
 
 failed=0

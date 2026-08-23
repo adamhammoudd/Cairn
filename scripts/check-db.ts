@@ -33,6 +33,10 @@ async function main() {
     { name: "historical_prices" },
     { name: "historical_events" },
     { name: "data_providers" },
+    { name: "symbol_directory", fix: "supabase/migrations/0027_on_demand_ingestion.sql" },
+    { name: "symbol_profiles", fix: "supabase/migrations/0028_profiles_statements_moderation.sql" },
+    { name: "financial_statements", fix: "supabase/migrations/0028_profiles_statements_moderation.sql" },
+    { name: "option_contracts", fix: "supabase/migrations/0028_profiles_statements_moderation.sql" },
   ];
 
   for (const t of tables) {
@@ -78,6 +82,48 @@ async function main() {
     detail: coingecko ? `present (enabled=${coingecko.enabled})` : "missing",
     fix: coingecko ? undefined : "supabase/seed/providers.sql",
   });
+
+  // Database functions. Since 0027 every price read in the app goes through
+  // these instead of querying historical_prices directly, so a project that
+  // never ran 0027/0028 serves an empty Markets page, a $0 portfolio and a
+  // ticker with no stats - all at once, and with no error on screen. That is
+  // exactly the failure this script exists to name in one command.
+  const rpcs: { name: string; args: Record<string, unknown>; fix: string; used_by: string }[] = [
+    {
+      name: "recent_prices",
+      args: { symbols: ["AAPL"], per_symbol: 1 },
+      fix: "supabase/migrations/0027_on_demand_ingestion.sql",
+      used_by: "Portfolio, ticker, dashboard, watchlists, sector map",
+    },
+    {
+      name: "recent_prices_all",
+      args: { per_symbol: 1 },
+      fix: "supabase/migrations/0027_on_demand_ingestion.sql",
+      used_by: "Markets, Screener, crypto overview",
+    },
+    {
+      name: "search_symbols",
+      args: { prefix: "AA", max_results: 1 },
+      fix: "supabase/migrations/0027_on_demand_ingestion.sql",
+      used_by: "header search, Research scope picker",
+    },
+    {
+      name: "symbol_52w_range",
+      args: {},
+      fix: "supabase/migrations/0028_profiles_statements_moderation.sql",
+      used_by: "Screener 52-week columns",
+    },
+  ];
+
+  for (const r of rpcs) {
+    const { error } = await admin.rpc(r.name as never, r.args as never);
+    checks.push({
+      label: `function ${r.name}()`,
+      ok: !error,
+      detail: error ? `${error.message} - breaks: ${r.used_by}` : "callable",
+      fix: error ? r.fix : undefined,
+    });
+  }
 
   let failed = 0;
   for (const c of checks) {

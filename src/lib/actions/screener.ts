@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { cryptoRolling24hFor } from "@/lib/market-data/current-price";
 import { EMPTY_FILTERS, type SavedScreen, type ScreenerFilters, type ScreenerRow } from "@/lib/screener";
+import { MIGRATIONS, unwrapRows } from "@/lib/supabase/read";
 
 // Market cap, P/E, and dividend yield are derived here from SEC XBRL
 // fundamentals (shares outstanding, TTM EPS, TTM dividends) against the latest
@@ -27,7 +28,7 @@ export async function runScreen(rawFilters: ScreenerFilters): Promise<ScreenerRo
   // whose last ingest is older than the newest 2000 rows. On-demand ingestion
   // makes N unbounded, so the budget has to be per symbol: recent_prices_all()
   // applies the LIMIT inside a lateral join.
-  const [{ data: prices }, { data: fundamentals }, { data: directory }, { data: ranges }] = await Promise.all([
+  const [pricesRes, fundamentalsRes, directoryRes, rangesRes] = await Promise.all([
     supabase.rpc("recent_prices_all", { per_symbol: 12 }),
     supabase.from("fundamentals").select("symbol, shares_outstanding, eps_ttm, dividends_ttm"),
     supabase.from("symbol_directory").select("symbol, asset_type, name").eq("status", "available"),
@@ -36,14 +37,22 @@ export async function runScreen(rawFilters: ScreenerFilters): Promise<ScreenerRo
     supabase.rpc("symbol_52w_range"),
   ]);
 
-  const fundamentalsBySymbol = new Map((fundamentals ?? []).map((f) => [f.symbol, f]));
-  const directoryBySymbol = new Map((directory ?? []).map((d) => [d.symbol, d]));
+  // These four are what Markets and the Screener are made of. Every one of them
+  // used to be `?? []`, so a database missing 0027/0028 produced an empty table
+  // that was indistinguishable from "no symbols match your filters".
+  const prices = unwrapRows("Screener prices (recent_prices_all)", pricesRes, MIGRATIONS.onDemandIngestion);
+  const fundamentals = unwrapRows("Screener fundamentals", fundamentalsRes);
+  const directory = unwrapRows("Screener symbol list (symbol_directory)", directoryRes, MIGRATIONS.onDemandIngestion);
+  const ranges = unwrapRows("Screener 52-week ranges (symbol_52w_range)", rangesRes, MIGRATIONS.profilesStatements);
+
+  const fundamentalsBySymbol = new Map(fundamentals.map((f) => [f.symbol, f]));
+  const directoryBySymbol = new Map(directory.map((d) => [d.symbol, d]));
   const rangeBySymbol = new Map(
-    ((ranges ?? []) as { symbol: string; week52_high: number | null; week52_low: number | null }[]).map((r) => [r.symbol, r]),
+    (ranges as { symbol: string; week52_high: number | null; week52_low: number | null }[]).map((r) => [r.symbol, r]),
   );
 
   const bySymbol = new Map<string, { assetType: string; closes: number[]; volume: number | null; asOf: string | null }>();
-  for (const p of (prices ?? []) as { symbol: string; asset_type: string; ts: string; close: number | null; volume: number | null }[]) {
+  for (const p of prices as { symbol: string; asset_type: string; ts: string; close: number | null; volume: number | null }[]) {
     const entry = bySymbol.get(p.symbol) ?? { assetType: p.asset_type, closes: [], volume: null, asOf: null };
     // newest-first within a symbol
     if (entry.closes.length < 12 && p.close !== null) {
