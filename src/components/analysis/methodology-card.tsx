@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import type { AnalysisWithMethodology } from "@/lib/actions/analysis";
 import type { CalendarEvent } from "@/lib/calendar";
 import { Disclosure } from "@/components/compliance/disclosure";
@@ -5,6 +8,8 @@ import { Disclosure } from "@/components/compliance/disclosure";
 // "Nvidia&#x2019;s" verbatim in the sources list. The news panel already
 // decodes at display time; this is the same helper, not a second one.
 import { decodeEntities } from "@/lib/news";
+
+type Source = AnalysisWithMethodology["sources"][number];
 
 // Structure and values taken verbatim from the Research artboard's detail view
 // in Context/mockups/Cairn.dc.html (the `rHasDetail` block): a gradient header
@@ -60,6 +65,77 @@ function splitFinding(text: string): { finding: string; body: string } {
   return { finding: match[1], body: match[3] };
 }
 
+function SourceCard({ source }: { source: Source }) {
+  const inner = (
+    <>
+      <div className="text-[12.5px] leading-[1.5] text-primary text-pretty">{decodeEntities(source.title)}</div>
+      <div className="mt-2 flex items-center justify-between gap-2.5">
+        <span className="text-[11px] text-accent">{source.source_name}</span>
+        <span className="font-mono text-[9.5px] tracking-[0.08em] text-dim uppercase" suppressHydrationWarning>
+          {whenLabel(source.published_at)}
+        </span>
+      </div>
+    </>
+  );
+  const boxClass =
+    "block min-w-0 rounded-[11px] border border-[#232323] bg-[#101010] px-3.5 py-3.25 transition-[border-color,transform] duration-[180ms] ease-[cubic-bezier(0.4,0,0.2,1)] hover:-translate-y-px hover:border-[#3A3A3A]";
+  return source.url ? (
+    <a href={source.url} target="_blank" rel="noreferrer" className={boxClass}>
+      {inner}
+    </a>
+  ) : (
+    <div className={boxClass}>{inner}</div>
+  );
+}
+
+// The full source list, previously rendered inline on every card, moved into
+// this popup so a 12-source analysis doesn't push sources further down the
+// page than the analogs and confidence it's meant to support. Sources remain
+// one click away, never hidden entirely - the compliance requirement is that
+// they're shown, not that they're pre-expanded.
+function SourcesModal({ sources, onClose }: { sources: Source[]; onClose: () => void }) {
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [onClose]);
+
+  return (
+    <div
+      className="animate-scrim-in fixed inset-0 z-20 flex items-center justify-center bg-black/60 p-4"
+      onClick={onClose}
+      role="presentation"
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="All sources"
+        className="animate-sheet-in flex w-full max-w-2xl flex-col rounded-card border border-line bg-panel p-6"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <h2 className="font-serif text-lg text-primary">Sources · {sources.length}</h2>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            className="rounded-lg px-2 py-1 text-lg leading-none text-muted transition-colors duration-base ease-standard hover:text-primary"
+          >
+            ×
+          </button>
+        </div>
+        <div className="grid max-h-[70vh] grid-cols-[repeat(auto-fit,minmax(min(260px,100%),1fr))] gap-2 overflow-y-auto pr-1">
+          {sources.map((s) => (
+            <SourceCard key={s.id} source={s} />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 interface MethodologyCardProps {
   analysis: AnalysisWithMethodology;
   /** Visual/layout density - chat and briefing use this, unrelated to plan tier. */
@@ -92,188 +168,205 @@ export function MethodologyCard({
   const conf = CONFIDENCE_STYLE[analysis.confidence_level] ?? CONFIDENCE_STYLE.low;
   const { finding, body } = splitFinding(analysis.reasoning_text);
 
-  // Free tier shows the single closest analog; Premium shows all of them.
-  const shownAnalogs = isTopLine ? analysis.analogs.slice(0, 1) : analysis.analogs;
+  const [sourcesOpen, setSourcesOpen] = useState(false);
+  // Collapsed by default at any depth - the closest analog is the one that
+  // matters at a glance, and expanding is one click for whoever wants the rest.
+  const [analogsExpanded, setAnalogsExpanded] = useState(false);
+
+  // A single source is nothing to collapse; only offer the popup once there's
+  // an actual "rest" to hide behind it.
+  const hasMoreSources = analysis.sources.length > 1;
+  const previewSource = analysis.sources[0] ?? null;
+
+  // Free tier only ever has the closest analog to show, full stop - that gate
+  // is unchanged. Premium has all of them but, like sources, leads with the
+  // best match and expands on request instead of dumping the whole list.
+  const shownAnalogs = isTopLine ? analysis.analogs.slice(0, 1) : analogsExpanded ? analysis.analogs : analysis.analogs.slice(0, 1);
   const hasHidden = isTopLine && analysis.analogs.length > 1;
+  const canExpandAnalogs = !isTopLine && analysis.analogs.length > 1;
 
   const pad = isDense ? "p-4" : "p-5";
 
   return (
-    <div className="animate-rise-in overflow-hidden rounded-[14px] border border-[#262626] bg-[#0C0C0C]">
-      <div className={`border-b border-[#1E1E1E] bg-gradient-to-b from-[#121212] to-[#0C0C0C] ${pad}`}>
-        <div className="mb-3 flex flex-wrap items-center gap-2.5">
-          <span className={`${SECTION_LABEL} capitalize`}>
-            {analysis.scope_type} · {analysis.scope_value}
-          </span>
-          <span className={META_LABEL} suppressHydrationWarning>
-            {whenLabel(analysis.created_at)}
-          </span>
-        </div>
-
-        <div className="mb-2.5 font-mono text-[10px] tracking-[0.14em] text-accent uppercase">
-          {analysis.analysis_type.replace(/_/g, " ")}
-        </div>
-
-        <h2
-          className={`m-0 font-serif font-normal leading-[1.25] text-primary text-pretty ${
-            isDense ? "text-[19px]" : "text-[25px]"
-          }`}
-        >
-          {finding}
-        </h2>
-
-        <div className="mt-4 flex flex-wrap items-center gap-4">
-          <div>
-            <div className="font-mono text-[9px] tracking-[0.12em] text-dim uppercase">Probability range</div>
-            <div
-              className={`mt-1.25 font-serif leading-none tabular-nums text-primary ${
-                isDense ? "text-[24px]" : "text-[32px]"
-              }`}
-            >
-              {analysis.probability_low}–{analysis.probability_high}%
-            </div>
+    <>
+      <div className="animate-rise-in overflow-hidden rounded-[14px] border border-[#262626] bg-[#0C0C0C]">
+        <div className={`border-b border-[#1E1E1E] bg-gradient-to-b from-[#121212] to-[#0C0C0C] ${pad}`}>
+          <div className="mb-3 flex flex-wrap items-center gap-2.5">
+            <span className={`${SECTION_LABEL} capitalize`}>
+              {analysis.scope_type} · {analysis.scope_value}
+            </span>
+            <span className={META_LABEL} suppressHydrationWarning>
+              {whenLabel(analysis.created_at)}
+            </span>
           </div>
 
-          <div
-            className="flex items-center gap-2.25 rounded-[10px] border px-3.25 py-2.25"
-            style={{ borderColor: conf.border, background: conf.bg }}
+          <div className="mb-2.5 font-mono text-[10px] tracking-[0.14em] text-accent uppercase">
+            {analysis.analysis_type.replace(/_/g, " ")}
+          </div>
+
+          <h2
+            className={`m-0 font-serif font-normal leading-[1.25] text-primary text-pretty ${
+              isDense ? "text-[19px]" : "text-[25px]"
+            }`}
           >
-            <div aria-hidden className="flex items-end gap-0.5">
-              {[8, 12, 16].map((h, i) => (
-                <span
-                  key={h}
-                  className="w-0.75 rounded-[1px]"
-                  style={{ height: h, background: conf.bars >= i + 1 ? conf.tint : OFF_BAR }}
-                />
-              ))}
-            </div>
-            <span className="text-[12.5px]" style={{ color: conf.tint }}>
-              {conf.label}
-            </span>
-          </div>
-        </div>
-      </div>
+            {finding}
+          </h2>
 
-      <div className={pad}>
-        {body && <p className="mb-5 text-[13.5px] leading-[1.7] text-primary text-pretty">{body}</p>}
-
-        <div className="mb-5">
-          <div className={`${SECTION_LABEL} mb-2.75`}>Sources · {analysis.sources.length}</div>
-          {analysis.sources.length === 0 ? (
-            <div className="text-[12px] text-dim">None cited</div>
-          ) : (
-            <div className="grid grid-cols-[repeat(auto-fit,minmax(min(260px,100%),1fr))] gap-2">
-              {analysis.sources.map((s) => {
-                const inner = (
-                  <>
-                    <div className="text-[12.5px] leading-[1.5] text-primary text-pretty">
-                      {decodeEntities(s.title)}
-                    </div>
-                    <div className="mt-2 flex items-center justify-between gap-2.5">
-                      <span className="text-[11px] text-accent">{s.source_name}</span>
-                      <span className="font-mono text-[9.5px] tracking-[0.08em] text-dim uppercase" suppressHydrationWarning>
-                        {whenLabel(s.published_at)}
-                      </span>
-                    </div>
-                  </>
-                );
-                const boxClass =
-                  "block min-w-0 rounded-[11px] border border-[#232323] bg-[#101010] px-3.5 py-3.25 transition-[border-color,transform] duration-[180ms] ease-[cubic-bezier(0.4,0,0.2,1)] hover:-translate-y-px hover:border-[#3A3A3A]";
-                return s.url ? (
-                  <a key={s.id} href={s.url} target="_blank" rel="noreferrer" className={boxClass}>
-                    {inner}
-                  </a>
-                ) : (
-                  <div key={s.id} className={boxClass}>
-                    {inner}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
-        <div className="mb-4.5 rounded-[12px] border border-[#1E1E1E] bg-canvas p-4">
-          <div className="mb-3 flex items-baseline justify-between gap-3">
-            <span className={SECTION_LABEL}>Historical analogs</span>
-            <span className={META_LABEL}>
-              {shownAnalogs.length} of {analysis.sample_size} shown
-            </span>
-          </div>
-
-          {analysis.analogs.length === 0 ? (
-            <div className="text-[12px] text-dim">None matched</div>
-          ) : (
-            <div className="flex flex-col gap-3">
-              {shownAnalogs.map((e, i) => {
-                const matchPct = Math.round(e.similarity_score * 100);
-                return (
-                  <div key={e.id} className="animate-rise-in" style={{ animationDelay: `${i * 70}ms` }}>
-                    <div className="flex items-center justify-between gap-2.5">
-                      <span className="min-w-0 truncate text-[12.5px] text-primary">
-                        {e.symbol ?? e.sector}{" "}
-                        <span className="text-muted">
-                          · {e.event_type} ·{" "}
-                          {new Date(e.event_date).toLocaleDateString(undefined, { month: "short", year: "numeric" })}
-                        </span>
-                      </span>
-                      <span className="shrink-0 font-mono text-[11px] tabular-nums text-muted">{matchPct}% match</span>
-                    </div>
-                    <div className="mt-1.5 h-0.75 overflow-hidden rounded-sm bg-[#1C1C1C]">
-                      {/* Match bars grow left-to-right over 620ms with a 70ms
-                          stagger, per the mock's motion spec for this panel. */}
-                      <div
-                        className="animate-grow-x h-full origin-left rounded-sm bg-gradient-to-r from-accent-light to-accent-dark"
-                        style={{ width: `${matchPct}%`, animationDelay: `${i * 70}ms` }}
-                      />
-                    </div>
-                    {e.note && <div className="mt-1.75 text-[11.5px] leading-[1.55] text-muted text-pretty">{e.note}</div>}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-          {hasHidden && (
-            <div className="mt-3.5 flex flex-wrap items-center justify-between gap-3 rounded-[10px] border border-[#232323] bg-[#101010] px-3.25 py-3">
-              <div className="min-w-0">
-                <div className="text-[12px] text-primary">Premium shows all {analysis.analogs.length} analogs</div>
-                <div className="mt-1 text-[11.5px] leading-[1.5] text-muted text-pretty">
-                  Same analysis, same confidence range, same caveats — more of the underlying comparisons visible.
-                </div>
-              </div>
-              <a
-                href="/billing"
-                className="shrink-0 rounded-[9px] border border-line px-3.5 py-2 text-[12px] text-primary transition-[border-color] duration-[160ms] ease-[cubic-bezier(0.4,0,0.2,1)] hover:border-accent"
+          <div className="mt-4 flex flex-wrap items-center gap-4">
+            <div>
+              <div className="font-mono text-[9px] tracking-[0.12em] text-dim uppercase">Probability range</div>
+              <div
+                className={`mt-1.25 font-serif leading-none tabular-nums text-primary ${
+                  isDense ? "text-[24px]" : "text-[32px]"
+                }`}
               >
-                See all analogs
-              </a>
+                {analysis.probability_low}–{analysis.probability_high}%
+              </div>
             </div>
-          )}
+
+            <div
+              className="flex items-center gap-2.25 rounded-[10px] border px-3.25 py-2.25"
+              style={{ borderColor: conf.border, background: conf.bg }}
+            >
+              <div aria-hidden className="flex items-end gap-0.5">
+                {[8, 12, 16].map((h, i) => (
+                  <span
+                    key={h}
+                    className="w-0.75 rounded-[1px]"
+                    style={{ height: h, background: conf.bars >= i + 1 ? conf.tint : OFF_BAR }}
+                  />
+                ))}
+              </div>
+              <span className="text-[12.5px]" style={{ color: conf.tint }}>
+                {conf.label}
+              </span>
+            </div>
+          </div>
         </div>
 
-        {upcomingEvents.length > 0 && (
-          <div className="mb-4.5 rounded-[10px] border border-[#262626] bg-[#101010] px-3 py-2.5">
-            <div className={`${SECTION_LABEL} mb-2`}>Upcoming for {analysis.scope_value}</div>
-            <div className="flex flex-col gap-1">
-              {upcomingEvents.slice(0, 3).map((e) => (
-                <div key={e.id} className="text-[12px] text-muted">
-                  <span className="capitalize">{e.event_type}</span> ·{" "}
-                  {new Date(`${e.event_date}T00:00:00`).toLocaleDateString()}
-                </div>
-              ))}
+        <div className={pad}>
+          {body && <p className="mb-5 text-[13.5px] leading-[1.7] text-primary text-pretty">{body}</p>}
+
+          <div className="mb-5">
+            <div className="mb-2.75 flex items-center justify-between gap-3">
+              <span className={SECTION_LABEL}>Sources · {analysis.sources.length}</span>
+              {hasMoreSources && (
+                <button
+                  type="button"
+                  onClick={() => setSourcesOpen(true)}
+                  className="text-[11.5px] text-accent underline decoration-accent/40 underline-offset-2 transition-colors duration-base ease-standard hover:decoration-accent"
+                >
+                  View all sources
+                </button>
+              )}
             </div>
+            {analysis.sources.length === 0 ? (
+              <div className="text-[12px] text-dim">None cited</div>
+            ) : (
+              <SourceCard source={previewSource!} />
+            )}
           </div>
-        )}
 
-        {analysis.confidence_level === "low" && (
-          <div className="mb-4.5 rounded-[10px] border border-[#262626] bg-[#101010] px-3 py-2.5 text-[11.5px] leading-relaxed text-muted">
-            Low-confidence output — small historical sample or weak pattern match. Treat as directional, not precise.
+          <div className="mb-4.5 rounded-[12px] border border-[#1E1E1E] bg-canvas p-4">
+            <div className="mb-3 flex items-baseline justify-between gap-3">
+              <span className={SECTION_LABEL}>Historical analogs</span>
+              <span className={META_LABEL}>
+                {shownAnalogs.length} of {analysis.sample_size} shown
+              </span>
+            </div>
+
+            {analysis.analogs.length === 0 ? (
+              <div className="text-[12px] text-dim">None matched</div>
+            ) : (
+              <div className="flex flex-col gap-3">
+                {shownAnalogs.map((e, i) => {
+                  const matchPct = Math.round(e.similarity_score * 100);
+                  return (
+                    <div key={e.id} className="animate-rise-in" style={{ animationDelay: `${i * 70}ms` }}>
+                      <div className="flex items-center justify-between gap-2.5">
+                        <span className="min-w-0 truncate text-[12.5px] text-primary">
+                          {e.symbol ?? e.sector}{" "}
+                          <span className="text-muted">
+                            · {e.event_type} ·{" "}
+                            {new Date(e.event_date).toLocaleDateString(undefined, { month: "short", year: "numeric" })}
+                          </span>
+                        </span>
+                        <span className="shrink-0 font-mono text-[11px] tabular-nums text-muted">{matchPct}% match</span>
+                      </div>
+                      <div className="mt-1.5 h-0.75 overflow-hidden rounded-sm bg-[#1C1C1C]">
+                        {/* Match bars grow left-to-right over 620ms with a 70ms
+                            stagger, per the mock's motion spec for this panel. */}
+                        <div
+                          className="animate-grow-x h-full origin-left rounded-sm bg-gradient-to-r from-accent-light to-accent-dark"
+                          style={{ width: `${matchPct}%`, animationDelay: `${i * 70}ms` }}
+                        />
+                      </div>
+                      {e.note && <div className="mt-1.75 text-[11.5px] leading-[1.55] text-muted text-pretty">{e.note}</div>}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {canExpandAnalogs && (
+              <button
+                type="button"
+                onClick={() => setAnalogsExpanded((v) => !v)}
+                aria-expanded={analogsExpanded}
+                className="mt-3.5 flex w-full items-center justify-center gap-1.5 rounded-[9px] border border-[#232323] bg-[#101010] px-3.5 py-2 text-[12px] text-muted transition-colors duration-base ease-standard hover:border-line hover:text-primary"
+              >
+                {analogsExpanded ? "Show fewer" : `Show all ${analysis.analogs.length} historical analogs`}
+                <span
+                  aria-hidden
+                  className={`text-[10px] transition-transform duration-base ease-standard ${analogsExpanded ? "rotate-180" : ""}`}
+                >
+                  ⌄
+                </span>
+              </button>
+            )}
+
+            {hasHidden && (
+              <div className="mt-3.5 flex flex-wrap items-center justify-between gap-3 rounded-[10px] border border-[#232323] bg-[#101010] px-3.25 py-3">
+                <div className="min-w-0">
+                  <div className="text-[12px] text-primary">Premium shows all {analysis.analogs.length} analogs</div>
+                  <div className="mt-1 text-[11.5px] leading-[1.5] text-muted text-pretty">
+                    Same analysis, same confidence range, same caveats — more of the underlying comparisons visible.
+                  </div>
+                </div>
+                <a
+                  href="/billing"
+                  className="shrink-0 rounded-[9px] border border-line px-3.5 py-2 text-[12px] text-primary transition-[border-color] duration-[160ms] ease-[cubic-bezier(0.4,0,0.2,1)] hover:border-accent"
+                >
+                  See all analogs
+                </a>
+              </div>
+            )}
           </div>
-        )}
 
-        <Disclosure variant="callout" />
+          {upcomingEvents.length > 0 && (
+            <div className="mb-4.5 rounded-[10px] border border-[#262626] bg-[#101010] px-3 py-2.5">
+              <div className={`${SECTION_LABEL} mb-2`}>Upcoming for {analysis.scope_value}</div>
+              <div className="flex flex-col gap-1">
+                {upcomingEvents.slice(0, 3).map((e) => (
+                  <div key={e.id} className="text-[12px] text-muted">
+                    <span className="capitalize">{e.event_type}</span> ·{" "}
+                    {new Date(`${e.event_date}T00:00:00`).toLocaleDateString()}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {analysis.confidence_level === "low" && (
+            <div className="mb-4.5 rounded-[10px] border border-[#262626] bg-[#101010] px-3 py-2.5 text-[11.5px] leading-relaxed text-muted">
+              Low-confidence output — small historical sample or weak pattern match. Treat as directional, not precise.
+            </div>
+          )}
+
+          <Disclosure variant="callout" />
+        </div>
       </div>
-    </div>
+      {sourcesOpen && <SourcesModal sources={analysis.sources} onClose={() => setSourcesOpen(false)} />}
+    </>
   );
 }

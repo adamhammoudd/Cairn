@@ -70,6 +70,28 @@ async function main() {
     fix: isTestError ? "supabase/migrations/0015_scope_guard_test_marker.sql" : undefined,
   });
 
+  // schema.sql gained these two directly (2f9c718, 2e5075b) without ever
+  // getting a migration, so a project built from the numbered migrations
+  // alone - as opposed to a fresh `schema.sql` run - never received them.
+  // dashboard_layout is what surfaces first: saving a custom dashboard
+  // layout fails with "Could not find the 'dashboard_layout' column of
+  // 'user_settings' in the schema cache" the moment anyone tries it.
+  const { error: dashboardLayoutError } = await admin.from("user_settings").select("dashboard_layout").limit(1);
+  checks.push({
+    label: "user_settings.dashboard_layout",
+    ok: !dashboardLayoutError,
+    detail: dashboardLayoutError ? dashboardLayoutError.message : "present",
+    fix: dashboardLayoutError ? "supabase/migrations/0030_schema_sql_drift.sql" : undefined,
+  });
+
+  const { error: watchlistPrefsError } = await admin.from("watchlists").select("description, display_prefs").limit(1);
+  checks.push({
+    label: "watchlists.description + display_prefs",
+    ok: !watchlistPrefsError,
+    detail: watchlistPrefsError ? watchlistPrefsError.message : "present",
+    fix: watchlistPrefsError ? "supabase/migrations/0030_schema_sql_drift.sql" : undefined,
+  });
+
   // The CoinGecko provider row ingest-crypto now reads instead of a hardcoded URL.
   const { data: coingecko } = await admin
     .from("data_providers")
