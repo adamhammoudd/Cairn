@@ -104,7 +104,11 @@ function SourcesModal({ sources, onClose }: { sources: Source[]; onClose: () => 
 
   return (
     <div
-      className="animate-scrim-in fixed inset-0 z-20 flex items-center justify-center bg-black/60 p-4"
+      // overflow-y-auto so a short viewport (or a long source list) never
+      // clips the dialog with no way to reach the rest of it - `fixed` already
+      // keeps this centered on whatever the user is currently looking at,
+      // regardless of how far they've scrolled the page itself.
+      className="animate-scrim-in fixed inset-0 z-20 flex items-center justify-center overflow-y-auto bg-black/60 p-4"
       onClick={onClose}
       role="presentation"
     >
