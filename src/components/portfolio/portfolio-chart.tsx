@@ -6,6 +6,8 @@ import type { TimelinePoint } from "@/lib/portfolio";
 import { getIntradayPortfolioSeries } from "@/lib/actions/intraday";
 import type { ChartView } from "@/lib/supabase/types";
 import { DataFreshness } from "@/components/data-freshness";
+import { useDisplayPrefs } from "@/components/display-prefs-provider";
+import { formatMoney } from "@/lib/display-prefs";
 
 const TIMEFRAMES: ChartView[] = ["1D", "1W", "1M", "3M", "1Y", "ALL"];
 
@@ -17,7 +19,12 @@ interface PortfolioChartProps {
 }
 
 export function PortfolioChart({ seriesByTimeframe, hasHoldings, asOf = null }: PortfolioChartProps) {
-  const [timeframe, setTimeframe] = useState<ChartView>("1M");
+  // Opens on Settings > Display > "Default chart timeframe", same as the
+  // ticker chart. Base Camp's summary sparkline stays pinned to 1M - it plots
+  // from the daily series with no intraday path, so it cannot honour a 1D or
+  // 1W default; see DASHBOARD_SPARKLINE_TIMEFRAME in app/(app)/page.tsx.
+  const prefs = useDisplayPrefs();
+  const [timeframe, setTimeframe] = useState<ChartView>(prefs.defaultChartView);
   // 1D and 1W come from the live provider (minute and quarter-hour bars);
   // every other range is the daily series computed on the server.
   const [intraday, setIntraday] = useState<{ points: TimelinePoint[]; available: boolean } | null>(null);
@@ -111,7 +118,7 @@ export function PortfolioChart({ seriesByTimeframe, hasHoldings, asOf = null }: 
             </defs>
             <YAxis hide domain={["dataMin", "dataMax"]} />
             <Tooltip
-              formatter={(value) => [Number(value).toLocaleString(undefined, { style: "currency", currency: "USD" }), "Close"] as [string, string]}
+              formatter={(value) => [formatMoney(Number(value), prefs), "Close"] as [string, string]}
               labelFormatter={(label) =>
                 String(label).length > 10
                   ? new Date(String(label)).toLocaleString()

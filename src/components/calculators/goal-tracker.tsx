@@ -4,12 +4,16 @@ import { useActionState, useTransition } from "react";
 import { createGoal, deleteGoal } from "@/lib/actions/planning";
 import type { GoalProgress } from "@/lib/planning";
 import { CALC_INPUT, CalcCard, CalcField } from "@/components/calculators/calc-primitives";
-
-function fmtCurrency(n: number) {
-  return n.toLocaleString(undefined, { style: "currency", currency: "USD" });
-}
+import { useDisplayPrefs } from "@/components/display-prefs-provider";
+import { formatMoney } from "@/lib/display-prefs";
 
 export function GoalTracker({ goals }: { goals: GoalProgress[] }) {
+  // Both sides convert: currentValue is the portfolio's market value, and the
+  // target was entered against that same USD-denominated figure. Converting
+  // one and not the other would make the pair read as a comparison between
+  // two different currencies.
+  const prefs = useDisplayPrefs();
+  const fmtCurrency = (n: number) => formatMoney(n, prefs);
   const [error, formAction] = useActionState(createGoal, null);
   const [, startMutate] = useTransition();
 

@@ -5,6 +5,8 @@ import { Area, AreaChart, ResponsiveContainer, Tooltip, YAxis } from "recharts";
 import { buildPriceSeries } from "@/lib/ticker";
 import { DataFreshness } from "@/components/data-freshness";
 import { getIntradaySeries } from "@/lib/actions/intraday";
+import { useDisplayPrefs } from "@/components/display-prefs-provider";
+import { formatMoney } from "@/lib/display-prefs";
 import type { TimelinePoint } from "@/lib/portfolio";
 import type { ChartView } from "@/lib/supabase/types";
 
@@ -20,7 +22,12 @@ interface TickerChartProps {
 }
 
 export function TickerChart({ symbol, bars, priceSource = "last_close", priceAsOf = null }: TickerChartProps) {
-  const [timeframe, setTimeframe] = useState<ChartView>("3M");
+  // Settings > Display > "Default chart timeframe", whose hint has always read
+  // "Applied when opening a ticker". Until now this was hard-coded to 3M and
+  // the setting was written by the form and read by nothing, so the hint
+  // described behaviour the component did not have.
+  const prefs = useDisplayPrefs();
+  const [timeframe, setTimeframe] = useState<ChartView>(prefs.defaultChartView);
   // 1D and 1W plot provider bars (1 min / 15 min); the rest are daily closes.
   const [intraday, setIntraday] = useState<{ points: TimelinePoint[]; available: boolean } | null>(null);
   const [loadingIntraday, setLoadingIntraday] = useState(false);
@@ -107,7 +114,7 @@ export function TickerChart({ symbol, bars, priceSource = "last_close", priceAsO
             </defs>
             <YAxis hide domain={["dataMin", "dataMax"]} />
             <Tooltip
-              formatter={(value) => [Number(value).toLocaleString(undefined, { style: "currency", currency: "USD" }), "Close"] as [string, string]}
+              formatter={(value) => [formatMoney(Number(value), prefs), "Close"] as [string, string]}
               labelFormatter={(label) =>
                 String(label).length > 10
                   ? new Date(String(label)).toLocaleString()

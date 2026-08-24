@@ -3,15 +3,19 @@
 import { useMemo, useState } from "react";
 import { computeScenario, type ScenarioHolding } from "@/lib/planning";
 import { CALC_INPUT, CalcCard, CalcField, CalcStat } from "@/components/calculators/calc-primitives";
+import { useDisplayPrefs } from "@/components/display-prefs-provider";
+import { formatMoney } from "@/lib/display-prefs";
 
 const COLS = "grid-cols-[0.8fr_0.9fr_0.8fr_0.9fr_0.9fr_0.9fr]";
 
-function fmtCurrency(n: number | null) {
-  if (n === null) return "-";
-  return n.toLocaleString(undefined, { style: "currency", currency: "USD" });
-}
+
 
 export function ScenarioModeler({ holdings }: { holdings: ScenarioHolding[] }) {
+  // Every figure here derives from real holdings at real market prices, so it
+  // converts with the currency setting (formatMoney), unlike the calculators
+  // whose inputs the reader types.
+  const prefs = useDisplayPrefs();
+  const fmtCurrency = (n: number | null) => formatMoney(n, prefs);
   const [globalShockPct, setGlobalShockPct] = useState("0");
   const [overrides, setOverrides] = useState<Record<string, number | null>>({});
 

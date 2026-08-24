@@ -1,4 +1,5 @@
 import { getSectorHeatmap } from "@/lib/actions/sector-map";
+import { getUserSettings } from "@/lib/actions/settings";
 import { SectorTreemap } from "@/components/sector-map/sector-treemap";
 
 import { guardReads } from "@/components/data-unavailable";
@@ -11,7 +12,20 @@ export default async function SectorMapPage() {
 
 
 async function SectorMapBody() {
-  const data = await getSectorHeatmap();
+  const [heatmap, settings] = await Promise.all([getSectorHeatmap(), getUserSettings()]);
+
+  // Settings > Display > "Sector map focus". Null (the default) leaves the
+  // map's own largest-first ordering alone; a chosen sector is pulled to the
+  // front and marked, so the page opens on the sector the reader actually
+  // watches rather than whichever happens to be biggest that day.
+  //
+  // Reordering rather than filtering: hiding the other sectors would turn a
+  // heat map into a single card and lose the comparison the page exists for.
+  const focus = settings?.sector_map_default_sector ?? null;
+  const focusedSector = focus && heatmap.some((s) => s.name === focus) ? focus : null;
+  const data = focusedSector
+    ? [...heatmap].sort((a, b) => (a.name === focusedSector ? -1 : b.name === focusedSector ? 1 : 0))
+    : heatmap;
 
   // Coverage is stated on the page rather than left to be inferred from the
   // tiles: classification comes from SEC EDGAR sicDescription, which is SIC
@@ -28,6 +42,7 @@ async function SectorMapBody() {
         <p className="mt-1.75 max-w-[540px] text-[13.5px] text-muted text-pretty">
           Tile area is market cap; saturation is the size of today&apos;s move. Symbols with no SEC-classified sector
           show under &quot;Unclassified.&quot;
+          {focusedSector && <> Opening on {focusedSector} — your focus sector, set in Settings.</>}
         </p>
       </div>
 
@@ -40,7 +55,7 @@ async function SectorMapBody() {
         </div>
       ) : (
         <>
-          <SectorTreemap data={data} />
+          <SectorTreemap data={data} focusedSector={focusedSector} />
           <p className="mt-4 max-w-[720px] text-[12px] leading-relaxed text-dim text-pretty">
             Coverage: {classified.length} classified {classified.length === 1 ? "sector" : "sectors"} from SEC EDGAR
             (SIC industry classification, not GICS)

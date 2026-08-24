@@ -4,7 +4,16 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import type { AlertChannelName, AssetFilter, ChartView, Database, MetricStyle } from "@/lib/supabase/types";
+import type {
+  AlertChannelName,
+  AssetFilter,
+  BriefingDelivery,
+  ChartView,
+  Database,
+  MetricStyle,
+} from "@/lib/supabase/types";
+import { isSupportedCurrency } from "@/lib/market-data/fx";
+import { SECTOR_SLUGS } from "@/lib/sectors";
 
 type UserSettings = Database["public"]["Tables"]["user_settings"]["Row"];
 
@@ -35,12 +44,36 @@ export async function updateSettings(_prevState: string | null, formData: FormDa
     Boolean,
   ) as AlertChannelName[];
 
+  // Only currencies lib/market-data/fx.ts can actually source a rate for are
+  // accepted. A hand-posted "XYZ" would otherwise be stored and then silently
+  // fall back to USD on every page, with Settings still showing XYZ.
+  const submittedCurrency = String(formData.get("currency") ?? "USD");
+  const currency = isSupportedCurrency(submittedCurrency) ? submittedCurrency : "USD";
+
+  // Empty string is the "All sectors" option; anything else is stored as-is
+  // because the map groups by SEC sector names, which are free text. An
+  // unrecognised value simply matches no card and the page falls back to its
+  // own ordering (see app/(app)/sector-map/page.tsx).
+  const sectorFocus = String(formData.get("sector_map_default_sector") ?? "").trim();
+
+  const briefingHour = Number(formData.get("briefing_hour_local") ?? 12);
+  const briefingTimezone = String(formData.get("briefing_timezone") ?? "UTC").trim() || "UTC";
+  const briefingWatchlistIds = (formData.getAll("briefing_watchlist_ids") as string[]).filter(Boolean);
+  // Constrained to the shared sector vocabulary so a stored preference always
+  // matches something the news tagger can emit.
+  const briefingNewsCategories = (formData.getAll("briefing_news_categories") as string[]).filter((c) =>
+    SECTOR_SLUGS.includes(c),
+  );
+  const submittedDelivery = String(formData.get("briefing_delivery") ?? "in_app");
+  const briefingDelivery: BriefingDelivery =
+    submittedDelivery === "email" || submittedDelivery === "push" ? submittedDelivery : "in_app";
+
   const { error } = await supabase
     .from("user_settings")
     .update({
       default_chart_view: formData.get("default_chart_view") as ChartView,
       refresh_rate_seconds: Number(formData.get("refresh_rate_seconds")),
-      currency: String(formData.get("currency")),
+      currency,
       metric_style: formData.get("metric_style") as MetricStyle,
       compact_mode: formData.get("compact_mode") === "on",
       extended_hours: formData.get("extended_hours") === "on",
@@ -53,17 +86,69 @@ export async function updateSettings(_prevState: string | null, formData: FormDa
       default_comparison_timeframe: (formData.get("default_comparison_timeframe") as ChartView) || "3M",
       assistant_expand_methodology: formData.get("assistant_expand_methodology") === "on",
       assistant_use_portfolio_context: formData.get("assistant_use_portfolio_context") === "on",
+      sector_map_default_sector: sectorFocus || null,
+      briefing_hour_local: Number.isInteger(briefingHour) && briefingHour >= 0 && briefingHour <= 23 ? briefingHour : 12,
+      briefing_timezone: briefingTimezone,
+      briefing_include_holdings: formData.get("briefing_include_holdings") === "on",
+      briefing_watchlist_ids: briefingWatchlistIds,
+      briefing_news_categories: briefingNewsCategories,
+      briefing_delivery: briefingDelivery,
     })
     .eq("user_id", user.id);
 
   if (error) return error.message;
 
   // These preferences change how other pages render on first paint, so their
-  // cached RSC payloads have to go too -- not just /settings.
-  for (const path of ["/settings", "/alerts", "/markets", "/comparison", "/assistant"]) {
+  // cached RSC payloads have to go too -- not just /settings. The layout entry
+  // is what carries currency/density/metric-style to every page at once, since
+  // those are resolved in app/(app)/layout.tsx rather than per page.
+  revalidatePath("/", "layout");
+  for (const path of ["/settings", "/alerts", "/markets", "/comparison", "/assistant", "/sector-map", "/portfolio"]) {
     revalidatePath(path);
   }
   return "saved";
+}
+
+/**
+ * Display name and email.
+ *
+ * Two different mechanisms, deliberately reported separately: the name is a
+ * plain row update and takes effect immediately, while Supabase treats an
+ * email change as a verification flow - the address does not move until the
+ * confirmation link is followed. Saying "saved" for both would tell someone
+ * their email had changed when it had not.
+ */
+export async function updateProfile(_prevState: string | null, formData: FormData): Promise<string | null> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const displayName = String(formData.get("display_name") ?? "").trim();
+  const email = String(formData.get("email") ?? "").trim();
+
+  if (displayName.length > 80) return "Name must be 80 characters or fewer.";
+  if (!email) return "Email can't be empty.";
+
+  const { error: profileError } = await supabase
+    .from("profiles")
+    .update({ display_name: displayName || null })
+    .eq("user_id", user.id);
+  if (profileError) return profileError.message;
+
+  let emailPending = false;
+  if (email !== user.email) {
+    const { error: emailError } = await supabase.auth.updateUser({ email });
+    if (emailError) return emailError.message;
+    emailPending = true;
+  }
+
+  // The name is rendered by the app layout (top nav) as well as this page.
+  revalidatePath("/", "layout");
+  revalidatePath("/settings");
+
+  return emailPending ? "email_pending" : "saved";
 }
 
 export async function changePassword(_prevState: string | null, formData: FormData) {

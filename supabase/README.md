@@ -21,6 +21,19 @@ Run against your project's SQL editor (or `psql`), in order:
    too - it now also seeds the CoinGecko provider row `ingest-crypto` reads
    from instead of a hardcoded URL.
 
+   `0031_settings_page.sql` is the one migration that also **re-schedules a
+   cron job**: `generate-daily-briefings` moves from `0 12 * * 1-5` (12:00 UTC
+   for everybody) to `0 * * * *`, because the delivery time is now a per-user
+   setting and the function picks the users whose local hour has come round.
+   It requires `app.settings.cron_secret` to already be set (see the box
+   below) and raises with a hint if it is not. Re-deploy the function with the
+   migration - the old build ignores the new columns and would generate every
+   user's briefing on the first hourly tick:
+
+   ```bash
+   supabase functions deploy generate-daily-briefings --no-verify-jwt
+   ```
+
 ## 2. Edge Functions
 
 

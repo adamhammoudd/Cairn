@@ -9,14 +9,12 @@ import { COMPARISON_COLORS, MAX_COMPARE, seriesFor, type ComparisonRow } from "@
 import { Sparkline } from "@/components/sparkline";
 import { SymbolTypeahead } from "@/components/symbol-typeahead";
 import { DataFreshness } from "@/components/data-freshness";
+import { useDisplayPrefs } from "@/components/display-prefs-provider";
+import { absoluteChangeFrom, formatChange, formatMoney } from "@/lib/display-prefs";
 import type { ChartView } from "@/lib/supabase/types";
 
 const TIMEFRAMES: ChartView[] = ["1D", "1W", "1M", "3M", "1Y", "ALL"];
 
-function fmtCurrency(n: number | null) {
-  if (n === null) return "-";
-  return n.toLocaleString(undefined, { style: "currency", currency: "USD" });
-}
 
 export function ComparisonPanel({
   universe,
@@ -31,6 +29,7 @@ export function ComparisonPanel({
   defaultTimeframe?: ChartView;
 }) {
   const router = useRouter();
+  const prefs = useDisplayPrefs();
   const [timeframe, setTimeframe] = useState<ChartView>(defaultTimeframe);
 
   function updateSelection(next: string[]) {
@@ -131,9 +130,11 @@ export function ComparisonPanel({
                   </div>
 
                   <div className="mt-3 flex items-baseline gap-2.5">
-                    <span className="font-serif text-[22px] tabular-nums text-primary">{fmtCurrency(row.price)}</span>
+                    <span className="font-serif text-[22px] tabular-nums text-primary">
+                      {formatMoney(row.price, prefs)}
+                    </span>
                     <span className={`text-[12px] tabular-nums ${row.changePct === null ? "text-muted" : positive ? "text-accent" : "text-negative"}`}>
-                      {row.changePct === null ? "-" : `${positive ? "+" : ""}${row.changePct.toFixed(2)}%`}
+                      {formatChange(absoluteChangeFrom(row.price, row.changePct), row.changePct, prefs)}
                     </span>
                   </div>
 

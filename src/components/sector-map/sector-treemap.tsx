@@ -13,7 +13,14 @@ function fmtPct(pct: number | null) {
   return `${pct >= 0 ? "+" : ""}${pct.toFixed(2)}%`;
 }
 
-export function SectorTreemap({ data }: { data: SectorMapNode[] }) {
+export function SectorTreemap({
+  data,
+  focusedSector = null,
+}: {
+  data: SectorMapNode[];
+  /** Settings > Display > "Sector map focus" - ringed rather than isolated. */
+  focusedSector?: string | null;
+}) {
   return (
     <div className="flex flex-col gap-3.5">
       <div className="flex items-center gap-2.5 self-end">
@@ -38,11 +45,20 @@ export function SectorTreemap({ data }: { data: SectorMapNode[] }) {
           return (
             <div
               key={sector.name}
-              className="animate-rise-in rounded-card border border-line bg-panel p-3.75"
+              // The focus sector gets the accent border, not a different
+              // colour scale: saturation on these tiles means gain/loss and
+              // nothing else, so "this is the one you picked" has to be said
+              // with the frame.
+              className={`animate-rise-in rounded-card border bg-panel p-3.75 ${
+                sector.name === focusedSector ? "border-accent/45" : "border-line"
+              }`}
               style={{ animationDelay: `${index * 50}ms` }}
             >
               <div className="mb-3 flex items-center justify-between gap-3">
-                <span className="font-mono text-[10px] tracking-[0.14em] text-muted uppercase">{sector.name}</span>
+                <span className="flex items-center gap-1.75 font-mono text-[10px] tracking-[0.14em] text-muted uppercase">
+                  {sector.name}
+                  {sector.name === focusedSector && <span className="text-accent normal-case">· focus</span>}
+                </span>
                 <span
                   className={`text-[12.5px] tabular-nums ${
                     avg === null ? "text-muted" : avg >= 0 ? "text-accent" : "text-negative"

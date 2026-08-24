@@ -18,6 +18,8 @@ import {
   type ScreenerRow,
 } from "@/lib/screener";
 import { DataFreshness } from "@/components/data-freshness";
+import { useDisplayPrefs } from "@/components/display-prefs-provider";
+import { absoluteChangeFrom, formatChange, formatMoney } from "@/lib/display-prefs";
 
 function numOrNull(v: string): number | null {
   const trimmed = v.trim();
@@ -39,6 +41,9 @@ const NUM_INPUT_CLASS =
   "w-full rounded-[10px] border border-line bg-[#0B0B0B] px-3 py-2.5 text-[12.5px] text-primary outline-none transition-colors duration-fast ease-standard placeholder:text-dim focus:border-accent";
 
 export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }: ScreenerPanelProps) {
+  // Settings > Display: same currency and percent-vs-dollar treatment the
+  // Markets, Watchlists and Holdings tables use.
+  const prefs = useDisplayPrefs();
   const [filters, setFilters] = useState<ScreenerFilters>(EMPTY_FILTERS);
   const [rows, setRows] = useState<ScreenerRow[]>(initialRows);
   // A preset is a filter set plus an ordering. The filters go to the server
@@ -337,7 +342,7 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
                 <Link
                   key={r.symbol}
                   href={`/ticker/${r.symbol}`}
-                  className="animate-rise-in grid grid-cols-[1fr_0.8fr_0.9fr_0.8fr_0.9fr_0.9fr_0.7fr_0.8fr] items-center gap-2.5 border-b border-line px-4.5 py-3 transition-colors duration-fast ease-standard last:border-b-0 hover:bg-active"
+                  className="cn-row animate-rise-in grid grid-cols-[1fr_0.8fr_0.9fr_0.8fr_0.9fr_0.9fr_0.7fr_0.8fr] items-center gap-2.5 border-b border-line px-4.5 py-3 transition-colors duration-fast ease-standard last:border-b-0 hover:bg-active"
                   style={{ animationDelay: `${index * 25}ms` }}
                 >
                   <div className="text-sm text-primary">{r.symbol}</div>
@@ -345,14 +350,14 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
                     {r.assetType}
                   </div>
                   <div className="text-[12.5px] tabular-nums text-primary">
-                    {r.price === null ? "-" : r.price.toLocaleString(undefined, { style: "currency", currency: "USD" })}
+                    {formatMoney(r.price, prefs)}
                   </div>
                   <div
                     className={`text-[12.5px] tabular-nums ${
                       r.changePct === null ? "text-muted" : r.changePct >= 0 ? "text-accent" : "text-negative"
                     }`}
                   >
-                    {r.changePct === null ? "-" : `${r.changePct >= 0 ? "+" : ""}${r.changePct.toFixed(2)}%`}
+                    {formatChange(absoluteChangeFrom(r.price, r.changePct), r.changePct, prefs)}
                   </div>
                   <div className="text-[12.5px] tabular-nums text-muted">
                     {formatVolume(r.volume)}

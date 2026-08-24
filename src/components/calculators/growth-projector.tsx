@@ -4,15 +4,20 @@ import { useMemo, useState } from "react";
 import { Area, AreaChart, CartesianGrid, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { CALC_INPUT, CalcCard, CalcField, CalcStat } from "@/components/calculators/calc-primitives";
 import { project, requiredMonthlyContribution } from "@/lib/projection";
+import { useDisplayPrefs } from "@/components/display-prefs-provider";
+import { formatAmount } from "@/lib/display-prefs";
 
 // Retirement / long-horizon growth projection. Standalone by design: it reads
 // nothing from the user's portfolio and stores nothing unless they save a goal
 // elsewhere, matching the roadmap's "standalone, no persistence unless saved".
 
-const money = (n: number) =>
-  n.toLocaleString(undefined, { style: "currency", currency: "USD", maximumFractionDigits: 0 });
+
 
 export function GrowthProjector() {
+  // Amounts here are typed in by the reader, so they are labelled in the
+  // display currency but never converted - see formatAmount().
+  const prefs = useDisplayPrefs();
+  const money = (n: number) => formatAmount(n, prefs, { maximumFractionDigits: 0 });
   const [startingBalance, setStarting] = useState(25000);
   const [monthlyContribution, setMonthly] = useState(750);
   const [annualReturnPct, setReturn] = useState(7);

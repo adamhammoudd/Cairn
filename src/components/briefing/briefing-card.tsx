@@ -6,6 +6,7 @@ import type { BriefingContent } from "@/lib/ai/briefing";
 import type { AnalysisWithMethodology } from "@/lib/actions/analysis";
 import { MethodologyCard } from "@/components/analysis/methodology-card";
 import { Disclosure } from "@/components/compliance/disclosure";
+import { decodeEntities } from "@/lib/news";
 
 interface BriefingCardProps {
   briefing: BriefingContent | null;
@@ -59,6 +60,37 @@ export function BriefingCard({ briefing, analyses, analysisDepth }: BriefingCard
             <p className="relative mt-3.5 max-w-[760px] text-[13.5px] leading-relaxed text-primary text-pretty">
               {briefing.summary}
             </p>
+
+            {(briefing.news ?? []).length > 0 && (
+              <div className="relative mt-4 flex flex-col gap-2">
+                <div className="font-mono text-[9.5px] tracking-[0.14em] text-dim uppercase">
+                  In your news categories
+                </div>
+                {briefing.news.slice(0, 3).map((n) => (
+                  <div key={n.id} className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                    <span className="text-[12.5px] leading-snug text-primary text-pretty">
+                      {decodeEntities(n.title)}
+                    </span>
+                    <span className="font-mono text-[10px] text-dim">{n.source_name}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Older briefings were generated before Settings could scope
+                them, so `sources` is absent on those rows - hence the guard
+                rather than an assumption the field is there. */}
+            {briefing.sources && (
+              <p className="relative mt-3 text-[11px] text-dim text-pretty">
+                Built from {briefing.sources.holdings ? "your holdings" : "no holdings"}
+                {briefing.sources.watchlist_ids
+                  ? ` and ${briefing.sources.watchlist_ids.length} selected watchlist${briefing.sources.watchlist_ids.length === 1 ? "" : "s"}`
+                  : " and every watchlist"}
+                {briefing.sources.news_categories.length > 0 &&
+                  `, filtered to ${briefing.sources.news_categories.length} news categor${briefing.sources.news_categories.length === 1 ? "y" : "ies"}`}
+                . Change this in Settings &rsaquo; AI Assistant.
+              </p>
+            )}
 
             {briefing.upcoming_events.length > 0 && (
               <div className="relative mt-4 grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-2.5">

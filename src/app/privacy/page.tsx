@@ -42,7 +42,7 @@ export default function PrivacyPolicyPage() {
           <h2>Your data, your control</h2>
           <p>Export your data or delete your account at any time from Settings.</p>
         </section>
-        <section>
+        <section id="deletion">
           <h2>Data retention and deletion</h2>
           <p>
             You can export your data as JSON and delete your account at any time from Settings.
@@ -57,7 +57,7 @@ export default function PrivacyPolicyPage() {
             an automated test that deletes a user and asserts nothing is left behind.
           </p>
         </section>
-        <section>
+        <section id="ai-disclosure">
           <h2>How the AI assistant handles your data</h2>
           <p>
             <strong>Cairn uses artificial intelligence to generate analysis and chat content.</strong>{" "}
@@ -82,7 +82,7 @@ export default function PrivacyPolicyPage() {
             personal positions.
           </p>
         </section>
-        <section>
+        <section id="cookies">
           <h2>Cookies</h2>
           <p>
             Authentication session cookies only. Cairn runs no analytics, advertising, or tracking

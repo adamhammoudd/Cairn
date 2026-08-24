@@ -50,8 +50,38 @@ function isCoolingDown(lastTriggeredAt: string | null, cooldownSeconds: number):
   return Date.now() - new Date(lastTriggeredAt).getTime() < cooldownSeconds * 1000;
 }
 
-function evaluate(alert: AlertRow, series: Series | undefined, analyses: AnalysisRow[]): string | null {
+// Alert types the account-wide "minimum % move" floor applies to. Volume
+// spikes, SMA crossovers and AI-confidence alerts are not price moves, so a
+// "% move" setting must not silently mute them.
+const PRICE_MOVE_TYPES = new Set(["price", "pct_change"]);
+
+function closeToClosePercent(series: Series | undefined): number | null {
+  if (!series || series.closes.length < 2) return null;
+  const [latest, prev] = series.closes;
+  if (prev === 0 || !Number.isFinite(latest) || !Number.isFinite(prev)) return null;
+  return ((latest - prev) / prev) * 100;
+}
+
+function evaluate(
+  alert: AlertRow,
+  series: Series | undefined,
+  analyses: AnalysisRow[],
+  // Account-wide floor from user_settings.notification_thresholds
+  // .price_move_percent (Settings > Notifications & Alerts). Mirrors the gate
+  // in src/lib/alerts.ts - the two evaluators have no shared module across the
+  // Node/Deno boundary, so this check has to exist in both.
+  minPriceMovePercent?: number,
+): string | null {
   const c = alert.condition;
+
+  if (
+    minPriceMovePercent !== undefined &&
+    minPriceMovePercent > 0 &&
+    PRICE_MOVE_TYPES.has(alert.alert_type)
+  ) {
+    const move = closeToClosePercent(series);
+    if (move === null || Math.abs(move) < minPriceMovePercent) return null;
+  }
 
   if (alert.alert_type === "ai_confidence") {
     const minLevel = (c.minLevel as ConfidenceLevel) ?? "medium";
@@ -175,6 +205,24 @@ Deno.serve(async (req) => {
     analysesByScope.set(a.scope_value, list);
   }
 
+  // Account-wide notification thresholds, one query for every user who owns an
+  // enabled alert rather than one per alert.
+  const userIds = Array.from(new Set(rows.map((a) => a.user_id)));
+  const { data: settingsRows } = await supabase
+    .from("user_settings")
+    .select("user_id, notification_thresholds")
+    .in("user_id", userIds);
+
+  const minMoveByUser = new Map<string, number | undefined>();
+  for (const row of (settingsRows ?? []) as {
+    user_id: string;
+    notification_thresholds: Record<string, unknown> | null;
+  }[]) {
+    const raw = row.notification_thresholds?.price_move_percent;
+    const value = typeof raw === "number" ? raw : Number(raw);
+    minMoveByUser.set(row.user_id, Number.isFinite(value) && value > 0 ? value : undefined);
+  }
+
   const results = [];
   let triggeredCount = 0;
 
@@ -192,9 +240,14 @@ Deno.serve(async (req) => {
       const fresh = (analysesByScope.get(alert.scope_value) ?? []).filter(
         (a) => new Date(a.created_at).getTime() > since,
       );
-      message = evaluate(alert, undefined, fresh);
+      message = evaluate(alert, undefined, fresh, minMoveByUser.get(alert.user_id));
     } else {
-      message = evaluate(alert, seriesBySymbol.get(alert.scope_value), []);
+      message = evaluate(
+        alert,
+        seriesBySymbol.get(alert.scope_value),
+        [],
+        minMoveByUser.get(alert.user_id),
+      );
     }
 
     if (!message) {

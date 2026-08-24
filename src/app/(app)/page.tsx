@@ -17,14 +17,13 @@ export default async function DashboardPage() {
 
 
 
-// The Portfolio page's chart opens on 1M; the dashboard's summary sparkline
-// plots the same window from the same series so a reader moving between them
-// sees the same shape.
+// Base Camp's summary sparkline is pinned to 1M rather than following
+// Settings > Display > "Default chart timeframe" like the Portfolio and ticker
+// charts do. It draws from the daily close series with no intraday path, so a
+// 1D default would give it a single point and a 1W default five - the two
+// ranges the real charts serve from the provider instead. Pinned, and said so,
+// rather than honouring the setting into an empty sparkline.
 const DASHBOARD_SPARKLINE_TIMEFRAME = "1M" as const;
-
-function fmtCurrency(n: number) {
-  return n.toLocaleString(undefined, { style: "currency", currency: "USD" });
-}
 
 async function DashboardBody() {
   const supabase = await createClient();
@@ -157,8 +156,12 @@ async function DashboardBody() {
       initialLayout={initialLayout}
       today={today}
       portfolio={{
-        totalValue: fmtCurrency(totals.totalValue),
-        totalGain: `${totals.totalGain >= 0 ? "+" : ""}${fmtCurrency(totals.totalGain)}`,
+        // Raw USD, formatted in the client component through the shared
+        // display-prefs formatter. Formatting here would have pinned Base
+        // Camp's headline figure to dollars while Holdings and Markets
+        // followed the currency setting.
+        totalValue: totals.totalValue,
+        totalGain: totals.totalGain,
         totalGainPct: totals.totalGainPct,
         positive: totals.totalGain >= 0,
         positions: holdings.length,

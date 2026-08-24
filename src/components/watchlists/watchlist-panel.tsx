@@ -13,13 +13,14 @@ import {
 import { tintForWatchlist } from "@/lib/watchlists";
 import { Sparkline } from "@/components/sparkline";
 import { DataFreshness } from "@/components/data-freshness";
-
-function fmtCurrency(n: number | null) {
-  if (n === null) return "-";
-  return n.toLocaleString(undefined, { style: "currency", currency: "USD" });
-}
+import { useDisplayPrefs } from "@/components/display-prefs-provider";
+import { absoluteChangeFrom, formatChange, formatMoney } from "@/lib/display-prefs";
 
 export function WatchlistPanel({ watchlists }: { watchlists: WatchlistWithItems[] }) {
+  // Settings > Display drives the currency on the price column and the unit on
+  // the 24h column, the same as Markets and Holdings.
+  const prefs = useDisplayPrefs();
+  const fmtCurrency = (n: number | null) => formatMoney(n, prefs);
   const [activeId, setActiveId] = useState(watchlists[0]?.id ?? null);
   const [addError, addAction] = useActionState(addWatchlistItem, null);
   const [, startMutate] = useTransition();
@@ -185,7 +186,7 @@ export function WatchlistPanel({ watchlists }: { watchlists: WatchlistWithItems[
                         onDragStart={() => setDragId(item.id)}
                         onDragOver={(e) => e.preventDefault()}
                         onDrop={() => handleDrop(item.id)}
-                        className={`animate-rise-in grid ${cols} items-center gap-3 border-b border-[#171717] px-4.5 py-3.25 transition-colors duration-fast ease-standard last:border-b-0 hover:bg-active ${
+                        className={`cn-row animate-rise-in grid ${cols} items-center gap-3 border-b border-[#171717] px-4.5 py-3.25 transition-colors duration-fast ease-standard last:border-b-0 hover:bg-active ${
                           dragId === item.id ? "opacity-50" : ""
                         }`}
                         style={{ animationDelay: `${index * 50}ms` }}
@@ -218,9 +219,11 @@ export function WatchlistPanel({ watchlists }: { watchlists: WatchlistWithItems[
                             item.changePct === null ? "text-muted" : positive ? "text-accent" : "text-negative"
                           }`}
                         >
-                          {item.changePct === null
-                            ? "-"
-                            : `${item.changePct >= 0 ? "+" : ""}${item.changePct.toFixed(2)}%`}
+                          {formatChange(
+                            absoluteChangeFrom(item.latestClose, item.changePct),
+                            item.changePct,
+                            prefs,
+                          )}
                         </div>
 
                         {showSparkline && (

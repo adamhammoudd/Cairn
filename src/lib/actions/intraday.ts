@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { fetchIntradaySeries, isMarketDataProviderConfigured } from "@/lib/market-data/provider";
+import { getDisplayPrefs } from "@/lib/actions/display-prefs";
 import type { TimelinePoint } from "@/lib/portfolio";
 
 // 1D and 1W are the only ranges where a daily-close series is visibly wrong -
@@ -30,7 +31,11 @@ export async function getIntradaySeries(symbol: string, view: IntradayView): Pro
   if (!isMarketDataProviderConfigured()) return { points: [], available: false };
 
   const { interval, outputsize, spanMs } = RANGES[view];
-  const bars = await fetchIntradaySeries(symbol, interval, outputsize);
+  // Settings > Display > Extended hours. Read on the server rather than passed
+  // from the chart so the preference cannot be spoofed from the client into a
+  // different provider request.
+  const { extendedHours } = await getDisplayPrefs();
+  const bars = await fetchIntradaySeries(symbol, interval, outputsize, extendedHours);
   if (!bars) return { points: [], available: false };
 
   return {
@@ -62,10 +67,11 @@ export async function getIntradayPortfolioSeries(view: IntradayView): Promise<In
   if (symbols.length > 8) return { points: [], available: false };
 
   const { interval, outputsize, spanMs } = RANGES[view];
+  const { extendedHours } = await getDisplayPrefs();
   const seriesBySymbol = new Map<string, { ts: number; close: number }[]>();
 
   for (const symbol of symbols) {
-    const bars = await fetchIntradaySeries(symbol, interval, outputsize);
+    const bars = await fetchIntradaySeries(symbol, interval, outputsize, extendedHours);
     if (!bars) return { points: [], available: false };
     seriesBySymbol.set(
       symbol,
