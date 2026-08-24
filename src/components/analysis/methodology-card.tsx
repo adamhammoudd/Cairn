@@ -59,10 +59,25 @@ function whenLabel(iso: string): string {
 // body paragraph. The stored record has a single reasoning_text, so the finding
 // is its opening sentence and the body is the remainder - a split of what the
 // model actually wrote, never a second generated headline.
-function splitFinding(text: string): { finding: string; body: string } {
-  const match = text.match(/^([\s\S]*?[.!?])(\s+)([\s\S]*)$/);
-  if (!match || match[1].length > 220) return { finding: text, body: "" };
-  return { finding: match[1], body: match[3] };
+//
+// A title has to stay title-sized. This used to fall back to putting the
+// ENTIRE text in the title whenever the first sentence ran past TITLE_MAX (or
+// had no early sentence break at all) - so a long analysis had no description
+// at all, just one oversized headline holding everything the model wrote. An
+// early sentence break is still preferred when one exists; the fallback is now
+// a word-boundary crop, which guarantees the rest always shows as a real
+// description underneath instead of disappearing into the title.
+const TITLE_MAX = 220;
+
+export function splitFinding(text: string): { finding: string; body: string } {
+  const sentenceMatch = text.match(/^([\s\S]*?[.!?])(\s+)([\s\S]*)$/);
+  if (sentenceMatch && sentenceMatch[1].length <= TITLE_MAX) {
+    return { finding: sentenceMatch[1], body: sentenceMatch[3] };
+  }
+  if (text.length <= TITLE_MAX) return { finding: text, body: "" };
+  const cut = text.lastIndexOf(" ", TITLE_MAX);
+  const breakAt = cut > 40 ? cut : TITLE_MAX; // guards a single implausibly long "word"
+  return { finding: `${text.slice(0, breakAt).trimEnd()}…`, body: text.slice(breakAt).trimStart() };
 }
 
 function SourceCard({ source }: { source: Source }) {
@@ -104,7 +119,11 @@ function SourcesModal({ sources, onClose }: { sources: Source[]; onClose: () => 
 
   return (
     <div
-      className="animate-scrim-in fixed inset-0 z-20 flex items-center justify-center bg-black/60 p-4"
+      // overflow-y-auto so a short viewport (or a long source list) never
+      // clips the dialog with no way to reach the rest of it - `fixed` already
+      // keeps this centered on whatever the user is currently looking at,
+      // regardless of how far they've scrolled the page itself.
+      className="animate-scrim-in fixed inset-0 z-20 flex items-center justify-center overflow-y-auto bg-black/60 p-4"
       onClick={onClose}
       role="presentation"
     >
@@ -213,17 +232,6 @@ export function MethodologyCard({
           </h2>
 
           <div className="mt-4 flex flex-wrap items-center gap-4">
-            <div>
-              <div className="font-mono text-[9px] tracking-[0.12em] text-dim uppercase">Probability range</div>
-              <div
-                className={`mt-1.25 font-serif leading-none tabular-nums text-primary ${
-                  isDense ? "text-[24px]" : "text-[32px]"
-                }`}
-              >
-                {analysis.probability_low}–{analysis.probability_high}%
-              </div>
-            </div>
-
             <div
               className="flex items-center gap-2.25 rounded-[10px] border px-3.25 py-2.25"
               style={{ borderColor: conf.border, background: conf.bg }}
@@ -240,6 +248,17 @@ export function MethodologyCard({
               <span className="text-[12.5px]" style={{ color: conf.tint }}>
                 {conf.label}
               </span>
+            </div>
+
+            <div>
+              <div className="font-mono text-[9px] tracking-[0.12em] text-dim uppercase">Probability range</div>
+              <div
+                className={`mt-1.25 font-serif leading-none tabular-nums text-primary ${
+                  isDense ? "text-[24px]" : "text-[32px]"
+                }`}
+              >
+                {analysis.probability_low}–{analysis.probability_high}%
+              </div>
             </div>
           </div>
         </div>
