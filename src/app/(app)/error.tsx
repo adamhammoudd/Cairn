@@ -3,10 +3,12 @@
 import { useEffect } from "react";
 import Link from "next/link";
 
-// Before this existed, a failed server-side read had nowhere to land: the pages
-// swallowed the error and rendered an empty table or a $0 total, which is a
-// wrong answer presented as a real one. Reads now throw (lib/supabase/read.ts)
-// and this is where they surface.
+// The backstop, not the main path. Failed market-data reads are caught on the
+// server and rendered by components/data-unavailable.tsx, because a server
+// component that throws in a production build does not deliver its message
+// here - React substitutes error #441 and passes only a digest. So this
+// boundary must not promise a message it will not have; in production it shows
+// the digest and says where the real cause is logged.
 //
 // Amber, not red: the brand reserves red exclusively for loss and destructive
 // indicators, and "we could not load this" is neither. A red panel on a
@@ -16,10 +18,9 @@ export default function AppError({ error, reset }: { error: Error & { digest?: s
     console.error("[cairn] page failed to render:", error);
   }, [error]);
 
-  // Set by DataReadError for a missing table/function, i.e. a database that is
-  // behind the deployed code. Worth calling out separately because the fix is
-  // an unapplied migration, not a retry.
-  const migrationHint = /missing supabase\/migrations\//.test(error.message);
+  // In production React replaces a server-render message with a generic one and
+  // sets `digest`; only a development build carries the real text.
+  const messageWithheld = Boolean(error.digest) && /minified react error|omitted in production/i.test(error.message);
 
   return (
     <div className="animate-page-in flex min-h-[60vh] items-center justify-center px-4">
@@ -27,14 +28,21 @@ export default function AppError({ error, reset }: { error: Error & { digest?: s
         <p className="font-mono text-[10px] tracking-[0.12em] text-warning uppercase">Data unavailable</p>
         <h1 className="mt-2 text-xl text-primary">This page could not load its data</h1>
         <p className="mt-3 text-sm leading-relaxed text-muted">
-          {migrationHint
-            ? "The database is missing objects this build depends on, so prices, holdings and market listings cannot be read. Nothing is lost - the page is refusing to show placeholder values rather than reporting a zero it cannot stand behind."
-            : "A required read failed, so this page has no figures to show. It is deliberately blank rather than displaying values it could not verify."}
+          A required read failed, so this page has no figures to show. It is deliberately blank rather than displaying
+          values it could not verify.
         </p>
 
-        <pre className="mt-4 overflow-x-auto rounded-lg border border-line bg-canvas p-3 font-mono text-[11px] leading-relaxed text-dim">
-          {error.message}
+        <pre className="mt-4 overflow-x-auto rounded-lg border border-line bg-canvas p-3 font-mono text-[11px] leading-relaxed break-words whitespace-pre-wrap text-dim">
+          {messageWithheld ? `Server error, digest ${error.digest}` : error.message}
         </pre>
+
+        {messageWithheld ? (
+          <p className="mt-3 text-xs leading-relaxed text-dim">
+            React withholds server-render messages in production builds. The full cause is logged against this digest -
+            Vercel &gt; the deployment &gt; Logs, or <code className="font-mono text-muted">npm run check-db</code> if
+            prices and holdings are empty across several pages at once.
+          </p>
+        ) : null}
 
         <div className="mt-5 flex flex-wrap gap-2">
           <button

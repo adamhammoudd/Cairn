@@ -6,7 +6,16 @@ import { MarketsPanel } from "@/components/markets/markets-panel";
 import { createClient } from "@/lib/supabase/server";
 import { MIGRATIONS, unwrapRows } from "@/lib/supabase/read";
 
+import { guardReads } from "@/components/data-unavailable";
+
+// A failed market-data read renders the panel instead of throwing into a
+// minified React error; anything else propagates as before.
 export default async function MarketsPage() {
+  return guardReads(MarketsBody);
+}
+
+
+async function MarketsBody() {
   const supabase = await createClient();
   const [rows, cryptoRows, settings, directory] = await Promise.all([
     runScreen(EMPTY_FILTERS),

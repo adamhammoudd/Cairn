@@ -68,6 +68,17 @@ insert into subscriptions (user_id, tier) values
   ('bbbbbbbb-0000-4000-8000-000000000002', 'premium')
 on conflict (user_id) do update set tier = excluded.tier;
 
+-- A thread both Alice and Bob report, to check discussion_report_counts
+-- (migration 0029): the view aggregates discussion_reports, which is RLS'd to
+-- "own reports only" -- the view must not launder that into a cross-user total
+-- for anyone but service_role.
+insert into discussion_threads (id, symbol, user_id, body) values
+  ('dddddddd-0000-4000-8000-000000000001', 'AAPL', 'bbbbbbbb-0000-4000-8000-000000000002', 'a comment');
+
+insert into discussion_reports (thread_id, reporter_id, reason, status) values
+  ('dddddddd-0000-4000-8000-000000000001', 'aaaaaaaa-0000-4000-8000-000000000001', 'spam', 'open'),
+  ('dddddddd-0000-4000-8000-000000000001', 'bbbbbbbb-0000-4000-8000-000000000002', 'spam', 'open');
+
 -- --------------------------------------------------------------------------
 -- Harness. Each case asserts an *expected row count* for a statement run as
 -- the attacker. A leak shows up as a count that isn't zero.
@@ -167,6 +178,14 @@ select assert_count('WRITE insert chat_message into bob session',
   $q$with i as (insert into chat_messages (session_id, role, content)
      values ('44444444-0000-4000-8000-000000000002','user','injected') returning 1) select count(*) from i$q$, 0);
 
+-- ---- DISCUSSION_REPORT_COUNTS: Security Definer View fix (0029) -----------
+-- Before 0029 this view ran as its owner, not the caller, so it summed both
+-- reports regardless of RLS. With security_invoker it must fall back to what
+-- "read own reports" actually allows Alice: her one report, not Bob's too.
+select assert_count('READ  discussion_report_counts scoped to own report only, not bob''s',
+  $q$select coalesce((select open_reports from discussion_report_counts
+     where thread_id = 'dddddddd-0000-4000-8000-000000000001'), 0)$q$, 1);
+
 -- ---- SCOPE-GUARD LOG: default-deny table must not be readable -------------
 select assert_count('READ  ai_scope_guard_log (must be service-role only)',
   $q$select count(*) from ai_scope_guard_log$q$, 0);
@@ -181,6 +200,8 @@ select assert_count('ANON  read watchlists',      $q$select count(*) from watchl
 select assert_count('ANON  read subscriptions',   $q$select count(*) from subscriptions$q$, 0);
 select assert_count('ANON  delete watchlist_item (removeWatchlistItem has no auth check)',
   $q$with d as (delete from watchlist_items where id = '33333333-0000-4000-8000-000000000002' returning 1) select count(*) from d$q$, 0);
+select assert_count('ANON  read discussion_report_counts (must see nothing, not everyone''s reports)',
+  $q$select count(*) from discussion_report_counts where thread_id = 'dddddddd-0000-4000-8000-000000000001'$q$, 0);
 
 reset role;
 \o

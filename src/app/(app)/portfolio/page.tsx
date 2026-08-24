@@ -15,6 +15,15 @@ import { PortfolioChart } from "@/components/portfolio/portfolio-chart";
 import { AllocationPanel } from "@/components/portfolio/allocation-panel";
 import { HoldingsTable } from "@/components/portfolio/holdings-table";
 
+import { guardReads } from "@/components/data-unavailable";
+
+// A failed market-data read renders the panel instead of throwing into a
+// minified React error; anything else propagates as before.
+export default async function PortfolioPage() {
+  return guardReads(PortfolioBody);
+}
+
+
 const TIMEFRAMES: ChartView[] = ["1D", "1W", "1M", "3M", "1Y", "ALL"];
 
 function fmtCurrency(n: number) {
@@ -24,7 +33,7 @@ function fmtPct(n: number) {
   return `${n >= 0 ? "+" : ""}${n.toFixed(2)}%`;
 }
 
-export default async function PortfolioPage() {
+async function PortfolioBody() {
   const supabase = await createClient();
   const {
     data: { user },

@@ -10,6 +10,7 @@
 // nothing. That is the whole point of the helper, so it is what is asserted.
 
 import { DataReadError, MIGRATIONS, unwrap, unwrapRows } from "../../src/lib/supabase/read";
+import { DataUnavailable, guardReads } from "../../src/components/data-unavailable";
 import type { SuiteResult, TestCase } from "./report";
 
 const cases: TestCase[] = [];
@@ -102,13 +103,66 @@ try {
   check("maybeSingle-shaped read passes its row through", false, `threw unexpectedly: ${(e as Error).message}`);
 }
 
-export function runReadErrorsSuite(): SuiteResult {
+// --- the production path: the message must not be lost to React #441 --------
+// A server component that throws in a production build hands the browser
+// "Minified React error #441" and a digest - the message is withheld. So the
+// failure has to be caught on the server and rendered as markup instead. These
+// cases assert the catch happens and the panel receives the actionable text.
+async function asyncCases() {
+  const el = await guardReads(async () => {
+    unwrapRows(
+      "Markets listing (recent_prices_all)",
+      { data: null, error: { code: "PGRST202", message: "Could not find the function public.recent_prices_all" } },
+      MIGRATIONS.onDemandIngestion,
+    );
+    throw new Error("unreachable");
+  });
+
+  check("a failed read is caught and rendered, not thrown", el?.type === DataUnavailable, `element type: ${String((el as { type?: unknown })?.type === DataUnavailable)}`);
+
+  const passed = (el as unknown as { props: { error: DataReadError } }).props.error;
+  check(
+    "the rendered panel carries the migration hint",
+    passed instanceof DataReadError && passed.message.includes(MIGRATIONS.onDemandIngestion),
+    passed?.message ?? "no error on props",
+  );
+  check("the rendered panel knows it is a missing object", passed?.missingObject === true, String(passed?.missingObject));
+
+  // Not a read failure - must propagate untouched rather than being dressed up
+  // as "data unavailable", which would hide real bugs behind a tidy panel.
+  let typeErrorPropagated = false;
+  try {
+    await guardReads(async () => {
+      throw new TypeError("x.map is not a function");
+    });
+  } catch (e) {
+    typeErrorPropagated = e instanceof TypeError;
+  }
+  check("a non-read error still propagates", typeErrorPropagated, typeErrorPropagated ? "TypeError rethrown" : "swallowed by the guard");
+
+  // redirect() works by throwing; the guard must not eat it.
+  let redirectPropagated = false;
+  const redirectish = Object.assign(new Error("NEXT_REDIRECT"), { digest: "NEXT_REDIRECT;replace;/login;307;" });
+  try {
+    await guardReads(async () => {
+      throw redirectish;
+    });
+  } catch (e) {
+    redirectPropagated = e === redirectish;
+  }
+  check("a Next.js redirect still propagates", redirectPropagated, redirectPropagated ? "redirect rethrown" : "swallowed by the guard");
+}
+
+export async function runReadErrorsSuite(): Promise<SuiteResult> {
+  await asyncCases();
   return { suiteName: "Supabase read errors", gating: true, cases };
 }
 
 if (process.argv[1] && process.argv[1].endsWith("read-errors.ts")) {
-  for (const c of cases) console.log(`${c.status === "pass" ? "ok  " : "FAIL"} ${c.name} - ${c.detail}`);
-  const failed = cases.filter((c) => c.status === "fail").length;
-  console.log(`\n${cases.length - failed}/${cases.length} read-error cases passed`);
-  process.exit(failed === 0 ? 0 : 1);
+  runReadErrorsSuite().then((suite) => {
+    for (const c of suite.cases) console.log(`${c.status === "pass" ? "ok  " : "FAIL"} ${c.name} - ${c.detail}`);
+    const failed = suite.cases.filter((c) => c.status === "fail").length;
+    console.log(`\n${suite.cases.length - failed}/${suite.cases.length} read-error cases passed`);
+    process.exit(failed === 0 ? 0 : 1);
+  });
 }

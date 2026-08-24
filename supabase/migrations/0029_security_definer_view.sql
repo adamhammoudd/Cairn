@@ -1,0 +1,25 @@
+-- Supabase security advisor, CRITICAL: discussion_report_counts is a
+-- Security Definer View.
+--
+-- discussion_reports has RLS restricting select to auth.uid() = reporter_id
+-- (migration 0028) - a member can only ever see their own reports. But
+-- discussion_report_counts was created as a plain view, and a plain view
+-- (without security_invoker) runs its underlying query as the VIEW'S OWNER -
+-- the role that ran this migration - not as the querying role. That owner
+-- is not subject to discussion_reports' RLS policy, so the view's aggregate
+-- silently reads every reporter's rows regardless of who is asking.
+--
+-- The view is granted to anon and authenticated (0028), so this was not a
+-- theoretical gap: anyone holding the public anon key could already call
+-- GET /rest/v1/discussion_report_counts directly and read the open-report
+-- count for any thread_id, bypassing the RLS policy entirely - a path the
+-- app's own code never takes (lib/actions/discussion.ts reads this view only
+-- through the service-role admin client, which bypasses RLS anyway and is
+-- unaffected by this change).
+--
+-- security_invoker (Postgres 15+, Supabase's baseline) makes the view
+-- evaluate discussion_reports' RLS as the querying role instead of the
+-- owner. service_role keeps seeing every row, exactly as before. anon and
+-- authenticated now see only what "read own reports" already allows them -
+-- their own reported threads - instead of everyone's.
+alter view discussion_report_counts set (security_invoker = true);

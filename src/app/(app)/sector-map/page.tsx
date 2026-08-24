@@ -1,7 +1,16 @@
 import { getSectorHeatmap } from "@/lib/actions/sector-map";
 import { SectorTreemap } from "@/components/sector-map/sector-treemap";
 
+import { guardReads } from "@/components/data-unavailable";
+
+// A failed market-data read renders the panel instead of throwing into a
+// minified React error; anything else propagates as before.
 export default async function SectorMapPage() {
+  return guardReads(SectorMapBody);
+}
+
+
+async function SectorMapBody() {
   const data = await getSectorHeatmap();
 
   // Coverage is stated on the page rather than left to be inferred from the
