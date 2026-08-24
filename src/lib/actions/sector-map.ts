@@ -67,3 +67,32 @@ export async function getSectorHeatmap(): Promise<SectorMapNode[]> {
       return size(b) - size(a);
     });
 }
+
+/**
+ * The sector names the map can actually show, for the Settings > Display >
+ * "Sector map focus" dropdown.
+ *
+ * Read from the same fundamentals.sector column getSectorHeatmap() groups by,
+ * plus the two names it synthesises, so the menu can never offer a focus the
+ * map has no card for. Offering src/lib/sectors.ts's slugs here would have
+ * looked richer and been wrong: those are the news tagger's vocabulary (GICS
+ * -style), while the map groups by SEC SIC descriptions.
+ */
+export async function listSectorMapSectors(): Promise<string[]> {
+  const symbols = await getTrackedSymbols();
+  if (symbols.length === 0) return [];
+
+  const supabase = await createClient();
+  const [{ data: fundamentals }, { data: coinRows }] = await Promise.all([
+    supabase.from("fundamentals").select("sector").in("symbol", symbols),
+    supabase.from("crypto_metrics").select("symbol").in("symbol", symbols).limit(1),
+  ]);
+
+  const names = new Set<string>();
+  for (const f of fundamentals ?? []) {
+    if (f.sector) names.add(f.sector);
+  }
+  if ((coinRows ?? []).length > 0) names.add("Digital assets");
+
+  return Array.from(names).sort((a, b) => a.localeCompare(b));
+}

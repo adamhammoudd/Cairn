@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { Sparkline } from "@/components/sparkline";
 import { formatVolume, type ScreenerRow } from "@/lib/screener";
+import { useDisplayPrefs } from "@/components/display-prefs-provider";
+import { formatMoney } from "@/lib/display-prefs";
 
 // The movers deck above the Markets table. Every card is derived from the same
 // stored closes the table below shows - there is no separate "trending" feed,
@@ -28,6 +30,7 @@ const DECKS: { id: DeckId; label: string; method: string }[] = [
 ];
 
 export function TrendingDeck({ rows, requestCounts, names }: TrendingDeckProps) {
+  const prefs = useDisplayPrefs();
   const [deck, setDeck] = useState<DeckId>("gainers");
 
   const items = useMemo(() => {
@@ -114,9 +117,7 @@ export function TrendingDeck({ rows, requestCounts, names }: TrendingDeckProps) 
                     ? `Vol ${formatVolume(r.volume)}`
                     : deck === "searched"
                       ? `${requestCounts[r.symbol]} ${requestCounts[r.symbol] === 1 ? "request" : "requests"}`
-                      : r.price === null
-                        ? "-"
-                        : r.price.toLocaleString(undefined, { style: "currency", currency: "USD" })}
+                      : formatMoney(r.price, prefs)}
                 </div>
               </Link>
             );

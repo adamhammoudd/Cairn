@@ -70,13 +70,26 @@ export interface IntradayBar {
 // Minute-resolution history for the 1D/1W chart ranges. `historical_prices`
 // stores one row per day, so intraday can only come from the provider - with
 // no key configured this returns null and callers fall back to daily closes.
-export async function fetchIntradaySeries(symbol: string, interval: "1min" | "15min", outputsize: number): Promise<IntradayBar[] | null> {
+export async function fetchIntradaySeries(
+  symbol: string,
+  interval: "1min" | "15min",
+  outputsize: number,
+  /**
+   * Include pre-market and after-hours bars (Settings > Display > Extended
+   * hours). The provider returns regular-session bars only unless prepost is
+   * asked for, which is why the setting had no effect before: it was persisted
+   * and never reached a request.
+   */
+  extendedHours = false,
+): Promise<IntradayBar[] | null> {
   const apiKey = process.env.TWELVE_DATA_API_KEY;
   if (!apiKey) return null;
 
   const url =
     `${TWELVE_DATA_BASE}/time_series?symbol=${encodeURIComponent(symbol)}` +
-    `&interval=${interval}&outputsize=${Math.min(outputsize, 5000)}&order=ASC&apikey=${apiKey}`;
+    `&interval=${interval}&outputsize=${Math.min(outputsize, 5000)}&order=ASC` +
+    (extendedHours ? "&prepost=true" : "") +
+    `&apikey=${apiKey}`;
   // Cache for one minute: a 1min series gains at most one bar in that window,
   // and the free tier allows only 8 calls a minute across the whole app.
   const res = await fetch(url, { next: { revalidate: 60 } });

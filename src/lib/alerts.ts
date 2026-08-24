@@ -67,6 +67,19 @@ export interface EvaluationInput {
   alert: Pick<Alert, "alert_type" | "scope_value" | "condition">;
   series?: SymbolSeries;
   analyses?: AnalysisSnapshot[];
+  /**
+   * Account-wide floor from Settings > Notifications & Alerts, stored in
+   * user_settings.notification_thresholds.price_move_percent.
+   *
+   * Applies to the two price-movement types only (price, pct_change): a
+   * triggered alert whose close-to-close move is smaller than this is
+   * suppressed. Volume spikes, SMA crossovers and AI-confidence alerts are not
+   * price moves and are deliberately not gated by it - silently muting a
+   * crossover with a "% move" setting would be a surprise.
+   *
+   * Undefined means no floor, which is the pre-settings behaviour.
+   */
+  minPriceMovePercent?: number;
 }
 
 export interface EvaluationResult {
@@ -85,9 +98,42 @@ export function isCoolingDown(lastTriggeredAt: string | null, cooldownSeconds: n
   return now - new Date(lastTriggeredAt).getTime() < cooldownSeconds * 1000;
 }
 
-export function evaluateAlert({ alert, series, analyses }: EvaluationInput): EvaluationResult {
+/**
+ * Close-to-close move in percent, or null when it cannot be computed. Shared
+ * by evaluateAlert and the notification-threshold gate so both read the move
+ * the same way.
+ */
+export function closeToClosePercent(series: SymbolSeries | undefined): number | null {
+  if (!series || series.closes.length < 2) return null;
+  const [latest, prev] = series.closes;
+  if (prev === 0 || !Number.isFinite(latest) || !Number.isFinite(prev)) return null;
+  return ((latest - prev) / prev) * 100;
+}
+
+/** Alert types the account-wide "minimum % move" floor applies to. */
+const PRICE_MOVE_TYPES: ReadonlySet<AlertType> = new Set<AlertType>(["price", "pct_change"]);
+
+export function evaluateAlert({
+  alert,
+  series,
+  analyses,
+  minPriceMovePercent,
+}: EvaluationInput): EvaluationResult {
   const c = alert.condition;
   const notTriggered: EvaluationResult = { triggered: false, message: null };
+
+  // The account-wide floor, checked before the per-alert condition so a
+  // sub-threshold move never reaches a delivery row. This is what makes the
+  // Settings > Notifications & Alerts number real: it was written to
+  // notification_thresholds and read by nothing, in either evaluator.
+  if (
+    minPriceMovePercent !== undefined &&
+    minPriceMovePercent > 0 &&
+    PRICE_MOVE_TYPES.has(alert.alert_type)
+  ) {
+    const move = closeToClosePercent(series);
+    if (move === null || Math.abs(move) < minPriceMovePercent) return notTriggered;
+  }
 
   if (alert.alert_type === "ai_confidence") {
     const minLevel = (c.minLevel as ConfidenceLevel) ?? "medium";

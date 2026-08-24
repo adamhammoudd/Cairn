@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { getMarketStatus } from "@/lib/market-hours";
 import { useLiveRefresh } from "@/components/use-live-refresh";
+import { useDisplayPrefs } from "@/components/display-prefs-provider";
+import { absoluteChangeFrom, formatChange, formatMoney, formatSignedMoney } from "@/lib/display-prefs";
 import { useActionState } from "react";
 import { updateDashboardLayout } from "@/lib/actions/dashboard";
 import { DashboardSummaryCard } from "@/components/dashboard/dashboard-summary-card";
@@ -25,8 +27,9 @@ interface DashboardHomeProps {
   /** Date of the newest close behind every price on this page. */
   dataAsOf?: string | null;
   portfolio: {
-    totalValue: string;
-    totalGain: string;
+    /** Raw USD - formatted here through the shared display-prefs formatter. */
+    totalValue: number;
+    totalGain: number;
     totalGainPct: number;
     positive: boolean;
     positions: number;
@@ -98,6 +101,9 @@ export function DashboardHome({
   // would tell the user something new.
   const marketStatus = getMarketStatus();
   const { active: live, paused, setPaused } = useLiveRefresh(refreshRateSeconds, marketStatus.isOpen);
+  // Settings > Display: currency and percent-vs-dollar, the same source every
+  // other price surface reads.
+  const prefs = useDisplayPrefs();
   const [result, formAction] = useActionState(updateDashboardLayout, null);
 
   const moduleMap = new Map(MODULES.map((m) => [m.key, m]));
@@ -152,10 +158,12 @@ export function DashboardHome({
           <DashboardSummaryCard key={key} title={card.label} href={card.href} ctaLabel={card.cta} tint={card.tint} delay={delay} {...arrangeProps}>
             <div className="flex flex-wrap items-end justify-between gap-4">
               <div>
-                <div className="font-serif text-[30px] leading-none text-primary">{portfolio.totalValue}</div>
+                <div className="font-serif text-[30px] leading-none text-primary">
+                  {formatMoney(portfolio.totalValue, prefs)}
+                </div>
                 <div className="mt-2 text-xs text-muted">
                   <span className={portfolio.positive ? "text-accent" : "text-negative"}>
-                    {portfolio.totalGain} {portfolio.totalGainPct >= 0 ? "+" : ""}
+                    {formatSignedMoney(portfolio.totalGain, prefs)} {portfolio.totalGainPct >= 0 ? "+" : ""}
                     {portfolio.totalGainPct.toFixed(2)}%
                   </span>{" "}
                   all time
@@ -202,11 +210,10 @@ export function DashboardHome({
                 <div key={r.symbol} className="flex items-center justify-between gap-3">
                   <span className="text-[12.5px] text-primary">{r.symbol}</span>
                   <span className="font-mono text-[12.5px] tabular-nums text-muted">
-                    {r.price.toLocaleString(undefined, { style: "currency", currency: "USD" })}
+                    {formatMoney(r.price, prefs)}
                   </span>
                   <span className={`font-mono text-xs tabular-nums ${r.changePct >= 0 ? "text-accent" : "text-negative"}`}>
-                    {r.changePct >= 0 ? "+" : ""}
-                    {r.changePct.toFixed(2)}%
+                    {formatChange(absoluteChangeFrom(r.price, r.changePct), r.changePct, prefs)}
                   </span>
                 </div>
               ))}

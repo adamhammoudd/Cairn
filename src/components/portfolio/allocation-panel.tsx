@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useDisplayPrefs } from "@/components/display-prefs-provider";
+import { formatMoney } from "@/lib/display-prefs";
 import type { AllocationSlice } from "@/lib/portfolio";
 
 const DIMENSIONS = [
@@ -16,6 +18,7 @@ interface AllocationPanelProps {
 }
 
 export function AllocationPanel({ byDimension }: AllocationPanelProps) {
+  const prefs = useDisplayPrefs();
   const [dimension, setDimension] = useState<(typeof DIMENSIONS)[number]["key"]>("asset_class");
   const slices = byDimension[dimension];
 
@@ -46,7 +49,7 @@ export function AllocationPanel({ byDimension }: AllocationPanelProps) {
                 <span>
                   {s.label} · {s.pct.toFixed(0)}%
                 </span>
-                <span>{s.value.toLocaleString(undefined, { style: "currency", currency: "USD" })}</span>
+                <span>{formatMoney(s.value, prefs)}</span>
               </div>
               <div className="h-1.5 rounded-full bg-active">
                 <div

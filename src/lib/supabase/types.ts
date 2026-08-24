@@ -17,6 +17,10 @@ export type AlertChannelName = "in_app" | "push" | "email";
 // Two-factor is not implemented; this records whether the user has asked to be
 // enrolled when it ships, so the Settings placeholder holds real state.
 export type TwoFactorStatus = "not_enrolled" | "requested";
+// Only in_app has a delivery path. email/push are stored preferences that the
+// Settings UI labels as undelivered until a provider is wired - the same
+// posture default_alert_channels already takes.
+export type BriefingDelivery = "in_app" | "email" | "push";
 
 /** Shape returned by the recent_prices / recent_prices_all functions. */
 export interface PriceBarRow {
@@ -70,6 +74,13 @@ export interface Database {
           assistant_expand_methodology: boolean;
           assistant_use_portfolio_context: boolean;
           two_factor_status: TwoFactorStatus;
+          sector_map_default_sector: string | null;
+          briefing_hour_local: number;
+          briefing_timezone: string;
+          briefing_include_holdings: boolean;
+          briefing_watchlist_ids: string[];
+          briefing_news_categories: string[];
+          briefing_delivery: BriefingDelivery;
           created_at: string;
           updated_at: string;
         };
@@ -89,6 +100,13 @@ export interface Database {
           assistant_expand_methodology?: boolean;
           assistant_use_portfolio_context?: boolean;
           two_factor_status?: TwoFactorStatus;
+          sector_map_default_sector?: string | null;
+          briefing_hour_local?: number;
+          briefing_timezone?: string;
+          briefing_include_holdings?: boolean;
+          briefing_watchlist_ids?: string[];
+          briefing_news_categories?: string[];
+          briefing_delivery?: BriefingDelivery;
         };
         Update: {
           default_chart_view?: ChartView;
@@ -105,6 +123,13 @@ export interface Database {
           assistant_expand_methodology?: boolean;
           assistant_use_portfolio_context?: boolean;
           two_factor_status?: TwoFactorStatus;
+          sector_map_default_sector?: string | null;
+          briefing_hour_local?: number;
+          briefing_timezone?: string;
+          briefing_include_holdings?: boolean;
+          briefing_watchlist_ids?: string[];
+          briefing_news_categories?: string[];
+          briefing_delivery?: BriefingDelivery;
         };
         Relationships: [];
       };
@@ -587,9 +612,37 @@ export interface Database {
         Relationships: [];
       };
       subscriptions: {
-        Row: { user_id: string; tier: SubscriptionTier; created_at: string };
-        Insert: { user_id: string; tier?: SubscriptionTier };
-        Update: { tier?: SubscriptionTier };
+        Row: {
+          user_id: string;
+          tier: SubscriptionTier;
+          /** Null until a real payment processor sets it - see migration 0031. */
+          current_period_end: string | null;
+          created_at: string;
+        };
+        Insert: { user_id: string; tier?: SubscriptionTier; current_period_end?: string | null };
+        Update: { tier?: SubscriptionTier; current_period_end?: string | null };
+        Relationships: [];
+      };
+      subscription_events: {
+        Row: {
+          id: string;
+          user_id: string;
+          from_tier: SubscriptionTier | null;
+          to_tier: SubscriptionTier;
+          source: string;
+          amount_cents: number | null;
+          currency: string | null;
+          created_at: string;
+        };
+        Insert: {
+          user_id: string;
+          from_tier?: SubscriptionTier | null;
+          to_tier: SubscriptionTier;
+          source?: string;
+          amount_cents?: number | null;
+          currency?: string | null;
+        };
+        Update: { source?: string };
         Relationships: [];
       };
       ai_usage_events: {

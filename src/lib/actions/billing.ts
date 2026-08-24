@@ -100,12 +100,107 @@ export async function setTier(_prevState: string | null, formData: FormData) {
     return "Premium isn't available yet - payments aren't set up. Nothing has been charged or changed.";
   }
 
+  // Read the current tier first so the history row can record what it changed
+  // from. A no-op switch (already on this tier) writes no event.
+  const { data: current } = await supabase
+    .from("subscriptions")
+    .select("tier")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  const fromTier: SubscriptionTier = current?.tier ?? "free";
+
   const { error } = await supabase.from("subscriptions").upsert({ user_id: user.id, tier });
   if (error) return error.message;
 
+  if (fromTier !== tier) {
+    // Through the service-role client: this is the user's billing record, and
+    // a user must not be able to forge or delete their own. Same posture as
+    // recordAiUsage. A failure here must not fail the plan change itself - the
+    // tier is already committed and the history line is secondary - so it is
+    // logged rather than returned.
+    const admin = createAdminClient();
+    const { error: eventError } = await admin.from("subscription_events").insert({
+      user_id: user.id,
+      from_tier: fromTier,
+      to_tier: tier,
+      source: "self_serve",
+    });
+    if (eventError) console.error("subscription_events insert failed", eventError.message);
+  }
+
   revalidatePath("/billing");
+  revalidatePath("/settings");
   revalidatePath("/");
   return "saved";
+}
+
+export interface PlanChange {
+  id: string;
+  fromTier: SubscriptionTier | null;
+  toTier: SubscriptionTier;
+  source: string;
+  amountCents: number | null;
+  currency: string | null;
+  createdAt: string;
+}
+
+export interface BillingDetail {
+  usage: UsageSummary;
+  chat: ChatUsageSummary;
+  /** Null until a payment processor sets one - never fabricated. */
+  renewsAt: string | null;
+  /** Plan changes, newest first. Not payments - see migration 0031. */
+  history: PlanChange[];
+  /** Mirrors the server-side gate, so the UI can explain a refused upgrade. */
+  billingEnabled: boolean;
+}
+
+/**
+ * Everything Settings > Billing shows, from the same functions the Billing
+ * page and the Research page's quota indicator read.
+ *
+ * getBillingSummary() and getChatUsageSummary() are reused rather than
+ * re-counted here, which is what keeps the Settings usage figures and the
+ * Research page's quota indicator from drifting apart - they are literally the
+ * same count.
+ */
+export async function getBillingDetail(): Promise<BillingDetail> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const [usage, chat] = await Promise.all([getBillingSummary(), getChatUsageSummary()]);
+
+  if (!user) {
+    return { usage, chat, renewsAt: null, history: [], billingEnabled: billingEnabled() };
+  }
+
+  const [{ data: subscription }, { data: events }] = await Promise.all([
+    supabase.from("subscriptions").select("current_period_end").eq("user_id", user.id).maybeSingle(),
+    supabase
+      .from("subscription_events")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(20),
+  ]);
+
+  return {
+    usage,
+    chat,
+    renewsAt: subscription?.current_period_end ?? null,
+    history: (events ?? []).map((e) => ({
+      id: e.id,
+      fromTier: e.from_tier,
+      toTier: e.to_tier,
+      source: e.source,
+      amountCents: e.amount_cents,
+      currency: e.currency,
+      createdAt: e.created_at,
+    })),
+    billingEnabled: billingEnabled(),
+  };
 }
 
 export interface UsageGate {

@@ -305,3 +305,25 @@ select,
   text-decoration: underline;
   text-underline-offset: 2px;
 }
+
+/* Compact density (Settings > Display > Density).
+ *
+ * `.cn-row` marks the data rows of every list surface - Holdings, Markets,
+ * Watchlists, the Screener, and the Settings rows themselves. AppShell stamps
+ * data-density on the app root from user_settings.compact_mode, and this is
+ * the single rule that acts on it.
+ *
+ * One rule keyed off one attribute, rather than a `compact ? ... : ...` at
+ * every call site, is what makes the toggle land on every table instead of
+ * whichever three someone remembered to thread the prop through. Padding only:
+ * font sizes and colours are untouched, so compact stays readable and no
+ * contrast ratio moves.
+ */
+[data-density="compact"] .cn-row {
+  padding-top: 0.4rem;
+  padding-bottom: 0.4rem;
+}
+
+[data-density="compact"] .cn-row-gap {
+  row-gap: 0.4rem;
+}

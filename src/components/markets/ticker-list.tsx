@@ -4,6 +4,8 @@ import Link from "next/link";
 import { ASSET_TYPE_LABEL, ASSET_TYPE_TAG_CLASS, formatMarketCap, formatVolume, type ScreenerRow } from "@/lib/screener";
 import { assetName } from "@/lib/asset-names";
 import { Sparkline } from "@/components/sparkline";
+import { useDisplayPrefs } from "@/components/display-prefs-provider";
+import { absoluteChangeFrom, formatChange, formatMoney } from "@/lib/display-prefs";
 
 // The one ticker list. Every asset type on Markets renders through this --
 // crypto used to get its own seven-column table, so switching the category
@@ -25,11 +27,15 @@ function initialsOf(symbol: string) {
   return symbol.slice(0, 2).toUpperCase();
 }
 
-function money(n: number | null) {
-  return n === null ? "-" : n.toLocaleString(undefined, { style: "currency", currency: "USD" });
-}
-
 export function TickerList({ rows, names, marketCaps, emptyState }: TickerListProps) {
+  // Settings > Display: currency converts the price column, and the change
+  // column follows the percent-vs-dollar choice. ScreenerRow carries only
+  // changePct, so the dollar move is derived from it and the price rather than
+  // the column silently staying in percent when the user asked for dollars.
+  const prefs = useDisplayPrefs();
+  const money = (n: number | null) => formatMoney(n, prefs);
+  const change = (r: ScreenerRow) => formatChange(absoluteChangeFrom(r.price, r.changePct), r.changePct, prefs);
+
   return (
     <div className="overflow-hidden rounded-card border border-line bg-panel">
       <div
@@ -63,7 +69,7 @@ export function TickerList({ rows, names, marketCaps, emptyState }: TickerListPr
           <Link
             key={r.symbol}
             href={`/ticker/${r.symbol}`}
-            className={`block border-b border-[#171717] transition-colors duration-fast ease-standard last:border-b-0 hover:bg-active sm:grid sm:items-center sm:gap-3 sm:px-5 sm:py-3 ${GRID}`}
+            className={`cn-row block border-b border-[#171717] transition-colors duration-fast ease-standard last:border-b-0 hover:bg-active sm:grid sm:items-center sm:gap-3 sm:px-5 sm:py-3 ${GRID}`}
           >
             {/* Phone (<640px): the mock collapses the row into a card. */}
             <div className="flex flex-col gap-2 px-4 py-3.5 sm:hidden">
@@ -92,7 +98,7 @@ export function TickerList({ rows, names, marketCaps, emptyState }: TickerListPr
                       r.changePct === null ? "text-muted" : r.changePct >= 0 ? "text-accent" : "text-negative"
                     }`}
                   >
-                    {r.changePct === null ? "-" : `${r.changePct >= 0 ? "+" : ""}${r.changePct.toFixed(2)}%`}
+                    {change(r)}
                   </div>
                 </div>
               </div>
@@ -133,7 +139,7 @@ export function TickerList({ rows, names, marketCaps, emptyState }: TickerListPr
                 r.changePct === null ? "text-muted" : r.changePct >= 0 ? "text-accent" : "text-negative"
               }`}
             >
-              {r.changePct === null ? "-" : `${r.changePct >= 0 ? "+" : ""}${r.changePct.toFixed(2)}%`}
+              {change(r)}
             </div>
             <div className="hidden text-[12.5px] tabular-nums text-muted sm:block">{formatMarketCap(marketCap)}</div>
             <div className="hidden text-[12.5px] tabular-nums text-muted sm:block">{formatVolume(r.volume)}</div>

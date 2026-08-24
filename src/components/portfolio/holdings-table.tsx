@@ -4,14 +4,11 @@ import { useState, useTransition, type ReactNode } from "react";
 import { deleteHolding } from "@/lib/actions/holdings";
 import { HoldingModal } from "@/components/portfolio/holding-modal";
 import { Sparkline } from "@/components/sparkline";
+import { useDisplayPrefs } from "@/components/display-prefs-provider";
+import { formatMoney, formatChange, formatSecondaryChange } from "@/lib/display-prefs";
 import type { Holding, HoldingMetrics } from "@/lib/portfolio";
 
 const COLS = "grid-cols-[1.5fr_0.7fr_0.9fr_1fr_1fr_1.1fr_96px_72px]";
-
-function fmtCurrency(n: number | null) {
-  if (n === null) return "-";
-  return n.toLocaleString(undefined, { style: "currency", currency: "USD" });
-}
 
 export function HoldingsTable({
   metrics,
@@ -28,6 +25,11 @@ export function HoldingsTable({
 }) {
   const [editing, setEditing] = useState<Holding | null | "new">(null);
   const [isDeleting, startDelete] = useTransition();
+  // Currency and percent-vs-dollar both come from Settings > Display. Every
+  // figure below goes through the shared formatters so a currency change
+  // cannot reach the value column and miss the cost basis.
+  const prefs = useDisplayPrefs();
+  const fmtCurrency = (n: number | null) => formatMoney(n, prefs);
 
   // The mock lists positions largest-first; unpriced rows sink to the bottom.
   const rows = [...metrics].sort((a, b) => (b.value ?? -Infinity) - (a.value ?? -Infinity));
@@ -79,7 +81,7 @@ export function HoldingsTable({
               const positive = (m.gain ?? 0) >= 0;
               const series = sparklines[m.symbol] ?? [];
               return (
-                <div key={m.id} className="flex flex-col gap-2.5 border-b border-[#171717] px-4 py-3.5 last:border-b-0">
+                <div key={m.id} className="cn-row flex flex-col gap-2.5 border-b border-[#171717] px-4 py-3.5 last:border-b-0">
                   <div className="flex items-center justify-between gap-2.5">
                     <div className="flex min-w-0 items-center gap-2.5">
                       <div
@@ -144,7 +146,7 @@ export function HoldingsTable({
                       <div
                         className={`mt-0.75 text-[12.5px] tabular-nums ${positive ? "text-accent" : "text-negative"}`}
                       >
-                        {m.gainPct === null ? "—" : `${m.gainPct >= 0 ? "+" : ""}${m.gainPct.toFixed(1)}%`}
+                        {formatChange(m.gain, m.gainPct, prefs, 1)}
                       </div>
                     </div>
                   </div>
@@ -174,7 +176,7 @@ export function HoldingsTable({
                 return (
                   <div
                     key={m.id}
-                    className={`grid ${COLS} items-center gap-3 border-b border-[#171717] px-4.5 py-3.25 transition-colors duration-fast ease-standard last:border-b-0 hover:bg-active`}
+                    className={`cn-row grid ${COLS} items-center gap-3 border-b border-[#171717] px-4.5 py-3.25 transition-colors duration-fast ease-standard last:border-b-0 hover:bg-active`}
                   >
                     <div className="flex min-w-0 items-center gap-2.5">
                       <div
@@ -200,14 +202,18 @@ export function HoldingsTable({
                     </div>
                     <div className="text-[12.5px] tabular-nums text-primary">{fmtCurrency(m.value)}</div>
 
+                    {/* Which unit leads is Settings > Display > "Show percent
+                        vs. dollar change". Both are still shown - the setting
+                        reorders them rather than hiding one, so nothing a
+                        reader could want is taken away by a display choice. */}
                     <div className="flex flex-col gap-0.5">
                       <span className={`text-[12.5px] tabular-nums ${positive ? "text-accent" : "text-negative"}`}>
-                        {m.gain === null ? "-" : `${positive ? "+" : ""}${fmtCurrency(m.gain)}`}
+                        {formatChange(m.gain, m.gainPct, prefs, 1)}
                       </span>
                       <span
                         className={`text-[11px] tabular-nums opacity-70 ${positive ? "text-accent" : "text-negative"}`}
                       >
-                        {m.gainPct === null ? "" : `${m.gainPct >= 0 ? "+" : ""}${m.gainPct.toFixed(1)}%`}
+                        {m.gain === null && m.gainPct === null ? "" : formatSecondaryChange(m.gain, m.gainPct, prefs, 1)}
                       </span>
                     </div>
 

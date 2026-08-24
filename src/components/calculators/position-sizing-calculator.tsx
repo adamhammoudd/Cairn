@@ -3,13 +3,19 @@
 import { useMemo, useState } from "react";
 import { computePositionSize } from "@/lib/planning";
 import { CALC_INPUT, CalcCard, CalcField, CalcStat } from "@/components/calculators/calc-primitives";
-
-function fmtCurrency(n: number) {
-  return n.toLocaleString(undefined, { style: "currency", currency: "USD" });
-}
+import { useDisplayPrefs } from "@/components/display-prefs-provider";
+import { formatAmount } from "@/lib/display-prefs";
 
 export function PositionSizingCalculator({ defaultAccountValue }: { defaultAccountValue: number }) {
-  const [accountValue, setAccountValue] = useState(defaultAccountValue > 0 ? defaultAccountValue.toFixed(2) : "");
+  // The seeded account value is a real portfolio figure, so it is converted
+  // once on the way in. Everything after that is arithmetic on numbers the
+  // reader typed, which is why the outputs are labelled in the display
+  // currency (formatAmount) rather than converted a second time.
+  const prefs = useDisplayPrefs();
+  const fmtCurrency = (n: number) => formatAmount(n, prefs);
+  const [accountValue, setAccountValue] = useState(
+    defaultAccountValue > 0 ? (defaultAccountValue * prefs.fxRate).toFixed(2) : "",
+  );
   const [riskPct, setRiskPct] = useState("1");
   const [entryPrice, setEntryPrice] = useState("");
   const [stopPrice, setStopPrice] = useState("");

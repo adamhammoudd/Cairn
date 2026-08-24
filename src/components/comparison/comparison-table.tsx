@@ -1,12 +1,9 @@
 "use client";
 
 import { formatMarketCap } from "@/lib/screener";
+import { useDisplayPrefs } from "@/components/display-prefs-provider";
+import { absoluteChangeFrom, formatChange, formatMoney, type DisplayPrefs } from "@/lib/display-prefs";
 import type { ComparisonRow } from "@/lib/comparison";
-
-function fmtCurrency(n: number | null) {
-  if (n === null) return "-";
-  return n.toLocaleString(undefined, { style: "currency", currency: "USD" });
-}
 
 interface Cell {
   text: string;
@@ -20,18 +17,25 @@ const TONE_CLASS: Record<Cell["tone"], string> = {
   negative: "text-negative",
 };
 
-const METRICS: { label: string; cell: (row: ComparisonRow) => Cell }[] = [
-  { label: "Price", cell: (r) => ({ text: fmtCurrency(r.price), tone: r.price === null ? "muted" : "primary" }) },
+// `cell` takes the display preferences rather than closing over a module-level
+// formatter, so the Price row and the Change row both follow Settings >
+// Display. A module-scope fmtCurrency() is exactly how this table came to be
+// the one surface still printing dollars after a currency change.
+const METRICS: { label: string; cell: (row: ComparisonRow, prefs: DisplayPrefs) => Cell }[] = [
+  {
+    label: "Price",
+    cell: (r, prefs) => ({ text: formatMoney(r.price, prefs), tone: r.price === null ? "muted" : "primary" }),
+  },
   {
     // Crypto carries CoinGecko's rolling 24h figure and session-based markets
     // the last two closes - the same rule every other surface follows. The
     // footnote below the table says so rather than one label implying both.
     label: "Change",
-    cell: (r) =>
+    cell: (r, prefs) =>
       r.changePct === null
         ? { text: "-", tone: "muted" }
         : {
-            text: `${r.changePct >= 0 ? "+" : ""}${r.changePct.toFixed(2)}%`,
+            text: formatChange(absoluteChangeFrom(r.price, r.changePct), r.changePct, prefs),
             tone: r.changePct >= 0 ? "positive" : "negative",
           },
   },
@@ -55,6 +59,7 @@ const METRICS: { label: string; cell: (row: ComparisonRow) => Cell }[] = [
 ];
 
 export function ComparisonTable({ rows }: { rows: ComparisonRow[] }) {
+  const prefs = useDisplayPrefs();
   // Metric-per-row, symbol-per-column so the same measure lines up horizontally
   // across every ticker.
   const gridTemplate = `minmax(120px, 170px) repeat(${rows.length}, minmax(0, 1fr))`;
@@ -82,12 +87,12 @@ export function ComparisonTable({ rows }: { rows: ComparisonRow[] }) {
           {METRICS.map((metric, index) => (
             <div
               key={metric.label}
-              className="animate-rise-in grid items-center gap-3 border-b border-line px-4.5 py-3.25 transition-colors duration-fast ease-standard last:border-b-0 hover:bg-active"
+              className="cn-row animate-rise-in grid items-center gap-3 border-b border-line px-4.5 py-3.25 transition-colors duration-fast ease-standard last:border-b-0 hover:bg-active"
               style={{ gridTemplateColumns: gridTemplate, animationDelay: `${index * 30}ms` }}
             >
               <div className="text-[12px] text-muted">{metric.label}</div>
               {rows.map((row) => {
-                const cell = metric.cell(row);
+                const cell = metric.cell(row, prefs);
                 return (
                   <div key={row.symbol} className={`text-[13px] tabular-nums ${TONE_CLASS[cell.tone]}`}>
                     {cell.text}

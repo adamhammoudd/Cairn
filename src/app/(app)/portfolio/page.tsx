@@ -10,7 +10,7 @@ import {
 } from "@/lib/portfolio";
 import { getLatestCloses, latestDataDate } from "@/lib/market-data/current-price";
 import type { ChartView } from "@/lib/supabase/types";
-import { StatCard } from "@/components/portfolio/stat-card";
+import { PortfolioStats } from "@/components/portfolio/portfolio-stats";
 import { PortfolioChart } from "@/components/portfolio/portfolio-chart";
 import { AllocationPanel } from "@/components/portfolio/allocation-panel";
 import { HoldingsTable } from "@/components/portfolio/holdings-table";
@@ -25,13 +25,6 @@ export default async function PortfolioPage() {
 
 
 const TIMEFRAMES: ChartView[] = ["1D", "1W", "1M", "3M", "1Y", "ALL"];
-
-function fmtCurrency(n: number) {
-  return n.toLocaleString(undefined, { style: "currency", currency: "USD" });
-}
-function fmtPct(n: number) {
-  return `${n >= 0 ? "+" : ""}${n.toFixed(2)}%`;
-}
 
 async function PortfolioBody() {
   const supabase = await createClient();
@@ -100,33 +93,7 @@ async function PortfolioBody() {
   return (
     <div className="animate-page-in">
       <HoldingsTable metrics={metrics} sparklines={sparklines}>
-        <div className="mb-4 grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-3">
-          <StatCard
-            label="Total value"
-            value={fmtCurrency(totals.totalValue)}
-            sub={`${metrics.length} ${metrics.length === 1 ? "position" : "positions"}`}
-          />
-          <StatCard
-            label="Unrealised gain"
-            value={`${totals.totalGain >= 0 ? "+" : ""}${fmtCurrency(totals.totalGain)}`}
-            sub={`${totals.totalGainPct >= 0 ? "+" : ""}${totals.totalGainPct.toFixed(2)}% on cost`}
-            tone={totals.totalGain >= 0 ? "positive" : "negative"}
-            delayMs={50}
-          />
-          <StatCard
-            label="Today"
-            value={fmtPct(totals.todayChangePct)}
-            sub="Since previous close"
-            tone={totals.todayChangePct >= 0 ? "positive" : "negative"}
-            delayMs={100}
-          />
-          <StatCard
-            label="Cost basis"
-            value={fmtCurrency(totals.totalCostBasis)}
-            sub={`Across ${assetTypeCount} asset ${assetTypeCount === 1 ? "type" : "types"}`}
-            delayMs={150}
-          />
-        </div>
+        <PortfolioStats totals={totals} positions={metrics.length} assetTypeCount={assetTypeCount} />
 
         <div className="mb-3.5">
           <PortfolioChart seriesByTimeframe={seriesByTimeframe} hasHoldings={rows.length > 0} asOf={asOf} />
