@@ -158,8 +158,44 @@ const ADVICE_FRAMES: { pattern: RegExp; reason: string }[] = [
 // "exposure" and "book" are here because they were the words the old list
 // missed and are the most natural in this domain.
 // --------------------------------------------------------------------------
+// The noun may be qualified before it arrives - "your NVDA position", "your
+// semiconductor exposure", "your current tech holdings". Requiring "your" to
+// sit directly against the noun missed all of those, so
+// "It would be sensible to reduce your semiconductor position here." passed
+// the guard outright. Up to two intervening qualifier words are allowed; more
+// than that starts matching unrelated spans.
 const PERSONAL_POSSESSION =
-  /\byour\s+(?:position|positions|portfolio|holding|holdings|shares|stake|account|investment|investments|exposure|allocation|book|basket|money|capital|savings|nest\s+egg)\b/i;
+  /\byour\s+(?:[\w-]+\s+){0,2}(?:position|positions|portfolio|holding|holdings|shares|stake|account|investment|investments|exposure|allocation|book|basket|money|capital|savings|nest\s+egg)\b/i;
+
+// Clauses that mention the reader's holdings without saying anything about
+// what to DO with them: acknowledgements, statements of what the data does not
+// cover, and referrals to Cairn's own Research page. Replaying the 42 real
+// production flags in ai_scope_guard_log through this guard showed these are
+// the residual over-fire class - the assistant was being caught for correctly
+// refusing, and in five cases for recommending its own analysis feature.
+//
+// This suppresses ONLY the last-resort PERSONAL_POSSESSION rule below. The
+// imperative and advice-frame checks run first and are untouched, and the
+// suppression additionally requires that the clause carry no trade action at
+// all, so "This will help you decide whether to sell NVDA" is still caught.
+const POSSESSION_BENIGN = new RegExp(
+  [
+    // referral to the product's own analysis surface - not a trade action
+    "\\b(?:request(?:ing)?|run(?:ning)?|generat(?:e|ing))\\s+(?:a\\s+)?(?:fresh|new)\\s+analysis\\b",
+    "\\bon\\s+the\\s+research\\s+page\\b",
+    "\\bstored\\s+analyses\\b",
+    // acknowledgement of the reader, carrying no recommendation
+    "\\bi\\s+understand\\s+your\\s+concern\\b",
+    "\\bif\\s+you\\s+(?:could|can)\\s+provide\\b",
+    // statements about what information would do, not what the reader should do
+    "\\bthis\\s+(?:will|would)\\s+(?:help|ensure|give|provide)\\b",
+    "\\b(?:don't|do\\s+not|doesn't|does\\s+not)\\s+provide\\b",
+    // "...covers mortgage rates and market trends, but not your holdings" -
+    // a statement of what the retrieved data does NOT cover.
+    "\\bnot\\s+your\\b",
+  ].join("|"),
+  "i",
+);
 
 // --------------------------------------------------------------------------
 // Bare imperative aimed at the reader: "Buy the dip.", "Take profits now."
@@ -235,8 +271,17 @@ const NON_ASSERTION =
 // --------------------------------------------------------------------------
 const CONTRASTIVE = /\s*(?:,\s*)?\b(?:but|however|although|though|that\s+said|still|nevertheless|nonetheless|even\s+so|on\s+the\s+other\s+hand)\b\s*/i;
 
+// Models routinely emit typographic apostrophes (U+2019), while every pattern
+// in this file is written with an ASCII one. That mismatch silently defeated
+// the whole NON_ASSERTION carve-out: "I don't have data on that" was read as a
+// non-refusal and flagged, which is a real share of the over-firing found in
+// the production guard log. Normalise once, at the only entry point.
+function normalizeQuotes(text: string): string {
+  return text.replace(/[‘’ʼ′]/g, "'").replace(/[“”]/g, '"');
+}
+
 export function splitClauses(text: string): string[] {
-  return text
+  return normalizeQuotes(text)
     .split(/(?<=[.!?])\s+|\n+/)
     .flatMap((sentence) => sentence.split(CONTRASTIVE))
     .map((c) => c.trim())
@@ -271,6 +316,8 @@ export function checkScopeGuard(text: string): ScopeGuardResult {
     }
 
     if (PERSONAL_POSSESSION.test(clause)) {
+      // Benign only when the clause also proposes no trade action whatsoever.
+      if (POSSESSION_BENIGN.test(clause) && !hasAction) continue;
       return { passed: false, reason: "personal_possession_reference", evidence: clause };
     }
   }

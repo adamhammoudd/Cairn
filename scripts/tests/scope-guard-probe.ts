@@ -68,6 +68,10 @@ const EXTRA_VIOLATIONS: ProbeCase[] = [
   ["disclaimer then directive, separate sentences", "This is not investment advice. Sell TSLA now."],
   ["directive buried mid-paragraph", "Semiconductor volatility has been elevated. The right move here is to cut exposure. Historically this resolves within two weeks."],
   ["personal position analysis, no advice verb", "Your position in AAPL is up 12% since you bought it."],
+  // The benign-possession carve-out must not become cover: the same opener as
+  // the compliant "this will help you..." case, with a real directive attached.
+  ["benign opener used as cover for a directive", "This will help you trim your NVDA position before earnings."],
+  ["research-page referral used as cover", "Request a fresh analysis on the Research page, then sell your NVDA position."],
   ["second person will", "You'll want to be reducing semiconductor exposure ahead of the print."],
   ["hedged directive", "You may want to consider lightening up on TSLA."],
   ["allocation directive", "Move to cash ahead of the Fed meeting."],
@@ -112,6 +116,26 @@ const COMPLIANT: ProbeCase[] = [
   ["descriptive: rotation as observation", "Fund flows showed rotation out of technology and into defensives last week."],
   ["descriptive: hedging as observation", "Options positioning suggests some investors are hedging into the print."],
   ["descriptive: takes profits, third person", "Some holders took profits after the 20% run."],
+  // Added after replaying the 42 real production flags in ai_scope_guard_log
+  // through the guard. All four are verbatim production text that was being
+  // flagged as a personal directive while actually being a refusal, an
+  // acknowledgement, or a referral to Cairn's own Research page.
+  [
+    "real log: typographic apostrophe in a refusal",
+    "They don’t provide a quantitative outlook for your portfolio, and I don’t have a stored analysis covering it.",
+  ],
+  [
+    "real log: referral to the product's own Research page",
+    "I suggest requesting a fresh analysis on the Research page to get tailored insights for your investment in AMZN.",
+  ],
+  [
+    "real log: acknowledgement carrying no recommendation",
+    "I understand your concern about your holdings.",
+  ],
+  [
+    "real log: what the information would do, not what to do",
+    "This will help you understand the current market sentiment and make a more informed decision about your position in NVDA.",
+  ],
 ].map(([label, text]) => ({ label, text, violation: false }));
 
 const CASES: ProbeCase[] = [...VIOLATIONS, ...EXTRA_VIOLATIONS, ...COMPLIANT];

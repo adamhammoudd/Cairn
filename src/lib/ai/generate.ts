@@ -262,7 +262,10 @@ Respond with only a JSON object matching the required schema.`,
       confidence_level: band.confidence,
       sample_size: band.sampleCount,
       reasoning_text: prose.reasoning_text,
-      model_version: `self-hosted:${llmModel()}`,
+      // Provider-qualified so a row is traceable to what actually served it.
+      // This said "self-hosted:" long after Groq shipped, which mislabeled every
+      // stored analysis and matched a privacy claim that was no longer true.
+      model_version: `groq:${llmModel()}`,
       status: "validated",
     })
     .select()
