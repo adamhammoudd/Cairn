@@ -36,7 +36,12 @@ const csp = [
   "base-uri 'self'",
   "form-action 'self'",
   "object-src 'none'",
-  "upgrade-insecure-requests",
+  // `upgrade-insecure-requests` is deliberately NOT here. The spec makes it a
+  // no-op in a Report-Only policy - browsers ignore it and Chrome logs a
+  // console warning about it - so shipping it in this header only produced
+  // noise and the false impression that upgrades were being enforced. Add it
+  // back in the same commit that renames the header below to the enforcing
+  // "Content-Security-Policy", not before.
 ].join("; ");
 
 const securityHeaders = [

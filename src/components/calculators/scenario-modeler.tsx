@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { computeScenario, type ScenarioHolding } from "@/lib/planning";
-import { CALC_INPUT, CalcCard, CalcField, CalcStat } from "@/components/calculators/calc-primitives";
+import { CalcCard, CalcField, CalcStat } from "@/components/calculators/calc-primitives";
 import { useDisplayPrefs } from "@/components/display-prefs-provider";
 import { formatMoney } from "@/lib/display-prefs";
 

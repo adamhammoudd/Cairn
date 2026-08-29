@@ -89,8 +89,12 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
   // keystroke rather than on every character.
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
+    // Moved inside the timer: setting it synchronously in the effect body
+    // triggers a cascading render on every keystroke, which is what
+    // react-hooks/set-state-in-effect flags. The spinner is only meaningful
+    // once the debounced query actually starts.
     const timer = setTimeout(async () => {
+      if (!cancelled) setLoading(true);
       const next = await runScreen(filters);
       if (!cancelled) {
         setRows(next);

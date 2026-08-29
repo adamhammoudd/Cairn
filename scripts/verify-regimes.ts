@@ -4,7 +4,7 @@ import "./tests/env";
 
 async function main() {
   const { deriveVolatilityRegimes, EQUITY_PERIODS_PER_YEAR } = await import(
-    "../supabase/functions/_shared/volatility.ts"
+    "../supabase/functions/_shared/volatility"
   );
   const { createAdminClient } = await import("@/lib/supabase/admin");
   const db = createAdminClient();
@@ -19,8 +19,8 @@ async function main() {
       .limit(750);
     const bars = (data ?? []).slice().reverse();
     const regimes = deriveVolatilityRegimes(
-      bars.map((b: { ts: string }) => String(b.ts).slice(0, 10)),
-      bars.map((b: { close: number }) => Number(b.close)),
+      bars.map((b) => String(b.ts).slice(0, 10)),
+      bars.map((b) => Number(b.close ?? 0)),
       EQUITY_PERIODS_PER_YEAR,
     );
     console.log(`${symbol.padEnd(6)} bars=${String(bars.length).padStart(4)}  regimes=${regimes.length}`);
