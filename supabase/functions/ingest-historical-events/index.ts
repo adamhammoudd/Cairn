@@ -23,6 +23,7 @@
 
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
+import { deriveVolatilityRegimes, EQUITY_PERIODS_PER_YEAR } from "../_shared/volatility.ts";
 import { requireCronSecret } from "../_shared/auth.ts";
 
 const UA_YAHOO = "Mozilla/5.0 (cairn-ingest/1.0)";
@@ -281,6 +282,34 @@ Deno.serve(async (req) => {
         });
       }
 
+      // Derived volatility regimes, the same analog source ingest-crypto uses.
+      //
+      // Without these, a symbol's only analogs are Nasdaq earnings and Yahoo
+      // dividends. Both return nothing for most long-tail names - and both are
+      // wrapped in a .catch above, so the failure is silent - which left every
+      // symbol outside the mega-cap seed set with zero analogs and made
+      // analysis generation fail outright. Regimes are computed from closes we
+      // already store, so they work for any symbol with enough price history,
+      // including one that was only just ingested on demand.
+      const regimes = deriveVolatilityRegimes(
+        priceBars.map((b) => String(b.ts).slice(0, 10)),
+        priceBars.map((b) => Number(b.close)),
+        EQUITY_PERIODS_PER_YEAR,
+      );
+      for (const r of regimes) {
+        rows.push({
+          symbol,
+          sector,
+          event_type: "volatility_regime",
+          event_date: r.event_date,
+          description: r.description,
+          metadata: { source: "derived_realized_volatility" },
+          price_before: r.price_before,
+          price_after: r.price_after,
+          volume_at_event: null,
+        });
+      }
+
       let upserted = 0;
       if (rows.length > 0) {
         const { error } = await supabase
@@ -298,6 +327,7 @@ Deno.serve(async (req) => {
         earnings: earnings.length,
         dividends: yahoo.dividends.length,
         splits: yahoo.splits.length,
+        regimes: regimes.length,
         upserted,
         skipped_no_price_window: skipped,
       });
