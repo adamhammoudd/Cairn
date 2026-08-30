@@ -1,25 +1,28 @@
-Place your PNG (the one you provided) into this folder and name it `source-icon.png`.
+# App icon / favicon
 
-Recommended generated files and filenames (place these in `public/`):
-- `apple-touch-icon.png` - Apple touch icon (180x180)
-- `favicon-32x32.png` - favicon (32x32)
-- `favicon-16x16.png` - favicon (16x16)
-- `favicon.ico` - multi-size .ico (optional)
+The single source is **`public/cairn-mark.svg`** - the three-stone Cairn mark,
+geometry identical to the `<Logo>` component (`src/components/logo.tsx`, which
+renders this same file inline).
 
-Quick ImageMagick commands to create the PNG sizes (run in this repo root):
+To change the icon, edit `cairn-mark.svg`, then regenerate the raster set:
 
 ```bash
-# resize source to 180x180 for Apple touch icon
-magick public/source-icon.png -resize 180x180 public/apple-touch-icon.png
-
-# create favicons
-magick public/source-icon.png -resize 32x32 public/favicon-32x32.png
-magick public/source-icon.png -resize 16x16 public/favicon-16x16.png
-
-# create a multi-size .ico (optional)
-magick public/source-icon.png -resize 16x16 favicon-16x16.png -resize 32x32 favicon-32x32.png public/favicon.ico
+node scripts/gen-icons.mjs
 ```
 
-If you prefer a GUI tool, export PNGs at the exact sizes above and drop them here. Next.js will serve these from `/` (for example `/apple-touch-icon.png`).
+That writes:
 
-After adding files, reload the site and clear browser cache (or open in a private window) to see the updated tab icon.
+| File | Purpose |
+|---|---|
+| `src/app/icon.svg` | scalable favicon (Next file convention) |
+| `src/app/favicon.ico` | 32px `.ico` fallback for old browsers |
+| `src/app/apple-icon.png` | 180px Apple touch icon (Next file convention) |
+| `public/apple-touch-icon.png` | same, for tools that hardcode `/apple-touch-icon.png` |
+| `public/icon-192.png`, `public/icon-512.png` | PWA icons, referenced by `public/site.webmanifest` |
+
+Next.js injects the `<link rel="icon">` / `apple-touch-icon` / manifest tags
+automatically from those file-convention names - there is no icon list in
+`src/app/layout.tsx` to keep in sync.
+
+After regenerating, hard-reload (or a private window) to bust the browser's
+cached tab icon.
