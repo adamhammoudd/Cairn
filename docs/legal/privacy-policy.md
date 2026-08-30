@@ -71,6 +71,22 @@ Users can export their data (JSON) and delete their account at any time via Sett
 delete (Phase 1), which removes the account and cascades to owned data per the database schema's
 foreign-key constraints.
 
+Two stores are NOT reached by that cascade and are handled separately (Stage 4.4 of the
+2026-08-30 remediation; see `src/lib/actions/settings.ts` `deleteAccount()`):
+
+- **`ai_scope_guard_log`** retains the text of rejected/corrected AI generations and has no
+  `user_id` column. A scheduled purge (`purge_scope_guard_log()`, cron `purge-scope-guard-log`,
+  migration `0035_scope_guard_log_retention.sql`) deletes non-test rows after **90 days**. Adding
+  a `user_id` to enable a per-user scrub would make the log more identifying, not less, so the
+  time limit is the control. _[Legal review: confirm 90 days is defensible.]_
+- **Groq** (model inference). Checked against Groq's published terms (2026-08-30): no per-account
+  or per-record deletion API exists. Groq does not retain inference inputs/outputs by default,
+  short-lived troubleshooting logs age out within ~30 days, and an org admin can enable Zero Data
+  Retention self-serve. Account deletion therefore does not issue a Groq deletion request; it
+  relies on that non-retention. **Founder action: enable Groq ZDR at the org level.**
+- Supabase managed backups may hold a copy for a short rolling window post-deletion. **Confirm
+  and state the exact window.**
+
 ## 6. AI-specific data handling - flagged for legal review
 
 This section exists because the AI analysis engine's output type (probability/pattern analysis)

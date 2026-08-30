@@ -233,6 +233,27 @@ export async function exportUserData() {
   };
 }
 
+// Two stores hold user-adjacent data that a straight `auth.admin.deleteUser`
+// cascade does NOT reach, and there is no clean per-user delete for either:
+//
+//  1. ai_scope_guard_log - retains raw_output/corrected_output, which can echo
+//     text a user typed into chat, and has no user_id column to filter on.
+//     Handled by a 90-day time-based retention purge instead (migration
+//     0035_scope_guard_log_retention.sql, cron `purge-scope-guard-log`), so no
+//     row of that text outlives the window regardless of which user it came
+//     from. Adding a user_id purely to enable a scrub here would make the log
+//     MORE identifying, not less.
+//
+//  2. Groq (and any configured fallback) - the model provider that chat text
+//     was sent to for inference. Checked against Groq's published terms
+//     (2026-08-30): there is no per-account or per-record deletion API to call.
+//     Groq does not retain inference inputs/outputs by default; short-lived
+//     troubleshooting logs age out within 30 days; and an organisation admin
+//     can turn on Zero Data Retention self-serve in the Groq console. The real
+//     control is therefore the founder enabling ZDR at the org level (tracked
+//     as a founder action item), not anything this function can do at request
+//     time. Documented here and in docs/legal/privacy-policy.md rather than
+//     left as an unstated gap.
 export async function deleteAccount() {
   const supabase = await createClient();
   const {
@@ -243,6 +264,14 @@ export async function deleteAccount() {
   const admin = createAdminClient();
   const { error } = await admin.auth.admin.deleteUser(user.id);
   if (error) return error.message;
+
+  // Best-effort record that a deletion happened, for the founder's own audit of
+  // whether upstream ZDR is in place. No PII in the log line.
+  console.info(
+    `[deleteAccount] account deleted. Supabase data cascaded. ` +
+      `ai_scope_guard_log: covered by 90-day retention purge. ` +
+      `Groq: no per-record deletion API - relies on org-level Zero Data Retention.`,
+  );
 
   await supabase.auth.signOut();
   redirect("/login");

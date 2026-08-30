@@ -68,6 +68,111 @@ export default function PrivacyPolicyPage() {
           <h2>Your data, your control</h2>
           <p>Export your data or delete your account at any time from Settings.</p>
         </section>
+        <section id="lawful-basis">
+          <h2>Why we are allowed to process your data (lawful basis)</h2>
+          <p>
+            <strong>Non-lawyer draft - the specific bases below need confirmation by counsel.</strong>{" "}
+            For users in the UK and EU, the working position is that Cairn processes account data,
+            portfolio data, settings and chat history because it is <em>necessary to perform the
+            contract</em> you enter into when you create an account (UK GDPR / GDPR Article 6(1)(b)).
+            Anti-abuse handling of waitlist signups (IP, user-agent, timezone) relies on Cairn&apos;s{" "}
+            <em>legitimate interest</em> in preventing abuse of the founding-member offer (Article
+            6(1)(f)). Cairn does not rely on consent for any core feature and sets no
+            consent-requiring cookies, so there is no consent to withdraw for those.
+          </p>
+        </section>
+        <section id="retention">
+          <h2>How long we keep it</h2>
+          <p>
+            Account, portfolio, settings and chat data are kept for as long as your account exists.
+            When you delete your account, that data is removed immediately by a cascading delete
+            (verified by an automated test) - it is not retained on a timer afterwards.
+          </p>
+          <ul>
+            <li>Unconfirmed waitlist entries: removed on request, and in any case not carried past
+              launch.</li>
+            <li>Alert delivery history and daily briefings: kept while the account exists, deleted
+              with it.</li>
+            <li>The AI scope-guard log (which can contain the text of a rejected AI generation) is
+              purged automatically after <strong>90 days</strong> by a scheduled job. It has no
+              account identifier, so it is not tied to you specifically; the time limit is what
+              bounds how long that text is kept. The 90-day figure is still subject to legal
+              review.</li>
+            <li>Authentication-attempt logs: kept only as long as needed for rate-limiting and
+              abuse detection.</li>
+            <li>Backups: Supabase&apos;s managed backups may retain a copy for a short rolling
+              window after deletion before they roll off. <strong>The exact window needs to be
+              confirmed and stated here.</strong></li>
+          </ul>
+        </section>
+        <section id="gdpr-rights">
+          <h2>Your rights (UK / EU GDPR)</h2>
+          <p>
+            If you are in the UK or EU you have the right to: <strong>access</strong> the personal
+            data Cairn holds about you; have inaccurate data <strong>rectified</strong>;{" "}
+            <strong>erase</strong> your data (&quot;right to be forgotten&quot;);{" "}
+            <strong>restrict</strong> processing; <strong>object</strong> to processing carried out
+            on a legitimate-interest basis; and receive your data in a portable, machine-readable
+            format (<strong>data portability</strong>). Settings → Export &amp; delete covers
+            access, portability and erasure directly; for rectification, restriction or objection,
+            or for any request you would rather make in writing, use the contact address below.
+          </p>
+          <p>
+            You also have the right to <strong>lodge a complaint with a data protection
+            supervisory authority</strong> - in the UK, the Information Commissioner&apos;s Office
+            (ico.org.uk); in the EU, the authority in your country of residence. We would ask that
+            you contact us first so we can try to resolve it, but that is your right regardless.
+          </p>
+          <p>
+            <strong>Non-lawyer draft:</strong> whether Cairn needs an EU or UK representative
+            (GDPR Article 27) or a Data Protection Officer given the analysis engine is an open
+            question flagged for counsel.
+          </p>
+        </section>
+        <section id="ccpa">
+          <h2>California privacy rights (CCPA / CPRA)</h2>
+          <p>
+            If you are a California resident you have the right to know what personal information
+            Cairn has collected about you, to request its deletion, and to request correction of
+            inaccurate information. Settings → Export &amp; delete covers these; you can also use
+            the contact address below.
+          </p>
+          <p>
+            <strong>Do Not Sell or Share My Personal Information.</strong> Cairn does not sell your
+            personal information, and does not share it for cross-context behavioural advertising,
+            as those terms are used in the CCPA/CPRA. Cairn runs no advertising, analytics or
+            attribution pipeline, so there is nothing to opt out of - but if that ever changes, a
+            working opt-out mechanism will be added here before any such processing begins. Cairn
+            will not deny you service, charge a different price, or give you a lower quality of
+            service for exercising any of these rights.
+          </p>
+        </section>
+        <section id="transfers">
+          <h2>International data transfers</h2>
+          <p>
+            Cairn&apos;s database, authentication and storage run on Supabase in the{" "}
+            <strong>EU (eu-west-1, Ireland)</strong> region, so account, portfolio, settings and
+            chat data is stored in the EU.
+          </p>
+          <p>
+            Chat message text and the ticker/sector scope of an analysis request are sent to{" "}
+            <strong>Groq (a US company)</strong> for model inference (see &quot;Third parties&quot;
+            above). For UK/EU users this is a transfer outside the UK/EEA.{" "}
+            <strong>Non-lawyer draft - open for counsel:</strong> the transfer mechanism (Standard
+            Contractual Clauses, the EU-US Data Privacy Framework, or a UK Addendum), Groq&apos;s
+            actual processing locations, and whether a transfer impact assessment is required have
+            not been confirmed. Until they are, no assurance about Groq&apos;s handling of that
+            text is made here beyond what is stated above.
+          </p>
+          <p>
+            Per Groq&apos;s published terms, Groq does not retain inference inputs or outputs by
+            default and does not use them to train models; short-lived operational logs age out
+            within about 30 days. Because there is no per-record deletion interface, deleting your
+            Cairn account does not send a deletion request to Groq - it relies on that
+            non-retention. Enabling Groq&apos;s account-level &quot;Zero Data Retention&quot; is a
+            pending administrative step.
+          </p>
+        </section>
         <section id="deletion">
           <h2>Data retention and deletion</h2>
           <p>
@@ -132,11 +237,21 @@ export default function PrivacyPolicyPage() {
             for legal re-review rather than being treated as routine edits.
           </p>
         </section>
-        <section>
+        <section id="contact">
           <h2>Contact</h2>
           <p>
-            A support and privacy contact address will be published here before Cairn accepts real
-            users. Until then this is a pre-launch build.
+            This is the single contact point for privacy questions, data-rights requests
+            (access, rectification, erasure, restriction, objection, portability), CCPA requests,
+            security reports, accessibility problems, and legal or takedown notices under the Terms
+            of Service. The Terms page and the Accessibility statement both point here.
+          </p>
+          <p>
+            <strong>A monitored contact address has not been published yet.</strong> It is blocked
+            on the domain decision (the intended address is <code>privacy@</code> and{" "}
+            <code>support@</code> on Cairn&apos;s own domain, once that is registered) and is a
+            hard requirement before Cairn accepts real users - several of the rights described on
+            this page have no route to us without it. Until it is published, this remains a
+            pre-launch build with no real users.
           </p>
         </section>
     </LegalShell>

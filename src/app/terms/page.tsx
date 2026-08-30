@@ -4,7 +4,7 @@ export const metadata = { title: "Terms of Service - Cairn" };
 
 export default function TermsofServicePage() {
   return (
-    <LegalShell eyebrow="Legal" title="Terms of Service" updated="20 August 2026">
+    <LegalShell eyebrow="Legal" title="Terms of Service" updated="30 August 2026">
 <section>
           <h2>1. What Cairn is</h2>
           <p>
@@ -95,8 +95,94 @@ export default function TermsofServicePage() {
           </p>
         </section>
         <section>
-          <h2>9–12. Billing, liability, termination, governing law, changes</h2>
-          <p>Placeholders pending legal review - see the full draft in the repository.</p>
+          <h2>9. Subscriptions and billing</h2>
+          <p>
+            Cairn offers a free tier and a paid Premium tier. Premium is billed through Stripe on a
+            recurring basis at the price shown at checkout, and renews automatically until
+            cancelled. You can cancel at any time from the billing settings or the Stripe customer
+            portal; cancellation stops the next renewal and Premium features remain available until
+            the end of the period already paid for. If a renewal payment fails, the account is
+            downgraded to the free tier rather than losing access to its own data.
+          </p>
+          <p>
+            <strong>Draft clause - flagged for legal review.</strong> Refund policy, proration on
+            mid-period tier changes, price-change notice periods, and the treatment of taxes are
+            deliberately not stated here and must be drafted alongside the finalized Phase 12
+            billing terms before Premium is offered for sale.
+          </p>
+        </section>
+        <section>
+          <h2>10. Disclaimers and limitation of liability</h2>
+          <p>
+            Cairn is provided &quot;as is&quot; and &quot;as available,&quot; without warranties of
+            any kind, express or implied, including as to accuracy, completeness, timeliness, or
+            fitness for a particular purpose. Market and news data comes from third-party sources
+            and may be delayed, incomplete, or wrong. The AI analysis engine produces
+            probability-weighted, market-level context that can be mistaken or based on a small
+            historical sample; it is not a recommendation and not a substitute for advice from a
+            licensed professional. You are solely responsible for any decision you make.
+          </p>
+          <p>
+            <strong>Draft clause - specifically flagged for legal review.</strong> The intent is
+            that, to the maximum extent permitted by applicable law, Cairn and the people who build
+            it are not liable for indirect, incidental, special, consequential, or punitive
+            damages, or for lost profits or investment losses, arising from use of the service; and
+            that total liability for any direct damages is capped at the greater of the amount you
+            paid Cairn in the twelve months before the claim or a nominal fixed sum. The specific
+            cap, the carve-outs that cannot lawfully be excluded (such as for gross negligence,
+            fraud, death or personal injury, and non-waivable consumer rights in the EU, UK and
+            elsewhere), and the interaction with Section 7&apos;s dispute-resolution clause must be
+            drafted or reviewed by a qualified lawyer for each target market. Generic SaaS
+            boilerplate must not be relied on here given the analysis engine&apos;s regulatory
+            profile.
+          </p>
+        </section>
+        <section>
+          <h2>11. Termination</h2>
+          <p>
+            You may delete your account and its data at any time from Settings → Export &amp;
+            delete. Cairn may suspend or terminate an account that violates these terms - in
+            particular Section 6 (unlawful, infringing, or market-manipulative content) - or where
+            required by law. Where practical and not legally prohibited, Cairn will give notice
+            before terminating an account that is not in serious breach, and you will be able to
+            export your data first. Sections that by their nature should survive termination -
+            including Sections 4, 6, 10, and 12 - continue to apply after your account ends.
+          </p>
+        </section>
+        <section>
+          <h2>12. Governing law and disputes</h2>
+          <p>
+            <strong>Draft clause - flagged for legal review; must not be relied on as written.</strong>{" "}
+            The governing law, the courts or forum for disputes, and how this interacts with the
+            binding-arbitration and class-waiver intent in Section 7 all depend on the
+            jurisdiction(s) in which Cairn actually launches, which is not yet decided. Consumer
+            protection law in many jurisdictions (including the EU and UK) gives users the right to
+            bring claims in their country of residence under their local law regardless of what
+            this section says; any governing-law clause has to be written around that. This section
+            will be completed by counsel as part of the pre-launch legal review, together with the
+            open items in the jurisdictional checklist.
+          </p>
+        </section>
+        <section>
+          <h2>13. Changes to these terms</h2>
+          <p>
+            Cairn may update these terms. For minor or clarifying changes, the updated version is
+            posted here with a new &quot;last updated&quot; date. For material changes - especially
+            anything affecting the scope or disclosures of the AI analysis engine, the billing
+            terms, or the dispute-resolution and liability clauses - Cairn will give notice through
+            the service or by email before the change takes effect, and such changes are flagged
+            for legal re-review rather than treated as routine edits. Continuing to use Cairn after
+            a change takes effect means you accept the updated terms; if you do not, you can delete
+            your account as described in Section 11.
+          </p>
+        </section>
+        <section>
+          <h2>14. Contact</h2>
+          <p>
+            Questions about these terms, and legal or takedown notices under Section 6, go to the
+            contact address published on the Privacy Policy page. A dedicated, monitored legal
+            contact address will be published here before Cairn accepts paying users.
+          </p>
         </section>
     </LegalShell>
   );
