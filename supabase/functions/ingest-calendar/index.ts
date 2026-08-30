@@ -119,9 +119,14 @@ Deno.serve(async (req) => {
 
   const tracked = new Set(
     (providers ?? [])
-      .flatMap((p: { config: Record<string, unknown> }) =>
-        Array.isArray(p.config?.symbols) ? (p.config.symbols as string[]) : [],
-      )
+      .flatMap((p: { config: Record<string, unknown> }) => {
+        // config.symbols accepts plain strings and { symbol, asset_type }
+        // objects (see ingest-market-data). Only the ticker matters here.
+        const syms = Array.isArray(p.config?.symbols) ? (p.config.symbols as unknown[]) : [];
+        return syms
+          .map((s) => (typeof s === "string" ? s : (s as { symbol?: string })?.symbol))
+          .filter((s): s is string => typeof s === "string");
+      })
       .map((s) => s.toUpperCase()),
   );
 
