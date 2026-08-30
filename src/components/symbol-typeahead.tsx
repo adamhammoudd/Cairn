@@ -93,12 +93,11 @@ export function SymbolTypeahead({
   useEffect(() => {
     if (selected) return; // query was just set by a selection, don't re-search
     const q = query.trim();
-    if (!q) {
-      setResults([]);
-      setProbed(null);
-      setProbing(null);
-      return;
-    }
+    // An empty query is handled by deriving empty state at render (see
+    // `hasQuery` below) rather than by clearing three pieces of state here.
+    // Setting state synchronously in an effect body cascades an extra render
+    // on every keystroke, which is what react-hooks/set-state-in-effect flags.
+    if (!q) return;
     let cancelled = false;
     const timer = setTimeout(async () => {
       const next = await searchSymbols(q);
@@ -151,15 +150,24 @@ export function SymbolTypeahead({
     onSelect(result);
   }
 
+  // With an empty box there is nothing to show, whatever the last search left
+  // in state. Deriving that here keeps the effect above free of setState.
+  const hasQuery = query.trim().length > 0;
+  const activeResults = hasQuery ? results : [];
+  const activeProbed = hasQuery ? probed : null;
+  const activeProbing = hasQuery ? probing : null;
+
   const excluded = new Set(exclude ?? []);
-  const visible = excluded.size ? results.filter((r) => !excluded.has(r.symbol)) : results;
+  const visible = excluded.size ? activeResults.filter((r) => !excluded.has(r.symbol)) : activeResults;
   // A freshly-ingested symbol is appended rather than merged into the local
   // list, so its "just fetched" state is visible.
   const newlyAvailable =
-    probed?.availability === "available" && !visible.some((r) => r.symbol === probed.symbol) && !excluded.has(probed.symbol)
-      ? probed
+    activeProbed?.availability === "available" &&
+    !visible.some((r) => r.symbol === activeProbed.symbol) &&
+    !excluded.has(activeProbed.symbol)
+      ? activeProbed
       : null;
-  const unavailable = probed?.availability === "unavailable" ? probed : null;
+  const unavailable = activeProbed?.availability === "unavailable" ? activeProbed : null;
 
   return (
     <div ref={containerRef} className={`relative ${className}`}>
@@ -228,20 +236,20 @@ export function SymbolTypeahead({
             </button>
           )}
 
-          {probing && (
+          {activeProbing && (
             <div className="flex items-center gap-2 px-3.5 py-2 text-[12.5px] text-dim">
               <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-accent" />
-              Checking for data on {probing}…
+              Checking for data on {activeProbing}…
             </div>
           )}
 
-          {!probing && unavailable && (
+          {!activeProbing && unavailable && (
             <div className="border-t border-line px-3.5 py-2 text-[12.5px] text-dim">
               {unavailable.detail ?? `No market data available for ${unavailable.symbol}.`}
             </div>
           )}
 
-          {!probing && !unavailable && visible.length === 0 && !newlyAvailable && (
+          {!activeProbing && !unavailable && visible.length === 0 && !newlyAvailable && (
             <div className="px-3.5 py-2 text-[12.5px] text-dim">
               {TICKER_RE.test(query.trim()) ? "Searching…" : "No symbol or company name matches that."}
             </div>

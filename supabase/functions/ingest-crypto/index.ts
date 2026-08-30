@@ -20,6 +20,7 @@
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 import { requireCronSecret } from "../_shared/auth.ts";
+import { deriveVolatilityRegimes, CRYPTO_PERIODS_PER_YEAR } from "../_shared/volatility.ts";
 
 // Was a hardcoded 25 - a self-imposed cap on a keyless API, not a provider
 // limit. It is now the provider row's `config.top_n` (default 250, CoinGecko's
@@ -67,78 +68,6 @@ async function cg<T>(baseUrl: string, path: string): Promise<T | null> {
  * than sqrt(252): crypto trades every day, so the equity trading-day
  * convention would understate it by ~20%.
  */
-function rollingVolatility(closes: number[], window: number): (number | null)[] {
-  const returns = closes.map((c, i) => (i === 0 || closes[i - 1] === 0 ? 0 : Math.log(c / closes[i - 1])));
-  return closes.map((_, i) => {
-    if (i < window) return null;
-    const slice = returns.slice(i - window + 1, i + 1);
-    const mean = slice.reduce((a, b) => a + b, 0) / slice.length;
-    const variance = slice.reduce((a, b) => a + (b - mean) ** 2, 0) / slice.length;
-    return Math.sqrt(variance) * Math.sqrt(365);
-  });
-}
-
-interface DerivedRegime {
-  event_date: string;
-  description: string;
-  price_before: number;
-  price_after: number;
-}
-
-/**
- * Flag windows where 30-day realized vol ran materially above the asset's own
- * median. Threshold is relative to the asset itself, not an absolute number -
- * an absolute equity-style threshold would mark essentially all of crypto as
- * "elevated" and carry no information.
- */
-function deriveVolatilityRegimes(dates: string[], closes: number[]): DerivedRegime[] {
-  const window = 30;
-  const vols = rollingVolatility(closes, window);
-  const observed = vols.filter((v): v is number => v !== null).sort((a, b) => a - b);
-  if (observed.length < window) return [];
-
-  const median = observed[Math.floor(observed.length / 2)];
-
-  // Relative-only thresholds break on stablecoins: 1.5x a near-zero median is
-  // still near-zero, which manufactured "elevated volatility" analogs for USDT
-  // whose price went $1.00 -> $1.00. Feeding those to the analysis engine
-  // would yield confident-sounding output about no movement at all. Require
-  // the regime to also clear an absolute floor to count as one.
-  const MIN_ANNUALIZED_VOL = 0.15;
-  const threshold = Math.max(median * 1.5, MIN_ANNUALIZED_VOL);
-
-  const regimes: DerivedRegime[] = [];
-  let inRegime = false;
-  let startIdx = 0;
-
-  for (let i = 0; i < vols.length; i++) {
-    const v = vols[i];
-    if (v === null) continue;
-
-    if (!inRegime && v > threshold) {
-      inRegime = true;
-      startIdx = i;
-    } else if (inRegime && v <= threshold) {
-      inRegime = false;
-      // Only keep regimes that persisted - a single day over the line is noise.
-      if (i - startIdx >= 5) {
-        regimes.push({
-          event_date: dates[startIdx],
-          description:
-            `Elevated volatility regime: 30-day realized volatility exceeded ` +
-            `${(threshold * 100).toFixed(0)}% annualized (1.5x this asset's own median) ` +
-            `for ${i - startIdx} days.`,
-          price_before: closes[startIdx],
-          price_after: closes[i],
-        });
-      }
-    }
-  }
-
-  // Keep the most recent handful - older regimes add little for pattern matching.
-  return regimes.slice(-8);
-}
-
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   // Scheduled callers must present the shared secret; see _shared/auth.ts.
@@ -211,6 +140,33 @@ Deno.serve(async (req) => {
       if (batch && Array.isArray(batch)) coins.push(...batch);
     }
   }
+
+  // De-duplicated by symbol before it feeds anything downstream. A shared
+  // ticker across two different CoinGecko listings is a real, common event in
+  // crypto (FIGR_HELOC, GRAM, RAIN, WBT, LEO and CC are already in
+  // symbol_directory for exactly this reason), and coins here comes from two
+  // independent fetches - the top-N page and the on-demand "missing" lookup -
+  // with nothing stopping the same symbol from arriving via both.
+  //
+  // Without this, metricsRows can carry two rows with the same conflict key,
+  // and `upsert(..., { onConflict: "symbol" })` fails outright:
+  //   ON CONFLICT DO UPDATE command cannot affect row a second time
+  // which aborted the whole run - metrics, price history and volatility
+  // regimes for every coin, not just the colliding pair.
+  //
+  // The more prominent coin (lower market_cap_rank) wins; unranked coins keep
+  // first-seen order, matching how the app resolves other symbol collisions
+  // (see the equity/ETF ambiguity note in docs/backlog.md).
+  const bySymbol = new Map<string, MarketCoin>();
+  for (const c of coins) {
+    const sym = c.symbol.toUpperCase();
+    const existing = bySymbol.get(sym);
+    if (!existing || (c.market_cap_rank ?? Infinity) < (existing.market_cap_rank ?? Infinity)) {
+      bySymbol.set(sym, c);
+    }
+  }
+  coins.length = 0;
+  coins.push(...bySymbol.values());
 
   const metricsRows = coins.map((c) => ({
     symbol: c.symbol.toUpperCase(),
@@ -296,7 +252,7 @@ Deno.serve(async (req) => {
       .from("historical_prices")
       .upsert(bars, { onConflict: "symbol,ts", ignoreDuplicates: false });
 
-    const regimes = deriveVolatilityRegimes(dates, closes);
+    const regimes = deriveVolatilityRegimes(dates, closes, CRYPTO_PERIODS_PER_YEAR);
     // Replace this symbol's derived regimes rather than accumulating duplicates
     // across runs - they're recomputed from the full window each time.
     await supabase.from("historical_events").delete().eq("symbol", symbol).eq("event_type", "volatility_regime");

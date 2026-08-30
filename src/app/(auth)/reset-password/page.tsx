@@ -21,7 +21,12 @@ export default function ResetPasswordPage() {
         setReady(true);
       });
     } else {
-      setReady(true);
+      // Deferred a tick rather than set synchronously in the effect body: a
+      // synchronous setState here cascades an extra render on mount, which is
+      // what react-hooks/set-state-in-effect flags. The code-present branch
+      // above is already async and was never the problem.
+      const timer = setTimeout(() => setReady(true), 0);
+      return () => clearTimeout(timer);
     }
   }, []);
 

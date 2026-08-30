@@ -60,6 +60,41 @@ export interface CryptoUniverseEntry {
   name: string | null;
 }
 
+// Equities/ETFs outside the 7-symbol TRACKED list. Before this, only those 7
+// could ever be tagged, so a long-tail symbol got prices and analogs from
+// on-demand ingestion (migration 0027) but zero news - "must cite at least
+// one source" then rejected every analysis for it, which is what surfaced
+// this gap (AXON: 0 historical_events fixed it had, 0 news it never could).
+//
+// The alias comes from symbol_directory.name, exactly the source crypto
+// already draws on from crypto_metrics.name - same idea, applied to the other
+// asset classes that also now get a name from on-demand ingestion.
+export interface EquityUniverseEntry {
+  symbol: string;
+  name: string | null;
+}
+
+// The \b before the group is load-bearing. Without it these alternatives match
+// the TAIL of an ordinary word: "se" turned "Axon Enterprise" into
+// "Axon Enterpri", and "co" would do the same to "Cisco". The suffix must be
+// its own word.
+const LEGAL_SUFFIX =
+  /\s*[,.]?\s*\b(incorporated|inc\.?|corporation|corp\.?|co\.?|company|limited|ltd\.?|plc|llc|s\.a\.|n\.v\.|ag|se|holdings?|group)\.?\s*$/i;
+
+/** "Advanced Micro Devices, Inc." -> "Advanced Micro Devices". Best-effort, not exhaustive. */
+function companyAlias(name: string): string {
+  const commaIdx = name.indexOf(",");
+  const core = commaIdx > 0 ? name.slice(0, commaIdx) : name;
+  return core.replace(LEGAL_SUFFIX, "").trim();
+}
+
+// Mirrors the crypto thresholds: a symbol only matches case-sensitively and
+// only at 3+ characters (equities include real 1-2 letter tickers like "M",
+// too collision-prone to ever safely case-fold-match), and a company alias
+// only at 5+ characters after suffix-stripping.
+const MIN_EQUITY_SYMBOL_LEN = 3;
+const MIN_EQUITY_ALIAS_LEN = 5;
+
 function wordBoundaryMatch(text: string, term: string): boolean {
   const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   return new RegExp(`\\b${escaped}\\b`, "i").test(text);
@@ -74,6 +109,7 @@ export function tagContent(
   title: string,
   body: string | null,
   cryptoUniverse: CryptoUniverseEntry[] = [],
+  equityUniverse: EquityUniverseEntry[] = [],
 ): { tickers: string[]; sectors: string[] } {
   const text = `${title} ${body ?? ""}`;
   const tickers = new Set<string>();
@@ -86,6 +122,17 @@ export function tagContent(
       tickers.add(t.symbol);
       for (const s of t.sectors) sectors.add(s);
     }
+  }
+
+  const curated = new Set(TRACKED.map((t) => t.symbol));
+  for (const eq of equityUniverse) {
+    const symbol = eq.symbol.toUpperCase();
+    if (curated.has(symbol)) continue; // TRACKED's hand-tuned aliases/sectors win
+    const alias = eq.name ? companyAlias(eq.name) : "";
+    const matched =
+      (symbol.length >= MIN_EQUITY_SYMBOL_LEN && caseSensitiveWordMatch(text, symbol)) ||
+      (alias.length >= MIN_EQUITY_ALIAS_LEN && wordBoundaryMatch(text, alias));
+    if (matched) tickers.add(symbol);
   }
 
   for (const coin of cryptoUniverse) {

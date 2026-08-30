@@ -1,10 +1,11 @@
 // Hosted inference client, OpenAI-compatible.
 //
-// Provider: Groq. Cairn previously pointed at a self-hosted OpenAI-compatible
-// server on localhost, which cannot work from Vercel by construction - a
-// deployed function has no route to the developer's laptop. That is now
-// settled: Groq is the provider, reached over its OpenAI-compatible surface,
-// so this file stays a thin fetch wrapper rather than an SDK dependency.
+// Provider: Groq, primary. Cairn previously pointed at a self-hosted
+// OpenAI-compatible server on localhost, which cannot work from Vercel by
+// construction - a deployed function has no route to the developer's laptop.
+// That is settled: Groq is the provider, reached over its OpenAI-compatible
+// surface, so this file stays a thin fetch wrapper rather than an SDK
+// dependency.
 //
 // Configuration (see .env.local.example):
 //   LLM_BASE_URL    https://api.groq.com/openai/v1
@@ -12,6 +13,11 @@
 //   GROQ_API_KEY    required - set in .env.local AND in Vercel env vars.
 //                   Never committed, never hardcoded, never NEXT_PUBLIC_*.
 //   LLM_TIMEOUT_MS  optional; default below.
+//
+// Optional second endpoint, tried only when the primary is exhausted:
+//   FALLBACK_LLM_BASE_URL / FALLBACK_LLM_API_KEY / FALLBACK_LLM_MODEL
+// See the "fallback endpoint" section below for why this exists and what it
+// does and does not cover.
 //
 // Model choice, checked rather than assumed (2026-08-20): Groq deprecated
 // `llama-3.3-70b-versatile` and `llama-3.1-8b-instant` on 2026-08-16 and names
@@ -42,6 +48,12 @@ export const BUSY_MESSAGE =
  * (rate limit, overload, upstream 5xx) after the retry budget was spent.
  * Callers translate this into BUSY_MESSAGE - never a raw provider error, and
  * never a silent hang.
+ *
+ * This is also the exact condition llmComplete() treats as "try the next
+ * configured endpoint" - a non-retryable status (401, 400, 404, 422...) is a
+ * real configuration fault and is thrown as a plain Error instead, which
+ * deliberately never falls through to a second endpoint. Masking a bad API
+ * key by silently working via fallback would hide the thing that needs fixing.
  */
 export class LlmBusyError extends Error {
   readonly status: number;
@@ -92,27 +104,90 @@ export function isLlmConfigured(): boolean {
   return Boolean(llmApiKey());
 }
 
-export async function llmHealthCheck(): Promise<{ ok: boolean; detail: string }> {
-  if (!isLlmConfigured()) {
-    return { ok: false, detail: "GROQ_API_KEY is not set - no model provider is configured." };
-  }
-  try {
-    const res = await fetch(`${llmBaseUrl()}/models`, {
-      headers: authHeaders(),
-      signal: AbortSignal.timeout(10_000),
-    });
-    if (!res.ok) return { ok: false, detail: `${llmBaseUrl()}/models returned HTTP ${res.status}` };
-    return { ok: true, detail: `Reachable at ${llmBaseUrl()}, model "${llmModel()}"` };
-  } catch (err) {
-    return { ok: false, detail: `Cannot reach ${llmBaseUrl()}: ${err instanceof Error ? err.message : String(err)}` };
-  }
+// --------------------------------------------------------------------------
+// Fallback endpoint.
+//
+// Groq's free tier caps the whole organisation at 200,000 tokens/day - not
+// per user. One real chat turn's context (recent news + stored analyses)
+// costs roughly 2,000-4,000 tokens, so that ceiling supports on the order of
+// 60-100 real turns/day across every user combined, and this project hit it
+// during its own verification pass with a handful of test generations.
+//
+// Rather than pay for a higher Groq tier, a second free OpenAI-compatible
+// endpoint can be configured and is tried automatically once the primary is
+// exhausted. Cerebras' free trial is the one this was verified against on
+// paper (not yet live - no account exists to test with as of this comment):
+// it serves the identical open-weight `openai/gpt-oss-120b` model Groq does,
+// at roughly 5x the daily token budget (published docs, 2026-08-30), so
+// output quality does not change - only which datacenter answered.
+//
+// Optional and additive: unset, behaviour is identical to before this existed.
+export interface LlmEndpoint {
+  baseUrl: string;
+  apiKey: string;
+  model: string;
+  /** For logs and model_version - "primary" or "fallback", never a raw secret. */
+  label: "primary" | "fallback";
 }
 
-function authHeaders(): Record<string, string> {
-  const headers: Record<string, string> = { "Content-Type": "application/json" };
-  const key = llmApiKey();
-  if (key) headers.Authorization = `Bearer ${key}`;
-  return headers;
+export function primaryEndpoint(): LlmEndpoint | null {
+  const apiKey = llmApiKey();
+  if (!apiKey) return null;
+  return { baseUrl: llmBaseUrl(), apiKey, model: llmModel(), label: "primary" };
+}
+
+export function fallbackEndpoint(): LlmEndpoint | null {
+  const baseUrl = process.env.FALLBACK_LLM_BASE_URL;
+  const apiKey = process.env.FALLBACK_LLM_API_KEY;
+  if (!baseUrl || !apiKey) return null;
+  return {
+    baseUrl: baseUrl.replace(/\/+$/, ""),
+    apiKey,
+    // Defaults to the SAME model id as the primary - the intended use (a
+    // second host serving the identical open-weight model) needs no override.
+    model: process.env.FALLBACK_LLM_MODEL || llmModel(),
+    label: "fallback",
+  };
+}
+
+function configuredEndpoints(): LlmEndpoint[] {
+  return [primaryEndpoint(), fallbackEndpoint()].filter((e): e is LlmEndpoint => e !== null);
+}
+
+/** "groq" for the primary (matching the provider name used before a fallback existed) or "fallback". */
+function providerName(label: LlmEndpoint["label"]): string {
+  return label === "fallback" ? "fallback" : "groq";
+}
+
+export async function llmHealthCheck(): Promise<{ ok: boolean; detail: string }> {
+  const endpoints = configuredEndpoints();
+  if (endpoints.length === 0) {
+    return { ok: false, detail: "GROQ_API_KEY is not set - no model provider is configured." };
+  }
+  const results = await Promise.all(
+    endpoints.map(async (ep) => {
+      try {
+        const res = await fetch(`${ep.baseUrl}/models`, {
+          headers: authHeaders(ep),
+          signal: AbortSignal.timeout(10_000),
+        });
+        if (!res.ok) return `${ep.label} (${ep.baseUrl}): HTTP ${res.status}`;
+        return `${ep.label} (${ep.baseUrl}): reachable, model "${ep.model}"`;
+      } catch (err) {
+        return `${ep.label} (${ep.baseUrl}): ${err instanceof Error ? err.message : String(err)}`;
+      }
+    }),
+  );
+  // ok = the primary works. A dead fallback is reported (visible in `detail`)
+  // but does not fail the check - it only matters once the primary is
+  // actually exhausted, and this is the only place both configured endpoints
+  // are proactively checked instead of discovered mid-request.
+  const primaryOk = /reachable/.test(results[0] ?? "");
+  return { ok: primaryOk, detail: results.join("; ") };
+}
+
+function authHeaders(endpoint: LlmEndpoint): Record<string, string> {
+  return { "Content-Type": "application/json", Authorization: `Bearer ${endpoint.apiKey}` };
 }
 
 interface ChatCompletionResponse {
@@ -145,13 +220,26 @@ export function isRetryableStatus(status: number): boolean {
   return RETRYABLE_STATUS.has(status);
 }
 
+/**
+ * A daily-token-budget rejection is a 429 that will not resolve within this
+ * module's backoff window - Groq's own message says "try again in N minutes",
+ * where N is always well past MAX_BACKOFF_MS's 8-second ceiling. Retrying it
+ * with backoff four times is four guaranteed failures and several seconds of
+ * pure latency before the caller ever gets to try a second endpoint.
+ * Recognised by substring because Groq does not expose a distinct status code
+ * or error type for it - only the message text says which 429 this is.
+ */
+function isDailyQuotaExhausted(status: number, detail: string): boolean {
+  return status === 429 && /tokens per day|\bTPD\b/i.test(detail);
+}
+
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-async function postChatCompletion(body: Record<string, unknown>): Promise<Response> {
+async function postChatCompletion(endpoint: LlmEndpoint, body: Record<string, unknown>): Promise<Response> {
   const timeout = Number(process.env.LLM_TIMEOUT_MS || DEFAULT_TIMEOUT_MS);
-  return fetch(`${llmBaseUrl()}/chat/completions`, {
+  return fetch(`${endpoint.baseUrl}/chat/completions`, {
     method: "POST",
-    headers: authHeaders(),
+    headers: authHeaders(endpoint),
     body: JSON.stringify(body),
     signal: AbortSignal.timeout(timeout),
   });
@@ -163,21 +251,23 @@ async function postChatCompletion(body: Record<string, unknown>): Promise<Respon
  * real configuration error surfaces immediately instead of being retried into a
  * timeout.
  */
-async function postWithRetry(body: Record<string, unknown>): Promise<Response> {
+async function postWithRetry(endpoint: LlmEndpoint, body: Record<string, unknown>): Promise<Response> {
   let lastStatus = 0;
   let lastDetail = "";
+  let attemptsMade = 0;
 
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+    attemptsMade = attempt + 1;
     let res: Response;
     try {
-      res = await postChatCompletion(body);
+      res = await postChatCompletion(endpoint, body);
     } catch (err) {
       // Network error or client-side timeout: transient by the same logic.
       lastStatus = 0;
       // Name the endpoint. A bare "fetch failed" with no URL is unactionable,
       // and the first real failure in the wild was exactly this: a stale
       // LLM_BASE_URL still pointing at a local Ollama that was not running.
-      lastDetail = `${llmBaseUrl()}: ${err instanceof Error ? err.message : String(err)}`;
+      lastDetail = `${endpoint.baseUrl}: ${err instanceof Error ? err.message : String(err)}`;
       if (attempt === MAX_ATTEMPTS - 1) break;
       await sleep(backoffDelayMs(attempt));
       continue;
@@ -187,28 +277,104 @@ async function postWithRetry(body: Record<string, unknown>): Promise<Response> {
 
     lastStatus = res.status;
     lastDetail = (await res.text().catch(() => "")).slice(0, 300);
+
+    // Give up on THIS endpoint immediately rather than spending the retry
+    // budget on a condition guaranteed not to clear inside it - the caller
+    // moves on to the next configured endpoint (if any) right away instead of
+    // waiting out three more doomed attempts first.
+    if (isDailyQuotaExhausted(lastStatus, lastDetail)) break;
+
     if (attempt === MAX_ATTEMPTS - 1) break;
     await sleep(backoffDelayMs(attempt, res.headers.get("retry-after")));
   }
 
-  throw new LlmBusyError(lastStatus, MAX_ATTEMPTS, lastDetail || "no response body");
+  throw new LlmBusyError(lastStatus, attemptsMade, lastDetail || "no response body");
+}
+
+/** The json_schema -> json_object degrade-and-retry dance, against one endpoint. */
+async function completeAgainstEndpoint(endpoint: LlmEndpoint, base: Record<string, unknown>, req: LlmRequest): Promise<string> {
+  let body = base;
+  if (req.jsonSchema) {
+    body = {
+      ...base,
+      response_format: {
+        type: "json_schema",
+        json_schema: { name: req.schemaName ?? "output", schema: req.jsonSchema, strict: true },
+      },
+    };
+  }
+
+  let res = await postWithRetry(endpoint, body);
+
+  // Structured-output support varies by model/provider. If json_schema is
+  // rejected, fall back to plain JSON mode - the caller validates the parsed
+  // result either way, so this degrades safely rather than hard-failing.
+  if (!res.ok && req.jsonSchema && (res.status === 400 || res.status === 422)) {
+    res = await postWithRetry(endpoint, { ...base, response_format: { type: "json_object" } });
+  }
+
+  if (!res.ok) {
+    const detail = await res.text().catch(() => "");
+    throw new Error(
+      `Model request failed (HTTP ${res.status}) at ${endpoint.baseUrl} for model "${endpoint.model}". ` +
+        `Check the API key and that the model id is still current. ${detail.slice(0, 300)}`,
+    );
+  }
+
+  const data = (await res.json()) as ChatCompletionResponse;
+  if (data.error?.message) throw new Error(`Model error: ${data.error.message}`);
+
+  const choice = data.choices?.[0];
+  const content = choice?.message?.content;
+  if (typeof content !== "string" || content.trim() === "") {
+    // Distinguish the two ways "empty" happens. Truncation is a budget bug we
+    // can fix; anything else is the provider behaving unexpectedly. Reporting
+    // both as "empty response" is what made the first occurrence take a raw
+    // API dump to diagnose.
+    if (choice?.finish_reason === "length") {
+      throw new Error(
+        `Model "${endpoint.model}" hit the ${body.max_tokens}-token budget before producing any answer ` +
+          `(finish_reason: length). On a reasoning model, raise maxTokens or lower LLM_REASONING_EFFORT.`,
+      );
+    }
+    throw new Error(
+      `Model "${endpoint.model}" returned an empty response (finish_reason: ${choice?.finish_reason ?? "none"}).`,
+    );
+  }
+
+  return content;
+}
+
+interface CompletionResult {
+  text: string;
+  endpoint: LlmEndpoint;
 }
 
 /**
- * Single completion against the configured provider. Returns raw text - callers
- * are responsible for validating it (and in this codebase, for running it
- * through the scope guard in lib/ai/scope-guard.ts before it is stored or
- * shown to anyone).
+ * Tries each configured endpoint in order (primary, then fallback if one is
+ * set) and moves to the next ONLY on LlmBusyError - the provider was reachable
+ * but would not serve the request (rate limit, daily quota, overload). A real
+ * configuration fault (bad key, bad model id, malformed request) throws a
+ * plain Error from completeAgainstEndpoint and is never retried against a
+ * second endpoint, so a broken primary key cannot be silently papered over by
+ * a working fallback - it still surfaces immediately, as it always has.
+ *
+ * Returns which endpoint actually served the request alongside the text,
+ * threaded through the return value rather than tracked in shared state -
+ * this file tried AsyncLocalStorage for that first and it did not reliably
+ * survive the fetch/AbortSignal.timeout continuation chain in practice
+ * (confirmed with a live two-endpoint test, not assumed), so the correct-by
+ * -construction fix is simply to return it.
  */
-export async function llmComplete(req: LlmRequest): Promise<string> {
-  if (!isLlmConfigured()) {
+async function completeWithEndpoints(req: LlmRequest): Promise<CompletionResult> {
+  const endpoints = configuredEndpoints();
+  if (endpoints.length === 0) {
     throw new Error(
       "No model provider configured: set GROQ_API_KEY (and LLM_BASE_URL/LLM_MODEL) in .env.local and in Vercel.",
     );
   }
 
-  const base: Record<string, unknown> = {
-    model: llmModel(),
+  const baseWithoutModel: Record<string, unknown> = {
     messages: [{ role: "system", content: req.system }, ...req.messages],
     max_tokens: req.maxTokens ?? 1024,
     // Low but non-zero: deterministic enough to be reviewable, not so rigid
@@ -230,53 +396,30 @@ export async function llmComplete(req: LlmRequest): Promise<string> {
     stream: false,
   };
 
-  let body = base;
-  if (req.jsonSchema) {
-    body = {
-      ...base,
-      response_format: {
-        type: "json_schema",
-        json_schema: { name: req.schemaName ?? "output", schema: req.jsonSchema, strict: true },
-      },
-    };
-  }
-
-  let res = await postWithRetry(body);
-
-  // Structured-output support varies by model on Groq. If json_schema is
-  // rejected, fall back to plain JSON mode - the caller validates the parsed
-  // result either way, so this degrades safely rather than hard-failing.
-  if (!res.ok && req.jsonSchema && (res.status === 400 || res.status === 422)) {
-    res = await postWithRetry({ ...base, response_format: { type: "json_object" } });
-  }
-
-  if (!res.ok) {
-    const detail = await res.text().catch(() => "");
-    throw new Error(
-      `Model request failed (HTTP ${res.status}) at ${llmBaseUrl()} for model "${llmModel()}". ` +
-        `Check GROQ_API_KEY and that the model id is still current. ${detail.slice(0, 300)}`,
-    );
-  }
-
-  const data = (await res.json()) as ChatCompletionResponse;
-  if (data.error?.message) throw new Error(`Model error: ${data.error.message}`);
-
-  const choice = data.choices?.[0];
-  const content = choice?.message?.content;
-  if (typeof content !== "string" || content.trim() === "") {
-    // Distinguish the two ways "empty" happens. Truncation is a budget bug we
-    // can fix; anything else is the provider behaving unexpectedly. Reporting
-    // both as "empty response" is what made the first occurrence take a raw
-    // API dump to diagnose.
-    if (choice?.finish_reason === "length") {
-      throw new Error(
-        `Model "${llmModel()}" hit the ${body.max_tokens}-token budget before producing any answer ` +
-          `(finish_reason: length). On a reasoning model, raise maxTokens or lower LLM_REASONING_EFFORT.`,
-      );
+  let firstError: unknown = null;
+  for (let i = 0; i < endpoints.length; i++) {
+    const endpoint = endpoints[i];
+    try {
+      const text = await completeAgainstEndpoint(endpoint, { ...baseWithoutModel, model: endpoint.model }, req);
+      return { text, endpoint };
+    } catch (err) {
+      if (!(err instanceof LlmBusyError)) throw err; // real fault - surface immediately, never fall through
+      firstError ??= err;
+      if (i < endpoints.length - 1) continue; // try the next configured endpoint
     }
-    throw new Error(`Model "${llmModel()}" returned an empty response (finish_reason: ${choice?.finish_reason ?? "none"}).`);
   }
-  return content;
+
+  throw firstError;
+}
+
+/**
+ * Single completion. Returns raw text - callers are responsible for
+ * validating it (and in this codebase, for running it through the scope
+ * guard in lib/ai/scope-guard.ts before it is stored or shown to anyone).
+ */
+export async function llmComplete(req: LlmRequest): Promise<string> {
+  const { text } = await completeWithEndpoints(req);
+  return text;
 }
 
 /**
@@ -284,16 +427,25 @@ export async function llmComplete(req: LlmRequest): Promise<string> {
  * their JSON or trail a stray token, so we strip code fences and isolate the
  * outermost object before parsing, then retry once with a corrective nudge
  * rather than failing the whole generation on a formatting slip.
+ *
+ * Shared by llmCompleteJson (existing callers, unchanged signature) and
+ * llmCompleteJsonWithProvider (generate.ts, which needs to know which
+ * endpoint actually served the request for ai_analyses.model_version).
  */
-export async function llmCompleteJson<T>(req: LlmRequest, validate: (parsed: unknown) => parsed is T): Promise<T> {
-  const attempt = async (messages: LlmMessage[]): Promise<{ parsed: T | null; raw: string }> => {
-    const raw = await llmComplete({ ...req, messages });
+async function completeJsonWithEndpoint<T>(
+  req: LlmRequest,
+  validate: (parsed: unknown) => parsed is T,
+): Promise<{ parsed: T; endpoint: LlmEndpoint }> {
+  const attempt = async (
+    messages: LlmMessage[],
+  ): Promise<{ parsed: T | null; raw: string; endpoint: LlmEndpoint }> => {
+    const { text: raw, endpoint } = await completeWithEndpoints({ ...req, messages });
     const parsed = tryParseJson(raw);
-    return { parsed: parsed !== null && validate(parsed) ? parsed : null, raw };
+    return { parsed: parsed !== null && validate(parsed) ? parsed : null, raw, endpoint };
   };
 
   const first = await attempt(req.messages);
-  if (first.parsed) return first.parsed;
+  if (first.parsed) return { parsed: first.parsed, endpoint: first.endpoint };
 
   const second = await attempt([
     ...req.messages,
@@ -305,9 +457,29 @@ export async function llmCompleteJson<T>(req: LlmRequest, validate: (parsed: unk
         "no code fences, no commentary before or after it.",
     },
   ]);
-  if (second.parsed) return second.parsed;
+  if (second.parsed) return { parsed: second.parsed, endpoint: second.endpoint };
 
   throw new Error(`Model did not return schema-valid JSON after a retry. Last response: ${second.raw.slice(0, 500)}`);
+}
+
+export async function llmCompleteJson<T>(req: LlmRequest, validate: (parsed: unknown) => parsed is T): Promise<T> {
+  const { parsed } = await completeJsonWithEndpoint(req, validate);
+  return parsed;
+}
+
+/**
+ * Same as llmCompleteJson, plus which endpoint actually served the request as
+ * "<provider>:<model>" (e.g. "groq:openai/gpt-oss-120b" or
+ * "fallback:openai/gpt-oss-120b") - for the one caller (generate.ts) that
+ * records this in ai_analyses.model_version and must not assume Groq now that
+ * a fallback endpoint can serve a request.
+ */
+export async function llmCompleteJsonWithProvider<T>(
+  req: LlmRequest,
+  validate: (parsed: unknown) => parsed is T,
+): Promise<{ parsed: T; modelVersion: string }> {
+  const { parsed, endpoint } = await completeJsonWithEndpoint(req, validate);
+  return { parsed, modelVersion: `${providerName(endpoint.label)}:${endpoint.model}` };
 }
 
 function tryParseJson(raw: string): unknown {

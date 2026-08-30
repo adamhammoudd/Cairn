@@ -7,7 +7,7 @@
 //
 // Run: npx tsx scripts/tests/tagging.ts
 
-import { tagContent, type CryptoUniverseEntry } from "../../supabase/functions/_shared/tagging";
+import { tagContent, type CryptoUniverseEntry, type EquityUniverseEntry } from "../../supabase/functions/_shared/tagging";
 import type { SuiteResult, TestCase } from "./report";
 
 // A slice of the live top-25 universe, including the collision-prone symbols.
@@ -24,6 +24,16 @@ const UNIVERSE: CryptoUniverseEntry[] = [
   { symbol: "CC", name: "CC" },
 ];
 
+// A slice of the on-demand long-tail universe (migration 0027), including
+// deliberately collision-prone cases: "M" (Macy's) is exactly the kind of
+// symbol MIN_EQUITY_SYMBOL_LEN exists to exclude.
+const EQUITY_UNIVERSE: EquityUniverseEntry[] = [
+  { symbol: "AXON", name: "Axon Enterprise, Inc." },
+  { symbol: "SHOP", name: "Shopify Inc." },
+  { symbol: "PLTR", name: "Palantir Technologies Inc." },
+  { symbol: "M", name: "Macy's, Inc." },
+];
+
 interface Case {
   name: string;
   title: string;
@@ -35,6 +45,40 @@ interface Case {
 }
 
 const CASES: Case[] = [
+  // --- long-tail equity/ETF universe (added with the AXON news-gap fix) ---
+  {
+    name: "long-tail ticker in prose (AXON)",
+    title: "Axon Enterprise wins new police body-camera contract",
+    expectTickers: ["AXON"],
+  },
+  {
+    name: "long-tail ticker by bare symbol",
+    title: "SHOP shares rise after upgraded guidance",
+    expectTickers: ["SHOP"],
+  },
+  {
+    name: "long-tail company alias, legal suffix stripped",
+    title: "Palantir Technologies signs new government deal",
+    expectTickers: ["PLTR"],
+  },
+  {
+    name: "1-char equity ticker never matches - too collision-prone (Macy's 'M')",
+    title: "M was a great year for retail, sources say",
+    expectNotTickers: ["M"],
+  },
+  {
+    name: "legal-suffix stripping does not eat the tail of a real word",
+    // "Axon Enterprise" -> "Axon Enterpri" if the suffix alternation ("se")
+    // is allowed to match mid-word. Regression guard for that.
+    title: "Axon Enterprise reported quarterly results",
+    expectTickers: ["AXON"],
+  },
+  {
+    name: "curated TRACKED entry still wins over the wider universe",
+    title: "Apple unveils new iPhone lineup",
+    expectTickers: ["AAPL"],
+    expectSectors: ["technology"],
+  },
   // --- real headlines from news_items ---
   {
     name: "bitcoin+ethereum headline tags both coins and the crypto sector",
@@ -96,7 +140,7 @@ const CASES: Case[] = [
 // tagging that unblocks every crypto analysis had no CI coverage at all.
 export function runTaggingSuite(): SuiteResult {
   const cases: TestCase[] = CASES.map((c) => {
-    const { tickers, sectors } = tagContent(c.title, c.body ?? null, UNIVERSE);
+    const { tickers, sectors } = tagContent(c.title, c.body ?? null, UNIVERSE, EQUITY_UNIVERSE);
     const problems: string[] = [];
     for (const t of c.expectTickers ?? []) if (!tickers.includes(t)) problems.push(`missing ticker ${t}`);
     for (const t of c.expectNotTickers ?? []) if (tickers.includes(t)) problems.push(`unexpected ticker ${t}`);
@@ -117,7 +161,7 @@ function run(): number {
   let failures = 0;
 
   for (const c of CASES) {
-    const { tickers, sectors } = tagContent(c.title, c.body ?? null, UNIVERSE);
+    const { tickers, sectors } = tagContent(c.title, c.body ?? null, UNIVERSE, EQUITY_UNIVERSE);
     const problems: string[] = [];
 
     for (const t of c.expectTickers ?? []) if (!tickers.includes(t)) problems.push(`missing ticker ${t}`);

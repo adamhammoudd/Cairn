@@ -1,3 +1,11 @@
+-- SUPERSEDED by 0032_cron_secret_via_vault.sql - do not run this one.
+--
+-- This migration's `alter database postgres set app.settings.cron_secret`
+-- requires superuser, which hosted Supabase projects are not given:
+--   ERROR: 42501: permission denied to set parameter "app.settings.cron_secret"
+-- It could never actually be applied here. 0032 does the same job via Vault,
+-- which Supabase does grant access to. Kept as a record of the first attempt.
+--
 -- Re-schedules every job to present the shared secret the Edge Functions now
 -- require (supabase/functions/_shared/auth.ts).
 --

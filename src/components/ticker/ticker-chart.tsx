@@ -97,11 +97,9 @@ export function TickerChart({ symbol, bars, priceSource = "last_close", priceAsO
           <div className="flex h-[220px] items-center justify-center text-sm text-muted">Loading intraday prices…</div>
         ) : points.length === 0 ? (
           <div className="flex h-[220px] items-center justify-center px-6 text-center text-sm text-muted">
-            {timeframe === "1D"
-              ? "Intraday isn't available on this deployment - stored prices are one close per day, so an intraday view would draw a straight line between yesterday and today rather than a real session."
-              : isIntraday
-                ? "No intraday bars returned for this range."
-                : "No price history for this range yet."}
+            {isIntraday
+              ? "No intraday bars for this range - the market may not have opened yet, or the provider has nothing for this symbol."
+              : "No price history for this range yet."}
           </div>
         ) : (
           <ResponsiveContainer width="100%" height={260}>

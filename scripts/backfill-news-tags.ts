@@ -18,7 +18,7 @@
 
 import "./tests/env";
 import { createClient } from "@supabase/supabase-js";
-import { tagContent, type CryptoUniverseEntry } from "../supabase/functions/_shared/tagging";
+import { tagContent, type CryptoUniverseEntry, type EquityUniverseEntry } from "../supabase/functions/_shared/tagging";
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -52,16 +52,44 @@ async function main() {
   }));
   console.log(`crypto universe: ${universe.length} coins`);
 
-  const { data: rows, error } = await supabase
-    .from("news_items")
-    .select("id, title, body, tickers, sectors");
-  if (error) throw error;
+  // Same widening as ingest-news: long-tail equities/ETFs from on-demand
+  // ingestion (migration 0027) get a name in symbol_directory, so they can be
+  // found in prose too, not just the curated 7 in tagging.ts's TRACKED list.
+  const { data: equities, error: equityErr } = await supabase
+    .from("symbol_directory")
+    .select("symbol, name")
+    .in("asset_type", ["equity", "etf"])
+    .eq("status", "available");
+  if (equityErr) throw equityErr;
+  const equityUniverse: EquityUniverseEntry[] = (equities ?? []).map((e) => ({
+    symbol: e.symbol,
+    name: e.name,
+  }));
+  console.log(`equity/ETF universe: ${equityUniverse.length} symbols`);
+
+  // Paginated. A bare .select() is capped at PostgREST's default 1000 rows, so
+  // this silently re-tagged only the newest 1000 of 7,550+ articles and
+  // reported "scanned 1000" as though that were the whole table.
+  const PAGE = 1000;
+  const rows: { id: string; title: string; body: string | null; tickers: string[] | null; sectors: string[] | null }[] = [];
+  for (let from = 0; ; from += PAGE) {
+    const { data: page, error } = await supabase
+      .from("news_items")
+      .select("id, title, body, tickers, sectors")
+      .order("id", { ascending: true })
+      .range(from, from + PAGE - 1);
+    if (error) throw error;
+    if (!page || page.length === 0) break;
+    rows.push(...page);
+    if (page.length < PAGE) break;
+  }
 
   let changed = 0;
   let cryptoTagged = 0;
+  let equityTagged = 0;
 
-  for (const row of rows ?? []) {
-    const { tickers, sectors } = tagContent(row.title, row.body, universe);
+  for (const row of rows) {
+    const { tickers, sectors } = tagContent(row.title, row.body, universe, equityUniverse);
 
     if (sameTags(row.tickers, tickers) && sameTags(row.sectors, sectors)) continue;
 
@@ -76,11 +104,13 @@ async function main() {
 
     changed++;
     if (sectors.includes("crypto")) cryptoTagged++;
+    if (tickers.some((t) => equityUniverse.some((e) => e.symbol.toUpperCase() === t))) equityTagged++;
   }
 
-  console.log(`scanned ${rows?.length ?? 0} articles`);
+  console.log(`scanned ${rows.length} articles`);
   console.log(`updated ${changed}`);
   console.log(`now carrying a crypto sector: ${cryptoTagged}`);
+  console.log(`now carrying a long-tail equity/ETF ticker: ${equityTagged}`);
 }
 
 main().catch((err) => {

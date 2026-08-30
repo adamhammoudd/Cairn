@@ -49,19 +49,19 @@ hold up, not because we believe they don't.
 - [ ] **UK FCA - financial promotion rules.** Confirm whether any output could be construed as a
       "financial promotion" requiring FCA-authorized approval, given the UK's broader definition
       relative to the US.
-- [ ] **Data residency / cross-border transfer.** Supabase infrastructure and the VPS hosting the
-      self-hosted model - confirm where data is processed/stored and whether Standard Contractual
-      Clauses or an adequacy decision covers the transfer for EU/UK users. Note the model host is
-      now a location we choose, which may make residency easier to satisfy than a vendor API would.
+- [ ] **Data residency / cross-border transfer.** Supabase infrastructure and Groq's inference
+      infrastructure - confirm where data is processed/stored and whether Standard Contractual
+      Clauses or an adequacy decision covers the transfer for EU/UK users. Groq's processing
+      location is a vendor-controlled fact to obtain in writing, not one we choose.
 
 ## Cross-cutting
 
-- [ ] **Self-hosted model - liability now sits entirely with us.** There is no third-party AI
-      subprocessor anymore (see `docs/self-hosted-model.md`). Confirm the consequences: we are
-      solely responsible for the model's outputs, for the licence terms of the open-weight model
-      actually deployed (Qwen/Llama/Mistral licences differ, and some carry acceptable-use or
-      redistribution conditions), and for securing the inference endpoint. **Confirm the deployed
-      model's licence permits commercial use in our jurisdictions.**
+- [ ] **Third-party AI subprocessor (Groq).** Cairn calls Groq's hosted API (see
+      `docs/model-provider-setup.md`); an earlier revision of these drafts wrongly recorded the
+      model as self-hosted with no AI subprocessor. Confirm the consequences: obtain Groq's DPA,
+      confirm its data-retention and training-use terms for API traffic, list it as a subprocessor
+      where required, and confirm the terms under which `openai/gpt-oss-120b` is served permit our
+      commercial use. Cairn remains responsible for the outputs it surfaces to users.
 - [ ] **Deterministic probability computation.** Probability ranges/confidence are now computed in
       code (Wilson score interval), not model-generated. Confirm whether describing outputs as
       statistically derived and reproducible changes how they should be characterized - it may
