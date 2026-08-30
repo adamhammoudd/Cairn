@@ -9,7 +9,7 @@ export const metadata = { title: "Accessibility - Cairn" };
 // in the same voice as the rest of the product.
 export default function AccessibilityPage() {
   return (
-    <LegalShell eyebrow="Accessibility" title="Accessibility at Cairn" updated="20 August 2026" draft={false}>
+    <LegalShell eyebrow="Accessibility" title="Accessibility at Cairn" updated="30 August 2026" draft={false}>
       <section>
         <h2>What this page is</h2>
         <p>
@@ -61,9 +61,11 @@ export default function AccessibilityPage() {
         <h2>Telling us about a problem</h2>
         <p>
           If something here is unusable for you, that is a defect and we want to hear about it.
-          Contact us through the support address on your account settings page and describe what
-          you were trying to do, the page you were on, and the assistive technology you were
-          using. Reports of this kind are prioritised alongside functional bugs, not below them.
+          Use the contact address on the{" "}
+          <a href="/privacy#contact">Privacy Policy page</a> (the single contact point for the
+          product) and describe what you were trying to do, the page you were on, and the
+          assistive technology you were using. Reports of this kind are prioritised alongside
+          functional bugs, not below them.
         </p>
       </section>
     </LegalShell>

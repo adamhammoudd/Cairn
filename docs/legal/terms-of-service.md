@@ -59,31 +59,51 @@ detail.
 
 ## 6. Subscription and billing
 
-_[Placeholder - Phase 12 introduces paid tiers via Stripe. This section needs to be written once
-that phase's terms (refunds, cancellation, tier changes, failed-payment downgrade behavior) are
-finalized, and reviewed alongside it.]_
+Cairn offers a free tier and a paid Premium tier billed through Stripe on a recurring basis at the
+price shown at checkout, renewing automatically until cancelled. Users can cancel from billing
+settings or the Stripe customer portal; cancellation stops the next renewal and Premium features
+stay available until the end of the paid period. A failed renewal payment downgrades the account
+to the free tier rather than removing access to the user's own data.
+
+_[Legal review: refund policy, proration on mid-period tier changes, price-change notice periods,
+and tax treatment are NOT stated and must be drafted alongside the finalized Phase 12 billing
+terms before Premium is offered for sale. First draft of the operational shape is on
+`src/app/terms/page.tsx` §9, flagged as draft.]_
 
 ## 7. Disclaimers and limitation of liability
 
-_[Standard SaaS disclaimer language + limitation-of-liability clause to be drafted by counsel.
-Given the AI analysis engine's regulatory profile, this section carries more weight than it would
-for a pure news-aggregation product - do not reuse generic boilerplate without review.]_
+First-draft "as is / as available" disclaimer and a limitation-of-liability clause are on
+`src/app/terms/page.tsx` §10, both explicitly flagged as draft.
+
+_[Legal review, high priority: the specific liability cap, the non-excludable carve-outs (gross
+negligence, fraud, death/personal injury, non-waivable EU/UK consumer rights), and the interaction
+with §7's arbitration/class-waiver intent must be drafted or reviewed by counsel per target
+market. The AI analysis engine's regulatory profile means generic SaaS boilerplate is not safe to
+reuse here.]_
 
 ## 8. Termination
 
-Cairn may suspend or terminate accounts for violation of these terms. Users may delete their
-account and data at any time via Settings → Export & delete (Phase 1).
+Users may delete their account and data at any time via Settings → Export & delete. Cairn may
+suspend or terminate an account that violates these terms (in particular §6 content rules) or
+where required by law, with notice and an export opportunity where practical and not legally
+prohibited. Sections that should survive termination (4, 6, 10, 12 on the live page) continue to
+apply. Full text on `src/app/terms/page.tsx` §11.
 
 ## 9. Governing law and disputes
 
-_[Placeholder - depends on the jurisdiction(s) Cairn is launched in; see the jurisdictional
-checklist for open questions that affect this section specifically.]_
+Draft on `src/app/terms/page.tsx` §12, flagged as not-to-be-relied-on-as-written.
+
+_[Legal review: governing law, forum, and interaction with §7 arbitration depend on the launch
+jurisdiction(s), which are undecided. Must be written around mandatory local-forum consumer rights
+in the EU/UK and elsewhere. Completed by counsel in the pre-launch review with the jurisdictional
+checklist.]_
 
 ## 10. Changes to these terms
 
-Cairn may update these terms; material changes affecting the AI analysis engine's scope or
-disclosures will be flagged as higher-priority for legal re-review than routine changes, per the
-jurisdictional checklist.
+Cairn may update these terms; minor changes are posted with a new "last updated" date, material
+changes (AI-engine scope/disclosures, billing, dispute-resolution, liability) get advance notice
+through the service or by email and are flagged for legal re-review. Full text on
+`src/app/terms/page.tsx` §13.
 
 ---
 

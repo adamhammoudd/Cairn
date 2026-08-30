@@ -1,11 +1,12 @@
-﻿"use client";
+"use client";
 
-import { Suspense, useActionState } from "react";
+import { Suspense, useActionState, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { signIn } from "@/lib/actions/auth";
 import { Field } from "@/components/auth/field";
 import { SubmitButton } from "@/components/auth/submit-button";
+import { AuthError, AuthFooter, AuthHeader } from "@/components/auth/auth-chrome";
 
 function LoginMessage() {
   const message = useSearchParams().get("message");
@@ -29,26 +30,32 @@ function Notice({ children }: { children: React.ReactNode }) {
 
 export default function LoginPage() {
   const [error, formAction] = useActionState(signIn, null);
+  // Controlled so a failed sign-in keeps the email in the box - retyping it on
+  // every wrong-password attempt is the pattern new-watchlist-form.tsx already
+  // avoids. Password is deliberately left uncontrolled: never hold it in React
+  // state, and re-entering it after a failure is expected anyway.
+  const [email, setEmail] = useState("");
 
   return (
     <>
-      <div className="mb-6">
-        <div className="font-mono text-[10px] tracking-[0.16em] text-muted uppercase">Account</div>
-        <h1 className="mt-2 font-serif text-[28px] leading-[1.15] font-normal text-primary">Welcome back</h1>
-        <p className="mt-2 text-[13px] text-muted text-pretty">Sign in to your portfolio dashboard.</p>
-      </div>
+      <AuthHeader eyebrow="Account" title="Welcome back" blurb="Sign in to your portfolio dashboard." />
 
       <Suspense fallback={null}>
         <LoginMessage />
       </Suspense>
-      {error && (
-        <p className="mb-4 rounded-[10px] border border-negative/40 bg-negative/8 px-3 py-2.5 text-[12.5px] text-negative">
-          {error}
-        </p>
-      )}
+      {error && <AuthError>{error}</AuthError>}
 
       <form action={formAction}>
-        <Field id="email" name="email" type="email" label="Email" placeholder="you@example.com" required />
+        <Field
+          id="email"
+          name="email"
+          type="email"
+          label="Email"
+          placeholder="you@example.com"
+          required
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
 
         <div className="mb-3.5">
           <div className="mb-1.75 flex items-baseline justify-between gap-3">
@@ -84,16 +91,7 @@ export default function LoginPage() {
         </Link>
       </p>
 
-      <p className="mt-6 border-t border-line pt-4 text-center text-[11px] leading-[1.6] text-dim text-pretty">
-        Cairn is informational only - not a broker and not investment advice.{" "}
-        <Link href="/terms" className="text-muted hover:text-primary">
-          Terms
-        </Link>{" "}
-        ·{" "}
-        <Link href="/privacy" className="text-muted hover:text-primary">
-          Privacy
-        </Link>
-      </p>
+      <AuthFooter />
     </>
   );
 }

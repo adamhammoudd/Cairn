@@ -1,8 +1,8 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Area, AreaChart, ResponsiveContainer, Tooltip, YAxis } from "recharts";
-import type { TimelinePoint } from "@/lib/portfolio";
+import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { xAxisConfig, type TimelinePoint } from "@/lib/portfolio";
 import { getIntradayPortfolioSeries } from "@/lib/actions/intraday";
 import type { ChartView } from "@/lib/supabase/types";
 import { DataFreshness } from "@/components/data-freshness";
@@ -66,6 +66,11 @@ export function PortfolioChart({ seriesByTimeframe, hasHoldings, asOf = null }: 
   const positive = rangeChange >= 0;
   const color = positive ? "#2FC685" : "#D96C6C";
 
+  // Per-timeframe X-axis: tick spacing that never overlaps, and a label format
+  // matched to the window (hour for 1D, weekday for 1W, ... month+year for
+  // ALL). Shared helper - the Compare page's chart uses the same one.
+  const { interval, tickFormatter } = xAxisConfig(points, timeframe);
+
   return (
     <div className="overflow-hidden rounded-card border border-line bg-panel">
       <div className="flex items-center justify-between gap-3 border-b border-[#1E1E1E] px-4 py-3">
@@ -116,6 +121,15 @@ export function PortfolioChart({ seriesByTimeframe, hasHoldings, asOf = null }: 
                 <stop offset="100%" stopColor={color} stopOpacity={0} />
               </linearGradient>
             </defs>
+            <XAxis
+              dataKey="date"
+              interval={interval}
+              tickFormatter={tickFormatter}
+              tick={{ fill: "#8A8A8A", fontSize: 10 }}
+              axisLine={{ stroke: "#2A2A2A" }}
+              tickLine={false}
+              minTickGap={20}
+            />
             <YAxis hide domain={["dataMin", "dataMax"]} />
             <Tooltip
               formatter={(value) => [formatMoney(Number(value), prefs), "Close"] as [string, string]}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useFormStatus } from "react-dom";
 import { joinWaitlist, type JoinState } from "@/lib/actions/waitlist";
@@ -40,6 +40,10 @@ function Confirmed({
 export function WaitlistForm({ centered = false }: { centered?: boolean }) {
   const [state, formAction] = useActionState<JoinState, FormData>(joinWaitlist, JOIN_IDLE);
   const tzRef = useRef<HTMLInputElement>(null);
+  // Controlled so a rejected submission (invalid address, rate-limited) keeps
+  // what the visitor typed instead of clearing the field - React 19 resets
+  // uncontrolled fields once a form action settles.
+  const [email, setEmail] = useState("");
 
   // Fill the hidden timezone field after mount with a direct DOM write (not
   // state) so there's no SSR/client mismatch. It's only a review signal.
@@ -106,6 +110,8 @@ export function WaitlistForm({ centered = false }: { centered?: boolean }) {
             autoComplete="email"
             required
             placeholder="you@email.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             aria-describedby={state.status === "error" ? "wl-error" : undefined}
             className="w-full rounded-[10px] border border-line bg-[#0B0B0B] px-3.5 py-3 text-[14px] text-primary transition-colors duration-base ease-standard outline-none placeholder:text-dim focus:border-accent sm:max-w-[320px]"
           />

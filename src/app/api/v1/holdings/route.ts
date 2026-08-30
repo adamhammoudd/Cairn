@@ -15,7 +15,12 @@ export async function GET(req: Request) {
     .eq("user_id", auth.user.id)
     .order("symbol", { ascending: true })
     .limit(limit);
-  if (error) return apiError(500, "query_failed", error.message);
+  if (error) {
+    // Log the real Postgres/PostgREST error server-side; the client gets a
+    // generic message, matching /api/chat.
+    console.error("[api/v1/holdings] holdings query failed:", error);
+    return apiError(500, "query_failed", "Could not load holdings. Please try again.");
+  }
 
   const symbols = Array.from(new Set((holdings ?? []).map((h) => h.symbol)));
   // One bar per symbol through the lateral-join RPC, not a shared LIMIT across
@@ -26,7 +31,10 @@ export async function GET(req: Request) {
   const { data: prices, error: pricesError } = symbols.length
     ? await supabase.rpc("recent_prices", { symbols, per_symbol: 1 })
     : { data: [], error: null };
-  if (pricesError) return apiError(500, "query_failed", pricesError.message);
+  if (pricesError) {
+    console.error("[api/v1/holdings] recent_prices failed:", pricesError);
+    return apiError(500, "query_failed", "Could not load holdings. Please try again.");
+  }
   const latest = new Map(
     ((prices ?? []) as { symbol: string; ts: string; close: number | null }[]).map((p) => [p.symbol, p]),
   );

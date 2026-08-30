@@ -32,6 +32,16 @@ const DEFAULT_BASE_URL = "https://api.groq.com/openai/v1";
 const DEFAULT_MODEL = "openai/gpt-oss-120b";
 const DEFAULT_TIMEOUT_MS = 60_000;
 
+// The fallback endpoint's model id is NOT the primary's. Groq names the
+// open-weight 120B model `openai/gpt-oss-120b`; Cerebras - the endpoint this
+// fallback was designed against (docs/decisions/2026-08-30-groq-fallback-endpoint.md)
+// - serves the same weights under the bare id `gpt-oss-120b`, no `openai/`
+// prefix (checked against inference-docs.cerebras.ai, 2026-08-30). Defaulting
+// the fallback to the primary's id shipped a model id that 404s on Cerebras,
+// and a `/models` health check never caught it because /models does not take a
+// model id. Overridable with FALLBACK_LLM_MODEL for any other host.
+const DEFAULT_FALLBACK_MODEL = "gpt-oss-120b";
+
 // Groq's free tier enforces real per-minute request and token limits. These
 // are transient by definition, so they are retried rather than surfaced.
 const MAX_ATTEMPTS = 4;
@@ -115,11 +125,13 @@ export function isLlmConfigured(): boolean {
 //
 // Rather than pay for a higher Groq tier, a second free OpenAI-compatible
 // endpoint can be configured and is tried automatically once the primary is
-// exhausted. Cerebras' free trial is the one this was verified against on
-// paper (not yet live - no account exists to test with as of this comment):
-// it serves the identical open-weight `openai/gpt-oss-120b` model Groq does,
-// at roughly 5x the daily token budget (published docs, 2026-08-30), so
-// output quality does not change - only which datacenter answered.
+// exhausted. Cerebras' free trial is the one this was designed against (not
+// yet tested live - no Cerebras account exists for this repo): it serves the
+// same open-weight GPT-OSS 120B weights Groq does, at roughly 5x the daily
+// token budget (published docs, 2026-08-30), so output quality does not change
+// - only which datacenter answered. Note the model id differs by provider:
+// Groq's `openai/gpt-oss-120b` vs Cerebras' bare `gpt-oss-120b` (see
+// DEFAULT_FALLBACK_MODEL).
 //
 // Optional and additive: unset, behaviour is identical to before this existed.
 export interface LlmEndpoint {
@@ -143,9 +155,11 @@ export function fallbackEndpoint(): LlmEndpoint | null {
   return {
     baseUrl: baseUrl.replace(/\/+$/, ""),
     apiKey,
-    // Defaults to the SAME model id as the primary - the intended use (a
-    // second host serving the identical open-weight model) needs no override.
-    model: process.env.FALLBACK_LLM_MODEL || llmModel(),
+    // Same open-weight model, different provider, different id string. See
+    // DEFAULT_FALLBACK_MODEL - the primary's `openai/`-prefixed id is a Groq
+    // convention and is not what Cerebras (or most OpenAI-compatible hosts)
+    // serve it under.
+    model: process.env.FALLBACK_LLM_MODEL || DEFAULT_FALLBACK_MODEL,
     label: "fallback",
   };
 }
@@ -167,12 +181,32 @@ export async function llmHealthCheck(): Promise<{ ok: boolean; detail: string }>
   const results = await Promise.all(
     endpoints.map(async (ep) => {
       try {
-        const res = await fetch(`${ep.baseUrl}/models`, {
+        // A real generation, not GET /models. /models 200s whenever the API
+        // key is valid, regardless of whether `ep.model` is an id this host
+        // actually serves - which is exactly how a wrong fallback model id
+        // ("openai/gpt-oss-120b" on Cerebras) passed a health check and then
+        // 404'd on the first real request. This sends the smallest possible
+        // completion and treats a 2xx (even an empty answer from a reasoning
+        // model hitting the 1-token budget) as "this model id generates".
+        const res = await fetch(`${ep.baseUrl}/chat/completions`, {
+          method: "POST",
           headers: authHeaders(ep),
-          signal: AbortSignal.timeout(10_000),
+          body: JSON.stringify({
+            model: ep.model,
+            messages: [{ role: "user", content: "ping" }],
+            max_tokens: 1,
+          }),
+          signal: AbortSignal.timeout(15_000),
         });
-        if (!res.ok) return `${ep.label} (${ep.baseUrl}): HTTP ${res.status}`;
-        return `${ep.label} (${ep.baseUrl}): reachable, model "${ep.model}"`;
+        if (res.ok) return `${ep.label} (${ep.baseUrl}): reachable, model "${ep.model}" generated`;
+        const detail = (await res.text().catch(() => "")).slice(0, 160);
+        // A 429 here is the provider rate-limiting the probe, not a broken
+        // config - the model id and key are fine, we just asked at a bad
+        // moment. Report it honestly rather than as a hard failure.
+        if (res.status === 429) {
+          return `${ep.label} (${ep.baseUrl}): model "${ep.model}" reachable, rate-limited on probe (HTTP 429)`;
+        }
+        return `${ep.label} (${ep.baseUrl}): model "${ep.model}" HTTP ${res.status} ${detail}`;
       } catch (err) {
         return `${ep.label} (${ep.baseUrl}): ${err instanceof Error ? err.message : String(err)}`;
       }

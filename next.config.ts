@@ -70,6 +70,15 @@ const nextConfig: NextConfig = {
   // file silently ignored, so they are merged here.
   allowedDevOrigins: ["192.168.0.106"],
 
+  // Build-time stamp for the corner BuildBadge (src/lib/build-id.ts). Captured
+  // here, once, so the badge does not shell out to git on every render and
+  // shows a real value on Vercel (where the build container has no .git).
+  env: {
+    NEXT_PUBLIC_BUILD_SHA:
+      process.env.VERCEL_GIT_COMMIT_SHA ?? process.env.GIT_COMMIT_SHA ?? "",
+    NEXT_PUBLIC_BUILD_TIME: new Date().toISOString(),
+  },
+
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },
