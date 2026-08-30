@@ -18,13 +18,30 @@ export type IntradayView = keyof typeof RANGES;
 
 export interface IntradayResult {
   points: TimelinePoint[];
-  /** False when no market-data key is configured, so the UI can say why. */
+  /** False when no provider returned usable bars, so the UI can say why. */
   available: boolean;
 }
 
 function withinSpan(ts: string, spanMs: number): boolean {
   const t = new Date(ts).getTime();
   return Number.isFinite(t) && Date.now() - t <= spanMs;
+}
+
+/**
+ * A symbol's asset type, needed because Yahoo quotes coins as a `-USD` pair.
+ * Read from symbol_directory rather than guessed: `BTC` without it resolves to
+ * Grayscale Bitcoin Mini Trust (~$34), which draws a believable chart of
+ * entirely the wrong asset.
+ */
+async function assetTypeOf(symbol: string): Promise<"equity" | "etf" | "crypto" | undefined> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("symbol_directory")
+    .select("asset_type")
+    .eq("symbol", symbol.toUpperCase())
+    .maybeSingle();
+  const t = data?.asset_type;
+  return t === "equity" || t === "etf" || t === "crypto" ? t : undefined;
 }
 
 export async function getIntradaySeries(symbol: string, view: IntradayView): Promise<IntradayResult> {
@@ -35,7 +52,7 @@ export async function getIntradaySeries(symbol: string, view: IntradayView): Pro
   // from the chart so the preference cannot be spoofed from the client into a
   // different provider request.
   const { extendedHours } = await getDisplayPrefs();
-  const bars = await fetchIntradaySeries(symbol, interval, outputsize, extendedHours);
+  const bars = await fetchIntradaySeries(symbol, interval, outputsize, extendedHours, await assetTypeOf(symbol));
   if (!bars) return { points: [], available: false };
 
   return {
@@ -66,12 +83,15 @@ export async function getIntradayPortfolioSeries(view: IntradayView): Promise<In
   // quota and rate-limit the rest of the app, so it keeps the daily series.
   if (symbols.length > 8) return { points: [], available: false };
 
+  const assetTypes = new Map<string, "equity" | "etf" | "crypto" | undefined>();
+  for (const symbol of symbols) assetTypes.set(symbol, await assetTypeOf(symbol));
+
   const { interval, outputsize, spanMs } = RANGES[view];
   const { extendedHours } = await getDisplayPrefs();
   const seriesBySymbol = new Map<string, { ts: number; close: number }[]>();
 
   for (const symbol of symbols) {
-    const bars = await fetchIntradaySeries(symbol, interval, outputsize, extendedHours);
+    const bars = await fetchIntradaySeries(symbol, interval, outputsize, extendedHours, assetTypes.get(symbol));
     if (!bars) return { points: [], available: false };
     seriesBySymbol.set(
       symbol,
