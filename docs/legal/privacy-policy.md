@@ -58,6 +58,13 @@ processing locations for cross-border transfer purposes. An earlier revision of 
 incorrectly stated that no third-party model provider was used; that statement was wrong and must
 not be relied on.]_
 
+_[Legal review, conditional: `src/lib/ai/llm.ts` supports an optional second inference endpoint
+(`FALLBACK_LLM_BASE_URL`), tried only when Groq's daily quota is exhausted - see
+`docs/decisions/2026-08-30-groq-fallback-endpoint.md`. As of this revision it is unconfigured
+(no value set) and therefore not in use. The moment a value is set in production, this section
+must name that provider the same way Groq is named above - update this BEFORE relying on the
+fallback, not after.]_
+
 ## 5. Data retention and deletion
 
 Users can export their data (JSON) and delete their account at any time via Settings → Export &

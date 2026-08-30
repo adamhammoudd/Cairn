@@ -27,7 +27,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { checkScopeGuard, checkCompleteness } from "@/lib/ai/scope-guard";
 import { classifyScope, classifierMode, resolveUnavailable } from "@/lib/ai/scope-classifier";
 import { computeHistoricalStats, computeSimilarityScore, computeProbabilityBand, ELEVATED_MOVE_THRESHOLD_PCT } from "@/lib/ai/analytics";
-import { llmCompleteJson, llmModel } from "@/lib/ai/llm";
+import { llmCompleteJsonWithProvider } from "@/lib/ai/llm";
 import type { ScopeType, Database } from "@/lib/supabase/types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
@@ -177,7 +177,7 @@ Probability of an elevated move (>=${ELEVATED_MOVE_THRESHOLD_PCT}% in absolute t
 Confidence level: ${band.confidence}
 Sample size: ${band.sampleCount} historical analogs`;
 
-  const prose = await llmCompleteJson<ModelProse>(
+  const { parsed: prose, modelVersion } = await llmCompleteJsonWithProvider<ModelProse>(
     {
       system: isCrypto ? SYSTEM_PROMPT + CRYPTO_PROMPT_ADDENDUM : SYSTEM_PROMPT,
       maxTokens: 900,
@@ -265,7 +265,10 @@ Respond with only a JSON object matching the required schema.`,
       // Provider-qualified so a row is traceable to what actually served it.
       // This said "self-hosted:" long after Groq shipped, which mislabeled every
       // stored analysis and matched a privacy claim that was no longer true.
-      model_version: `groq:${llmModel()}`,
+      // Now reads the ACTUAL serving endpoint - "groq:..." or "fallback:..." -
+      // rather than assuming Groq, now that a fallback endpoint can serve a
+      // request when Groq's daily quota is exhausted (see lib/ai/llm.ts).
+      model_version: modelVersion,
       status: "validated",
     })
     .select()
