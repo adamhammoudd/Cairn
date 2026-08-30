@@ -56,6 +56,22 @@ export function AlertForm({ alert, defaultChannels, onDone, onCancel }: AlertFor
   const condition = alert?.condition ?? {};
   const channels = alert ? alert.channels : defaultChannels;
 
+  // Controlled condition fields. React 19 resets an uncontrolled form once its
+  // action settles, so a validation error (e.g. fast SMA >= slow SMA) used to
+  // blank every number the user had entered. Holding them in state preserves
+  // them across a failed submit, matching new-watchlist-form.tsx.
+  const [cond, setCond] = useState({
+    comparator: str(condition, "comparator", "above"),
+    value: "value" in condition ? String(num(condition, "value", 0)) : "",
+    multiplier: String(num(condition, "multiplier", 2)),
+    fastDays: String(num(condition, "fastDays", 50)),
+    slowDays: String(num(condition, "slowDays", 200)),
+    direction: str(condition, "direction", "above"),
+    minLevel: str(condition, "minLevel", "medium"),
+    cooldown_seconds: String(alert?.cooldown_seconds ?? 3600),
+  });
+  const setC = <K extends keyof typeof cond>(key: K, v: string) => setCond((c) => ({ ...c, [key]: v }));
+
   // The action returns the sentinel "saved" rather than redirecting, so the
   // panel closes the form (and drops back to the list) only once the write
   // actually succeeded.
@@ -115,7 +131,12 @@ export function AlertForm({ alert, defaultChannels, onDone, onCancel }: AlertFor
           <>
             <label className="block">
               <span className={LABEL}>Direction</span>
-              <select name="comparator" defaultValue={str(condition, "comparator", "above")} className={inputClass}>
+              <select
+                name="comparator"
+                value={cond.comparator}
+                onChange={(e) => setC("comparator", e.target.value)}
+                className={inputClass}
+              >
                 <option value="above" className="bg-panel">
                   Above
                 </option>
@@ -131,7 +152,8 @@ export function AlertForm({ alert, defaultChannels, onDone, onCancel }: AlertFor
                 type="number"
                 step="any"
                 required
-                defaultValue={alert && "value" in condition ? num(condition, "value", 0) : undefined}
+                value={cond.value}
+                onChange={(e) => setC("value", e.target.value)}
                 className={inputClass}
               />
             </label>
@@ -145,7 +167,8 @@ export function AlertForm({ alert, defaultChannels, onDone, onCancel }: AlertFor
               name="multiplier"
               type="number"
               step="0.1"
-              defaultValue={num(condition, "multiplier", 2)}
+              value={cond.multiplier}
+              onChange={(e) => setC("multiplier", e.target.value)}
               required
               className={inputClass}
             />
@@ -159,7 +182,8 @@ export function AlertForm({ alert, defaultChannels, onDone, onCancel }: AlertFor
               <input
                 name="fastDays"
                 type="number"
-                defaultValue={num(condition, "fastDays", 50)}
+                value={cond.fastDays}
+                onChange={(e) => setC("fastDays", e.target.value)}
                 required
                 className={inputClass}
               />
@@ -169,14 +193,20 @@ export function AlertForm({ alert, defaultChannels, onDone, onCancel }: AlertFor
               <input
                 name="slowDays"
                 type="number"
-                defaultValue={num(condition, "slowDays", 200)}
+                value={cond.slowDays}
+                onChange={(e) => setC("slowDays", e.target.value)}
                 required
                 className={inputClass}
               />
             </label>
             <label className="block">
               <span className={LABEL}>Cross direction</span>
-              <select name="direction" defaultValue={str(condition, "direction", "above")} className={inputClass}>
+              <select
+                name="direction"
+                value={cond.direction}
+                onChange={(e) => setC("direction", e.target.value)}
+                className={inputClass}
+              >
                 <option value="above" className="bg-panel">
                   Fast crosses above slow
                 </option>
@@ -191,7 +221,12 @@ export function AlertForm({ alert, defaultChannels, onDone, onCancel }: AlertFor
         {alertType === "ai_confidence" && (
           <label className="block">
             <span className={LABEL}>Notify at confidence</span>
-            <select name="minLevel" defaultValue={str(condition, "minLevel", "medium")} className={inputClass}>
+            <select
+              name="minLevel"
+              value={cond.minLevel}
+              onChange={(e) => setC("minLevel", e.target.value)}
+              className={inputClass}
+            >
               <option value="low" className="bg-panel">
                 Low or higher
               </option>
@@ -207,7 +242,12 @@ export function AlertForm({ alert, defaultChannels, onDone, onCancel }: AlertFor
 
         <label className="block">
           <span className={LABEL}>Cooldown</span>
-          <select name="cooldown_seconds" defaultValue={alert?.cooldown_seconds ?? 3600} className={inputClass}>
+          <select
+            name="cooldown_seconds"
+            value={cond.cooldown_seconds}
+            onChange={(e) => setC("cooldown_seconds", e.target.value)}
+            className={inputClass}
+          >
             {COOLDOWN_OPTIONS.map((o) => (
               <option key={o.value} value={o.value} className="bg-panel">
                 {o.label}

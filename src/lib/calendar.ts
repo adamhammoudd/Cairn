@@ -10,7 +10,14 @@ export interface CalendarEvent {
   title: string;
 }
 
-export const EVENT_TYPES = ["earnings", "economic", "dividend", "ipo", "split"] as const;
+// Only the event types a data source actually populates. `ingest-calendar`
+// pulls earnings, ex-dividend and split dates from Nasdaq; it has no feed for
+// economic releases or IPO pricing (see the note at the top of
+// supabase/functions/ingest-calendar/index.ts), so offering "economic" and
+// "ipo" filter chips just gave users toggles that could never return a result.
+// Add them back here the moment real ingestion for them exists - EVENT_TYPE_TINT
+// below still carries their colours so historical or future rows still render.
+export const EVENT_TYPES = ["earnings", "dividend", "split"] as const;
 
 // Categorical event tints. The design mock assigns accent green to earnings,
 // but green carries gain semantics in this product, so earnings takes the

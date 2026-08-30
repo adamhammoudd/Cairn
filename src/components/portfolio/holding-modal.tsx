@@ -24,6 +24,24 @@ export function HoldingModal({ holding, initialSymbol, onClose }: HoldingModalPr
   const formRef = useRef<HTMLFormElement>(null);
   const [assetType, setAssetType] = useState(holding?.asset_type ?? initialSymbol?.assetType ?? "equity");
 
+  // Controlled field values. React 19 resets an uncontrolled form once its
+  // action settles, so a validation error (bad quantity, missing date) used to
+  // wipe everything the user had entered in add mode. Keeping the values in
+  // state preserves them across a failed submit - the same reason
+  // new-watchlist-form.tsx is controlled.
+  const [fields, setFields] = useState({
+    symbol: holding?.symbol ?? initialSymbol?.symbol ?? "",
+    quantity: holding?.quantity != null ? String(holding.quantity) : "",
+    purchase_price: holding?.purchase_price != null ? String(holding.purchase_price) : "",
+    purchase_date: holding?.purchase_date ?? "",
+    sector: holding?.sector ?? "",
+    asset_class: holding?.asset_class ?? "",
+    geography: holding?.geography ?? "",
+    notes: holding?.notes ?? "",
+  });
+  const setField = <K extends keyof typeof fields>(key: K, value: string) =>
+    setFields((f) => ({ ...f, [key]: value }));
+
   useEffect(() => {
     if (result === "saved") onClose();
   }, [result, onClose]);
@@ -57,12 +75,17 @@ export function HoldingModal({ holding, initialSymbol, onClose }: HoldingModalPr
               {holding || initialSymbol ? (
                 <input
                   name="symbol"
-                  defaultValue={holding?.symbol ?? initialSymbol?.symbol}
+                  value={fields.symbol}
                   readOnly
                   className="w-full cursor-not-allowed rounded-lg border border-line bg-active px-3 py-2 text-sm text-muted outline-none uppercase"
                 />
               ) : (
-                <SymbolTypeahead onSelect={(r) => setAssetType(r.assetType)} />
+                <SymbolTypeahead
+                  onSelect={(r) => {
+                    setField("symbol", r.symbol);
+                    setAssetType(r.assetType);
+                  }}
+                />
               )}
             </Field>
             <Field label="Asset type">
@@ -88,7 +111,8 @@ export function HoldingModal({ holding, initialSymbol, onClose }: HoldingModalPr
                 type="number"
                 step="any"
                 min="0"
-                defaultValue={holding?.quantity}
+                value={fields.quantity}
+                onChange={(e) => setField("quantity", e.target.value)}
                 required
                 className="w-full rounded-lg border border-line bg-active px-3 py-2 text-sm text-primary outline-none"
               />
@@ -99,7 +123,8 @@ export function HoldingModal({ holding, initialSymbol, onClose }: HoldingModalPr
                 type="number"
                 step="any"
                 min="0"
-                defaultValue={holding?.purchase_price}
+                value={fields.purchase_price}
+                onChange={(e) => setField("purchase_price", e.target.value)}
                 required
                 className="w-full rounded-lg border border-line bg-active px-3 py-2 text-sm text-primary outline-none"
               />
@@ -110,7 +135,8 @@ export function HoldingModal({ holding, initialSymbol, onClose }: HoldingModalPr
             <input
               name="purchase_date"
               type="date"
-              defaultValue={holding?.purchase_date}
+              value={fields.purchase_date}
+              onChange={(e) => setField("purchase_date", e.target.value)}
               required
               className="w-full rounded-lg border border-line bg-active px-3 py-2 text-sm text-primary outline-none"
             />
@@ -125,7 +151,8 @@ export function HoldingModal({ holding, initialSymbol, onClose }: HoldingModalPr
               <input
                 name="sector"
                 list="sector-suggestions"
-                defaultValue={holding?.sector ?? ""}
+                value={fields.sector}
+                onChange={(e) => setField("sector", e.target.value)}
                 className="w-full rounded-lg border border-line bg-active px-3 py-2 text-sm text-primary outline-none"
               />
               <datalist id="sector-suggestions">
@@ -137,14 +164,16 @@ export function HoldingModal({ holding, initialSymbol, onClose }: HoldingModalPr
             <Field label="Asset class">
               <input
                 name="asset_class"
-                defaultValue={holding?.asset_class ?? ""}
+                value={fields.asset_class}
+                onChange={(e) => setField("asset_class", e.target.value)}
                 className="w-full rounded-lg border border-line bg-active px-3 py-2 text-sm text-primary outline-none"
               />
             </Field>
             <Field label="Geography">
               <input
                 name="geography"
-                defaultValue={holding?.geography ?? ""}
+                value={fields.geography}
+                onChange={(e) => setField("geography", e.target.value)}
                 className="w-full rounded-lg border border-line bg-active px-3 py-2 text-sm text-primary outline-none"
               />
             </Field>
@@ -153,7 +182,8 @@ export function HoldingModal({ holding, initialSymbol, onClose }: HoldingModalPr
           <Field label="Notes">
             <textarea
               name="notes"
-              defaultValue={holding?.notes ?? ""}
+              value={fields.notes}
+              onChange={(e) => setField("notes", e.target.value)}
               rows={2}
               className="w-full resize-none rounded-lg border border-line bg-active px-3 py-2 text-sm text-primary outline-none"
             />

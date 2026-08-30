@@ -35,7 +35,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="flex min-h-full flex-col" suppressHydrationWarning>
         {children}
-        <BuildBadge />
+        {/* Dev + Vercel preview only - a stale-render check for whoever is
+            building, not something to ship on every public page (login,
+            signup, legal). Hidden on the production deployment; local dev has
+            no VERCEL_ENV so it still shows there. */}
+        {process.env.VERCEL_ENV !== "production" && <BuildBadge />}
       </body>
     </html>
   );

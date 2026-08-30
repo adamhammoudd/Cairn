@@ -1,8 +1,9 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
-import { Area, AreaChart, ResponsiveContainer, Tooltip, YAxis } from "recharts";
+import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { buildPriceSeries } from "@/lib/ticker";
+import { xAxisConfig } from "@/lib/portfolio";
 import { DataFreshness } from "@/components/data-freshness";
 import { getIntradaySeries } from "@/lib/actions/intraday";
 import { useDisplayPrefs } from "@/components/display-prefs-provider";
@@ -66,6 +67,10 @@ export function TickerChart({ symbol, bars, priceSource = "last_close", priceAsO
   const rangeChange = points.length > 1 ? points[points.length - 1].value - points[0].value : 0;
   const color = rangeChange >= 0 ? "#2FC685" : "#D96C6C";
 
+  // Per-timeframe X-axis, same helper the Compare page uses: tick spacing that
+  // never overlaps and a label format matched to the window.
+  const { interval, tickFormatter } = xAxisConfig(points, timeframe);
+
   return (
     <div className="overflow-hidden rounded-card border border-line bg-panel">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-3">
@@ -110,6 +115,15 @@ export function TickerChart({ symbol, bars, priceSource = "last_close", priceAsO
                 <stop offset="100%" stopColor={color} stopOpacity={0} />
               </linearGradient>
             </defs>
+            <XAxis
+              dataKey="date"
+              interval={interval}
+              tickFormatter={tickFormatter}
+              tick={{ fill: "#8A8A8A", fontSize: 10 }}
+              axisLine={{ stroke: "#2A2A2A" }}
+              tickLine={false}
+              minTickGap={20}
+            />
             <YAxis hide domain={["dataMin", "dataMax"]} />
             <Tooltip
               formatter={(value) => [formatMoney(Number(value), prefs), "Close"] as [string, string]}

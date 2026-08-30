@@ -85,6 +85,11 @@ export function ProfilePanel({ symbol, esg, assetType }: ProfilePanelProps) {
       {esg ? (
         <div className="rounded-card border border-line bg-panel p-5">
           <div className="mb-3 font-mono text-[10px] tracking-[0.14em] text-muted uppercase">ESG scores</div>
+          {/* Disclosure first, so it is read before the numbers rather than as a
+              footnote under them. These are not real scores. */}
+          <p className="mb-3 rounded-lg border border-warning/30 bg-warning/[0.06] px-2.5 py-1.75 text-[11.5px] leading-[1.5] text-warning text-pretty">
+            Illustrative demo data ({esg.source}) - not sourced from a live ESG data provider.
+          </p>
           <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-4">
             {[
               { label: "Environmental", value: esg.environmental ?? "-" },
