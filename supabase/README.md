@@ -21,6 +21,13 @@ Run against your project's SQL editor (or `psql`), in order:
    too - it now also seeds the CoinGecko provider row `ingest-crypto` reads
    from instead of a hardcoded URL.
 
+   `0033_waitlist.sql` adds the pre-launch `waitlist` table and the
+   `confirm_waitlist` / `waitlist_founding_slots_remaining` functions behind the
+   `/waitlist` page. Service-role only (RLS on, no policy). Before that page
+   goes live, set `RESEND_API_KEY` and `WAITLIST_EMAIL_FROM` (see
+   `.env.local.example`) or no one can confirm and the founding-50 list can't be
+   finalised.
+
    `0031_settings_page.sql` is the one migration that also **re-schedules a
    cron job**: `generate-daily-briefings` moves from `0 12 * * 1-5` (12:00 UTC
    for everybody) to `0 * * * *`, because the delivery time is now a per-user
