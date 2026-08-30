@@ -141,6 +141,33 @@ Deno.serve(async (req) => {
     }
   }
 
+  // De-duplicated by symbol before it feeds anything downstream. A shared
+  // ticker across two different CoinGecko listings is a real, common event in
+  // crypto (FIGR_HELOC, GRAM, RAIN, WBT, LEO and CC are already in
+  // symbol_directory for exactly this reason), and coins here comes from two
+  // independent fetches - the top-N page and the on-demand "missing" lookup -
+  // with nothing stopping the same symbol from arriving via both.
+  //
+  // Without this, metricsRows can carry two rows with the same conflict key,
+  // and `upsert(..., { onConflict: "symbol" })` fails outright:
+  //   ON CONFLICT DO UPDATE command cannot affect row a second time
+  // which aborted the whole run - metrics, price history and volatility
+  // regimes for every coin, not just the colliding pair.
+  //
+  // The more prominent coin (lower market_cap_rank) wins; unranked coins keep
+  // first-seen order, matching how the app resolves other symbol collisions
+  // (see the equity/ETF ambiguity note in docs/backlog.md).
+  const bySymbol = new Map<string, MarketCoin>();
+  for (const c of coins) {
+    const sym = c.symbol.toUpperCase();
+    const existing = bySymbol.get(sym);
+    if (!existing || (c.market_cap_rank ?? Infinity) < (existing.market_cap_rank ?? Infinity)) {
+      bySymbol.set(sym, c);
+    }
+  }
+  coins.length = 0;
+  coins.push(...bySymbol.values());
+
   const metricsRows = coins.map((c) => ({
     symbol: c.symbol.toUpperCase(),
     coingecko_id: c.id,

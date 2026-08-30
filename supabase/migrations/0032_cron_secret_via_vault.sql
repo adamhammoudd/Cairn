@@ -44,11 +44,17 @@ begin
       hint = 'Run: select vault.create_secret(''<random, matching Supabase secrets CRON_SECRET>'', ''cron_secret'', ''cron auth''); then re-run this migration.';
   end if;
 
+  -- generate-daily-briefings is deliberately NOT in this list. 0031 moves it
+  -- to hourly ('0 * * * *') as part of the delivery-time setting; scheduling
+  -- it here too, at 0023's original daily-at-noon cadence, would silently
+  -- revert that the next time this migration runs after 0031 - which is
+  -- exactly what happened the first time both were applied. This migration
+  -- owns every OTHER job's auth header; 0031 owns generate-daily-briefings
+  -- end to end (schedule and header both).
   for job in
     select * from (values
       ('ingest-news-every-15-min',       '*/15 * * * *',  'ingest-news',               5000),
       ('ingest-market-data-daily',       '0 22 * * 1-5',  'ingest-market-data',        60000),
-      ('generate-daily-briefings',       '0 12 * * 1-5',  'generate-daily-briefings',  60000),
       ('ingest-historical-events-daily', '30 22 * * 1-5', 'ingest-historical-events',  60000),
       ('ingest-fundamentals-weekly',     '0 6 * * 1',     'ingest-fundamentals',       60000),
       ('ingest-calendar-daily',          '30 6 * * *',    'ingest-calendar',           60000),
