@@ -55,9 +55,13 @@ export default function PrivacyPolicyPage() {
         <section>
           <h2>Third parties</h2>
           <p>
-            Supabase (database, auth, storage) and configured news/market data providers. No
-            third-party AI provider: the analysis engine and assistant run on a model hosted on our
-            own infrastructure, so your chat messages are never sent to an external model service.
+            Supabase (database, auth, storage), configured news/market data providers, and Groq -
+            a third-party hosted AI model provider. The analysis engine and the assistant are not
+            self-hosted: they call Groq over its API, which means the text of your chat messages,
+            prior turns in the same session, and the ticker/sector scope used to generate an
+            analysis are transmitted to Groq for processing. Groq acts as a processor on Cairn&apos;s
+            instructions; Cairn does not send Groq a user identifier, account, email, or position
+            size, and does not use your data to train any model.
           </p>
         </section>
         <section>
@@ -88,8 +92,10 @@ export default function PrivacyPolicyPage() {
             see them, and they can be wrong.
           </p>
           <p>
-            Chat messages are processed by a model running on Cairn&apos;s own infrastructure. They
-            are not sent to any external model provider and are not used to train any model.
+            Chat messages are transmitted to a third-party hosted model provider (Groq) for
+            processing - they are not processed on Cairn&apos;s own infrastructure. Cairn does not
+            use them to train any model. What Groq retains or logs is governed by Groq&apos;s own
+            terms, which counsel has not yet reviewed.
           </p>
           <p>
             Probability ranges, confidence levels, and sample sizes are computed statistically in
