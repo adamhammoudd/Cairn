@@ -9,7 +9,7 @@ import { corsHeaders } from "../_shared/cors.ts";
 import { requireCronSecret } from "../_shared/auth.ts";
 import { ADAPTERS, type ProviderRow } from "../_shared/adapters.ts";
 import { dedupHash } from "../_shared/dedup.ts";
-import { tagContent, type CryptoUniverseEntry } from "../_shared/tagging.ts";
+import { tagContent, type CryptoUniverseEntry, type EquityUniverseEntry } from "../_shared/tagging.ts";
 import { editorialVerdict } from "../_shared/editorial.ts";
 
 Deno.serve(async (req) => {
@@ -39,6 +39,16 @@ Deno.serve(async (req) => {
   const { data: coins } = await supabase.from("crypto_metrics").select("symbol, name");
   const cryptoUniverse: CryptoUniverseEntry[] = coins ?? [];
 
+  // Same idea for equities/ETFs: on-demand ingestion (migration 0027) gives
+  // every tracked symbol a name in symbol_directory, not just the curated 7 in
+  // TRACKED, so the tagger can find a long-tail symbol in prose too.
+  const { data: equities } = await supabase
+    .from("symbol_directory")
+    .select("symbol, name")
+    .in("asset_type", ["equity", "etf"])
+    .eq("status", "available");
+  const equityUniverse: EquityUniverseEntry[] = equities ?? [];
+
   const results = [];
 
   for (const provider of (providers ?? []) as (ProviderRow & { weight: number })[]) {
@@ -57,7 +67,7 @@ Deno.serve(async (req) => {
 
       for (const item of items) {
         const hash = await dedupHash(item.title, item.published_at);
-        const { tickers, sectors } = tagContent(item.title, item.body, cryptoUniverse);
+        const { tickers, sectors } = tagContent(item.title, item.body, cryptoUniverse, equityUniverse);
 
         // Editorial gate: the market-wide feed is market/sector/ticker news.
         // Items tagged to a tracked symbol always pass, so this can never drop
