@@ -673,6 +673,40 @@ export interface Database {
         Update: never;
         Relationships: [];
       };
+      // Pre-launch waitlist (migration 0033). Service-role only - RLS is on
+      // with no policy, so the anon/authenticated clients never see this.
+      waitlist: {
+        Row: {
+          id: number;
+          email: string;
+          email_normalized: string;
+          status: "pending" | "confirmed";
+          confirmation_token: string;
+          confirmed_at: string | null;
+          waitlist_position: number | null;
+          founding_member: boolean;
+          signup_ip: string | null;
+          user_agent: string | null;
+          client_timezone: string | null;
+          review_flag: boolean;
+          created_at: string;
+        };
+        Insert: {
+          email: string;
+          email_normalized: string;
+          signup_ip?: string | null;
+          user_agent?: string | null;
+          client_timezone?: string | null;
+        };
+        Update: {
+          status?: "pending" | "confirmed";
+          confirmed_at?: string | null;
+          waitlist_position?: number | null;
+          founding_member?: boolean;
+          review_flag?: boolean;
+        };
+        Relationships: [];
+      };
       // Everything Cairn has ever been asked about, and what came back -
       // the registry behind on-demand ingestion (migration 0027).
       symbol_profiles: {
@@ -871,6 +905,21 @@ export interface Database {
       recent_prices_all: {
         Args: { per_symbol?: number; asset_types?: string[] };
         Returns: PriceBarRow[];
+      };
+      // Double-opt-in confirmation for a waitlist row (migration 0033).
+      confirm_waitlist: {
+        Args: { p_token: string };
+        Returns: {
+          outcome: "confirmed" | "already" | "invalid";
+          list_position: number | null;
+          founding_member: boolean;
+          founding_limit: number;
+        }[];
+      };
+      // Real count of founding-member places left (migration 0033).
+      waitlist_founding_slots_remaining: {
+        Args: Record<string, never>;
+        Returns: number;
       };
     };
     Enums: Record<string, never>;

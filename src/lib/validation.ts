@@ -40,6 +40,35 @@ export function validateSymbol(raw: unknown): ValidationResult {
 }
 
 /**
+ * Normalises and validates an email address. Shape only - it cannot tell a
+ * real inbox from a plausible-looking one, which is why the waitlist confirms
+ * by clicking a link sent to the address rather than trusting this check.
+ *
+ * The pattern is intentionally simple: exactly one `@`, a non-empty local
+ * part with no spaces, and a domain with at least one dot and a 2+ char TLD.
+ * RFC 5322 in full accepts things (quoted strings, comments, bare TLDs) that
+ * no signup form should, and rejecting those here is a feature.
+ */
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+const MAX_EMAIL_LENGTH = 254; // RFC 3696 errata: the maximum forward-path length.
+
+export function validateEmail(raw: unknown): ValidationResult {
+  if (typeof raw !== "string") return { ok: false, value: "", error: "Enter your email address." };
+
+  // Lower-cased so "A@x.com" and "a@x.com" are one signup, not two. This is the
+  // value stored in email_normalized and used as the uniqueness key.
+  const value = raw.trim().toLowerCase();
+  if (value.length === 0) return { ok: false, value, error: "Enter your email address." };
+  if (value.length > MAX_EMAIL_LENGTH) {
+    return { ok: false, value, error: "That email address is too long." };
+  }
+  if (!EMAIL_PATTERN.test(value)) {
+    return { ok: false, value, error: "That doesn't look like a valid email address." };
+  }
+  return { ok: true, value };
+}
+
+/**
  * Guards free-text fields against oversized payloads before they reach the
  * database. Length is checked in code points rather than UTF-16 units so an
  * emoji-heavy string is measured the way a reader would count it.

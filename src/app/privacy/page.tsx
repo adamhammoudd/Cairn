@@ -4,13 +4,35 @@ export const metadata = { title: "Privacy Policy - Cairn" };
 
 export default function PrivacyPolicyPage() {
   return (
-    <LegalShell eyebrow="Legal" title="Privacy Policy" updated="20 August 2026">
+    <LegalShell eyebrow="Legal" title="Privacy Policy" updated="30 August 2026">
 <section>
           <h2>What we collect</h2>
           <p>
             Account data (email, hashed password, display name), portfolio data (holdings,
             watchlists), settings, and chat history. We do not collect brokerage credentials or
             bank details - Cairn has no trade-execution feature.
+          </p>
+        </section>
+        {/*
+          Waitlist clause added for the pre-launch waitlist page (/waitlist),
+          which collects an email before any account exists. Non-lawyer first
+          draft - covered by the page-level "Draft - not legal advice" banner
+          and needs cfo-legal-advisor / counsel review before launch.
+        */}
+        <section id="waitlist">
+          <h2>Pre-launch waitlist</h2>
+          <p>
+            If you join the waitlist on our pre-launch page, we collect your email address, and we
+            record the IP address, browser user-agent string, and timezone of the signup. The email
+            address is used to send you one confirmation link, to notify you when access opens, and
+            to administer the founding-member offer. The IP, user-agent, and timezone are used only
+            for basic anti-abuse (rate limiting and a manual review of the founding-member list) and
+            are not used to build a profile or track you across sites.
+          </p>
+          <p>
+            Waitlist entries are stored in our database (Supabase) and are not shared with anyone
+            else. You can ask us to remove your waitlist entry at any time via the contact address
+            below; if you never confirm your email, the entry stays unconfirmed and grants nothing.
           </p>
         </section>
         <section>
