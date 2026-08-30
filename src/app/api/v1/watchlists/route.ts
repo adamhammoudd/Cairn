@@ -14,7 +14,12 @@ export async function GET(req: Request) {
     .eq("user_id", auth.user.id)
     .order("sort_order", { ascending: true })
     .limit(limit);
-  if (error) return apiError(500, "query_failed", error.message);
+  if (error) {
+    // Log the real Postgres/PostgREST error server-side; the client gets a
+    // generic message, matching /api/chat.
+    console.error("[api/v1/watchlists] watchlists query failed:", error);
+    return apiError(500, "query_failed", "Could not load watchlists. Please try again.");
+  }
 
   const ids = (lists ?? []).map((l) => l.id);
   const { data: items } = ids.length
