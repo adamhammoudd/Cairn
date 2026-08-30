@@ -113,18 +113,33 @@ grant all on public.subscription_events to service_role;
 -- Without this the delivery-time setting would be a control that writes a
 -- stored value and changes nothing.
 --
--- Same shape as 0023_cron_secret_header.sql: re-scheduling under an existing
--- jobname replaces the command in place, so this creates no duplicate job and
--- is safe to re-run. The header name is x-cairn-cron-secret, matching
--- supabase/functions/_shared/auth.ts.
+-- Same shape as 0032_cron_secret_via_vault.sql: re-scheduling under an
+-- existing jobname replaces the command in place, so this creates no
+-- duplicate job and is safe to re-run. The header name is
+-- x-cairn-cron-secret, matching supabase/functions/_shared/auth.ts.
+--
+-- Originally read the secret with current_setting('app.settings.cron_secret'),
+-- which requires `alter database postgres set ...` - superuser, which hosted
+-- Supabase projects do not grant
+-- (ERROR: 42501: permission denied to set parameter). That RAISE firing rolled
+-- back this entire script as one transaction, including the column/table DDL
+-- above, which is why this migration never actually applied even though it
+-- had shipped in a commit. Switched to Vault, matching 0032: the secret must
+-- exist there first via
+--   select vault.create_secret('<value matching Supabase secrets CRON_SECRET>', 'cron_secret', 'cron auth');
 do $$
 declare
-  secret text := current_setting('app.settings.cron_secret', true);
+  secret text;
 begin
+  select decrypted_secret into secret
+  from vault.decrypted_secrets
+  where name = 'cron_secret'
+  limit 1;
+
   if secret is null or secret = '' then
     raise exception using
-      message = 'app.settings.cron_secret is not set',
-      hint = 'Run: alter database postgres set app.settings.cron_secret = ''<random>''; and supabase secrets set CRON_SECRET=<same>. Without it the re-scheduled briefing job would 401.';
+      message = 'No ''cron_secret'' entry in Vault',
+      hint = 'Run: select vault.create_secret(''<random, matching Supabase secrets CRON_SECRET>'', ''cron_secret'', ''cron auth''); then re-run this migration.';
   end if;
 
   perform cron.schedule(
@@ -138,7 +153,7 @@ begin
       url := 'https://vvferejzawkhzlmvvaog.functions.supabase.co/generate-daily-briefings',
       headers := jsonb_build_object(
         'Content-Type', 'application/json',
-        'x-cairn-cron-secret', current_setting('app.settings.cron_secret', true)
+        'x-cairn-cron-secret', (select decrypted_secret from vault.decrypted_secrets where name = 'cron_secret')
       ),
       timeout_milliseconds := 120000
     );
