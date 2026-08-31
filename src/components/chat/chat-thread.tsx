@@ -16,6 +16,7 @@ import {
   UnavailablePanel,
 } from "@/components/analysis/research-states";
 import type { ChatMessageData } from "@/components/chat/chat-message";
+import { MethodologyCard } from "@/components/analysis/methodology-card";
 import { getUserPlan } from "@/lib/actions/billing";
 import { TIER_LIMITS } from "@/lib/billing";
 import Link from "next/link";
@@ -110,16 +111,28 @@ export function ChatThread({
   const [hasMore, setHasMore] = useState(false);
   const [loadingOlder, setLoadingOlder] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  // Lets the composer button stop an in-flight stream, per the artboard's
+  // "label swaps to Stop while streaming".
+  const abortRef = useRef<AbortController | null>(null);
 
+  // Only the most recent turn that cited an analysis needs its methodology
+  // fetched - that is the one card the thread shows (mock's `showAnalysis`).
+  // Older turns keep their text; their card is not re-rendered, so it is not
+  // re-fetched.
   async function withAnalyses(history: Awaited<ReturnType<typeof listChatMessages>>): Promise<Message[]> {
-    return Promise.all(
-      history.map(async (m) => ({
-        role: m.role,
-        content: m.content,
-        analyses:
-          m.referenced_analysis_ids.length > 0 ? await getAnalysesByIds(m.referenced_analysis_ids) : undefined,
-      })),
-    );
+    let lastWithIds = -1;
+    for (let i = history.length - 1; i >= 0; i--) {
+      if (history[i].referenced_analysis_ids.length > 0) {
+        lastWithIds = i;
+        break;
+      }
+    }
+    const latest = lastWithIds >= 0 ? await getAnalysesByIds(history[lastWithIds].referenced_analysis_ids) : [];
+    return history.map((m, i) => ({
+      role: m.role,
+      content: m.content,
+      analyses: i === lastWithIds ? latest : undefined,
+    }));
   }
 
   async function loadSession(id: string) {
@@ -212,10 +225,12 @@ export function ChatThread({
         setSessions((prev) => [created, ...prev]);
       }
 
+      abortRef.current = new AbortController();
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ sessionId: activeSessionId, message: text }),
+        signal: abortRef.current.signal,
       });
 
       if (!res.ok) {
@@ -269,21 +284,29 @@ export function ChatThread({
       if (wasUntitled) {
         setSessions(await listChatSessions());
       }
-    } catch {
-      setMessages((prev) => {
-        const next = [...prev];
-        next[next.length - 1] = {
-          role: "assistant",
-          content: "The assistant could not be reached. Nothing was saved - please try again.",
-          failed: true,
-        };
-        return next;
-      });
-      if (createdNow && activeSessionId) await discardEmptySession(activeSessionId);
+    } catch (err) {
+      // A user-initiated stop is not a failure - keep whatever streamed so far.
+      if (!(err instanceof DOMException && err.name === "AbortError")) {
+        setMessages((prev) => {
+          const next = [...prev];
+          next[next.length - 1] = {
+            role: "assistant",
+            content: "The assistant could not be reached. Nothing was saved - please try again.",
+            failed: true,
+          };
+          return next;
+        });
+        if (createdNow && activeSessionId) await discardEmptySession(activeSessionId);
+      }
     } finally {
+      abortRef.current = null;
       setStreaming(false);
       setGeneratingScope(null);
     }
+  }
+
+  function stopStreaming() {
+    abortRef.current?.abort();
   }
 
   /**
@@ -303,6 +326,13 @@ export function ChatThread({
 
   const filteredSessions = sessions.filter((s) => sessionLabel(s).toLowerCase().includes(search.toLowerCase()));
 
+  // The one methodology card the thread shows: the analyses the LAST assistant
+  // reply cited, and only that reply's. The mock has a single `showAnalysis`
+  // block after the message list, tied to the current answer - not one card
+  // per turn, which is what made a long thread feel chaotic.
+  const lastAssistant = [...messages].reverse().find((m) => m.role === "assistant" && !m.failed);
+  const latestAnalyses = lastAssistant?.analyses ?? [];
+
   const conversation = (
     <>
       <div ref={scrollRef} className={`flex-1 overflow-y-auto ${compact ? "px-3 py-3" : "p-5"}`}>
@@ -311,7 +341,7 @@ export function ChatThread({
             Ask about a ticker, sector, or market trend - I&apos;ll answer from stored research only.
           </p>
         ) : (
-          <div className="flex flex-col gap-3.5">
+          <div className="flex flex-col gap-4">
             {hasMore && (
               <button
                 type="button"
@@ -327,16 +357,11 @@ export function ChatThread({
                 key={i}
                 message={m}
                 streaming={streaming && m.role === "assistant" && i === messages.length - 1}
-                depth={depth}
-                expandMethodology={expandMethodology}
-                dense={compact}
               />
             ))}
 
             {/* Chat-triggered generation, shown inline. These are the Research
-                page's own panels, not chat-specific copies - the wording of a
-                quota block or a thin-data refusal cannot drift between the two
-                entry points because there is only one of each component. */}
+                page's own panels, not chat-specific copies. */}
             {generatingScope && (
               <div>
                 <p className="mb-2.5 text-[13px] leading-relaxed text-muted text-pretty">
@@ -356,45 +381,89 @@ export function ChatThread({
                 resetLabel={turnState.quota.resetLabel}
               />
             )}
+
+            {/* One card, for the latest cited analysis - the mock's showAnalysis
+                block. Older turns keep only their text. Rendered inline when
+                "Show methodology by default" is on (Settings > AI Assistant),
+                behind a disclosure summary when it's off. */}
+            {!streaming && latestAnalyses.length > 0 && (
+              expandMethodology ? (
+                <div className="flex flex-col gap-3">
+                  {latestAnalyses.map((a) => (
+                    <MethodologyCard key={a.id} analysis={a} depth={depth} dense={compact} />
+                  ))}
+                </div>
+              ) : (
+                <details className="group flex flex-col gap-2">
+                  <summary className="flex cursor-pointer list-none items-center gap-2 font-mono text-[9.5px] tracking-[0.14em] text-muted uppercase transition-colors duration-fast ease-standard hover:text-primary">
+                    <svg
+                      width="9"
+                      height="9"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="3"
+                      className="shrink-0 transition-transform duration-base ease-standard group-open:rotate-180"
+                    >
+                      <polyline points="6 9 12 15 18 9" />
+                    </svg>
+                    Methodology · {latestAnalyses.length === 1 ? "1 analysis" : `${latestAnalyses.length} analyses`}
+                  </summary>
+                  <div className="mt-1 flex flex-col gap-3">
+                    {latestAnalyses.map((a) => (
+                      <MethodologyCard key={a.id} analysis={a} depth={depth} dense={compact} />
+                    ))}
+                  </div>
+                </details>
+              )
+            )}
           </div>
         )}
       </div>
 
-      <div className="flex items-center gap-2 border-t border-line p-3">
-        <input
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && send()}
-          placeholder="Ask about NVDA, semiconductors, the market…"
-          disabled={streaming}
-          className="flex-1 rounded-lg border border-line bg-active px-3 py-2 text-[13.5px] text-primary outline-none disabled:opacity-60"
-        />
-        <button
-          type="button"
-          onClick={() => send()}
-          disabled={streaming || !input.trim()}
-          className="rounded-lg bg-gradient-to-br from-accent-light to-accent-dark px-3.5 py-2 text-[13px] font-semibold text-canvas disabled:opacity-50"
-        >
-          Send
-        </button>
-      </div>
-      {!compact && (
-        <div className="flex flex-wrap gap-1.5 px-3 pb-3">
-          {SUGGESTED_PROMPTS.map((p) => (
-            <button
-              key={p}
-              type="button"
-              onClick={() => send(p)}
-              disabled={streaming}
-              className="rounded-full border border-line px-2.75 py-1.5 text-[11.5px] text-muted transition-colors duration-fast ease-standard hover:border-accent hover:text-primary disabled:opacity-50"
-            >
-              {p}
-            </button>
-          ))}
+      {/* Composer: input row, quick prompts, and the single compliance
+          disclosure - one dark footer, matching the artboard. */}
+      <div className="border-t border-line bg-[#0C0C0C] px-4 py-3.5">
+        <div className="flex items-end gap-2.5">
+          <input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && send()}
+            placeholder="Ask about your holdings, a ticker, or today's move…"
+            disabled={streaming}
+            className="min-w-0 flex-1 rounded-[10px] border border-line bg-[#0F0F0F] px-3.25 py-2.75 text-[13px] text-primary outline-none transition-colors duration-fast ease-standard focus:border-accent disabled:opacity-60"
+          />
+          <button
+            type="button"
+            onClick={() => (streaming ? stopStreaming() : send())}
+            disabled={!streaming && !input.trim()}
+            className={`shrink-0 rounded-[10px] px-4.5 py-2.75 text-[13px] font-semibold transition-[box-shadow] duration-base ease-standard disabled:opacity-50 ${
+              streaming
+                ? "border border-line bg-transparent text-primary hover:border-[#3A3A3A]"
+                : "bg-gradient-to-br from-accent-light to-accent-dark text-canvas hover:shadow-[0_0_22px_rgba(47,198,133,0.35)]"
+            }`}
+          >
+            {streaming ? "Stop" : "Send"}
+          </button>
         </div>
-      )}
-      <div className="px-3 pb-2">
-        <Disclosure />
+        {!compact && (
+          <div className="mt-2.75 flex flex-wrap gap-1.5">
+            {SUGGESTED_PROMPTS.map((p) => (
+              <button
+                key={p}
+                type="button"
+                onClick={() => send(p)}
+                disabled={streaming}
+                className="rounded-full border border-[#232323] px-2.75 py-1.5 text-[11.5px] text-muted transition-colors duration-fast ease-standard hover:border-accent hover:text-primary disabled:opacity-50"
+              >
+                {p}
+              </button>
+            ))}
+          </div>
+        )}
+        <div className="mt-2.5">
+          <Disclosure />
+        </div>
       </div>
     </>
   );
