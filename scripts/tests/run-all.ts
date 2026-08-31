@@ -24,6 +24,8 @@ import { runContrastSuite } from "./contrast";
 import { runEditorialSuite } from "./editorial";
 import { runLlmBackoffSuite } from "./llm-backoff";
 import { runReplyFormatSuite } from "./reply-format";
+import { runMarkdownRenderSuite } from "./markdown-render";
+import { runIntradayWindowSuite } from "./intraday-window";
 import { runSectorVocabularySuite } from "./sector-vocabulary";
 import { runReadErrorsSuite } from "./read-errors";
 import { runSplitFindingSuite } from "./split-finding";
@@ -66,6 +68,8 @@ async function main() {
     editorialSuites,
     backoffSuites,
     replyFormatSuites,
+    markdownRenderSuites,
+    intradayWindowSuites,
     sectorVocabularySuites,
     readErrorSuites,
     splitFindingSuites,
@@ -82,6 +86,8 @@ async function main() {
     guarded("News editorial gate", () => [runEditorialSuite()]),
     guarded("LLM rate-limit retry policy", () => [runLlmBackoffSuite()]),
     guarded("Chat reply formatting", () => [runReplyFormatSuite()]),
+    guarded("Chat markdown parser", () => [runMarkdownRenderSuite()]),
+    guarded("Intraday chart windowing", () => [runIntradayWindowSuite()]),
     guarded("Sector vocabulary", () => [runSectorVocabularySuite()]),
     guarded("Supabase read errors", async () => [await runReadErrorsSuite()]),
     guarded("Analysis card title/description split", () => [runSplitFindingSuite()]),
@@ -101,6 +107,8 @@ async function main() {
     ...editorialSuites,
     ...backoffSuites,
     ...replyFormatSuites,
+    ...markdownRenderSuites,
+    ...intradayWindowSuites,
     ...sectorVocabularySuites,
     ...readErrorSuites,
     ...splitFindingSuites,

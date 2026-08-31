@@ -15,7 +15,7 @@ import { buildChatContext, type ChatContext } from "@/lib/ai/context";
 import { checkScopeGuard, checkNoFreelancedProbability, rewriteForScopeGuard } from "@/lib/ai/scope-guard";
 import { classifyScope, classifierMode, resolveUnavailable } from "@/lib/ai/scope-classifier";
 import { llmComplete } from "@/lib/ai/llm";
-import { toPlainProse } from "@/lib/ai/reply-format";
+import { normalizeReply } from "@/lib/ai/reply-format";
 import type { Database } from "@/lib/supabase/types";
 
 const SYSTEM_PROMPT = `You are Cairn's conversational research assistant. You answer questions about
@@ -32,19 +32,23 @@ Hard rules, no exceptions:
   don't round it into false precision or restate it more confidently than it was stored.
 - Plain language, cite sources/analogs when you reference them.
 
-How the answer must be written - a fixed format, not a preference:
-- Plain prose sentences ONLY. No markdown whatsoever: no tables, no pipe
-  characters, no bullet or numbered lists, no headings, no bold or italics.
-  The chat bubble renders text literally, so a markdown table reaches the user
-  as rows of "|" characters. There is never a reason to emit one.
-- One or two short paragraphs separated by a single blank line, 40-90 words in
-  total. If the answer will not fit in that, the excess is detail that belongs
-  in the analysis card, not the reply.
+How the answer must be written:
+- The chat bubble renders markdown. You MAY use **bold** for the key figure or
+  finding, short bulleted or numbered lists when you are genuinely enumerating
+  parallel points, a single short "## Sub-heading" only when the answer really
+  has two distinct sections, and [label](url) links for sources you name. Do
+  NOT use tables or pipe "|" characters - the column is too narrow and they are
+  flattened out anyway. Do not decorate a one-idea answer with structure it
+  doesn't need.
+- Concise: aim for two short paragraphs, ~40-110 words. A list may replace a
+  paragraph but keep it to 2-4 items. If the answer will not fit, the excess is
+  detail that belongs in the analysis card, not the reply.
 - Lead with the direct answer and its concrete figures - the actual range, the
   actual move, the actual percentage. No preamble about what you do or do not
   have on file.
-- Never list headlines one by one. Say what they collectively indicate, in a
-  sentence.
+- Don't recite headlines one by one as prose. If you are surfacing several, a
+  short bullet list with each source linked is fine; otherwise say what they
+  collectively indicate in a sentence.
 - When stored analyses are attached to this turn, close by pointing to the card
   beneath the reply instead of restating its numbers, e.g. "Below is the
   market-level probability context for the move, with its inputs shown."
@@ -55,9 +59,9 @@ How the answer must be written - a fixed format, not a preference:
   is available only when both are empty, and then in ONE sentence naming what
   would answer it. Not a paragraph, and never an apology.
 
-This is the exact shape and length expected:
+This is the shape and length expected:
 
-Your portfolio is up 1.24% today - $1,417 on $115,686. NVDA (+2.8%) and AMD
+Your portfolio is up **1.24%** today - $1,417 on $115,686. NVDA (+2.8%) and AMD
 (+3.2%) contributed nearly all of it; VTI is the only drag at -0.21%.
 
 AMD remains your one position underwater on cost basis, -11.0% against an
@@ -174,10 +178,11 @@ export async function runChatTurn({
   }
 
   if (!failure) {
-    // Formatting only - the guard above ran on rawOutput, and toPlainProse
-    // changes no wording, so the check it just passed still describes what the
-    // user sees. rawOutput is stored and logged unmodified.
-    return { displayText: toPlainProse(rawOutput), flagged: false, flagReason: null, rawOutput, analysisIds, context };
+    // Formatting only - the guard above ran on rawOutput, and normalizeReply
+    // only flattens pipe tables (no wording change), so the check it just
+    // passed still describes what the user sees. rawOutput is stored and
+    // logged unmodified; the bubble renders the markdown.
+    return { displayText: normalizeReply(rawOutput), flagged: false, flagReason: null, rawOutput, analysisIds, context };
   }
 
   const corrected = rewriteForScopeGuard(context.analyses);
