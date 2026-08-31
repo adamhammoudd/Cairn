@@ -615,12 +615,34 @@ export interface Database {
         Row: {
           user_id: string;
           tier: SubscriptionTier;
-          /** Null until a real payment processor sets it - see migration 0031. */
+          /** Stripe Customer id, set the first time this user starts checkout. */
+          stripe_customer_id: string | null;
+          /** Stripe Subscription id of the active/most-recent premium sub. */
+          stripe_subscription_id: string | null;
+          /** Mirrors the Stripe subscription status (active, past_due, canceled...). */
+          status: string;
+          /** End of the current paid period - drives the "renews on" line. */
           current_period_end: string | null;
           created_at: string;
+          updated_at: string;
         };
-        Insert: { user_id: string; tier?: SubscriptionTier; current_period_end?: string | null };
-        Update: { tier?: SubscriptionTier; current_period_end?: string | null };
+        Insert: {
+          user_id: string;
+          tier?: SubscriptionTier;
+          stripe_customer_id?: string | null;
+          stripe_subscription_id?: string | null;
+          status?: string;
+          current_period_end?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          tier?: SubscriptionTier;
+          stripe_customer_id?: string | null;
+          stripe_subscription_id?: string | null;
+          status?: string;
+          current_period_end?: string | null;
+          updated_at?: string;
+        };
         Relationships: [];
       };
       subscription_events: {

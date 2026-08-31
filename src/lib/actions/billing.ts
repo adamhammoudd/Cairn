@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { stripeConfigured } from "@/lib/stripe";
 import {
   computeUsageSummary,
   computeChatUsageSummary,
@@ -75,9 +76,10 @@ export async function getChatUsageSummary(): Promise<ChatUsageSummary> {
 //
 // Flag rather than a hard-coded false so that wiring Stripe is a config
 // change plus a webhook, not a hunt for the place upgrades were disabled.
-// Absent env var means disabled -- the safe direction.
+// Absent env var means disabled -- the safe direction. Also requires Stripe
+// to actually be configured, so the UI can't offer a checkout that 500s.
 function billingEnabled(): boolean {
-  return process.env.BILLING_ENABLED === "true";
+  return process.env.BILLING_ENABLED === "true" && stripeConfigured();
 }
 
 // Self-serve, no payment - this build has no real billing processor yet
@@ -153,6 +155,8 @@ export interface BillingDetail {
   history: PlanChange[];
   /** Mirrors the server-side gate, so the UI can explain a refused upgrade. */
   billingEnabled: boolean;
+  /** True once this user has a Stripe customer - gates the "Manage billing" link. */
+  hasStripeCustomer: boolean;
 }
 
 /**
@@ -173,11 +177,15 @@ export async function getBillingDetail(): Promise<BillingDetail> {
   const [usage, chat] = await Promise.all([getBillingSummary(), getChatUsageSummary()]);
 
   if (!user) {
-    return { usage, chat, renewsAt: null, history: [], billingEnabled: billingEnabled() };
+    return { usage, chat, renewsAt: null, history: [], billingEnabled: billingEnabled(), hasStripeCustomer: false };
   }
 
   const [{ data: subscription }, { data: events }] = await Promise.all([
-    supabase.from("subscriptions").select("current_period_end").eq("user_id", user.id).maybeSingle(),
+    supabase
+      .from("subscriptions")
+      .select("current_period_end, stripe_customer_id")
+      .eq("user_id", user.id)
+      .maybeSingle(),
     supabase
       .from("subscription_events")
       .select("*")
@@ -190,6 +198,7 @@ export async function getBillingDetail(): Promise<BillingDetail> {
     usage,
     chat,
     renewsAt: subscription?.current_period_end ?? null,
+    hasStripeCustomer: !!subscription?.stripe_customer_id,
     history: (events ?? []).map((e) => ({
       id: e.id,
       fromTier: e.from_tier,

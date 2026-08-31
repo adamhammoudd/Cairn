@@ -3,9 +3,22 @@
 import Link from "next/link";
 import { useActionState } from "react";
 import { setTier, type BillingDetail } from "@/lib/actions/billing";
+import { createCheckoutSession, createPortalSession } from "@/lib/actions/checkout";
 import { TIER_LIMITS } from "@/lib/billing";
 import { nextResetLabel } from "@/lib/chat-state";
-import type { SubscriptionTier } from "@/lib/supabase/types";
+
+const ACTION_BTN =
+  "rounded-lg border border-line px-4 py-2 text-[12.5px] text-primary transition-colors duration-fast ease-standard hover:bg-active disabled:cursor-not-allowed disabled:opacity-50";
+
+// createCheckoutSession / createPortalSession redirect on success and only
+// return a string on failure - useActionState surfaces that string. The
+// (prevState, formData) args useActionState passes are unused here.
+async function checkoutAction(): Promise<string | null> {
+  return (await createCheckoutSession()) ?? null;
+}
+async function portalAction(): Promise<string | null> {
+  return (await createPortalSession()) ?? null;
+}
 
 const ROW = "cn-row border-b border-[#171717] px-4.5 py-3.75 last:border-b-0";
 
@@ -28,10 +41,12 @@ function Meter({ used, limit }: { used: number; limit: number }) {
  */
 export function BillingSettingsPanel({ detail }: { detail: BillingDetail }) {
   const [error, formAction] = useActionState(setTier, null);
-  const { usage, chat, renewsAt, history, billingEnabled } = detail;
+  const [checkoutError, checkout] = useActionState(checkoutAction, null);
+  const [portalError, portal] = useActionState(portalAction, null);
+  const { usage, chat, renewsAt, history, billingEnabled, hasStripeCustomer } = detail;
   const tier = usage.tier;
   const config = TIER_LIMITS[tier];
-  const other: SubscriptionTier = tier === "free" ? "premium" : "free";
+  const actionError = error || checkoutError || portalError;
 
   return (
     <>
@@ -54,25 +69,50 @@ export function BillingSettingsPanel({ detail }: { detail: BillingDetail }) {
           </div>
         </div>
 
-        <form action={formAction} className="shrink-0">
-          <input type="hidden" name="tier" value={other} />
-          <button
-            type="submit"
-            disabled={other === "premium" && !billingEnabled}
-            title={
-              other === "premium" && !billingEnabled
-                ? "Premium isn't available yet - payments aren't set up."
-                : undefined
-            }
-            className="rounded-lg border border-line px-4 py-2 text-[12.5px] text-primary transition-colors duration-fast ease-standard hover:bg-active disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {other === "premium" ? "Upgrade to Premium" : "Downgrade to Free"}
-          </button>
-        </form>
+        <div className="flex shrink-0 flex-wrap gap-2">
+          {tier === "free" ? (
+            billingEnabled ? (
+              // Stripe Checkout - the webhook grants premium, not this click.
+              <form action={checkout}>
+                <button type="submit" className={ACTION_BTN}>
+                  Upgrade to Premium
+                </button>
+              </form>
+            ) : (
+              <form action={formAction}>
+                <input type="hidden" name="tier" value="premium" />
+                <button
+                  type="submit"
+                  disabled
+                  title="Premium isn't available yet - payments aren't set up."
+                  className={ACTION_BTN}
+                >
+                  Upgrade to Premium
+                </button>
+              </form>
+            )
+          ) : (
+            <>
+              {hasStripeCustomer && (
+                <form action={portal}>
+                  <button type="submit" className={ACTION_BTN}>
+                    Manage billing
+                  </button>
+                </form>
+              )}
+              <form action={formAction}>
+                <input type="hidden" name="tier" value="free" />
+                <button type="submit" className={ACTION_BTN}>
+                  Downgrade to Free
+                </button>
+              </form>
+            </>
+          )}
+        </div>
       </div>
 
-      {error && error !== "saved" && (
-        <div className={`${ROW} text-[12.5px] text-warning`}>{error}</div>
+      {actionError && actionError !== "saved" && (
+        <div className={`${ROW} text-[12.5px] text-warning`}>{actionError}</div>
       )}
 
       <div className={ROW}>
