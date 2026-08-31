@@ -61,6 +61,51 @@ export function BriefingCard({ briefing, analyses, analysisDepth }: BriefingCard
               {briefing.summary}
             </p>
 
+            {(briefing.price_moves ?? []).length > 0 && (
+              <div className="relative mt-4 flex flex-col gap-2">
+                <div className="font-mono text-[9.5px] tracking-[0.14em] text-dim uppercase">
+                  Notable moves · last session
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {briefing.price_moves.slice(0, 6).map((m) => {
+                    const up = m.change_pct >= 0;
+                    return (
+                      <a
+                        key={m.symbol}
+                        href={`/ticker/${encodeURIComponent(m.symbol)}`}
+                        className="rounded-lg border border-line bg-canvas/55 px-2.5 py-1.5 text-[12px] hover:border-[#3A3A3A]"
+                      >
+                        <span className="text-primary">{m.symbol}</span>{" "}
+                        <span className={up ? "text-accent" : "text-negative"}>
+                          {up ? "+" : ""}
+                          {m.change_pct}%
+                        </span>
+                      </a>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {(briefing.symbol_news ?? []).length > 0 && (
+              <div className="relative mt-4 flex flex-col gap-2">
+                <div className="font-mono text-[9.5px] tracking-[0.14em] text-dim uppercase">
+                  On your holdings &amp; watchlist
+                </div>
+                {briefing.symbol_news.slice(0, 4).map((n) => (
+                  <div key={n.id} className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                    {n.tickers[0] && (
+                      <span className="font-mono text-[10px] text-accent">{n.tickers.join(" ")}</span>
+                    )}
+                    <span className="text-[12.5px] leading-snug text-primary text-pretty">
+                      {decodeEntities(n.title)}
+                    </span>
+                    <span className="font-mono text-[10px] text-dim">{n.source_name}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
             {(briefing.news ?? []).length > 0 && (
               <div className="relative mt-4 flex flex-col gap-2">
                 <div className="font-mono text-[9.5px] tracking-[0.14em] text-dim uppercase">
