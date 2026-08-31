@@ -6,7 +6,7 @@ import { deleteHolding } from "@/lib/actions/holdings";
 import { HoldingModal } from "@/components/portfolio/holding-modal";
 import { Sparkline } from "@/components/sparkline";
 import { useDisplayPrefs } from "@/components/display-prefs-provider";
-import { formatMoney, formatChange, formatSecondaryChange } from "@/lib/display-prefs";
+import { formatMoney, formatCompactMoney, formatChange, formatSecondaryChange } from "@/lib/display-prefs";
 import type { Holding, HoldingMetrics } from "@/lib/portfolio";
 
 const COLS = "grid-cols-[1.5fr_0.7fr_0.9fr_1fr_1fr_1.1fr_96px_72px]";
@@ -30,7 +30,11 @@ export function HoldingsTable({
   // figure below goes through the shared formatters so a currency change
   // cannot reach the value column and miss the cost basis.
   const prefs = useDisplayPrefs();
-  const fmtCurrency = (n: number | null) => formatMoney(n, prefs);
+  // Compact once a figure passes ~$1M so a large position can't stretch a
+  // column; the exact value is on the cell's title. Ordinary holdings are
+  // unaffected (formatCompactMoney defers to formatMoney below the threshold).
+  const fmtCurrency = (n: number | null) => formatCompactMoney(n, prefs);
+  const fmtExact = (n: number | null) => formatMoney(n, prefs);
 
   // The mock lists positions largest-first; unpriced rows sink to the bottom.
   const rows = [...metrics].sort((a, b) => (b.value ?? -Infinity) - (a.value ?? -Infinity));
@@ -206,12 +210,19 @@ export function HoldingsTable({
                       </div>
                     </div>
 
-                    <div className="text-[12.5px] tabular-nums text-primary">{m.quantity}</div>
+                    <div className="text-[12.5px] tabular-nums text-primary" title={m.quantity.toLocaleString()}>
+                      {m.quantity.toLocaleString(undefined, { maximumFractionDigits: 4 })}
+                    </div>
                     <div className="text-[12.5px] tabular-nums text-primary">{fmtCurrency(m.currentPrice)}</div>
-                    <div className="text-[12.5px] tabular-nums text-muted">
+                    <div
+                      className="text-[12.5px] tabular-nums text-muted"
+                      title={fmtExact(m.purchase_price * m.quantity)}
+                    >
                       {fmtCurrency(m.purchase_price * m.quantity)}
                     </div>
-                    <div className="text-[12.5px] tabular-nums text-primary">{fmtCurrency(m.value)}</div>
+                    <div className="text-[12.5px] tabular-nums text-primary" title={fmtExact(m.value)}>
+                      {fmtCurrency(m.value)}
+                    </div>
 
                     {/* Which unit leads is Settings > Display > "Show percent
                         vs. dollar change". Both are still shown - the setting

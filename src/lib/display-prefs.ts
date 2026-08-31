@@ -59,10 +59,51 @@ export const DEFAULT_DISPLAY_PREFS: DisplayPrefs = {
  */
 export function formatMoney(usd: number | null | undefined, prefs: DisplayPrefs): string {
   if (usd === null || usd === undefined || !Number.isFinite(usd)) return "-";
-  return (usd * prefs.fxRate).toLocaleString(undefined, {
+  const value = usd * prefs.fxRate;
+  // Safety net: a genuinely enormous figure gets compact notation rather than
+  // a 20-digit string that overflows every cell it lands in. Ordinary money
+  // (below a quadrillion) is unaffected.
+  const notation = Math.abs(value) >= 1e15 ? "compact" : "standard";
+  return value.toLocaleString(undefined, { style: "currency", currency: prefs.effectiveCurrency, notation });
+}
+
+/**
+ * Money in compact notation ($1.2M, $340K, $4.1B) once the figure is large
+ * enough that the exact digits stop mattering and the width starts to. Below
+ * `threshold` it defers to formatMoney so small values keep their cents.
+ * Use in stat tiles, table cells and chart labels - anywhere space is tight.
+ */
+export function formatCompactMoney(
+  usd: number | null | undefined,
+  prefs: DisplayPrefs,
+  threshold = 1_000_000,
+): string {
+  if (usd === null || usd === undefined || !Number.isFinite(usd)) return "-";
+  const value = usd * prefs.fxRate;
+  if (Math.abs(value) < threshold) return formatMoney(usd, prefs);
+  return value.toLocaleString(undefined, {
     style: "currency",
     currency: prefs.effectiveCurrency,
+    notation: "compact",
+    maximumFractionDigits: 2,
   });
+}
+
+/** formatCompactMoney with an explicit leading sign - gain/loss stat tiles. */
+export function formatCompactSignedMoney(
+  usd: number | null | undefined,
+  prefs: DisplayPrefs,
+  threshold = 1_000_000,
+): string {
+  if (usd === null || usd === undefined || !Number.isFinite(usd)) return "-";
+  return `${usd >= 0 ? "+" : ""}${formatCompactMoney(usd, prefs, threshold)}`;
+}
+
+/** A plain count in compact notation once it's large (share quantities etc.). */
+export function formatCompactNumber(n: number | null | undefined, threshold = 100_000): string {
+  if (n === null || n === undefined || !Number.isFinite(n)) return "-";
+  if (Math.abs(n) < threshold) return n.toLocaleString();
+  return n.toLocaleString(undefined, { notation: "compact", maximumFractionDigits: 1 });
 }
 
 /** Same, with an explicit leading sign - gain/loss columns. */
