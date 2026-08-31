@@ -4,11 +4,12 @@ import { useMemo, useRef, useState } from "react";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { buildPriceSeries } from "@/lib/ticker";
 import { xAxisConfig } from "@/lib/portfolio";
+import { formatTooltipLabel } from "@/lib/chart-dates";
 import { DataFreshness } from "@/components/data-freshness";
 import { getIntradaySeries } from "@/lib/actions/intraday";
+import type { IntradayResult } from "@/lib/intraday-window";
 import { useDisplayPrefs } from "@/components/display-prefs-provider";
 import { formatMoney } from "@/lib/display-prefs";
-import type { TimelinePoint } from "@/lib/portfolio";
 import type { ChartView } from "@/lib/supabase/types";
 
 const TIMEFRAMES: ChartView[] = ["1D", "1W", "1M", "3M", "1Y", "ALL"];
@@ -30,7 +31,7 @@ export function TickerChart({ symbol, bars, priceSource = "last_close", priceAsO
   const prefs = useDisplayPrefs();
   const [timeframe, setTimeframe] = useState<ChartView>(prefs.defaultChartView);
   // 1D and 1W plot provider bars (1 min / 15 min); the rest are daily closes.
-  const [intraday, setIntraday] = useState<{ points: TimelinePoint[]; available: boolean } | null>(null);
+  const [intraday, setIntraday] = useState<IntradayResult | null>(null);
   const [loadingIntraday, setLoadingIntraday] = useState(false);
   const isIntraday = timeframe === "1D" || timeframe === "1W";
 
@@ -89,9 +90,19 @@ export function TickerChart({ symbol, bars, priceSource = "last_close", priceAsO
           ))}
         </div>
         {intradayPoints ? (
-          <span className="font-mono text-[10px] tracking-[0.12em] text-dim uppercase">
-            {timeframe === "1D" ? "Live · 1 min bars" : "Live · 15 min bars"}
-          </span>
+          // Market closed: the intraday feed anchors on the last session, so
+          // the label reads "as of <that date>" rather than "Live".
+          intraday?.stale ? (
+            <DataFreshness
+              source="last_close"
+              asOf={intraday.asOf}
+              detail={timeframe === "1D" ? "1 min bars" : "15 min bars"}
+            />
+          ) : (
+            <span className="font-mono text-[10px] tracking-[0.12em] text-dim uppercase">
+              {timeframe === "1D" ? "Live · 1 min bars" : "Live · 15 min bars"}
+            </span>
+          )
         ) : (
           <DataFreshness source={priceSource} asOf={priceAsOf} detail="daily closes" />
         )}
@@ -127,11 +138,7 @@ export function TickerChart({ symbol, bars, priceSource = "last_close", priceAsO
             <YAxis hide domain={["dataMin", "dataMax"]} />
             <Tooltip
               formatter={(value) => [formatMoney(Number(value), prefs), "Close"] as [string, string]}
-              labelFormatter={(label) =>
-                String(label).length > 10
-                  ? new Date(String(label)).toLocaleString()
-                  : new Date(String(label)).toLocaleDateString()
-              }
+              labelFormatter={(label) => formatTooltipLabel(String(label))}
               contentStyle={{ background: "#0F0F0F", border: "1px solid #2A2A2A", borderRadius: 8, fontSize: 12 }}
               labelStyle={{ color: "#8A8A8A" }}
             />

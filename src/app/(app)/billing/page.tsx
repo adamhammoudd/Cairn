@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { getBillingSummary } from "@/lib/actions/billing";
+import { getBillingDetail } from "@/lib/actions/billing";
 import { BillingPanel } from "@/components/billing/billing-panel";
 
 export default async function BillingPage() {
@@ -10,7 +10,7 @@ export default async function BillingPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const summary = await getBillingSummary();
+  const detail = await getBillingDetail();
 
-  return <BillingPanel summary={summary} />;
+  return <BillingPanel detail={detail} />;
 }

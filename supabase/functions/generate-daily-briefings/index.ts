@@ -221,6 +221,68 @@ Deno.serve(async (req) => {
           }));
       }
 
+      // News tagging a tracked symbol - always relevant, independent of the
+      // category filter. Mirrors symbolNews in src/lib/ai/briefing.ts.
+      let symbolNews: {
+        id: string;
+        title: string;
+        source_name: string;
+        published_at: string;
+        tickers: string[];
+      }[] = [];
+      if (symbols.length > 0) {
+        const tenDaysAgo = new Date(now);
+        tenDaysAgo.setDate(tenDaysAgo.getDate() - 10);
+        const { data: tagged } = await supabase
+          .from("news_items")
+          .select("id, title, source_name, published_at, tickers")
+          .overlaps("tickers", symbols)
+          .gte("published_at", tenDaysAgo.toISOString())
+          .order("published_at", { ascending: false })
+          .limit(6);
+        const seen = new Set(news.map((n) => n.id));
+        symbolNews = ((tagged ?? []) as typeof symbolNews)
+          .filter((a) => !seen.has(a.id))
+          .map((a) => ({
+            id: a.id,
+            title: a.title,
+            source_name: a.source_name,
+            published_at: a.published_at,
+            tickers: (a.tickers ?? []).filter((t: string) => symbols.includes(t)),
+          }));
+      }
+
+      // Last-session price move per tracked symbol (>= 2%). Mirrors
+      // priceMovesFor in src/lib/ai/briefing.ts.
+      const priceMoves: { symbol: string; change_pct: number; close: number; as_of: string }[] = [];
+      if (symbols.length > 0) {
+        const { data: bars } = await supabase
+          .from("historical_prices")
+          .select("symbol, ts, close")
+          .in("symbol", symbols)
+          .order("ts", { ascending: false })
+          .limit(symbols.length * 3);
+        const bySymbol = new Map<string, { ts: string; close: number }[]>();
+        for (const b of (bars ?? []) as { symbol: string; ts: string; close: number | null }[]) {
+          if (b.close === null) continue;
+          const arr = bySymbol.get(b.symbol) ?? [];
+          if (arr.length < 2) arr.push({ ts: b.ts, close: Number(b.close) });
+          bySymbol.set(b.symbol, arr);
+        }
+        for (const [symbol, rows] of bySymbol) {
+          if (rows.length < 2 || rows[1].close === 0) continue;
+          const changePct = ((rows[0].close - rows[1].close) / rows[1].close) * 100;
+          if (Math.abs(changePct) < 2) continue;
+          priceMoves.push({
+            symbol,
+            change_pct: Math.round(changePct * 100) / 100,
+            close: rows[0].close,
+            as_of: rows[0].ts,
+          });
+        }
+        priceMoves.sort((a, b) => Math.abs(b.change_pct) - Math.abs(a.change_pct));
+      }
+
       const analysisList = analyses ?? [];
       const eventList = events ?? [];
 
@@ -229,10 +291,24 @@ Deno.serve(async (req) => {
         summary = includeHoldings
           ? "No holdings or watchlist symbols yet - add some to get a personalized relevance ranking, or ask the assistant about any market/sector/ticker directly."
           : "The watchlists feeding this briefing are empty, and holdings are switched off as a source in Settings. Add symbols, or turn holdings back on, to get a relevance ranking.";
-      } else if (analysisList.length === 0 && eventList.length === 0 && news.length === 0) {
-        summary = `No new research, upcoming events, or matching stories for your ${symbols.length} tracked symbol${symbols.length === 1 ? "" : "s"} since your last briefing.`;
+      } else if (
+        analysisList.length === 0 &&
+        eventList.length === 0 &&
+        news.length === 0 &&
+        symbolNews.length === 0 &&
+        priceMoves.length === 0
+      ) {
+        summary = `No notable price moves, new research, upcoming events, or stories for your ${symbols.length} tracked symbol${symbols.length === 1 ? "" : "s"} since your last briefing.`;
       } else {
         const parts: string[] = [];
+        if (priceMoves.length > 0) {
+          parts.push(
+            `${priceMoves.length} notable move${priceMoves.length === 1 ? "" : "s"}: ${priceMoves
+              .slice(0, 3)
+              .map((m) => `${m.symbol} ${m.change_pct > 0 ? "+" : ""}${m.change_pct}%`)
+              .join(", ")}${priceMoves.length > 3 ? ", and more" : ""} (as of ${priceMoves[0].as_of}).`,
+          );
+        }
         if (analysisList.length > 0) {
           parts.push(
             `${analysisList.length} relevant analysis${analysisList.length === 1 ? "" : "es"}: ${analysisList
@@ -252,6 +328,11 @@ Deno.serve(async (req) => {
               .join(", ")}${eventList.length > 3 ? ", and more" : ""}.`,
           );
         }
+        if (symbolNews.length > 0) {
+          parts.push(
+            `${symbolNews.length} recent stor${symbolNews.length === 1 ? "y" : "ies"} on your holdings and watchlist.`,
+          );
+        }
         if (news.length > 0) {
           parts.push(`${news.length} story${news.length === 1 ? "" : " stories"} in your chosen news categories.`);
         }
@@ -264,6 +345,8 @@ Deno.serve(async (req) => {
         summary,
         analyses: analysisList,
         upcoming_events: eventList,
+        price_moves: priceMoves,
+        symbol_news: symbolNews,
         news,
         sources: {
           holdings: includeHoldings,

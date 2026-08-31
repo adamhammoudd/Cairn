@@ -8,13 +8,8 @@ import { isMarketDataProviderConfigured } from "@/lib/market-data/provider";
 import { isSettingsTabId, type SettingsTabId } from "@/lib/settings-categories";
 
 // `?tab=billing` opens straight on a category, so a link from elsewhere in the
-// app (the Alerts page, a quota panel) can land on the row it means rather than
-// on Display with an instruction to go looking.
-export default async function SettingsPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ tab?: string }>;
-}) {
+// app (the Alerts page, a quota panel) can land on the row it means.
+export default async function SettingsPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
   const supabase = await createClient();
   const {
     data: { user },
@@ -28,11 +23,7 @@ export default async function SettingsPage({
     await Promise.all([
       supabase.from("profiles").select("*").eq("user_id", user.id).single(),
       supabase.from("user_settings").select("*").eq("user_id", user.id).single(),
-      // Same functions the Research page's quota indicator and the chat gate
-      // read, so the usage figures here cannot drift from the ones enforced.
       getBillingDetail(),
-      // Reused rather than re-derived so the currency note under the selector
-      // describes the rate the rest of the app is actually applying.
       getDisplayPrefs(),
       listSectorMapSectors(),
       supabase.from("watchlists").select("id, name").eq("user_id", user.id).order("sort_order", { ascending: true }),
@@ -43,13 +34,14 @@ export default async function SettingsPage({
   }
 
   return (
-    <div className="animate-page-in mx-auto max-w-[1060px]">
+    <div className="animate-page-in mx-auto max-w-[1156px] px-5.5 pt-6.5 pb-15">
+      {/* The mockup's intro block. The app header/top-nav above it is left
+          as-is per the task - this pass excludes it. */}
       <div className="mb-5">
-        <div className="mb-2 font-mono text-[10.5px] tracking-[0.16em] text-muted uppercase">Account · Settings</div>
-        <h1 className="font-serif text-[30px] leading-[1.1] font-normal text-primary">Settings</h1>
+        <div className="mb-2 font-mono text-[10.5px] tracking-[0.16em] text-muted uppercase">Account</div>
+        <h1 className="font-serif text-[32px] leading-[1.1] font-normal text-primary">Settings</h1>
         <p className="mt-1.75 max-w-[560px] text-[13.5px] text-muted text-pretty">
-          Display, account, notifications, billing, AI assistant, and privacy preferences. Every control here changes
-          real behaviour — nothing on this page is a placeholder.
+          Grouped by what they affect. Changes save as you make them.
         </p>
       </div>
 
@@ -57,14 +49,11 @@ export default async function SettingsPage({
         settings={settings}
         displayName={profile?.display_name || "Account"}
         email={user.email ?? ""}
+        emailVerified={!!user.email_confirmed_at}
         billing={billing}
         sectorOptions={sectorOptions}
         watchlists={watchlistRows ?? []}
-        fx={{
-          effectiveCurrency: prefs.effectiveCurrency,
-          unavailable: prefs.fxUnavailable,
-          asOf: prefs.fxAsOf,
-        }}
+        fx={{ effectiveCurrency: prefs.effectiveCurrency, unavailable: prefs.fxUnavailable, asOf: prefs.fxAsOf }}
         intradayAvailable={isMarketDataProviderConfigured()}
         initialTab={initialTab}
       />

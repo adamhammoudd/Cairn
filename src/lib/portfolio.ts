@@ -1,4 +1,5 @@
 import type { ChartView, Database } from "@/lib/supabase/types";
+import { formatChartLabel, isInstant } from "@/lib/chart-dates";
 
 export type Holding = Database["public"]["Tables"]["holdings"]["Row"];
 export type PriceBar = Database["public"]["Tables"]["historical_prices"]["Row"];
@@ -179,20 +180,22 @@ export function xAxisConfig(points: TimelinePoint[], timeframe: ChartView) {
   const interval = points.length > desiredTicks ? Math.ceil(points.length / desiredTicks) - 1 : 0;
 
   // 1D/1W points carry a time component when an intraday feed is available;
-  // formatting them as dates would print the same label on every tick.
+  // formatting them as dates would print the same label on every tick. Daily
+  // bars are formatted in UTC by formatChartLabel so the calendar date is the
+  // same for every viewer (see lib/chart-dates.ts).
   const formatters: Record<ChartView, (iso: string) => string> = {
     "1D": (iso) =>
-      iso.length > 10
+      isInstant(iso)
         ? new Date(iso).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })
-        : new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" }),
+        : formatChartLabel(iso, { month: "short", day: "numeric" }),
     "1W": (iso) =>
-      iso.length > 10
+      isInstant(iso)
         ? new Date(iso).toLocaleString(undefined, { weekday: "short", hour: "numeric" })
-        : new Date(iso).toLocaleDateString(undefined, { weekday: "short" }),
-    "1M": (iso) => new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" }),
-    "3M": (iso) => new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" }),
-    "1Y": (iso) => new Date(iso).toLocaleDateString(undefined, { month: "short" }),
-    ALL: (iso) => new Date(iso).toLocaleDateString(undefined, { month: "short", year: "2-digit" }),
+        : formatChartLabel(iso, { weekday: "short" }),
+    "1M": (iso) => formatChartLabel(iso, { month: "short", day: "numeric" }),
+    "3M": (iso) => formatChartLabel(iso, { month: "short", day: "numeric" }),
+    "1Y": (iso) => formatChartLabel(iso, { month: "short" }),
+    ALL: (iso) => formatChartLabel(iso, { month: "short", year: "2-digit" }),
   };
 
   return { interval, tickFormatter: formatters[timeframe] };

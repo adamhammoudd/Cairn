@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { stripeConfigured } from "@/lib/stripe";
 import {
   computeUsageSummary,
   computeChatUsageSummary,
@@ -75,14 +76,17 @@ export async function getChatUsageSummary(): Promise<ChatUsageSummary> {
 //
 // Flag rather than a hard-coded false so that wiring Stripe is a config
 // change plus a webhook, not a hunt for the place upgrades were disabled.
-// Absent env var means disabled -- the safe direction.
+// Absent env var means disabled -- the safe direction. Also requires Stripe
+// to actually be configured, so the UI can't offer a checkout that 500s.
 function billingEnabled(): boolean {
-  return process.env.BILLING_ENABLED === "true";
+  return process.env.BILLING_ENABLED === "true" && stripeConfigured();
 }
 
-// Self-serve, no payment - this build has no real billing processor yet
-// (see migration 0012's header note). Explicitly disclosed as such in the
-// Billing UI so it never reads as a real purchase flow.
+// Plan changes the user can make WITHOUT paying: only downgrade to free, and
+// (before Stripe is wired) the "not available yet" message. Premium is granted
+// exclusively by the Stripe webhook (app/api/stripe/webhook) - this action
+// must never write tier='premium', or a raw form POST is a free subscription
+// whether billing is on or off.
 export async function setTier(_prevState: string | null, formData: FormData) {
   const supabase = await createClient();
   const {
@@ -93,21 +97,28 @@ export async function setTier(_prevState: string | null, formData: FormData) {
   const tier = String(formData.get("tier") ?? "");
   if (tier !== "free" && tier !== "premium") return "Invalid plan.";
 
-  // Downgrading stays available even with billing off: a user must always be
-  // able to leave a plan, and refusing that is the failure mode regulators
-  // care about. Only the upgrade is gated.
-  if (tier === "premium" && !billingEnabled()) {
-    return "Premium isn't available yet - payments aren't set up. Nothing has been charged or changed.";
+  if (tier === "premium") {
+    // Never self-serve. With Stripe configured, upgrading goes through
+    // createCheckoutSession(); without it, there is nothing to sell.
+    return billingEnabled()
+      ? "Start a Premium subscription from the checkout button, not here."
+      : "Premium isn't available yet - payments aren't set up. Nothing has been charged or changed.";
   }
 
-  // Read the current tier first so the history row can record what it changed
-  // from. A no-op switch (already on this tier) writes no event.
+  // Downgrade to free. Always allowed - a user must be able to leave a plan.
+  // If they have a live Stripe subscription, send them to the Customer Portal
+  // to actually cancel; flipping the row here without cancelling in Stripe
+  // would keep charging them.
   const { data: current } = await supabase
     .from("subscriptions")
-    .select("tier")
+    .select("tier, stripe_subscription_id, status")
     .eq("user_id", user.id)
     .maybeSingle();
   const fromTier: SubscriptionTier = current?.tier ?? "free";
+
+  if (current?.stripe_subscription_id && current.status !== "canceled") {
+    return "You have an active subscription - cancel it from 'Manage billing' so you're not charged again. The plan changes here once Stripe confirms.";
+  }
 
   const { error } = await supabase.from("subscriptions").upsert({ user_id: user.id, tier });
   if (error) return error.message;
@@ -153,6 +164,8 @@ export interface BillingDetail {
   history: PlanChange[];
   /** Mirrors the server-side gate, so the UI can explain a refused upgrade. */
   billingEnabled: boolean;
+  /** True once this user has a Stripe customer - gates the "Manage billing" link. */
+  hasStripeCustomer: boolean;
 }
 
 /**
@@ -173,11 +186,15 @@ export async function getBillingDetail(): Promise<BillingDetail> {
   const [usage, chat] = await Promise.all([getBillingSummary(), getChatUsageSummary()]);
 
   if (!user) {
-    return { usage, chat, renewsAt: null, history: [], billingEnabled: billingEnabled() };
+    return { usage, chat, renewsAt: null, history: [], billingEnabled: billingEnabled(), hasStripeCustomer: false };
   }
 
   const [{ data: subscription }, { data: events }] = await Promise.all([
-    supabase.from("subscriptions").select("current_period_end").eq("user_id", user.id).maybeSingle(),
+    supabase
+      .from("subscriptions")
+      .select("current_period_end, stripe_customer_id")
+      .eq("user_id", user.id)
+      .maybeSingle(),
     supabase
       .from("subscription_events")
       .select("*")
@@ -190,6 +207,7 @@ export async function getBillingDetail(): Promise<BillingDetail> {
     usage,
     chat,
     renewsAt: subscription?.current_period_end ?? null,
+    hasStripeCustomer: !!subscription?.stripe_customer_id,
     history: (events ?? []).map((e) => ({
       id: e.id,
       fromTier: e.from_tier,

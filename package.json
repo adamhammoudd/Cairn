@@ -22,6 +22,10 @@
     "test:editorial": "tsx --conditions=react-server scripts/tests/editorial.ts",
     "test:backoff": "tsx --conditions=react-server scripts/tests/llm-backoff.ts",
     "test:reply-format": "tsx --conditions=react-server scripts/tests/reply-format.ts",
+    "test:markdown-render": "tsx --conditions=react-server scripts/tests/markdown-render.ts",
+    "test:intraday-window": "tsx --conditions=react-server scripts/tests/intraday-window.ts",
+    "test:stripe-webhook": "tsx --conditions=react-server scripts/tests/stripe-webhook.ts",
+    "test:briefing-summary": "tsx --conditions=react-server scripts/tests/briefing-summary.ts",
     "test:guard-probe": "tsx --conditions=react-server scripts/tests/scope-guard-probe.ts",
     "test:classifier": "tsx --conditions=react-server scripts/tests/scope-classifier.ts",
     "test:market-hours": "tsx --conditions=react-server scripts/tests/market-hours.ts",
@@ -45,6 +49,7 @@
     "react-dom": "19.2.8",
     "recharts": "^3.10.1",
     "server-only": "^0.0.1",
+    "stripe": "^22.6.0",
     "tailwind-merge": "^3.6.0"
   },
   "devDependencies": {
@@ -57,6 +62,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.3.0",
     "playwright": "^1.62.1",
+    "sharp": "^0.35.3",
     "tailwindcss": "^4",
     "tsx": "^4.23.12",
     "typescript": "^5"

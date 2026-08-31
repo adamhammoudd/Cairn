@@ -15,6 +15,18 @@ export interface BriefingContent {
   }[];
   upcoming_events: { symbol: string | null; event_type: string; event_date: string; title: string }[];
   /**
+   * Last-session price move for each tracked symbol that moved more than
+   * PRICE_MOVE_THRESHOLD_PCT, biggest absolute move first. Real closes from
+   * historical_prices - never a live quote, never fabricated.
+   */
+  price_moves: { symbol: string; change_pct: number; close: number; as_of: string }[];
+  /**
+   * Recent stories that tag one of the reader's tracked symbols, regardless of
+   * the news-category filter below - "news about what I hold" is always
+   * relevant. Deduplicated against `news`.
+   */
+  symbol_news: { id: string; title: string; source_name: string; published_at: string; tickers: string[] }[];
+  /**
    * Stories matching the reader's preferred news categories (Settings > AI
    * Assistant). Empty when no categories are chosen, which is the default and
    * the pre-settings behaviour.
@@ -47,6 +59,119 @@ export const DEFAULT_BRIEFING_SOURCES: BriefingSourceSettings = {
   watchlistIds: [],
   newsCategories: [],
 };
+
+/** A symbol's last-session move is only worth a line if it cleared this. */
+export const PRICE_MOVE_THRESHOLD_PCT = 2;
+
+interface SummaryInput {
+  symbolCount: number;
+  includeHoldings: boolean;
+  priceMoves: BriefingContent["price_moves"];
+  analyses: BriefingContent["analyses"];
+  events: BriefingContent["upcoming_events"];
+  symbolNews: BriefingContent["symbol_news"];
+  news: BriefingContent["news"];
+}
+
+/**
+ * The one-paragraph briefing summary. Pure and exported so it can be tested
+ * without a database, and so the scheduled Edge Function and the on-demand
+ * path can't drift on wording (the Deno mirror hand-copies this).
+ */
+export function composeBriefingSummary(i: SummaryInput): string {
+  if (i.symbolCount === 0) {
+    return i.includeHoldings
+      ? "No holdings or watchlist symbols yet - add some to get a personalized relevance ranking, or ask the assistant about any market/sector/ticker directly."
+      : "The watchlists feeding this briefing are empty, and holdings are switched off as a source in Settings. Add symbols, or turn holdings back on, to get a relevance ranking.";
+  }
+
+  const plural = i.symbolCount === 1 ? "" : "s";
+  if (
+    i.priceMoves.length === 0 &&
+    i.analyses.length === 0 &&
+    i.events.length === 0 &&
+    i.symbolNews.length === 0 &&
+    i.news.length === 0
+  ) {
+    return `No notable price moves, new research, upcoming events, or stories for your ${i.symbolCount} tracked symbol${plural} since your last briefing.`;
+  }
+
+  const parts: string[] = [];
+  if (i.priceMoves.length > 0) {
+    parts.push(
+      `${i.priceMoves.length} notable move${i.priceMoves.length === 1 ? "" : "s"}: ${i.priceMoves
+        .slice(0, 3)
+        .map((m) => `${m.symbol} ${m.change_pct > 0 ? "+" : ""}${m.change_pct}%`)
+        .join(", ")}${i.priceMoves.length > 3 ? ", and more" : ""} (as of ${i.priceMoves[0].as_of}).`,
+    );
+  }
+  if (i.analyses.length > 0) {
+    parts.push(
+      `${i.analyses.length} relevant analysis${i.analyses.length === 1 ? "" : "es"}: ${i.analyses
+        .slice(0, 3)
+        .map((a) => `${a.scope_value} (${a.probability_low}–${a.probability_high}%, ${a.confidence_level} confidence)`)
+        .join(", ")}${i.analyses.length > 3 ? ", and more" : ""}.`,
+    );
+  }
+  if (i.events.length > 0) {
+    parts.push(
+      `${i.events.length} upcoming event${i.events.length === 1 ? "" : "s"}: ${i.events
+        .slice(0, 3)
+        .map((e) => `${e.symbol ?? ""} ${e.event_type} on ${e.event_date}`.trim())
+        .join(", ")}${i.events.length > 3 ? ", and more" : ""}.`,
+    );
+  }
+  if (i.symbolNews.length > 0) {
+    parts.push(
+      `${i.symbolNews.length} recent stor${i.symbolNews.length === 1 ? "y" : "ies"} on your holdings and watchlist.`,
+    );
+  }
+  if (i.news.length > 0) {
+    parts.push(`${i.news.length} story${i.news.length === 1 ? "" : " stories"} in your chosen news categories.`);
+  }
+  return parts.join(" ");
+}
+
+/**
+ * Last-session percentage move for each symbol, from the two most recent daily
+ * closes in historical_prices. Symbols with fewer than two bars are skipped
+ * (no move can be computed), never guessed.
+ */
+async function priceMovesFor(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  symbols: string[],
+): Promise<BriefingContent["price_moves"]> {
+  if (symbols.length === 0) return [];
+
+  const { data: bars } = await supabase
+    .from("historical_prices")
+    .select("symbol, ts, close")
+    .in("symbol", symbols)
+    .order("ts", { ascending: false })
+    .limit(symbols.length * 3);
+
+  const bySymbol = new Map<string, { ts: string; close: number }[]>();
+  for (const b of bars ?? []) {
+    if (b.close === null) continue;
+    const arr = bySymbol.get(b.symbol) ?? [];
+    if (arr.length < 2) arr.push({ ts: b.ts, close: Number(b.close) });
+    bySymbol.set(b.symbol, arr);
+  }
+
+  const moves: BriefingContent["price_moves"] = [];
+  for (const [symbol, rows] of bySymbol) {
+    if (rows.length < 2 || rows[1].close === 0) continue;
+    const changePct = ((rows[0].close - rows[1].close) / rows[1].close) * 100;
+    if (Math.abs(changePct) < PRICE_MOVE_THRESHOLD_PCT) continue;
+    moves.push({
+      symbol,
+      change_pct: Math.round(changePct * 100) / 100,
+      close: rows[0].close,
+      as_of: rows[0].ts,
+    });
+  }
+  return moves.sort((a, b) => Math.abs(b.change_pct) - Math.abs(a.change_pct));
+}
 
 /**
  * The symbols a briefing covers, given the reader's chosen sources.
@@ -155,41 +280,45 @@ export async function generateBriefing(userId: string): Promise<BriefingContent>
       }));
   }
 
+  // News that tags a tracked symbol - always relevant, independent of the
+  // category filter. Last 10 days, so a stale story doesn't headline a briefing.
+  let symbolNews: BriefingContent["symbol_news"] = [];
+  if (symbols.length > 0) {
+    const tenDaysAgo = new Date();
+    tenDaysAgo.setDate(tenDaysAgo.getDate() - 10);
+    const { data: tagged } = await supabase
+      .from("news_items")
+      .select("id, title, source_name, published_at, tickers")
+      .overlaps("tickers", symbols)
+      .gte("published_at", tenDaysAgo.toISOString())
+      .order("published_at", { ascending: false })
+      .limit(6);
+    const seen = new Set(news.map((n) => n.id));
+    symbolNews = (tagged ?? [])
+      .filter((a) => !seen.has(a.id))
+      .map((a) => ({
+        id: a.id,
+        title: a.title,
+        source_name: a.source_name,
+        published_at: a.published_at,
+        tickers: (a.tickers ?? []).filter((t: string) => symbols.includes(t)),
+      }));
+  }
+
+  const priceMoves = await priceMovesFor(supabase, symbols);
+
   const analysisList = analyses ?? [];
   const eventList = events ?? [];
 
-  let summary: string;
-  if (symbols.length === 0) {
-    summary = sources.includeHoldings
-      ? "No holdings or watchlist symbols yet - add some to get a personalized relevance ranking, or ask the assistant about any market/sector/ticker directly."
-      : "The watchlists feeding this briefing are empty, and holdings are switched off as a source in Settings. Add symbols, or turn holdings back on, to get a relevance ranking.";
-  } else if (analysisList.length === 0 && eventList.length === 0 && news.length === 0) {
-    summary = `No new research, upcoming events, or matching stories for your ${symbols.length} tracked symbol${symbols.length === 1 ? "" : "s"} since your last briefing.`;
-  } else {
-    const parts: string[] = [];
-    if (analysisList.length > 0) {
-      parts.push(
-        `${analysisList.length} relevant analysis${analysisList.length === 1 ? "" : "es"}: ${analysisList
-          .slice(0, 3)
-          .map((a) => `${a.scope_value} (${a.probability_low}–${a.probability_high}%, ${a.confidence_level} confidence)`)
-          .join(", ")}${analysisList.length > 3 ? ", and more" : ""}.`,
-      );
-    }
-    if (eventList.length > 0) {
-      parts.push(
-        `${eventList.length} upcoming event${eventList.length === 1 ? "" : "s"}: ${eventList
-          .slice(0, 3)
-          .map((e) => `${e.symbol ?? ""} ${e.event_type} on ${e.event_date}`.trim())
-          .join(", ")}${eventList.length > 3 ? ", and more" : ""}.`,
-      );
-    }
-    if (news.length > 0) {
-      parts.push(
-        `${news.length} story${news.length === 1 ? "" : " stories"} in your chosen news categories.`,
-      );
-    }
-    summary = parts.join(" ");
-  }
+  const summary = composeBriefingSummary({
+    symbolCount: symbols.length,
+    includeHoldings: sources.includeHoldings,
+    priceMoves,
+    analyses: analysisList,
+    events: eventList,
+    symbolNews,
+    news,
+  });
 
   const content: BriefingContent = {
     generated_at: new Date().toISOString(),
@@ -197,6 +326,8 @@ export async function generateBriefing(userId: string): Promise<BriefingContent>
     summary,
     analyses: analysisList,
     upcoming_events: eventList,
+    price_moves: priceMoves,
+    symbol_news: symbolNews,
     news,
     sources: {
       holdings: sources.includeHoldings,

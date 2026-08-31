@@ -1,9 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Cairn">
   <!--
     The Cairn mark: three stacked stones that also read as an ascending bar
-    chart. Geometry matches the <Logo> component (src/components/logo.tsx) 1:1 -
-    this file is the single source: the component renders it inline and
-    scripts/gen-icons.mjs rasterises it into the favicon / app-icon set.
+    chart. Geometry mirrors the <Logo> component (src/components/logo.tsx),
+    which is the source of truth - keep the two in sync (three rounded rects).
+    scripts/gen-icons.mjs rasterises THIS file into the favicon / app-icon set,
+    and public/site.webmanifest references it directly.
   -->
   <defs>
     <linearGradient id="cairn-stone" x1="0" y1="0" x2="1" y2="1">

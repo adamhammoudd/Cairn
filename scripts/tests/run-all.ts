@@ -24,6 +24,10 @@ import { runContrastSuite } from "./contrast";
 import { runEditorialSuite } from "./editorial";
 import { runLlmBackoffSuite } from "./llm-backoff";
 import { runReplyFormatSuite } from "./reply-format";
+import { runMarkdownRenderSuite } from "./markdown-render";
+import { runIntradayWindowSuite } from "./intraday-window";
+import { runStripeWebhookSuite } from "./stripe-webhook";
+import { runBriefingSummarySuite } from "./briefing-summary";
 import { runSectorVocabularySuite } from "./sector-vocabulary";
 import { runReadErrorsSuite } from "./read-errors";
 import { runSplitFindingSuite } from "./split-finding";
@@ -66,6 +70,10 @@ async function main() {
     editorialSuites,
     backoffSuites,
     replyFormatSuites,
+    markdownRenderSuites,
+    intradayWindowSuites,
+    stripeWebhookSuites,
+    briefingSummarySuites,
     sectorVocabularySuites,
     readErrorSuites,
     splitFindingSuites,
@@ -82,6 +90,10 @@ async function main() {
     guarded("News editorial gate", () => [runEditorialSuite()]),
     guarded("LLM rate-limit retry policy", () => [runLlmBackoffSuite()]),
     guarded("Chat reply formatting", () => [runReplyFormatSuite()]),
+    guarded("Chat markdown parser", () => [runMarkdownRenderSuite()]),
+    guarded("Intraday chart windowing", () => [runIntradayWindowSuite()]),
+    guarded("Stripe billing wiring", () => [runStripeWebhookSuite()]),
+    guarded("Daily briefing summary", () => [runBriefingSummarySuite()]),
     guarded("Sector vocabulary", () => [runSectorVocabularySuite()]),
     guarded("Supabase read errors", async () => [await runReadErrorsSuite()]),
     guarded("Analysis card title/description split", () => [runSplitFindingSuite()]),
@@ -101,6 +113,10 @@ async function main() {
     ...editorialSuites,
     ...backoffSuites,
     ...replyFormatSuites,
+    ...markdownRenderSuites,
+    ...intradayWindowSuites,
+    ...stripeWebhookSuites,
+    ...briefingSummarySuites,
     ...sectorVocabularySuites,
     ...readErrorSuites,
     ...splitFindingSuites,
