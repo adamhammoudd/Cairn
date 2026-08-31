@@ -8,21 +8,37 @@ entry behind it. Items needing a human decision are called out, not resolved.
 
 ---
 
-## 1. Settings page — match the mockup — **BLOCKED**
+## 1. Settings page — match the mockup — **done** (`<settings commit>`)
 
-The design-import method (used for the Research page, commit `4bf0f0f`) pulls a
-fresh `Cairn.dc.html` from the Claude Design project via the DesignSync MCP.
-That MCP needs `/design-login`, which can only run in an interactive session —
-a background job can't authorize it. The local `Context/mockups/Cairn.dc.html`
-is truncated at exactly 256 KiB (ends mid-array), so it carries no complete
-Settings artboard to work from.
+Unblocked once the founder ran `/design-login`. Pulled `Cairn Settings.dc.html`
+fresh from the Claude Design project (the same file the Research page import
+used) and rebuilt the page to it — **header/top-nav left as-is per the task**.
+The artboard is committed to `Context/mockups/`.
 
-The founder said the mockup is "on the google chrome browser", but the browser
-extension only exposes its own tab group, not the founder's other tabs.
+- New sticky underline **tab bar** (`settings-tab-bar.tsx`) replacing the
+  nav-style grouped subheader (deleted); "2FA off" badge on Account.
+- Shared **card primitives** (`settings-card.tsx`) with values transcribed
+  from the mockup; one card per group, 14px gap.
+- Exact mockup **toggle** (38×22, 16px knob, translateX 2→16).
+- Every tab restructured into the mockup's multi-card layout; **every wired
+  control kept** (`test:settings-wiring` 45/45).
+- Account: two-column profile grid + verified chip; 2FA as the mockup card
+  but with the honest "not available yet" body (**not** the mockup's fake QR
+  enrolment — a working-looking 2FA screen is the worst placeholder); Danger
+  zone with a typed-`DELETE` confirmation replacing `window.confirm`.
+- Billing: the mockup's plan card (gradient + Premium glow) + usage card +
+  payment history + footnote. Stripe wiring from item 3 unchanged.
 
-**Needs:** the founder to run `/design-login` in an interactive Claude Code
-session, **or** paste the Settings mockup URL, **or** drag that tab into the
-Claude side panel. Then this is a straightforward pixel pass. Nothing shipped.
+**Deliberate deviations from the swatch:** `#6A6A6A` → `text-dim` (`#7B7B7B`)
+for contrast (`test:contrast` is gating); the mockup's *illustrative* control
+set (per-notification-type toggles, "improve models with my data",
+session-history retention, product-analytics) is replaced with the real wired
+controls — the page's own standing promise is "nothing here is a placeholder".
+
+**Verification:** `tsc` + `next build` + `eslint` clean; `test:settings-wiring`
+45/45. Value-level transcription, not a rendered screenshot — the same bar the
+Research page import (`4bf0f0f`) met, since a logged-in page can't be captured
+from here.
 
 ## 2. Chart fixes
 
@@ -83,6 +99,17 @@ unbuilt); built from the roadmap Phase 12 outline. Full runbook:
 `STRIPE_PRICE_PREMIUM`, `STRIPE_WEBHOOK_SECRET`, then the §3 local run in the
 spec; live keys only after that passes. Also **chief-of-staff sign-off to pull
 Phase 12 forward** per the roadmap's "don't reorder phases" rule.
+
+**Post-review (2026-08-31, `<review commit>`):** checked the integration against
+the founder's detailed requirements. One real gap found and fixed — `setTier()`
+would have allowed a single free premium upgrade the moment `BILLING_ENABLED`
+flipped to `true` (its guard was `!billingEnabled()`); it now refuses **every**
+premium write, and refuses a downgrade too while a live Stripe subscription
+exists (routing to the Customer Portal so Stripe is actually cancelled).
+Webhook pinned to the `nodejs` runtime. Everything else in the requirements
+list already held — see the review table in `docs/stripe-integration-spec.md`
+§4a. `STRIPE_PUBLISHABLE_KEY` is intentionally unused: the integration is
+hosted Checkout + Portal, so there is no client-side Stripe.js.
 
 ## 4. Admin account — **done, verified**
 
