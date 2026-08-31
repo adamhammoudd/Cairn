@@ -1,20 +1,22 @@
 "use client";
 
 import { useTransition } from "react";
+import Link from "next/link";
 import { requestBriefing } from "@/lib/actions/briefing";
 import type { BriefingContent } from "@/lib/ai/briefing";
-import type { AnalysisWithMethodology } from "@/lib/actions/analysis";
-import { MethodologyCard } from "@/components/analysis/methodology-card";
 import { Disclosure } from "@/components/compliance/disclosure";
 import { decodeEntities } from "@/lib/news";
 
 interface BriefingCardProps {
   briefing: BriefingContent | null;
-  analyses: AnalysisWithMethodology[];
-  analysisDepth: "top_line" | "full";
 }
 
-export function BriefingCard({ briefing, analyses, analysisDepth }: BriefingCardProps) {
+// The AI Assistant artboard's briefing card: gradient panel, accent glow, a
+// mono date label + serif headline, the summary paragraph, then a compact row
+// of highlight tiles. The full methodology cards it used to trail with are
+// gone - the summary already names each analysis, and the one place a
+// methodology card belongs on this page is under the answer that cites it.
+export function BriefingCard({ briefing }: BriefingCardProps) {
   const [pending, startTransition] = useTransition();
 
   const today = new Date().toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
@@ -150,6 +152,26 @@ export function BriefingCard({ briefing, analyses, analysisDepth }: BriefingCard
                 ))}
               </div>
             )}
+
+            {briefing.analyses.length > 0 && (
+              <div className="relative mt-4 flex flex-col gap-2">
+                <div className="font-mono text-[9.5px] tracking-[0.14em] text-dim uppercase">Recent analyses</div>
+                <div className="flex flex-wrap gap-2">
+                  {briefing.analyses.slice(0, 6).map((a) => (
+                    <Link
+                      key={a.id}
+                      href={`/ticker/${encodeURIComponent(a.scope_value)}`}
+                      className="rounded-lg border border-line bg-canvas/55 px-2.5 py-1.5 text-[12px] hover:border-[#3A3A3A]"
+                    >
+                      <span className="text-primary">{a.scope_value}</span>{" "}
+                      <span className="tabular-nums text-muted">
+                        {a.probability_low}–{a.probability_high}%
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
           </>
         )}
 
@@ -159,10 +181,6 @@ export function BriefingCard({ briefing, analyses, analysisDepth }: BriefingCard
           </div>
         )}
       </div>
-
-      {analyses.map((a) => (
-        <MethodologyCard key={a.id} analysis={a} dense depth={analysisDepth} />
-      ))}
     </div>
   );
 }
