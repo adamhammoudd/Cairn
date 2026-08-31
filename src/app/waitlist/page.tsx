@@ -25,10 +25,10 @@ function Eyebrow({ children, className = "" }: { children: React.ReactNode; clas
 const TRUST = ["Research & analysis only", "No brokerage account", "No trade execution"];
 
 const PREMIUM_ADDS = [
-  ["Unlimited research runs", "The Free plan caps analyses per month; Premium removes the cap."],
+  ["Unlimited chat", "The Free plan caps daily assistant messages; Premium removes that cap."],
+  ["A much larger analysis quota", "Free covers a handful of full analyses a month; Premium raises the monthly cap well above it."],
   ["Full methodology", "Every historical analog behind a probability, not just the closest one."],
   ["Deeper source trails", "The complete set of articles and data an answer was built from."],
-  ["Priority on new surfaces", "Screener, sector map, and scenario tools as they ship."],
 ];
 
 const FEATURES = [

@@ -12,6 +12,7 @@ import {
   QuotaReachedPanel,
   UnavailablePanel,
 } from "@/components/analysis/research-states";
+import { TIER_LIMITS } from "@/lib/billing";
 import type { CalendarEvent } from "@/lib/calendar";
 import type { ScopeType } from "@/lib/supabase/types";
 
@@ -115,6 +116,7 @@ export function ResearchWorkspace({
   const held = new Set(heldSymbols);
   const atCap = usage.used >= usage.limit;
   const nearCap = usage.used === usage.limit - 1;
+  const isFreePlan = planLabel !== TIER_LIMITS.premium.label;
 
   // Type-ahead. Tickers come from the same searchSymbols action "Add holding"
   // uses, so a scope is only offerable if it is a real tracked instrument;
@@ -245,16 +247,25 @@ export function ResearchWorkspace({
           {(atCap || nearCap) && (
             <div className="mt-2.75">
               <div className="text-[11.5px] leading-[1.55] text-muted text-pretty">
-                {atCap
-                  ? `You've used all ${usage.limit} analyses on the ${planLabel} plan this month. They reset on ${resetLabel} — or upgrade for unlimited runs and full methodology detail.`
-                  : `One analysis left this month on the ${planLabel} plan. Upgrade for unlimited runs and full methodology detail.`}
+                {/* Both tiers have a monthly analysis cap - Premium raises it
+                    (5 -> 100), it does not remove it. Only chat is unlimited on
+                    Premium. */}
+                {isFreePlan
+                  ? atCap
+                    ? `You've used all ${usage.limit} analyses on the Free plan this month. Premium raises the cap to ${TIER_LIMITS.premium.monthlyAiAnalyses} a month with full methodology detail. They reset on ${resetLabel}.`
+                    : `One analysis left this month on the Free plan. Premium raises the cap to ${TIER_LIMITS.premium.monthlyAiAnalyses} a month and adds full methodology detail.`
+                  : atCap
+                    ? `You've used all ${usage.limit} Premium analyses this month. They reset on ${resetLabel}.`
+                    : `One analysis left this month on the Premium plan. It resets on ${resetLabel}.`}
               </div>
-              <a
-                href="/billing"
-                className="mt-2.5 inline-block rounded-[9px] bg-gradient-to-br from-accent-light to-accent-dark px-3.25 py-1.75 text-[12px] font-semibold text-canvas transition-[box-shadow] duration-[180ms] ease-[cubic-bezier(0.4,0,0.2,1)] hover:shadow-[0_0_22px_rgba(47,198,133,0.35)]"
-              >
-                Upgrade to Premium
-              </a>
+              {isFreePlan && (
+                <a
+                  href="/billing"
+                  className="mt-2.5 inline-block rounded-[9px] bg-gradient-to-br from-accent-light to-accent-dark px-3.25 py-1.75 text-[12px] font-semibold text-canvas transition-[box-shadow] duration-[180ms] ease-[cubic-bezier(0.4,0,0.2,1)] hover:shadow-[0_0_22px_rgba(47,198,133,0.35)]"
+                >
+                  Upgrade to Premium
+                </a>
+              )}
             </div>
           )}
         </div>

@@ -124,11 +124,13 @@ Verified: `select public.is_admin('fea0d4e4-…')` → `true`. `getAdminSnapshot
 returns non-null for that role, so `/admin` no longer `notFound()`s, and the
 tables behind it have real rows (16 analyses, 75 directory rows, 41,032 bars).
 
-## 5. Expand analysis coverage — **ON HOLD (founder's call)**
+## 5. Expand analysis coverage — **DROPPED (founder: "remove perplexity api integration")**
 
-The founder chose to wait for a Perplexity API key rather than use the
-web-search fallback. Not started. The item 7 briefing check that depends on it
-was done for the parts that don't (price/news wiring).
+Not started, and now not planned. No Perplexity code was ever added (the item
+was on hold), so there is nothing to remove — this section is closed. The
+completeness gate ("not enough historical data") stays exactly as designed;
+tickers that fail it continue to show the honest message. If coverage is
+revisited later it would be a fresh scoping exercise, not this item.
 
 ## 6. Portfolio holding links — **done** (`558ece6`)
 
@@ -186,15 +188,12 @@ templates in-repo (Supabase auth emails are dashboard-configured). The rasters
 regenerate byte-identical from the SVG. **One gap fixed:** `sharp` was missing
 so the documented regen workflow was broken.
 
-## 11. Sign-out button colour — **NEEDS A HUMAN DECISION — not implemented**
+## 11. Sign-out button colour — **RESOLVED (founder: "no red button")**
 
-Current: `top-nav.tsx` renders "Sign out" as `text-muted → hover:text-primary`,
-a neutral treatment consistent with the other menu items. The request to make
-it **red** conflicts with the standing brand rule ("red reserved exclusively
-for loss/destructive indicators"), enforced everywhere else (the delete-holding
-button is the only red control in that menu). **Do not implement until
-`design-lead` or the founder confirms** whether this is an intentional
-exception or should get a neutral/outline treatment instead.
+The sign-out button stays neutral — `text-muted → hover:text-primary` in
+`top-nav.tsx`, consistent with the other menu items and with the brand rule
+that reserves red for loss/destructive indicators. No code change; the
+original "make it red" request is withdrawn.
 
 ## 12. Incoherence sweep — findings
 
@@ -205,20 +204,18 @@ exception or should get a neutral/outline treatment instead.
 - `src/app/icon.svg` claimed to be "the single source" when
   `cairn-mark.svg` is → item 9/10.
 
-**Needs a product decision — NOT fixed:**
+**Resolved (founder: "capped") — fixed in `<copy commit>`:**
 
-- **Premium "unlimited runs" vs the 100/month cap.** `TIER_LIMITS.premium
-  .monthlyAiAnalyses = 100`, but `/billing`, `research-workspace.tsx`
-  (`"Upgrade for unlimited runs"`), `research-states.tsx` (`"Upgrade for
-  unlimited"`) and the **waitlist page** (`"Unlimited research runs — Premium
-  removes the cap"`) all promise unlimited. `Context/positioning.md` only
-  promises "unlimited **chat** + full methodology depth" — silent on an
-  analysis cap. And `research-workspace.tsx:250` shows a Premium user at their
-  cap the line *"Upgrade for unlimited runs"* — there is nothing to upgrade to.
-  **Decision needed:** is Premium analyses unlimited (set the limit to `null`,
-  keep the copy) or capped at 100 (fix every "unlimited" string)? Then align
-  code + all copy in one pass, or item 12 has just created its own
-  contradiction.
+- **Premium analyses stay capped** at `TIER_LIMITS.premium.monthlyAiAnalyses`
+  (100). The contradicting "unlimited" copy is corrected:
+  `research-workspace.tsx` and `research-states.tsx` now say Premium *raises*
+  the monthly cap (and drop the nonsensical "upgrade for unlimited" shown to a
+  Premium user — those blocks are gated to Free now); the **waitlist page**
+  swaps "Unlimited research runs / Premium removes the cap" for "Unlimited
+  chat" + "a much larger analysis quota". `positioning.md` was already correct
+  ("unlimited **chat** + full methodology depth") and is unchanged. The only
+  remaining "unlimited" strings are about chat, which genuinely is uncapped on
+  Premium (`dailyChatMessages: null`).
 
 - **`docs/decisions/2026-08-20-model-provider.md`** still frames "A. Self-hosted
   small model" as "the current design" and quotes a privacy blurb ("Self-hosted
