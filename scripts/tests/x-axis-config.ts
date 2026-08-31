@@ -6,6 +6,7 @@
 // Run: npx tsx --conditions=react-server scripts/tests/x-axis-config.ts
 
 import { xAxisConfig } from "../../src/lib/portfolio";
+import { formatTooltipLabel } from "../../src/lib/chart-dates";
 import type { ChartView } from "../../src/lib/supabase/types";
 
 let pass = 0;
@@ -63,6 +64,21 @@ try {
   check("empty / single-point series does not throw", true);
 } catch (e) {
   check("empty / single-point series does not throw", false, String(e));
+}
+
+// Daily-bar labels must not shift by a day depending on the viewer's time
+// zone. `historical_prices.ts` is "YYYY-MM-DD"; new Date("2026-08-28") is UTC
+// midnight, so a naive toLocaleDateString() rendered "Aug 27" west of UTC.
+// formatChartLabel / formatTooltipLabel pin date-only values to UTC.
+{
+  const tick = xAxisConfig(series(22, DAY, false), "1M").tickFormatter("2026-08-28");
+  check("a daily bar's axis label keeps its own calendar date (Aug 28)", /Aug\s*28/.test(tick), `"${tick}"`);
+  check("the tooltip label keeps its own calendar date (Aug 28)", /Aug\s*28/.test(formatTooltipLabel("2026-08-28")), `"${formatTooltipLabel("2026-08-28")}"`);
+  check(
+    "an intraday timestamp still formats with a time component",
+    /\d/.test(formatTooltipLabel("2026-08-28T14:30:00.000Z")) && formatTooltipLabel("2026-08-28T14:30:00.000Z").length > 12,
+    `"${formatTooltipLabel("2026-08-28T14:30:00.000Z")}"`,
+  );
 }
 
 console.log(`\n${pass}/${pass + fail} x-axis cases passed`);

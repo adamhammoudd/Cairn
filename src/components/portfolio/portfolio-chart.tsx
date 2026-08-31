@@ -3,7 +3,9 @@
 import { useRef, useState } from "react";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { xAxisConfig, type TimelinePoint } from "@/lib/portfolio";
+import { formatTooltipLabel } from "@/lib/chart-dates";
 import { getIntradayPortfolioSeries } from "@/lib/actions/intraday";
+import type { IntradayResult } from "@/lib/intraday-window";
 import type { ChartView } from "@/lib/supabase/types";
 import { DataFreshness } from "@/components/data-freshness";
 import { useDisplayPrefs } from "@/components/display-prefs-provider";
@@ -27,7 +29,7 @@ export function PortfolioChart({ seriesByTimeframe, hasHoldings, asOf = null }: 
   const [timeframe, setTimeframe] = useState<ChartView>(prefs.defaultChartView);
   // 1D and 1W come from the live provider (minute and quarter-hour bars);
   // every other range is the daily series computed on the server.
-  const [intraday, setIntraday] = useState<{ points: TimelinePoint[]; available: boolean } | null>(null);
+  const [intraday, setIntraday] = useState<IntradayResult | null>(null);
   const [loadingIntraday, setLoadingIntraday] = useState(false);
   const isIntraday = timeframe === "1D" || timeframe === "1W";
 
@@ -89,9 +91,17 @@ export function PortfolioChart({ seriesByTimeframe, hasHoldings, asOf = null }: 
           ))}
         </div>
         {intradayPoints ? (
-          <span className="font-mono text-[10px] tracking-[0.12em] text-dim uppercase">
-            {timeframe === "1D" ? "Combined value · 1 min" : "Combined value · 15 min"}
-          </span>
+          intraday?.stale ? (
+            <DataFreshness
+              source="last_close"
+              asOf={intraday.asOf}
+              detail={timeframe === "1D" ? "combined value · 1 min" : "combined value · 15 min"}
+            />
+          ) : (
+            <span className="font-mono text-[10px] tracking-[0.12em] text-dim uppercase">
+              {timeframe === "1D" ? "Combined value · 1 min" : "Combined value · 15 min"}
+            </span>
+          )
         ) : (
           <DataFreshness source="last_close" asOf={asOf} detail="combined holdings value" />
         )}
@@ -133,11 +143,7 @@ export function PortfolioChart({ seriesByTimeframe, hasHoldings, asOf = null }: 
             <YAxis hide domain={["dataMin", "dataMax"]} />
             <Tooltip
               formatter={(value) => [formatMoney(Number(value), prefs), "Close"] as [string, string]}
-              labelFormatter={(label) =>
-                String(label).length > 10
-                  ? new Date(String(label)).toLocaleString()
-                  : new Date(String(label)).toLocaleDateString()
-              }
+              labelFormatter={(label) => formatTooltipLabel(String(label))}
               contentStyle={{ background: "#0F0F0F", border: "1px solid #2A2A2A", borderRadius: 8, fontSize: 12 }}
               labelStyle={{ color: "#8A8A8A" }}
             />

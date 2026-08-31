@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { xAxisConfig } from "@/lib/portfolio";
+import { formatTooltipLabel } from "@/lib/chart-dates";
 import { buildPriceSeries } from "@/lib/ticker";
 import { COMPARISON_COLORS, type ComparisonRow } from "@/lib/comparison";
 import type { ChartView } from "@/lib/supabase/types";
@@ -120,7 +121,7 @@ export function ComparisonCharts({ rows, timeframe }: { rows: ComparisonRow[]; t
           />
           <Tooltip
             formatter={(value, name) => [`${Number(value).toFixed(1)} (${(Number(value) - 100).toFixed(1)}%)`, name]}
-            labelFormatter={(label) => new Date(String(label)).toLocaleDateString()}
+            labelFormatter={(label) => formatTooltipLabel(String(label))}
             contentStyle={{ background: "#0F0F0F", border: "1px solid #2A2A2A", borderRadius: 8, fontSize: 12 }}
             labelStyle={{ color: "#8A8A8A" }}
             itemSorter={(item) => -Number(item.value ?? 0)}
