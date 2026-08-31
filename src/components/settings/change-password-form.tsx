@@ -13,7 +13,7 @@ export function ChangePasswordForm() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="rounded-lg border border-line px-4 py-2 text-[13px] text-primary"
+        className="shrink-0 rounded-[10px] border border-line px-3.5 py-2 text-[12.5px] text-primary transition-colors duration-fast ease-standard hover:border-[#3A3A3A]"
       >
         Change password
       </button>
