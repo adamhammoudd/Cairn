@@ -61,9 +61,8 @@ export function computeSimilarityScore(eventDate: string, asOf: Date = new Date(
 //
 // Previously the model chose probability_low/probability_high itself. That was
 // always the weakest link in the engine (a language model is not a calibrated
-// estimator), and it is untenable with a small self-hosted model. So the band
-// is now computed here, in code, from the actual distribution of historical
-// analog outcomes -- the model never picks a number.
+// estimator). So the band is now computed here, in code, from the actual
+// distribution of historical analog outcomes -- the model never picks a number.
 //
 // The band is a Wilson score interval on the observed base rate. Wilson rather
 // than the textbook normal approximation because it stays inside [0,1] and

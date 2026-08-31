@@ -1,5 +1,5 @@
-// The probability engine. Runs against a SELF-HOSTED model (see lib/ai/llm.ts)
-// - Cairn calls no third-party model API.
+// The probability engine. Runs against a hosted model over an
+// OpenAI-compatible API (Groq, primary; see lib/ai/llm.ts).
 //
 // Division of labour, which is the important design decision in this file:
 //
