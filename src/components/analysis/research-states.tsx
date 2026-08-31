@@ -1,4 +1,5 @@
 import { UNAVAILABLE_MESSAGE } from "@/lib/analysis";
+import { TIER_LIMITS } from "@/lib/billing";
 
 // The Research detail column's non-populated states, transcribed from the
 // `rIsGenerating` / `rNeedsPick` / `rIsEmpty` / `rIsUnavailable` / `rIsQuota`
@@ -180,6 +181,7 @@ export function QuotaReachedPanel({
   resetLabel: string;
   onBrowseLibrary?: () => void;
 }) {
+  const isFreePlan = planLabel !== TIER_LIMITS.premium.label;
   return (
     <div className="rounded-[14px] border border-[rgba(217,164,65,0.35)] bg-[#0C0C0C] px-6.5 py-11 text-center">
       <div className="mb-4.5 inline-flex items-center gap-2 rounded-full border border-[rgba(217,164,65,0.35)] bg-[rgba(217,164,65,0.1)] px-3 py-1.25">
@@ -191,11 +193,14 @@ export function QuotaReachedPanel({
       <p className={`${BLURB} max-w-[400px]`}>
         Your {planLabel}-plan runs reset on {resetLabel}. Everything you&apos;ve already generated stays readable in the
         library — nothing is locked away.
+        {isFreePlan && ` Premium raises the monthly cap to ${TIER_LIMITS.premium.monthlyAiAnalyses} and adds full methodology detail.`}
       </p>
       <div className="flex flex-wrap justify-center gap-2">
-        <a href="/billing" className={PRIMARY_BUTTON}>
-          Upgrade for unlimited
-        </a>
+        {isFreePlan && (
+          <a href="/billing" className={PRIMARY_BUTTON}>
+            Upgrade to Premium
+          </a>
+        )}
         {onBrowseLibrary && (
           <button type="button" onClick={onBrowseLibrary} className={SECONDARY_BUTTON}>
             Browse the library
