@@ -29,7 +29,13 @@ export function ScenarioModeler({ holdings }: { holdings: ScenarioHolding[] }) {
   const totalDelta = hypotheticalTotal - currentTotal;
 
   function setOverride(symbol: string, raw: string) {
-    setOverrides((prev) => ({ ...prev, [symbol]: raw === "" ? null : Number(raw) }));
+    if (raw === "") return setOverrides((prev) => ({ ...prev, [symbol]: null }));
+    const n = Number(raw);
+    // A price-move override is a percent; clamp to a sane band so a stray
+    // large number can't blow up hypothetical value past what any format
+    // string handles.
+    const pct = Number.isFinite(n) ? Math.min(Math.max(n, -100), 10_000) : 0;
+    setOverrides((prev) => ({ ...prev, [symbol]: pct }));
   }
 
   if (holdings.length === 0) {
@@ -97,6 +103,9 @@ export function ScenarioModeler({ holdings }: { holdings: ScenarioHolding[] }) {
                 <div className="text-primary">{r.symbol}</div>
                 <div className="tabular-nums text-muted">{fmtCurrency(r.currentPrice)}</div>
                 <input
+                  type="number"
+                  min={-100}
+                  max={10000}
                   value={overrides[r.symbol] ?? ""}
                   onChange={(e) => setOverride(r.symbol, e.target.value)}
                   placeholder={globalShockPct}

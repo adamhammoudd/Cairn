@@ -26,6 +26,7 @@
     "test:intraday-window": "tsx --conditions=react-server scripts/tests/intraday-window.ts",
     "test:stripe-webhook": "tsx --conditions=react-server scripts/tests/stripe-webhook.ts",
     "test:briefing-summary": "tsx --conditions=react-server scripts/tests/briefing-summary.ts",
+    "test:billing-limits": "tsx --conditions=react-server scripts/tests/billing-limits.ts",
     "test:guard-probe": "tsx --conditions=react-server scripts/tests/scope-guard-probe.ts",
     "test:classifier": "tsx --conditions=react-server scripts/tests/scope-classifier.ts",
     "test:market-hours": "tsx --conditions=react-server scripts/tests/market-hours.ts",

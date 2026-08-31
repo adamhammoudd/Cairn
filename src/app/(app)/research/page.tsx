@@ -45,7 +45,7 @@ export default async function ResearchPage() {
       sectors={sectors}
       depth={depth}
       planLabel={TIER_LIMITS[usage.tier].label}
-      usage={{ used: usage.used, limit: usage.limit }}
+      usage={{ used: usage.used, limit: usage.limit, unlimited: usage.unlimited }}
       resetLabel={nextResetLabel()}
     />
   );

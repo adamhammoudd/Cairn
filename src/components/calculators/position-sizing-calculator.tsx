@@ -3,8 +3,9 @@
 import { useMemo, useState } from "react";
 import { computePositionSize } from "@/lib/planning";
 import { CALC_INPUT, CalcCard, CalcField, CalcStat } from "@/components/calculators/calc-primitives";
+import { clampAmount, MAX_AMOUNT_INPUT } from "@/lib/input-limits";
 import { useDisplayPrefs } from "@/components/display-prefs-provider";
-import { formatAmount } from "@/lib/display-prefs";
+import { formatAmount, formatCompactNumber } from "@/lib/display-prefs";
 
 export function PositionSizingCalculator({ defaultAccountValue }: { defaultAccountValue: number }) {
   // The seeded account value is a real portfolio figure, so it is converted
@@ -12,7 +13,8 @@ export function PositionSizingCalculator({ defaultAccountValue }: { defaultAccou
   // reader typed, which is why the outputs are labelled in the display
   // currency (formatAmount) rather than converted a second time.
   const prefs = useDisplayPrefs();
-  const fmtCurrency = (n: number) => formatAmount(n, prefs);
+  const fmtCurrency = (n: number) =>
+    Math.abs(n) >= 1e7 ? formatAmount(n, prefs, { notation: "compact", maximumFractionDigits: 2 }) : formatAmount(n, prefs);
   const [accountValue, setAccountValue] = useState(
     defaultAccountValue > 0 ? (defaultAccountValue * prefs.fxRate).toFixed(2) : "",
   );
@@ -23,10 +25,10 @@ export function PositionSizingCalculator({ defaultAccountValue }: { defaultAccou
   const result = useMemo(
     () =>
       computePositionSize({
-        accountValue: Number(accountValue) || 0,
-        riskPct: Number(riskPct) || 0,
-        entryPrice: Number(entryPrice) || 0,
-        stopPrice: Number(stopPrice) || 0,
+        accountValue: clampAmount(Number(accountValue) || 0),
+        riskPct: Math.min(Math.max(Number(riskPct) || 0, 0), 100),
+        entryPrice: clampAmount(Number(entryPrice) || 0),
+        stopPrice: clampAmount(Number(stopPrice) || 0),
       }),
     [accountValue, riskPct, entryPrice, stopPrice],
   );
@@ -41,6 +43,9 @@ export function PositionSizingCalculator({ defaultAccountValue }: { defaultAccou
       <div className="grid grid-cols-2 gap-2.75">
         <CalcField label="Account value ($)">
           <input
+            type="number"
+            min={0}
+            max={MAX_AMOUNT_INPUT}
             value={accountValue}
             onChange={(e) => setAccountValue(e.target.value)}
             placeholder="e.g. 50000"
@@ -48,10 +53,22 @@ export function PositionSizingCalculator({ defaultAccountValue }: { defaultAccou
           />
         </CalcField>
         <CalcField label="Risk per trade (%)">
-          <input value={riskPct} onChange={(e) => setRiskPct(e.target.value)} placeholder="e.g. 1" className={CALC_INPUT} />
+          <input
+            type="number"
+            min={0}
+            max={100}
+            step={0.1}
+            value={riskPct}
+            onChange={(e) => setRiskPct(e.target.value)}
+            placeholder="e.g. 1"
+            className={CALC_INPUT}
+          />
         </CalcField>
         <CalcField label="Entry price ($)">
           <input
+            type="number"
+            min={0}
+            max={MAX_AMOUNT_INPUT}
             value={entryPrice}
             onChange={(e) => setEntryPrice(e.target.value)}
             placeholder="e.g. 182.50"
@@ -60,6 +77,9 @@ export function PositionSizingCalculator({ defaultAccountValue }: { defaultAccou
         </CalcField>
         <CalcField label="Stop price ($)">
           <input
+            type="number"
+            min={0}
+            max={MAX_AMOUNT_INPUT}
             value={stopPrice}
             onChange={(e) => setStopPrice(e.target.value)}
             placeholder="e.g. 175.00"
@@ -72,7 +92,12 @@ export function PositionSizingCalculator({ defaultAccountValue }: { defaultAccou
         <div className="mt-4 rounded-xl border border-line bg-canvas p-4">
           <div className="flex items-baseline justify-between gap-3">
             <span className="text-[12px] text-muted">Share quantity</span>
-            <span className="font-serif text-[28px] tabular-nums text-primary">{result.shareQty.toLocaleString()}</span>
+            <span
+              className="font-serif text-[28px] tabular-nums text-primary"
+              title={result.shareQty.toLocaleString()}
+            >
+              {formatCompactNumber(result.shareQty)}
+            </span>
           </div>
           <div className="mt-3.5 grid grid-cols-2 gap-2.5">
             <CalcStat label="Risk amount" value={fmtCurrency(result.riskAmount)} />

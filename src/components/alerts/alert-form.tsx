@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useState } from "react";
 import { createAlert, updateAlert } from "@/lib/actions/alerts";
+import { MAX_AMOUNT_INPUT } from "@/lib/input-limits";
 import { SymbolTypeahead } from "@/components/symbol-typeahead";
 import {
   ALERT_TYPE_LABELS,
@@ -151,6 +152,7 @@ export function AlertForm({ alert, defaultChannels, onDone, onCancel }: AlertFor
                 name="value"
                 type="number"
                 step="any"
+                max={MAX_AMOUNT_INPUT}
                 required
                 value={cond.value}
                 onChange={(e) => setC("value", e.target.value)}
@@ -167,6 +169,8 @@ export function AlertForm({ alert, defaultChannels, onDone, onCancel }: AlertFor
               name="multiplier"
               type="number"
               step="0.1"
+              min="0"
+              max="10000"
               value={cond.multiplier}
               onChange={(e) => setC("multiplier", e.target.value)}
               required
@@ -182,6 +186,8 @@ export function AlertForm({ alert, defaultChannels, onDone, onCancel }: AlertFor
               <input
                 name="fastDays"
                 type="number"
+                min="1"
+                max="400"
                 value={cond.fastDays}
                 onChange={(e) => setC("fastDays", e.target.value)}
                 required
@@ -193,6 +199,8 @@ export function AlertForm({ alert, defaultChannels, onDone, onCancel }: AlertFor
               <input
                 name="slowDays"
                 type="number"
+                min="1"
+                max="400"
                 value={cond.slowDays}
                 onChange={(e) => setC("slowDays", e.target.value)}
                 required

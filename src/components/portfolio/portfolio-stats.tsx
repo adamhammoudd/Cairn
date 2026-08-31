@@ -2,7 +2,13 @@
 
 import { StatCard } from "@/components/portfolio/stat-card";
 import { useDisplayPrefs } from "@/components/display-prefs-provider";
-import { formatMoney, formatPercent, formatSignedMoney } from "@/lib/display-prefs";
+import {
+  formatCompactMoney,
+  formatCompactSignedMoney,
+  formatMoney,
+  formatPercent,
+  formatSignedMoney,
+} from "@/lib/display-prefs";
 import type { PortfolioTotals } from "@/lib/portfolio";
 
 // The four headline figures above the holdings table. Split out of the
@@ -25,12 +31,14 @@ export function PortfolioStats({
     <div className="mb-4 grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-3">
       <StatCard
         label="Total value"
-        value={formatMoney(totals.totalValue, prefs)}
+        value={formatCompactMoney(totals.totalValue, prefs)}
+        exact={formatMoney(totals.totalValue, prefs)}
         sub={`${positions} ${positions === 1 ? "position" : "positions"}`}
       />
       <StatCard
         label="Unrealised gain"
-        value={formatSignedMoney(totals.totalGain, prefs)}
+        value={formatCompactSignedMoney(totals.totalGain, prefs)}
+        exact={formatSignedMoney(totals.totalGain, prefs)}
         sub={`${formatPercent(totals.totalGainPct)} on cost`}
         tone={totals.totalGain >= 0 ? "positive" : "negative"}
         delayMs={50}
@@ -44,7 +52,8 @@ export function PortfolioStats({
       />
       <StatCard
         label="Cost basis"
-        value={formatMoney(totals.totalCostBasis, prefs)}
+        value={formatCompactMoney(totals.totalCostBasis, prefs)}
+        exact={formatMoney(totals.totalCostBasis, prefs)}
         sub={`Across ${assetTypeCount} asset ${assetTypeCount === 1 ? "type" : "types"}`}
         delayMs={150}
       />

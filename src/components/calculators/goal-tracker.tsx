@@ -4,6 +4,7 @@ import { useActionState, useTransition } from "react";
 import { createGoal, deleteGoal } from "@/lib/actions/planning";
 import type { GoalProgress } from "@/lib/planning";
 import { CALC_INPUT, CalcCard, CalcField } from "@/components/calculators/calc-primitives";
+import { MAX_AMOUNT_INPUT } from "@/lib/input-limits";
 import { useDisplayPrefs } from "@/components/display-prefs-provider";
 import { formatMoney } from "@/lib/display-prefs";
 
@@ -28,7 +29,7 @@ export function GoalTracker({ goals }: { goals: GoalProgress[] }) {
             <input name="name" placeholder="e.g. Retirement fund" className={CALC_INPUT} />
           </CalcField>
           <CalcField label="Target value ($)">
-            <input name="target_value" placeholder="e.g. 250000" className={CALC_INPUT} />
+            <input name="target_value" type="number" min={0} max={MAX_AMOUNT_INPUT} placeholder="e.g. 250000" className={CALC_INPUT} />
           </CalcField>
           <CalcField label="Target date">
             <input type="date" name="target_date" className={CALC_INPUT} />

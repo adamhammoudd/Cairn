@@ -28,6 +28,7 @@ import { runMarkdownRenderSuite } from "./markdown-render";
 import { runIntradayWindowSuite } from "./intraday-window";
 import { runStripeWebhookSuite } from "./stripe-webhook";
 import { runBriefingSummarySuite } from "./briefing-summary";
+import { runBillingLimitsSuite } from "./billing-limits";
 import { runSectorVocabularySuite } from "./sector-vocabulary";
 import { runReadErrorsSuite } from "./read-errors";
 import { runSplitFindingSuite } from "./split-finding";
@@ -74,6 +75,7 @@ async function main() {
     intradayWindowSuites,
     stripeWebhookSuites,
     briefingSummarySuites,
+    billingLimitsSuites,
     sectorVocabularySuites,
     readErrorSuites,
     splitFindingSuites,
@@ -94,6 +96,7 @@ async function main() {
     guarded("Intraday chart windowing", () => [runIntradayWindowSuite()]),
     guarded("Stripe billing wiring", () => [runStripeWebhookSuite()]),
     guarded("Daily briefing summary", () => [runBriefingSummarySuite()]),
+    guarded("Billing limits + formatting", () => [runBillingLimitsSuite()]),
     guarded("Sector vocabulary", () => [runSectorVocabularySuite()]),
     guarded("Supabase read errors", async () => [await runReadErrorsSuite()]),
     guarded("Analysis card title/description split", () => [runSplitFindingSuite()]),
@@ -117,6 +120,7 @@ async function main() {
     ...intradayWindowSuites,
     ...stripeWebhookSuites,
     ...briefingSummarySuites,
+    ...billingLimitsSuites,
     ...sectorVocabularySuites,
     ...readErrorSuites,
     ...splitFindingSuites,

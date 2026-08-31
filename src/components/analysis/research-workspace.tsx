@@ -84,7 +84,7 @@ interface ResearchWorkspaceProps {
   sectors: string[];
   depth: "top_line" | "full";
   planLabel: string;
-  usage: { used: number; limit: number };
+  usage: { used: number; limit: number; unlimited: boolean };
   /** e.g. "1 September" - when the monthly allowance rolls over. */
   resetLabel: string;
 }
@@ -114,8 +114,9 @@ export function ResearchWorkspace({
   const [error, setError] = useState<string | null>(null);
 
   const held = new Set(heldSymbols);
-  const atCap = usage.used >= usage.limit;
-  const nearCap = usage.used === usage.limit - 1;
+  // Admins have no cap; the quota chip shows the count for reference only.
+  const atCap = !usage.unlimited && usage.used >= usage.limit;
+  const nearCap = !usage.unlimited && usage.used === usage.limit - 1;
   const isFreePlan = planLabel !== TIER_LIMITS.premium.label;
 
   // Type-ahead. Tickers come from the same searchSymbols action "Add holding"
@@ -233,7 +234,7 @@ export function ResearchWorkspace({
           <div className="flex items-baseline justify-between gap-3">
             <span className={MONO_LABEL}>This month</span>
             <span className={`text-[12.5px] tabular-nums ${atCap ? "text-warning" : "text-muted"}`}>
-              {usage.used} of {usage.limit} used
+              {usage.unlimited ? `${usage.used} used · no cap` : `${usage.used} of ${usage.limit} used`}
             </span>
           </div>
           <div className="mt-2.5 h-1 overflow-hidden rounded-sm bg-[#1C1C1C]">
@@ -241,7 +242,7 @@ export function ResearchWorkspace({
               className={`h-full origin-left rounded-sm transition-[width] duration-[340ms] ease-[cubic-bezier(0.4,0,0.2,1)] ${
                 atCap ? "bg-warning" : "bg-gradient-to-r from-accent-light to-accent-dark"
               }`}
-              style={{ width: `${Math.min((usage.used / usage.limit) * 100, 100)}%` }}
+              style={{ width: usage.unlimited ? "100%" : `${Math.min((usage.used / usage.limit) * 100, 100)}%` }}
             />
           </div>
           {(atCap || nearCap) && (

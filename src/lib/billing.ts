@@ -26,16 +26,22 @@ export interface UsageSummary {
   used: number;
   remaining: number;
   periodLabel: string;
+  /** True for admins - no analysis cap; the count is shown for reference only. */
+  unlimited: boolean;
 }
 
-export function computeUsageSummary(tier: SubscriptionTier, used: number): UsageSummary {
+export function computeUsageSummary(tier: SubscriptionTier, used: number, unlimited = false): UsageSummary {
   const limit = TIER_LIMITS[tier].monthlyAiAnalyses;
   return {
     tier,
     limit,
     used,
-    remaining: Math.max(limit - used, 0),
+    // MAX_SAFE_INTEGER rather than Infinity: this crosses the RSC boundary as a
+    // prop, and JSON.stringify(Infinity) is null. Callers gate on `unlimited`,
+    // not this number, but it must still survive serialisation.
+    remaining: unlimited ? Number.MAX_SAFE_INTEGER : Math.max(limit - used, 0),
     periodLabel: new Date().toLocaleDateString(undefined, { month: "long", year: "numeric" }),
+    unlimited,
   };
 }
 
@@ -44,11 +50,19 @@ export interface ChatUsageSummary {
   limit: number | null;
   used: number;
   remaining: number | null;
+  /** True for admins, or for Premium's null daily limit. */
+  unlimited: boolean;
 }
 
-export function computeChatUsageSummary(tier: SubscriptionTier, used: number): ChatUsageSummary {
-  const limit = TIER_LIMITS[tier].dailyChatMessages;
-  return { tier, limit, used, remaining: limit === null ? null : Math.max(limit - used, 0) };
+export function computeChatUsageSummary(tier: SubscriptionTier, used: number, unlimited = false): ChatUsageSummary {
+  const limit = unlimited ? null : TIER_LIMITS[tier].dailyChatMessages;
+  return {
+    tier,
+    limit,
+    used,
+    remaining: limit === null ? null : Math.max(limit - used, 0),
+    unlimited: unlimited || limit === null,
+  };
 }
 
 // Calendar-month boundary - usage resets naturally each month with no

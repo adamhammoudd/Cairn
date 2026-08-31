@@ -22,7 +22,7 @@ export function BillingPanel({ detail }: { detail: BillingDetail }) {
   const [checkoutError, checkout] = useActionState(checkoutAction, null);
   const [portalError, portal] = useActionState(portalAction, null);
   const { usage, renewsAt, billingEnabled, hasStripeCustomer } = detail;
-  const usagePct = usage.limit > 0 ? Math.min((usage.used / usage.limit) * 100, 100) : 0;
+  const usagePct = usage.unlimited ? 100 : usage.limit > 0 ? Math.min((usage.used / usage.limit) * 100, 100) : 0;
   const actionError = [error, checkoutError, portalError].find((e) => e && e !== "saved");
 
   return (
@@ -50,21 +50,23 @@ export function BillingPanel({ detail }: { detail: BillingDetail }) {
           <div className="text-right">
             <div className="text-[11px] tracking-[0.06em] text-muted uppercase">AI analyses this month</div>
             <div className="mt-1 text-[14px] text-primary">
-              {usage.used} / {usage.limit} · {usage.periodLabel}
+              {usage.unlimited ? `${usage.used} · no cap` : `${usage.used} / ${usage.limit}`} · {usage.periodLabel}
             </div>
           </div>
         </div>
 
         <div className="mt-4 h-2 overflow-hidden rounded-full bg-active">
           <div
-            className={`h-full rounded-full ${usagePct >= 100 ? "bg-warning" : "bg-accent"}`}
+            className={`h-full rounded-full ${!usage.unlimited && usagePct >= 100 ? "bg-warning" : "bg-accent"}`}
             style={{ width: `${usagePct}%` }}
           />
         </div>
-        {usage.remaining === 0 && (
-          <p className="mt-2 text-[12px] text-warning">
-            Limit reached for this month. It resets on the 1st.
-          </p>
+        {usage.unlimited ? (
+          <p className="mt-2 text-[12px] text-muted">Admin account — no analysis cap.</p>
+        ) : (
+          usage.remaining === 0 && (
+            <p className="mt-2 text-[12px] text-warning">Limit reached for this month. It resets on the 1st.</p>
+          )
         )}
 
         {usage.tier === "premium" && hasStripeCustomer && (
