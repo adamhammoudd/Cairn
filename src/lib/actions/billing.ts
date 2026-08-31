@@ -13,7 +13,19 @@ import {
   type UsageSummary,
   type ChatUsageSummary,
 } from "@/lib/billing";
-import type { SubscriptionTier } from "@/lib/supabase/types";
+import type { Database, SubscriptionTier } from "@/lib/supabase/types";
+import type { SupabaseClient } from "@supabase/supabase-js";
+
+/**
+ * True when the user carries the admin role. Admins have no AI usage cap -
+ * analyses and chat run without a quota check (they still record usage, so the
+ * admin dashboard's own figures stay real). The role is only settable via
+ * service-role SQL, never through the app.
+ */
+async function isAdminUser(supabase: SupabaseClient<Database>, userId: string): Promise<boolean> {
+  const { data } = await supabase.from("profiles").select("role").eq("user_id", userId).maybeSingle();
+  return data?.role === "admin";
+}
 
 // The one shared gate every premium/billing-gated feature routes through
 // (CLAUDE.md: "Every premium/billing feature must route through the shared
@@ -37,16 +49,17 @@ export async function getBillingSummary(): Promise<UsageSummary> {
   } = await supabase.auth.getUser();
   if (!user) return computeUsageSummary("free", 0);
 
-  const [{ data: subscription }, { count }] = await Promise.all([
+  const [{ data: subscription }, { count }, admin] = await Promise.all([
     supabase.from("subscriptions").select("tier").eq("user_id", user.id).maybeSingle(),
     supabase
       .from("ai_usage_events")
       .select("*", { count: "exact", head: true })
       .eq("user_id", user.id)
       .gte("created_at", startOfCurrentMonthIso()),
+    isAdminUser(supabase, user.id),
   ]);
 
-  return computeUsageSummary(subscription?.tier ?? "free", count ?? 0);
+  return computeUsageSummary(subscription?.tier ?? "free", count ?? 0, admin);
 }
 
 export async function getChatUsageSummary(): Promise<ChatUsageSummary> {
@@ -56,16 +69,17 @@ export async function getChatUsageSummary(): Promise<ChatUsageSummary> {
   } = await supabase.auth.getUser();
   if (!user) return computeChatUsageSummary("free", 0);
 
-  const [{ data: subscription }, { count }] = await Promise.all([
+  const [{ data: subscription }, { count }, admin] = await Promise.all([
     supabase.from("subscriptions").select("tier").eq("user_id", user.id).maybeSingle(),
     supabase
       .from("chat_usage_events")
       .select("*", { count: "exact", head: true })
       .eq("user_id", user.id)
       .gte("created_at", startOfTodayIso()),
+    isAdminUser(supabase, user.id),
   ]);
 
-  return computeChatUsageSummary(subscription?.tier ?? "free", count ?? 0);
+  return computeChatUsageSummary(subscription?.tier ?? "free", count ?? 0, admin);
 }
 
 // There is no billing processor in this build. Until there is, upgrading is
@@ -232,14 +246,17 @@ export interface UsageGate {
 export async function checkAiUsageAllowed(userId: string): Promise<UsageGate> {
   const supabase = await createClient();
 
-  const [{ data: subscription }, { count }] = await Promise.all([
+  const [{ data: subscription }, { count }, admin] = await Promise.all([
     supabase.from("subscriptions").select("tier").eq("user_id", userId).maybeSingle(),
     supabase
       .from("ai_usage_events")
       .select("*", { count: "exact", head: true })
       .eq("user_id", userId)
       .gte("created_at", startOfCurrentMonthIso()),
+    isAdminUser(supabase, userId),
   ]);
+
+  if (admin) return { allowed: true };
 
   const summary = computeUsageSummary(subscription?.tier ?? "free", count ?? 0);
   if (summary.remaining <= 0) {
@@ -266,14 +283,17 @@ export async function recordAiUsage(userId: string): Promise<void> {
 export async function checkChatUsageAllowed(userId: string): Promise<UsageGate> {
   const supabase = await createClient();
 
-  const [{ data: subscription }, { count }] = await Promise.all([
+  const [{ data: subscription }, { count }, admin] = await Promise.all([
     supabase.from("subscriptions").select("tier").eq("user_id", userId).maybeSingle(),
     supabase
       .from("chat_usage_events")
       .select("*", { count: "exact", head: true })
       .eq("user_id", userId)
       .gte("created_at", startOfTodayIso()),
+    isAdminUser(supabase, userId),
   ]);
+
+  if (admin) return { allowed: true };
 
   const summary = computeChatUsageSummary(subscription?.tier ?? "free", count ?? 0);
   if (summary.limit !== null && (summary.remaining ?? 0) <= 0) {

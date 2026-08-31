@@ -59,9 +59,10 @@ export function BillingSettingsPanel({ detail }: { detail: BillingDetail }) {
   const config = TIER_LIMITS[usage.tier];
   const actionError = [error, checkoutError, portalError].find((e) => e && e !== "saved");
 
-  const analysesAtCap = usage.remaining <= 0;
-  const chatCapped = chat.limit !== null;
+  const analysesAtCap = !usage.unlimited && usage.remaining <= 0;
+  const chatCapped = !chat.unlimited && chat.limit !== null;
   const chatAtCap = chatCapped && (chat.remaining ?? 0) <= 0;
+  const adminNote = "Admin account — no cap. Shown for your own tracking.";
 
   return (
     <div className="flex flex-col gap-3.5">
@@ -179,13 +180,15 @@ export function BillingSettingsPanel({ detail }: { detail: BillingDetail }) {
           <div className="flex flex-col gap-4.5 p-4.25">
             <Meter
               label="AI analyses"
-              readout={`${usage.used} / ${usage.limit}`}
-              pct={(usage.used / usage.limit) * 100}
+              readout={usage.unlimited ? `${usage.used} · no cap` : `${usage.used} / ${usage.limit}`}
+              pct={usage.unlimited ? 100 : (usage.used / usage.limit) * 100}
               atCap={analysesAtCap}
               sub={
-                analysesAtCap
-                  ? "Allowance used. Resets at the start of the next period."
-                  : `${config.label}-plan allowance for the current period.`
+                usage.unlimited
+                  ? adminNote
+                  : analysesAtCap
+                    ? "Allowance used. Resets at the start of the next period."
+                    : `${config.label}-plan allowance for the current period.`
               }
             />
             <Meter
@@ -193,7 +196,13 @@ export function BillingSettingsPanel({ detail }: { detail: BillingDetail }) {
               readout={chatCapped ? `${chat.used} / ${chat.limit}` : `${chat.used} used`}
               pct={chatCapped ? (chat.used / (chat.limit ?? 1)) * 100 : 100}
               atCap={chatAtCap}
-              sub={chatCapped ? `${config.label}-plan allowance, resets at midnight.` : "Unlimited on Premium. Shown for your own tracking."}
+              sub={
+                chatCapped
+                  ? `${config.label}-plan allowance, resets at midnight.`
+                  : usage.unlimited
+                    ? adminNote
+                    : "Unlimited on Premium. Shown for your own tracking."
+              }
             />
             <div className="border-t border-[#1E1E1E] pt-3.5 text-[11px] leading-[1.55] text-dim text-pretty">
               The same meter component the Research page&rsquo;s quota indicator shows and the same count the
