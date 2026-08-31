@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition, type ReactNode } from "react";
+import Link from "next/link";
 import { deleteHolding } from "@/lib/actions/holdings";
 import { HoldingModal } from "@/components/portfolio/holding-modal";
 import { Sparkline } from "@/components/sparkline";
@@ -95,7 +96,12 @@ export function HoldingsTable({
                         {m.symbol.slice(0, 2)}
                       </div>
                       <div className="min-w-0">
-                        <div className="text-[14px] text-primary">{m.symbol}</div>
+                        <Link
+                          href={`/ticker/${encodeURIComponent(m.symbol)}`}
+                          className="text-[14px] text-primary hover:text-accent"
+                        >
+                          {m.symbol}
+                        </Link>
                         <div className="truncate text-[11.5px] text-muted capitalize">{m.asset_type}</div>
                       </div>
                     </div>
@@ -190,7 +196,12 @@ export function HoldingsTable({
                         {m.symbol.slice(0, 2)}
                       </div>
                       <div className="min-w-0">
-                        <div className="text-[13px] text-primary">{m.symbol}</div>
+                        <Link
+                          href={`/ticker/${encodeURIComponent(m.symbol)}`}
+                          className="text-[13px] text-primary hover:text-accent"
+                        >
+                          {m.symbol}
+                        </Link>
                         <div className="truncate text-[11px] text-muted capitalize">{m.asset_type}</div>
                       </div>
                     </div>
