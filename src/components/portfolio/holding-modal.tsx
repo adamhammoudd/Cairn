@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useRef, useState } from "react";
 import { addHolding, updateHolding } from "@/lib/actions/holdings";
+import { MAX_AMOUNT_INPUT } from "@/lib/input-limits";
 import { SubmitButton } from "@/components/auth/submit-button";
 import { SymbolTypeahead } from "@/components/symbol-typeahead";
 import type { Holding } from "@/lib/portfolio";
@@ -111,6 +112,7 @@ export function HoldingModal({ holding, initialSymbol, onClose }: HoldingModalPr
                 type="number"
                 step="any"
                 min="0"
+                max={MAX_AMOUNT_INPUT}
                 value={fields.quantity}
                 onChange={(e) => setField("quantity", e.target.value)}
                 required
@@ -123,6 +125,7 @@ export function HoldingModal({ holding, initialSymbol, onClose }: HoldingModalPr
                 type="number"
                 step="any"
                 min="0"
+                max={MAX_AMOUNT_INPUT}
                 value={fields.purchase_price}
                 onChange={(e) => setField("purchase_price", e.target.value)}
                 required

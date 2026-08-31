@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { Area, AreaChart, CartesianGrid, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { CALC_INPUT, CalcCard, CalcField, CalcStat } from "@/components/calculators/calc-primitives";
+import { clampAmount, MAX_AMOUNT_INPUT } from "@/lib/input-limits";
 import { project, requiredMonthlyContribution } from "@/lib/projection";
 import { useDisplayPrefs } from "@/components/display-prefs-provider";
 import { formatAmount } from "@/lib/display-prefs";
@@ -17,7 +18,10 @@ export function GrowthProjector() {
   // Amounts here are typed in by the reader, so they are labelled in the
   // display currency but never converted - see formatAmount().
   const prefs = useDisplayPrefs();
-  const money = (n: number) => formatAmount(n, prefs, { maximumFractionDigits: 0 });
+  const money = (n: number) =>
+    Math.abs(n) >= 1e7
+      ? formatAmount(n, prefs, { notation: "compact", maximumFractionDigits: 2 })
+      : formatAmount(n, prefs, { maximumFractionDigits: 0 });
   const [startingBalance, setStarting] = useState(25000);
   const [monthlyContribution, setMonthly] = useState(750);
   const [annualReturnPct, setReturn] = useState(7);
@@ -37,10 +41,15 @@ export function GrowthProjector() {
     [startingBalance, annualReturnPct, inflationPct, annualFeePct, years, target],
   );
 
-  const num = (setter: (n: number) => void) => (e: React.ChangeEvent<HTMLInputElement>) => {
-    const v = Number(e.target.value);
-    setter(Number.isFinite(v) ? v : 0);
-  };
+  // Amounts are clamped to [0, MAX_AMOUNT_INPUT]; rates/years (which can be
+  // negative or need their own ceiling) pass through unclamped.
+  const num =
+    (setter: (n: number) => void, opts: { amount?: boolean } = {}) =>
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const v = Number(e.target.value);
+      if (!Number.isFinite(v)) return setter(0);
+      setter(opts.amount ? clampAmount(v) : v);
+    };
 
   return (
     <CalcCard
@@ -49,10 +58,10 @@ export function GrowthProjector() {
     >
       <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-3">
         <CalcField label="Starting balance">
-          <input type="number" min={0} value={startingBalance} onChange={num(setStarting)} className={CALC_INPUT} />
+          <input type="number" min={0} max={MAX_AMOUNT_INPUT} value={startingBalance} onChange={num(setStarting, { amount: true })} className={CALC_INPUT} />
         </CalcField>
         <CalcField label="Monthly contribution">
-          <input type="number" min={0} value={monthlyContribution} onChange={num(setMonthly)} className={CALC_INPUT} />
+          <input type="number" min={0} max={MAX_AMOUNT_INPUT} value={monthlyContribution} onChange={num(setMonthly, { amount: true })} className={CALC_INPUT} />
         </CalcField>
         <CalcField label="Years">
           <input type="number" min={1} max={80} value={years} onChange={num(setYears)} className={CALC_INPUT} />
@@ -119,7 +128,7 @@ export function GrowthProjector() {
 
       <div className="mt-4 grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-3 border-t border-[#1E1E1E] pt-4">
         <CalcField label="Target balance">
-          <input type="number" min={0} value={target} onChange={num(setTarget)} className={CALC_INPUT} />
+          <input type="number" min={0} max={MAX_AMOUNT_INPUT} value={target} onChange={num(setTarget, { amount: true })} className={CALC_INPUT} />
         </CalcField>
         <CalcField label="Withdrawal rate %">
           <input type="number" step={0.1} min={0} value={withdrawalRate} onChange={num(setWithdrawal)} className={CALC_INPUT} />

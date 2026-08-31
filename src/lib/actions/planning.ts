@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { boundedAmount, MAX_AMOUNT_INPUT } from "@/lib/input-limits";
 import { computeGoalProgress, type GoalProgress, type ScenarioHolding } from "@/lib/planning";
 import { latestCloseBySymbol } from "@/lib/portfolio";
 
@@ -71,10 +72,13 @@ export async function createGoal(_prevState: string | null, formData: FormData) 
   if (!user) redirect("/login");
 
   const name = String(formData.get("name") ?? "").trim();
-  const targetValue = Number(formData.get("target_value"));
+  const targetValue = boundedAmount(formData.get("target_value"));
   const targetDate = String(formData.get("target_date") ?? "");
-  if (!name || !targetValue || targetValue <= 0 || !targetDate) {
+  if (!name || !targetDate) {
     return "Name, a positive target value, and a target date are required.";
+  }
+  if (targetValue === null) {
+    return `Target value must be a positive number no larger than ${MAX_AMOUNT_INPUT.toLocaleString("en-US")}.`;
   }
 
   const { error } = await supabase

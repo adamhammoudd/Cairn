@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { MAX_AMOUNT_INPUT } from "@/lib/input-limits";
 import type { Alert, AlertDelivery, AlertType } from "@/lib/alerts";
 
 export async function listAlerts(): Promise<Alert[]> {
@@ -31,17 +32,20 @@ function buildCondition(alertType: AlertType, formData: FormData): Record<string
     case "pct_change": {
       const value = Number(formData.get("value"));
       if (!Number.isFinite(value)) return "Enter a numeric threshold.";
+      if (Math.abs(value) > MAX_AMOUNT_INPUT) return `Threshold must be within ±${MAX_AMOUNT_INPUT.toLocaleString("en-US")}.`;
       return { comparator: String(formData.get("comparator") ?? "above"), value };
     }
     case "volume_spike": {
       const multiplier = Number(formData.get("multiplier"));
       if (!Number.isFinite(multiplier) || multiplier <= 0) return "Enter a volume multiplier above 0.";
+      if (multiplier > 10_000) return "Volume multiplier must be 10,000 or less.";
       return { multiplier };
     }
     case "technical_crossover": {
       const fastDays = Number(formData.get("fastDays"));
       const slowDays = Number(formData.get("slowDays"));
       if (!Number.isFinite(fastDays) || !Number.isFinite(slowDays)) return "Enter both SMA windows.";
+      if (fastDays < 1 || slowDays < 1 || fastDays > 400 || slowDays > 400) return "SMA windows must be between 1 and 400 days.";
       if (fastDays >= slowDays) return "The fast SMA window must be shorter than the slow one.";
       return { fastDays, slowDays, direction: String(formData.get("direction") ?? "above") };
     }
