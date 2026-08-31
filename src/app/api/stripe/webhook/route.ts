@@ -11,6 +11,9 @@ import { stripe, syncSubscriptionForCustomer } from "@/lib/stripe";
 //
 // Local testing:  stripe listen --forward-to localhost:3000/api/stripe/webhook
 
+// Node runtime (not edge): stripe.webhooks.constructEvent needs Node crypto,
+// and the raw request body must not be transformed before verification.
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const HANDLED = new Set<Stripe.Event.Type>([

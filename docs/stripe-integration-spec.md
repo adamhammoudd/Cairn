@@ -100,6 +100,23 @@ Only after §3 fully passes: swap `STRIPE_SECRET_KEY`, `STRIPE_PRICE_PREMIUM`,
 in live mode, redeploy. Run one real card through checkout and immediately
 cancel + refund from the dashboard to confirm the live path.
 
+## 4a. Review against the founder's requirements (2026-08-31)
+
+| Requirement | Status |
+|---|---|
+| Test mode first; live is a separate founder decision | ✅ `billingEnabled()` needs `BILLING_ENABLED=true` **and** a configured key; §4 says live is your call |
+| `STRIPE_SECRET_KEY` from env, never hardcoded, never client-side | ✅ `process.env` only; `lib/stripe.ts` has `import "server-only"` (and via `admin.ts`); `next build` would fail on a client import |
+| `STRIPE_PUBLISHABLE_KEY` | **Not used** — the integration is hosted Checkout redirect + Customer Portal, so there is no client-side Stripe.js and no publishable key needed. One less secret to manage. |
+| Webhook signature verification, non-negotiable | ✅ `constructEvent` against `STRIPE_WEBHOOK_SECRET`; missing header → 400 before the body is read; `test:stripe-webhook` proves wrong-secret / tampered / empty-sig are all rejected |
+| Fake unsigned "payment succeeded" is rejected | ✅ covered by the test + `curl -XPOST .../webhook -d '{}'` → 400 (runbook §3.5) |
+| Webhook is the source of truth for granting Premium | ✅ `syncSubscriptionForCustomer` is the **only** writer of `tier='premium'`; the success redirect only navigates |
+| `getUserPlan()` reads webhook-synced state, not the self-serve toggle | ✅ reads `subscriptions.tier`; **`setTier()` now refuses every premium write** (was: allowed one once `BILLING_ENABLED` flipped on — a free-premium hole; fixed this pass) |
+| Customer Portal wired to "Manage subscription" in Settings → Billing | ✅ `createPortalSession()` → "Manage billing" button on `/billing` and Settings → Billing when a customer exists |
+| Graceful downgrade on payment failure, no silent Premium | ✅ webhook handles `invoice.payment_failed`; `past_due` keeps Premium through Stripe's retry window (grace), then `canceled`/`unpaid`/`deleted` → free. **Tunable:** drop to free on first failure instead of honouring the grace window — say the word. |
+| Downgrade path | `setTier('free')` refuses if there's a live Stripe sub and points the user to the Portal (so Stripe is cancelled, not just the row flipped) |
+| Event replay / idempotency | `syncSubscriptionForCustomer` is idempotent (upsert; `subscription_events` only on an actual tier change). No separate processed-events table — not needed given the idempotent sync. |
+| End-to-end Test-mode verification | **Not done — needs keys.** Runbook §3 is the exact steps. |
+
 ## 5. Open questions for the founder
 
 - **Price point** — not set anywhere yet. Positioning implies a single monthly
