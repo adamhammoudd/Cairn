@@ -695,6 +695,16 @@ export interface Database {
         Update: never;
         Relationships: [];
       };
+      // Per-UTC-day outbound email counter for the temporary Gmail SMTP bridge
+      // (migration 0036, src/lib/waitlist.ts). Written only through the
+      // record_email_send() RPC; service-role only. Drop with the Gmail path
+      // once waitlist email moves to a verified Resend domain.
+      email_send_log: {
+        Row: { day: string; sent: number };
+        Insert: { day: string; sent?: number };
+        Update: { sent?: number };
+        Relationships: [];
+      };
       // Pre-launch waitlist (migration 0033). Service-role only - RLS is on
       // with no policy, so the anon/authenticated clients never see this.
       waitlist: {
@@ -942,6 +952,13 @@ export interface Database {
       waitlist_founding_slots_remaining: {
         Args: Record<string, never>;
         Returns: number;
+      };
+      // Atomically claim one send slot for today against the Gmail SMTP
+      // bridge's daily cap (migration 0036). True = under cap and counter
+      // bumped; false = cap already reached, nothing sent.
+      record_email_send: {
+        Args: { p_cap: number };
+        Returns: boolean;
       };
     };
     Enums: Record<string, never>;

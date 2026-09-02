@@ -112,32 +112,79 @@ export async function flagIfClustered(
 // ---------------------------------------------------------------------------
 // Confirmation email.
 //
-// There is no email provider wired into this project yet (see
-// supabase/README.md - alert `email` deliveries are written `unconfigured` for
-// the same reason). This sends via Resend's HTTP API when RESEND_API_KEY and
-// WAITLIST_EMAIL_FROM are set, and otherwise logs the confirmation URL to the
-// server console so local testing and pre-provider staging still work.
+// Provider precedence, highest priority first:
+//   1. Resend HTTP API   - when RESEND_API_KEY + WAITLIST_EMAIL_FROM are set.
+//                          This is the launch setup.
+//   2. Gmail SMTP bridge - when GMAIL_SMTP_USER + GMAIL_SMTP_APP_PASSWORD are
+//                          set. TEMPORARY - see the banner on sendViaGmailSmtp()
+//                          below. Only fires when Resend is NOT configured.
+//   3. Console log        - neither configured: the confirmation URL is written
+//                          to the server log so local dev and pre-provider
+//                          staging still work.
 //
-// BEFORE THIS PAGE GOES LIVE: set both env vars. Until then, no one can
-// confirm, so the founding-50 list cannot be finalised.
+// Resend always wins when configured, so setting the real Resend vars later
+// retires the Gmail bridge automatically, with no code change.
+//
+// BEFORE THIS PAGE GOES LIVE: configure one of the two real providers. Until
+// then no one can confirm and the founding-50 list cannot be finalised.
 // ---------------------------------------------------------------------------
 export interface EmailResult {
   sent: boolean;
+  /** Which path handled (or would have handled) this message. */
+  via: "resend" | "gmail" | "none";
   reason?: string;
 }
 
+export interface ConfirmationMessage {
+  subject: string;
+  text: string;
+  html: string;
+}
+
+const EMAIL_SUBJECT = "Confirm your spot on the Cairn waitlist";
+
+/**
+ * Resolves which sender handles a confirmation email, given the environment.
+ * Pure and exported so the precedence (Resend beats the Gmail bridge beats
+ * console) is unit-testable without a live send.
+ */
+export function selectEmailProvider(
+  env: Record<string, string | undefined> = process.env,
+): "resend" | "gmail" | "none" {
+  if (env.RESEND_API_KEY && env.WAITLIST_EMAIL_FROM) return "resend";
+  if (env.GMAIL_SMTP_USER && env.GMAIL_SMTP_APP_PASSWORD) return "gmail";
+  return "none";
+}
+
 export async function sendConfirmationEmail(to: string, confirmUrl: string): Promise<EmailResult> {
-  const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.WAITLIST_EMAIL_FROM;
+  const message = buildConfirmationEmail(confirmUrl);
 
-  if (!apiKey || !from) {
-    console.warn(
-      `[cairn] waitlist: no email provider configured (set RESEND_API_KEY + WAITLIST_EMAIL_FROM). ` +
-        `Confirmation link for ${to}: ${confirmUrl}`,
-    );
-    return { sent: false, reason: "no-provider" };
+  switch (selectEmailProvider()) {
+    case "resend":
+      return sendViaResend(
+        process.env.RESEND_API_KEY!,
+        process.env.WAITLIST_EMAIL_FROM!,
+        to,
+        message,
+      );
+    case "gmail":
+      return sendViaGmailSmtp(
+        process.env.GMAIL_SMTP_USER!,
+        process.env.GMAIL_SMTP_APP_PASSWORD!,
+        to,
+        message,
+      );
+    default:
+      console.warn(
+        `[cairn] waitlist: no email provider configured (set RESEND_API_KEY + ` +
+          `WAITLIST_EMAIL_FROM for launch, or the temporary GMAIL_SMTP_* pair as a ` +
+          `bridge). Confirmation link for ${to}: ${confirmUrl}`,
+      );
+      return { sent: false, via: "none", reason: "no-provider" };
   }
+}
 
+export function buildConfirmationEmail(confirmUrl: string): ConfirmationMessage {
   const text = [
     "Confirm your spot on the Cairn waitlist.",
     "",
@@ -148,8 +195,92 @@ export async function sendConfirmationEmail(to: string, confirmUrl: string): Pro
     confirmUrl,
     "",
     "If you didn't sign up, ignore this email and nothing happens.",
+    "Cairn is informational only - not a broker and not investment advice.",
   ].join("\n");
 
+  return { subject: EMAIL_SUBJECT, text, html: confirmationEmailHtml(confirmUrl) };
+}
+
+/**
+ * Light-background transactional template. Deliberately NOT a copy of Cairn's
+ * dark product UI - a dark email renders unpredictably across clients and trips
+ * spam heuristics. Table layout, inline styles, hosted PNG logo, one CTA, plain
+ * copy. The button uses the exact brand accent (#2FC685) with near-black text
+ * so it stays on-brand AND clears WCAG AA contrast (white-on-green would not).
+ */
+function confirmationEmailHtml(confirmUrl: string): string {
+  const origin = safeOrigin(confirmUrl);
+  const logo = `${origin}/cairn-lockup.png`;
+  return `<!doctype html>
+<html lang="en">
+<body style="margin:0;padding:0;background:#f4f4f5;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;">
+    <tr>
+      <td align="center" style="padding:32px 16px;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:480px;background:#ffffff;border:1px solid #e4e4e7;border-radius:12px;">
+          <tr>
+            <td style="padding:32px 32px 0;">
+              <img src="${logo}" alt="Cairn" width="148" height="50" style="display:block;border:0;outline:none;text-decoration:none;">
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:24px 32px 0;font-family:Georgia,'Times New Roman',serif;font-size:22px;line-height:1.3;color:#18181b;">
+              Confirm your spot on the waitlist
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:16px 32px 0;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.6;color:#3f3f46;">
+              Cairn is a pre-launch, portfolio-aware market research assistant. The app isn&rsquo;t open yet &mdash; confirming this address holds your place in line, and your founding-member status if you&rsquo;re among the first 50 to confirm.
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:24px 32px 0;">
+              <table role="presentation" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="border-radius:8px;background:#2FC685;">
+                    <a href="${confirmUrl}" style="display:inline-block;padding:12px 24px;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;font-weight:600;color:#0A0A0A;text-decoration:none;border-radius:8px;">
+                      Confirm my email
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:20px 32px 0;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:12px;line-height:1.6;color:#71717a;">
+              Or paste this link into your browser:<br>
+              <a href="${confirmUrl}" style="color:#18181b;text-decoration:underline;word-break:break-all;">${confirmUrl}</a>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:24px 32px 32px;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:12px;line-height:1.6;color:#a1a1aa;">
+              If you didn&rsquo;t sign up for Cairn, ignore this email and nothing happens.<br>
+              Cairn is informational only &mdash; not a broker and not investment advice.
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+}
+
+/** Origin of a URL we built ourselves; falls back to the deployed site. */
+function safeOrigin(url: string): string {
+  try {
+    return new URL(url).origin;
+  } catch {
+    return process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ?? "";
+  }
+}
+
+async function sendViaResend(
+  apiKey: string,
+  from: string,
+  to: string,
+  message: ConfirmationMessage,
+): Promise<EmailResult> {
   try {
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -160,18 +291,112 @@ export async function sendConfirmationEmail(to: string, confirmUrl: string): Pro
       body: JSON.stringify({
         from,
         to,
-        subject: "Confirm your spot on the Cairn waitlist",
-        text,
+        subject: message.subject,
+        text: message.text,
+        html: message.html,
       }),
     });
     if (!res.ok) {
       console.error(`[cairn] waitlist email send failed: ${res.status} ${await res.text()}`);
-      return { sent: false, reason: `provider-${res.status}` };
+      return { sent: false, via: "resend", reason: `provider-${res.status}` };
     }
-    return { sent: true };
+    return { sent: true, via: "resend" };
   } catch (err) {
     console.error("[cairn] waitlist email send threw", err);
-    return { sent: false, reason: "network" };
+    return { sent: false, via: "resend", reason: "network" };
+  }
+}
+
+// ===========================================================================
+// TEMPORARY - Gmail SMTP bridge. DELETE this block (and the nodemailer
+// dependency, the GMAIL_SMTP_* env vars, and migration 0036's table) once a
+// real domain is verified on Resend and WAITLIST_EMAIL_FROM points at it.
+//
+// What it does: sends waitlist confirmation email through a personal Gmail
+// account over authenticated SMTP (smtp.gmail.com:587, STARTTLS), using a
+// 16-character Google "app password" in GMAIL_SMTP_APP_PASSWORD - never the
+// real account password.
+//
+// Why it is a BRIDGE and not the launch setup:
+//   - Volume. A normal Gmail account is capped at ~500 messages/day; exceed it
+//     and Google can suspend outbound sending on the account for up to 24h.
+//     reserveGmailSlot() stops at GMAIL_SMTP_DAILY_CAP (default 400) to keep
+//     headroom - it is a ceiling for a pre-launch trickle, nothing more.
+//   - Deliverability. Mail leaves as the gmail.com address, not a Cairn domain.
+//     There is no SPF / DKIM / DMARC alignment for Cairn, so a meaningful share
+//     of these land in spam or are rejected outright by strict receivers.
+//   - Reputation. Bursts of transactional mail from a consumer Gmail account is
+//     precisely the pattern Google's abuse heuristics flag.
+//
+// The real fix is a verified sending domain on Resend (RESEND_API_KEY +
+// WAITLIST_EMAIL_FROM). The instant those are set, sendConfirmationEmail()
+// routes to Resend and never calls this function.
+// ===========================================================================
+
+const GMAIL_SMTP_DAILY_CAP = Number(process.env.GMAIL_SMTP_DAILY_CAP) || 400;
+
+async function sendViaGmailSmtp(
+  user: string,
+  appPassword: string,
+  to: string,
+  message: ConfirmationMessage,
+): Promise<EmailResult> {
+  // Claimed BEFORE the send. If the send then throws, the slot is still spent -
+  // deliberately conservative, since Gmail counts attempts too.
+  const slot = await reserveGmailSlot();
+  if (!slot.ok) {
+    console.error(
+      `[cairn] waitlist: Gmail SMTP bridge is at or over its daily cap ` +
+        `(${GMAIL_SMTP_DAILY_CAP}). Confirmation email for ${to} was NOT sent. ` +
+        `Configure Resend (RESEND_API_KEY + WAITLIST_EMAIL_FROM) to remove this ceiling.`,
+    );
+    return { sent: false, via: "gmail", reason: "daily-cap" };
+  }
+
+  try {
+    // Dynamic import: nodemailer is only pulled in on the bridge path, and this
+    // keeps it out of any bundle that never sends mail.
+    const nodemailer = await import("nodemailer");
+    const transport = nodemailer.createTransport({
+      host: "smtp.gmail.com",
+      port: 587,
+      secure: false, // STARTTLS is negotiated on 587
+      auth: { user, pass: appPassword },
+    });
+    await transport.sendMail({
+      from: `Cairn <${user}>`,
+      to,
+      subject: message.subject,
+      text: message.text,
+      html: message.html,
+    });
+    return { sent: true, via: "gmail" };
+  } catch (err) {
+    console.error("[cairn] waitlist Gmail SMTP send threw", err);
+    return { sent: false, via: "gmail", reason: "smtp-error" };
+  }
+}
+
+/**
+ * Atomically claims one send against today's Gmail cap (migration 0036).
+ *
+ * Fails CLOSED, unlike checkSignupRate() above: if we cannot read the counter
+ * we assume we are near the cap and skip the send rather than risk the account.
+ * The signup row is already written by this point, so the cost of a miss is a
+ * delayed confirmation the user can re-request - not a lost signup.
+ */
+async function reserveGmailSlot(): Promise<{ ok: boolean }> {
+  try {
+    const admin = createAdminClient();
+    const { data, error } = await admin.rpc("record_email_send", { p_cap: GMAIL_SMTP_DAILY_CAP });
+    if (error) {
+      console.error("[cairn] waitlist: could not read Gmail send counter", error);
+      return { ok: false };
+    }
+    return { ok: data === true };
+  } catch (err) {
+    console.error("[cairn] waitlist: Gmail send counter threw", err);
+    return { ok: false };
   }
 }
 
