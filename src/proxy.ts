@@ -31,10 +31,19 @@ export async function proxy(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
 
-  // Define routes that public/unauthenticated users are allowed to see
-  const isPublicRoute = pathname === "/waitlist" || pathname.startsWith("/api");
+  // 1. Explicitly list all routes accessible without an account
+  const publicRoutes = [
+    "/waitlist",
+    "/privacy",
+    "/terms",
+    "/accessibility",
+  ];
 
-  // If there's no logged-in user and they try to visit any route other than /waitlist, redirect them
+  // 2. Check if current path matches an allowed public page or API route
+  const isPublicRoute =
+    publicRoutes.includes(pathname) || pathname.startsWith("/api");
+
+  // 3. If unauthenticated and NOT on a public route (e.g. typing /login or /), redirect to /waitlist
   if (!user && !isPublicRoute) {
     return NextResponse.redirect(new URL("/waitlist", request.url));
   }
