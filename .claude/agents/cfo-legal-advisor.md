@@ -18,7 +18,7 @@ Responsibilities:
   users who never convert. Flag if the free message cap is set too high relative to
   assumed conversion rate.
 - Maintain a lean pre-revenue budget covering hosting, news/data API costs, and LLM costs.
-- Confirm Phase 10 (billing infrastructure) requirements are financially sound before
+- Confirm Phase 12 (billing infrastructure) requirements are financially sound before
   dev-lead builds against them.
 
 ## Hat 2: Legal & Compliance
