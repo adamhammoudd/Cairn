@@ -46,22 +46,17 @@ export interface TickerUnavailable {
   detail: string;
 }
 
-// Asset type is read off the ingested price history rather than a hardcoded
-// list, same as the AI engine's crypto detection in lib/ai/generate.ts - a
-// newly-ingested symbol of any type routes correctly the moment its price
-// history lands, with no second place to update.
-export async function getTickerDetail(symbolRaw: string): Promise<TickerData | null> {
-  const result = await loadTicker(symbolRaw);
-  return "reason" in result ? null : result;
-}
-
 /**
- * Same as getTickerDetail, but distinguishes "we have never heard of this" from
- * "the provider is rate-limiting us right now" so the page can say which.
+ * Distinguishes "we have never heard of this symbol" from "the provider is
+ * rate-limiting us right now" so the page can say which.
  *
  * A symbol with no stored history is fetched from the provider on the spot
  * (see lib/market-data/ingest.ts) - that is what makes the universe on-demand
- * rather than a config list.
+ * rather than a config list. Asset type is read off the ingested price
+ * history rather than a hardcoded list, same as the AI engine's crypto
+ * detection in lib/ai/generate.ts - a newly-ingested symbol of any type
+ * routes correctly the moment its price history lands, with no second place
+ * to update.
  */
 export async function loadTicker(symbolRaw: string): Promise<TickerData | TickerUnavailable> {
   const symbol = symbolRaw.trim().toUpperCase();

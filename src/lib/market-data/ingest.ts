@@ -465,9 +465,3 @@ export async function ensureSymbolIngested(symbolRaw: string, options: EnsureOpt
     inFlight.delete(symbol);
   }
 }
-
-/** True when a symbol already has price history, without touching the provider. */
-export async function isSymbolIngested(symbol: string): Promise<boolean> {
-  const row = await readDirectory(symbol.toUpperCase());
-  return row?.status === "available" && row.bars > 0;
-}

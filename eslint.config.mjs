@@ -24,6 +24,9 @@ const eslintConfig = defineConfig([
     // Generated artefacts, not authored source.
     "graphify-out/**",
     "supabase/functions/**",
+    // Sibling tooling/skill checkouts some contributors keep in-tree (see
+    // .gitignore and tsconfig.json's exclude) - not part of the app.
+    "external/**",
   ]),
 ]);
 

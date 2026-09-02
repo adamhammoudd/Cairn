@@ -85,16 +85,3 @@ export function validateText(
   if (length > max) return { ok: false, value, error: `${field} must be ${max} characters or fewer.` };
   return { ok: true, value };
 }
-
-/** Rejects NaN/Infinity as well as out-of-range values, which Number() alone does not. */
-export function validateNumber(
-  raw: unknown,
-  field: string,
-  { min, max }: { min?: number; max?: number } = {},
-): { ok: boolean; value: number; error?: string } {
-  const value = Number(raw);
-  if (!Number.isFinite(value)) return { ok: false, value: 0, error: `${field} must be a number.` };
-  if (min !== undefined && value < min) return { ok: false, value, error: `${field} must be at least ${min}.` };
-  if (max !== undefined && value > max) return { ok: false, value, error: `${field} must be at most ${max}.` };
-  return { ok: true, value };
-}
