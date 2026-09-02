@@ -29,16 +29,23 @@ export async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user && request.nextUrl.pathname === "/") {
+  const pathname = request.nextUrl.pathname;
+
+  // Define routes that public/unauthenticated users are allowed to see
+  const isPublicRoute = pathname === "/waitlist" || pathname.startsWith("/api");
+
+  // If there's no logged-in user and they try to visit any route other than /waitlist, redirect them
+  if (!user && !isPublicRoute) {
     return NextResponse.redirect(new URL("/waitlist", request.url));
   }
 
   return response;
 }
 
-// Default export compatibility fix
 export default proxy;
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+  ],
 };
