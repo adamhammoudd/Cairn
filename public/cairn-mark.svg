@@ -3,8 +3,11 @@
     The Cairn mark: three stacked stones that also read as an ascending bar
     chart. Geometry mirrors the <Logo> component (src/components/logo.tsx),
     which is the source of truth - keep the two in sync (three rounded rects).
-    scripts/gen-icons.mjs rasterises THIS file into the favicon / app-icon set,
-    and public/site.webmanifest references it directly.
+    The three stones sit on equal 3-unit gaps with equal 10-unit top/bottom
+    padding, so they read as evenly stacked at every size.
+    scripts/gen-icons.mjs rasterises THIS file into the favicon / app-icon set
+    (plus the cairn-mark.png / cairn-lockup.png exports), and
+    public/site.webmanifest references it directly.
   -->
   <defs>
     <linearGradient id="cairn-stone" x1="0" y1="0" x2="1" y2="1">
@@ -14,5 +17,5 @@
   </defs>
   <rect x="30" y="10" width="40" height="21" rx="10.5" fill="url(#cairn-stone)" />
   <rect x="21" y="34" width="58" height="25" rx="12.5" fill="url(#cairn-stone)" />
-  <rect x="12" y="60" width="76" height="28" rx="14" fill="url(#cairn-stone)" />
+  <rect x="12" y="62" width="76" height="28" rx="14" fill="url(#cairn-stone)" />
 </svg>
