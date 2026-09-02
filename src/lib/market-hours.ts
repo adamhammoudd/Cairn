@@ -11,8 +11,8 @@
 // UTC, so this does not need a twice-yearly correction.
 //
 // Holidays are the NYSE/Nasdaq full-day closures. They need extending each
-// year; `marketHolidaysCoverUntil()` exists so a caller can tell when the list
-// has run out instead of silently reporting "open" on Thanksgiving 2028.
+// year, or the app silently reports "open" on a holiday past the last
+// modelled year.
 
 export type MarketPhase = "open" | "pre" | "after" | "closed" | "holiday" | "weekend";
 
@@ -37,10 +37,6 @@ const HOLIDAYS_2027 = [
 ];
 
 const HOLIDAYS = new Set([...HOLIDAYS_2026, ...HOLIDAYS_2027]);
-
-export function marketHolidaysCoverUntil(): string {
-  return "2027-12-31";
-}
 
 interface ZonedParts {
   year: number;

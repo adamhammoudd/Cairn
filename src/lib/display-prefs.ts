@@ -181,12 +181,3 @@ export function absoluteChangeFrom(price: number | null, changePct: number | nul
   if (denominator === 0) return null;
   return price - price / (denominator / 100);
 }
-
-/**
- * Density class for a table/list row. One helper rather than a conditional at
- * every call site, so "compact" means the same thing on Holdings, Markets,
- * Watchlists and the Screener.
- */
-export function rowDensityClass(compact: boolean): string {
-  return compact ? "py-2" : "";
-}

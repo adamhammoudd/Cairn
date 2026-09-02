@@ -124,10 +124,3 @@ export function normalizeSectorsForMatching(values: (string | null | undefined)[
   }
   return out;
 }
-
-/** Render a stored slug (or free text) back to a display label. */
-export function sectorLabel(value: string): string {
-  const slug = normalizeSector(value);
-  if (slug) return SECTOR_LABEL[slug] ?? value;
-  return value;
-}
