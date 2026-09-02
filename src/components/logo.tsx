@@ -7,9 +7,11 @@ interface LogoProps {
 // The Cairn mark: three stacked stones that also read as an ascending bar
 // chart. The geometry here is the source of truth - `public/cairn-mark.svg`
 // mirrors it exactly (kept trivial: three rounded rects) and is what
-// `scripts/gen-icons.mjs` rasterises into the favicon / app-icon set. Rendered
-// inline (not an <img>) so it scales perfectly and the accent glow can ride on
-// a CSS filter.
+// `scripts/gen-icons.mjs` rasterises into the favicon / app-icon set (plus the
+// cairn-mark.png / cairn-lockup.png exports). The stones sit on equal 3-unit
+// gaps with equal 10-unit top/bottom padding, so they read as evenly stacked.
+// Rendered inline (not an <img>) so it scales perfectly and the accent glow can
+// ride on a CSS filter.
 function CairnMark({ size }: { size: number }) {
   // Suffixed by size so the common case (two Logos of different sizes on one
   // page) doesn't emit duplicate ids. Same-size repeats reference an identical
@@ -32,7 +34,7 @@ function CairnMark({ size }: { size: number }) {
       </defs>
       <rect x="30" y="10" width="40" height="21" rx="10.5" fill={`url(#${gradientId})`} />
       <rect x="21" y="34" width="58" height="25" rx="12.5" fill={`url(#${gradientId})`} />
-      <rect x="12" y="60" width="76" height="28" rx="14" fill={`url(#${gradientId})`} />
+      <rect x="12" y="62" width="76" height="28" rx="14" fill={`url(#${gradientId})`} />
     </svg>
   );
 }
