@@ -7,7 +7,7 @@
 //
 // Run: npm run test:intraday-window
 
-import { RANGES, sessionWindow, windowBars } from "@/lib/intraday-window";
+import { closeAtOrBefore, composePortfolioSeries, RANGES, sessionWindow, windowBars } from "@/lib/intraday-window";
 import type { SuiteResult, TestCase } from "./report";
 
 function check(name: string, ok: boolean, detail: string): TestCase {
@@ -66,6 +66,93 @@ export function runIntradayWindowSuite(): SuiteResult {
   const withFuture = [...fridaySession, { ts: new Date(sundayNow + DAY).toISOString(), close: 999 }];
   const clipped = windowBars(withFuture, "1D", RANGES["1D"].spanMs, sundayNow);
   cases.push(check("a bar dated in the future is dropped", !clipped.points.some((p) => p.value === 999), `${clipped.points.length} points`));
+
+  // ---- closeAtOrBefore ----
+  const priceRows = [
+    { ts: 10, close: 100 },
+    { ts: 20, close: 200 },
+    { ts: 30, close: 300 },
+  ];
+  cases.push(check("closeAtOrBefore hits the exact bar", closeAtOrBefore(priceRows, 20) === 200, "200"));
+  cases.push(check("closeAtOrBefore falls back to the prior bar", closeAtOrBefore(priceRows, 25) === 200, "200"));
+  cases.push(check("closeAtOrBefore before the first bar -> null", closeAtOrBefore(priceRows, 5) === null, "null"));
+  cases.push(check("closeAtOrBefore after the last bar -> last close", closeAtOrBefore(priceRows, 999) === 300, "300"));
+
+  // ---- composePortfolioSeries ----
+  // A two-holding portfolio: MSFT ($400, 10 sh) trades only on the last two
+  // grid points; BTC ($100k, 0.01) trades on every point. Before MSFT's first
+  // bar it must carry its seed (yesterday's $390 close), not drop to zero.
+  const grid = [0, 1, 2, 3];
+  const lots = [
+    { symbol: "MSFT", quantity: 10, purchaseMs: -100 },
+    { symbol: "BTC", quantity: 0.01, purchaseMs: -100 },
+  ];
+  const windowed = new Map<string, { ts: number; close: number }[]>([
+    ["MSFT", [
+      { ts: 2, close: 400 },
+      { ts: 3, close: 410 },
+    ]],
+    ["BTC", [
+      { ts: 0, close: 100_000 },
+      { ts: 1, close: 100_000 },
+      { ts: 2, close: 100_000 },
+      { ts: 3, close: 100_000 },
+    ]],
+  ]);
+  const seed = new Map<string, number>([["MSFT", 390], ["BTC", 99_000]]);
+  const series = composePortfolioSeries(grid, lots, windowed, seed);
+  cases.push(
+    check(
+      "composePortfolioSeries carries a not-yet-traded holding at its seed",
+      series[0].value === 390 * 10 + 100_000 * 0.01,
+      `${series[0].value}`,
+    ),
+  );
+  cases.push(
+    check(
+      "composePortfolioSeries uses the live bar once the holding trades",
+      series[3].value === 410 * 10 + 100_000 * 0.01,
+      `${series[3].value}`,
+    ),
+  );
+  cases.push(
+    check(
+      "composePortfolioSeries never dips below one holding's value",
+      series.every((p) => p.value >= 100_000 * 0.01),
+      JSON.stringify(series.map((p) => p.value)),
+    ),
+  );
+
+  // A holding the provider returned nothing for still counts, flat at its
+  // daily close - the chart is the whole portfolio, not just what traded.
+  const noBars = composePortfolioSeries(
+    [0, 1],
+    [{ symbol: "ISRG", quantity: 2, purchaseMs: -100 }],
+    new Map(),
+    new Map([["ISRG", 500]]),
+  );
+  cases.push(
+    check(
+      "composePortfolioSeries prices a holding with no intraday bars off its seed",
+      noBars.length === 2 && noBars.every((p) => p.value === 1000),
+      JSON.stringify(noBars.map((p) => p.value)),
+    ),
+  );
+
+  // A lot bought mid-window contributes only from its purchase time on.
+  const midBuy = composePortfolioSeries(
+    [0, 10, 20],
+    [{ symbol: "NVDA", quantity: 1, purchaseMs: 10 }],
+    new Map([["NVDA", [{ ts: 0, close: 100 }, { ts: 20, close: 120 }]]]),
+    new Map([["NVDA", 90]]),
+  );
+  cases.push(
+    check(
+      "composePortfolioSeries excludes a lot before its purchase time",
+      midBuy[0].value === 0 && midBuy[1].value === 100 && midBuy[2].value === 120,
+      JSON.stringify(midBuy.map((p) => p.value)),
+    ),
+  );
 
   // ---- sessionWindow: shared multi-symbol anchor ----
   const sw = sessionWindow([fridayClose - DAY, fridayClose], "1W", RANGES["1W"].spanMs, sundayNow);

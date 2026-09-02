@@ -69,6 +69,58 @@ export function windowBars(
   };
 }
 
+/** Last close at or before `ts` (binary search - `rows` must be ascending by ts). */
+export function closeAtOrBefore(rows: { ts: number; close: number }[], ts: number): number | null {
+  let lo = 0;
+  let hi = rows.length - 1;
+  let hit = -1;
+  while (lo <= hi) {
+    const mid = (lo + hi) >> 1;
+    if (rows[mid].ts <= ts) {
+      hit = mid;
+      lo = mid + 1;
+    } else {
+      hi = mid - 1;
+    }
+  }
+  return hit === -1 ? null : rows[hit].close;
+}
+
+export interface HoldingLot {
+  symbol: string;
+  quantity: number;
+  /** Epoch ms; the lot contributes only at grid points at or after this. */
+  purchaseMs: number;
+}
+
+/**
+ * Portfolio value on a shared intraday grid. Every lot contributes at every
+ * grid point at or after its purchase: the last of its in-window bars, or -
+ * before its first in-window bar - the price carried from before the window
+ * opened (`seed`). A lot whose symbol has neither an in-window series nor a
+ * seed contributes nothing rather than dropping the whole point to zero, so a
+ * chart of five holdings still reads as five holdings when one has no intraday
+ * data. Points are not filtered here; the caller drops leading zeros.
+ */
+export function composePortfolioSeries(
+  grid: number[],
+  lots: HoldingLot[],
+  windowed: Map<string, { ts: number; close: number }[]>,
+  seed: Map<string, number>,
+): TimelinePoint[] {
+  return grid.map((ts) => {
+    let value = 0;
+    for (const lot of lots) {
+      if (lot.purchaseMs > ts) continue;
+      const rows = windowed.get(lot.symbol);
+      const inWindow = rows && rows.length > 0 ? closeAtOrBefore(rows, ts) : null;
+      const price = inWindow ?? seed.get(lot.symbol) ?? null;
+      if (price != null) value += price * lot.quantity;
+    }
+    return { date: new Date(ts).toISOString(), value };
+  });
+}
+
 /**
  * The shared window for a multi-symbol (portfolio) series: one anchor across
  * every symbol's bars so they line up on the same grid.

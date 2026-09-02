@@ -73,6 +73,12 @@ async function lastBars(symbols: string[], perSymbol = 2): Promise<Map<string, B
 
 const num = (v: number | null | undefined) => (v == null ? null : Number(v));
 
+// The live-quote providers need to know a coin is a coin: `fetchQuote("BTC")`
+// against the bare ticker returns Grayscale Bitcoin Mini Trust ETF (~$34), not
+// Bitcoin. Only the crypto/non-crypto distinction matters to the quote path.
+const cryptoHint = (assetType: string | null | undefined): "crypto" | undefined =>
+  assetType === "crypto" ? "crypto" : undefined;
+
 function toLastClosePrice(symbol: string, rows: Bar[]): CurrentPrice {
   // numeric columns arrive as strings over PostgREST; coerce before any math.
   const latest = rows[0];
@@ -116,8 +122,14 @@ export async function cryptoRolling24hFor(symbols: string[]): Promise<Map<string
 }
 
 export async function getCurrentPrice(symbol: string): Promise<CurrentPrice> {
+  // Read the stored bars first - they are the fallback either way, and their
+  // asset_type is what tells the live-quote path to ask for `BTC/USD` rather
+  // than the bare `BTC` ticker (a different, ~$34 listing).
+  const rows = (await lastBars([symbol])).get(symbol) ?? [];
+  const hint = cryptoHint(rows[0]?.asset_type);
+
   if (isMarketDataProviderConfigured()) {
-    const quote = await fetchQuote(symbol);
+    const quote = await fetchQuote(symbol, hint);
     if (quote && quote.price !== null) {
       return {
         symbol: quote.symbol,
@@ -135,7 +147,6 @@ export async function getCurrentPrice(symbol: string): Promise<CurrentPrice> {
     }
   }
 
-  const rows = (await lastBars([symbol])).get(symbol) ?? [];
   const base = toLastClosePrice(symbol, rows);
   if (rows[0]?.asset_type !== "crypto") return base;
 
@@ -163,7 +174,7 @@ export async function getLatestCloses(symbols: string[]): Promise<Map<string, { 
   for (const symbol of symbols) {
     const rows = bySymbol.get(symbol) ?? [];
     if (tryLive) {
-      const quote = await fetchQuote(symbol);
+      const quote = await fetchQuote(symbol, cryptoHint(rows[0]?.asset_type));
       if (quote && quote.price !== null) {
         result.set(symbol, { latest: quote.price, prev: num(rows[0]?.close) });
         continue;

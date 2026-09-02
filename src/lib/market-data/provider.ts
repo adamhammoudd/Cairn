@@ -54,11 +54,26 @@ export function isMarketDataProviderConfigured(): boolean {
   return true;
 }
 
-export async function fetchQuote(symbol: string): Promise<QuoteResult | null> {
+/**
+ * Twelve Data's ticker for a symbol. Coins quote as a `BASE/USD` pair; the bare
+ * ticker is a different, real listing - `BTC` resolves to "Grayscale Bitcoin
+ * Mini Trust ETF" on NYSE at ~$34, not Bitcoin at ~$77k. This is the Twelve
+ * Data counterpart of `yahooSymbol`, which appends `-USD` for the same reason.
+ */
+function twelveDataSymbol(symbol: string, assetType?: "equity" | "etf" | "crypto"): string {
+  if (assetType !== "crypto") return symbol;
+  if (symbol.includes("/")) return symbol;
+  return `${symbol.replace(/-USD$/i, "")}/USD`;
+}
+
+export async function fetchQuote(
+  symbol: string,
+  assetType?: "equity" | "etf" | "crypto",
+): Promise<QuoteResult | null> {
   const apiKey = process.env.TWELVE_DATA_API_KEY;
   if (!apiKey) return null;
 
-  const url = `${TWELVE_DATA_BASE}/quote?symbol=${encodeURIComponent(symbol)}&apikey=${apiKey}`;
+  const url = `${TWELVE_DATA_BASE}/quote?symbol=${encodeURIComponent(twelveDataSymbol(symbol, assetType))}&apikey=${apiKey}`;
   const res = await fetch(url, { next: { revalidate: 60 } });
   if (!res.ok) return null;
 
