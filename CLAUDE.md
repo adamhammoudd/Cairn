@@ -34,8 +34,8 @@ chief-of-staff sign-off. Current revision-pass feedback is tracked separately - 
 founder for the latest status if unsure what's already shipped.
 
 ## Departments & agents
-- chief-of-staff - cross-department sequencing, roadmap integrity, escalation point
-- dev-lead (+ bug-fixer sub-agent) - engineering, PR review
-- design-lead - brand/UI consistency across product and marketing
-- cfo-legal-advisor - subscription economics + legal/compliance drafting (combined role)
-- cmo-strategist - positioning, launch content, conversion messaging
+- chief-of-staff — cross-department sequencing, escalation point
+- dev-lead (Engineering Manager) — bug-finder, bug-fixer, feature-builder, codebase-organizer
+- design-lead — brand/UI consistency
+- cfo-legal-advisor — economics + legal drafting
+- cmo-strategist (Marketing Manager) — social-media-manager, creative-designer
