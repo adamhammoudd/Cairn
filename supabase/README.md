@@ -28,6 +28,12 @@ Run against your project's SQL editor (or `psql`), in order:
    `.env.local.example`) or no one can confirm and the founding-50 list can't be
    finalised.
 
+   `0036_email_send_log.sql` adds `email_send_log` and `record_email_send()` -
+   a per-UTC-day counter for the **temporary** Gmail SMTP bridge in
+   `src/lib/waitlist.ts` (used only when the `RESEND_*` vars above are unset and
+   the `GMAIL_SMTP_*` vars are). Service-role only. The whole migration is safe
+   to drop once waitlist email moves to a verified Resend domain.
+
    `0031_settings_page.sql` is the one migration that also **re-schedules a
    cron job**: `generate-daily-briefings` moves from `0 12 * * 1-5` (12:00 UTC
    for everybody) to `0 * * * *`, because the delivery time is now a per-user

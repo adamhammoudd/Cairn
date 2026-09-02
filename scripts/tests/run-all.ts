@@ -33,6 +33,7 @@ import { runSectorVocabularySuite } from "./sector-vocabulary";
 import { runReadErrorsSuite } from "./read-errors";
 import { runSplitFindingSuite } from "./split-finding";
 import { runSettingsWiringSuite } from "./settings-wiring";
+import { runWaitlistEmailSuite } from "./waitlist-email";
 
 // A suite that throws (missing credentials, unreachable service) must surface
 // as a hard failure of that suite, not take the whole run down with a stack
@@ -80,6 +81,7 @@ async function main() {
     readErrorSuites,
     splitFindingSuites,
     settingsWiringSuites,
+    waitlistEmailSuites,
   ] = await Promise.all([
     guarded("Adversarial scope guard", runAdversarialScopeGuardSuites),
     guarded("Methodology substance", async () => [await runMethodologySubstanceSuite()]),
@@ -101,6 +103,7 @@ async function main() {
     guarded("Supabase read errors", async () => [await runReadErrorsSuite()]),
     guarded("Analysis card title/description split", () => [runSplitFindingSuite()]),
     guarded("Settings control wiring", () => [runSettingsWiringSuite()]),
+    guarded("Waitlist confirmation email", () => [runWaitlistEmailSuite()]),
   ]);
 
   const allSuites = [
@@ -125,6 +128,7 @@ async function main() {
     ...readErrorSuites,
     ...splitFindingSuites,
     ...settingsWiringSuites,
+    ...waitlistEmailSuites,
   ];
   const reportPath = writeReport(allSuites);
 
