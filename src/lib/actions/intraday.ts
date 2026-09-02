@@ -3,7 +3,15 @@
 import { createClient } from "@/lib/supabase/server";
 import { fetchIntradaySeries, isMarketDataProviderConfigured } from "@/lib/market-data/provider";
 import { getDisplayPrefs } from "@/lib/actions/display-prefs";
-import { RANGES, sessionWindow, windowBars, type IntradayResult, type IntradayView } from "@/lib/intraday-window";
+import {
+  closeAtOrBefore,
+  composePortfolioSeries,
+  RANGES,
+  sessionWindow,
+  windowBars,
+  type IntradayResult,
+  type IntradayView,
+} from "@/lib/intraday-window";
 import type { TimelinePoint } from "@/lib/portfolio";
 
 /**
@@ -38,9 +46,16 @@ export async function getIntradaySeries(symbol: string, view: IntradayView): Pro
   return { points, available: points.length > 0, stale, asOf };
 }
 
-// Portfolio value over the same intraday grid: each holding is priced on its
-// own bars, then carried forward so a symbol that has not printed on a given
-// minute still contributes its last known price instead of dropping to zero.
+// Portfolio value over the intraday grid. Two things this has to get right, and
+// both were previously wrong enough to make the chart not look like the
+// portfolio at all:
+//   * A held symbol the provider returns no intraday bars for (or that has not
+//     printed yet before the equity open) still contributes - carried forward
+//     from its last intraday bar, or failing that its latest daily close - so
+//     the line is the whole portfolio, not just whichever holdings happened to
+//     trade in the window.
+//   * One symbol's fetch failing no longer discards the entire series; that
+//     holding falls back to its daily close and the rest of the chart stands.
 export async function getIntradayPortfolioSeries(view: IntradayView): Promise<IntradayResult> {
   const empty = { points: [] as TimelinePoint[], available: false, stale: false, asOf: null };
   if (!isMarketDataProviderConfigured()) return empty;
@@ -62,13 +77,27 @@ export async function getIntradayPortfolioSeries(view: IntradayView): Promise<In
   const assetTypes = new Map<string, "equity" | "etf" | "crypto" | undefined>();
   for (const symbol of symbols) assetTypes.set(symbol, await assetTypeOf(symbol));
 
+  // Latest stored daily close per symbol: the price a holding carries before
+  // its first intraday print (equities do not trade the overnight and weekend
+  // minutes a 24/7 coin does), and its whole contribution when no intraday bar
+  // came back at all.
+  const dailyClose = new Map<string, number>();
+  {
+    const { data } = await supabase.rpc("recent_prices", { symbols, per_symbol: 1 });
+    for (const row of (data ?? []) as { symbol: string; close: number | null }[]) {
+      if (row.close != null) dailyClose.set(row.symbol, Number(row.close));
+    }
+  }
+
   const { interval, outputsize, spanMs } = RANGES[view];
   const { extendedHours } = await getDisplayPrefs();
   const rawBySymbol = new Map<string, { ts: number; close: number }[]>();
 
   for (const symbol of symbols) {
     const bars = await fetchIntradaySeries(symbol, interval, outputsize, extendedHours, assetTypes.get(symbol));
-    if (!bars) return empty;
+    // A single symbol's provider failure must not blank the whole chart - it
+    // falls back to its daily close below.
+    if (!bars) continue;
     rawBySymbol.set(
       symbol,
       bars
@@ -92,23 +121,22 @@ export async function getIntradayPortfolioSeries(view: IntradayView): Promise<In
 
   const grid = Array.from(new Set(Array.from(seriesBySymbol.values()).flat().map((b) => b.ts))).sort((a, b) => a - b);
   if (grid.length === 0) return { ...empty, available: true };
+  const gridStart = grid[0];
 
-  const cursor = new Map<string, number>();
+  // Price to carry for each symbol before its first in-window bar: the last
+  // raw bar at or before the window opens, else its daily close.
+  const seed = new Map<string, number>();
+  for (const symbol of symbols) {
+    const price = closeAtOrBefore(rawBySymbol.get(symbol) ?? [], gridStart) ?? dailyClose.get(symbol) ?? null;
+    if (price != null) seed.set(symbol, price);
+  }
 
-  const points: TimelinePoint[] = grid.map((ts) => {
-    let value = 0;
-    for (const h of holdings) {
-      if (new Date(h.purchase_date).getTime() > ts) continue;
-      const rows = seriesBySymbol.get(h.symbol);
-      if (!rows || rows.length === 0) continue;
-
-      let i = cursor.get(h.symbol) ?? 0;
-      while (i + 1 < rows.length && rows[i + 1].ts <= ts) i++;
-      cursor.set(h.symbol, i);
-      if (rows[i].ts <= ts) value += rows[i].close * Number(h.quantity);
-    }
-    return { date: new Date(ts).toISOString(), value };
-  });
+  const lots = holdings.map((h) => ({
+    symbol: h.symbol,
+    quantity: Number(h.quantity),
+    purchaseMs: new Date(h.purchase_date).getTime(),
+  }));
+  const points = composePortfolioSeries(grid, lots, seriesBySymbol, seed);
 
   return {
     points: points.filter((p) => p.value > 0),
