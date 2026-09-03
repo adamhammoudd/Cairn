@@ -9,7 +9,9 @@
 //
 // Pure assertions only - nothing here opens a socket or sends a message.
 
-import { selectEmailProvider, buildConfirmationEmail } from "../../src/lib/waitlist";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import { selectEmailProvider, buildConfirmationEmail, parseClientTimezone } from "../../src/lib/waitlist";
 import type { SuiteResult, TestCase } from "./report";
 
 const cases: TestCase[] = [];
@@ -79,6 +81,40 @@ check(
   /not a broker and not investment advice/i.test(msg.html) && /not a broker/i.test(msg.text),
   "disclaimer present",
 );
+
+// --- client timezone capture (src/lib/waitlist.ts + waitlist-form.tsx) ----
+//
+// Regression cover for the bug where every waitlist row landed with
+// client_timezone = '': the form wrote the value into a hidden <input> from a
+// mount effect through a ref, and that value never reached the submitted
+// FormData. The form now stamps it at dispatch time and parseClientTimezone
+// normalises it.
+check("a real IANA zone is kept", parseClientTimezone("Europe/London") === "Europe/London", "Area/Location");
+check("a three-part zone is kept", parseClientTimezone("America/Argentina/Salta") === "America/Argentina/Salta", "");
+check("bare UTC is kept", parseClientTimezone("UTC") === "UTC", "");
+check("an empty string becomes null, not ''", parseClientTimezone("") === null, "the exact value every old row has");
+check("whitespace is trimmed then rejected if empty", parseClientTimezone("   ") === null, "");
+check("a missing field is null", parseClientTimezone(null) === null, "");
+check("an over-long value is rejected", parseClientTimezone("A/".repeat(40)) === null, "> 64 chars");
+check(
+  "a junk value that isn't zone-shaped is rejected",
+  parseClientTimezone("'; drop table waitlist; --") === null,
+  "sanity filter against a hand-crafted POST",
+);
+
+{
+  const form = readFileSync(join(import.meta.dirname, "..", "..", "src", "app", "waitlist", "waitlist-form.tsx"), "utf8");
+  check(
+    "the form stamps tz onto the payload at submit time",
+    form.includes('formData.set("tz"'),
+    "not via a hidden <input> populated after mount",
+  );
+  check(
+    "the form no longer relies on a ref-filled hidden tz input",
+    !form.includes('name="tz"') && !/tzRef/.test(form),
+    "that pattern is what lost the value",
+  );
+}
 
 export function runWaitlistEmailSuite(): SuiteResult {
   return { suiteName: "Waitlist confirmation email", gating: true, cases };

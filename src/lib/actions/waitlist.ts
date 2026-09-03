@@ -6,6 +6,7 @@ import { validateEmail } from "@/lib/validation";
 import {
   checkSignupRate,
   flagIfClustered,
+  parseClientTimezone,
   sendConfirmationEmail,
   siteUrl,
   type WaitlistRow,
@@ -36,11 +37,10 @@ export async function joinWaitlist(_prev: JoinState, formData: FormData): Promis
   if (!emailCheck.ok) return { status: "error", message: emailCheck.error ?? "Enter a valid email address." };
   const email = emailCheck.value; // already trimmed + lower-cased
 
-  // The client sends its IANA timezone (e.g. "Europe/London") purely as a
-  // manual-review signal. It is never trusted for anything and is capped so a
-  // hand-crafted POST can't stuff the column.
-  const tzRaw = formData.get("tz");
-  const clientTimezone = typeof tzRaw === "string" && tzRaw.length <= 64 ? tzRaw : null;
+  // The client stamps its IANA timezone (e.g. "Europe/London") onto the form at
+  // submit time, purely as a manual-review signal. Never trusted; see
+  // parseClientTimezone for the sanity filter.
+  const clientTimezone = parseClientTimezone(formData.get("tz"));
 
   const { ip, userAgent, origin } = await requestSignals();
 
