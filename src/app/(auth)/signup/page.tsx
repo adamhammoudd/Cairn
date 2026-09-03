@@ -14,6 +14,10 @@ export default function SignupPage() {
   // uncontrolled - never in React state.
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  // The submit button stays disabled until this is checked - the consent is
+  // gated before the request, not validated after it. signUp() re-checks it
+  // server-side and records the consent (src/lib/actions/auth.ts).
+  const [agreed, setAgreed] = useState(false);
 
   return (
     <>
@@ -51,8 +55,41 @@ export default function SignupPage() {
           required
           minLength={8}
         />
+        <div className="mt-4 flex items-start gap-2.5">
+          <input
+            id="consent"
+            name="consent"
+            type="checkbox"
+            required
+            checked={agreed}
+            onChange={(e) => setAgreed(e.target.checked)}
+            className="mt-0.5 size-4 shrink-0 accent-accent"
+          />
+          <label htmlFor="consent" className="text-[12.5px] leading-[1.5] text-muted">
+            I agree to the{" "}
+            <Link
+              href="/terms"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-accent underline underline-offset-2 hover:text-accent-light"
+            >
+              Terms of Service
+            </Link>{" "}
+            and{" "}
+            <Link
+              href="/privacy"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-accent underline underline-offset-2 hover:text-accent-light"
+            >
+              Privacy Policy
+            </Link>
+            .
+          </label>
+        </div>
+
         <div className="mt-5">
-          <SubmitButton>Create account</SubmitButton>
+          <SubmitButton disabled={!agreed}>Create account</SubmitButton>
         </div>
       </form>
 

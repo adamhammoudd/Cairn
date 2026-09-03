@@ -311,6 +311,21 @@ create table subscriptions (
   updated_at timestamptz not null default now()
 );
 
+-- Signup consent record (migration 0037). Append-only: one row per consent
+-- event, capturing when a user agreed and which ToS/Privacy revision they
+-- agreed to. Written service-role only.
+create table user_consents (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  consented_at timestamptz not null default now(),
+  tos_version text not null,
+  privacy_version text not null,
+  ip inet,
+  user_agent text,
+  created_at timestamptz not null default now()
+);
+create index user_consents_user_id_idx on user_consents (user_id, consented_at desc);
+
 -- ============================================================
 -- RLS: enable + owner-scoped policies on every user-owned table
 -- ============================================================
@@ -328,6 +343,8 @@ alter table alerts enable row level security;
 alter table alert_deliveries enable row level security;
 alter table discussion_threads enable row level security;
 alter table subscriptions enable row level security;
+alter table user_consents enable row level security;
+create policy "own consents are readable" on user_consents for select using (auth.uid() = user_id);
 
 create policy "own row" on profiles for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 create policy "own row" on user_settings for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
