@@ -86,8 +86,11 @@ export default function PrivacyPolicyPage() {
           <h2>How long we keep it</h2>
           <p>
             Account, portfolio, settings and chat data are kept for as long as your account exists.
-            When you delete your account, that data is removed immediately by a cascading delete
-            (verified by an automated test) - it is not retained on a timer afterwards.
+            When you delete your account, that data is removed immediately by a cascading delete -
+            it is not retained on a timer afterwards. The cascade is designed so that removing the
+            account removes everything linked to it; that design is checked by an automated test in
+            our build pipeline (see the deletion section below), not re-verified on each individual
+            deletion.
           </p>
           <ul>
             <li>Unconfirmed waitlist entries: removed on request, and in any case not carried past
@@ -185,8 +188,11 @@ export default function PrivacyPolicyPage() {
           <p>
             Deleting your account removes the account itself; every table holding your data is
             linked to it with a cascading foreign key, so holdings, watchlists, chat history,
-            alerts, briefings, goals and discussion posts are removed with it. This is verified by
-            an automated test that deletes a user and asserts nothing is left behind.
+            alerts, briefings, goals and discussion posts are removed with it. An automated test in
+            our build pipeline exercises this: it creates a user across every one of those tables,
+            deletes the user, and asserts nothing is left behind, and it also checks that every
+            table with a user identifier carries the cascade. That test proves the deletion logic
+            is correct; it runs in CI, not against your specific account when you delete it.
           </p>
         </section>
         <section id="ai-disclosure">
