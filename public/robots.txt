@@ -1,5 +1,15 @@
+# Pre-launch. The whole app sits behind the waitlist gate and nothing here is
+# ready to be indexed or ranked, so general crawlers get Disallow: /.
+#
+# facebookexternalhit and Twitterbot are kept on Allow on purpose: they are
+# link-preview fetchers, not search indexers, and the Instagram / Facebook /
+# X bio links point at /waitlist - disallowing them would break the link card
+# the founder is actively driving signups through.
 User-agent: facebookexternalhit
 Allow: /
 
-User-agent: *
+User-agent: Twitterbot
 Allow: /
+
+User-agent: *
+Disallow: /

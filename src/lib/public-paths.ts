@@ -12,9 +12,17 @@
 const PUBLIC_EXACT = new Set(["/privacy", "/terms", "/accessibility"]);
 const PUBLIC_PREFIXES = ["/waitlist"];
 
+// Static files served from public/ that must never be bounced to the waitlist.
+// The middleware matcher in proxy.ts already excludes these, so normally the
+// middleware never runs on them; this is the second layer, in case the matcher
+// is ever loosened. robots.txt in particular has to stay reachable for the
+// pre-launch `Disallow: /` to mean anything.
+const PUBLIC_FILES = new Set(["/robots.txt", "/sitemap.xml"]);
+
 export function isPublicPath(pathname: string): boolean {
   // API routes carry their own auth (session cookie / webhook signature).
   if (pathname === "/api" || pathname.startsWith("/api/")) return true;
+  if (PUBLIC_FILES.has(pathname)) return true;
   if (PUBLIC_EXACT.has(pathname)) return true;
   return PUBLIC_PREFIXES.some(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
