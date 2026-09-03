@@ -41,7 +41,8 @@
     "test:settings-wiring": "tsx --conditions=react-server scripts/tests/settings-wiring.ts",
     "test:waitlist-email": "tsx --conditions=react-server scripts/tests/waitlist-email.ts",
     "test:proxy-paths": "tsx --conditions=react-server scripts/tests/proxy-public-paths.ts",
-    "test:signup-consent": "tsx --conditions=react-server scripts/tests/signup-consent.ts"
+    "test:signup-consent": "tsx --conditions=react-server scripts/tests/signup-consent.ts",
+    "test:live-refresh": "tsx --conditions=react-server scripts/tests/live-refresh.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.4",
