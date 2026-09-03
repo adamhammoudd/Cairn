@@ -78,7 +78,7 @@ async function TickerBody({ params }: { params: Promise<{ symbol: string }> }) {
   const data = await loadTicker(symbol);
   if ("reason" in data) return <Unavailable symbol={data.symbol} reason={data.reason} detail={data.detail} />;
 
-  const [analyses, discussion, plan, holdingRows, watchlistRows, profileRow] = await Promise.all([
+  const [analyses, discussion, plan, holdingRows, watchlistRows, profileRow, settingsRow] = await Promise.all([
     getAnalysesForScope("ticker", data.symbol),
     listThreadsForSymbol(data.symbol),
     getUserPlan(),
@@ -89,6 +89,8 @@ async function TickerBody({ params }: { params: Promise<{ symbol: string }> }) {
     // Drives the moderation link under the discussion panel; the queue itself
     // re-checks the role server-side, this only decides whether to offer it.
     supabase.from("profiles").select("role").eq("user_id", user.id).maybeSingle(),
+    // Poll interval for the live-quote refresh in the header.
+    supabase.from("user_settings").select("refresh_rate_seconds").eq("user_id", user.id).maybeSingle(),
   ]);
 
   const held = holdingRows.data ?? [];
@@ -115,6 +117,7 @@ async function TickerBody({ params }: { params: Promise<{ symbol: string }> }) {
       avgCost={avgCost}
       watchlists={watchlists}
       canModerate={profileRow.data?.role === "admin"}
+      refreshRateSeconds={settingsRow.data?.refresh_rate_seconds ?? null}
     />
   );
 }

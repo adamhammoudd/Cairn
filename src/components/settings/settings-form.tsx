@@ -95,7 +95,7 @@ export function SettingsForm({ settings, activeTab, sectorOptions, watchlists, f
 
           <CardRow
             label="Refresh rate"
-            desc="How often Base Camp re-runs its queries, while the market is open and this tab is in the foreground. Prices are last-close figures, so this refetches the same daily closes — it does not make them live."
+            desc="How often pages re-run their queries, while the market is open and this tab is in the foreground. The ticker and portfolio pages carry a live quote and refresh it on this cadence (never faster than once a minute — the quote provider is rate-limited). Other surfaces show the last daily close, so a refresh there refetches the same figure."
           >
             <SelectControl name="refresh_rate_seconds" defaultValue={settings.refresh_rate_seconds}>
               {REFRESH_RATES.map((r) => (

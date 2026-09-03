@@ -36,11 +36,11 @@ async function PortfolioBody() {
   // A read failure here (an RLS change, a rotated key) must not render as
   // "you own nothing" - an empty portfolio and an unreadable one look identical
   // on screen and mean completely different things to someone checking a balance.
-  const holdingsRes = await supabase
-    .from("holdings")
-    .select("*")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: true });
+  const [holdingsRes, settingsRes] = await Promise.all([
+    supabase.from("holdings").select("*").eq("user_id", user.id).order("created_at", { ascending: true }),
+    // Poll interval for the live-quote refresh above the holdings table.
+    supabase.from("user_settings").select("refresh_rate_seconds").eq("user_id", user.id).maybeSingle(),
+  ]);
 
   const rows = unwrapRows("Portfolio holdings", holdingsRes);
   const symbols = Array.from(new Set(rows.map((h) => h.symbol)));
@@ -93,7 +93,12 @@ async function PortfolioBody() {
   return (
     <div className="animate-page-in">
       <HoldingsTable metrics={metrics} sparklines={sparklines}>
-        <PortfolioStats totals={totals} positions={metrics.length} assetTypeCount={assetTypeCount} />
+        <PortfolioStats
+          totals={totals}
+          positions={metrics.length}
+          assetTypeCount={assetTypeCount}
+          refreshRateSeconds={settingsRes.data?.refresh_rate_seconds ?? null}
+        />
 
         <div className="mb-3.5">
           <PortfolioChart seriesByTimeframe={seriesByTimeframe} hasHoldings={rows.length > 0} asOf={asOf} />

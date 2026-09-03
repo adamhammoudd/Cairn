@@ -20,6 +20,14 @@ export interface QuoteResult {
   changePercent: number | null;
   volume: number | null;
   fetchedAt: string;
+  /**
+   * The provider's own date for this quote (YYYY-MM-DD). On a closed market
+   * this is the last session, NOT today - so it, not `fetchedAt`, is what the
+   * "as of" label must use, or a Friday close reads as live on Sunday.
+   */
+  quoteDate: string | null;
+  /** The provider's own "is the market for this symbol trading right now" flag. */
+  marketOpen: boolean;
   // Session figures from the same quote. Without these a live headline price
   // was displayed next to an "Open" and "Day range" read off the stored daily
   // bar, which is how /ticker/AAPL came to show a price outside its own day
@@ -91,6 +99,10 @@ export async function fetchQuote(
     changePercent: numeric("percent_change"),
     volume: numeric("volume"),
     fetchedAt: new Date().toISOString(),
+    quoteDate: typeof data.datetime === "string" ? data.datetime.slice(0, 10) : null,
+    // Twelve Data returns `is_market_open`. Absent => assume closed, the safe
+    // direction for a freshness label.
+    marketOpen: data.is_market_open === true,
     open: numeric("open"),
     dayHigh: numeric("high"),
     dayLow: numeric("low"),

@@ -5,6 +5,7 @@ import { formatMarketCap, formatVolume } from "@/lib/screener";
 import { formatSupply } from "@/lib/crypto";
 import { assetName } from "@/lib/asset-names";
 import { DataFreshness } from "@/components/data-freshness";
+import { LivePricePoll } from "@/components/live-price-poll";
 import { decodeEntities } from "@/lib/news";
 import type { TickerData } from "@/lib/actions/ticker";
 import type { AnalysisWithMethodology } from "@/lib/actions/analysis";
@@ -31,6 +32,8 @@ interface TickerWorkspaceProps {
   watchlists: { id: string; name: string; hasSymbol: boolean }[];
   /** Whether this reader may resolve reports; drives the moderation affordance. */
   canModerate?: boolean;
+  /** user_settings.refresh_rate_seconds - poll cadence for the live-quote refresh. */
+  refreshRateSeconds?: number | null;
 }
 
 type TabId = "overview" | "profile" | "technicals" | "financials" | "options";
@@ -44,6 +47,7 @@ export function TickerWorkspace({
   avgCost,
   watchlists,
   canModerate = false,
+  refreshRateSeconds = null,
 }: TickerWorkspaceProps) {
   const [tab, setTab] = useState<TabId>("overview");
   const isCrypto = data.assetType === "crypto";
@@ -200,8 +204,9 @@ export function TickerWorkspace({
                     changeAbs === null ? "" : ` · ${positive ? "+" : "-"}${money(Math.abs(changeAbs))}`
                   } ${data.priceSource === "live" ? "today" : "on the last close"}`}
             </div>
-            <div className="mt-1">
+            <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
               <DataFreshness source={data.priceSource} asOf={data.priceAsOf} />
+              <LivePricePoll refreshRateSeconds={refreshRateSeconds} />
             </div>
           </div>
           <div className="flex gap-2">
