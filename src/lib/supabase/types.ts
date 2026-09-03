@@ -673,6 +673,28 @@ export interface Database {
         Update: never;
         Relationships: [];
       };
+      user_consents: {
+        Row: {
+          id: string;
+          user_id: string;
+          consented_at: string;
+          tos_version: string;
+          privacy_version: string;
+          ip: string | null;
+          user_agent: string | null;
+          created_at: string;
+        };
+        Insert: {
+          user_id: string;
+          tos_version: string;
+          privacy_version: string;
+          consented_at?: string;
+          ip?: string | null;
+          user_agent?: string | null;
+        };
+        Update: never;
+        Relationships: [];
+      };
       auth_attempts: {
         Row: {
           id: number;

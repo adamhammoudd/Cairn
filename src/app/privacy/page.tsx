@@ -1,10 +1,11 @@
 import { LegalShell } from "@/components/legal-shell";
+import { PRIVACY_VERSION, legalDateDisplay } from "@/lib/legal-versions";
 
 export const metadata = { title: "Privacy Policy - Cairn" };
 
 export default function PrivacyPolicyPage() {
   return (
-    <LegalShell eyebrow="Legal" title="Privacy Policy" updated="30 August 2026">
+    <LegalShell eyebrow="Legal" title="Privacy Policy" updated={legalDateDisplay(PRIVACY_VERSION)}>
 <section>
           <h2>What we collect</h2>
           <p>
