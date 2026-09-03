@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useActionState, useState } from "react";
 import Link from "next/link";
 import { useFormStatus } from "react-dom";
 import { joinWaitlist, type JoinState } from "@/lib/actions/waitlist";
@@ -39,21 +39,23 @@ function Confirmed({
 
 export function WaitlistForm({ centered = false }: { centered?: boolean }) {
   const [state, formAction] = useActionState<JoinState, FormData>(joinWaitlist, JOIN_IDLE);
-  const tzRef = useRef<HTMLInputElement>(null);
   // Controlled so a rejected submission (invalid address, rate-limited) keeps
   // what the visitor typed instead of clearing the field - React 19 resets
   // uncontrolled fields once a form action settles.
   const [email, setEmail] = useState("");
 
-  // Fill the hidden timezone field after mount with a direct DOM write (not
-  // state) so there's no SSR/client mismatch. It's only a review signal.
-  useEffect(() => {
+  // Stamp the visitor's IANA timezone onto the payload at dispatch time. The
+  // previous approach - a hidden <input> filled by a mount effect through a ref
+  // - never reached the submitted FormData (every row landed with tz=""), so
+  // this is done here where the value provably makes it into the request.
+  const submit = (formData: FormData) => {
     try {
-      if (tzRef.current) tzRef.current.value = Intl.DateTimeFormat().resolvedOptions().timeZone ?? "";
+      formData.set("tz", Intl.DateTimeFormat().resolvedOptions().timeZone ?? "");
     } catch {
-      /* no-op */
+      /* Intl unavailable - the server treats a missing tz as unknown */
     }
-  }, []);
+    formAction(formData);
+  };
 
   const align = centered ? "mx-auto max-w-[440px] text-center" : "";
 
@@ -97,8 +99,7 @@ export function WaitlistForm({ centered = false }: { centered?: boolean }) {
 
   return (
     <div className={centered ? "mx-auto max-w-[520px]" : ""}>
-      <form action={formAction} noValidate>
-        <input ref={tzRef} type="hidden" name="tz" defaultValue="" />
+      <form action={submit} noValidate>
         <label htmlFor={`wl-email${centered ? "-2" : ""}`} className="sr-only">
           Email address
         </label>

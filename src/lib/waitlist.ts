@@ -8,6 +8,29 @@ import { createAdminClient } from "@/lib/supabase/admin";
 
 export const FOUNDING_LIMIT = 50;
 
+/**
+ * Normalises the client-reported IANA timezone from the signup form into what
+ * gets written to `waitlist.client_timezone`. Pure and exported so it can be
+ * tested without a form or a DB.
+ *
+ * Returns `null` - not `""` - for anything missing, blank, or implausible, so a
+ * row that never got a real value reads as "unknown" rather than as an empty
+ * string. Every row before 2026-09-03 has `client_timezone = ''` because the
+ * form wrote the value through a hidden `<input>` populated in a mount effect
+ * and the effect's value never made it into the submitted FormData; the form
+ * now stamps it at submit time and this guards the column.
+ */
+export function parseClientTimezone(raw: FormDataEntryValue | null): string | null {
+  if (typeof raw !== "string") return null;
+  const tz = raw.trim();
+  if (!tz || tz.length > 64) return null;
+  // "Area/Location", "Area/Location/Sub", or a bare "UTC"/"GMT". Never trusted
+  // for logic - this is a manual-review signal only - so the check is just a
+  // sanity filter against a hand-crafted POST stuffing the column.
+  if (!/^(UTC|GMT|[A-Za-z][A-Za-z_+-]*\/[A-Za-z0-9_+-]+(\/[A-Za-z0-9_+-]+)?)$/.test(tz)) return null;
+  return tz;
+}
+
 // Soft rate limit: a household or an office sharing one NAT address will
 // legitimately produce two or three signups close together, so the first few
 // pass. A script hammering the form produces dozens - past this many from one
