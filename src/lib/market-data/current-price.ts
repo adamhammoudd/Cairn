@@ -71,6 +71,23 @@ async function lastBars(symbols: string[], perSymbol = 2): Promise<Map<string, B
   return bySymbol;
 }
 
+/**
+ * Group already-fetched bars by symbol, newest-first - so a caller that has
+ * just read a wide window of history (the Portfolio page's recent_prices
+ * call for the timeline) can hand it to getLatestCloses()/latestDataDate()
+ * instead of each of those firing its own recent_prices round trip.
+ */
+export function groupBarsBySymbol(rows: Bar[]): Map<string, Bar[]> {
+  const bySymbol = new Map<string, Bar[]>();
+  for (const row of rows) {
+    const arr = bySymbol.get(row.symbol) ?? [];
+    arr.push(row);
+    bySymbol.set(row.symbol, arr);
+  }
+  for (const arr of bySymbol.values()) arr.sort((a, b) => (a.ts < b.ts ? 1 : -1));
+  return bySymbol;
+}
+
 const num = (v: number | null | undefined) => (v == null ? null : Number(v));
 
 // The live-quote providers need to know a coin is a coin: `fetchQuote("BTC")`
@@ -164,11 +181,15 @@ export async function getCurrentPrice(symbol: string): Promise<CurrentPrice> {
 // Drop-in replacement for `latestCloseBySymbol(historical_prices rows)` used
 // by portfolio valuation - same {latest, prev} shape, so lib/portfolio.ts's
 // pure functions need no changes, only the data source at the call site.
-export async function getLatestCloses(symbols: string[]): Promise<Map<string, { latest: number | null; prev: number | null }>> {
+export async function getLatestCloses(
+  symbols: string[],
+  /** Bars the caller already fetched (Portfolio's timeline read) - skips a recent_prices round trip. */
+  prefetchedBars?: Map<string, Bar[]>,
+): Promise<Map<string, { latest: number | null; prev: number | null }>> {
   const result = new Map<string, { latest: number | null; prev: number | null }>();
   if (symbols.length === 0) return result;
 
-  const bySymbol = await lastBars(symbols);
+  const bySymbol = prefetchedBars ?? (await lastBars(symbols));
 
   // Twelve Data's free tier is 8 req/min - only worth attempting live
   // fetches for a small symbol set (a user's own holdings), never a
@@ -204,8 +225,11 @@ export async function getLatestCloses(symbols: string[]): Promise<Map<string, { 
  * The as-of date of the newest bar the app holds for these symbols, for the
  * shared freshness label. Null when none of them have any history.
  */
-export async function latestDataDate(symbols: string[]): Promise<string | null> {
-  const bySymbol = await lastBars(symbols, 1);
+export async function latestDataDate(
+  symbols: string[],
+  prefetchedBars?: Map<string, Bar[]>,
+): Promise<string | null> {
+  const bySymbol = prefetchedBars ?? (await lastBars(symbols, 1));
   let newest: string | null = null;
   for (const rows of bySymbol.values()) {
     const ts = rows[0]?.ts ?? null;

@@ -197,18 +197,39 @@ export async function getBillingDetail(): Promise<BillingDetail> {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const [usage, chat] = await Promise.all([getBillingSummary(), getChatUsageSummary()]);
-
   if (!user) {
-    return { usage, chat, renewsAt: null, history: [], billingEnabled: billingEnabled(), hasStripeCustomer: false };
+    return {
+      usage: computeUsageSummary("free", 0),
+      chat: computeChatUsageSummary("free", 0),
+      renewsAt: null,
+      history: [],
+      billingEnabled: billingEnabled(),
+      hasStripeCustomer: false,
+    };
   }
 
-  const [{ data: subscription }, { data: events }] = await Promise.all([
+  // One auth check, one Promise.all. This used to call getBillingSummary() +
+  // getChatUsageSummary(), each of which re-ran auth.getUser() and re-queried
+  // subscriptions - so a Settings load fired ~3 auth validations and ~4
+  // subscriptions reads for figures that come from one row. computeUsageSummary
+  // / computeChatUsageSummary are the same pure functions those helpers use.
+  const [{ data: subscription }, { count: aiCount }, { count: chatCount }, admin, { data: events }] = await Promise.all([
     supabase
       .from("subscriptions")
-      .select("current_period_end, stripe_customer_id")
+      .select("tier, current_period_end, stripe_customer_id")
       .eq("user_id", user.id)
       .maybeSingle(),
+    supabase
+      .from("ai_usage_events")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .gte("created_at", startOfCurrentMonthIso()),
+    supabase
+      .from("chat_usage_events")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .gte("created_at", startOfTodayIso()),
+    isAdminUser(supabase, user.id),
     supabase
       .from("subscription_events")
       .select("*")
@@ -217,9 +238,11 @@ export async function getBillingDetail(): Promise<BillingDetail> {
       .limit(20),
   ]);
 
+  const tier = subscription?.tier ?? "free";
+
   return {
-    usage,
-    chat,
+    usage: computeUsageSummary(tier, aiCount ?? 0, admin),
+    chat: computeChatUsageSummary(tier, chatCount ?? 0, admin),
     renewsAt: subscription?.current_period_end ?? null,
     hasStripeCustomer: !!subscription?.stripe_customer_id,
     history: (events ?? []).map((e) => ({
