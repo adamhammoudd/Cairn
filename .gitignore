@@ -49,6 +49,12 @@ supabase/.temp/
 .mcp.json
 graphify-out/
 
+# Git worktree checkouts some agents create in-tree. They were committed as
+# gitlinks (submodule-style 160000 entries) with no .gitmodules, which makes
+# `git status` noisy and a fresh clone confusing. The worktrees themselves are
+# managed by .git/worktrees/ and are unaffected by ignoring the path here.
+.claude/worktrees/
+
 # Generated test reports - a new timestamped file per run (see scripts/tests/
 # run-all.ts). The report is meant to be read by a human after a run, not
 # version-controlled; committing them is pure churn.
