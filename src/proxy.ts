@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { isPublicPath } from "@/lib/public-paths";
 
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
@@ -29,22 +30,11 @@ export async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const pathname = request.nextUrl.pathname;
-
-  // 1. Explicitly list all routes accessible without an account
-  const publicRoutes = [
-    "/waitlist",
-    "/privacy",
-    "/terms",
-    "/accessibility",
-  ];
-
-  // 2. Check if current path matches an allowed public page or API route
-  const isPublicRoute =
-    publicRoutes.includes(pathname) || pathname.startsWith("/api");
-
-  // 3. If unauthenticated and NOT on a public route (e.g. typing /login or /), redirect to /waitlist
-  if (!user && !isPublicRoute) {
+  // Routes reachable without an account are listed in lib/public-paths.ts
+  // (kept there so the allowlist is unit-testable). `/waitlist` matches as a
+  // prefix, so `/waitlist/confirm` - the link in the confirmation email -
+  // reaches its page instead of being bounced back to `/waitlist`.
+  if (!user && !isPublicPath(request.nextUrl.pathname)) {
     return NextResponse.redirect(new URL("/waitlist", request.url));
   }
 
