@@ -8,7 +8,7 @@ import {
   computeTotals,
   type PriceBar,
 } from "@/lib/portfolio";
-import { getLatestCloses, latestDataDate } from "@/lib/market-data/current-price";
+import { getLatestCloses, latestDataDate, groupBarsBySymbol } from "@/lib/market-data/current-price";
 import type { ChartView } from "@/lib/supabase/types";
 import { PortfolioStats } from "@/components/portfolio/portfolio-stats";
 import { PortfolioChart } from "@/components/portfolio/portfolio-chart";
@@ -60,7 +60,16 @@ async function PortfolioBody() {
   // wants oldest-first, so sort once here rather than relying on the order the
   // rows happen to arrive in.
   const priceRows = ((prices ?? []) as PriceBar[]).slice().sort((a, b) => (a.ts < b.ts ? -1 : a.ts > b.ts ? 1 : 0));
-  const closes = await getLatestCloses(symbols);
+
+  // The recent_prices read above already holds every bar these two need. Hand
+  // it over so neither fires its own recent_prices round trip - Portfolio was
+  // making three (per_symbol 1500, then 2, then 1) for one page. getLatestCloses
+  // still layers the live quote on top when the market is open.
+  const barsBySymbol = groupBarsBySymbol(priceRows);
+  const [closes, asOf] = await Promise.all([
+    getLatestCloses(symbols, barsBySymbol),
+    latestDataDate(symbols, barsBySymbol),
+  ]);
   const metrics = computeHoldingMetrics(rows, closes);
   const totals = computeTotals(metrics, closes);
 
@@ -85,8 +94,6 @@ async function PortfolioBody() {
       .slice(-30)
       .map((p) => Number(p.close));
   }
-
-  const asOf = await latestDataDate(symbols);
 
   const assetTypeCount = new Set(rows.map((h) => h.asset_type)).size;
 
