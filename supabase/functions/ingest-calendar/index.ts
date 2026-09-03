@@ -143,14 +143,23 @@ Deno.serve(async (req) => {
 
   const relevant = collected.filter((e) => e.symbol && tracked.has(e.symbol));
 
-  // Replace this source's rows rather than accumulating duplicates across runs.
-  await supabase.from("calendar_events").delete().eq("metadata->>source", "nasdaq");
+  // Nasdaq's API rejects datacenter IPs intermittently, and a blocked run comes
+  // back as an empty fetch, not an error. The old code deleted every existing
+  // `source=nasdaq` row unconditionally and only re-inserted when `relevant`
+  // was non-empty - so one blocked run wiped the calendar and left it empty
+  // until a run happened to get through. Only touch the table when the fetch
+  // clearly worked: at least one day in the window returned rows.
+  const fetchWorked = failures.length < DAYS_AHEAD;
 
   let inserted = 0;
-  if (relevant.length > 0) {
-    const { error } = await supabase.from("calendar_events").insert(relevant);
-    if (!error) inserted = relevant.length;
-    else return Response.json({ error: error.message }, { status: 500, headers: corsHeaders });
+  if (fetchWorked) {
+    // Replace this source's rows rather than accumulating duplicates across runs.
+    await supabase.from("calendar_events").delete().eq("metadata->>source", "nasdaq");
+    if (relevant.length > 0) {
+      const { error } = await supabase.from("calendar_events").insert(relevant);
+      if (error) return Response.json({ error: error.message }, { status: 500, headers: corsHeaders });
+      inserted = relevant.length;
+    }
   }
 
   return Response.json(
@@ -158,7 +167,9 @@ Deno.serve(async (req) => {
       tracked_symbols: Array.from(tracked),
       fetched: collected.length,
       inserted,
+      days_with_data: DAYS_AHEAD - failures.length,
       days_with_no_data: failures.length,
+      write_skipped: !fetchWorked,
     },
     { headers: corsHeaders },
   );
