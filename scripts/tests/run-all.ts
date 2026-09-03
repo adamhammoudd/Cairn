@@ -35,6 +35,8 @@ import { runSplitFindingSuite } from "./split-finding";
 import { runSettingsWiringSuite } from "./settings-wiring";
 import { runWaitlistEmailSuite } from "./waitlist-email";
 import { runProxyPublicPathsSuite } from "./proxy-public-paths";
+import { runSignupConsentSuite } from "./signup-consent";
+import { runLiveRefreshSuite } from "./live-refresh";
 
 // A suite that throws (missing credentials, unreachable service) must surface
 // as a hard failure of that suite, not take the whole run down with a stack
@@ -84,6 +86,8 @@ async function main() {
     settingsWiringSuites,
     waitlistEmailSuites,
     proxyPublicPathsSuites,
+    signupConsentSuites,
+    liveRefreshSuites,
   ] = await Promise.all([
     guarded("Adversarial scope guard", runAdversarialScopeGuardSuites),
     guarded("Methodology substance", async () => [await runMethodologySubstanceSuite()]),
@@ -107,6 +111,8 @@ async function main() {
     guarded("Settings control wiring", () => [runSettingsWiringSuite()]),
     guarded("Waitlist confirmation email", () => [runWaitlistEmailSuite()]),
     guarded("Waitlist gate allowlist", () => [runProxyPublicPathsSuite()]),
+    guarded("Signup consent", async () => [await runSignupConsentSuite()]),
+    guarded("Live-quote polling", () => [runLiveRefreshSuite()]),
   ]);
 
   const allSuites = [
@@ -133,6 +139,8 @@ async function main() {
     ...settingsWiringSuites,
     ...waitlistEmailSuites,
     ...proxyPublicPathsSuites,
+    ...signupConsentSuites,
+    ...liveRefreshSuites,
   ];
   const reportPath = writeReport(allSuites);
 

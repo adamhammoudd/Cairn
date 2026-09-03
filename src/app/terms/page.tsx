@@ -1,10 +1,11 @@
 import { LegalShell } from "@/components/legal-shell";
+import { TOS_VERSION, legalDateDisplay } from "@/lib/legal-versions";
 
 export const metadata = { title: "Terms of Service - Cairn" };
 
 export default function TermsofServicePage() {
   return (
-    <LegalShell eyebrow="Legal" title="Terms of Service" updated="30 August 2026">
+    <LegalShell eyebrow="Legal" title="Terms of Service" updated={legalDateDisplay(TOS_VERSION)}>
 <section>
           <h2>1. What Cairn is</h2>
           <p>

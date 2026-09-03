@@ -71,6 +71,23 @@ async function lastBars(symbols: string[], perSymbol = 2): Promise<Map<string, B
   return bySymbol;
 }
 
+/**
+ * Group already-fetched bars by symbol, newest-first - so a caller that has
+ * just read a wide window of history (the Portfolio page's recent_prices
+ * call for the timeline) can hand it to getLatestCloses()/latestDataDate()
+ * instead of each of those firing its own recent_prices round trip.
+ */
+export function groupBarsBySymbol(rows: Bar[]): Map<string, Bar[]> {
+  const bySymbol = new Map<string, Bar[]>();
+  for (const row of rows) {
+    const arr = bySymbol.get(row.symbol) ?? [];
+    arr.push(row);
+    bySymbol.set(row.symbol, arr);
+  }
+  for (const arr of bySymbol.values()) arr.sort((a, b) => (a.ts < b.ts ? 1 : -1));
+  return bySymbol;
+}
+
 const num = (v: number | null | undefined) => (v == null ? null : Number(v));
 
 // The live-quote providers need to know a coin is a coin: `fetchQuote("BTC")`
@@ -131,13 +148,18 @@ export async function getCurrentPrice(symbol: string): Promise<CurrentPrice> {
   if (isMarketDataProviderConfigured()) {
     const quote = await fetchQuote(symbol, hint);
     if (quote && quote.price !== null) {
+      // Honest source: a quote pulled while the market is CLOSED is the last
+      // session's close, not a live price. Label it "last_close" and date it
+      // to the provider's own quote date, so a Friday number never shows as
+      // "Live" on a Sunday. Crypto trades 24/7, so its quote is genuinely live.
+      const isLive = quote.marketOpen || hint === "crypto";
       return {
         symbol: quote.symbol,
         price: quote.price,
         changePct: quote.changePercent,
         volume: quote.volume,
-        source: "live",
-        asOf: quote.fetchedAt.slice(0, 10),
+        source: isLive ? "live" : "last_close",
+        asOf: quote.quoteDate ?? quote.fetchedAt.slice(0, 10),
         // From the quote itself: a live price with a stored day range can
         // contradict itself, which is exactly what /ticker/AAPL displayed.
         open: quote.open,
@@ -159,11 +181,15 @@ export async function getCurrentPrice(symbol: string): Promise<CurrentPrice> {
 // Drop-in replacement for `latestCloseBySymbol(historical_prices rows)` used
 // by portfolio valuation - same {latest, prev} shape, so lib/portfolio.ts's
 // pure functions need no changes, only the data source at the call site.
-export async function getLatestCloses(symbols: string[]): Promise<Map<string, { latest: number | null; prev: number | null }>> {
+export async function getLatestCloses(
+  symbols: string[],
+  /** Bars the caller already fetched (Portfolio's timeline read) - skips a recent_prices round trip. */
+  prefetchedBars?: Map<string, Bar[]>,
+): Promise<Map<string, { latest: number | null; prev: number | null }>> {
   const result = new Map<string, { latest: number | null; prev: number | null }>();
   if (symbols.length === 0) return result;
 
-  const bySymbol = await lastBars(symbols);
+  const bySymbol = prefetchedBars ?? (await lastBars(symbols));
 
   // Twelve Data's free tier is 8 req/min - only worth attempting live
   // fetches for a small symbol set (a user's own holdings), never a
@@ -171,18 +197,27 @@ export async function getLatestCloses(symbols: string[]): Promise<Map<string, { 
   // change directly (that's what a screener conventionally shows anyway).
   const tryLive = isMarketDataProviderConfigured() && symbols.length <= 8;
 
-  for (const symbol of symbols) {
-    const rows = bySymbol.get(symbol) ?? [];
-    if (tryLive) {
-      const quote = await fetchQuote(symbol, cryptoHint(rows[0]?.asset_type));
-      if (quote && quote.price !== null) {
-        result.set(symbol, { latest: quote.price, prev: num(rows[0]?.close) });
-        continue;
+  // One round trip, not one per holding. Each fetchQuote() is independently
+  // cached (revalidate: 60), so a symbol two users both hold is fetched once
+  // per minute across the whole app, not once per page render.
+  const entries = await Promise.all(
+    symbols.map(async (symbol) => {
+      const rows = bySymbol.get(symbol) ?? [];
+      if (tryLive) {
+        const quote = await fetchQuote(symbol, cryptoHint(rows[0]?.asset_type));
+        if (quote && quote.price !== null) {
+          // A quote taken while the market is open is compared to the last
+          // stored close; a closed-market quote IS ~the last close, so its
+          // predecessor is the one before that.
+          const prev = quote.marketOpen ? num(rows[0]?.close) : num(rows[1]?.close);
+          return [symbol, { latest: quote.price, prev }] as const;
+        }
       }
-    }
-    const fallback = toLastClosePrice(symbol, rows);
-    result.set(symbol, { latest: fallback.price, prev: num(rows[1]?.close) });
-  }
+      const fallback = toLastClosePrice(symbol, rows);
+      return [symbol, { latest: fallback.price, prev: num(rows[1]?.close) }] as const;
+    }),
+  );
+  for (const [symbol, value] of entries) result.set(symbol, value);
   return result;
 }
 
@@ -190,8 +225,11 @@ export async function getLatestCloses(symbols: string[]): Promise<Map<string, { 
  * The as-of date of the newest bar the app holds for these symbols, for the
  * shared freshness label. Null when none of them have any history.
  */
-export async function latestDataDate(symbols: string[]): Promise<string | null> {
-  const bySymbol = await lastBars(symbols, 1);
+export async function latestDataDate(
+  symbols: string[],
+  prefetchedBars?: Map<string, Bar[]>,
+): Promise<string | null> {
+  const bySymbol = prefetchedBars ?? (await lastBars(symbols, 1));
   let newest: string | null = null;
   for (const rows of bySymbol.values()) {
     const ts = rows[0]?.ts ?? null;

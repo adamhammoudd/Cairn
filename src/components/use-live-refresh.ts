@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { shouldPoll } from "@/lib/live-refresh";
 
 // Makes the "Live" pill and the Settings > Display > "Refresh rate · how often
 // live prices update" row true.
@@ -49,7 +50,7 @@ export function useLiveRefresh(refreshRateSeconds: number, marketIsOpen: boolean
     return () => document.removeEventListener("visibilitychange", onVisibility);
   }, []);
 
-  const active = !paused && marketIsOpen && visible;
+  const active = shouldPoll({ paused, marketOpen: marketIsOpen, tabVisible: visible });
 
   useEffect(() => {
     if (!active) return;

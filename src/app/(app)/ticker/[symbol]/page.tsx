@@ -75,20 +75,28 @@ async function TickerBody({ params }: { params: Promise<{ symbol: string }> }) {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const data = await loadTicker(symbol);
-  if ("reason" in data) return <Unavailable symbol={data.symbol} reason={data.reason} detail={data.detail} />;
-
-  const [analyses, discussion, plan, holdingRows, watchlistRows, profileRow] = await Promise.all([
-    getAnalysesForScope("ticker", data.symbol),
-    listThreadsForSymbol(data.symbol),
+  // loadTicker() (which may ingest the symbol on demand) and the four
+  // user-scoped reads that don't depend on the resolved symbol run together -
+  // previously the whole second batch waited for loadTicker even though only
+  // three of its reads actually need data.symbol.
+  const [data, plan, watchlistRows, profileRow, settingsRow] = await Promise.all([
+    loadTicker(symbol),
     getUserPlan(),
-    // The header reads "<name> · <held>" in the mock, and the Watch control
-    // needs the user lists to add to. Both are RLS-scoped to this user.
-    supabase.from("holdings").select("quantity, purchase_price").eq("symbol", data.symbol),
+    // The Watch control needs the user's lists to add to.
     listWatchlists(),
     // Drives the moderation link under the discussion panel; the queue itself
     // re-checks the role server-side, this only decides whether to offer it.
     supabase.from("profiles").select("role").eq("user_id", user.id).maybeSingle(),
+    // Poll interval for the live-quote refresh in the header.
+    supabase.from("user_settings").select("refresh_rate_seconds").eq("user_id", user.id).maybeSingle(),
+  ]);
+  if ("reason" in data) return <Unavailable symbol={data.symbol} reason={data.reason} detail={data.detail} />;
+
+  const [analyses, discussion, holdingRows] = await Promise.all([
+    getAnalysesForScope("ticker", data.symbol),
+    listThreadsForSymbol(data.symbol),
+    // "<name> · <held>" in the header, RLS-scoped to this user.
+    supabase.from("holdings").select("quantity, purchase_price").eq("symbol", data.symbol),
   ]);
 
   const held = holdingRows.data ?? [];
@@ -115,6 +123,7 @@ async function TickerBody({ params }: { params: Promise<{ symbol: string }> }) {
       avgCost={avgCost}
       watchlists={watchlists}
       canModerate={profileRow.data?.role === "admin"}
+      refreshRateSeconds={settingsRow.data?.refresh_rate_seconds ?? null}
     />
   );
 }

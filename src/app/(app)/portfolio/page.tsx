@@ -8,7 +8,7 @@ import {
   computeTotals,
   type PriceBar,
 } from "@/lib/portfolio";
-import { getLatestCloses, latestDataDate } from "@/lib/market-data/current-price";
+import { getLatestCloses, latestDataDate, groupBarsBySymbol } from "@/lib/market-data/current-price";
 import type { ChartView } from "@/lib/supabase/types";
 import { PortfolioStats } from "@/components/portfolio/portfolio-stats";
 import { PortfolioChart } from "@/components/portfolio/portfolio-chart";
@@ -36,11 +36,11 @@ async function PortfolioBody() {
   // A read failure here (an RLS change, a rotated key) must not render as
   // "you own nothing" - an empty portfolio and an unreadable one look identical
   // on screen and mean completely different things to someone checking a balance.
-  const holdingsRes = await supabase
-    .from("holdings")
-    .select("*")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: true });
+  const [holdingsRes, settingsRes] = await Promise.all([
+    supabase.from("holdings").select("*").eq("user_id", user.id).order("created_at", { ascending: true }),
+    // Poll interval for the live-quote refresh above the holdings table.
+    supabase.from("user_settings").select("refresh_rate_seconds").eq("user_id", user.id).maybeSingle(),
+  ]);
 
   const rows = unwrapRows("Portfolio holdings", holdingsRes);
   const symbols = Array.from(new Set(rows.map((h) => h.symbol)));
@@ -60,7 +60,16 @@ async function PortfolioBody() {
   // wants oldest-first, so sort once here rather than relying on the order the
   // rows happen to arrive in.
   const priceRows = ((prices ?? []) as PriceBar[]).slice().sort((a, b) => (a.ts < b.ts ? -1 : a.ts > b.ts ? 1 : 0));
-  const closes = await getLatestCloses(symbols);
+
+  // The recent_prices read above already holds every bar these two need. Hand
+  // it over so neither fires its own recent_prices round trip - Portfolio was
+  // making three (per_symbol 1500, then 2, then 1) for one page. getLatestCloses
+  // still layers the live quote on top when the market is open.
+  const barsBySymbol = groupBarsBySymbol(priceRows);
+  const [closes, asOf] = await Promise.all([
+    getLatestCloses(symbols, barsBySymbol),
+    latestDataDate(symbols, barsBySymbol),
+  ]);
   const metrics = computeHoldingMetrics(rows, closes);
   const totals = computeTotals(metrics, closes);
 
@@ -86,14 +95,17 @@ async function PortfolioBody() {
       .map((p) => Number(p.close));
   }
 
-  const asOf = await latestDataDate(symbols);
-
   const assetTypeCount = new Set(rows.map((h) => h.asset_type)).size;
 
   return (
     <div className="animate-page-in">
       <HoldingsTable metrics={metrics} sparklines={sparklines}>
-        <PortfolioStats totals={totals} positions={metrics.length} assetTypeCount={assetTypeCount} />
+        <PortfolioStats
+          totals={totals}
+          positions={metrics.length}
+          assetTypeCount={assetTypeCount}
+          refreshRateSeconds={settingsRes.data?.refresh_rate_seconds ?? null}
+        />
 
         <div className="mb-3.5">
           <PortfolioChart seriesByTimeframe={seriesByTimeframe} hasHoldings={rows.length > 0} asOf={asOf} />

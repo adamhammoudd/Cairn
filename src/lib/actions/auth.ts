@@ -3,7 +3,9 @@
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { checkAuthRateLimit, recordAuthAttempt } from "@/lib/auth-rate-limit";
+import { TOS_VERSION, PRIVACY_VERSION, consentGiven } from "@/lib/legal-versions";
 
 // Behind a proxy the socket address is the proxy's, so the forwarded chain is
 // the only thing that identifies the caller. First entry is the client;
@@ -36,7 +38,17 @@ export async function signUp(_prevState: string | null, formData: FormData) {
   const name = String(formData.get("name") ?? "");
   const email = String(formData.get("email") ?? "");
   const password = String(formData.get("password") ?? "");
+
+  // Server-side gate, not just the disabled button: a hand-crafted POST must
+  // not be able to create an account without a consent record behind it.
+  if (!consentGiven(formData)) {
+    return "You must agree to the Terms of Service and Privacy Policy to create an account.";
+  }
+
+  const h = await headers();
   const ip = await clientIp();
+  const userAgent = h.get("user-agent");
+  const consentedAt = new Date().toISOString();
 
   const limit = await checkAuthRateLimit(email, "sign_up", ip);
   if (!limit.allowed) return limit.message ?? "Too many attempts. Try again later.";
@@ -45,12 +57,42 @@ export async function signUp(_prevState: string | null, formData: FormData) {
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
-    options: { data: { display_name: name } },
+    options: {
+      data: {
+        display_name: name,
+        // Backstop copy of the consent, on the auth user itself, in case the
+        // user_consents insert below fails.
+        tos_version: TOS_VERSION,
+        privacy_version: PRIVACY_VERSION,
+        consented_at: consentedAt,
+      },
+    },
   });
 
   await recordAuthAttempt(email, "sign_up", !error, ip);
 
   if (error) return error.message;
+
+  // The compliance record. Service-role client: a user must not be able to
+  // forge or delete their own consent row. A failure here is logged with the
+  // user id (recoverable from the auth-user metadata backstop) rather than
+  // failing a signup whose auth user already exists.
+  if (data.user) {
+    const { error: consentError } = await createAdminClient()
+      .from("user_consents")
+      .insert({
+        user_id: data.user.id,
+        consented_at: consentedAt,
+        tos_version: TOS_VERSION,
+        privacy_version: PRIVACY_VERSION,
+        ip,
+        user_agent: userAgent ? userAgent.slice(0, 500) : null,
+      });
+    if (consentError) {
+      console.error(`[signUp] user_consents insert failed for ${data.user.id}:`, consentError.message);
+    }
+  }
+
   if (!data.session) redirect("/login?message=check-your-email");
   redirect("/");
 }
