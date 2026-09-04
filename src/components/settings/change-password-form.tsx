@@ -24,8 +24,17 @@ export function ChangePasswordForm() {
     <form action={formAction} className="flex max-w-xs flex-col gap-3">
       <input
         type="password"
+        name="current_password"
+        placeholder="Current password"
+        autoComplete="current-password"
+        required
+        className="w-full rounded-lg border border-line bg-active px-3.5 py-2.5 text-sm text-primary outline-none"
+      />
+      <input
+        type="password"
         name="password"
         placeholder="New password"
+        autoComplete="new-password"
         required
         minLength={8}
         className="w-full rounded-lg border border-line bg-active px-3.5 py-2.5 text-sm text-primary outline-none"
