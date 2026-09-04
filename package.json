@@ -36,6 +36,7 @@
     "backfill:news-tags": "tsx --conditions=react-server scripts/backfill-news-tags.ts",
     "test:sectors": "tsx --conditions=react-server scripts/tests/sector-vocabulary.ts",
     "test:read-errors": "tsx --conditions=react-server scripts/tests/read-errors.ts",
+    "test:holdings-user-scope": "tsx --conditions=react-server scripts/tests/holdings-user-scope.ts",
     "test:fail-loud-reads": "tsx --conditions=react-server scripts/tests/fail-loud-reads.ts",
     "test:export-csv": "tsx --conditions=react-server scripts/tests/export-csv.ts",
     "test:intraday-parallel": "tsx --conditions=react-server scripts/tests/intraday-parallel.ts",

@@ -66,7 +66,10 @@ export async function getIntradayPortfolioSeries(view: IntradayView): Promise<In
   } = await supabase.auth.getUser();
   if (!user) return empty;
 
-  const { data: holdings } = await supabase.from("holdings").select("symbol, quantity, purchase_date");
+  const { data: holdings } = await supabase
+    .from("holdings")
+    .select("symbol, quantity, purchase_date")
+    .eq("user_id", user.id);
   if (!holdings || holdings.length === 0) return { ...empty, available: true };
 
   const symbols = Array.from(new Set(holdings.map((h) => h.symbol)));
