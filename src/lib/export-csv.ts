@@ -12,12 +12,27 @@
 
 export type CsvRow = Record<string, unknown>;
 
+// CSV / formula injection. Excel, Sheets and LibreOffice evaluate a cell as a
+// formula when its first character is one of these - so a watchlist name of
+// `=1+1`, `@SUM(A1:A9)` or `-2+3+cmd|'/C calc'!A0` executes on open. Neutralise
+// by prefixing a single quote, which those apps read as "treat as text".
+//
+// The number carve-out keeps a legitimate negative figure ("-11.24") numeric
+// in the sheet: it starts with `-` but is not a formula. `+15`, likewise.
+const FORMULA_LEAD = /^[=+\-@\t\r]/;
+
+function neutralizeFormula(raw: string): string {
+  if (FORMULA_LEAD.test(raw) && !Number.isFinite(Number(raw.trim()))) return `'${raw}`;
+  return raw;
+}
+
 function escapeCell(value: unknown): string {
   if (value === null || value === undefined) return "";
   const raw = typeof value === "object" ? JSON.stringify(value) : String(value);
+  const safe = neutralizeFormula(raw);
   // Quote when the value could otherwise break the row, and double any quotes
   // inside it - RFC 4180.
-  return /[",\n\r]/.test(raw) ? `"${raw.replace(/"/g, '""')}"` : raw;
+  return /[",\n\r]/.test(safe) ? `"${safe.replace(/"/g, '""')}"` : safe;
 }
 
 /** One dataset as a header row plus its rows. Column order follows the first row. */

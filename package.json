@@ -36,6 +36,7 @@
     "backfill:news-tags": "tsx --conditions=react-server scripts/backfill-news-tags.ts",
     "test:sectors": "tsx --conditions=react-server scripts/tests/sector-vocabulary.ts",
     "test:read-errors": "tsx --conditions=react-server scripts/tests/read-errors.ts",
+    "test:export-csv": "tsx --conditions=react-server scripts/tests/export-csv.ts",
     "test:x-axis": "tsx --conditions=react-server scripts/tests/x-axis-config.ts",
     "test:split-finding": "tsx --conditions=react-server scripts/tests/split-finding.ts",
     "test:settings-wiring": "tsx --conditions=react-server scripts/tests/settings-wiring.ts",
