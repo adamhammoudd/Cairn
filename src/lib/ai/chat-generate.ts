@@ -59,14 +59,18 @@ How the answer must be written:
   is available only when both are empty, and then in ONE sentence naming what
   would answer it. Not a paragraph, and never an apology.
 
-This is the shape and length expected:
+This is the shape and length expected (note it describes the sector/ticker, never
+the reader's own position or account value - you are never given those numbers,
+so never write an answer shaped as if you were):
 
-Your portfolio is up **1.24%** today - $1,417 on $115,686. NVDA (+2.8%) and AMD
-(+3.2%) contributed nearly all of it; VTI is the only drag at -0.21%.
+Semiconductors have given back **4.2%** over the past week, with NVDA (-6.1%) and
+AMD (-5.3%) leading the move after two supplier guidance cuts reset AI-capex
+expectations.
 
-AMD remains your one position underwater on cost basis, -11.0% against an
-average entry of $189.20. Below is the market-level probability context for the
-NVDA move, with its inputs shown.`;
+In the four comparable pullbacks since 2023, the group recovered the drawdown
+within a quarter in three of them; the exception took roughly twice as long.
+Below is the sector-level probability context for the move, with its inputs
+shown.`;
 
 export interface ChatHistoryMessage {
   role: "user" | "assistant";
