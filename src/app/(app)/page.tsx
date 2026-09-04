@@ -66,7 +66,10 @@ async function DashboardBody() {
 
   const holdings = holdingsRes.data ?? [];
   const symbols = Array.from(new Set(holdings.map((h) => h.symbol)));
-  const closes = await getLatestCloses(symbols);
+  // Ground truth for the crypto-quote hint - see the same note on the
+  // Portfolio page for why this can't be inferred from historical_prices bars.
+  const assetTypeBySymbol = new Map(holdings.map((h) => [h.symbol, h.asset_type]));
+  const closes = await getLatestCloses(symbols, undefined, assetTypeBySymbol);
   const metrics = computeHoldingMetrics(holdings, closes);
   const totals = computeTotals(metrics, closes);
 

@@ -178,7 +178,17 @@ Deno.serve(async (req) => {
         .order("created_at", { ascending: false })
         .limit(10);
       if (symbols.length > 0) analysisQuery = analysisQuery.in("scope_value", symbols);
-      const { data: analyses } = await analysisQuery;
+      const { data: rawAnalyses } = await analysisQuery;
+      // Newest analysis per symbol only - ordered by created_at desc above, so
+      // "newest" is "first seen" here. Without this a re-analyzed symbol (real
+      // case: MSFT has three stored runs, two landing on identical figures)
+      // crowded out everything else in the summary with repeats of itself.
+      const seenScopeValues = new Set<string>();
+      const analyses = (rawAnalyses ?? []).filter((a: { scope_value: string }) => {
+        if (seenScopeValues.has(a.scope_value)) return false;
+        seenScopeValues.add(a.scope_value);
+        return true;
+      });
 
       const twoWeeksOut = new Date(now);
       twoWeeksOut.setDate(twoWeeksOut.getDate() + 14);
@@ -311,7 +321,7 @@ Deno.serve(async (req) => {
         }
         if (analysisList.length > 0) {
           parts.push(
-            `${analysisList.length} relevant analysis${analysisList.length === 1 ? "" : "es"}: ${analysisList
+            `${analysisList.length} relevant ${analysisList.length === 1 ? "analysis" : "analyses"}: ${analysisList
               .slice(0, 3)
               .map(
                 (a: { scope_value: string; probability_low: number; probability_high: number; confidence_level: string }) =>

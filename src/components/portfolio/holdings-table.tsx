@@ -161,7 +161,17 @@ export function HoldingsTable({
                     </div>
                     <div>
                       <div className="text-[10px] text-dim">Price</div>
-                      <div className="mt-0.75 text-[12.5px] tabular-nums text-primary">{fmtCurrency(m.currentPrice)}</div>
+                      <div
+                        className="mt-0.75 flex items-center gap-1 text-[12.5px] tabular-nums text-primary"
+                        title={m.priceStale ? `Stale - last updated ${m.priceAsOf ?? "unknown"}` : undefined}
+                      >
+                        {fmtCurrency(m.currentPrice)}
+                        {m.priceStale && (
+                          <span aria-label={`Price stale as of ${m.priceAsOf ?? "unknown date"}`} className="text-negative">
+                            ⚠
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <div>
                       <div className="text-[10px] text-dim">Gain / loss</div>
@@ -225,7 +235,17 @@ export function HoldingsTable({
                     <div className="text-[12.5px] tabular-nums text-primary" title={m.quantity.toLocaleString()}>
                       {m.quantity.toLocaleString(undefined, { maximumFractionDigits: 4 })}
                     </div>
-                    <div className="text-[12.5px] tabular-nums text-primary">{fmtCurrency(m.currentPrice)}</div>
+                    <div
+                      className="flex items-center gap-1 text-[12.5px] tabular-nums text-primary"
+                      title={m.priceStale ? `Stale - last updated ${m.priceAsOf ?? "unknown"}` : undefined}
+                    >
+                      {fmtCurrency(m.currentPrice)}
+                      {m.priceStale && (
+                        <span aria-label={`Price stale as of ${m.priceAsOf ?? "unknown date"}`} className="text-negative">
+                          ⚠
+                        </span>
+                      )}
+                    </div>
                     <div
                       className="text-[12.5px] tabular-nums text-muted"
                       title={fmtExact(m.purchase_price * m.quantity)}

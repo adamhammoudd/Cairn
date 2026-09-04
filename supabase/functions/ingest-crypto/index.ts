@@ -21,6 +21,7 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 import { requireCronSecret } from "../_shared/auth.ts";
 import { deriveVolatilityRegimes, CRYPTO_PERIODS_PER_YEAR } from "../_shared/volatility.ts";
+import { buildDirectoryPatch } from "../_shared/symbol-directory.ts";
 
 // Was a hardcoded 25 - a self-imposed cap on a keyless API, not a provider
 // limit. It is now the provider row's `config.top_n` (default 250, CoinGecko's
@@ -187,6 +188,21 @@ Deno.serve(async (req) => {
   if (metricsError) {
     return Response.json({ error: metricsError.message }, { status: 500, headers: corsHeaders });
   }
+
+  // Bump symbol_directory for every coin this run actually priced - not just
+  // the HISTORY_COINS_PER_RUN handful that get a full daily-bar refresh below.
+  // /admin's staleness check (and anything reading last_checked_at) cares
+  // whether a coin's data was touched at all; the metrics pass touches all of
+  // them every run, so that is the real freshness signal, not the slow
+  // history queue. (Previously this function never wrote to symbol_directory
+  // at all - reads at the top of this file aside - so every crypto row's
+  // last_checked_at was stuck at whatever migration 0027's backfill or its
+  // first on-demand search left it, BTC included.)
+  const nowIso = new Date().toISOString();
+  await supabase
+    .from("symbol_directory")
+    .update(buildDirectoryPatch({ kind: "success" }, nowIso))
+    .in("symbol", metricsRows.map((m) => m.symbol));
 
   // Pick the stalest coins for the history pass. Without this, a rate-limited
   // run always burns its budget on the same top-ranked coins and the rest

@@ -71,10 +71,18 @@ export function SectorTreemap({
               <div className="flex h-32.5 gap-1">
                 {tiles.map((tile) => {
                   const tone = labelToneForChange(tile.changePct);
+                  // Small tiles truncate to a couple of characters (several
+                  // distinct tickers can all read as "U."), with nothing to
+                  // disambiguate them - the reported bug. `title` gives every
+                  // tile a native hover tooltip with its full symbol
+                  // regardless of how narrow it renders.
+                  const tileLabel = `${tile.name} · ${fmtPct(tile.changePct)}`;
                   return (
                     <Link
                       key={tile.name}
                       href={`/ticker/${tile.name}`}
+                      title={tileLabel}
+                      aria-label={tileLabel}
                       // Floor each tile at 8% of the row so a mega-cap next to a
                       // small-cap doesn't reduce the latter to an invisible sliver.
                       style={{

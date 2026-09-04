@@ -106,8 +106,9 @@ export function composeBriefingSummary(i: SummaryInput): string {
     );
   }
   if (i.analyses.length > 0) {
+    // "analysis" pluralises irregularly - appending "es" reads as "analysises".
     parts.push(
-      `${i.analyses.length} relevant analysis${i.analyses.length === 1 ? "" : "es"}: ${i.analyses
+      `${i.analyses.length} relevant ${i.analyses.length === 1 ? "analysis" : "analyses"}: ${i.analyses
         .slice(0, 3)
         .map((a) => `${a.scope_value} (${a.probability_low}–${a.probability_high}%, ${a.confidence_level} confidence)`)
         .join(", ")}${i.analyses.length > 3 ? ", and more" : ""}.`,
@@ -130,6 +131,30 @@ export function composeBriefingSummary(i: SummaryInput): string {
     parts.push(`${i.news.length} story${i.news.length === 1 ? "" : " stories"} in your chosen news categories.`);
   }
   return parts.join(" ");
+}
+
+/**
+ * Keeps only the newest analysis per scope_value, in whatever order they
+ * arrived - the analyses query orders by created_at desc, so "newest" is
+ * "first seen" here, no extra sort needed.
+ *
+ * Root cause (2026-09-04 walkthrough, item 6 quality pass): a symbol that
+ * has been re-analyzed several times (real data - MSFT has three stored runs
+ * a week apart, two of them landing on byte-identical figures) had every one
+ * of those runs surface in the same briefing: "3 relevant analyses: MSFT
+ * (20-64%, medium confidence), MSFT (10-57%, medium confidence), MSFT
+ * (10-57%, medium confidence)." unchanged across four consecutive days. A
+ * reader wants this symbol's current assessment, not its whole history
+ * repeated - and three copies of one symbol crowd out whatever else the
+ * briefing could have surfaced (the slice below only keeps the first 3).
+ */
+export function dedupeLatestPerSymbol<T extends { scope_value: string }>(rows: T[]): T[] {
+  const seen = new Set<string>();
+  return rows.filter((r) => {
+    if (seen.has(r.scope_value)) return false;
+    seen.add(r.scope_value);
+    return true;
+  });
 }
 
 /**
@@ -237,7 +262,8 @@ export async function generateBriefing(userId: string): Promise<BriefingContent>
     .order("created_at", { ascending: false })
     .limit(10);
   if (symbols.length > 0) analysisQuery = analysisQuery.in("scope_value", symbols);
-  const { data: analyses } = await analysisQuery;
+  const { data: rawAnalyses } = await analysisQuery;
+  const analyses = dedupeLatestPerSymbol(rawAnalyses ?? []);
 
   const today = new Date().toISOString().slice(0, 10);
   const twoWeeksOut = new Date();

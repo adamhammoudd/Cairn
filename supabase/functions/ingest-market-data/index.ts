@@ -7,6 +7,7 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 import { requireCronSecret } from "../_shared/auth.ts";
 import { fetchYahooFinanceDaily, type PriceBar } from "../_shared/market-adapters.ts";
+import { buildDirectoryPatch } from "../_shared/symbol-directory.ts";
 
 
 // asset_type used to be read once per provider and applied to every symbol
@@ -107,17 +108,39 @@ Deno.serve(async (req) => {
     }
 
     for (const { symbol, assetType } of symbols) {
+      const now = new Date().toISOString();
       try {
         await sleep(REQUEST_DELAY_MS);
         const bars = await fetchYahooFinanceDaily(symbol, assetType);
         if (bars.length === 0) {
           results.push({ provider: provider.name, symbol, error: "no data returned" });
+          await supabase
+            .from("symbol_directory")
+            .update(buildDirectoryPatch({ kind: "no_data" }, now))
+            .eq("symbol", symbol);
           continue;
         }
 
         const { error: upsertError } = await supabase
           .from("historical_prices")
           .upsert(bars, { onConflict: "symbol,ts", ignoreDuplicates: false });
+
+        // Every configured symbol gets its directory row bumped here -
+        // previously only the on-demand pass below did this, so this loop's
+        // 40-plus tracked equities/ETFs kept refreshing historical_prices
+        // while /admin's staleness check (and the Holdings-table fallback
+        // that reads it) kept reporting them as untouched for days.
+        await supabase
+          .from("symbol_directory")
+          .update(
+            buildDirectoryPatch(
+              upsertError
+                ? { kind: "error", message: upsertError.message }
+                : { kind: "success", bars: bars.length },
+              now,
+            ),
+          )
+          .eq("symbol", symbol);
 
         results.push({
           provider: provider.name,
@@ -127,7 +150,12 @@ Deno.serve(async (req) => {
           error: upsertError?.message,
         });
       } catch (err) {
-        results.push({ provider: provider.name, symbol, error: err instanceof Error ? err.message : String(err) });
+        const message = err instanceof Error ? err.message : String(err);
+        results.push({ provider: provider.name, symbol, error: message });
+        await supabase
+          .from("symbol_directory")
+          .update(buildDirectoryPatch({ kind: "error", message }, now))
+          .eq("symbol", symbol);
       }
     }
   }

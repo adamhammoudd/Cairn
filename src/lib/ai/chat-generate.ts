@@ -23,6 +23,7 @@ import { renderPortfolioSummaryBlock, portfolioSummaryFigures } from "@/lib/ai/p
 import { classifyScope, type ClassifierOutcome } from "@/lib/ai/scope-classifier";
 import { llmComplete } from "@/lib/ai/llm";
 import { normalizeReply } from "@/lib/ai/reply-format";
+import { resolveCitations } from "@/lib/ai/citations";
 import type { Database } from "@/lib/supabase/types";
 
 const SYSTEM_PROMPT = `You are Cairn's conversational research assistant. You answer questions about
@@ -151,15 +152,24 @@ function buildContextBlock(context: ChatContext): string {
   // as the one authoritative source for any personal number this turn.
   const portfolioBlock = context.portfolio ? `\n\n${renderPortfolioSummaryBlock(context.portfolio)}` : "";
 
+  // Neither list needs its row `id` shown to the model - nothing downstream
+  // parses an id back out of the reply (analysisIds for the attached card
+  // comes from context.analyses directly, not from the model's text), and a
+  // visible UUID is exactly what got cited verbatim into chat replies before
+  // (see lib/ai/citations.ts). `url` is included on news so the model can
+  // follow the system prompt's own "[label](url)" instruction for real.
+  const analysesForModel = context.analyses.map(({ id: _id, ...rest }) => rest);
+  const newsForModel = context.news.map(({ id: _id, url, ...rest }) => (url ? { ...rest, url } : rest));
+
   return `Context for this turn (stored, already-validated data - do not invent beyond this):
 
 ${cardNote}
 
 Relevant stored analyses:
-${context.analyses.length === 0 ? "(none found)" : JSON.stringify(context.analyses, null, 2)}
+${analysesForModel.length === 0 ? "(none found)" : JSON.stringify(analysesForModel, null, 2)}
 
 Relevant recent news:
-${context.news.length === 0 ? "(none found)" : JSON.stringify(context.news, null, 2)}${portfolioBlock}`;
+${newsForModel.length === 0 ? "(none found)" : JSON.stringify(newsForModel, null, 2)}${portfolioBlock}`;
 }
 
 /**
@@ -246,11 +256,13 @@ export async function runChatTurn({
   }
 
   if (!failure) {
-    // Formatting only - the guard above ran on rawOutput, and normalizeReply
-    // only flattens pipe tables (no wording change), so the check it just
-    // passed still describes what the user sees. rawOutput is stored and
-    // logged unmodified; the bubble renders the markdown.
-    return { displayText: normalizeReply(rawOutput), flagged: false, flagReason: null, rawOutput, analysisIds, context };
+    // Formatting only - the guard above ran on rawOutput, and neither
+    // resolveCitations (marker -> real link, or dropped) nor normalizeReply
+    // (pipe-table flattening) changes wording, so the check that just passed
+    // still describes what the user sees. rawOutput is stored and logged
+    // unmodified; the bubble renders the markdown.
+    const displayText = normalizeReply(resolveCitations(rawOutput, context.news));
+    return { displayText, flagged: false, flagReason: null, rawOutput, analysisIds, context };
   }
 
   const corrected = rewriteForScopeGuard(context.analyses);
