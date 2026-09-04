@@ -9,6 +9,8 @@
 // string "ZZQQ9!!" with no validation, and it became a permanent dead row
 // rendering "- - -" forever, because nothing downstream could resolve it.
 
+import { normalizeSector } from "@/lib/sectors";
+
 /** Longest real ticker is 5 chars plus a class suffix (BRK.B, RDS-A). */
 const MAX_SYMBOL_LENGTH = 12;
 const SYMBOL_PATTERN = /^[A-Z0-9]{1,10}(?:[.-][A-Z]{1,2})?$/;
@@ -37,6 +39,33 @@ export function validateSymbol(raw: unknown): ValidationResult {
     return { ok: false, value, error: `"${raw.trim().slice(0, 20)}" isn't a valid ticker symbol.` };
   }
   return { ok: true, value };
+}
+
+/**
+ * An alert's `scope_value`. Every alert type watches a ticker; `ai_confidence`
+ * alerts may instead watch a sector (that is the one type the evaluator
+ * resolves against `ai_analyses.scope_value` rather than a price series).
+ *
+ * This is the same hardening the watchlist symbol field got after "ZZQQ9!!"
+ * became a permanent dead row - a server action is an HTTP endpoint and the
+ * typeahead is not in the way of a raw POST. Returns the value to store: an
+ * uppercase symbol, or a canonical lowercase sector slug.
+ */
+export function validateAlertScope(raw: unknown, alertType: string): ValidationResult {
+  if (typeof raw !== "string" || raw.trim().length === 0) {
+    return { ok: false, value: "", error: "Pick a ticker or sector to watch." };
+  }
+
+  const symbol = validateSymbol(raw);
+  if (symbol.ok) return symbol;
+
+  if (alertType === "ai_confidence") {
+    const slug = normalizeSector(raw);
+    if (slug) return { ok: true, value: slug };
+  }
+
+  const noun = alertType === "ai_confidence" ? "ticker or sector" : "ticker symbol";
+  return { ok: false, value: raw.trim().toUpperCase(), error: `"${raw.trim().slice(0, 20)}" isn't a valid ${noun}.` };
 }
 
 /**
