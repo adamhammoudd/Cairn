@@ -1,33 +1,37 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Field } from "@/components/auth/field";
 import { AuthError, AuthFooter, AuthHeader } from "@/components/auth/auth-chrome";
 
+// checking  - exchanging the link's code for a session
+// ready     - a valid session is established; show the new-password form
+// invalid   - no code, or the code was expired / already used. Show a "request
+//             a new link" panel instead of a form that will only fail on submit.
+type LinkStatus = "checking" | "ready" | "invalid";
+
 export default function ResetPasswordPage() {
   const router = useRouter();
-  const [ready, setReady] = useState(false);
+  const [status, setStatus] = useState<LinkStatus>("checking");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
   useEffect(() => {
     const supabase = createClient();
     const code = new URLSearchParams(window.location.search).get("code");
-    if (code) {
-      supabase.auth.exchangeCodeForSession(code).then(({ error: err }) => {
-        if (err) setError(err.message);
-        setReady(true);
-      });
-    } else {
+    if (!code) {
       // Deferred a tick rather than set synchronously in the effect body: a
       // synchronous setState here cascades an extra render on mount, which is
-      // what react-hooks/set-state-in-effect flags. The code-present branch
-      // above is already async and was never the problem.
-      const timer = setTimeout(() => setReady(true), 0);
+      // what react-hooks/set-state-in-effect flags.
+      const timer = setTimeout(() => setStatus("invalid"), 0);
       return () => clearTimeout(timer);
     }
+    supabase.auth.exchangeCodeForSession(code).then(({ error: err }) => {
+      setStatus(err ? "invalid" : "ready");
+    });
   }, []);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -49,6 +53,25 @@ export default function ResetPasswordPage() {
 
     if (err) setError(err.message);
     else router.push("/login");
+  }
+
+  if (status === "invalid") {
+    return (
+      <>
+        <AuthHeader
+          eyebrow="Account"
+          title="This reset link has expired"
+          blurb="Password reset links can only be used once and expire after a short while. Request a fresh one and we'll email it to you."
+        />
+        <Link
+          href="/forgot-password"
+          className="mt-5 block w-full rounded-[10px] bg-gradient-to-br from-accent-light to-accent-dark py-2.75 text-center text-[13.5px] font-semibold text-canvas transition-[box-shadow,transform] duration-base ease-standard hover:-translate-y-px hover:shadow-[0_0_26px_rgba(47,198,133,0.35)]"
+        >
+          Request a new link
+        </Link>
+        <AuthFooter />
+      </>
+    );
   }
 
   return (
@@ -78,7 +101,7 @@ export default function ResetPasswordPage() {
         />
         <button
           type="submit"
-          disabled={!ready || pending}
+          disabled={status !== "ready" || pending}
           className="mt-5 w-full rounded-[10px] bg-gradient-to-br from-accent-light to-accent-dark py-2.75 text-[13.5px] font-semibold text-canvas transition-[box-shadow,transform] duration-base ease-standard hover:-translate-y-px hover:shadow-[0_0_26px_rgba(47,198,133,0.35)] disabled:opacity-60"
         >
           {pending ? "Updating…" : "Update password"}
