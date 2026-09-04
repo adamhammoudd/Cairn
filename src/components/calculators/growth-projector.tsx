@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { Area, AreaChart, CartesianGrid, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { CALC_INPUT, CalcCard, CalcField, CalcStat } from "@/components/calculators/calc-primitives";
-import { clampAmount, MAX_AMOUNT_INPUT } from "@/lib/input-limits";
+import { clampAmount, clampRate, MAX_AMOUNT_INPUT, MAX_RATE_INPUT, MIN_RATE_INPUT } from "@/lib/input-limits";
 import { project, requiredMonthlyContribution } from "@/lib/projection";
 import { useDisplayPrefs } from "@/components/display-prefs-provider";
 import { formatAmount } from "@/lib/display-prefs";
@@ -41,14 +41,18 @@ export function GrowthProjector() {
     [startingBalance, annualReturnPct, inflationPct, annualFeePct, years, target],
   );
 
-  // Amounts are clamped to [0, MAX_AMOUNT_INPUT]; rates/years (which can be
-  // negative or need their own ceiling) pass through unclamped.
+  // Amounts clamp to [0, MAX_AMOUNT_INPUT]; percentage rates clamp to
+  // [MIN_RATE_INPUT, MAX_RATE_INPUT] (return may be negative, fee/inflation/
+  // withdrawal may not) so a "700" typo can't compound the projection into
+  // nonsense; only the year count passes through (its own min/max on the input).
   const num =
-    (setter: (n: number) => void, opts: { amount?: boolean } = {}) =>
+    (setter: (n: number) => void, opts: { amount?: boolean; rate?: boolean; allowNegative?: boolean } = {}) =>
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const v = Number(e.target.value);
       if (!Number.isFinite(v)) return setter(0);
-      setter(opts.amount ? clampAmount(v) : v);
+      if (opts.amount) return setter(clampAmount(v));
+      if (opts.rate) return setter(clampRate(v, { allowNegative: opts.allowNegative ?? false }));
+      setter(v);
     };
 
   return (
@@ -67,13 +71,13 @@ export function GrowthProjector() {
           <input type="number" min={1} max={80} value={years} onChange={num(setYears)} className={CALC_INPUT} />
         </CalcField>
         <CalcField label="Annual return %">
-          <input type="number" step={0.1} value={annualReturnPct} onChange={num(setReturn)} className={CALC_INPUT} />
+          <input type="number" step={0.1} min={MIN_RATE_INPUT} max={MAX_RATE_INPUT} value={annualReturnPct} onChange={num(setReturn, { rate: true, allowNegative: true })} className={CALC_INPUT} />
         </CalcField>
         <CalcField label="Annual fees %">
-          <input type="number" step={0.05} min={0} value={annualFeePct} onChange={num(setFee)} className={CALC_INPUT} />
+          <input type="number" step={0.05} min={0} max={MAX_RATE_INPUT} value={annualFeePct} onChange={num(setFee, { rate: true })} className={CALC_INPUT} />
         </CalcField>
         <CalcField label="Inflation %">
-          <input type="number" step={0.1} min={0} value={inflationPct} onChange={num(setInflation)} className={CALC_INPUT} />
+          <input type="number" step={0.1} min={0} max={MAX_RATE_INPUT} value={inflationPct} onChange={num(setInflation, { rate: true })} className={CALC_INPUT} />
         </CalcField>
       </div>
 
@@ -131,7 +135,7 @@ export function GrowthProjector() {
           <input type="number" min={0} max={MAX_AMOUNT_INPUT} value={target} onChange={num(setTarget, { amount: true })} className={CALC_INPUT} />
         </CalcField>
         <CalcField label="Withdrawal rate %">
-          <input type="number" step={0.1} min={0} value={withdrawalRate} onChange={num(setWithdrawal)} className={CALC_INPUT} />
+          <input type="number" step={0.1} min={0} max={MAX_RATE_INPUT} value={withdrawalRate} onChange={num(setWithdrawal, { rate: true })} className={CALC_INPUT} />
         </CalcField>
         <CalcStat
           label="To hit the target"

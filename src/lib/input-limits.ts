@@ -17,6 +17,26 @@ export function clampAmount(n: number): number {
 }
 
 /**
+ * Bounds for the percentage-rate fields in the calculators (annual return,
+ * inflation, fee drag, withdrawal rate). Without them, a fat-fingered "700"
+ * instead of "7" compounds a projection into a meaningless number - and there
+ * is no rate outside this range worth modelling.
+ */
+export const MIN_RATE_INPUT = -100;
+export const MAX_RATE_INPUT = 100;
+
+/**
+ * Clamp a percentage rate into [MIN_RATE_INPUT, MAX_RATE_INPUT]; non-finite ->
+ * 0. `allowNegative` defaults to false (fee, inflation and withdrawal rates
+ * cannot be negative); pass true for a return rate.
+ */
+export function clampRate(n: number, { allowNegative = false } = {}): number {
+  if (!Number.isFinite(n)) return 0;
+  const lo = allowNegative ? MIN_RATE_INPUT : 0;
+  return Math.min(Math.max(n, lo), MAX_RATE_INPUT);
+}
+
+/**
  * Server-side: coerce a form value to a number and validate it is a positive,
  * finite amount within bounds. Returns null when it isn't, so the action can
  * return a clear message instead of writing a bad row.
