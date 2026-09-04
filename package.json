@@ -37,6 +37,7 @@
     "test:sectors": "tsx --conditions=react-server scripts/tests/sector-vocabulary.ts",
     "test:read-errors": "tsx --conditions=react-server scripts/tests/read-errors.ts",
     "test:x-axis": "tsx --conditions=react-server scripts/tests/x-axis-config.ts",
+    "test:portfolio-totals": "tsx --conditions=react-server scripts/tests/portfolio-totals.ts",
     "test:split-finding": "tsx --conditions=react-server scripts/tests/split-finding.ts",
     "test:settings-wiring": "tsx --conditions=react-server scripts/tests/settings-wiring.ts",
     "test:waitlist-email": "tsx --conditions=react-server scripts/tests/waitlist-email.ts",
