@@ -8,7 +8,7 @@
 // in the case name, which is also what makes the DST pair meaningful - the
 // same 14:00 UTC is pre-market in January and open in July.
 
-import { getMarketStatus } from "../../src/lib/market-hours";
+import { getMarketStatus, LAST_MODELLED_HOLIDAY_YEAR } from "../../src/lib/market-hours";
 import type { SuiteResult, TestCase } from "./report";
 
 const cases: TestCase[] = [];
@@ -47,6 +47,26 @@ check("14:30 UTC in January is 09:30 EST = open", "2026-01-15T14:30:00Z", "open"
 
 // --- midnight boundary, where hour12:false can report "24" -----------------
 check("midnight ET is closed, not open", "2026-08-20T04:00:00Z", "closed");
+
+// --- past the modelled holiday table: never a confident "open" -------------
+// (audit 2026-09-04, medium). A weekday session past LAST_MODELLED_HOLIDAY_YEAR
+// might be a full-day closure we can't detect, so the status is hedged, not
+// asserted open.
+{
+  const pastYear = `${LAST_MODELLED_HOLIDAY_YEAR + 1}-06-15T15:00:00Z`; // a June weekday, ~11:00 ET
+  const s = getMarketStatus(new Date(pastYear));
+  cases.push({
+    name: `a weekday session in ${LAST_MODELLED_HOLIDAY_YEAR + 1} is not asserted "open"`,
+    status: !s.isOpen && s.phase === "closed" ? "pass" : "fail",
+    detail: `${s.phase} ("${s.label}"), isOpen=${s.isOpen}`,
+  });
+  cases.push({
+    name: "the hedged label says the holiday calendar is out of date",
+    status: /out of date|unavailable/i.test(s.label) ? "pass" : "fail",
+    detail: s.label,
+  });
+}
+check("a Saturday past the table is still 'weekend', not the hedge", `${LAST_MODELLED_HOLIDAY_YEAR + 1}-06-10T16:00:00Z`, "weekend");
 
 export function runMarketHoursSuite(): SuiteResult {
   return { suiteName: "Market hours", gating: true, cases };
