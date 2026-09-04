@@ -35,6 +35,16 @@ export const stripe = new Stripe(SECRET || "sk_unconfigured_placeholder", {
 
 export const PREMIUM_PRICE_ID = process.env.STRIPE_PRICE_PREMIUM ?? "";
 
+/**
+ * Deterministic idempotency key for creating this user's Stripe Customer.
+ * Passed to `customers.create` so a double-click / two open tabs (both within
+ * Stripe's 24h idempotency window) converge on ONE Customer record instead of
+ * creating one each and orphaning the first.
+ */
+export function customerIdempotencyKey(userId: string): string {
+  return `cairn-customer-${userId}`;
+}
+
 export function siteUrl(): string {
   return (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").replace(/\/$/, "");
 }

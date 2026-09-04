@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { MAX_AMOUNT_INPUT } from "@/lib/input-limits";
+import { validateAlertScope } from "@/lib/validation";
+import { parseCooldownSeconds } from "@/lib/alerts";
 import type { Alert, AlertDelivery, AlertType } from "@/lib/alerts";
 
 export async function listAlerts(): Promise<Alert[]> {
@@ -64,8 +66,12 @@ export async function createAlert(_prevState: string | null, formData: FormData)
   if (!user) redirect("/login");
 
   const alertType = String(formData.get("alert_type") ?? "") as AlertType;
-  const scopeValue = String(formData.get("scope_value") ?? "").trim().toUpperCase();
-  if (!scopeValue) return "Pick a ticker or sector to watch.";
+
+  const scope = validateAlertScope(formData.get("scope_value"), alertType);
+  if (!scope.ok) return scope.error ?? "Pick a ticker or sector to watch.";
+
+  const cooldownSeconds = parseCooldownSeconds(formData.get("cooldown_seconds"));
+  if (typeof cooldownSeconds === "string") return cooldownSeconds;
 
   const condition = buildCondition(alertType, formData);
   if (typeof condition === "string") return condition;
@@ -75,9 +81,9 @@ export async function createAlert(_prevState: string | null, formData: FormData)
   const { error } = await supabase.from("alerts").insert({
     user_id: user.id,
     alert_type: alertType,
-    scope_value: scopeValue,
+    scope_value: scope.value,
     condition,
-    cooldown_seconds: Number(formData.get("cooldown_seconds")) || 3600,
+    cooldown_seconds: cooldownSeconds,
     channels: channels.length > 0 ? channels : ["in_app"],
   });
   if (error) return error.message;
@@ -101,8 +107,12 @@ export async function updateAlert(_prevState: string | null, formData: FormData)
   if (!id) return "Missing alert id.";
 
   const alertType = String(formData.get("alert_type") ?? "") as AlertType;
-  const scopeValue = String(formData.get("scope_value") ?? "").trim().toUpperCase();
-  if (!scopeValue) return "Pick a ticker or sector to watch.";
+
+  const scope = validateAlertScope(formData.get("scope_value"), alertType);
+  if (!scope.ok) return scope.error ?? "Pick a ticker or sector to watch.";
+
+  const cooldownSeconds = parseCooldownSeconds(formData.get("cooldown_seconds"));
+  if (typeof cooldownSeconds === "string") return cooldownSeconds;
 
   const condition = buildCondition(alertType, formData);
   if (typeof condition === "string") return condition;
@@ -113,9 +123,9 @@ export async function updateAlert(_prevState: string | null, formData: FormData)
     .from("alerts")
     .update({
       alert_type: alertType,
-      scope_value: scopeValue,
+      scope_value: scope.value,
       condition,
-      cooldown_seconds: Number(formData.get("cooldown_seconds")) || 3600,
+      cooldown_seconds: cooldownSeconds,
       channels: channels.length > 0 ? channels : ["in_app"],
       last_triggered_at: null,
     })

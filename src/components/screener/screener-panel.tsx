@@ -1,15 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState, useTransition } from "react";
-import { deleteSavedScreen, runScreen, saveScreen } from "@/lib/actions/screener";
+import { useMemo, useState, useTransition } from "react";
+import { deleteSavedScreen, saveScreen } from "@/lib/actions/screener";
 import {
   ASSET_TYPE_LABEL,
   ASSET_TYPE_TAG_CLASS,
   ASSET_TYPES,
   EMPTY_FILTERS,
   PRESET_SCREENS,
+  SCREENER_NUMERIC_FIELDS,
   applyScreenSort,
+  applyScreenerFilters,
   formatMarketCap,
   formatVolume,
   type ScreenSort,
@@ -21,11 +23,21 @@ import { DataFreshness } from "@/components/data-freshness";
 import { useDisplayPrefs } from "@/components/display-prefs-provider";
 import { absoluteChangeFrom, formatChange, formatMoney } from "@/lib/display-prefs";
 
+type NumericField = (typeof SCREENER_NUMERIC_FIELDS)[number];
+type FilterText = Record<NumericField, string>;
+
 function numOrNull(v: string): number | null {
   const trimmed = v.trim();
   if (!trimmed) return null;
   const n = Number(trimmed);
   return Number.isFinite(n) ? n : null;
+}
+
+/** The text each filter box should show for a given filter set. */
+function textFromFilters(f: ScreenerFilters): FilterText {
+  return Object.fromEntries(
+    SCREENER_NUMERIC_FIELDS.map((k) => [k, f[k] === null ? "" : String(f[k])]),
+  ) as FilterText;
 }
 
 interface ScreenerPanelProps {
@@ -40,22 +52,54 @@ function FieldLabel({ children }: { children: React.ReactNode }) {
 const NUM_INPUT_CLASS =
   "w-full rounded-[10px] border border-line bg-[#0B0B0B] px-3 py-2.5 text-[12.5px] text-primary outline-none transition-colors duration-fast ease-standard placeholder:text-dim focus:border-accent";
 
+function FilterInput({
+  field,
+  placeholder,
+  text,
+  onEdit,
+}: {
+  field: NumericField;
+  placeholder: string;
+  text: FilterText;
+  onEdit: (field: NumericField, raw: string) => void;
+}) {
+  return (
+    <input
+      inputMode="decimal"
+      placeholder={placeholder}
+      value={text[field]}
+      onChange={(e) => onEdit(field, e.target.value)}
+      className={NUM_INPUT_CLASS}
+    />
+  );
+}
+
 export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }: ScreenerPanelProps) {
   // Settings > Display: same currency and percent-vs-dollar treatment the
   // Markets, Watchlists and Holdings tables use.
   const prefs = useDisplayPrefs();
   const [filters, setFilters] = useState<ScreenerFilters>(EMPTY_FILTERS);
-  const [rows, setRows] = useState<ScreenerRow[]>(initialRows);
-  // A preset is a filter set plus an ordering. The filters go to the server
-  // like any other; the ordering is applied here over the full matching set,
-  // so it is an exact sort rather than a server-side top-N.
+  // Text mirror for the filter boxes, so a preset / reset / saved-screen load
+  // visibly updates every box to match what is actually filtering, and so a
+  // half-typed value ("-", "1.") is not clobbered on the way in.
+  const [filterText, setFilterText] = useState<FilterText>(() => textFromFilters(EMPTY_FILTERS));
+  // A preset is a filter set plus an ordering. Both are applied client-side
+  // over the full universe already in the browser (`initialRows`), so a
+  // keystroke re-filters instantly with no database round trip.
   const [preset, setPreset] = useState<string | null>(null);
   const [sort, setSort] = useState<ScreenSort | null>(null);
   const [savedScreens, setSavedScreens] = useState<SavedScreen[]>(initialSavedScreens);
-  const [loading, setLoading] = useState(false);
   const [, startMutate] = useTransition();
+
+  const matched = useMemo(() => applyScreenerFilters(initialRows, filters), [initialRows, filters]);
   // Newest bar behind any row currently on screen.
-  const visibleRows = sort ? applyScreenSort(rows, sort) : rows;
+  const visibleRows = sort ? applyScreenSort(matched, sort) : matched;
+
+  /** Set the whole filter set at once (preset, reset, saved screen) and sync the boxes. */
+  function setFilterSet(next: ScreenerFilters) {
+    setFilters(next);
+    setFilterText(textFromFilters(next));
+  }
   const asOf = visibleRows.reduce<string | null>((newest, r) => (r.asOf && (!newest || r.asOf > newest) ? r.asOf : newest), null);
   const activePreset = PRESET_SCREENS.find((p) => p.id === preset) ?? null;
 
@@ -64,7 +108,7 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
     if (!found) return;
     setPreset(id);
     setSort(found.sort);
-    setFilters(found.filters);
+    setFilterSet(found.filters);
   }
 
   /**
@@ -73,40 +117,19 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
    * preset, and keeping either after the banner disappeared would mean rows
    * being dropped with nothing on screen saying so.
    */
-  function patchFilters(patch: Partial<ScreenerFilters>) {
+  /** Type into one numeric filter box: mirror the raw text, filter on the parsed value. */
+  function editFilter(field: NumericField, raw: string) {
     setPreset(null);
     setSort(null);
-    setFilters((f) => ({ ...f, ...patch }));
+    setFilterText((t) => ({ ...t, [field]: raw }));
+    setFilters((f) => ({ ...f, [field]: numOrNull(raw) }));
   }
 
   function clearPreset() {
     setPreset(null);
     setSort(null);
-    setFilters(EMPTY_FILTERS);
+    setFilterSet(EMPTY_FILTERS);
   }
-
-  // Debounced re-query: filters are typed into, so fire 300ms after the last
-  // keystroke rather than on every character.
-  useEffect(() => {
-    let cancelled = false;
-    // Moved inside the timer: setting it synchronously in the effect body
-    // triggers a cascading render on every keystroke, which is what
-    // react-hooks/set-state-in-effect flags. The spinner is only meaningful
-    // once the debounced query actually starts.
-    const timer = setTimeout(async () => {
-      if (!cancelled) setLoading(true);
-      const next = await runScreen(filters);
-      if (!cancelled) {
-        setRows(next);
-        setLoading(false);
-      }
-    }, 300);
-
-    return () => {
-      cancelled = true;
-      clearTimeout(timer);
-    };
-  }, [filters]);
 
   function toggleAssetType(t: string) {
     setPreset(null);
@@ -161,73 +184,33 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
 
           <FieldLabel>Price</FieldLabel>
           <div className="flex items-center gap-2">
-            <input
-              placeholder="Min"
-              onChange={(e) => patchFilters({ minPrice: numOrNull(e.target.value) })}
-              className={NUM_INPUT_CLASS}
-            />
-            <input
-              placeholder="Max"
-              onChange={(e) => patchFilters({ maxPrice: numOrNull(e.target.value) })}
-              className={NUM_INPUT_CLASS}
-            />
+            <FilterInput field="minPrice" placeholder="Min" text={filterText} onEdit={editFilter} />
+            <FilterInput field="maxPrice" placeholder="Max" text={filterText} onEdit={editFilter} />
           </div>
 
           <FieldLabel>% change</FieldLabel>
           <div className="flex items-center gap-2">
-            <input
-              placeholder="Min"
-              onChange={(e) => patchFilters({ minChangePct: numOrNull(e.target.value) })}
-              className={NUM_INPUT_CLASS}
-            />
-            <input
-              placeholder="Max"
-              onChange={(e) => patchFilters({ maxChangePct: numOrNull(e.target.value) })}
-              className={NUM_INPUT_CLASS}
-            />
+            <FilterInput field="minChangePct" placeholder="Min" text={filterText} onEdit={editFilter} />
+            <FilterInput field="maxChangePct" placeholder="Max" text={filterText} onEdit={editFilter} />
           </div>
 
           <FieldLabel>Min volume</FieldLabel>
-          <input
-            placeholder="e.g. 1000000"
-            onChange={(e) => patchFilters({ minVolume: numOrNull(e.target.value) })}
-            className={NUM_INPUT_CLASS}
-          />
+          <FilterInput field="minVolume" placeholder="e.g. 1000000" text={filterText} onEdit={editFilter} />
 
           <FieldLabel>Market cap ($M)</FieldLabel>
           <div className="flex items-center gap-2">
-            <input
-              placeholder="Min"
-              onChange={(e) => patchFilters({ minMarketCapM: numOrNull(e.target.value) })}
-              className={NUM_INPUT_CLASS}
-            />
-            <input
-              placeholder="Max"
-              onChange={(e) => patchFilters({ maxMarketCapM: numOrNull(e.target.value) })}
-              className={NUM_INPUT_CLASS}
-            />
+            <FilterInput field="minMarketCapM" placeholder="Min" text={filterText} onEdit={editFilter} />
+            <FilterInput field="maxMarketCapM" placeholder="Max" text={filterText} onEdit={editFilter} />
           </div>
 
           <FieldLabel>P/E ratio</FieldLabel>
           <div className="flex items-center gap-2">
-            <input
-              placeholder="Min"
-              onChange={(e) => patchFilters({ minPe: numOrNull(e.target.value) })}
-              className={NUM_INPUT_CLASS}
-            />
-            <input
-              placeholder="Max"
-              onChange={(e) => patchFilters({ maxPe: numOrNull(e.target.value) })}
-              className={NUM_INPUT_CLASS}
-            />
+            <FilterInput field="minPe" placeholder="Min" text={filterText} onEdit={editFilter} />
+            <FilterInput field="maxPe" placeholder="Max" text={filterText} onEdit={editFilter} />
           </div>
 
           <FieldLabel>Min dividend yield (%)</FieldLabel>
-          <input
-            placeholder="e.g. 1.5"
-            onChange={(e) => patchFilters({ minDividendYield: numOrNull(e.target.value) })}
-            className={NUM_INPUT_CLASS}
-          />
+          <FilterInput field="minDividendYield" placeholder="e.g. 1.5" text={filterText} onEdit={editFilter} />
 
           <button
             type="button"
@@ -263,7 +246,11 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
                 <div key={s.id} className="flex items-center justify-between gap-2">
                   <button
                     type="button"
-                    onClick={() => setFilters(s.filters)}
+                    onClick={() => {
+                      setPreset(null);
+                      setSort(null);
+                      setFilterSet(s.filters);
+                    }}
                     className="flex-1 truncate rounded-lg px-2.5 py-2 text-left text-[12.5px] text-muted transition-colors duration-fast ease-standard hover:bg-active hover:text-primary"
                   >
                     {s.name}
@@ -290,7 +277,7 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
         <div className="overflow-hidden rounded-card border border-line bg-panel">
           <div className="flex items-center justify-between gap-3 border-b border-line px-4.5 py-3">
             <span className="font-mono text-[10px] tracking-[0.14em] text-muted uppercase">
-              {loading ? "Filtering…" : `${visibleRows.length} match${visibleRows.length === 1 ? "" : "es"}`}
+              {`${visibleRows.length} match${visibleRows.length === 1 ? "" : "es"}`}
             </span>
             <div className="flex items-center gap-3">
               {/* Same numbers as Markets and the ticker page, so the same
