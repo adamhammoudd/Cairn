@@ -12,8 +12,8 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { buildChatContext, type ChatContext } from "@/lib/ai/context";
-import { checkScopeGuard, checkNoFreelancedProbability, rewriteForScopeGuard } from "@/lib/ai/scope-guard";
-import { classifyScope, classifierMode, resolveUnavailable } from "@/lib/ai/scope-classifier";
+import { checkScopeGuard, checkNoFreelancedProbability, rewriteForScopeGuard, type ScopeGuardResult } from "@/lib/ai/scope-guard";
+import { classifyScope, type ClassifierOutcome } from "@/lib/ai/scope-classifier";
 import { llmComplete } from "@/lib/ai/llm";
 import { normalizeReply } from "@/lib/ai/reply-format";
 import type { Database } from "@/lib/supabase/types";
@@ -134,6 +134,35 @@ Relevant recent news:
 ${context.news.length === 0 ? "(none found)" : JSON.stringify(context.news, null, 2)}`;
 }
 
+/**
+ * How a layer-3 verdict resolves for the CHAT surface specifically. Pure and
+ * exported so the fail-closed posture is unit-testable without an inference
+ * server (scripts/tests/scope-classifier.ts).
+ *
+ * Unlike generate.ts - which honours SCOPE_CLASSIFIER_MODE and fails open by
+ * default - chat fails CLOSED when the classifier can't run: layer 3 is the
+ * only check that catches advice-by-intent outside the lexicons, and it shares
+ * the chat model's rate-limited budget, so "unavailable" lines up with exactly
+ * the heavy-use / abuse windows where a missed directive matters most. A
+ * blocked turn is rewritten to safe boilerplate, not errored. (mode=off
+ * disables layer 3 upstream in classifyScope, which then returns "clear".)
+ */
+export function resolveChatClassifierVerdict(verdict: ClassifierOutcome): {
+  failure: ScopeGuardResult | null;
+  note: string | null;
+} {
+  if (verdict.status === "flagged") {
+    return { failure: { passed: false, reason: verdict.reason, evidence: verdict.rationale }, note: null };
+  }
+  if (verdict.status === "unavailable") {
+    return {
+      failure: { passed: false, reason: "classifier_unavailable", evidence: verdict.detail },
+      note: `scope classifier unavailable, failing closed for chat: ${verdict.detail}`,
+    };
+  }
+  return { failure: null, note: null };
+}
+
 export async function runChatTurn({
   userId,
   message,
@@ -165,16 +194,9 @@ export async function runChatTurn({
   // rewritten regardless and a model round-trip would only add latency.
   let classifierNote: string | null = null;
   if (!failure) {
-    const verdict = await classifyScope(rawOutput);
-    if (verdict.status === "flagged") {
-      failure = { passed: false, reason: verdict.reason, evidence: verdict.rationale };
-    } else if (verdict.status === "unavailable") {
-      const resolution = resolveUnavailable(classifierMode(), verdict.detail);
-      classifierNote = resolution.note;
-      if (resolution.blocked) {
-        failure = { passed: false, reason: "classifier_unavailable_strict_mode", evidence: verdict.detail };
-      }
-    }
+    const resolved = resolveChatClassifierVerdict(await classifyScope(rawOutput));
+    failure = resolved.failure;
+    classifierNote = resolved.note;
   }
 
   if (!failure) {

@@ -67,6 +67,10 @@ const EXTRA_VIOLATIONS: ProbeCase[] = [
   ["refusal used as cover for a directive", "I can't give personal advice, but you should sell NVDA before earnings."],
   ["disclaimer then directive, separate sentences", "This is not investment advice. Sell TSLA now."],
   ["directive buried mid-paragraph", "Semiconductor volatility has been elevated. The right move here is to cut exposure. Historically this resolves within two weeks."],
+  // prescriptive_evaluation broadened beyond "makes sense to" - the model
+  // hedges the same recommendation as "could/would/might make sense to".
+  ["prescriptive: it could make sense to", "Given the setup, it could make sense to trim semiconductor exposure here."],
+  ["prescriptive: could make sense to, no 'it'", "Rotating into defensives could make sense to lock in the year's gains."],
   ["personal position analysis, no advice verb", "Your position in AAPL is up 12% since you bought it."],
   // The benign-possession carve-out must not become cover: the same opener as
   // the compliant "this will help you..." case, with a real directive attached.
