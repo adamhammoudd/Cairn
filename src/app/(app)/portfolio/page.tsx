@@ -84,14 +84,17 @@ async function PortfolioBody() {
   };
 
   // Last 30 closes per symbol, oldest-first, for the holdings table's inline
-  // trend column. priceRows is sorted ascending above, so slice(-30) is the
-  // most recent 30 - it is only correct because of that sort, which is why the
-  // sort is not left to chance.
+  // trend column. Reuses barsBySymbol (built above for the quote reads) instead
+  // of re-scanning the whole priceRows array once per held symbol - that was
+  // O(symbols x priceRows), avoidable server work on every page load.
+  // groupBarsBySymbol sorts each list newest-first, so slice(0, 30).reverse()
+  // is the most recent 30 in chronological order.
   const sparklines: Record<string, number[]> = {};
   for (const symbol of symbols) {
-    sparklines[symbol] = priceRows
-      .filter((p) => p.symbol === symbol && p.close !== null)
-      .slice(-30)
+    sparklines[symbol] = (barsBySymbol.get(symbol) ?? [])
+      .filter((p) => p.close !== null)
+      .slice(0, 30)
+      .reverse()
       .map((p) => Number(p.close));
   }
 
