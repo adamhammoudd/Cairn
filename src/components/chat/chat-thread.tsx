@@ -111,8 +111,11 @@ export function ChatThread({
   const [hasMore, setHasMore] = useState(false);
   const [loadingOlder, setLoadingOlder] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
-  // Lets the composer button stop an in-flight stream, per the artboard's
-  // "label swaps to Stop while streaming".
+  // Ends the client-side typing animation for an in-flight turn. It cannot stop
+  // *generation* - the whole answer is produced, scope-guarded and written to
+  // chat_messages server-side before the first byte streams (see
+  // app/api/chat/route.ts). So the button is "Skip", not "Stop", and on click
+  // the view is synced to the persisted turn rather than left truncated.
   const abortRef = useRef<AbortController | null>(null);
 
   // Only the most recent turn that cited an analysis needs its methodology
@@ -285,8 +288,21 @@ export function ChatThread({
         setSessions(await listChatSessions());
       }
     } catch (err) {
-      // A user-initiated stop is not a failure - keep whatever streamed so far.
-      if (!(err instanceof DOMException && err.name === "AbortError")) {
+      if (err instanceof DOMException && err.name === "AbortError") {
+        // "Skip" pressed. The turn was fully generated and saved before
+        // streaming began, so sync the thread to the persisted turn - leaving
+        // the truncated copy on screen would silently be replaced by the full
+        // answer on the next reload.
+        if (activeSessionId) {
+          try {
+            const history = await listChatMessages(activeSessionId, 0);
+            setMessages(await withAnalyses(history));
+          } catch {
+            // Best effort - if the reload fails the reader still has the
+            // partial answer, and a manual reload will show the full one.
+          }
+        }
+      } else {
         setMessages((prev) => {
           const next = [...prev];
           next[next.length - 1] = {
@@ -305,7 +321,7 @@ export function ChatThread({
     }
   }
 
-  function stopStreaming() {
+  function skipAnimation() {
     abortRef.current?.abort();
   }
 
@@ -435,15 +451,16 @@ export function ChatThread({
           />
           <button
             type="button"
-            onClick={() => (streaming ? stopStreaming() : send())}
+            onClick={() => (streaming ? skipAnimation() : send())}
             disabled={!streaming && !input.trim()}
+            title={streaming ? "Show the full answer now (it's already generated)" : undefined}
             className={`shrink-0 rounded-[10px] px-4.5 py-2.75 text-[13px] font-semibold transition-[box-shadow] duration-base ease-standard disabled:opacity-50 ${
               streaming
                 ? "border border-line bg-transparent text-primary hover:border-[#3A3A3A]"
                 : "bg-gradient-to-br from-accent-light to-accent-dark text-canvas hover:shadow-[0_0_22px_rgba(47,198,133,0.35)]"
             }`}
           >
-            {streaming ? "Stop" : "Send"}
+            {streaming ? "Skip" : "Send"}
           </button>
         </div>
         {!compact && (

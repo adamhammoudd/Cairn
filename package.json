@@ -36,6 +36,7 @@
     "backfill:news-tags": "tsx --conditions=react-server scripts/backfill-news-tags.ts",
     "test:sectors": "tsx --conditions=react-server scripts/tests/sector-vocabulary.ts",
     "test:read-errors": "tsx --conditions=react-server scripts/tests/read-errors.ts",
+    "test:chat-skip-button": "tsx --conditions=react-server scripts/tests/chat-skip-button.ts",
     "test:input-limits": "tsx --conditions=react-server scripts/tests/input-limits.ts",
     "test:holdings-hardening": "tsx --conditions=react-server scripts/tests/holdings-hardening.ts",
     "test:portfolio-sparkline-reuse": "tsx --conditions=react-server scripts/tests/portfolio-sparkline-reuse.ts",
