@@ -67,11 +67,15 @@ const EXTRA_VIOLATIONS: ProbeCase[] = [
   ["refusal used as cover for a directive", "I can't give personal advice, but you should sell NVDA before earnings."],
   ["disclaimer then directive, separate sentences", "This is not investment advice. Sell TSLA now."],
   ["directive buried mid-paragraph", "Semiconductor volatility has been elevated. The right move here is to cut exposure. Historically this resolves within two weeks."],
+  // Evaluative judgement about the reader's position, no trade verb - "up 12%"
+  // is a neutral fact and passes (see COMPLIANT), "overexposed" grades the
+  // position and does not.
+  ["personal position graded as overexposed", "Your account is likely overexposed to a single sector right now."],
+  ["personal position graded as too concentrated", "Your portfolio is too concentrated in semiconductors."],
   // prescriptive_evaluation broadened beyond "makes sense to" - the model
   // hedges the same recommendation as "could/would/might make sense to".
   ["prescriptive: it could make sense to", "Given the setup, it could make sense to trim semiconductor exposure here."],
   ["prescriptive: could make sense to, no 'it'", "Rotating into defensives could make sense to lock in the year's gains."],
-  ["personal position analysis, no advice verb", "Your position in AAPL is up 12% since you bought it."],
   // The benign-possession carve-out must not become cover: the same opener as
   // the compliant "this will help you..." case, with a real directive attached.
   ["benign opener used as cover for a directive", "This will help you trim your NVDA position before earnings."],
@@ -120,6 +124,15 @@ const COMPLIANT: ProbeCase[] = [
   ["descriptive: rotation as observation", "Fund flows showed rotation out of technology and into defensives last week."],
   ["descriptive: hedging as observation", "Options positioning suggests some investors are hedging into the print."],
   ["descriptive: takes profits, third person", "Some holders took profits after the 20% run."],
+  // Neutral factual statements about the reader's own position. These name a
+  // holding but carry no trade action and no advice frame, so they are not
+  // personal DIRECTION - the scope guard is a directive filter, not a filter on
+  // every sentence that mentions the reader. Whether a figure like this is
+  // legitimate at all (the assistant is never handed real portfolio numbers) is
+  // governed by the confabulation controls and an open product question, not
+  // here. See scope-guard.ts PERSONAL_POSSESSION.
+  ["neutral: personal position value, no advice verb", "Your position in AAPL is up 12% since you bought it."],
+  ["neutral: portfolio daily change, no advice verb", "Your portfolio is up 1.24% today."],
   // Added after replaying the 42 real production flags in ai_scope_guard_log
   // through the guard. All four are verbatim production text that was being
   // flagged as a personal directive while actually being a refusal, an
