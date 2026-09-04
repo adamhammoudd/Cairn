@@ -38,6 +38,23 @@ const HOLIDAYS_2027 = [
 
 const HOLIDAYS = new Set([...HOLIDAYS_2026, ...HOLIDAYS_2027]);
 
+// The last calendar year HOLIDAYS covers. Past this, a full-day closure cannot
+// be detected - so instead of silently reporting a holiday as a normal session
+// (the "confident and wrong" failure this whole file exists to avoid), the
+// status is hedged and a warning is logged once per year so the omission is
+// visible in the deployment logs rather than only on screen.
+export const LAST_MODELLED_HOLIDAY_YEAR = 2027;
+
+const warnedYears = new Set<number>();
+function warnStaleHolidayTable(year: number): void {
+  if (warnedYears.has(year)) return;
+  warnedYears.add(year);
+  console.warn(
+    `[market-hours] NYSE holiday table ends at ${LAST_MODELLED_HOLIDAY_YEAR}; asked about ${year}. ` +
+      `Full-day closures for ${year} are not modelled - extend HOLIDAYS_* in src/lib/market-hours.ts.`,
+  );
+}
+
 interface ZonedParts {
   year: number;
   month: number;
@@ -82,6 +99,12 @@ export function getMarketStatus(at: Date = new Date()): MarketStatus {
   }
   if (HOLIDAYS.has(iso)) {
     return { phase: "holiday", label: "Markets closed · holiday", isOpen: false };
+  }
+  if (p.year > LAST_MODELLED_HOLIDAY_YEAR) {
+    // Weekday, past the holiday table: it might be a full-day closure and we
+    // cannot tell, so never assert a bare "open".
+    warnStaleHolidayTable(p.year);
+    return { phase: "closed", label: "Market status unavailable · holiday calendar out of date", isOpen: false };
   }
 
   const OPEN = 9 * 60 + 30;
