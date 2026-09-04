@@ -106,7 +106,7 @@ export function runBriefingSummarySuite(): SuiteResult {
   cases.push(check("dedupe: the NEWEST MSFT run is the one kept", deduped.find((a) => a.scope_value === "MSFT")?.created_at === "2026-09-01", JSON.stringify(deduped)));
   cases.push(check("dedupe: an untouched symbol (NVDA) is unaffected", deduped.some((a) => a.scope_value === "NVDA"), JSON.stringify(deduped)));
   cases.push(check("dedupe: no symbol survives duplicated", new Set(deduped.map((a) => a.scope_value)).size === deduped.length, JSON.stringify(deduped)));
-  cases.push(check("dedupe: empty input, no crash", dedupeLatestPerSymbol([]).length === 0));
+  cases.push(check("dedupe: empty input, no crash", dedupeLatestPerSymbol([]).length === 0, "no crash on empty array"));
 
   return { suiteName: "Daily briefing summary", gating: true, cases };
 }

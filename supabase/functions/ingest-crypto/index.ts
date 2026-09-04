@@ -22,6 +22,7 @@ import { corsHeaders } from "../_shared/cors.ts";
 import { requireCronSecret } from "../_shared/auth.ts";
 import { deriveVolatilityRegimes, CRYPTO_PERIODS_PER_YEAR } from "../_shared/volatility.ts";
 import { buildDirectoryPatch } from "../_shared/symbol-directory.ts";
+import { compareForHistoryRefresh } from "../_shared/history-refresh-priority.ts";
 
 // Was a hardcoded 25 - a self-imposed cap on a keyless API, not a provider
 // limit. It is now the provider row's `config.top_n` (default 250, CoinGecko's
@@ -218,13 +219,28 @@ Deno.serve(async (req) => {
     if (!freshestBySymbol.has(row.symbol)) freshestBySymbol.set(row.symbol, row.ts);
   }
 
+  // Symbols someone actually holds or watches, across every account - refreshed
+  // ahead of the generic stalest-first queue every run, same request budget
+  // (see _shared/history-refresh-priority.ts). This is what keeps BTC-sized
+  // coins from waiting behind a 250-coin long tail; it does not raise
+  // CoinGecko request volume, only reorders which HISTORY_COINS_PER_RUN coins
+  // get picked.
+  const [{ data: heldRows }, { data: watchedRows }] = await Promise.all([
+    supabase.from("holdings").select("symbol"),
+    supabase.from("watchlist_items").select("symbol"),
+  ]);
+  const prioritySymbols = new Set<string>(
+    [...(heldRows ?? []), ...(watchedRows ?? [])].map((r: { symbol: string }) => r.symbol.toUpperCase()),
+  );
+
   const historyFor = [...coins]
-    .sort((a, b) => {
-      const aTs = freshestBySymbol.get(a.symbol.toUpperCase()) ?? "";
-      const bTs = freshestBySymbol.get(b.symbol.toUpperCase()) ?? "";
-      if (aTs !== bTs) return aTs < bTs ? -1 : 1; // never-ingested ("") first
-      return (a.market_cap_rank ?? 999) - (b.market_cap_rank ?? 999);
-    })
+    .sort((a, b) =>
+      compareForHistoryRefresh(
+        { symbol: a.symbol.toUpperCase(), freshestBarTs: freshestBySymbol.get(a.symbol.toUpperCase()) ?? "", marketCapRank: a.market_cap_rank },
+        { symbol: b.symbol.toUpperCase(), freshestBarTs: freshestBySymbol.get(b.symbol.toUpperCase()) ?? "", marketCapRank: b.market_cap_rank },
+        prioritySymbols,
+      ),
+    )
     .slice(0, HISTORY_COINS_PER_RUN);
 
   const results = [];

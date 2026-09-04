@@ -65,7 +65,8 @@
     "test:holdings-stale-price": "tsx --conditions=react-server scripts/tests/holdings-stale-price.ts",
     "test:allocation-asset-class": "tsx --conditions=react-server scripts/tests/allocation-asset-class.ts",
     "test:chat-citations": "tsx --conditions=react-server scripts/tests/citations.ts",
-    "test:market-decks": "tsx --conditions=react-server scripts/tests/market-decks.ts"
+    "test:market-decks": "tsx --conditions=react-server scripts/tests/market-decks.ts",
+    "test:history-refresh-priority": "tsx --conditions=react-server scripts/tests/history-refresh-priority.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.4",
