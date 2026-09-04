@@ -28,6 +28,7 @@
     "test:briefing-summary": "tsx --conditions=react-server scripts/tests/briefing-summary.ts",
     "test:billing-limits": "tsx --conditions=react-server scripts/tests/billing-limits.ts",
     "test:guard-probe": "tsx --conditions=react-server scripts/tests/scope-guard-probe.ts",
+    "test:portfolio-figure-drift": "tsx --conditions=react-server scripts/tests/portfolio-figure-drift.ts",
     "test:classifier": "tsx --conditions=react-server scripts/tests/scope-classifier.ts",
     "test:market-hours": "tsx --conditions=react-server scripts/tests/market-hours.ts",
     "test:contrast": "tsx --conditions=react-server scripts/tests/contrast.ts",

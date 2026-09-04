@@ -12,7 +12,14 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { buildChatContext, type ChatContext } from "@/lib/ai/context";
-import { checkScopeGuard, checkNoFreelancedProbability, rewriteForScopeGuard, type ScopeGuardResult } from "@/lib/ai/scope-guard";
+import {
+  checkScopeGuard,
+  checkNoFreelancedProbability,
+  checkPortfolioFigureDrift,
+  rewriteForScopeGuard,
+  type ScopeGuardResult,
+} from "@/lib/ai/scope-guard";
+import { renderPortfolioSummaryBlock, portfolioSummaryFigures } from "@/lib/ai/portfolio-summary";
 import { classifyScope, type ClassifierOutcome } from "@/lib/ai/scope-classifier";
 import { llmComplete } from "@/lib/ai/llm";
 import { normalizeReply } from "@/lib/ai/reply-format";
@@ -30,6 +37,12 @@ Hard rules, no exceptions:
   analyses are relevant to surface - never to shape advice about their specific position.
 - When you cite a stored analysis, keep its probability range and confidence level as given -
   don't round it into false precision or restate it more confidently than it was stored.
+- Portfolio figures: some turns include a PORTFOLIO_SUMMARY block with the reader's own totals,
+  computed by Cairn. You may restate a figure from that block exactly as it is written there. You
+  may NEVER compute, estimate, extrapolate, round, or infer any portfolio, position, cost-basis,
+  or profit/loss number that is not printed verbatim in that block - if it isn't there, say you
+  don't have it. When no PORTFOLIO_SUMMARY block is present this turn, you have no portfolio
+  figures at all and must not present any.
 - Plain language, cite sources/analogs when you reference them.
 
 How the answer must be written:
@@ -59,9 +72,9 @@ How the answer must be written:
   is available only when both are empty, and then in ONE sentence naming what
   would answer it. Not a paragraph, and never an apology.
 
-This is the shape and length expected (note it describes the sector/ticker, never
-the reader's own position or account value - you are never given those numbers,
-so never write an answer shaped as if you were):
+This is the shape and length expected (note it describes the sector/ticker itself,
+not the reader's account - state a personal figure only by restating one from a
+PORTFOLIO_SUMMARY block when this turn includes one, never by inventing it):
 
 Semiconductors have given back **4.2%** over the past week, with NVDA (-6.1%) and
 AMD (-5.3%) leading the move after two supplier guidance cuts reset AI-capex
@@ -133,6 +146,11 @@ function buildContextBlock(context: ChatContext): string {
       ? "NO analysis card is rendered beneath your reply this turn. Do NOT write \"Below is...\" or refer to anything shown below - there is nothing there."
       : `An analysis card IS rendered beneath your reply this turn (${context.analyses.length}). Close by pointing to it instead of restating its numbers.`;
 
+  // Real portfolio figures, when the feature is on. Kept as a clearly labelled,
+  // self-delimiting block so the model (and checkPortfolioFigureDrift) treat it
+  // as the one authoritative source for any personal number this turn.
+  const portfolioBlock = context.portfolio ? `\n\n${renderPortfolioSummaryBlock(context.portfolio)}` : "";
+
   return `Context for this turn (stored, already-validated data - do not invent beyond this):
 
 ${cardNote}
@@ -141,7 +159,7 @@ Relevant stored analyses:
 ${context.analyses.length === 0 ? "(none found)" : JSON.stringify(context.analyses, null, 2)}
 
 Relevant recent news:
-${context.news.length === 0 ? "(none found)" : JSON.stringify(context.news, null, 2)}`;
+${context.news.length === 0 ? "(none found)" : JSON.stringify(context.news, null, 2)}${portfolioBlock}`;
 }
 
 /**
@@ -204,7 +222,18 @@ export async function runChatTurn({
 
   const scopeCheck = checkScopeGuard(rawOutput);
   const probabilityCheck = checkNoFreelancedProbability(rawOutput, context.analyses);
-  let failure = !scopeCheck.passed ? scopeCheck : !probabilityCheck.passed ? probabilityCheck : null;
+  // No-op unless a PORTFOLIO_SUMMARY block was injected this turn: with the
+  // feature off, context.portfolio is null and this is skipped entirely.
+  const portfolioFigureCheck: ScopeGuardResult = context.portfolio
+    ? checkPortfolioFigureDrift(rawOutput, portfolioSummaryFigures(context.portfolio))
+    : { passed: true, reason: null };
+  let failure = !scopeCheck.passed
+    ? scopeCheck
+    : !probabilityCheck.passed
+      ? probabilityCheck
+      : !portfolioFigureCheck.passed
+        ? portfolioFigureCheck
+        : null;
 
   // Layer 3: semantic second pass. Only consulted when the deterministic
   // layers found nothing -- if they already flagged, the response is being

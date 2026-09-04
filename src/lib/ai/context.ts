@@ -1,6 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/types";
+import {
+  buildPortfolioSummary,
+  portfolioContextEnabled,
+  type PortfolioSummary,
+} from "@/lib/ai/portfolio-summary";
 
 // Same tracked list as supabase/functions/_shared/tagging.ts (kept in sync
 // manually - one runs in Deno, the other in Node, no shared module between them).
@@ -30,6 +35,11 @@ export interface ChatContext {
   analyses: { id: string; scope_type: string; scope_value: string; analysis_type: string; probability_low: number; probability_high: number; confidence_level: string; reasoning_text: string; sample_size: number }[];
   news: { id: string; title: string; source_name: string; published_at: string }[];
   relevantSymbols: string[];
+  // Real, code-computed portfolio figures for this turn, or null. Only ever
+  // non-null when ENABLE_PORTFOLIO_CONTEXT is on and the user holds something -
+  // see lib/ai/portfolio-summary.ts. The model may restate these verbatim and
+  // nothing else (checkPortfolioFigureDrift enforces it).
+  portfolio: PortfolioSummary | null;
 }
 
 // Relevance ranking only - never used to shape what's said, only which stored
@@ -97,5 +107,21 @@ export async function buildChatContext(
   }
   const { data: news } = await newsQuery;
 
-  return { analyses: analyses ?? [], news: news ?? [], relevantSymbols };
+  // Portfolio figures are injected only when the feature is switched on AND the
+  // per-conversation / account "portfolio context" setting is on. Detail is
+  // scoped to the tickers the message actually names and the user holds -
+  // `mentioned` is the same detection that picks relevant analyses, so the two
+  // notions of "asked about" cannot drift.
+  let portfolio: PortfolioSummary | null = null;
+  if (usePortfolioContext && portfolioContextEnabled()) {
+    try {
+      portfolio = await buildPortfolioSummary(userId, mentioned, client);
+    } catch (err) {
+      // A summary that cannot be computed (market-data read failed, no request
+      // scope) must never fail the turn - the assistant just answers without it.
+      console.error("[chat] portfolio summary unavailable, continuing without it:", err);
+    }
+  }
+
+  return { analyses: analyses ?? [], news: news ?? [], relevantSymbols, portfolio };
 }
