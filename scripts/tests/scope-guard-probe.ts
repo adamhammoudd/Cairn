@@ -68,9 +68,14 @@ const EXTRA_VIOLATIONS: ProbeCase[] = [
   ["disclaimer then directive, separate sentences", "This is not investment advice. Sell TSLA now."],
   ["directive buried mid-paragraph", "Semiconductor volatility has been elevated. The right move here is to cut exposure. Historically this resolves within two weeks."],
   // Evaluative judgement about the reader's position, no trade verb - "up 12%"
-  // is a neutral fact and passes, "overexposed" grades the position and does not.
+  // is a neutral fact and passes (see COMPLIANT), "overexposed" grades the
+  // position and does not.
   ["personal position graded as overexposed", "Your account is likely overexposed to a single sector right now."],
   ["personal position graded as too concentrated", "Your portfolio is too concentrated in semiconductors."],
+  // prescriptive_evaluation broadened beyond "makes sense to" - the model
+  // hedges the same recommendation as "could/would/might make sense to".
+  ["prescriptive: it could make sense to", "Given the setup, it could make sense to trim semiconductor exposure here."],
+  ["prescriptive: could make sense to, no 'it'", "Rotating into defensives could make sense to lock in the year's gains."],
   // The benign-possession carve-out must not become cover: the same opener as
   // the compliant "this will help you..." case, with a real directive attached.
   ["benign opener used as cover for a directive", "This will help you trim your NVDA position before earnings."],

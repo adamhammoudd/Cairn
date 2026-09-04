@@ -130,7 +130,7 @@ const ADVICE_FRAMES: { pattern: RegExp; reason: string }[] = [
   },
   // Evaluative-prescriptive: no modal, no pronoun, still a recommendation.
   {
-    pattern: /\b(?:it\s+(?:makes|would\s+make)\s+sense\s+to|makes\s+sense\s+to|it(?:'s|\s+is)\s+worth\b|worth\s+(?:considering|taking|trimming|adding|buying|selling|holding)|the\s+(?:smart|right|best|obvious|sensible)\s+(?:move|play|thing|call|approach)|the\s+(?:move|play)\s+(?:here|now)\s+is|no\s+reason\s+not\s+to|you\s+can't\s+go\s+wrong|there(?:'s|\s+is)\s+a\s+case\s+for)\b/i,
+    pattern: /\b(?:(?:it\s+)?(?:makes|(?:would|could|might)\s+make)\s+sense\s+to|it(?:'s|\s+is)\s+worth\b|worth\s+(?:considering|taking|trimming|adding|buying|selling|holding)|the\s+(?:smart|right|best|obvious|sensible)\s+(?:move|play|thing|call|approach)|the\s+(?:move|play)\s+(?:here|now)\s+is|no\s+reason\s+not\s+to|you\s+can't\s+go\s+wrong|there(?:'s|\s+is)\s+a\s+case\s+for)\b/i,
     reason: "prescriptive_evaluation",
   },
   // Timing prescriptions: "now is a good time to", "now would be the time to".
