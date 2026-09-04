@@ -413,6 +413,64 @@ export function checkNoFreelancedProbability(
 }
 
 // ---------------------------------------------------------------------------
+// Chat-specific gate: portfolio figure drift.
+//
+// Only in play when ENABLE_PORTFOLIO_CONTEXT is on AND a PORTFOLIO_SUMMARY
+// block was injected this turn (lib/ai/portfolio-summary.ts, and
+// docs/decisions/2026-09-04-ai-portfolio-figures.md option (c) rule #4). The
+// model is then handed real, code-computed portfolio figures and told to
+// restate them verbatim. This fails the turn CLOSED if the model emits:
+//   - any "$" dollar figure that is not one of those exact computed values, or
+//   - a percentage inside a clause about the reader's own position/portfolio
+//     that is not one of them.
+// A flagged turn is rewritten to safe boilerplate like every other scope-guard
+// failure - nothing drifted ever reaches the user. This does NOT touch the
+// advice-language detection above: it changes only which *numbers* the model
+// may state, not which conclusions it may draw.
+//
+// `allowedFigures` is portfolioSummaryFigures() - normalized (digits + ".")
+// tokens. An empty list means no portfolio block this turn, and this check is
+// a no-op, so behaviour with the flag off is identical to before the feature.
+// ---------------------------------------------------------------------------
+
+/** Reduce a figure to a comparable token: "-$1,290.40" and "1290.40" both -> "1290.40". */
+export function normalizePortfolioFigure(token: string): string {
+  return token.replace(/[^0-9.]/g, "");
+}
+
+const MONEY_FIGURE = /\$\s?\d[\d,]*(?:\.\d+)?/g;
+const PERCENT_FIGURE = /\d[\d,]*(?:\.\d+)?(?=\s?%)/g;
+
+// A clause is "about the reader's own position" when it puts "your" in front of
+// a portfolio/return noun (up to three qualifier words between). Scoped this
+// tightly on purpose: a percentage in "semiconductors fell 4.2%" is ordinary
+// market description and must not be touched, only "your portfolio is up 3.1%".
+const READER_POSITION_CLAUSE =
+  /\byour\s+(?:[\w-]+\s+){0,3}(?:portfolio|position|positions|holding|holdings|stake|account|p&l|pnl|return|returns|gain|gains|loss|losses|cost\s+basis)\b/i;
+
+export function checkPortfolioFigureDrift(text: string, allowedFigures: string[]): ScopeGuardResult {
+  if (allowedFigures.length === 0) return { passed: true, reason: null };
+  const allowed = new Set(allowedFigures);
+
+  for (const match of text.matchAll(MONEY_FIGURE)) {
+    if (!allowed.has(normalizePortfolioFigure(match[0]))) {
+      return { passed: false, reason: "portfolio_figure_not_in_summary", evidence: match[0] };
+    }
+  }
+
+  for (const clause of splitClauses(text)) {
+    if (!READER_POSITION_CLAUSE.test(clause)) continue;
+    for (const match of clause.matchAll(PERCENT_FIGURE)) {
+      if (!allowed.has(normalizePortfolioFigure(match[0]))) {
+        return { passed: false, reason: "portfolio_percent_not_in_summary", evidence: clause };
+      }
+    }
+  }
+
+  return { passed: true, reason: null };
+}
+
+// ---------------------------------------------------------------------------
 // Deterministic rewrite for a flagged chat response. Never a second model
 // call - built only from already-validated ai_analyses fields (which passed
 // this same guard at generation time in generate.ts) plus fixed boilerplate,

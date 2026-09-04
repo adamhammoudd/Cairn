@@ -18,6 +18,7 @@ import { runCitationFreshnessSuite } from "./citation-freshness";
 import { runProbabilityMathSuite } from "./probability-math";
 import { runTaggingSuite } from "./tagging";
 import { runScopeGuardProbeSuite } from "./scope-guard-probe";
+import { runPortfolioFigureDriftSuite } from "./portfolio-figure-drift";
 import { runScopeClassifierSuite } from "./scope-classifier";
 import { runMarketHoursSuite } from "./market-hours";
 import { runContrastSuite } from "./contrast";
@@ -69,6 +70,7 @@ async function main() {
     citationSuites,
     taggingSuites,
     probeSuites,
+    portfolioFigureDriftSuites,
     classifierSuites,
     marketHoursSuites,
     contrastSuites,
@@ -94,6 +96,7 @@ async function main() {
     guarded("Citation freshness", async () => [await runCitationFreshnessSuite()]),
     guarded("News tagging", () => [runTaggingSuite()]),
     guarded("Scope guard probe", () => [runScopeGuardProbeSuite()]),
+    guarded("Portfolio figure drift", () => [runPortfolioFigureDriftSuite()]),
     guarded("Scope classifier", () => [runScopeClassifierSuite()]),
     guarded("Market hours", () => [runMarketHoursSuite()]),
     guarded("Palette contrast", () => [runContrastSuite()]),
@@ -122,6 +125,7 @@ async function main() {
     ...citationSuites,
     ...taggingSuites,
     ...probeSuites,
+    ...portfolioFigureDriftSuites,
     ...classifierSuites,
     ...marketHoursSuites,
     ...contrastSuites,
