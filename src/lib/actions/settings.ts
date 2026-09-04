@@ -14,6 +14,7 @@ import type {
 } from "@/lib/supabase/types";
 import { isSupportedCurrency } from "@/lib/market-data/fx";
 import { SECTOR_SLUGS } from "@/lib/sectors";
+import { passwordChangeError, deleteConfirmationError } from "@/lib/settings-guards";
 
 type UserSettings = Database["public"]["Tables"]["user_settings"]["Row"];
 
@@ -152,12 +153,31 @@ export async function updateProfile(_prevState: string | null, formData: FormDat
 }
 
 export async function changePassword(_prevState: string | null, formData: FormData) {
+  const currentPassword = String(formData.get("current_password") ?? "");
   const password = String(formData.get("password") ?? "");
-  if (password.length < 8) return "Password must be at least 8 characters.";
+
+  const guardError = passwordChangeError(currentPassword, password);
+  if (guardError) return guardError;
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.updateUser({ password });
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user?.email) redirect("/login");
 
+  // Re-authenticate with the current password before changing it. An active
+  // session on its own - a stolen cookie, an unattended logged-in device, an
+  // XSS bug - must not be enough to set a new password and lock the owner out
+  // of their own account. signInWithPassword is the only "verify this
+  // password" primitive the SDK exposes; on success it simply rotates this
+  // same user's tokens.
+  const { error: reauthError } = await supabase.auth.signInWithPassword({
+    email: user.email,
+    password: currentPassword,
+  });
+  if (reauthError) return "Current password is incorrect.";
+
+  const { error } = await supabase.auth.updateUser({ password });
   if (error) return error.message;
   return "saved";
 }
@@ -254,7 +274,13 @@ export async function exportUserData() {
 //     as a founder action item), not anything this function can do at request
 //     time. Documented here and in docs/legal/privacy-policy.md rather than
 //     left as an unstated gap.
-export async function deleteAccount() {
+export async function deleteAccount(confirmation?: string): Promise<string | void> {
+  // The "type DELETE to confirm" friction is enforced here, not only in the
+  // client component - deleteAccount is a server action and therefore a plain
+  // callable endpoint, so the client-side gate is a convenience, not a control.
+  const confirmError = deleteConfirmationError(confirmation);
+  if (confirmError) return confirmError;
+
   const supabase = await createClient();
   const {
     data: { user },

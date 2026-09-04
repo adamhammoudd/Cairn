@@ -72,8 +72,8 @@ export function runReplyFormatSuite(): SuiteResult {
 
   // ---- must not alter wording (the scope guard already ran on this text) ----
   const mockReply =
-    "Your portfolio is up **1.24%** today - $1,417 on $115,686. NVDA (+2.8%) and AMD (+3.2%) contributed nearly all of it; VTI is the only drag at -0.21%.\n\n" +
-    "AMD remains your one position underwater on cost basis, -11.0% against an average entry of $189.20. Below is the market-level probability context for the NVDA move, with its inputs shown.";
+    "Semiconductors have given back **4.2%** over the past week, with NVDA (-6.1%) and AMD (-5.3%) leading the move after two supplier guidance cuts.\n\n" +
+    "In the four comparable pullbacks since 2023, the group recovered the drawdown within a quarter in three of them; the exception took roughly twice as long. Below is the sector-level probability context for the move, with its inputs shown.";
   cases.push(check("the expected reply shape is returned byte-for-byte unchanged", normalizeReply(mockReply) === mockReply, "no-op"));
   cases.push(check("the blank line between paragraphs is preserved", normalizeReply(mockReply).includes("\n\n"), "intact"));
 
