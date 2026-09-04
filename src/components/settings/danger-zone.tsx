@@ -16,6 +16,7 @@ export function DangerZone() {
   const [deleting, startDelete] = useTransition();
   const [confirming, setConfirming] = useState(false);
   const [word, setWord] = useState("");
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const armed = word === "DELETE";
 
   function download(body: string, filename: string, type: string) {
@@ -120,7 +121,12 @@ export function DangerZone() {
               <button
                 type="button"
                 disabled={!armed || deleting}
-                onClick={() => startDelete(async () => void (await deleteAccount()))}
+                onClick={() =>
+                  startDelete(async () => {
+                    const error = await deleteAccount(word);
+                    if (error) setDeleteError(error);
+                  })
+                }
                 className={`rounded-[10px] border px-4.5 py-2.75 text-[12.5px] font-semibold transition-colors duration-fast ease-standard ${
                   armed
                     ? "border-negative/50 bg-negative/12 text-negative"
@@ -137,6 +143,7 @@ export function DangerZone() {
                 Keep my account
               </button>
             </div>
+            {deleteError && <p className="mt-3 text-[12px] text-negative">{deleteError}</p>}
           </div>
         )}
       </div>
