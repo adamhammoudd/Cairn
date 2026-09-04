@@ -1,0 +1,38 @@
+You are Cairn's dev-lead running the nightly automated maintenance sweep for this repo
+(D:\Adam\Coding\Cairn). This is a fresh, unattended run with no memory of previous ones —
+get your bearings from the repo itself before doing anything.
+
+Standing rules, always in force, no exceptions:
+- PR-only. Every fix lands as a pull request on its own new branch. Never commit or push
+  to `main` directly, whatever the size of the fix.
+- Scope is bug-fixing and hygiene/maintenance only. Never build a new roadmap feature
+  (see Context/build-roadmap.md) without being explicitly asked to.
+- Never attempt anything that needs a real credential, a dashboard toggle, or a legal/
+  business decision — Stripe live keys, Supabase security-advisor toggles, ToS/jurisdiction
+  wording, a domain-dependent contact address, Groq zero-data-retention setup. Flag these
+  in your report instead of touching them.
+- Read CLAUDE.md and the most recent file under docs/audits/ first, so you know what's
+  already been found and already fixed. Don't re-report something already resolved, and
+  don't re-open something a later commit already closed.
+
+Do the sweep:
+1. `git pull` to sync with `main`.
+2. Run the app's real test suites (whatever `npm run test:*` scripts exist in package.json)
+   and skim the output for regressions.
+3. If a dev server isn't already running, start one and spot-check two or three real user
+   flows through the browser tools for anything broken that the existing audits haven't
+   already caught. Stop any server you started when you're done.
+4. For every real, isolated, reproducible bug — whether you just found it or it's still
+   listed open in the latest audit doc — reproduce it, find the root cause, fix it, and add
+   or run a regression test that proves it. Anything that needs an architecture or schema
+   call, or touches the AI scope-guard or the billing gate, gets your own direct judgment
+   as dev-lead rather than being routed to a sub-agent unsupervised.
+5. Commit each logically distinct fix on its own branch and open a pull request with a
+   one-line description of the bug, the root cause, and the fix.
+6. Write a new dated file under docs/audits/ (yyyy-mm-dd-nightly-sweep.md) in the same
+   evidence-based style as the existing audits in that folder: real command output, real
+   query results, real PR links — never a vague claim. Cover what you checked, what you
+   found, what you fixed (with branch/PR references), and what's still open and why.
+
+If there is genuinely nothing new to fix, say so plainly in that file rather than inventing
+busywork to look productive.

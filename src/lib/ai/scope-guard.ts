@@ -130,7 +130,7 @@ const ADVICE_FRAMES: { pattern: RegExp; reason: string }[] = [
   },
   // Evaluative-prescriptive: no modal, no pronoun, still a recommendation.
   {
-    pattern: /\b(?:it\s+(?:makes|would\s+make)\s+sense\s+to|makes\s+sense\s+to|it(?:'s|\s+is)\s+worth\b|worth\s+(?:considering|taking|trimming|adding|buying|selling|holding)|the\s+(?:smart|right|best|obvious|sensible)\s+(?:move|play|thing|call|approach)|the\s+(?:move|play)\s+(?:here|now)\s+is|no\s+reason\s+not\s+to|you\s+can't\s+go\s+wrong|there(?:'s|\s+is)\s+a\s+case\s+for)\b/i,
+    pattern: /\b(?:(?:it\s+)?(?:makes|(?:would|could|might)\s+make)\s+sense\s+to|it(?:'s|\s+is)\s+worth\b|worth\s+(?:considering|taking|trimming|adding|buying|selling|holding)|the\s+(?:smart|right|best|obvious|sensible)\s+(?:move|play|thing|call|approach)|the\s+(?:move|play)\s+(?:here|now)\s+is|no\s+reason\s+not\s+to|you\s+can't\s+go\s+wrong|there(?:'s|\s+is)\s+a\s+case\s+for)\b/i,
     reason: "prescriptive_evaluation",
   },
   // Timing prescriptions: "now is a good time to", "now would be the time to".
@@ -178,6 +178,16 @@ const PERSONAL_POSSESSION =
 // imperative and advice-frame checks run first and are untouched, and the
 // suppression additionally requires that the clause carry no trade action at
 // all, so "This will help you decide whether to sell NVDA" is still caught.
+// Evaluative judgement about the reader's own position - "your account is
+// overexposed", "your portfolio is too concentrated", "your holdings would
+// benefit from...". This is not a neutral fact the way "your portfolio is up
+// 1.24% today" is: it grades the personal position and implies a correction,
+// which is the thing the product rule forbids even when no trade verb appears.
+// Kept separate from ADVICE_FRAMES because those are reader-directed
+// constructions in general; this is specifically position-quality language.
+const POSSESSION_EVALUATION =
+  /\b(?:over-?exposed|under-?exposed|over-?weight(?:ed)?|under-?weight(?:ed)?|over-?concentrated|under-?diversified|poorly\s+diversified|not\s+(?:well\s+)?diversified|over-?loaded|too\s+(?:concentrated|heavy|exposed|risky|large|small|much)|benefit\s+from|better\s+off|at\s+risk|vulnerable|overdue\s+for)\b/i;
+
 const POSSESSION_BENIGN = new RegExp(
   [
     // referral to the product's own analysis surface - not a trade action
@@ -316,6 +326,18 @@ export function checkScopeGuard(text: string): ScopeGuardResult {
     }
 
     if (PERSONAL_POSSESSION.test(clause)) {
+      // This rule targets ADVICE about a personal position, not every mention
+      // of one. A clause that names the reader's holdings but carries no trade
+      // action and no advice frame is a neutral factual statement ("your
+      // portfolio is up 1.24% today", "your position in AAPL is up 12%") - it
+      // is not a directive, and the confabulation controls (the system-prompt
+      // rules, checkNoFreelancedProbability, and the open question of whether
+      // the assistant should ever hold real portfolio figures) are what govern
+      // whether such a number is legitimate, not this guard. Evaluative
+      // judgement about the position ("overexposed", "too concentrated") is a
+      // different thing and still flags - see POSSESSION_EVALUATION.
+      const hasAdviceFrame = ADVICE_FRAMES.some((f) => f.pattern.test(clause));
+      if (!hasAction && !hasAdviceFrame && !POSSESSION_EVALUATION.test(clause)) continue;
       // Benign only when the clause also proposes no trade action whatsoever.
       if (POSSESSION_BENIGN.test(clause) && !hasAction) continue;
       return { passed: false, reason: "personal_possession_reference", evidence: clause };

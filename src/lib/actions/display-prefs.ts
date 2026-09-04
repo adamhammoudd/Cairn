@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { getAuthUser } from "@/lib/supabase/auth";
 import { fetchUsdRate } from "@/lib/market-data/fx";
 import { DEFAULT_DISPLAY_PREFS, type DisplayPrefs } from "@/lib/display-prefs";
 
@@ -15,12 +16,10 @@ import { DEFAULT_DISPLAY_PREFS, type DisplayPrefs } from "@/lib/display-prefs";
  * preference must never be able to take a page down.
  */
 export async function getDisplayPrefs(): Promise<DisplayPrefs> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getAuthUser();
   if (!user) return DEFAULT_DISPLAY_PREFS;
 
+  const supabase = await createClient();
   const { data } = await supabase
     .from("user_settings")
     .select("currency, metric_style, compact_mode, extended_hours, default_chart_view")

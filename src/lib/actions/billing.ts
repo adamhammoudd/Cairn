@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getAuthUser } from "@/lib/supabase/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { stripeConfigured } from "@/lib/stripe";
 import {
@@ -32,22 +33,19 @@ async function isAdminUser(supabase: SupabaseClient<Database>, userId: string): 
 // getUserPlan() gate"). Previously named getTier() with zero call sites -
 // renamed so it's actually the thing every gate below calls.
 export async function getUserPlan(): Promise<SubscriptionTier> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getAuthUser();
   if (!user) return "free";
 
+  const supabase = await createClient();
   const { data } = await supabase.from("subscriptions").select("tier").eq("user_id", user.id).maybeSingle();
   return data?.tier ?? "free";
 }
 
 export async function getBillingSummary(): Promise<UsageSummary> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getAuthUser();
   if (!user) return computeUsageSummary("free", 0);
+
+  const supabase = await createClient();
 
   const [{ data: subscription }, { count }, admin] = await Promise.all([
     supabase.from("subscriptions").select("tier").eq("user_id", user.id).maybeSingle(),
@@ -63,11 +61,10 @@ export async function getBillingSummary(): Promise<UsageSummary> {
 }
 
 export async function getChatUsageSummary(): Promise<ChatUsageSummary> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getAuthUser();
   if (!user) return computeChatUsageSummary("free", 0);
+
+  const supabase = await createClient();
 
   const [{ data: subscription }, { count }, admin] = await Promise.all([
     supabase.from("subscriptions").select("tier").eq("user_id", user.id).maybeSingle(),
@@ -192,10 +189,8 @@ export interface BillingDetail {
  * same count.
  */
 export async function getBillingDetail(): Promise<BillingDetail> {
+  const user = await getAuthUser();
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
 
   if (!user) {
     return {

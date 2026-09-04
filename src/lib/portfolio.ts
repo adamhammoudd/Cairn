@@ -65,9 +65,21 @@ export function computeTotals(
 
   for (const m of metrics) {
     totalCostBasis += m.purchase_price * m.quantity;
-    if (m.value !== null) totalValue += m.value;
+
+    // A holding with no current price yet (just added, quote not fetched) is
+    // excluded from BOTH the current-value and the prior-value sums. Counting
+    // it in only one - as the old code did, adding its cost basis to
+    // prevTotalValue while contributing nothing to totalValue - silently
+    // deflates todayChange by that holding's whole cost basis and shows a
+    // phantom same-day loss right after a holding is added.
+    if (m.value === null) continue;
+    totalValue += m.value;
+
     const prev = closes.get(m.symbol)?.prev;
-    prevTotalValue += (prev ?? m.currentPrice ?? m.purchase_price) * m.quantity;
+    // No prior close (e.g. a newly listed symbol): fall back to the current
+    // price so the holding contributes 0 to the day change rather than a
+    // spurious swing. m.currentPrice is non-null here because m.value is.
+    prevTotalValue += (prev ?? m.currentPrice!) * m.quantity;
   }
 
   const totalGain = totalValue - totalCostBasis;

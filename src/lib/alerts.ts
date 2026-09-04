@@ -47,6 +47,25 @@ export const COOLDOWN_OPTIONS = [
   { value: 86400, label: "24 hours" },
 ];
 
+export const DEFAULT_COOLDOWN_SECONDS = 3600;
+export const MAX_COOLDOWN_SECONDS = 30 * 24 * 60 * 60;
+
+/**
+ * Validate a submitted cooldown. Zero or a negative number defeats the only
+ * anti-spam control an alert has - the evaluator gates re-firing on
+ * `last_triggered_at + cooldown_seconds`, so <= 0 means "fire on every run".
+ * Blank falls back to the 1-hour default (the old behaviour of `|| 3600`);
+ * anything past 30 days is almost certainly a typo. Returns the integer
+ * seconds to store, or an error string for the form.
+ */
+export function parseCooldownSeconds(raw: unknown): number | string {
+  if (raw == null || String(raw).trim() === "") return DEFAULT_COOLDOWN_SECONDS;
+  const value = Number(raw);
+  if (!Number.isFinite(value) || value <= 0) return "Cooldown must be a positive number of seconds.";
+  if (value > MAX_COOLDOWN_SECONDS) return "Cooldown must be 30 days or less.";
+  return Math.floor(value);
+}
+
 const CONFIDENCE_RANK: Record<ConfidenceLevel, number> = { low: 0, medium: 1, high: 2 };
 
 /** Market data for one symbol, newest close first. */

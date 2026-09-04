@@ -74,27 +74,50 @@ export async function getIntradayPortfolioSeries(view: IntradayView): Promise<In
   // quota and rate-limit the rest of the app, so it keeps the daily series.
   if (symbols.length > 8) return empty;
 
+  // Everything needed before the provider fetch is independent of everything
+  // else - one asset-type query for all symbols (was a serial maybeSingle per
+  // symbol), the daily closes, and the display prefs, all concurrent.
+  const [assetTypeRows, dailyCloseRes, { extendedHours }] = await Promise.all([
+    supabase
+      .from("symbol_directory")
+      .select("symbol, asset_type")
+      .in("symbol", symbols.map((s) => s.toUpperCase())),
+    supabase.rpc("recent_prices", { symbols, per_symbol: 1 }),
+    getDisplayPrefs(),
+  ]);
+
+  const assetTypeByUpper = new Map((assetTypeRows.data ?? []).map((r) => [r.symbol, r.asset_type]));
   const assetTypes = new Map<string, "equity" | "etf" | "crypto" | undefined>();
-  for (const symbol of symbols) assetTypes.set(symbol, await assetTypeOf(symbol));
+  for (const symbol of symbols) {
+    const t = assetTypeByUpper.get(symbol.toUpperCase());
+    assetTypes.set(symbol, t === "equity" || t === "etf" || t === "crypto" ? t : undefined);
+  }
 
   // Latest stored daily close per symbol: the price a holding carries before
   // its first intraday print (equities do not trade the overnight and weekend
   // minutes a 24/7 coin does), and its whole contribution when no intraday bar
   // came back at all.
   const dailyClose = new Map<string, number>();
-  {
-    const { data } = await supabase.rpc("recent_prices", { symbols, per_symbol: 1 });
-    for (const row of (data ?? []) as { symbol: string; close: number | null }[]) {
-      if (row.close != null) dailyClose.set(row.symbol, Number(row.close));
-    }
+  for (const row of (dailyCloseRes.data ?? []) as { symbol: string; close: number | null }[]) {
+    if (row.close != null) dailyClose.set(row.symbol, Number(row.close));
   }
 
   const { interval, outputsize, spanMs } = RANGES[view];
-  const { extendedHours } = await getDisplayPrefs();
   const rawBySymbol = new Map<string, { ts: number; close: number }[]>();
 
-  for (const symbol of symbols) {
-    const bars = await fetchIntradaySeries(symbol, interval, outputsize, extendedHours, assetTypes.get(symbol));
+  // Fetch every holding's intraday series in parallel rather than awaiting each
+  // in turn - up to 8 serial provider round-trips (the `symbols.length > 8`
+  // guard above is why 8 is the ceiling) on every intraday chart load. Results
+  // are consumed in `symbols` order below, so the composed series stays
+  // deterministic.
+  const fetched = await Promise.all(
+    symbols.map(async (symbol) => ({
+      symbol,
+      bars: await fetchIntradaySeries(symbol, interval, outputsize, extendedHours, assetTypes.get(symbol)),
+    })),
+  );
+
+  for (const { symbol, bars } of fetched) {
     // A single symbol's provider failure must not blank the whole chart - it
     // falls back to its daily close below.
     if (!bars) continue;
