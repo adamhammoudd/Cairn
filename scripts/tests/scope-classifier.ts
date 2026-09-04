@@ -14,6 +14,7 @@
 // Run: npx tsx scripts/tests/scope-classifier.ts
 
 import { isClassifierReply, interpretReply, resolveUnavailable } from "../../src/lib/ai/scope-classifier";
+import { resolveChatClassifierVerdict } from "../../src/lib/ai/chat-generate";
 import type { SuiteResult, TestCase } from "./report";
 
 const cases: TestCase[] = [];
@@ -60,6 +61,28 @@ check("strict mode blocks when classifier is down", strict.blocked, true);
 check("strict mode records why", strict.note.includes("connection refused"), true);
 
 check("off mode resolves like advisory when reached", resolveUnavailable("off", "n/a").blocked, false);
+
+// --- chat surface: layer 3 fails CLOSED, not open (audit 2026-09-04 #2) -----
+check(
+  "chat: an unavailable classifier blocks the turn (fail closed)",
+  resolveChatClassifierVerdict({ status: "unavailable", detail: "HTTP 429 tokens per day" }).failure?.reason,
+  "classifier_unavailable",
+);
+check(
+  "chat: the block is a rewrite, not an error - failure is a ScopeGuardResult",
+  resolveChatClassifierVerdict({ status: "unavailable", detail: "down" }).failure?.passed,
+  false,
+);
+check(
+  "chat: a clear verdict passes through untouched",
+  resolveChatClassifierVerdict({ status: "clear" }).failure,
+  null,
+);
+check(
+  "chat: a flagged verdict carries the classifier reason forward",
+  resolveChatClassifierVerdict({ status: "flagged", reason: "classifier:x", rationale: "tells reader to sell" }).failure?.reason,
+  "classifier:x",
+);
 
 export function runScopeClassifierSuite(): SuiteResult {
   return { suiteName: "Scope classifier (layer 3 decision logic)", gating: true, cases };

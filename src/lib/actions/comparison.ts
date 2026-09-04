@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { cryptoRolling24hFor } from "@/lib/market-data/current-price";
+import { unwrapRows, MIGRATIONS } from "@/lib/supabase/read";
 import type { ComparisonRow } from "@/lib/comparison";
 
 // The universe every symbol picker draws on (Compare, the Sector Heat Map).
@@ -17,13 +18,13 @@ import type { ComparisonRow } from "@/lib/comparison";
 // while anything ingested on demand is in the directory the moment it lands.
 export async function getTrackedSymbols(): Promise<string[]> {
   const supabase = await createClient();
-  const { data } = await supabase
-    .from("symbol_directory")
-    .select("symbol")
-    .eq("status", "available")
-    .order("symbol", { ascending: true });
+  const rows = unwrapRows(
+    "Tracked symbols (symbol_directory)",
+    await supabase.from("symbol_directory").select("symbol").eq("status", "available").order("symbol", { ascending: true }),
+    MIGRATIONS.onDemandIngestion,
+  );
 
-  return (data ?? []).map((row) => row.symbol.toUpperCase());
+  return rows.map((row) => row.symbol.toUpperCase());
 }
 
 // Derives marketCap/pe/dividendYield the same way runScreen() and
@@ -39,7 +40,7 @@ export async function getComparisonData(symbols: string[]): Promise<ComparisonRo
   // ascending it returns the *oldest* rows (so `price` was a months-stale
   // bar), and ordered descending a symbol with a longer history starves the
   // others of rows entirely.
-  const [{ data: barRows }, { data: fundamentals }, { data: directory }, { data: coins }] = await Promise.all([
+  const [barsRes, fundamentalsRes, directoryRes, coinsRes] = await Promise.all([
     supabase.rpc("recent_prices", { symbols, per_symbol: 400 }),
     supabase.from("fundamentals").select("symbol, shares_outstanding, eps_ttm, dividends_ttm").in("symbol", symbols),
     supabase.from("symbol_directory").select("symbol, asset_type, name").in("symbol", symbols),
@@ -49,14 +50,21 @@ export async function getComparisonData(symbols: string[]): Promise<ComparisonRo
     supabase.from("crypto_metrics").select("symbol, market_cap").in("symbol", symbols),
   ]);
 
-  const fundamentalsBySymbol = new Map((fundamentals ?? []).map((f) => [f.symbol, f]));
-  const directoryBySymbol = new Map((directory ?? []).map((d) => [d.symbol, d]));
-  const capBySymbol = new Map((coins ?? []).filter((c) => c.market_cap != null).map((c) => [c.symbol, Number(c.market_cap)]));
+  // Fail loud on a failed read rather than rendering an empty comparison that
+  // looks like "no data for these symbols" - the rule the Screener follows.
+  const barRows = unwrapRows("Comparison price history (recent_prices)", barsRes, MIGRATIONS.onDemandIngestion);
+  const fundamentals = unwrapRows("Comparison fundamentals", fundamentalsRes);
+  const directory = unwrapRows("Comparison symbol list (symbol_directory)", directoryRes, MIGRATIONS.onDemandIngestion);
+  const coins = unwrapRows("Comparison crypto market caps", coinsRes);
+
+  const fundamentalsBySymbol = new Map(fundamentals.map((f) => [f.symbol, f]));
+  const directoryBySymbol = new Map(directory.map((d) => [d.symbol, d]));
+  const capBySymbol = new Map(coins.filter((c) => c.market_cap != null).map((c) => [c.symbol, Number(c.market_cap)]));
 
   const barsBySymbol = new Map<string, { ts: string; close: number | null }[]>();
   const metaBySymbol = new Map<string, { assetType: string; volume: number | null; asOf: string | null }>();
 
-  for (const row of (barRows ?? []) as { symbol: string; asset_type: string; ts: string; close: number | null; volume: number | null }[]) {
+  for (const row of barRows as { symbol: string; asset_type: string; ts: string; close: number | null; volume: number | null }[]) {
     const arr = barsBySymbol.get(row.symbol) ?? [];
     arr.push({ ts: row.ts, close: row.close });
     barsBySymbol.set(row.symbol, arr);
