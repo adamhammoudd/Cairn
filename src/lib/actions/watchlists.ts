@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { readDisplayPrefs, type DisplayPrefs, type WatchlistWithItems } from "@/lib/watchlists";
 import { validateSymbol, validateText } from "@/lib/validation";
 import { ensureSymbolIngested } from "@/lib/market-data/ingest";
+import { unwrapRows, MIGRATIONS } from "@/lib/supabase/read";
 
 export type { WatchlistWithItems } from "@/lib/watchlists";
 
@@ -16,24 +17,28 @@ export async function listWatchlists(): Promise<WatchlistWithItems[]> {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: lists } = await supabase
-    .from("watchlists")
-    .select("*")
-    .eq("user_id", user.id)
-    .order("sort_order", { ascending: true });
+  // A failed read here must not read as "you have no watchlists" - fail loud,
+  // the same rule the Screener follows (see lib/supabase/read.ts).
+  const lists = unwrapRows(
+    "Watchlists",
+    await supabase.from("watchlists").select("*").eq("user_id", user.id).order("sort_order", { ascending: true }),
+  );
 
-  if (!lists || lists.length === 0) return [];
+  if (lists.length === 0) return [];
 
-  const { data: items } = await supabase
-    .from("watchlist_items")
-    .select("*")
-    .in(
-      "watchlist_id",
-      lists.map((l) => l.id),
-    )
-    .order("sort_order", { ascending: true });
+  const items = unwrapRows(
+    "Watchlist items",
+    await supabase
+      .from("watchlist_items")
+      .select("*")
+      .in(
+        "watchlist_id",
+        lists.map((l) => l.id),
+      )
+      .order("sort_order", { ascending: true }),
+  );
 
-  const symbols = Array.from(new Set((items ?? []).map((i) => i.symbol)));
+  const symbols = Array.from(new Set(items.map((i) => i.symbol)));
 
   // 30 most recent closes per symbol drive both the sparkline and the % change.
   //
@@ -42,14 +47,18 @@ export async function listWatchlists(): Promise<WatchlistWithItems[]> {
   // budget and an equity in the same list ends up with fewer than 30 - or, at
   // the tail, none, which renders as a flat "-" with no error. recent_prices()
   // puts the LIMIT inside a lateral join, one per symbol.
-  const { data: prices } =
+  const prices =
     symbols.length > 0
-      ? await supabase.rpc("recent_prices", { symbols, per_symbol: 30 })
-      : { data: [] };
+      ? unwrapRows(
+          "Watchlist price history (recent_prices)",
+          await supabase.rpc("recent_prices", { symbols, per_symbol: 30 }),
+          MIGRATIONS.onDemandIngestion,
+        )
+      : [];
 
   const bySymbol = new Map<string, number[]>();
   const asOfBySymbol = new Map<string, string>();
-  for (const p of (prices ?? []) as { symbol: string; ts: string; close: number | null }[]) {
+  for (const p of prices as { symbol: string; ts: string; close: number | null }[]) {
     if (p.close === null) continue;
     const arr = bySymbol.get(p.symbol) ?? [];
     if (arr.length === 0) asOfBySymbol.set(p.symbol, p.ts);
@@ -59,8 +68,11 @@ export async function listWatchlists(): Promise<WatchlistWithItems[]> {
 
   // Crypto items carry CoinGecko's rolling 24h change, the same figure Markets
   // and the ticker page show, instead of a close-to-close delta.
-  const { data: coinRows } = await supabase.from("crypto_metrics").select("symbol, price_change_24h_pct").in("symbol", symbols);
-  const rolling = new Map((coinRows ?? []).filter((c) => c.price_change_24h_pct != null).map((c) => [c.symbol, Number(c.price_change_24h_pct)]));
+  const coinRows = unwrapRows(
+    "Watchlist crypto metrics",
+    await supabase.from("crypto_metrics").select("symbol, price_change_24h_pct").in("symbol", symbols),
+  );
+  const rolling = new Map(coinRows.filter((c) => c.price_change_24h_pct != null).map((c) => [c.symbol, Number(c.price_change_24h_pct)]));
 
   return lists.map((l) => ({
     id: l.id,
@@ -68,7 +80,7 @@ export async function listWatchlists(): Promise<WatchlistWithItems[]> {
     description: l.description,
     displayPrefs: readDisplayPrefs(l.display_prefs),
     sort_order: l.sort_order,
-    items: (items ?? [])
+    items: items
       .filter((i) => i.watchlist_id === l.id)
       .map((i) => {
         const desc = bySymbol.get(i.symbol) ?? [];
@@ -213,12 +225,15 @@ export async function removeWatchlistItem(id: string) {
   // Deletes only where the parent watchlist is the caller's. This was the one
   // mutating action in the file with no auth.getUser() call at all, relying
   // entirely on RLS to stop a foreign (or anonymous) id.
-  const { data: ownedIds } = await supabase.from("watchlists").select("id").eq("user_id", user.id);
+  const ownedIds = unwrapRows(
+    "Watchlist ownership check",
+    await supabase.from("watchlists").select("id").eq("user_id", user.id),
+  );
   await supabase
     .from("watchlist_items")
     .delete()
     .eq("id", id)
-    .in("watchlist_id", (ownedIds ?? []).map((w) => w.id));
+    .in("watchlist_id", ownedIds.map((w) => w.id));
 
   revalidatePath("/watchlists");
 }
@@ -233,8 +248,11 @@ export async function reorderWatchlistItems(orderedIds: string[]) {
   // Same reasoning as removeWatchlistItem: constrain every update to items
   // whose parent watchlist belongs to the caller, so a forged id list cannot
   // reshuffle someone else's watchlist even if a policy regresses.
-  const { data: ownedIds } = await supabase.from("watchlists").select("id").eq("user_id", user.id);
-  const owned = (ownedIds ?? []).map((w) => w.id);
+  const ownedIds = unwrapRows(
+    "Watchlist ownership check",
+    await supabase.from("watchlists").select("id").eq("user_id", user.id),
+  );
+  const owned = ownedIds.map((w) => w.id);
 
   await Promise.all(
     orderedIds.map((id, index) =>
