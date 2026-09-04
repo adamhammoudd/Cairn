@@ -40,6 +40,7 @@
     "test:export-csv": "tsx --conditions=react-server scripts/tests/export-csv.ts",
     "test:intraday-parallel": "tsx --conditions=react-server scripts/tests/intraday-parallel.ts",
     "test:auth-dedup": "tsx --conditions=react-server scripts/tests/auth-dedup.ts",
+    "test:alerts-validation": "tsx --conditions=react-server scripts/tests/alerts-validation.ts",
     "test:x-axis": "tsx --conditions=react-server scripts/tests/x-axis-config.ts",
     "test:portfolio-totals": "tsx --conditions=react-server scripts/tests/portfolio-totals.ts",
     "test:split-finding": "tsx --conditions=react-server scripts/tests/split-finding.ts",
