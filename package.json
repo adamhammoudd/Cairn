@@ -38,6 +38,7 @@
     "test:read-errors": "tsx --conditions=react-server scripts/tests/read-errors.ts",
     "test:fail-loud-reads": "tsx --conditions=react-server scripts/tests/fail-loud-reads.ts",
     "test:export-csv": "tsx --conditions=react-server scripts/tests/export-csv.ts",
+    "test:intraday-parallel": "tsx --conditions=react-server scripts/tests/intraday-parallel.ts",
     "test:x-axis": "tsx --conditions=react-server scripts/tests/x-axis-config.ts",
     "test:portfolio-totals": "tsx --conditions=react-server scripts/tests/portfolio-totals.ts",
     "test:split-finding": "tsx --conditions=react-server scripts/tests/split-finding.ts",
