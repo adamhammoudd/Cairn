@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { stripe, stripeConfigured, PREMIUM_PRICE_ID, siteUrl } from "@/lib/stripe";
+import { stripe, stripeConfigured, PREMIUM_PRICE_ID, siteUrl, customerIdempotencyKey } from "@/lib/stripe";
 
 // Phase 12. These start Stripe-hosted flows only. The webhook
 // (app/api/stripe/webhook) is what actually writes a premium tier - so a user
@@ -13,7 +13,17 @@ function billingEnabled(): boolean {
   return process.env.BILLING_ENABLED === "true" && stripeConfigured();
 }
 
-/** The Stripe Customer for this user, created and recorded on first use. */
+/**
+ * The Stripe Customer for this user, created and recorded on first use.
+ *
+ * A double-click or two open tabs both fire this within seconds of each other.
+ * Without a guard, each call sees `stripe_customer_id` still null and calls
+ * `stripe.customers.create()` - two Customer records for one user, the second
+ * silently orphaning the first. The per-user idempotency key fixes that:
+ * Stripe caches the create response for 24h and returns the SAME customer for
+ * every call carrying the key, so the two racing requests converge on one
+ * record and the (identical) row write that follows is a harmless no-op.
+ */
 async function ensureStripeCustomer(userId: string, email: string | undefined): Promise<string> {
   const admin = createAdminClient();
   const { data: row } = await admin
@@ -23,10 +33,10 @@ async function ensureStripeCustomer(userId: string, email: string | undefined): 
     .maybeSingle();
   if (row?.stripe_customer_id) return row.stripe_customer_id;
 
-  const customer = await stripe.customers.create({
-    email,
-    metadata: { cairn_user_id: userId },
-  });
+  const customer = await stripe.customers.create(
+    { email, metadata: { cairn_user_id: userId } },
+    { idempotencyKey: customerIdempotencyKey(userId) },
+  );
   await admin
     .from("subscriptions")
     .upsert({ user_id: userId, stripe_customer_id: customer.id }, { onConflict: "user_id" });

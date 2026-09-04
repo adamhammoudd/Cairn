@@ -42,6 +42,7 @@
     "test:auth-dedup": "tsx --conditions=react-server scripts/tests/auth-dedup.ts",
     "test:alerts-validation": "tsx --conditions=react-server scripts/tests/alerts-validation.ts",
     "test:settings-auth": "tsx --conditions=react-server scripts/tests/settings-auth.ts",
+    "test:checkout-race": "tsx --conditions=react-server scripts/tests/checkout-race.ts",
     "test:x-axis": "tsx --conditions=react-server scripts/tests/x-axis-config.ts",
     "test:portfolio-totals": "tsx --conditions=react-server scripts/tests/portfolio-totals.ts",
     "test:split-finding": "tsx --conditions=react-server scripts/tests/split-finding.ts",
