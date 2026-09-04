@@ -95,8 +95,10 @@ async function TickerBody({ params }: { params: Promise<{ symbol: string }> }) {
   const [analyses, discussion, holdingRows] = await Promise.all([
     getAnalysesForScope("ticker", data.symbol),
     listThreadsForSymbol(data.symbol),
-    // "<name> · <held>" in the header, RLS-scoped to this user.
-    supabase.from("holdings").select("quantity, purchase_price").eq("symbol", data.symbol),
+    // "<name> · <held>" in the header. Filtered by user_id explicitly as a
+    // second line of defence, matching every other holdings read in the app -
+    // RLS is the backstop, not the only guard.
+    supabase.from("holdings").select("quantity, purchase_price").eq("symbol", data.symbol).eq("user_id", user.id),
   ]);
 
   const held = holdingRows.data ?? [];
