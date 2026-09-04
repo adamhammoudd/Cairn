@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { boundedAmount, MAX_AMOUNT_INPUT } from "@/lib/input-limits";
 import { computeGoalProgress, type GoalProgress, type ScenarioHolding } from "@/lib/planning";
 import { latestCloseBySymbol } from "@/lib/portfolio";
+import { unwrapRows, MIGRATIONS } from "@/lib/supabase/read";
 
 // Duplicates the holdings + latest-close fetch already in the Portfolio page
 // and the Comparison action - accepted small duplication, same pattern used
@@ -17,8 +18,14 @@ async function getCurrentPortfolioValue(): Promise<{ value: number; holdings: Sc
   } = await supabase.auth.getUser();
   if (!user) return { value: 0, holdings: [] };
 
-  const { data: holdings } = await supabase.from("holdings").select("symbol, quantity").eq("user_id", user.id);
-  const rows = holdings ?? [];
+  // A failed holdings read must not value the account at $0 - that is a wrong
+  // reading, not a degraded one, and it is what the Position Sizing and Goal
+  // Tracker calculators use as their default account value. Fail loud instead
+  // (same rule as the Screener - see lib/supabase/read.ts).
+  const rows = unwrapRows(
+    "Portfolio holdings (calculators)",
+    await supabase.from("holdings").select("symbol, quantity").eq("user_id", user.id),
+  );
   if (rows.length === 0) return { value: 0, holdings: [] };
 
   const symbols = Array.from(new Set(rows.map((h) => h.symbol)));
@@ -26,9 +33,13 @@ async function getCurrentPortfolioValue(): Promise<{ value: number; holdings: Sc
   // the NEWEST two. Ordered ascending with no limit, this returned the oldest
   // rows under PostgREST's row cap, so the calculators valued a portfolio at
   // prices from whenever ingestion started.
-  const { data: prices } = await supabase.rpc("recent_prices", { symbols, per_symbol: 2 });
+  const prices = unwrapRows(
+    "Portfolio price history (recent_prices)",
+    await supabase.rpc("recent_prices", { symbols, per_symbol: 2 }),
+    MIGRATIONS.onDemandIngestion,
+  );
 
-  const closes = latestCloseBySymbol((prices ?? []) as Parameters<typeof latestCloseBySymbol>[0]);
+  const closes = latestCloseBySymbol(prices as Parameters<typeof latestCloseBySymbol>[0]);
   const scenarioHoldings: ScenarioHolding[] = rows.map((h) => ({
     symbol: h.symbol,
     quantity: h.quantity,
@@ -56,12 +67,13 @@ export async function getGoalsWithProgress(): Promise<GoalProgress[]> {
   } = await supabase.auth.getUser();
   if (!user) return [];
 
-  const [{ data: goals }, { value: currentValue }] = await Promise.all([
+  const [goalsRes, { value: currentValue }] = await Promise.all([
     supabase.from("goals").select("*").eq("user_id", user.id).order("target_date", { ascending: true }),
     getCurrentPortfolioValue(),
   ]);
+  const goals = unwrapRows("Goals", goalsRes);
 
-  return (goals ?? []).map((g) => computeGoalProgress(g, currentValue));
+  return goals.map((g) => computeGoalProgress(g, currentValue));
 }
 
 export async function createGoal(_prevState: string | null, formData: FormData) {
