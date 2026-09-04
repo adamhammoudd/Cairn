@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { boundedAmount, MAX_AMOUNT_INPUT } from "@/lib/input-limits";
+import { isValidAssetType } from "@/lib/validation";
 import type { AssetType } from "@/lib/supabase/types";
 
 interface HoldingFields {
@@ -32,11 +33,16 @@ function parseHoldingForm(formData: FormData): { ok: true; fields: HoldingFields
   }
   if (quantity === null || purchase_price === null) return { ok: false, error: AMOUNT_ERROR };
 
+  const asset_type = formData.get("asset_type");
+  if (!isValidAssetType(asset_type)) {
+    return { ok: false, error: "Choose a valid asset type (equity, ETF, crypto, forex, index, or future)." };
+  }
+
   return {
     ok: true,
     fields: {
       symbol,
-      asset_type: formData.get("asset_type") as AssetType,
+      asset_type,
       quantity,
       purchase_price,
       purchase_date,
@@ -85,15 +91,20 @@ export async function updateHolding(_prevState: string | null, formData: FormDat
   return "saved";
 }
 
-export async function deleteHolding(id: string) {
+export async function deleteHolding(id: string): Promise<string | void> {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
+  // Return the error rather than throwing it. A throw from a server action
+  // surfaces at the page's error boundary and replaces the whole Portfolio
+  // with the generic error screen; every other mutation on this page shows an
+  // inline message instead, and a failed delete (an RLS denial, a network
+  // blip) should do the same.
   const { error } = await supabase.from("holdings").delete().eq("id", id).eq("user_id", user.id);
-  if (error) throw new Error(error.message);
+  if (error) return error.message;
 
   revalidatePath("/portfolio");
 }

@@ -98,6 +98,19 @@ export function validateEmail(raw: unknown): ValidationResult {
 }
 
 /**
+ * The asset types a holding may carry - kept in sync with the `AssetType`
+ * union in supabase/types.ts. A server action is an HTTP endpoint, so the
+ * `<select>` in the form is not a control: a raw POST can write any string,
+ * and a bogus value breaks the ticker page's stat-grid routing.
+ */
+export const ASSET_TYPE_VALUES = ["equity", "etf", "crypto", "forex", "index", "future"] as const;
+export type AssetTypeValue = (typeof ASSET_TYPE_VALUES)[number];
+
+export function isValidAssetType(value: unknown): value is AssetTypeValue {
+  return typeof value === "string" && (ASSET_TYPE_VALUES as readonly string[]).includes(value);
+}
+
+/**
  * Guards free-text fields against oversized payloads before they reach the
  * database. Length is checked in code points rather than UTF-16 units so an
  * emoji-heavy string is measured the way a reader would count it.
