@@ -26,6 +26,16 @@ export function HoldingsTable({
 }) {
   const [editing, setEditing] = useState<Holding | null | "new">(null);
   const [isDeleting, startDelete] = useTransition();
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  function handleDelete(symbol: string, id: string) {
+    if (!window.confirm(`Remove ${symbol} from your portfolio?`)) return;
+    setDeleteError(null);
+    startDelete(async () => {
+      const error = await deleteHolding(id);
+      if (error) setDeleteError(`Couldn't remove ${symbol}: ${error}`);
+    });
+  }
   // Currency and percent-vs-dollar both come from Settings > Display. Every
   // figure below goes through the shared formatters so a currency change
   // cannot reach the value column and miss the cost basis.
@@ -56,6 +66,12 @@ export function HoldingsTable({
       </div>
 
       {children}
+
+      {deleteError && (
+        <p role="alert" className="mb-3.5 rounded-lg border border-negative/40 bg-negative/10 px-3.5 py-2.5 text-[12.5px] text-negative">
+          {deleteError}
+        </p>
+      )}
 
       {metrics.length === 0 ? (
         <div className="rounded-card border border-line bg-panel px-6 py-15 text-center">
@@ -124,11 +140,7 @@ export function HoldingsTable({
                       <button
                         type="button"
                         disabled={isDeleting}
-                        onClick={() => {
-                          if (window.confirm(`Remove ${m.symbol} from your portfolio?`)) {
-                            startDelete(() => deleteHolding(m.id));
-                          }
-                        }}
+                        onClick={() => handleDelete(m.symbol, m.id)}
                         aria-label={`Delete ${m.symbol}`}
                         className="flex h-7.5 w-7.5 items-center justify-center rounded-lg text-negative disabled:opacity-50"
                       >
@@ -259,11 +271,7 @@ export function HoldingsTable({
                       <button
                         type="button"
                         disabled={isDeleting}
-                        onClick={() => {
-                          if (window.confirm(`Remove ${m.symbol} from your portfolio?`)) {
-                            startDelete(() => deleteHolding(m.id));
-                          }
-                        }}
+                        onClick={() => handleDelete(m.symbol, m.id)}
                         aria-label={`Delete ${m.symbol}`}
                         title="Delete"
                         className="flex h-7 w-7 items-center justify-center rounded-lg text-negative transition-colors duration-fast ease-standard hover:bg-negative/12 disabled:opacity-50"
