@@ -24,6 +24,15 @@ export function CalendarPanel({ events }: { events: CalendarEvent[] }) {
   const [activeTypes, setActiveTypes] = useState<string[]>([]);
   // Anchor "today" once per mount so the grid and labels can't disagree.
   const [todayIso] = useState(() => isoDate(new Date()));
+  // Which month the grid shows, as an offset in months from the current one.
+  // Events further out than this month are already fetched (listUpcomingEvents),
+  // so paging is purely a client-side re-window.
+  const [monthOffset, setMonthOffset] = useState(0);
+
+  const viewMonth = useMemo(() => {
+    const today = new Date(`${todayIso}T00:00:00`);
+    return new Date(today.getFullYear(), today.getMonth() + monthOffset, 1);
+  }, [todayIso, monthOffset]);
 
   const filtered = useMemo(
     () => (activeTypes.length === 0 ? events : events.filter((e) => activeTypes.includes(e.event_type))),
@@ -40,12 +49,10 @@ export function CalendarPanel({ events }: { events: CalendarEvent[] }) {
     return map;
   }, [filtered]);
 
-  // Six-week grid covering the month that contains today.
+  // Six-week grid covering the month currently in view.
   const cells = useMemo(() => {
-    const today = new Date(`${todayIso}T00:00:00`);
-    const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-    const gridStart = new Date(monthStart);
-    gridStart.setDate(1 - monthStart.getDay());
+    const gridStart = new Date(viewMonth);
+    gridStart.setDate(1 - viewMonth.getDay());
 
     return Array.from({ length: 42 }, (_, i) => {
       const date = new Date(gridStart);
@@ -54,17 +61,14 @@ export function CalendarPanel({ events }: { events: CalendarEvent[] }) {
       return {
         iso,
         day: date.getDate(),
-        inMonth: date.getMonth() === today.getMonth(),
+        inMonth: date.getMonth() === viewMonth.getMonth(),
         isToday: iso === todayIso,
         events: byDate.get(iso) ?? [],
       };
     });
-  }, [todayIso, byDate]);
+  }, [viewMonth, todayIso, byDate]);
 
-  const monthLabel = new Date(`${todayIso}T00:00:00`).toLocaleDateString(undefined, {
-    month: "long",
-    year: "numeric",
-  });
+  const monthLabel = viewMonth.toLocaleDateString(undefined, { month: "long", year: "numeric" });
 
   // Flat, date-ascending list (not grouped by day) - matches the "Next up" list in the mock.
   const upcoming = useMemo(
@@ -78,9 +82,37 @@ export function CalendarPanel({ events }: { events: CalendarEvent[] }) {
 
   return (
     <div className="animate-page-in flex flex-col gap-4">
-      <div>
-        <div className="mb-2 font-mono text-[10.5px] tracking-[0.16em] text-muted uppercase">Planning · Calendar</div>
-        <h1 className="font-serif text-[32px] leading-[1.1] font-normal text-primary">{monthLabel}</h1>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <div className="mb-2 font-mono text-[10.5px] tracking-[0.16em] text-muted uppercase">Planning · Calendar</div>
+          <h1 className="font-serif text-[32px] leading-[1.1] font-normal text-primary">{monthLabel}</h1>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => setMonthOffset((o) => o - 1)}
+            aria-label="Previous month"
+            className="flex h-8 w-8 items-center justify-center rounded-lg border border-line text-muted transition-colors duration-fast ease-standard hover:border-[#3A3A3A] hover:text-primary"
+          >
+            ‹
+          </button>
+          <button
+            type="button"
+            onClick={() => setMonthOffset(0)}
+            disabled={monthOffset === 0}
+            className="rounded-lg border border-line px-3 py-1.5 text-[12.5px] text-muted transition-colors duration-fast ease-standard hover:border-[#3A3A3A] hover:text-primary disabled:opacity-40"
+          >
+            Today
+          </button>
+          <button
+            type="button"
+            onClick={() => setMonthOffset((o) => o + 1)}
+            aria-label="Next month"
+            className="flex h-8 w-8 items-center justify-center rounded-lg border border-line text-muted transition-colors duration-fast ease-standard hover:border-[#3A3A3A] hover:text-primary"
+          >
+            ›
+          </button>
+        </div>
       </div>
 
       <div className="flex w-fit flex-wrap gap-1.5 rounded-xl border border-line bg-panel p-1">
