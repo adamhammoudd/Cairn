@@ -9,7 +9,7 @@
 //
 // Run: npm run test:briefing-summary
 
-import { composeBriefingSummary } from "@/lib/ai/briefing";
+import { composeBriefingSummary, dedupeLatestPerSymbol } from "@/lib/ai/briefing";
 import type { SuiteResult, TestCase } from "./report";
 
 function check(name: string, ok: boolean, detail: string): TestCase {
@@ -77,6 +77,36 @@ export function runBriefingSummarySuite(): SuiteResult {
   });
   cases.push(check("a full briefing leads with the price move", full.startsWith("1 notable move"), full.slice(0, 40)));
   cases.push(check("a full briefing includes every section", ["notable move", "relevant analysis", "upcoming event", "holdings and watchlist", "news categories"].every((s) => full.includes(s)), full));
+
+  // ---- quality pass (2026-09-04 walkthrough, item 6) ----
+  // "analysis" pluralises irregularly - a live check found every real
+  // briefing reading "3 relevant analysises: ..." instead of "analyses".
+  const twoAnalyses = composeBriefingSummary({
+    symbolCount: 2,
+    includeHoldings: true,
+    ...empty,
+    analyses: [analysis("NVDA"), analysis("AMD")],
+  });
+  cases.push(check("plural (2 analyses) spells it correctly", twoAnalyses.includes("2 relevant analyses:"), twoAnalyses));
+  cases.push(check("plural is never mis-spelled 'analysises'", !twoAnalyses.includes("analysises"), twoAnalyses));
+  const oneAnalysis = composeBriefingSummary({ symbolCount: 1, includeHoldings: true, ...empty, analyses: [analysis("NVDA")] });
+  cases.push(check("singular (1 analysis) reads naturally", oneAnalysis.includes("1 relevant analysis:"), oneAnalysis));
+
+  // dedupeLatestPerSymbol: a symbol re-analyzed several times (real case -
+  // MSFT has three stored runs a week apart) must surface once, not crowd
+  // out every other symbol with repeats of itself.
+  const reAnalyzed = [
+    { scope_value: "MSFT", created_at: "2026-09-01" }, // newest
+    { scope_value: "MSFT", created_at: "2026-08-24" },
+    { scope_value: "MSFT", created_at: "2026-08-21" },
+    { scope_value: "NVDA", created_at: "2026-08-30" },
+  ];
+  const deduped = dedupeLatestPerSymbol(reAnalyzed);
+  cases.push(check("dedupe: MSFT's three runs collapse to one", deduped.filter((a) => a.scope_value === "MSFT").length === 1, JSON.stringify(deduped)));
+  cases.push(check("dedupe: the NEWEST MSFT run is the one kept", deduped.find((a) => a.scope_value === "MSFT")?.created_at === "2026-09-01", JSON.stringify(deduped)));
+  cases.push(check("dedupe: an untouched symbol (NVDA) is unaffected", deduped.some((a) => a.scope_value === "NVDA"), JSON.stringify(deduped)));
+  cases.push(check("dedupe: no symbol survives duplicated", new Set(deduped.map((a) => a.scope_value)).size === deduped.length, JSON.stringify(deduped)));
+  cases.push(check("dedupe: empty input, no crash", dedupeLatestPerSymbol([]).length === 0, "no crash on empty array"));
 
   return { suiteName: "Daily briefing summary", gating: true, cases };
 }

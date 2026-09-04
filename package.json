@@ -60,7 +60,13 @@
     "test:waitlist-email": "tsx --conditions=react-server scripts/tests/waitlist-email.ts",
     "test:proxy-paths": "tsx --conditions=react-server scripts/tests/proxy-public-paths.ts",
     "test:signup-consent": "tsx --conditions=react-server scripts/tests/signup-consent.ts",
-    "test:live-refresh": "tsx --conditions=react-server scripts/tests/live-refresh.ts"
+    "test:live-refresh": "tsx --conditions=react-server scripts/tests/live-refresh.ts",
+    "test:symbol-directory-refresh": "tsx --conditions=react-server scripts/tests/symbol-directory-refresh.ts",
+    "test:holdings-stale-price": "tsx --conditions=react-server scripts/tests/holdings-stale-price.ts",
+    "test:allocation-asset-class": "tsx --conditions=react-server scripts/tests/allocation-asset-class.ts",
+    "test:chat-citations": "tsx --conditions=react-server scripts/tests/citations.ts",
+    "test:market-decks": "tsx --conditions=react-server scripts/tests/market-decks.ts",
+    "test:history-refresh-priority": "tsx --conditions=react-server scripts/tests/history-refresh-priority.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.4",

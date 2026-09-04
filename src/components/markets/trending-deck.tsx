@@ -1,16 +1,22 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { Sparkline } from "@/components/sparkline";
 import { formatVolume, type ScreenerRow } from "@/lib/screener";
 import { useDisplayPrefs } from "@/components/display-prefs-provider";
 import { formatMoney } from "@/lib/display-prefs";
+import { DECKS, deckComparator, deckHasSignal, deckValue, type DeckId } from "@/lib/market-decks";
 
 // The movers deck above the Markets table. Every card is derived from the same
 // stored closes the table below shows - there is no separate "trending" feed,
 // and nothing here is editorially picked. The deck says which measure it
 // ranked by, because "trending" on its own is a claim with no method behind it.
+//
+// `deck` is owned by the parent (MarketsPanel), not this component - the
+// ranked table underneath needs the same selection to sort by, and two
+// components each keeping their own copy of "which tab is active" is exactly
+// how they drifted apart before (see lib/market-decks.ts).
 
 interface TrendingDeckProps {
   rows: ScreenerRow[];
@@ -18,49 +24,19 @@ interface TrendingDeckProps {
   requestCounts: Record<string, number>;
   /** Provider display names, for the subline. */
   names: Record<string, string>;
+  deck: DeckId;
+  onDeckChange: (deck: DeckId) => void;
 }
 
-type DeckId = "gainers" | "losers" | "active" | "searched";
-
-const DECKS: { id: DeckId; label: string; method: string }[] = [
-  { id: "gainers", label: "Day gainers", method: "Ranked by the last session's percent change, largest first." },
-  { id: "losers", label: "Day losers", method: "Ranked by the last session's percent change, most negative first." },
-  { id: "active", label: "Most active", method: "Ranked by the last session's traded volume." },
-  { id: "searched", label: "Most searched", method: "Ranked by how many times this deployment has been asked for the symbol." },
-];
-
-export function TrendingDeck({ rows, requestCounts, names }: TrendingDeckProps) {
+export function TrendingDeck({ rows, requestCounts, names, deck, onDeckChange }: TrendingDeckProps) {
   const prefs = useDisplayPrefs();
-  const [deck, setDeck] = useState<DeckId>("gainers");
 
   const items = useMemo(() => {
-    const withChange = rows.filter((r) => r.changePct !== null);
-    switch (deck) {
-      case "gainers":
-        return [...withChange].sort((a, b) => (b.changePct ?? 0) - (a.changePct ?? 0)).slice(0, 6);
-      case "losers":
-        return [...withChange].sort((a, b) => (a.changePct ?? 0) - (b.changePct ?? 0)).slice(0, 6);
-      case "active":
-        return [...rows].filter((r) => r.volume !== null).sort((a, b) => (b.volume ?? 0) - (a.volume ?? 0)).slice(0, 6);
-      case "searched": {
-        const candidates = rows.filter((r) => (requestCounts[r.symbol] ?? 0) > 0);
-        const counts = candidates.map((r) => requestCounts[r.symbol]);
-        // With every symbol on the same count there is no "most" to show, and
-        // a stable sort would quietly fall back to whatever order the rows
-        // arrived in - which is the gainers ranking wearing a popularity
-        // label. Rank only when the counts actually differentiate.
-        if (candidates.length === 0 || Math.max(...counts) === Math.min(...counts)) return [];
-        return [...candidates]
-          .sort(
-            (a, b) =>
-              (requestCounts[b.symbol] ?? 0) - (requestCounts[a.symbol] ?? 0) ||
-              // Deterministic tie-break, so equal counts render the same order
-              // on every load instead of following the incoming sort.
-              a.symbol.localeCompare(b.symbol),
-          )
-          .slice(0, 6);
-      }
-    }
+    if (!deckHasSignal(rows, deck, requestCounts)) return [];
+    return rows
+      .filter((r) => deckValue(r, deck, requestCounts) !== null)
+      .sort(deckComparator(deck, requestCounts))
+      .slice(0, 6);
   }, [rows, deck, requestCounts]);
 
   const method = DECKS.find((d) => d.id === deck)?.method ?? "";
@@ -74,7 +50,7 @@ export function TrendingDeck({ rows, requestCounts, names }: TrendingDeckProps) 
               key={d.id}
               type="button"
               aria-pressed={deck === d.id}
-              onClick={() => setDeck(d.id)}
+              onClick={() => onDeckChange(d.id)}
               className={`rounded-lg px-3.25 py-1.75 text-[12.5px] transition-colors duration-base ease-standard ${
                 deck === d.id ? "bg-active text-primary" : "text-muted hover:text-primary"
               }`}

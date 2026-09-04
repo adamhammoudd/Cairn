@@ -178,15 +178,57 @@ export async function getCurrentPrice(symbol: string): Promise<CurrentPrice> {
   return rolling === undefined ? base : { ...base, changePct: rolling };
 }
 
+// How old a fallen-back-to daily close can be before Holdings should say so
+// rather than silently presenting it as the current price. Crypto trades
+// every calendar day, so a gap past ~a day and a half is a real ingestion
+// gap, not a weekend; equities/ETFs only trade on the exchange calendar, so
+// the same gap is routine over a long weekend and needs a much wider berth.
+export const STALE_AFTER_HOURS: Record<"crypto" | "other", number> = { crypto: 36, other: 96 };
+
+export function isStaleClose(assetType: string | undefined, asOf: string | null, now = new Date()): boolean {
+  if (!asOf) return false;
+  const ageMs = now.getTime() - new Date(`${asOf}T00:00:00Z`).getTime();
+  const limitHours = assetType === "crypto" ? STALE_AFTER_HOURS.crypto : STALE_AFTER_HOURS.other;
+  return ageMs > limitHours * 60 * 60 * 1000;
+}
+
+export interface LatestClose {
+  latest: number | null;
+  prev: number | null;
+  /**
+   * True only when we fell back to a stored daily close (no live quote
+   * attempted or available) AND that close is old enough to be misleading
+   * as "the current price" - the Holdings-table BTC bug from the 2026-09-04
+   * walkthrough: its last bar was 5 days old while Ticker/Calculators, which
+   * go through the same live-quote attempt, happened to get one. Surfacing
+   * this lets the table say so instead of quietly showing a stale number as
+   * if it were live.
+   */
+  stale: boolean;
+  /** Date the returned price is as of (bar date, or the live quote's own date). */
+  asOf: string | null;
+}
+
 // Drop-in replacement for `latestCloseBySymbol(historical_prices rows)` used
-// by portfolio valuation - same {latest, prev} shape, so lib/portfolio.ts's
-// pure functions need no changes, only the data source at the call site.
+// by portfolio valuation - same {latest, prev} shape (plus `stale`/`asOf`,
+// additive so existing callers reading only .latest/.prev are unaffected), so
+// lib/portfolio.ts's pure functions need no changes, only the data source at
+// the call site.
 export async function getLatestCloses(
   symbols: string[],
   /** Bars the caller already fetched (Portfolio's timeline read) - skips a recent_prices round trip. */
   prefetchedBars?: Map<string, Bar[]>,
-): Promise<Map<string, { latest: number | null; prev: number | null }>> {
-  const result = new Map<string, { latest: number | null; prev: number | null }>();
+  /**
+   * Each symbol's own stored `holdings.asset_type` - the ground truth the
+   * Edit-asset modal writes to. Preferred over inferring the type from
+   * `historical_prices` bars, which silently falls through to "no hint" (and
+   * a live quote can then resolve to a same-ticker-different-instrument,
+   * e.g. `BTC` the equity ticker instead of the coin) for any symbol whose
+   * bars are missing, stale, or reordered.
+   */
+  assetTypeBySymbol?: Map<string, string>,
+): Promise<Map<string, LatestClose>> {
+  const result = new Map<string, LatestClose>();
   if (symbols.length === 0) return result;
 
   const bySymbol = prefetchedBars ?? (await lastBars(symbols));
@@ -203,18 +245,24 @@ export async function getLatestCloses(
   const entries = await Promise.all(
     symbols.map(async (symbol) => {
       const rows = bySymbol.get(symbol) ?? [];
+      const assetType = assetTypeBySymbol?.get(symbol) ?? rows[0]?.asset_type;
       if (tryLive) {
-        const quote = await fetchQuote(symbol, cryptoHint(rows[0]?.asset_type));
+        const quote = await fetchQuote(symbol, cryptoHint(assetType));
         if (quote && quote.price !== null) {
           // A quote taken while the market is open is compared to the last
           // stored close; a closed-market quote IS ~the last close, so its
           // predecessor is the one before that.
           const prev = quote.marketOpen ? num(rows[0]?.close) : num(rows[1]?.close);
-          return [symbol, { latest: quote.price, prev }] as const;
+          const asOf = quote.quoteDate ?? quote.fetchedAt.slice(0, 10);
+          return [symbol, { latest: quote.price, prev, stale: false, asOf }] as const;
         }
       }
       const fallback = toLastClosePrice(symbol, rows);
-      return [symbol, { latest: fallback.price, prev: num(rows[1]?.close) }] as const;
+      const asOf = fallback.asOf;
+      return [
+        symbol,
+        { latest: fallback.price, prev: num(rows[1]?.close), stale: isStaleClose(assetType, asOf), asOf },
+      ] as const;
     }),
   );
   for (const [symbol, value] of entries) result.set(symbol, value);

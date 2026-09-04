@@ -9,6 +9,10 @@ export interface HoldingMetrics extends Holding {
   value: number | null;
   gain: number | null;
   gainPct: number | null;
+  /** True when currentPrice fell back to a stale stored close - see getLatestCloses(). */
+  priceStale: boolean;
+  /** Date currentPrice is as of (bar date, or the live quote's own date). */
+  priceAsOf: string | null;
 }
 
 // Latest close (and prior close, for day-change) per symbol, from a bag of
@@ -34,15 +38,16 @@ export function latestCloseBySymbol(prices: PriceBar[]) {
 
 export function computeHoldingMetrics(
   holdings: Holding[],
-  closes: Map<string, { latest: number | null; prev: number | null }>,
+  closes: Map<string, { latest: number | null; prev: number | null; stale?: boolean; asOf?: string | null }>,
 ): HoldingMetrics[] {
   return holdings.map((h) => {
-    const currentPrice = closes.get(h.symbol)?.latest ?? null;
+    const close = closes.get(h.symbol);
+    const currentPrice = close?.latest ?? null;
     const value = currentPrice !== null ? currentPrice * h.quantity : null;
     const costBasis = h.purchase_price * h.quantity;
     const gain = value !== null ? value - costBasis : null;
     const gainPct = value !== null && costBasis !== 0 ? (gain! / costBasis) * 100 : null;
-    return { ...h, currentPrice, value, gain, gainPct };
+    return { ...h, currentPrice, value, gain, gainPct, priceStale: close?.stale ?? false, priceAsOf: close?.asOf ?? null };
   });
 }
 
@@ -96,6 +101,26 @@ export interface AllocationSlice {
   pct: number;
 }
 
+// `asset_class` is a free-text field on `holdings` (Edit-asset modal's
+// "Asset class" input) separate from the structured `asset_type` dropdown
+// ("Asset type": equity/etf/crypto/forex/index/future) - most holdings never
+// get it filled in. Live check against Adam's real account: NVDA and AMZN
+// have asset_class manually set to "Equity"; ISRG, MSFT and BTC don't, and
+// all three fell into "Unclassified" in the allocation widget despite every
+// one of them carrying a perfectly good asset_type (BTC's is "crypto",
+// correct in the Edit-asset modal per the 2026-09-04 walkthrough). This map
+// backfills the widget's label from asset_type, in the same singular style
+// as the manually-typed "Equity" values, so a holding is only "Unclassified"
+// when Cairn genuinely has no classification for it at all.
+const ASSET_TYPE_CLASS_LABEL: Record<string, string> = {
+  equity: "Equity",
+  etf: "ETF",
+  crypto: "Crypto",
+  forex: "Forex",
+  index: "Index",
+  future: "Future",
+};
+
 export function computeAllocation(
   metrics: HoldingMetrics[],
   groupBy: "asset_class" | "sector" | "geography" | "asset_type",
@@ -105,7 +130,8 @@ export function computeAllocation(
 
   for (const m of metrics) {
     const value = m.value ?? m.purchase_price * m.quantity;
-    const key = (m[groupBy] as string | null) || "Unclassified";
+    const fallback = groupBy === "asset_class" ? (ASSET_TYPE_CLASS_LABEL[m.asset_type] ?? null) : null;
+    const key = (m[groupBy] as string | null) || fallback || "Unclassified";
     totals.set(key, (totals.get(key) ?? 0) + value);
     grandTotal += value;
   }

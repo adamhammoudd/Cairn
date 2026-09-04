@@ -66,8 +66,14 @@ async function PortfolioBody() {
   // making three (per_symbol 1500, then 2, then 1) for one page. getLatestCloses
   // still layers the live quote on top when the market is open.
   const barsBySymbol = groupBarsBySymbol(priceRows);
+  // Ground truth for the crypto-quote hint: each holding's own stored
+  // asset_type (what the Edit-asset modal writes), not whatever
+  // historical_prices' bars happen to carry - a symbol with missing/stale
+  // bars must not silently lose its crypto hint and resolve to the wrong
+  // instrument's live quote.
+  const assetTypeBySymbol = new Map(rows.map((h) => [h.symbol, h.asset_type]));
   const [closes, asOf] = await Promise.all([
-    getLatestCloses(symbols, barsBySymbol),
+    getLatestCloses(symbols, barsBySymbol, assetTypeBySymbol),
     latestDataDate(symbols, barsBySymbol),
   ]);
   const metrics = computeHoldingMetrics(rows, closes);

@@ -8,6 +8,7 @@ import { TickerList } from "@/components/markets/ticker-list";
 import { TrendingDeck } from "@/components/markets/trending-deck";
 import { DataFreshness } from "@/components/data-freshness";
 import type { AssetFilter } from "@/lib/supabase/types";
+import { DECKS, deckComparator, type DeckId } from "@/lib/market-decks";
 
 interface MarketsPanelProps {
   rows: ScreenerRow[];
@@ -23,6 +24,10 @@ const TABS = ["all", ...ASSET_TYPES] as const;
 export function MarketsPanel({ rows, cryptoRows, defaultFilter = "all", requestCounts = {} }: MarketsPanelProps) {
   const [tab, setTab] = useState<AssetFilter>(defaultFilter);
   const [query, setQuery] = useState("");
+  // Owned here, not inside TrendingDeck - the ranked table below needs the
+  // same selection to sort by (see lib/market-decks.ts for why they used to
+  // drift apart).
+  const [deck, setDeck] = useState<DeckId>("gainers");
 
   // crypto_metrics carries the display name and a market cap the fundamentals
   // table can't derive (no shares outstanding for a coin). Merged in here so
@@ -40,12 +45,18 @@ export function MarketsPanel({ rows, cryptoRows, defaultFilter = "all", requestC
   const filtered = useMemo(() => {
     const base = tab === "all" ? rows : rows.filter((r) => r.assetType === tab);
     const q = query.trim().toUpperCase();
-    return q
+    const matched = q
       ? base.filter((r) => r.symbol.toUpperCase().includes(q) || (names[r.symbol] ?? "").toUpperCase().includes(q))
       : base;
-  }, [rows, tab, query, names]);
+    // Same ranking the deck row above is showing, applied to the full
+    // (tab + search filtered) set rather than just its top 6 - the table no
+    // longer stays on whatever order runScreen() happened to return while
+    // the cards above it change tabs.
+    return [...matched].sort(deckComparator(deck, requestCounts));
+  }, [rows, tab, query, names, deck, requestCounts]);
 
   const activeFilterLabel = tab === "all" ? "the full universe" : `${tab} symbols`;
+  const deckMethod = DECKS.find((d) => d.id === deck)?.method ?? "";
 
   // Newest bar behind any row on screen.
   const asOf = useMemo(() => rows.reduce<string | null>((newest, r) => (r.asOf && (!newest || r.asOf > newest) ? r.asOf : newest), null), [rows]);
@@ -71,7 +82,7 @@ export function MarketsPanel({ rows, cryptoRows, defaultFilter = "all", requestC
         </div>
       </div>
 
-      <TrendingDeck rows={rows} requestCounts={requestCounts} names={names} />
+      <TrendingDeck rows={rows} requestCounts={requestCounts} names={names} deck={deck} onDeckChange={setDeck} />
 
       <div className="mb-4 flex flex-wrap items-center gap-2.5">
         <div className="flex flex-wrap gap-1.5 rounded-[11px] border border-line bg-panel p-1">
@@ -102,6 +113,8 @@ export function MarketsPanel({ rows, cryptoRows, defaultFilter = "all", requestC
           />
         </div>
       </div>
+
+      <p className="mb-2 text-[11.5px] text-dim">{deckMethod}</p>
 
       <TickerList
         rows={filtered}

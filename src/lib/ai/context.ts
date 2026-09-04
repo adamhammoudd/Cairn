@@ -33,7 +33,10 @@ export function detectTickers(text: string): string[] {
 
 export interface ChatContext {
   analyses: { id: string; scope_type: string; scope_value: string; analysis_type: string; probability_low: number; probability_high: number; confidence_level: string; reasoning_text: string; sample_size: number }[];
-  news: { id: string; title: string; source_name: string; published_at: string }[];
+  // `url` is what lets the model follow the system prompt's own instruction
+  // to cite with a real `[label](url)` link instead of falling back to some
+  // other notation for a source it has no href for (see lib/ai/citations.ts).
+  news: { id: string; title: string; source_name: string; url: string | null; published_at: string }[];
   relevantSymbols: string[];
   // Real, code-computed portfolio figures for this turn, or null. Only ever
   // non-null when ENABLE_PORTFOLIO_CONTEXT is on and the user holds something -
@@ -99,7 +102,7 @@ export async function buildChatContext(
 
   let newsQuery = supabase
     .from("news_items")
-    .select("id, title, source_name, published_at")
+    .select("id, title, source_name, url, published_at")
     .order("published_at", { ascending: false })
     .limit(6);
   if (relevantSymbols.length > 0) {
