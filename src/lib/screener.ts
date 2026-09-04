@@ -178,6 +178,51 @@ export const PRESET_SCREENS: PresetScreen[] = [
   },
 ];
 
+/**
+ * Apply a ScreenerFilters set to rows that are already in hand, and order by
+ * percent change descending (the screener's default). Pure and shared: the
+ * server action runs it over the freshly-read universe, and the panel runs it
+ * over the same universe already in the browser, so a keystroke re-filters
+ * instantly instead of round-tripping to the database. A row missing the field
+ * a filter constrains is excluded by that filter (a null P/E is not "0").
+ */
+export function applyScreenerFilters(rows: ScreenerRow[], filters: ScreenerFilters): ScreenerRow[] {
+  return rows
+    .filter((r) => {
+      if (filters.assetTypes.length > 0 && !filters.assetTypes.includes(r.assetType)) return false;
+      if (filters.minPrice !== null && (r.price === null || r.price < filters.minPrice)) return false;
+      if (filters.maxPrice !== null && (r.price === null || r.price > filters.maxPrice)) return false;
+      if (filters.minChangePct !== null && (r.changePct === null || r.changePct < filters.minChangePct)) return false;
+      if (filters.maxChangePct !== null && (r.changePct === null || r.changePct > filters.maxChangePct)) return false;
+      if (filters.minVolume !== null && (r.volume === null || r.volume < filters.minVolume)) return false;
+
+      const capM = r.marketCap === null ? null : r.marketCap / 1e6;
+      if (filters.minMarketCapM !== null && (capM === null || capM < filters.minMarketCapM)) return false;
+      if (filters.maxMarketCapM !== null && (capM === null || capM > filters.maxMarketCapM)) return false;
+      if (filters.minPe !== null && (r.pe === null || r.pe < filters.minPe)) return false;
+      if (filters.maxPe !== null && (r.pe === null || r.pe > filters.maxPe)) return false;
+      if (filters.minDividendYield !== null && (r.dividendYield === null || r.dividendYield < filters.minDividendYield)) {
+        return false;
+      }
+      return true;
+    })
+    .sort((a, b) => (b.changePct ?? -Infinity) - (a.changePct ?? -Infinity));
+}
+
+/** The numeric fields on ScreenerFilters, in the panel's display order. */
+export const SCREENER_NUMERIC_FIELDS = [
+  "minPrice",
+  "maxPrice",
+  "minChangePct",
+  "maxChangePct",
+  "minVolume",
+  "minMarketCapM",
+  "maxMarketCapM",
+  "minPe",
+  "maxPe",
+  "minDividendYield",
+] as const satisfies readonly (keyof ScreenerFilters)[];
+
 /** How close to an extreme a symbol has to be for the 52-week presets. */
 export const NEAR_52W_PCT = 5;
 

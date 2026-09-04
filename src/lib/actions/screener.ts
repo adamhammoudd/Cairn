@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { cryptoRolling24hFor } from "@/lib/market-data/current-price";
-import { EMPTY_FILTERS, type SavedScreen, type ScreenerFilters, type ScreenerRow } from "@/lib/screener";
+import { EMPTY_FILTERS, applyScreenerFilters, type SavedScreen, type ScreenerFilters, type ScreenerRow } from "@/lib/screener";
 import { MIGRATIONS, unwrapRows } from "@/lib/supabase/read";
 
 // Market cap, P/E, and dividend yield are derived here from SEC XBRL
@@ -103,29 +103,9 @@ export async function runScreen(rawFilters: ScreenerFilters): Promise<ScreenerRo
     };
   });
 
-  return rows
-    .filter((r) => {
-      if (filters.assetTypes.length > 0 && !filters.assetTypes.includes(r.assetType)) return false;
-      if (filters.minPrice !== null && (r.price === null || r.price < filters.minPrice)) return false;
-      if (filters.maxPrice !== null && (r.price === null || r.price > filters.maxPrice)) return false;
-      if (filters.minChangePct !== null && (r.changePct === null || r.changePct < filters.minChangePct)) return false;
-      if (filters.maxChangePct !== null && (r.changePct === null || r.changePct > filters.maxChangePct)) return false;
-      if (filters.minVolume !== null && (r.volume === null || r.volume < filters.minVolume)) return false;
-
-      const capM = r.marketCap === null ? null : r.marketCap / 1e6;
-      if (filters.minMarketCapM !== null && (capM === null || capM < filters.minMarketCapM)) return false;
-      if (filters.maxMarketCapM !== null && (capM === null || capM > filters.maxMarketCapM)) return false;
-      if (filters.minPe !== null && (r.pe === null || r.pe < filters.minPe)) return false;
-      if (filters.maxPe !== null && (r.pe === null || r.pe > filters.maxPe)) return false;
-      if (
-        filters.minDividendYield !== null &&
-        (r.dividendYield === null || r.dividendYield < filters.minDividendYield)
-      ) {
-        return false;
-      }
-      return true;
-    })
-    .sort((a, b) => (b.changePct ?? -Infinity) - (a.changePct ?? -Infinity));
+  // Same predicate the Screener panel runs client-side over this exact set -
+  // see applyScreenerFilters in lib/screener.ts.
+  return applyScreenerFilters(rows, filters);
 }
 
 export async function listSavedScreens(): Promise<SavedScreen[]> {
