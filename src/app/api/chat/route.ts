@@ -1,11 +1,20 @@
 import { createClient } from "@/lib/supabase/server";
-import { runChatTurn, type ChatHistoryMessage } from "@/lib/ai/chat-generate";
+import { runChatTurn, MAX_CHAT_MESSAGE_CHARS, type ChatHistoryMessage } from "@/lib/ai/chat-generate";
 import { checkChatUsageAllowed, recordChatUsage, getBillingSummary } from "@/lib/actions/billing";
+import { rateLimit, sweepRateLimits } from "@/lib/rate-limit";
 import { findMissingAnalysisScope, runAnalysisGeneration } from "@/lib/actions/analysis";
 import { TIER_LIMITS } from "@/lib/billing";
 import type { ChatGenerationState } from "@/lib/chat-state";
 import { nextResetLabel } from "@/lib/chat-state";
 import { BUSY_MESSAGE, LlmBusyError } from "@/lib/ai/llm";
+
+// Per-user burst limit, independent of the daily chat quota. Premium's daily
+// quota is unlimited, and even Free's is a day-scale number - neither stops one
+// session from looping this endpoint fast enough to drain the shared per-day
+// model token budget for every user at once (audit 2026-09-04 #12). ~1 message
+// every 4-5s sustained is well above any real conversation.
+const CHAT_BURST_LIMIT = 12;
+const CHAT_BURST_WINDOW_MS = 60_000;
 
 export async function POST(req: Request) {
   const supabase = await createClient();
@@ -14,8 +23,20 @@ export async function POST(req: Request) {
   } = await supabase.auth.getUser();
   if (!user) return new Response("Unauthorized", { status: 401 });
 
+  sweepRateLimits();
+  const burst = rateLimit(`chat:${user.id}`, CHAT_BURST_LIMIT, CHAT_BURST_WINDOW_MS);
+  if (!burst.allowed) {
+    return new Response("You're sending messages too quickly. Wait a moment and try again.", {
+      status: 429,
+      headers: { "Retry-After": String(burst.retryAfterSec) },
+    });
+  }
+
   const { sessionId, message } = (await req.json()) as { sessionId: string; message: string };
   if (!sessionId || !message?.trim()) return new Response("Missing sessionId or message", { status: 400 });
+  if ([...message].length > MAX_CHAT_MESSAGE_CHARS) {
+    return new Response(`Message is too long - keep it under ${MAX_CHAT_MESSAGE_CHARS} characters.`, { status: 400 });
+  }
 
   // Verify the session belongs to this user. Scoped on user_id here rather
   // than left to RLS: the authorization decision belongs in the route, and the

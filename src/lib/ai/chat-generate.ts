@@ -72,6 +72,12 @@ within a quarter in three of them; the exception took roughly twice as long.
 Below is the sector-level probability context for the move, with its inputs
 shown.`;
 
+// Hard ceiling on a single submitted message, enforced before it is ever built
+// into the model prompt (audit 2026-09-04 #12). Generous for a real question;
+// a multi-megabyte paste is either a mistake or an attempt to run up token
+// cost / probe the context window. Measured in code points, like validateText.
+export const MAX_CHAT_MESSAGE_CHARS = 4000;
+
 export interface ChatHistoryMessage {
   role: "user" | "assistant";
   content: string;
@@ -175,6 +181,13 @@ export async function runChatTurn({
   isTest = false,
   usePortfolioContext = true,
 }: ChatTurnInput): Promise<ChatTurnResult> {
+  // Defense in depth: the route rejects an over-length message with a 400, but
+  // this is the single choke point every caller (route, test suite) passes
+  // through before the model, so the ceiling is enforced here too.
+  if ([...message].length > MAX_CHAT_MESSAGE_CHARS) {
+    throw new Error(`Chat message exceeds the ${MAX_CHAT_MESSAGE_CHARS}-character limit.`);
+  }
+
   const context = await buildChatContext(message, userId, supabaseClient, usePortfolioContext);
   const contextBlock = buildContextBlock(context);
 
