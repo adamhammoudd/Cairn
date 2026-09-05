@@ -4,6 +4,7 @@ import { useState, useTransition, type ReactNode } from "react";
 import Link from "next/link";
 import { deleteHolding } from "@/lib/actions/holdings";
 import { HoldingModal } from "@/components/portfolio/holding-modal";
+import { AssetTypeBadge } from "@/components/asset-type-badge";
 import { Sparkline } from "@/components/sparkline";
 import { useDisplayPrefs } from "@/components/display-prefs-provider";
 import { formatMoney, formatCompactMoney, formatChange, formatSecondaryChange } from "@/lib/display-prefs";
@@ -122,7 +123,9 @@ export function HoldingsTable({
                         >
                           {m.symbol}
                         </Link>
-                        <div className="truncate text-[11.5px] text-muted capitalize">{m.asset_type}</div>
+                        <div className="truncate">
+                          <AssetTypeBadge type={m.asset_type} variant="text" />
+                        </div>
                       </div>
                     </div>
                     <div className="flex shrink-0 items-center gap-1">
@@ -228,7 +231,9 @@ export function HoldingsTable({
                         >
                           {m.symbol}
                         </Link>
-                        <div className="truncate text-[11px] text-muted capitalize">{m.asset_type}</div>
+                        <div className="truncate">
+                          <AssetTypeBadge type={m.asset_type} variant="text" />
+                        </div>
                       </div>
                     </div>
 

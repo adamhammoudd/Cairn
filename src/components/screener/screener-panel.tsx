@@ -3,11 +3,12 @@
 import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
 import { deleteSavedScreen, saveScreen } from "@/lib/actions/screener";
+import { AssetTypeBadge } from "@/components/asset-type-badge";
 import {
   ASSET_TYPE_LABEL,
-  ASSET_TYPE_TAG_CLASS,
   ASSET_TYPES,
   EMPTY_FILTERS,
+  MARKET_CAP_UNAVAILABLE_HINT,
   PRESET_SCREENS,
   SCREENER_NUMERIC_FIELDS,
   applyScreenSort,
@@ -337,8 +338,8 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
                   style={{ animationDelay: `${index * 25}ms` }}
                 >
                   <div className="text-sm text-primary">{r.symbol}</div>
-                  <div className={`font-mono text-[10px] tracking-[0.08em] uppercase ${(ASSET_TYPE_TAG_CLASS[r.assetType] ?? "text-muted").split(" ")[0]}`}>
-                    {r.assetType}
+                  <div>
+                    <AssetTypeBadge type={r.assetType} />
                   </div>
                   <div className="text-[12.5px] tabular-nums text-primary">
                     {formatMoney(r.price, prefs)}
@@ -353,7 +354,12 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
                   <div className="text-[12.5px] tabular-nums text-muted">
                     {formatVolume(r.volume)}
                   </div>
-                  <div className="text-[12.5px] tabular-nums text-primary">{formatMarketCap(r.marketCap, prefs)}</div>
+                  <div
+                    className="text-[12.5px] tabular-nums text-primary"
+                    title={r.marketCap === null ? MARKET_CAP_UNAVAILABLE_HINT : undefined}
+                  >
+                    {formatMarketCap(r.marketCap, prefs)}
+                  </div>
                   <div className="text-[12.5px] tabular-nums text-muted">{r.pe === null ? "-" : `${r.pe.toFixed(1)}\u00d7`}</div>
                   <div className="text-[12.5px] tabular-nums text-muted">
                     {r.dividendYield === null ? "-" : `${r.dividendYield.toFixed(2)}%`}

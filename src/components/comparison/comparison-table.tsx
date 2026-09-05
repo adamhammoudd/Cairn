@@ -1,6 +1,7 @@
 "use client";
 
-import { ASSET_TYPE_TAG_CLASS, formatMarketCap } from "@/lib/screener";
+import { formatMarketCap, MARKET_CAP_UNAVAILABLE_HINT } from "@/lib/screener";
+import { AssetTypeBadge } from "@/components/asset-type-badge";
 import { useDisplayPrefs } from "@/components/display-prefs-provider";
 import { absoluteChangeFrom, formatChange, formatMoney, type DisplayPrefs } from "@/lib/display-prefs";
 import type { ComparisonRow } from "@/lib/comparison";
@@ -94,27 +95,25 @@ export function ComparisonTable({ rows }: { rows: ComparisonRow[] }) {
             >
               <div className="text-[12px] text-muted">{metric.label}</div>
               {rows.map((row) => {
-                // Every other page shows asset type as an uppercase pill
-                // (see ticker-list.tsx); this table printed the raw
-                // lowercase value as plain text, the one row here without a
-                // real "-" empty-state either, so it gets its own render
-                // rather than forcing a JSX-shaped Cell into every metric.
+                // Asset type is the one row that renders a component, not a
+                // text Cell - the shared AssetTypeBadge every other surface
+                // (Markets, Screener, Portfolio, Ticker) now uses, so the
+                // pill can't drift lowercase here again.
                 if (metric.label === "Asset type") {
                   return (
                     <div key={row.symbol}>
-                      <span
-                        className={`rounded-full border px-2 py-0.75 font-mono text-[9.5px] tracking-[0.1em] uppercase ${
-                          ASSET_TYPE_TAG_CLASS[row.assetType] ?? "text-muted border-line"
-                        }`}
-                      >
-                        {row.assetType}
-                      </span>
+                      <AssetTypeBadge type={row.assetType} />
                     </div>
                   );
                 }
                 const cell = metric.cell(row, prefs);
+                const hint = metric.label === "Market cap" && row.marketCap === null ? MARKET_CAP_UNAVAILABLE_HINT : undefined;
                 return (
-                  <div key={row.symbol} className={`text-[13px] tabular-nums ${TONE_CLASS[cell.tone]}`}>
+                  <div
+                    key={row.symbol}
+                    className={`text-[13px] tabular-nums ${TONE_CLASS[cell.tone]}`}
+                    title={hint}
+                  >
                     {cell.text}
                   </div>
                 );

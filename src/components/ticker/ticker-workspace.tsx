@@ -6,6 +6,7 @@ import { useDisplayPrefs } from "@/components/display-prefs-provider";
 import { formatMoney } from "@/lib/display-prefs";
 import { formatSupply } from "@/lib/crypto";
 import { assetName } from "@/lib/asset-names";
+import { AssetTypeBadge } from "@/components/asset-type-badge";
 import { DataFreshness } from "@/components/data-freshness";
 import { LivePricePoll } from "@/components/live-price-poll";
 import { decodeEntities } from "@/lib/news";
@@ -187,9 +188,7 @@ export function TickerWorkspace({
           <div className="min-w-0">
             <div className="flex flex-wrap items-baseline gap-3">
               <h1 className="font-serif text-[30px] leading-[1.1] font-normal text-primary">{data.symbol}</h1>
-              <span className="rounded-full border border-line px-2 py-0.75 font-mono text-[9.5px] tracking-[0.1em] text-muted uppercase">
-                {data.assetType}
-              </span>
+              <AssetTypeBadge type={data.assetType} />
             </div>
             <div className="mt-1.25 text-[13px] text-muted">{subline}</div>
           </div>

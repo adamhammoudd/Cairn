@@ -113,13 +113,21 @@ export function formatVolume(n: number | null): string {
   return n.toLocaleString();
 }
 
+// Shown as the tooltip on a market-cap cell that reads "n/a" - the figure is
+// derived at query time from shares-outstanding fundamentals, so a null means
+// the provider has no fundamentals row for that symbol yet (NFLX/PLTR/UBER
+// live), not that the company has no market cap. An explicit "n/a" + this
+// hint beats a bare dash that reads as a render bug.
+export const MARKET_CAP_UNAVAILABLE_HINT =
+  "No shares-outstanding data from the provider for this symbol, so market cap can't be derived.";
+
 // Was hardcoded `$` - every other money figure in the app converts through
 // DisplayPrefs (see lib/display-prefs.ts's formatMoney/formatCompactMoney);
 // this one didn't, so market cap kept showing USD on a EUR account even on
 // pages (Markets, Screener, Comparison) that convert every other figure
 // correctly.
 export function formatMarketCap(n: number | null, prefs: DisplayPrefs): string {
-  if (n === null) return "-";
+  if (n === null) return "n/a";
   const value = n * prefs.fxRate;
   return value.toLocaleString(undefined, {
     style: "currency",

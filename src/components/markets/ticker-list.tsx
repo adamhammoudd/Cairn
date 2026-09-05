@@ -1,8 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { ASSET_TYPE_LABEL, ASSET_TYPE_TAG_CLASS, formatMarketCap, formatVolume, type ScreenerRow } from "@/lib/screener";
+import {
+  ASSET_TYPE_LABEL,
+  formatMarketCap,
+  formatVolume,
+  MARKET_CAP_UNAVAILABLE_HINT,
+  type ScreenerRow,
+} from "@/lib/screener";
 import { assetName } from "@/lib/asset-names";
+import { AssetTypeBadge } from "@/components/asset-type-badge";
 import { Sparkline } from "@/components/sparkline";
 import { useDisplayPrefs } from "@/components/display-prefs-provider";
 import { absoluteChangeFrom, formatChange, formatMoney } from "@/lib/display-prefs";
@@ -125,13 +132,7 @@ export function TickerList({ rows, names, marketCaps, emptyState }: TickerListPr
               </div>
             </div>
             <div className="hidden sm:block">
-              <span
-                className={`rounded-full border px-2 py-0.75 font-mono text-[9.5px] tracking-[0.1em] uppercase ${
-                  ASSET_TYPE_TAG_CLASS[r.assetType] ?? "text-muted border-line"
-                }`}
-              >
-                {r.assetType}
-              </span>
+              <AssetTypeBadge type={r.assetType} />
             </div>
             <div className="hidden text-[12.5px] tabular-nums text-primary sm:block">{money(r.price)}</div>
             <div
@@ -141,7 +142,12 @@ export function TickerList({ rows, names, marketCaps, emptyState }: TickerListPr
             >
               {change(r)}
             </div>
-            <div className="hidden text-[12.5px] tabular-nums text-muted sm:block">{formatMarketCap(marketCap, prefs)}</div>
+            <div
+              className="hidden text-[12.5px] tabular-nums text-muted sm:block"
+              title={marketCap === null ? MARKET_CAP_UNAVAILABLE_HINT : undefined}
+            >
+              {formatMarketCap(marketCap, prefs)}
+            </div>
             <div className="hidden text-[12.5px] tabular-nums text-muted sm:block">{formatVolume(r.volume)}</div>
             <div className="hidden sm:block">
               {r.trend.length > 1 && (

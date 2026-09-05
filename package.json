@@ -70,7 +70,8 @@
     "test:currency-formatting": "tsx --conditions=react-server scripts/tests/currency-formatting.ts",
     "test:crypto-asset-type-mismatches": "tsx --conditions=react-server scripts/tests/crypto-asset-type-mismatches.ts",
     "test:holding-metadata-gaps": "tsx --conditions=react-server scripts/tests/holding-metadata-gaps.ts",
-    "test:btc-value-reconciliation": "tsx --conditions=react-server scripts/tests/btc-value-reconciliation.ts"
+    "test:btc-value-reconciliation": "tsx --conditions=react-server scripts/tests/btc-value-reconciliation.ts",
+    "test:asset-type-badge": "tsx --conditions=react-server scripts/tests/asset-type-badge-consistency.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.4",

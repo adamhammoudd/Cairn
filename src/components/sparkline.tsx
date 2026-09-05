@@ -67,12 +67,37 @@ export function Sparkline({
   height,
   stretch = false,
 }: SparklineProps) {
-  if (values.length < 2) {
-    return <div className={`${className} text-[11px] text-dim`}>-</div>;
-  }
-
   const w = width ?? VIEW_W;
   const h = height ?? VIEW_H;
+
+  // Fewer than two points is not an error - a holding added today, a crypto
+  // whose history hasn't backfilled, an illiquid name with one stored bar.
+  // A bare "-" in a chart column reads as a render bug; a flat dashed baseline
+  // reads as "no movement to plot yet", which is the honest state.
+  if (values.length < 2) {
+    return (
+      <svg
+        viewBox={`0 0 ${w} ${h}`}
+        {...(width && height ? { width, height } : {})}
+        className={`block ${className}`}
+        preserveAspectRatio={stretch || !width ? "none" : "xMidYMid meet"}
+        role="img"
+        aria-label="No price history yet"
+      >
+        <title>No price history yet</title>
+        <line
+          x1={PAD}
+          y1={h / 2}
+          x2={w - PAD}
+          y2={h / 2}
+          stroke="var(--color-dim, #7b7b7b)"
+          strokeWidth={1}
+          strokeDasharray="2 2"
+          vectorEffect="non-scaling-stroke"
+        />
+      </svg>
+    );
+  }
 
   return (
     <svg
