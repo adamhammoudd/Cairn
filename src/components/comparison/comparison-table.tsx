@@ -1,6 +1,6 @@
 "use client";
 
-import { formatMarketCap } from "@/lib/screener";
+import { ASSET_TYPE_TAG_CLASS, formatMarketCap } from "@/lib/screener";
 import { useDisplayPrefs } from "@/components/display-prefs-provider";
 import { absoluteChangeFrom, formatChange, formatMoney, type DisplayPrefs } from "@/lib/display-prefs";
 import type { ComparisonRow } from "@/lib/comparison";
@@ -39,7 +39,7 @@ const METRICS: { label: string; cell: (row: ComparisonRow, prefs: DisplayPrefs) 
             tone: r.changePct >= 0 ? "positive" : "negative",
           },
   },
-  { label: "Market cap", cell: (r) => ({ text: formatMarketCap(r.marketCap), tone: r.marketCap === null ? "muted" : "primary" }) },
+  { label: "Market cap", cell: (r, prefs) => ({ text: formatMarketCap(r.marketCap, prefs), tone: r.marketCap === null ? "muted" : "primary" }) },
   { label: "P/E", cell: (r) => ({ text: r.pe === null ? "-" : r.pe.toFixed(1), tone: r.pe === null ? "muted" : "primary" }) },
   {
     label: "Div. yield",
@@ -55,6 +55,8 @@ const METRICS: { label: string; cell: (row: ComparisonRow, prefs: DisplayPrefs) 
       tone: r.volume === null ? "muted" : "primary",
     }),
   },
+  // Rendered as a pill below instead of through `cell` - kept here only so
+  // the row still appears in this list with its label, in order.
   { label: "Asset type", cell: (r) => ({ text: r.assetType, tone: "muted" }) },
 ];
 
@@ -92,6 +94,24 @@ export function ComparisonTable({ rows }: { rows: ComparisonRow[] }) {
             >
               <div className="text-[12px] text-muted">{metric.label}</div>
               {rows.map((row) => {
+                // Every other page shows asset type as an uppercase pill
+                // (see ticker-list.tsx); this table printed the raw
+                // lowercase value as plain text, the one row here without a
+                // real "-" empty-state either, so it gets its own render
+                // rather than forcing a JSX-shaped Cell into every metric.
+                if (metric.label === "Asset type") {
+                  return (
+                    <div key={row.symbol}>
+                      <span
+                        className={`rounded-full border px-2 py-0.75 font-mono text-[9.5px] tracking-[0.1em] uppercase ${
+                          ASSET_TYPE_TAG_CLASS[row.assetType] ?? "text-muted border-line"
+                        }`}
+                      >
+                        {row.assetType}
+                      </span>
+                    </div>
+                  );
+                }
                 const cell = metric.cell(row, prefs);
                 return (
                   <div key={row.symbol} className={`text-[13px] tabular-nums ${TONE_CLASS[cell.tone]}`}>

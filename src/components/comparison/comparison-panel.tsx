@@ -31,13 +31,25 @@ export function ComparisonPanel({
   const router = useRouter();
   const prefs = useDisplayPrefs();
   const [timeframe, setTimeframe] = useState<ChartView>(defaultTimeframe);
+  // Adding a symbol re-navigates (`selected` is driven by the URL), and the
+  // quick-add chips reorder the instant `available` recomputes - a second
+  // click landing before that settles can add the wrong symbol (reported:
+  // "I did this myself"). `pendingAdd` briefly locks the row after a click;
+  // rather than an effect to clear it back to null (setState-in-effect,
+  // cascading render), it's just derived away once `available` no longer
+  // contains it - which is exactly the render where the navigation has
+  // actually landed.
+  const [pendingAdd, setPendingAdd] = useState<string | null>(null);
+  const available = universe.filter((s) => !selected.includes(s));
+  const isPending = pendingAdd !== null && available.includes(pendingAdd);
 
   function updateSelection(next: string[]) {
     router.push(next.length > 0 ? `/comparison?symbols=${next.join(",")}` : "/comparison");
   }
 
   function addSymbol(symbol: string) {
-    if (!symbol || selected.includes(symbol) || selected.length >= MAX_COMPARE) return;
+    if (!symbol || isPending || selected.includes(symbol) || selected.length >= MAX_COMPARE) return;
+    setPendingAdd(symbol);
     updateSelection([...selected, symbol]);
   }
 
@@ -45,7 +57,6 @@ export function ComparisonPanel({
     updateSelection(selected.filter((s) => s !== symbol));
   }
 
-  const available = universe.filter((s) => !selected.includes(s));
   const canAdd = selected.length < MAX_COMPARE;
 
   return (
@@ -77,8 +88,11 @@ export function ComparisonPanel({
               <button
                 key={symbol}
                 type="button"
+                disabled={isPending}
                 onClick={() => addSymbol(symbol)}
-                className="rounded-full border border-dashed border-line px-3 py-1.5 font-mono text-[11px] text-muted transition-colors duration-base ease-standard hover:border-accent hover:text-primary"
+                className={`rounded-full border border-dashed border-line px-3 py-1.5 font-mono text-[11px] text-muted transition-[opacity,color,border-color] duration-200 ease-standard hover:border-accent hover:text-primary ${
+                  pendingAdd === symbol ? "opacity-40" : isPending ? "opacity-70" : ""
+                }`}
               >
                 + {symbol}
               </button>

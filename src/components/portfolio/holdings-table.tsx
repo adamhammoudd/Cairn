@@ -7,7 +7,7 @@ import { HoldingModal } from "@/components/portfolio/holding-modal";
 import { Sparkline } from "@/components/sparkline";
 import { useDisplayPrefs } from "@/components/display-prefs-provider";
 import { formatMoney, formatCompactMoney, formatChange, formatSecondaryChange } from "@/lib/display-prefs";
-import type { Holding, HoldingMetrics } from "@/lib/portfolio";
+import { formatQuantity, type Holding, type HoldingMetrics } from "@/lib/portfolio";
 
 const COLS = "grid-cols-[1.5fr_0.7fr_0.9fr_1fr_1fr_1.1fr_96px_72px]";
 
@@ -233,7 +233,7 @@ export function HoldingsTable({
                     </div>
 
                     <div className="text-[12.5px] tabular-nums text-primary" title={m.quantity.toLocaleString()}>
-                      {m.quantity.toLocaleString(undefined, { maximumFractionDigits: 4 })}
+                      {formatQuantity(m.quantity)}
                     </div>
                     <div
                       className="flex items-center gap-1 text-[12.5px] tabular-nums text-primary"

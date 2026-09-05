@@ -5,6 +5,8 @@
 // Deno (supabase/functions/evaluate-alerts) - the two must stay in sync; there
 // is no shared module across the Node/Deno boundary.
 
+import { formatMoney, type DisplayPrefs } from "@/lib/display-prefs";
+
 export type AlertType = "price" | "pct_change" | "volume_spike" | "technical_crossover" | "ai_confidence";
 export type AlertChannel = "in_app" | "push" | "email";
 export type Comparator = "above" | "below";
@@ -30,6 +32,22 @@ export interface AlertDelivery {
   status: string;
   sent_at: string;
   read_at: string | null;
+}
+
+/**
+ * Collapses back-to-back deliveries for the same alert with byte-identical
+ * message text - the alert can genuinely fire twice in a short window with
+ * the same snapshot (confirmed live: an NVDA alert fired ~15h apart against
+ * the same day's close, message identical both times), which is correct
+ * evaluator behaviour, not a logging bug. Shown twice in the feed it just
+ * reads as a duplicate glitch, so this only changes what's displayed -
+ * `deliveries` (and its order) is expected newest-first, and every row it
+ * returns is still a real, untouched delivery.
+ */
+export function dedupeConsecutiveDeliveries<T extends { alert_id: string; message: string | null }>(deliveries: T[]): T[] {
+  return deliveries.filter(
+    (d, i) => i === 0 || d.alert_id !== deliveries[i - 1].alert_id || d.message !== deliveries[i - 1].message,
+  );
 }
 
 export const ALERT_TYPE_LABELS: Record<AlertType, string> = {
@@ -246,10 +264,23 @@ export function evaluateAlert({
   }
 }
 
-export function describeCondition(alertType: AlertType, condition: Record<string, unknown>): string {
+// `prefs` is optional so this stays callable from a plain-Node context with
+// no request scope (none currently, but matches every other pure formatter
+// in this module); passing it converts the price condition through the same
+// path as every other money figure in the app (see lib/display-prefs.ts).
+// Without it, this hardcoded "$" - the one Alerts bug the currency setting
+// missed, since every OTHER page's price routes through formatMoney().
+export function describeCondition(
+  alertType: AlertType,
+  condition: Record<string, unknown>,
+  prefs?: DisplayPrefs,
+): string {
   switch (alertType) {
-    case "price":
-      return `Price ${condition.comparator} $${condition.value}`;
+    case "price": {
+      const raw = Number(condition.value);
+      const value = prefs && Number.isFinite(raw) ? formatMoney(raw, prefs) : `$${condition.value}`;
+      return `Price ${condition.comparator} ${value}`;
+    }
     case "pct_change":
       return `Day change ${condition.comparator} ${condition.value}%`;
     case "volume_spike":

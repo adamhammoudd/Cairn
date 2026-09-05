@@ -353,7 +353,14 @@ export function ChatThread({
     <>
       <div ref={scrollRef} className={`flex-1 overflow-y-auto ${compact ? "px-3 py-3" : "p-5"}`}>
         {messages.length === 0 ? (
-          <p className="text-[13px] text-muted">
+          // Was the same 13px weight as the composer's own input text with no
+          // border/background to separate them - close enough in size and
+          // position to read as the input field itself. Smaller, dimmer,
+          // italic and with a leading glyph reads as a caption instead.
+          <p className="flex items-start gap-1.5 text-[12px] text-dim italic">
+            <span aria-hidden className="not-italic">
+              ↳
+            </span>
             Ask about a ticker, sector, or market trend - I&apos;ll answer from stored research only.
           </p>
         ) : (

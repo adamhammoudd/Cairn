@@ -1,6 +1,12 @@
 export interface SectorMapNode {
   name: string;
-  children: { name: string; size: number; changePct: number | null }[];
+  children: {
+    name: string;
+    size: number;
+    changePct: number | null;
+    /** Company/coin display name, for the hover tooltip - null when none is on file. */
+    displayName: string | null;
+  }[];
 }
 
 function opacityForChange(pct: number): number {

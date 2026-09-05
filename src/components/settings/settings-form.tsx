@@ -125,7 +125,9 @@ export function SettingsForm({ settings, activeTab, sectorOptions, watchlists, f
               value={settings.metric_style ?? "percent"}
               options={[
                 { value: "percent", label: "Percent" },
-                { value: "absolute", label: "Dollar" },
+                // Was "Dollar" - wrong word for a EUR/GBP/etc. account (this
+                // toggles amount vs. percentage, not literally US dollars).
+                { value: "absolute", label: "Amount" },
               ]}
             />
           </CardRow>

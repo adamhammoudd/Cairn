@@ -2,6 +2,8 @@
 // because a "use server" module may only export async functions - a plain
 // object export there is a build error.
 
+import type { DisplayPrefs } from "@/lib/display-prefs";
+
 export interface ScreenerFilters {
   assetTypes: string[];
   minPrice: number | null;
@@ -111,12 +113,20 @@ export function formatVolume(n: number | null): string {
   return n.toLocaleString();
 }
 
-export function formatMarketCap(n: number | null): string {
+// Was hardcoded `$` - every other money figure in the app converts through
+// DisplayPrefs (see lib/display-prefs.ts's formatMoney/formatCompactMoney);
+// this one didn't, so market cap kept showing USD on a EUR account even on
+// pages (Markets, Screener, Comparison) that convert every other figure
+// correctly.
+export function formatMarketCap(n: number | null, prefs: DisplayPrefs): string {
   if (n === null) return "-";
-  if (n >= 1e12) return `$${(n / 1e12).toFixed(2)}T`;
-  if (n >= 1e9) return `$${(n / 1e9).toFixed(1)}B`;
-  if (n >= 1e6) return `$${(n / 1e6).toFixed(0)}M`;
-  return `$${n.toLocaleString()}`;
+  const value = n * prefs.fxRate;
+  return value.toLocaleString(undefined, {
+    style: "currency",
+    currency: prefs.effectiveCurrency,
+    notation: "compact",
+    maximumFractionDigits: 2,
+  });
 }
 
 

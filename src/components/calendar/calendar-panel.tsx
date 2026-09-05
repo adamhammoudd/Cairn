@@ -100,7 +100,16 @@ export function CalendarPanel({ events }: { events: CalendarEvent[] }) {
             type="button"
             onClick={() => setMonthOffset(0)}
             disabled={monthOffset === 0}
-            className="rounded-lg border border-line px-3 py-1.5 text-[12.5px] text-muted transition-colors duration-fast ease-standard hover:border-[#3A3A3A] hover:text-primary disabled:opacity-40"
+            aria-label={monthOffset === 0 ? "You're viewing the current month" : "Jump to the current month"}
+            // Disabled-because-you're-already-here needs to read as "you are
+            // here", not "broken" - a plain opacity-40 disabled state looks
+            // identical to any other inert control. Same accent treatment the
+            // calendar grid already uses for today's cell.
+            className={`rounded-lg border px-3 py-1.5 text-[12.5px] transition-colors duration-fast ease-standard ${
+              monthOffset === 0
+                ? "border-accent/45 bg-active text-accent"
+                : "border-line text-muted hover:border-[#3A3A3A] hover:text-primary"
+            }`}
           >
             Today
           </button>

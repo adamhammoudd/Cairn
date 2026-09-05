@@ -9,7 +9,7 @@ export async function getSectorHeatmap(): Promise<SectorMapNode[]> {
   if (symbols.length === 0) return [];
 
   const supabase = await createClient();
-  const [{ data: prices }, { data: fundamentals }, { data: coinRows }] = await Promise.all([
+  const [{ data: prices }, { data: fundamentals }, { data: coinRows }, { data: directoryRows }] = await Promise.all([
     // Two bars per symbol, guaranteed per symbol. The shared-cap version
     // (`limit(symbols.length * 6)`) relied on every symbol printing bars on
     // the same days: one gap and a symbol got zero closes and silently became
@@ -17,11 +17,17 @@ export async function getSectorHeatmap(): Promise<SectorMapNode[]> {
     // the universe is on-demand.
     supabase.rpc("recent_prices", { symbols, per_symbol: 2 }),
     supabase.from("fundamentals").select("symbol, sector, shares_outstanding").in("symbol", symbols),
-    supabase.from("crypto_metrics").select("symbol, price_change_24h_pct, market_cap").in("symbol", symbols),
+    supabase.from("crypto_metrics").select("symbol, name, price_change_24h_pct, market_cap").in("symbol", symbols),
+    // Same name-resolution source ticker-list.tsx uses for equities: the
+    // provider's own display name, stored at ingest - so a small tile's
+    // tooltip can disambiguate collisions ("S…" could be several tickers)
+    // by real name, not just the symbol already visible on the tile itself.
+    supabase.from("symbol_directory").select("symbol, name").in("symbol", symbols),
   ]);
 
   const fundamentalsBySymbol = new Map((fundamentals ?? []).map((f) => [f.symbol, f]));
   const coinBySymbol = new Map((coinRows ?? []).map((c) => [c.symbol, c]));
+  const directoryNameBySymbol = new Map((directoryRows ?? []).map((d) => [d.symbol, d.name]));
   const closesBySymbol = new Map<string, number[]>();
   for (const p of (prices ?? []) as { symbol: string; ts: string; close: number | null }[]) {
     if (p.close === null) continue;
@@ -50,8 +56,9 @@ export async function getSectorHeatmap(): Promise<SectorMapNode[]> {
           : null;
     const sectorName = f?.sector ?? (coin ? "Digital assets" : "Unclassified");
 
+    const displayName = coin?.name ?? directoryNameBySymbol.get(symbol) ?? null;
     const children = bySector.get(sectorName) ?? [];
-    children.push({ name: symbol, size: marketCap ?? 1, changePct });
+    children.push({ name: symbol, size: marketCap ?? 1, changePct, displayName });
     bySector.set(sectorName, children);
   }
 
