@@ -90,7 +90,9 @@ export const ASSET_TYPE_TAG_CLASS: Record<string, string> = {
   future: "text-muted border-line",
 };
 
-/** Filter-pill labels, matching the mock's wording. */
+/** Filter-pill labels (plural), matching the mock's wording. For a single
+ *  row's badge or an inline mention, use ASSET_TYPE_BADGE / assetTypeBadge -
+ *  "Equities" is wrong on one row. */
 export const ASSET_TYPE_LABEL: Record<string, string> = {
   all: "All",
   equity: "Equities",
@@ -103,6 +105,26 @@ export const ASSET_TYPE_LABEL: Record<string, string> = {
   index: "Indices",
   future: "Futures",
 };
+
+/** Per-instance asset-type label (singular): a row's type badge, a typeahead
+ *  result, the Add-holding select. One source for all of them, rendered as-is.
+ *
+ *  This replaces a mix of `capitalize` (which turns "etf" into "Etf") and a
+ *  raw lowercase enum, which is why the same concept read as "equity",
+ *  "Equity" and "EQUITY" on different screens. Badge components keep their own
+ *  `uppercase` styling on top; prose uses this verbatim. */
+export const ASSET_TYPE_BADGE: Record<string, string> = {
+  equity: "Equity",
+  etf: "ETF",
+  crypto: "Crypto",
+  forex: "Forex",
+  index: "Index",
+  future: "Future",
+};
+
+export function assetTypeBadge(assetType: string): string {
+  return ASSET_TYPE_BADGE[assetType] ?? assetType.charAt(0).toUpperCase() + assetType.slice(1);
+}
 
 /** Share volume, compacted the way the mock shows it ("22.4M"). */
 export function formatVolume(n: number | null): string {

@@ -11,6 +11,7 @@ import { SymbolTypeahead } from "@/components/symbol-typeahead";
 import { DataFreshness } from "@/components/data-freshness";
 import { useDisplayPrefs } from "@/components/display-prefs-provider";
 import { absoluteChangeFrom, formatChange, formatMoney } from "@/lib/display-prefs";
+import { assetTypeBadge } from "@/lib/screener";
 import type { ChartView } from "@/lib/supabase/types";
 
 const TIMEFRAMES: ChartView[] = ["1D", "1W", "1M", "3M", "1Y", "ALL"];
@@ -130,7 +131,7 @@ export function ComparisonPanel({
                         {row.symbol}
                       </Link>
                       <div className="mt-0.75 truncate text-[11px] text-muted">
-                        {row.name ?? <span className="font-mono tracking-[0.08em] uppercase">{row.assetType}</span>}
+                        {row.name ?? <span className="font-mono tracking-[0.08em] uppercase">{assetTypeBadge(row.assetType)}</span>}
                       </div>
                     </div>
                     <button

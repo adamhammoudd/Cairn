@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { lookupSymbol, searchSymbols, type SymbolSearchResult } from "@/lib/actions/symbols";
+import { assetTypeBadge } from "@/lib/screener";
 
 interface SymbolTypeaheadProps {
   onSelect: (result: SymbolSearchResult) => void;
@@ -216,7 +217,7 @@ export function SymbolTypeahead({
                 <span className="shrink-0 text-primary">{highlightMatch(r.symbol, query)}</span>
                 {r.name && <span className="truncate text-[12px] text-muted">{highlightMatch(r.name, query)}</span>}
               </span>
-              <span className="ml-2 shrink-0 text-[11px] text-dim capitalize">{r.assetType}</span>
+              <span className="ml-2 shrink-0 text-[11px] text-dim">{assetTypeBadge(r.assetType)}</span>
             </button>
           ))}
 
