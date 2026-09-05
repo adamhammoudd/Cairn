@@ -240,7 +240,12 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
 
           <div className="mt-4.5 mb-2.25 font-mono text-[9.5px] tracking-[0.12em] text-dim uppercase">Saved screens</div>
           {savedScreens.length === 0 ? (
-            <p className="text-[12.5px] text-dim">None saved yet.</p>
+            <div className="rounded-lg border border-dashed border-line px-3 py-2.5">
+              <p className="text-[12.5px] text-muted">No saved screens</p>
+              <p className="mt-0.5 text-[11px] text-dim text-pretty">
+                Adjust the filters, then <span className="text-muted">Save screen</span> to pin one here.
+              </p>
+            </div>
           ) : (
             <div className="flex flex-col gap-1">
               {savedScreens.map((s) => (
@@ -351,13 +356,21 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
                   >
                     {formatChange(absoluteChangeFrom(r.price, r.changePct), r.changePct, prefs)}
                   </div>
-                  <div className="text-[12.5px] tabular-nums text-muted">
+                  <div
+                    className="text-[12.5px] tabular-nums text-muted"
+                    title={r.volume === null ? "Volume not reported for this asset" : undefined}
+                  >
                     {formatVolume(r.volume)}
                   </div>
-                  <div className="text-[12.5px] tabular-nums text-primary">{formatMarketCap(r.marketCap, prefs)}</div>
-                  <div className="text-[12.5px] tabular-nums text-muted">{r.pe === null ? "-" : `${r.pe.toFixed(1)}\u00d7`}</div>
+                  <div
+                    className={`text-[12.5px] tabular-nums ${r.marketCap === null ? "text-muted" : "text-primary"}`}
+                    title={r.marketCap === null ? "Market cap not reported - funds and ETFs don't file it" : undefined}
+                  >
+                    {formatMarketCap(r.marketCap, prefs)}
+                  </div>
+                  <div className="text-[12.5px] tabular-nums text-muted">{r.pe === null ? "n/a" : `${r.pe.toFixed(1)}\u00d7`}</div>
                   <div className="text-[12.5px] tabular-nums text-muted">
-                    {r.dividendYield === null ? "-" : `${r.dividendYield.toFixed(2)}%`}
+                    {r.dividendYield === null ? "n/a" : `${r.dividendYield.toFixed(2)}%`}
                   </div>
                 </Link>
               ))}

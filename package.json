@@ -68,6 +68,7 @@
     "test:market-decks": "tsx --conditions=react-server scripts/tests/market-decks.ts",
     "test:history-refresh-priority": "tsx --conditions=react-server scripts/tests/history-refresh-priority.ts",
     "test:currency-formatting": "tsx --conditions=react-server scripts/tests/currency-formatting.ts",
+    "test:missing-data-states": "tsx --conditions=react-server scripts/tests/missing-data-states.ts",
     "test:asset-type-labels": "tsx --conditions=react-server scripts/tests/asset-type-labels.ts",
     "test:crypto-asset-type-mismatches": "tsx --conditions=react-server scripts/tests/crypto-asset-type-mismatches.ts",
     "test:holding-metadata-gaps": "tsx --conditions=react-server scripts/tests/holding-metadata-gaps.ts",
