@@ -104,9 +104,11 @@ export const ASSET_TYPE_LABEL: Record<string, string> = {
   future: "Futures",
 };
 
-/** Share volume, compacted the way the mock shows it ("22.4M"). */
+/** Share volume, compacted the way the mock shows it ("22.4M"). "n/a" - not a
+ *  bare dash - when the provider carries no volume for this asset, so it reads
+ *  as "not reported" rather than being mistaken for a real zero. */
 export function formatVolume(n: number | null): string {
-  if (n === null) return "-";
+  if (n === null) return "n/a";
   if (n >= 1e9) return `${(n / 1e9).toFixed(1)}B`;
   if (n >= 1e6) return `${(n / 1e6).toFixed(1)}M`;
   if (n >= 1e3) return `${(n / 1e3).toFixed(1)}K`;
@@ -119,7 +121,10 @@ export function formatVolume(n: number | null): string {
 // pages (Markets, Screener, Comparison) that convert every other figure
 // correctly.
 export function formatMarketCap(n: number | null, prefs: DisplayPrefs): string {
-  if (n === null) return "-";
+  // "n/a", not "-": a formatted figure (even "€0") can never be this string, so
+  // "not reported" (a fund that doesn't file it, a forex pair) stays distinct
+  // from a genuine zero in the same column.
+  if (n === null) return "n/a";
   const value = n * prefs.fxRate;
   return value.toLocaleString(undefined, {
     style: "currency",

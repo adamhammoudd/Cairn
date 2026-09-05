@@ -67,12 +67,37 @@ export function Sparkline({
   height,
   stretch = false,
 }: SparklineProps) {
-  if (values.length < 2) {
-    return <div className={`${className} text-[11px] text-dim`}>-</div>;
-  }
-
   const w = width ?? VIEW_W;
   const h = height ?? VIEW_H;
+
+  // No usable series yet - the position was added less than a window ago, or
+  // the provider carries no history for it. A flat dashed baseline holds the
+  // column's rhythm and reads as "no trend yet" rather than a bare "-" sitting
+  // beside rows that do draw a line.
+  if (values.length < 2) {
+    return (
+      <svg
+        viewBox={`0 0 ${w} ${h}`}
+        {...(width && height ? { width, height } : {})}
+        className={`block ${className}`}
+        preserveAspectRatio={stretch || !width ? "none" : "xMidYMid meet"}
+        role="img"
+        aria-label="No recent trend data"
+      >
+        <title>No recent trend data</title>
+        <line
+          x1={PAD}
+          y1={h / 2}
+          x2={w - PAD}
+          y2={h / 2}
+          stroke="var(--color-line)"
+          strokeWidth={1}
+          strokeDasharray="2 2"
+          vectorEffect="non-scaling-stroke"
+        />
+      </svg>
+    );
+  }
 
   return (
     <svg
