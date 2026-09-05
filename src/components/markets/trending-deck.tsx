@@ -96,12 +96,14 @@ export function TrendingDeck({ rows, requestCounts, names, deck, onDeckChange }:
                 <div className="mt-2">
                   <Sparkline values={r.trend} positive={up} delayMs={i * 40} className="h-6 w-full" />
                 </div>
+                {/* The eyebrow shows the card's price on every deck except
+                    "active" (which shows the volume it ranked by). The
+                    "searched" deck used to print the raw request count here
+                    ("2 REQUESTS") - an internal demand metric that read as a
+                    debug label; the deck's own method caption already says it
+                    ranks by lookups, and the asset name is on the line above. */}
                 <div className="mt-1.5 font-mono text-[9.5px] tracking-[0.1em] text-dim uppercase">
-                  {deck === "active"
-                    ? `Vol ${formatVolume(r.volume)}`
-                    : deck === "searched"
-                      ? `${requestCounts[r.symbol]} ${requestCounts[r.symbol] === 1 ? "request" : "requests"}`
-                      : formatMoney(r.price, prefs)}
+                  {deck === "active" ? `Vol ${formatVolume(r.volume)}` : formatMoney(r.price, prefs)}
                 </div>
               </Link>
             );
