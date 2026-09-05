@@ -141,8 +141,18 @@ export function TickerList({ rows, names, marketCaps, emptyState }: TickerListPr
             >
               {change(r)}
             </div>
-            <div className="hidden text-[12.5px] tabular-nums text-muted sm:block">{formatMarketCap(marketCap, prefs)}</div>
-            <div className="hidden text-[12.5px] tabular-nums text-muted sm:block">{formatVolume(r.volume)}</div>
+            <div
+              className="hidden text-[12.5px] tabular-nums text-muted sm:block"
+              title={marketCap === null ? "Market cap not reported for this asset" : undefined}
+            >
+              {formatMarketCap(marketCap, prefs)}
+            </div>
+            <div
+              className="hidden text-[12.5px] tabular-nums text-muted sm:block"
+              title={r.volume === null ? "Volume not reported for this asset" : undefined}
+            >
+              {formatVolume(r.volume)}
+            </div>
             <div className="hidden sm:block">
               {r.trend.length > 1 && (
                 <Sparkline values={r.trend} positive={(r.changePct ?? 0) >= 0} color={changeColor} className="h-6.5 w-23.5" />
