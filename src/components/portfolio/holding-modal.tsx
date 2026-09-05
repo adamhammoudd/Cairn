@@ -9,6 +9,7 @@ import type { Holding } from "@/lib/portfolio";
 import type { AssetType } from "@/lib/supabase/types";
 import { FIELD_LABEL } from "@/components/field-label";
 import { SECTOR_SUGGESTIONS } from "@/lib/sectors";
+import { assetTypeBadge } from "@/lib/screener";
 
 const ASSET_TYPES = ["equity", "etf", "crypto", "forex", "future"] as const;
 
@@ -94,11 +95,11 @@ export function HoldingModal({ holding, initialSymbol, onClose }: HoldingModalPr
                 name="asset_type"
                 value={assetType}
                 onChange={(e) => setAssetType(e.target.value as (typeof ASSET_TYPES)[number])}
-                className="w-full rounded-lg border border-line bg-active px-3 py-2 text-sm text-primary outline-none capitalize"
+                className="w-full rounded-lg border border-line bg-active px-3 py-2 text-sm text-primary outline-none"
               >
                 {ASSET_TYPES.map((t) => (
                   <option key={t} value={t} className="bg-panel">
-                    {t}
+                    {assetTypeBadge(t)}
                   </option>
                 ))}
               </select>

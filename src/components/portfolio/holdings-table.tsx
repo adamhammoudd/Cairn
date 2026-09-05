@@ -8,6 +8,7 @@ import { Sparkline } from "@/components/sparkline";
 import { useDisplayPrefs } from "@/components/display-prefs-provider";
 import { formatMoney, formatCompactMoney, formatChange, formatSecondaryChange } from "@/lib/display-prefs";
 import { formatQuantity, type Holding, type HoldingMetrics } from "@/lib/portfolio";
+import { assetTypeBadge } from "@/lib/screener";
 
 const COLS = "grid-cols-[1.5fr_0.7fr_0.9fr_1fr_1fr_1.1fr_96px_72px]";
 
@@ -122,7 +123,7 @@ export function HoldingsTable({
                         >
                           {m.symbol}
                         </Link>
-                        <div className="truncate text-[11.5px] text-muted capitalize">{m.asset_type}</div>
+                        <div className="truncate text-[11.5px] text-muted">{assetTypeBadge(m.asset_type)}</div>
                       </div>
                     </div>
                     <div className="flex shrink-0 items-center gap-1">
@@ -228,7 +229,7 @@ export function HoldingsTable({
                         >
                           {m.symbol}
                         </Link>
-                        <div className="truncate text-[11px] text-muted capitalize">{m.asset_type}</div>
+                        <div className="truncate text-[11px] text-muted">{assetTypeBadge(m.asset_type)}</div>
                       </div>
                     </div>
 

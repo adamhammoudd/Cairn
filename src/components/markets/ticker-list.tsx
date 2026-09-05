@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ASSET_TYPE_LABEL, ASSET_TYPE_TAG_CLASS, formatMarketCap, formatVolume, type ScreenerRow } from "@/lib/screener";
+import { ASSET_TYPE_LABEL, ASSET_TYPE_TAG_CLASS, assetTypeBadge, formatMarketCap, formatVolume, type ScreenerRow } from "@/lib/screener";
 import { assetName } from "@/lib/asset-names";
 import { Sparkline } from "@/components/sparkline";
 import { useDisplayPrefs } from "@/components/display-prefs-provider";
@@ -130,7 +130,7 @@ export function TickerList({ rows, names, marketCaps, emptyState }: TickerListPr
                   ASSET_TYPE_TAG_CLASS[r.assetType] ?? "text-muted border-line"
                 }`}
               >
-                {r.assetType}
+                {assetTypeBadge(r.assetType)}
               </span>
             </div>
             <div className="hidden text-[12.5px] tabular-nums text-primary sm:block">{money(r.price)}</div>

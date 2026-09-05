@@ -12,6 +12,7 @@ import {
   SCREENER_NUMERIC_FIELDS,
   applyScreenSort,
   applyScreenerFilters,
+  assetTypeBadge,
   formatMarketCap,
   formatVolume,
   type ScreenSort,
@@ -343,7 +344,7 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
                 >
                   <div className="text-sm text-primary">{r.symbol}</div>
                   <div className={`font-mono text-[10px] tracking-[0.08em] uppercase ${(ASSET_TYPE_TAG_CLASS[r.assetType] ?? "text-muted").split(" ")[0]}`}>
-                    {r.assetType}
+                    {assetTypeBadge(r.assetType)}
                   </div>
                   <div className="text-[12.5px] tabular-nums text-primary">
                     {formatMoney(r.price, prefs)}

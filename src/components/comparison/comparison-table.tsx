@@ -1,6 +1,6 @@
 "use client";
 
-import { ASSET_TYPE_TAG_CLASS, formatMarketCap } from "@/lib/screener";
+import { ASSET_TYPE_TAG_CLASS, assetTypeBadge, formatMarketCap } from "@/lib/screener";
 import { useDisplayPrefs } from "@/components/display-prefs-provider";
 import { absoluteChangeFrom, formatChange, formatMoney, type DisplayPrefs } from "@/lib/display-prefs";
 import type { ComparisonRow } from "@/lib/comparison";
@@ -107,7 +107,7 @@ export function ComparisonTable({ rows }: { rows: ComparisonRow[] }) {
                           ASSET_TYPE_TAG_CLASS[row.assetType] ?? "text-muted border-line"
                         }`}
                       >
-                        {row.assetType}
+                        {assetTypeBadge(row.assetType)}
                       </span>
                     </div>
                   );
