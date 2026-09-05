@@ -1,6 +1,21 @@
 import type { ChartView, Database } from "@/lib/supabase/types";
 import { formatChartLabel, isInstant } from "@/lib/chart-dates";
 
+/**
+ * Holdings-table quantity display. Rounding a fractional crypto quantity to
+ * 4 decimal places (fine for a share count) throws away real precision: a
+ * 0.000544 BTC holding rendered as "0.0005" is off by ~8% from the row's own
+ * (correctly, full-precision computed) value column - exactly the "BTC
+ * doesn't reconcile" gap from the 2026-09-05 review. quantity * price is
+ * still computed from the untruncated number everywhere (this only touches
+ * what's printed), so this closes the gap between what a reader can
+ * literally verify with a calculator and what the app already computed.
+ */
+export function formatQuantity(quantity: number): string {
+  const digits = Math.abs(quantity) < 1 ? 8 : 4;
+  return quantity.toLocaleString(undefined, { maximumFractionDigits: digits });
+}
+
 export type Holding = Database["public"]["Tables"]["holdings"]["Row"];
 export type PriceBar = Database["public"]["Tables"]["historical_prices"]["Row"];
 

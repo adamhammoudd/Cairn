@@ -5,6 +5,8 @@ import { setTier, type BillingDetail } from "@/lib/actions/billing";
 import { createCheckoutSession, createPortalSession } from "@/lib/actions/checkout";
 import { TIER_LIMITS } from "@/lib/billing";
 import { nextResetLabel } from "@/lib/chat-state";
+import { useDisplayPrefs } from "@/components/display-prefs-provider";
+import { formatMoney } from "@/lib/display-prefs";
 
 // Settings > Billing, transcribed from Cairn Settings.dc.html: a plan card
 // (gradient + glow on Premium) beside a "This period" usage card, then payment
@@ -51,6 +53,7 @@ function Meter({
 }
 
 export function BillingSettingsPanel({ detail }: { detail: BillingDetail }) {
+  const prefs = useDisplayPrefs();
   const [error, formAction] = useActionState(setTier, null);
   const [checkoutError, checkout] = useActionState(checkoutAction, null);
   const [portalError, portal] = useActionState(portalAction, null);
@@ -90,7 +93,13 @@ export function BillingSettingsPanel({ detail }: { detail: BillingDetail }) {
                 </div>
                 <div className="mt-2.25 flex flex-wrap items-baseline gap-2.5">
                   <span className="font-serif text-[30px] leading-none text-primary">{config.label}</span>
-                  <span className="text-[13px] text-muted">{premium ? "billed monthly" : "$0"}</span>
+                  {/* Was a hardcoded "$0" - the free plan's price is genuinely
+                      zero regardless of currency, but the symbol in front of it
+                      should still match Settings > Display like every other
+                      figure in the app (Stripe's own price isn't shown here at
+                      all, precisely to avoid a mismatch - $0 is the one figure
+                      safe to render locally since 0 converts to 0 in any currency). */}
+                  <span className="text-[13px] text-muted">{premium ? "billed monthly" : formatMoney(0, prefs)}</span>
                 </div>
                 <p className="mt-2.5 max-w-[380px] text-[12.5px] leading-[1.55] text-muted text-pretty">
                   {premium

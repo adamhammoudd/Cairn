@@ -73,21 +73,28 @@ export function SectorTreemap({
                   const tone = labelToneForChange(tile.changePct);
                   // Small tiles truncate to a couple of characters (several
                   // distinct tickers can all read as "U."), with nothing to
-                  // disambiguate them - the reported bug. `title` gives every
-                  // tile a native hover tooltip with its full symbol
+                  // disambiguate them - the reported bug, confirmed in at
+                  // least two sectors now. `title` gives every tile a native
+                  // hover tooltip with its full symbol AND real name
                   // regardless of how narrow it renders.
-                  const tileLabel = `${tile.name} · ${fmtPct(tile.changePct)}`;
+                  const tileLabel = tile.displayName
+                    ? `${tile.name} · ${tile.displayName} · ${fmtPct(tile.changePct)}`
+                    : `${tile.name} · ${fmtPct(tile.changePct)}`;
                   return (
                     <Link
                       key={tile.name}
                       href={`/ticker/${tile.name}`}
                       title={tileLabel}
                       aria-label={tileLabel}
-                      // Floor each tile at 8% of the row so a mega-cap next to a
-                      // small-cap doesn't reduce the latter to an invisible sliver.
+                      // Floor each tile at 10% of the row (was 8%) so a
+                      // narrow tile has room for 2-3 characters before
+                      // truncating instead of collapsing to one - the bonus
+                      // half of the same fix, cheap enough to be worth doing:
+                      // a handful of extra px per tile, no layout redesign.
                       style={{
-                        flexGrow: Math.max(tile.size, total * 0.08),
+                        flexGrow: Math.max(tile.size, total * 0.1),
                         flexBasis: 0,
+                        minWidth: "34px",
                         background: colorForChange(tile.changePct),
                       }}
                       className="flex min-w-0 flex-col justify-end gap-0.75 overflow-hidden rounded-[9px] p-2.25 transition-[transform,box-shadow] duration-base ease-standard hover:-translate-y-0.5 hover:shadow-[0_10px_22px_rgba(0,0,0,0.45)]"

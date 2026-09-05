@@ -141,7 +141,7 @@ export function TickerList({ rows, names, marketCaps, emptyState }: TickerListPr
             >
               {change(r)}
             </div>
-            <div className="hidden text-[12.5px] tabular-nums text-muted sm:block">{formatMarketCap(marketCap)}</div>
+            <div className="hidden text-[12.5px] tabular-nums text-muted sm:block">{formatMarketCap(marketCap, prefs)}</div>
             <div className="hidden text-[12.5px] tabular-nums text-muted sm:block">{formatVolume(r.volume)}</div>
             <div className="hidden sm:block">
               {r.trend.length > 1 && (

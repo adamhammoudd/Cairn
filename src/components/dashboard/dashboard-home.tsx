@@ -80,6 +80,30 @@ const MODULES: { key: ModuleKey; label: string; href: string; cta: string; tint:
 
 const DEFAULT_LAYOUT: ModuleKey[] = ["portfolio", "markets", "watchlist", "news", "assistant"];
 
+/** Splits stored reasoning_text into its real paragraphs (it already comes
+ * this way from the model, \n\n-separated - see lib/ai/generate.ts's
+ * PROSE_SCHEMA) instead of letting HTML collapse them into one flowed block. */
+function quoteParagraphs(quote: string): string[] {
+  return quote
+    .split(/\n{2,}/)
+    .map((p) => p.trim())
+    .filter(Boolean);
+}
+
+/** Bolds the first sentence of a paragraph as a scannable lead line - same
+ * text, no rewording, just emphasis on how much of the card a skim reads. */
+function QuoteLead({ text }: { text: string }) {
+  const match = /^(.*?[.!?])(\s+|$)/.exec(text);
+  if (!match) return <>{text}</>;
+  const [, lead] = match;
+  return (
+    <>
+      <strong className="font-semibold">{lead}</strong>
+      {text.slice(lead.length)}
+    </>
+  );
+}
+
 export function DashboardHome({
   initialLayout,
   today,
@@ -267,7 +291,18 @@ export function DashboardHome({
           <DashboardSummaryCard key={key} title={card.label} href={card.href} ctaLabel={card.cta} tint={card.tint} delay={delay} {...arrangeProps}>
             {assistant.latestAnalysis ? (
               <>
-                <div className="text-[13px] leading-relaxed text-primary">{assistant.latestAnalysis.quote}</div>
+                {/* The stored reasoning_text already comes as 2-3 real
+                    paragraphs (\n\n-separated, same shape the Research page
+                    renders) - this widget was collapsing all of it into one
+                    flowed block instead of preserving the breaks, which is
+                    what made it read as one dense paragraph. Splits +
+                    bolds only how it's presented; the content itself, split
+                    here, is untouched. */}
+                {quoteParagraphs(assistant.latestAnalysis.quote).map((para, i) => (
+                  <p key={i} className={`text-[13px] leading-relaxed text-primary ${i > 0 ? "mt-2" : ""}`}>
+                    {i === 0 ? <QuoteLead text={para} /> : para}
+                  </p>
+                ))}
                 <div className="mt-3 flex flex-wrap gap-2">
                   <span className="rounded-full border border-line px-2.5 py-1.25 text-[11.5px] text-muted">
                     {assistant.latestAnalysis.sourceCount} sources

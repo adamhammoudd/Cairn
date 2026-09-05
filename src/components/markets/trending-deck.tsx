@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo } from "react";
 import { Sparkline } from "@/components/sparkline";
 import { formatVolume, type ScreenerRow } from "@/lib/screener";
+import { assetName } from "@/lib/asset-names";
 import { useDisplayPrefs } from "@/components/display-prefs-provider";
 import { formatMoney } from "@/lib/display-prefs";
 import { DECKS, deckComparator, deckHasSignal, deckValue, type DeckId } from "@/lib/market-decks";
@@ -84,7 +85,14 @@ export function TrendingDeck({ rows, requestCounts, names, deck, onDeckChange }:
                     {r.changePct === null ? "-" : `${up ? "+" : ""}${r.changePct.toFixed(2)}%`}
                   </span>
                 </div>
-                <div className="mt-0.5 truncate text-[11px] text-dim">{r.name ?? names[r.symbol] ?? r.assetType}</div>
+                {/* Same name-resolution order as ticker-list.tsx: this deck
+                    was missing the seven-symbol static-map fallback, so any
+                    of those symbols with no symbol_directory.name yet (AMZN,
+                    confirmed - the whole original seven are null) fell all
+                    the way through to the raw asset type as its "name". */}
+                <div className="mt-0.5 truncate text-[11px] text-dim">
+                  {r.name ?? names[r.symbol] ?? assetName(r.symbol, r.assetType)}
+                </div>
                 <div className="mt-2">
                   <Sparkline values={r.trend} positive={up} delayMs={i * 40} className="h-6 w-full" />
                 </div>

@@ -14,6 +14,8 @@ import {
 } from "recharts";
 import { sma, ema, rsi, macd, INDICATOR_COLOURS } from "@/lib/indicators";
 import { DataFreshness } from "@/components/data-freshness";
+import { useDisplayPrefs } from "@/components/display-prefs-provider";
+import { formatMoney } from "@/lib/display-prefs";
 
 // Technical overlays computed from the daily closes already in the trend
 // store - no extra provider call, and the same numbers the chart is drawn
@@ -87,7 +89,11 @@ export function TechnicalsPanel({ symbol, bars, priceSource, priceAsOf }: Techni
     const [, m, d] = v.split("-");
     return `${d}/${m}`;
   };
-  const money = (n: number) => n.toLocaleString(undefined, { style: "currency", currency: "USD" });
+  // Was hardcoded `currency: "USD"` - the price-overlay axis/tooltip (SMA/EMA
+  // lines are price, same units as the headline number) didn't follow
+  // Settings > Display > Primary currency like the rest of the Ticker page.
+  const prefs = useDisplayPrefs();
+  const money = (n: number) => formatMoney(n, prefs);
   const tooltip = {
     contentStyle: { background: "#0F0F0F", border: "1px solid #2A2A2A", borderRadius: 8, fontSize: 12 },
     labelStyle: { color: "#8A8A8A" },

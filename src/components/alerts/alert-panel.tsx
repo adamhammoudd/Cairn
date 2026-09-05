@@ -5,6 +5,7 @@ import { deleteAlert, toggleAlert, type DeliveryWithAlert } from "@/lib/actions/
 import { Switch } from "@/components/switch";
 import { AlertForm, CHANNEL_LABELS } from "@/components/alerts/alert-form";
 import { ALERT_TYPE_LABELS, COOLDOWN_OPTIONS, describeCondition, type Alert, type AlertChannel } from "@/lib/alerts";
+import { useDisplayPrefs } from "@/components/display-prefs-provider";
 
 interface AlertPanelProps {
   alerts: Alert[];
@@ -18,6 +19,7 @@ export function AlertPanel({ alerts, deliveries, defaultChannels }: AlertPanelPr
   // edited. One form at a time, so the page can't hold two conflicting drafts.
   const [openForm, setOpenForm] = useState<string | null>(null);
   const [, startMutate] = useTransition();
+  const prefs = useDisplayPrefs();
 
   const editing = openForm && openForm !== "new" ? alerts.find((a) => a.id === openForm) : undefined;
 
@@ -116,7 +118,7 @@ export function AlertPanel({ alerts, deliveries, defaultChannels }: AlertPanelPr
                   </div>
 
                   <div className="mt-1.75 text-[12.5px] text-muted">
-                    {describeCondition(a.alert_type, a.condition)}
+                    {describeCondition(a.alert_type, a.condition, prefs)}
                   </div>
 
                   <div className="mt-2.25 flex flex-wrap items-center gap-2">

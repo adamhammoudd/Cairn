@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { formatMarketCap, formatVolume } from "@/lib/screener";
+import { useDisplayPrefs } from "@/components/display-prefs-provider";
+import { formatMoney } from "@/lib/display-prefs";
 import { formatSupply } from "@/lib/crypto";
 import { assetName } from "@/lib/asset-names";
 import { DataFreshness } from "@/components/data-freshness";
@@ -50,6 +52,7 @@ export function TickerWorkspace({
   refreshRateSeconds = null,
 }: TickerWorkspaceProps) {
   const [tab, setTab] = useState<TabId>("overview");
+  const prefs = useDisplayPrefs();
   const isCrypto = data.assetType === "crypto";
   const isForex = data.assetType === "forex";
   const isIndex = data.assetType === "index" || data.assetType === "future";
@@ -79,9 +82,7 @@ export function TickerWorkspace({
   const subline = [
     name,
     heldQuantity === null || heldQuantity === 0 ? "not in your portfolio" : `${heldQuantity} held`,
-    heldQuantity && avgCost
-      ? `${avgCost.toLocaleString(undefined, { style: "currency", currency: "USD" })} avg`
-      : null,
+    heldQuantity && avgCost ? `${formatMoney(avgCost, prefs)} avg` : null,
   ]
     .filter(Boolean)
     .join(" · ");
@@ -92,8 +93,12 @@ export function TickerWorkspace({
   // currency either.
   const rate = (n: number | null) => (n === null ? "-" : n.toLocaleString(undefined, { minimumFractionDigits: 4, maximumFractionDigits: 5 }));
   const level = (n: number | null) => (n === null ? "-" : n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
-  const usd = (n: number | null) => (n === null ? "-" : n.toLocaleString(undefined, { style: "currency", currency: "USD" }));
-  const money = isForex ? rate : isIndex ? level : usd;
+  // Was hardcoded `currency: "USD"` - every price on this page (the headline
+  // number, day/52w range, avg cost) rendered in USD regardless of Settings >
+  // Display > Primary currency, while Markets/Screener/Portfolio/Comparison
+  // all converted correctly through this same formatMoney() helper.
+  const currency = (n: number | null) => formatMoney(n, prefs);
+  const money = isForex ? rate : isIndex ? level : currency;
   const range = (lo: number | null, hi: number | null) => (lo === null || hi === null ? "-" : `${money(lo)} – ${money(hi)}`);
 
   const fromExtreme = (extreme: number | null) =>
@@ -113,7 +118,7 @@ export function TickerWorkspace({
     ? [
         ...common,
         { label: "Volume", value: formatVolume(data.volume) },
-        { label: "Market cap", value: formatMarketCap(data.cryptoMetrics?.market_cap ?? null) },
+        { label: "Market cap", value: formatMarketCap(data.cryptoMetrics?.market_cap ?? null, prefs) },
         { label: "Market cap rank", value: data.cryptoMetrics?.market_cap_rank ?? "-" },
         volatility,
         {
@@ -145,7 +150,7 @@ export function TickerWorkspace({
         : [
             ...common,
             { label: "Volume", value: formatVolume(data.volume) },
-            { label: "Market cap", value: formatMarketCap(marketCap) },
+            { label: "Market cap", value: formatMarketCap(marketCap, prefs) },
             // The mock labels this P/E (fwd); no forward estimates are ingested,
             // so it stays trailing rather than presenting TTM as a forecast.
             { label: "P/E (TTM)", value: pe === null ? "-" : `${pe.toFixed(1)}x` },

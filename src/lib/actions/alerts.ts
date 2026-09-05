@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { MAX_AMOUNT_INPUT } from "@/lib/input-limits";
 import { validateAlertScope } from "@/lib/validation";
-import { parseCooldownSeconds } from "@/lib/alerts";
+import { dedupeConsecutiveDeliveries, parseCooldownSeconds } from "@/lib/alerts";
 import type { Alert, AlertDelivery, AlertType } from "@/lib/alerts";
 
 export async function listAlerts(): Promise<Alert[]> {
@@ -180,7 +180,7 @@ export async function listDeliveries(limit = 30): Promise<DeliveryWithAlert[]> {
     .order("sent_at", { ascending: false })
     .limit(limit);
 
-  return (data ?? []).map((d) => {
+  const deliveries = (data ?? []).map((d) => {
     const row = d as unknown as AlertDelivery & { alerts: { alert_type: string; scope_value: string } };
     return {
       id: row.id,
@@ -194,6 +194,16 @@ export async function listDeliveries(limit = 30): Promise<DeliveryWithAlert[]> {
       scope_value: row.alerts.scope_value,
     };
   });
+
+  // Same alert, same message text, back to back in the feed: the alert
+  // genuinely fired twice (confirmed live - the same NVDA alert fired
+  // ~15h apart, both against the same day's close, message byte-for-byte
+  // identical) - a real, cooldown-eligible re-fire, not a logging bug. Shown
+  // twice it just reads as a duplicate-entry glitch, so only the display
+  // collapses it; alert_deliveries itself is untouched. (Pure helper lives in
+  // lib/alerts.ts, not here - a "use server" module may only export async
+  // functions.)
+  return dedupeConsecutiveDeliveries(deliveries);
 }
 
 export async function markDeliveriesRead(ids: string[]) {

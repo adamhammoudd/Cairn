@@ -353,7 +353,7 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
                   <div className="text-[12.5px] tabular-nums text-muted">
                     {formatVolume(r.volume)}
                   </div>
-                  <div className="text-[12.5px] tabular-nums text-primary">{formatMarketCap(r.marketCap)}</div>
+                  <div className="text-[12.5px] tabular-nums text-primary">{formatMarketCap(r.marketCap, prefs)}</div>
                   <div className="text-[12.5px] tabular-nums text-muted">{r.pe === null ? "-" : `${r.pe.toFixed(1)}\u00d7`}</div>
                   <div className="text-[12.5px] tabular-nums text-muted">
                     {r.dividendYield === null ? "-" : `${r.dividendYield.toFixed(2)}%`}

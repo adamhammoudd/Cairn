@@ -181,3 +181,16 @@ export function absoluteChangeFrom(price: number | null, changePct: number | nul
   if (denominator === 0) return null;
   return price - price / (denominator / 100);
 }
+
+/**
+ * Just the symbol ("€", "£", "$") for the user's display currency - for a
+ * label like "Price (€)" where a full formatted amount would be wrong. Never
+ * hardcode "$" in a label a non-USD account will see (the alert form's
+ * "Price ($)" was exactly that).
+ */
+export function currencySymbol(prefs: DisplayPrefs): string {
+  return (0)
+    .toLocaleString(undefined, { style: "currency", currency: prefs.effectiveCurrency, minimumFractionDigits: 0, maximumFractionDigits: 0 })
+    .replace(/[0-9]/g, "")
+    .trim();
+}
