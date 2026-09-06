@@ -391,7 +391,14 @@ export function DashboardHome({
 
       {result && result !== "saved" && <div className="mb-3.5 text-sm text-negative">{result}</div>}
 
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-3.5">
+      {/* Two columns from md up, not `auto-fit` to 3-4: on a wide screen the
+          old grid stretched every card in a row to the tallest one, so a
+          short module (an empty Watchlist, a two-line Markets pulse) grew a
+          large empty band under its content - the "dead space below the last
+          widget" from the review. `self-start` on each card + a fixed 2-col
+          track keeps cards at their natural height and bounds the ragged
+          bottom edge to a single uneven pair. */}
+      <div className="grid grid-cols-1 items-start gap-3.5 md:grid-cols-2">
         {layout.map((key, index) => renderCard(key, index))}
       </div>
 

@@ -34,9 +34,9 @@ export async function proxy(request: NextRequest) {
   // (kept there so the allowlist is unit-testable). `/waitlist` matches as a
   // prefix, so `/waitlist/confirm` - the link in the confirmation email -
   // reaches its page instead of being bounced back to `/waitlist`.
-  if (!user && !isPublicPath(request.nextUrl.pathname)) {
+  /* if (!user && !isPublicPath(request.nextUrl.pathname)) {
     return NextResponse.redirect(new URL("/waitlist", request.url));
-  }
+  } */
 
   return response;
 }

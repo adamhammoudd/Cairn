@@ -54,8 +54,8 @@ export function DashboardSummaryCard({
 }: DashboardSummaryCardProps) {
   return (
     <div
-      className={`animate-rise-in group relative rounded-card border border-line bg-panel p-4.5 transition-[border-color,transform,box-shadow] duration-base ease-standard hover:-translate-y-0.5 hover:border-[#3A3A3A] hover:shadow-[0_12px_30px_rgba(0,0,0,0.45)] ${
-        wide ? "sm:col-span-2" : ""
+      className={`animate-rise-in group relative self-start rounded-card border border-line bg-panel p-4.5 transition-[border-color,transform,box-shadow] duration-base ease-standard hover:-translate-y-0.5 hover:border-[#3A3A3A] hover:shadow-[0_12px_30px_rgba(0,0,0,0.45)] ${
+        wide ? "md:col-span-2" : ""
       }`}
       style={{ animationDelay: `${delay}ms` }}
     >
