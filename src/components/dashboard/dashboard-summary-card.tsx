@@ -9,17 +9,50 @@ interface DashboardSummaryCardProps {
   valueTone?: "primary" | "positive" | "negative";
   detail?: string;
   delay?: number;
-  wide?: boolean;
   children?: ReactNode;
   arranging?: boolean;
   onMoveUp?: () => void;
   onMoveDown?: () => void;
-  onToggleWide?: () => void;
   onHide?: () => void;
 }
 
 const ARRANGE_BTN =
   "flex h-6 w-6 items-center justify-center rounded-control border border-line text-micro text-muted transition-colors duration-fast ease-standard hover:border-accent hover:text-primary";
+
+export interface ArrangeHandlers {
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
+  onHide?: () => void;
+}
+
+/**
+ * Reorder/hide controls, shared by the two full-width bands on Base Camp and
+ * by the supporting tiles, so arrange mode looks and behaves the same wherever
+ * it appears.
+ *
+ * The old "widen" toggle is gone: width is now decided by what a module is,
+ * not by a per-card preference, so the control had nothing left to change.
+ */
+export function ArrangeControls({ onMoveUp, onMoveDown, onHide }: ArrangeHandlers) {
+  return (
+    <div className="flex items-center gap-1">
+      <button type="button" onClick={onMoveUp} aria-label="Move up" className={ARRANGE_BTN}>
+        ↑
+      </button>
+      <button type="button" onClick={onMoveDown} aria-label="Move down" className={ARRANGE_BTN}>
+        ↓
+      </button>
+      <button
+        type="button"
+        onClick={onHide}
+        aria-label="Hide"
+        className="flex h-6 w-6 items-center justify-center rounded-control border border-line text-caption text-muted transition-colors duration-fast ease-standard hover:border-negative hover:text-negative"
+      >
+        ×
+      </button>
+    </div>
+  );
+}
 
 const VALUE_TONE_CLASSES: Record<NonNullable<DashboardSummaryCardProps["valueTone"]>, string> = {
   primary: "text-primary",
@@ -35,19 +68,15 @@ export function DashboardSummaryCard({
   valueTone = "primary",
   detail,
   delay = 0,
-  wide = false,
   children,
   arranging = false,
   onMoveUp,
   onMoveDown,
-  onToggleWide,
   onHide,
 }: DashboardSummaryCardProps) {
   return (
     <div
-      className={`animate-rise-in group relative self-start rounded-card border border-line bg-panel p-4.5 transition-[border-color,transform,box-shadow] duration-base ease-standard hover:-translate-y-0.5 hover:border-line-strong hover:shadow-[0_12px_30px_rgba(0,0,0,0.45)] ${
-        wide ? "md:col-span-2" : ""
-      }`}
+      className="animate-rise-in group relative self-start rounded-card border border-line bg-panel p-4.5 transition-[border-color,transform,box-shadow] duration-base ease-standard hover:-translate-y-0.5 hover:border-line-strong hover:shadow-[0_12px_30px_rgba(0,0,0,0.45)]"
       style={{ animationDelay: `${delay}ms` }}
     >
       {/* The card header used to carry a small coloured rule before the label -
@@ -63,24 +92,7 @@ export function DashboardSummaryCard({
           <span className="font-mono text-eyebrow text-muted uppercase">{title}</span>
         </div>
         {arranging ? (
-          <div className="flex items-center gap-1">
-            <button type="button" onClick={onMoveUp} className={ARRANGE_BTN}>
-              ↑
-            </button>
-            <button type="button" onClick={onMoveDown} className={ARRANGE_BTN}>
-              ↓
-            </button>
-            <button type="button" onClick={onToggleWide} className={ARRANGE_BTN}>
-              ⇔
-            </button>
-            <button
-              type="button"
-              onClick={onHide}
-              className="flex h-6 w-6 items-center justify-center rounded-control border border-line text-caption text-muted transition-colors duration-fast ease-standard hover:border-negative hover:text-negative"
-            >
-              ×
-            </button>
-          </div>
+          <ArrangeControls onMoveUp={onMoveUp} onMoveDown={onMoveDown} onHide={onHide} />
         ) : (
           <Link
             href={href}

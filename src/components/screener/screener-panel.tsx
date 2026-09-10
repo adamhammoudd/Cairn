@@ -22,6 +22,7 @@ import {
 } from "@/lib/screener";
 import { DataFreshness } from "@/components/data-freshness";
 import { useDisplayPrefs } from "@/components/display-prefs-provider";
+import { PromptDialog } from "@/components/dialog";
 import { absoluteChangeFrom, formatChange, formatMoney, currencySymbol } from "@/lib/display-prefs";
 
 type NumericField = (typeof SCREENER_NUMERIC_FIELDS)[number];
@@ -90,6 +91,7 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
   const [preset, setPreset] = useState<string | null>(null);
   const [sort, setSort] = useState<ScreenSort | null>(null);
   const [savedScreens, setSavedScreens] = useState<SavedScreen[]>(initialSavedScreens);
+  const [namingScreen, setNamingScreen] = useState(false);
   const [, startMutate] = useTransition();
 
   const matched = useMemo(() => applyScreenerFilters(initialRows, filters), [initialRows, filters]);
@@ -142,11 +144,14 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
   }
 
   function handleSave() {
-    const name = window.prompt("Name this screen:");
-    if (!name?.trim()) return;
+    setNamingScreen(true);
+  }
+
+  function submitScreenName(name: string) {
+    setNamingScreen(false);
     startMutate(async () => {
-      await saveScreen(name.trim(), filters);
-      setSavedScreens((prev) => [...prev, { id: crypto.randomUUID(), name: name.trim(), filters }]);
+      await saveScreen(name, filters);
+      setSavedScreens((prev) => [...prev, { id: crypto.randomUUID(), name, filters }]);
     });
   }
 
@@ -378,6 +383,16 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
           )}
         </div>
       </div>
+
+      <PromptDialog
+        open={namingScreen}
+        title="Name this screen"
+        description="Saved screens keep the filters currently applied and reappear in the sidebar."
+        placeholder="e.g. Large-cap dividend payers"
+        confirmLabel="Save screen"
+        onSubmit={submitScreenName}
+        onCancel={() => setNamingScreen(false)}
+      />
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { deleteChatSession, renameChatSession, updateChatPreferences, type ChatSession } from "@/lib/actions/chat";
+import { ConfirmDialog } from "@/components/dialog";
 
 // Tri-state control. A per-chat preference is null until the user actually
 // sets it, so a thread keeps following Settings > AI Assistant instead of
@@ -43,6 +44,7 @@ export function ChatSettingsPanel({ session, accountDefaults, fallbackTitle }: C
   const [context, setContext] = useState(toChoice(session.use_portfolio_context));
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [saving, startSave] = useTransition();
   const [deleting, startDelete] = useTransition();
 
@@ -69,7 +71,11 @@ export function ChatSettingsPanel({ session, accountDefaults, fallbackTitle }: C
   }
 
   function remove() {
-    if (!window.confirm("Delete this conversation and its messages? This cannot be undone.")) return;
+    setConfirmingDelete(true);
+  }
+
+  function confirmRemove() {
+    setConfirmingDelete(false);
     startDelete(async () => {
       const deleteError = await deleteChatSession(session.id);
       if (deleteError) {
@@ -176,6 +182,16 @@ export function ChatSettingsPanel({ session, accountDefaults, fallbackTitle }: C
           </button>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={confirmingDelete}
+        title="Delete this conversation?"
+        description="The thread and every message in it are removed. Analyses it cited stay on record and remain reachable from Research."
+        confirmLabel="Delete conversation"
+        destructive
+        onConfirm={confirmRemove}
+        onCancel={() => setConfirmingDelete(false)}
+      />
     </div>
   );
 }

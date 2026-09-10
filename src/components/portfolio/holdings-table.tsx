@@ -9,6 +9,7 @@ import { useDisplayPrefs } from "@/components/display-prefs-provider";
 import { formatMoney, formatCompactMoney, formatChange, formatSecondaryChange } from "@/lib/display-prefs";
 import { formatQuantity, type Holding, type HoldingMetrics } from "@/lib/portfolio";
 import { assetTypeBadge } from "@/lib/screener";
+import { ConfirmDialog } from "@/components/dialog";
 
 const COLS = "grid-cols-[1.5fr_0.7fr_0.9fr_1fr_1fr_1.1fr_96px_72px]";
 
@@ -29,12 +30,22 @@ export function HoldingsTable({
   const [isDeleting, startDelete] = useTransition();
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
+  // The row awaiting confirmation. window.confirm blocked inline and returned
+  // a boolean; the dialog is declarative, so the pending target lives in state.
+  const [pendingDelete, setPendingDelete] = useState<{ symbol: string; id: string } | null>(null);
+
   function handleDelete(symbol: string, id: string) {
-    if (!window.confirm(`Remove ${symbol} from your portfolio?`)) return;
+    setPendingDelete({ symbol, id });
+  }
+
+  function confirmDelete() {
+    const target = pendingDelete;
+    setPendingDelete(null);
+    if (!target) return;
     setDeleteError(null);
     startDelete(async () => {
-      const error = await deleteHolding(id);
-      if (error) setDeleteError(`Couldn't remove ${symbol}: ${error}`);
+      const error = await deleteHolding(target.id);
+      if (error) setDeleteError(`Couldn't remove ${target.symbol}: ${error}`);
     });
   }
   // Currency and percent-vs-dollar both come from Settings > Display. Every
@@ -317,6 +328,16 @@ export function HoldingsTable({
       {editing !== null && (
         <HoldingModal holding={editing === "new" ? null : editing} onClose={() => setEditing(null)} />
       )}
+
+      <ConfirmDialog
+        open={pendingDelete !== null}
+        title={`Remove ${pendingDelete?.symbol ?? ""} from your portfolio?`}
+        description="The position and its cost basis are deleted. Your recorded history for this symbol goes with it."
+        confirmLabel="Remove position"
+        destructive
+        onConfirm={confirmDelete}
+        onCancel={() => setPendingDelete(null)}
+      />
     </>
   );
 }

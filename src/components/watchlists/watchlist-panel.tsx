@@ -15,6 +15,7 @@ import { Sparkline } from "@/components/sparkline";
 import { DataFreshness } from "@/components/data-freshness";
 import { useDisplayPrefs } from "@/components/display-prefs-provider";
 import { absoluteChangeFrom, formatChange, formatMoney } from "@/lib/display-prefs";
+import { ConfirmDialog } from "@/components/dialog";
 
 export function WatchlistPanel({ watchlists }: { watchlists: WatchlistWithItems[] }) {
   // Settings > Display drives the currency on the price column and the unit on
@@ -25,6 +26,7 @@ export function WatchlistPanel({ watchlists }: { watchlists: WatchlistWithItems[
   const [addError, addAction] = useActionState(addWatchlistItem, null);
   const [, startMutate] = useTransition();
   const [dragId, setDragId] = useState<string | null>(null);
+  const [confirmingDeleteList, setConfirmingDeleteList] = useState(false);
 
   const active = watchlists.find((w) => w.id === activeId) ?? watchlists[0] ?? null;
 
@@ -146,11 +148,7 @@ export function WatchlistPanel({ watchlists }: { watchlists: WatchlistWithItems[
             </button>
             <button
               type="button"
-              onClick={() => {
-                if (window.confirm(`Delete the "${active.name}" list?`)) {
-                  startMutate(() => deleteWatchlist(active.id));
-                }
-              }}
+              onClick={() => setConfirmingDeleteList(true)}
               className="ml-auto text-body text-muted transition-colors duration-fast ease-standard hover:text-negative"
             >
               Delete list
@@ -280,6 +278,19 @@ export function WatchlistPanel({ watchlists }: { watchlists: WatchlistWithItems[
           </Link>
         </div>
       )}
+
+      <ConfirmDialog
+        open={confirmingDeleteList}
+        title={`Delete the "${active?.name ?? ""}" list?`}
+        description="The list and every symbol in it are removed. Alerts you set on those symbols are not affected."
+        confirmLabel="Delete list"
+        destructive
+        onConfirm={() => {
+          setConfirmingDeleteList(false);
+          if (active) startMutate(() => deleteWatchlist(active.id));
+        }}
+        onCancel={() => setConfirmingDeleteList(false)}
+      />
     </div>
   );
 }
