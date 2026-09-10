@@ -27,7 +27,7 @@ of the 117 components found:
 None of that was visible as a bug. It was visible as the app not feeling like one app.
 
 **The rule that keeps it fixed:** if a value is not expressible in the tokens below,
-that is a gap in the system to be discussed — not a licence to write a literal.
+that is a gap in the system to be discussed - not a licence to write a literal.
 
 ---
 
@@ -51,7 +51,7 @@ above a stat" is a role that must not drift, while "small" is an invitation to i
 | `text-display` | 34px | 1.1 | Hero figures, headline stats |
 
 **`text-eyebrow` carries its own `letter-spacing: 0.12em`.** Do not add `tracking-*`
-beside it — that one binding is what collapsed eight competing tracking values, and
+beside it - that one binding is what collapsed eight competing tracking values, and
 re-adding one reopens the drift.
 
 Line heights stay tight deliberately. Tailwind's inherited 1.5 stretched every table row
@@ -60,11 +60,11 @@ Prose opts into `leading-relaxed` where it needs air.
 
 ### Faces
 
-Three, each with a fixed role — unchanged from the brand guide:
+Three, each with a fixed role - unchanged from the brand guide:
 
-- **`font-serif`** (Newsreader) — wordmark and headlines only.
-- **`font-sans`** (default) — body copy, UI labels, controls.
-- **`font-mono`** (IBM Plex Mono) — eyebrows, timestamps, tabular figures. Reinforces the
+- **`font-serif`** (Newsreader) - wordmark and headlines only.
+- **`font-sans`** (default) - body copy, UI labels, controls.
+- **`font-mono`** (IBM Plex Mono) - eyebrows, timestamps, tabular figures. Reinforces the
   terminal feel; never general UI copy.
 
 ---
@@ -77,10 +77,10 @@ A four-step elevation ramp. Every near-black resolves to one of these.
 |---|---|---|
 | `bg-canvas` | `#0A0A0A` | Page ground |
 | `bg-panel` | `#0F0F0F` | Cards, panels, table bodies |
-| `bg-raised` | `#151515` | Menus, popovers, sheets, tooltips — above a panel |
+| `bg-raised` | `#151515` | Menus, popovers, sheets, tooltips - above a panel |
 | `bg-active` | `#171717` | Interactive fill: hover, pressed, selected |
 
-`bg-active` was `#141414`, one step off the canvas, which read as dead under a pointer —
+`bg-active` was `#141414`, one step off the canvas, which read as dead under a pointer -
 which is precisely why call sites kept substituting `#171717`/`#191919`/`#1C1C1C` by hand.
 
 ## Borders
@@ -99,7 +99,7 @@ Three weights, because a dense UI genuinely needs three.
 |---|---|---|
 | `text-primary` | `#F5F5F5` | 18.1:1 |
 | `text-muted` | `#8A8A8A` | 4.6:1 |
-| `text-dim` | `#7B7B7B` | 4.68:1 — the floor. Nothing recedes further. |
+| `text-dim` | `#7B7B7B` | 4.68:1 - the floor. Nothing recedes further. |
 
 `#6A6A6A` measured 3.66:1 and is **retired**. If a value needs to look fainter than
 `text-dim`, the answer is less weight or more space, not less contrast.
@@ -112,10 +112,10 @@ The one non-negotiable in the product:
 
 - **Green `--color-accent` = gain, and CTAs.** Never anything else.
 - **Red `--color-negative` = loss and destructive.** Never decorative, never a brand accent.
-- `--gradient-gain` / `--gradient-loss` are the paired gradients. One definition each —
+- `--gradient-gain` / `--gradient-loss` are the paired gradients. One definition each -
   they were copy-pasted literals in five components, and a pair that can drift can swap.
 
-Categorical tints — `warning` (amber), `info` (blue), `violet` — are for tagging and chart
+Categorical tints - `warning` (amber), `info` (blue), `violet` - are for tagging and chart
 series only. They never encode gain or loss and never become a CTA.
 
 Adding a colour goes through `Context/brand-guide.md` and design-lead first.
@@ -135,7 +135,7 @@ silently inheriting a new meaning.
 | `rounded-panel` | 10px | Inner panels, list rows, tiles |
 | `rounded-card` | 14px | Cards, modals |
 | `rounded-sheet` | 18px | Full sheets, hero surfaces |
-| `rounded-full` | — | Avatars, pills, dots |
+| `rounded-full` | - | Avatars, pills, dots |
 
 ---
 
@@ -148,7 +148,7 @@ Vertical rhythm tiers: `2` (8px) within a group, `4` (16px) between groups, `6`�
 (24–32px) between sections.
 
 Density: `[data-density="compact"]` tightens `.cn-row` padding only. Mark data rows with
-`cn-row` so the Settings toggle reaches them — one rule keyed off one attribute, rather
+`cn-row` so the Settings toggle reaches them - one rule keyed off one attribute, rather
 than a conditional at every call site.
 
 ---
@@ -160,7 +160,7 @@ One global rule in `globals.css`: a 2px `--color-accent` ring at 2px offset on
 `Highlight` under `forced-colors`.
 
 Exactly one file of 117 styled focus before this existed. **Do not remove a focus ring.**
-If it collides with a layout, offset it — never delete it.
+If it collides with a layout, offset it - never delete it.
 
 ---
 
@@ -168,7 +168,7 @@ If it collides with a layout, offset it — never delete it.
 
 Tokens: `--duration-fast` (120ms), `--duration-base` (200ms), `--ease-standard`.
 
-Purposeful only — hover, state change, entry, loading. Named keyframes live in
+Purposeful only - hover, state change, entry, loading. Named keyframes live in
 `globals.css` (`animate-page-in`, `animate-rise-in`, `animate-menu-in`, `animate-sheet-in`,
 `animate-grow-x`…). All motion is disabled under `prefers-reduced-motion`, globally.
 
@@ -178,7 +178,7 @@ Animate `transform` and `opacity`. Never `width`, `height`, `top`, or `left`.
 
 ## Charts
 
-All Recharts styling comes from `src/lib/chart-theme.ts` — `CHART_TOOLTIP`,
+All Recharts styling comes from `src/lib/chart-theme.ts` - `CHART_TOOLTIP`,
 `CHART_AXIS_TICK`, `CHART_GRID`, `CHART_SERIES`. Recharts takes style objects rather than
 classes, so tokens are referenced there as `var(--color-…)`.
 
@@ -192,12 +192,12 @@ classes, so tokens are referenced there as `var(--color-…)`.
 
 ## Notice idioms
 
-Two shapes, two meanings — do not mix them:
+Two shapes, two meanings - do not mix them:
 
 - **A rule beside content** (`Disclosure` variant `callout`: a self-stretching 4px warning
   bar inside a bordered panel) means *this is a caveat on the content next to it*.
 - **A fully tinted card** (border and heading wash in the semantic tone) means *this whole
-  region behaves differently* — e.g. the Settings danger zone.
+  region behaves differently* - e.g. the Settings danger zone.
 
 Compliance copy renders through `components/compliance/disclosure.tsx`. It exists so the
 wording cannot drift; do not retype it.
@@ -210,6 +210,6 @@ wording cannot drift; do not retype it.
 - [ ] No `tracking-*` beside `text-eyebrow`.
 - [ ] Interactive elements keep a visible focus ring.
 - [ ] Gain is green, loss is red, and neither is used for anything else.
-- [ ] Every probability output shows sources, analogs and confidence — never a bare score.
+- [ ] Every probability output shows sources, analogs and confidence - never a bare score.
 - [ ] Reads at 375px with no horizontal scroll.
 - [ ] `node .claude/skills/impeccable/scripts/detect.mjs --json <changed files>` is clean.

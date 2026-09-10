@@ -1,4 +1,4 @@
-# Coherence proposals — judgement calls for the founder
+# Coherence proposals - judgement calls for the founder
 
 **Date:** 2026-09-10 · **Branch:** `design/coherence-pass-2026-09-10`
 
@@ -11,7 +11,7 @@ Nothing here is code-complete. Approve individually.
 
 ---
 
-## 1. Two complete billing surfaces — **recommend merging**
+## 1. Two complete billing surfaces - **recommend merging**
 
 **Found.** `/billing` and `/settings?tab=billing` are both linked from the same account
 menu, and they are not equivalent:
@@ -19,11 +19,11 @@ menu, and they are not equivalent:
 | | `/billing` (`billing-panel.tsx`, 135 lines) | `/settings?tab=billing` (`billing-settings-panel.tsx`, 293 lines) |
 |---|---|---|
 | Upgrade CTA | yes | yes |
-| Usage: analyses / chat | — | yes |
-| Allowance reset date | — | yes |
-| Renewal date, billing period | — | yes |
-| Payment method | — | yes |
-| Plan history, payment history | — | yes |
+| Usage: analyses / chat | - | yes |
+| Allowance reset date | - | yes |
+| Renewal date, billing period | - | yes |
+| Payment method | - | yes |
+| Plan history, payment history | - | yes |
 
 The Settings tab is a strict superset. `/billing` adds an upgrade button and a "Payments
 aren't set up yet" state, nothing else.
@@ -36,7 +36,7 @@ change has to land on. `getUserPlan()` gating has to be right in two places.
 `/crypto` forwards to `/markets`. The top-nav Upgrade button and every existing link keep
 working; `billing-panel.tsx` is deleted.
 
-**Risk.** Low, but **not zero right now** — Stripe (Phase 12) was built on
+**Risk.** Low, but **not zero right now** - Stripe (Phase 12) was built on
 `worktree-aug31-founder-punchlist` and has never been run end-to-end. If that branch
 touches `billing-panel.tsx`, merge it first and do this after, or the two will conflict.
 
@@ -44,7 +44,7 @@ touches `billing-panel.tsx`, merge it first and do this after, or the two will c
 
 ---
 
-## 2. The "Planning" nav group holds two thin items — **recommend folding**
+## 2. The "Planning" nav group holds two thin items - **recommend folding**
 
 **Found.** Top-level nav is 5 groups over 12 destinations. "Planning" contains only
 Calculators and Calendar, and it is the only group a user has no reason to open twice.
@@ -54,11 +54,11 @@ Base Camp · Markets(5) · Portfolio(3) · Planning(2) · Assistant(2)
 ```
 
 **Recommend.** Move **Calculators** into Portfolio (it is sized off account value and
-holdings — `getPositionSizingDefaults()` already reads the portfolio) and **Calendar** into
+holdings - `getPositionSizingDefaults()` already reads the portfolio) and **Calendar** into
 Markets (earnings and macro events are market data, not personal planning). Nav becomes
 four groups; nothing is deleted or moved on disk.
 
-**Against.** If Planning is meant to grow — goals, retirement projection, tax lots — then
+**Against.** If Planning is meant to grow - goals, retirement projection, tax lots - then
 it is a placeholder for a real section and should stay. `getGoalsWithProgress()` suggests
 goals already exist, which is an argument for keeping it. **Your call: is Planning a
 section or a leftover?**
@@ -67,7 +67,7 @@ section or a leftover?**
 
 ---
 
-## 3. Onboarding is buried in the account menu — **recommend promoting or retiring**
+## 3. Onboarding is buried in the account menu - **recommend promoting or retiring**
 
 **Found.** `/onboarding` is reachable only as "First-run walkthrough", the third item in
 the account dropdown, between Billing and Sign out.
@@ -87,15 +87,15 @@ is where people go to leave, not to learn.
 
 ---
 
-## 4. Disclaimer copy is retyped on the waitlist — **recommend a decision, not a change**
+## 4. Disclaimer copy is retyped on the waitlist - **recommend a decision, not a change**
 
 **Found.** `components/compliance/disclosure.tsx` carries a comment stating it is
-"the one component every probability output… renders through — Phase 6 requires this be
+"the one component every probability output… renders through - Phase 6 requires this be
 literally the same component everywhere… not separately-worded copies that can drift."
 
 `app/waitlist/proof-card.tsx` then hand-writes its own:
 
-> Market-level context from the sources above — not a recommendation to buy, hold, or sell.
+> Market-level context from the sources above - not a recommendation to buy, hold, or sell.
 
 versus the canonical:
 
@@ -103,42 +103,42 @@ versus the canonical:
 > recommendation to buy, hold, or sell anything.
 
 **What I did.** Aligned the waitlist card's *visual* treatment to the `Disclosure` callout
-idiom so there is one shape for "caveat". **I did not touch the wording** — this is
+idiom so there is one shape for "caveat". **I did not touch the wording** - this is
 compliance-adjacent copy, and per `CLAUDE.md` legal drafts are non-lawyer first drafts
 requiring professional review.
 
 **Recommend.** Either use `<Disclosure variant="callout" />` on the waitlist and accept the
 longer canonical sentence, or document the marketing card as a deliberate exception. The
-current state — a near-copy that can drift — is the one option that should not persist.
+current state - a near-copy that can drift - is the one option that should not persist.
 
 **Effort.** 5 minutes once decided. **Route through cfo-legal-advisor.**
 
 ---
 
-## 5. Sign-out in red — **recommend declining, and closing the request**
+## 5. Sign-out in red - **recommend declining, and closing the request**
 
 **Found.** An open request to make the sign-out button red. `Context/brand-guide.md`:
 "Red is reserved exclusively for loss/negative/destructive indicators (including delete
-actions) — never used decoratively."
+actions) - never used decoratively."
 
 **Recommend. Decline.** Signing out destroys nothing and is trivially reversible. Painting
 it red spends the product's only alarm colour on a routine action, and every red thing
-after it means slightly less — including the delete-account button two rows below it in the
+after it means slightly less - including the delete-account button two rows below it in the
 same Settings page.
 
 If the goal was that sign-out is *hard to find*, that is a placement problem: it currently
-sits last in the account dropdown with no separator. Giving it a divider above it — the
-standard treatment for a destructive-adjacent exit — solves the real complaint without
+sits last in the account dropdown with no separator. Giving it a divider above it - the
+standard treatment for a destructive-adjacent exit - solves the real complaint without
 spending the colour.
 
 **Effort.** 5 minutes for the divider. Closes the item either way.
 
 ---
 
-## 6. "Day gainers" is all sub-cent crypto — **recommend a liquidity floor**
+## 6. "Day gainers" is all sub-cent crypto - **recommend a liquidity floor**
 
 **Found live, logged in.** Base Camp's Markets pulse and the top of `/markets` both lead
-with APEPE (€0.00), CHIP (€0.05), BTW (€0.37), BC (€0.03) — because "ranked by the last
+with APEPE (€0.00), CHIP (€0.05), BTW (€0.37), BC (€0.03) - because "ranked by the last
 session's percent change, largest first" over a board that includes all crypto is always
 won by whatever micro-cap moved most. AMD at +3.04% is the first name most users would
 recognise, in sixth place.
@@ -146,8 +146,8 @@ recognise, in sixth place.
 The ranking is doing exactly what it says. The problem is that what it says is not what a
 "Day gainers" deck is for.
 
-**Recommend.** Add a floor to the gainers/losers decks — a minimum price, market cap, or
-traded volume — so the deck answers "what moved that matters" rather than "what moved".
+**Recommend.** Add a floor to the gainers/losers decks - a minimum price, market cap, or
+traded volume - so the deck answers "what moved that matters" rather than "what moved".
 The methodology string under the deck already exists and should state the floor, since
 showing the rule is the product's whole stance.
 
@@ -160,12 +160,12 @@ nothing. The ranking question above is yours.
 
 ---
 
-## 7. Alert delivery messages hardcode `$` — **blocked on an edge deploy**
+## 7. Alert delivery messages hardcode `$` - **blocked on an edge deploy**
 
 **Found live.** The Alerts page shows one alert reading "Price above **€**190.32" and, in
 Recent deliveries directly beside it, "NVDA is above **$**221 (last close $227.98)". Both
 describe the same threshold. 221 USD *is* €190.32, so the number is right and the symbol is
-not — on the same screen, in two places.
+not - on the same screen, in two places.
 
 **Why it is not fixed on this branch.** The delivery text is generated by the
 `evaluate-alerts` Supabase edge function, which carries its **own duplicated copy** of the
@@ -174,7 +174,7 @@ template (`supabase/functions/evaluate-alerts/index.ts:105`) alongside the one i
 edge deploys are blocked in this environment, so a one-sided fix would only widen the
 drift between deployed functions and `main` that the migration ledger already tracks.
 
-`describeCondition()` in `src/lib/alerts.ts` was previously fixed for exactly this bug —
+`describeCondition()` in `src/lib/alerts.ts` was previously fixed for exactly this bug -
 its comment calls it "the one Alerts bug the currency setting missed". It missed two.
 
 **Recommend.** Fix both copies together and deploy the edge function in one change. Better:
@@ -186,10 +186,10 @@ way every other price in the app does, and the template stops existing twice.
 
 ---
 
-## 8. The Screener's columns are mostly `n/a` — **recommend narrowing by asset type**
+## 8. The Screener's columns are mostly `n/a` - **recommend narrowing by asset type**
 
-**Found live.** With no filters, 84 matches come back and four of the seven columns —
-Volume, Mkt cap, P/E, Yield — read `n/a` on nearly every row, because the board is
+**Found live.** With no filters, 84 matches come back and four of the seven columns -
+Volume, Mkt cap, P/E, Yield - read `n/a` on nearly every row, because the board is
 dominated by crypto and those fields are equities concepts. The designed missing-data
 states are doing their job; there is simply nothing to put in them.
 
@@ -197,13 +197,13 @@ states are doing their job; there is simply nothing to put in them.
 market cap and volume; equities keep P/E and yield. A table whose columns are mostly "not
 applicable" teaches people to stop reading it.
 
-Related to item 6 — both come from a single board mixing asset classes with one schema.
+Related to item 6 - both come from a single board mixing asset classes with one schema.
 
 **Effort.** ~1 hour.
 
 ---
 
-## 9. `/crypto` — **no action, working as intended**
+## 9. `/crypto` - **no action, working as intended**
 
 Flagged during the audit as an orphan route (a 7-line redirect outside the nav). It is not:
 crypto was deliberately folded into Markets as a filterable asset type, and the route
@@ -218,6 +218,6 @@ survives to forward old bookmarks. **Noted so it does not get re-flagged next sw
   not orphaned files.
 - **Nav depth is fine** at 4–5 groups. The problem was one thin group, not the pattern.
 - **The visual identity stays.** Dark canvas, signature green, serif/sans/mono roles and
-  the terminal density are the brand, and they were never the problem — the problem was
+  the terminal density are the brand, and they were never the problem - the problem was
   117 components each approximating them slightly differently. That is now fixed in
   `DESIGN.md` and enforced by the tokens.

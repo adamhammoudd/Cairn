@@ -192,7 +192,7 @@ export function QuotaReachedPanel({
       <div className={`${HEADING} text-h2`}>You&apos;ve used this month&apos;s analyses</div>
       <p className={`${BLURB} max-w-[400px]`}>
         Your {planLabel}-plan runs reset on {resetLabel}. Everything you&apos;ve already generated stays readable in the
-        library — nothing is locked away.
+        library - nothing is locked away.
         {isFreePlan && ` Premium raises the monthly cap to ${TIER_LIMITS.premium.monthlyAiAnalyses} and adds full methodology detail.`}
       </p>
       <div className="flex flex-wrap justify-center gap-2">

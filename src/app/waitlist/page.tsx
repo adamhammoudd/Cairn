@@ -34,15 +34,15 @@ const PREMIUM_ADDS = [
 const FEATURES = [
   [
     "Portfolio-aware",
-    "The assistant already has your holdings and watchlist in context. Ask how your portfolio did today without re-explaining it — your positions rank what's relevant to you, and are never sent to the model as a request for advice about your specific position.",
+    "The assistant already has your holdings and watchlist in context. Ask how your portfolio did today without re-explaining it - your positions rank what's relevant to you, and are never sent to the model as a request for advice about your specific position.",
   ],
   [
     "Sourced and transparent",
-    "Every probability, briefing, and reply shows its inputs. Ranges and confidence are computed in code — a Wilson interval over historical analogs — not guessed by a language model, which only writes the explanation.",
+    "Every probability, briefing, and reply shows its inputs. Ranges and confidence are computed in code - a Wilson interval over historical analogs - not guessed by a language model, which only writes the explanation.",
   ],
   [
     "Informational only",
-    "No brokerage, no trade execution. Cairn gives market-level context and lets you draw the conclusion. It never resolves to buy, hold, or sell — on any plan, free or premium.",
+    "No brokerage, no trade execution. Cairn gives market-level context and lets you draw the conclusion. It never resolves to buy, hold, or sell - on any plan, free or premium.",
   ],
 ];
 
@@ -72,12 +72,12 @@ export default async function WaitlistPage() {
             </span>
 
             <h1 className="mt-5 font-serif text-display leading-[1.08] font-normal text-primary text-balance sm:text-display">
-              An AI research assistant that knows your portfolio — and shows its sources.
+              An AI research assistant that knows your portfolio - and shows its sources.
             </h1>
 
             <p className="mt-5 max-w-[520px] text-title leading-[1.65] text-muted text-pretty">
               Ask what a move means for what you actually hold. Cairn answers with the articles it
-              read, the historical cases it compared, and how confident it is — so you can judge the
+              read, the historical cases it compared, and how confident it is - so you can judge the
               reasoning, not just the conclusion.
             </p>
 
@@ -117,18 +117,18 @@ export default async function WaitlistPage() {
                 The first {FOUNDING_LIMIT} people on this list get two months of Premium, free.
               </h2>
               <p className="mt-3.5 max-w-[460px] text-body leading-[1.65] text-muted text-pretty">
-                A place is claimed only when you confirm your email — the first {FOUNDING_LIMIT} to
+                A place is claimed only when you confirm your email - the first {FOUNDING_LIMIT} to
                 confirm are the founding members. After that the offer closes; that&apos;s the only
                 limit on this page, and it&apos;s a real one.
               </p>
               <p className="mt-3 max-w-[460px] text-body leading-[1.65] text-muted text-pretty">
                 The two months begin on the day <span className="text-primary">your</span> access
-                starts at launch — not the day you join the waitlist, and not a fixed calendar date.
+                starts at launch - not the day you join the waitlist, and not a fixed calendar date.
                 It is not &ldquo;two months from today.&rdquo;
               </p>
               <p className="mt-3 max-w-[460px] text-body leading-[1.65] text-muted text-pretty">
                 Confirm after the {FOUNDING_LIMIT} places are filled and you still get standard access
-                at launch — the same as any new user — but{" "}
+                at launch - the same as any new user - but{" "}
                 <span className="text-primary">no free Premium period</span>.
               </p>
               {slotsFull && (
@@ -154,13 +154,13 @@ export default async function WaitlistPage() {
                       <path d="M3 8.5l3.5 3.5L13 4.5" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                     <span className="text-body leading-[1.5] text-muted text-pretty">
-                      <span className="text-primary">{title}</span> — {body}
+                      <span className="text-primary">{title}</span> - {body}
                     </span>
                   </li>
                 ))}
               </ul>
               <p className="mt-4 border-t border-line pt-3 text-caption leading-[1.55] text-dim text-pretty">
-                Premium never changes an analysis or softens a caveat — it shows more of the
+                Premium never changes an analysis or softens a caveat - it shows more of the
                 methodology behind it.
               </p>
             </div>
@@ -199,7 +199,7 @@ export default async function WaitlistPage() {
           <div className="flex flex-col gap-4 text-micro leading-[1.7] text-dim sm:flex-row sm:items-start sm:justify-between">
             <p className="max-w-[560px] text-pretty">
               Cairn uses AI to generate market, sector, and ticker analysis. Every output is
-              informational market-level context — not investment advice, not a recommendation about
+              informational market-level context - not investment advice, not a recommendation about
               your personal positions, and it can be wrong. Cairn is not a broker and has no trade
               execution.
             </p>

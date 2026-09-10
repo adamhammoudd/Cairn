@@ -1,7 +1,7 @@
 # Decision needed: which model serves the assistant
 
 **Owner:** chief-of-staff + founder · **Raised by:** dev-lead · **Date:** 2026-08-20
-**Status:** RESOLVED 2026-08-21 in part — one sub-decision still open
+**Status:** RESOLVED 2026-08-21 in part - one sub-decision still open
 
 ---
 
@@ -26,8 +26,8 @@ What shipped against that decision:
 - Retry-with-backoff on 429/5xx, honouring `Retry-After`, four attempts, jittered
   and capped at 8s. Non-retryable statuses (400/401/403/404/422) surface
   immediately rather than being retried into a timeout.
-- On exhaustion the user sees one fixed line — *"The assistant is temporarily
-  busy and could not complete that request. Please try again shortly."* — served
+- On exhaustion the user sees one fixed line - *"The assistant is temporarily
+  busy and could not complete that request. Please try again shortly."* - served
   as `503` with `Retry-After`. Never a raw provider error; never a silent hang.
 - Covered by `npm run test:backoff` (22 gating cases).
 
@@ -36,8 +36,8 @@ What shipped against that decision:
 This memo argues downstream code assumes a small 3B–7B local model. On Groq's
 `gpt-oss-120b` that assumption is now conservative rather than wrong: the
 engine still computes every probability in code and the model still only
-narrates. **That should not be relaxed.** The architecture's honesty guarantee —
-that a cited source is a row that was actually retrieved — comes from the model
+narrates. **That should not be relaxed.** The architecture's honesty guarantee -
+that a cited source is a row that was actually retrieved - comes from the model
 never being asked for a number or a citation, and a more capable model is a
 reason to keep that property, not to spend it.
 
@@ -48,7 +48,7 @@ reason to keep that property, not to spend it.
 **This one is not mine to decide, and I have not decided it.**
 
 Groq's free tier has real per-minute request and token limits. The retry policy
-above absorbs a brief burst. It cannot absorb a sustained limit — after four
+above absorbs a brief burst. It cannot absorb a sustained limit - after four
 attempts the user gets the "temporarily busy" line and the turn does not happen.
 
 Two options:
@@ -59,7 +59,7 @@ Two options:
 | Cost | A second vendor relationship + per-token spend, mostly idle | None |
 | Code | The client is already provider-agnostic (`LLM_BASE_URL` + `LLM_API_KEY`), so a fallback is a routing change, not a rewrite | None |
 | Compliance surface | A second processor of user chat content to disclose | Unchanged |
-| Honest framing to users | "Assistant is up" | "Assistant is busy" — which is at least true |
+| Honest framing to users | "Assistant is up" | "Assistant is busy" - which is at least true |
 
 ### First real data point (2026-08-21)
 
@@ -79,7 +79,7 @@ first.
 unavailability for now. Cairn is pre-launch with no paying users, the failure is
 visible and honestly worded rather than silent, and a second processor of chat
 content is a compliance item worth deferring until there is load to justify it.
-Revisit the moment real usage produces a measurable rate of busy responses —
+Revisit the moment real usage produces a measurable rate of busy responses -
 `ai_usage_events` plus the `[chat] provider unavailable` log lines are enough to
 measure it without new instrumentation.
 
@@ -88,9 +88,9 @@ unavailability, because that is the behaviour that ships if nobody decides.
 
 ---
 
-## Original memo (2026-08-20) — retained for reasoning
+## Original memo (2026-08-20) - retained for reasoning
 
-**Status at time of writing:** open — blocking every live-generation verification
+**Status at time of writing:** open - blocking every live-generation verification
 
 ## Correcting the premise in the remediation brief
 
@@ -98,7 +98,7 @@ The brief says to *"replace the placeholder `ANTHROPIC_API_KEY` in `.env.local`
 with a real key."* That is not this codebase's architecture. `.env.local.example`
 states it directly:
 
-> Self-hosted AI model. Cairn calls no third-party model API — you run the
+> Self-hosted AI model. Cairn calls no third-party model API - you run the
 > model yourself. Any OpenAI-compatible server works: Ollama, vLLM, llama.cpp's
 > server, LM Studio.
 
@@ -107,7 +107,7 @@ speaks OpenAI-compatible `/chat/completions`. There is no Anthropic client. The
 stray `ANTHROPIC_API_KEY` the audit found is a leftover, not a wired dependency.
 
 So this is not a key swap. It is a decision about what runs inference, with a
-real recurring cost attached — which is exactly why the brief asks for
+real recurring cost attached - which is exactly why the brief asks for
 sign-off first.
 
 ## What the codebase assumes today
@@ -119,7 +119,7 @@ to be fair to whoever made it, well-executed:
 - probabilities are computed in code (Wilson score interval over real analogs),
   never by the model
 - cited sources and analogs are the exact rows fed into the prompt, selected by
-  id — the model cannot name a source that was not supplied
+  id - the model cannot name a source that was not supplied
 - the model writes prose only
 
 Fabricated citations and invented probabilities are therefore structurally hard
@@ -137,7 +137,7 @@ regardless of model quality. The model is doing the easiest part of the job.
 ## What the unit economics need from this
 
 Free tier is 20 chat messages/day and 5 analyses/month. Premium is unlimited
-chat. **Unlimited chat on a per-token provider with no cap is the exposure** —
+chat. **Unlimited chat on a per-token provider with no cap is the exposure** -
 one enthusiastic premium user can cost more than their subscription, and there
 is currently no spend cap anywhere in the codebase (Wave 7.7 flags this
 separately). If B or C is chosen, a hard monthly cap and a per-user rate limit
@@ -148,7 +148,7 @@ must ship with it, not after.
 **D.** The architecture is already built for a small local model and degrades
 sensibly; standing up one Ollama/vLLM box unblocks every blocked verification at
 a fixed, known cost, and proves the pipeline end to end. Re-open the hosted
-question once there is real usage data to price against — `llm.ts` makes it a
+question once there is real usage data to price against - `llm.ts` makes it a
 config change.
 
 If the founder wants better prose immediately, **C over B**: the model is only

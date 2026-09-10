@@ -62,7 +62,7 @@ export function BillingPanel({ detail }: { detail: BillingDetail }) {
           />
         </div>
         {usage.unlimited ? (
-          <p className="mt-2 text-caption text-muted">Admin account — no analysis cap.</p>
+          <p className="mt-2 text-caption text-muted">Admin account - no analysis cap.</p>
         ) : (
           usage.remaining === 0 && (
             <p className="mt-2 text-caption text-warning">Limit reached for this month. It resets on the 1st.</p>

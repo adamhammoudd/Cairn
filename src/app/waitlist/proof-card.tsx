@@ -96,7 +96,7 @@ export function ProofCard() {
         <div className="mt-4 flex items-stretch gap-2 rounded-panel border border-line bg-panel px-3 py-2.5">
           <span aria-hidden className="w-1 flex-shrink-0 self-stretch rounded-xs bg-warning" />
           <p className="text-caption leading-[1.5] text-muted text-pretty">
-            Market-level context from the sources above — not a recommendation to buy, hold, or sell.
+            Market-level context from the sources above - not a recommendation to buy, hold, or sell.
           </p>
         </div>
       </div>

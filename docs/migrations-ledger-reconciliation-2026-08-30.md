@@ -1,4 +1,4 @@
-# Migration ledger reconciliation — 2026-08-30
+# Migration ledger reconciliation - 2026-08-30
 
 **Owner:** dev-lead · **Trigger:** Stage 8.2 of the 30 Aug combined-scan remediation.
 
@@ -10,14 +10,14 @@ had drifted from `supabase/migrations/*.sql` in two ways:
 1. **Version strings do not match filenames.** The repo names migrations
    `NNNN_slug.sql`. The ledger uses a mix: `0002`/`0003` for the first two, then
    `supabase`-style UTC timestamps (`20260810101022`) for most, and only the
-   `0016`–`0018` batch carries the `NNNN_slug` string — in the `name` column,
+   `0016`–`0018` batch carries the `NNNN_slug` string - in the `name` column,
    never the `version` column. This means `supabase db push` was **not** the tool
    that applied most of these; they were run by hand (SQL editor / MCP) and the
    ledger row inserted separately, or not at all.
 
 2. **0027–0032 were missing entirely.** Their SQL had been applied to the live
    DB but no ledger row was ever written, so the ledger under-reported the
-   applied schema by six migrations — the same "is this deployed?" ambiguity
+   applied schema by six migrations - the same "is this deployed?" ambiguity
    that this project has hit repeatedly.
 
 ## What was verified live before backfilling (2026-08-30)
@@ -53,7 +53,7 @@ had drifted from `supabase/migrations/*.sql` in two ways:
   matching ledger row. Their objects (fundamentals tables, scope-guard
   hardening, chat usage gate) are present in the running DB and in
   `schema.sql`; they were most likely folded into the initial provisioning or
-  an early squash. Flagged, not backfilled — needs a per-migration object
+  an early squash. Flagged, not backfilled - needs a per-migration object
   audit, which is a separate task.
 - **`0023_cron_secret_header`** is correctly absent: its own successor
   `0032_cron_secret_via_vault` documents that `0023` could never apply on hosted

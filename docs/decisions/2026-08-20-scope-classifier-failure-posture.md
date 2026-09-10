@@ -1,7 +1,7 @@
 # Decision needed: what happens when the scope classifier is unreachable
 
 **Owner:** chief-of-staff · **Raised by:** dev-lead · **Date:** 2026-08-20
-**Status:** open — shipped defaulting to advisory; flipping it is one env var
+**Status:** open - shipped defaulting to advisory; flipping it is one env var
 
 ## Context
 
@@ -15,9 +15,9 @@ Layer 3 needs an inference server. Layers 1–2 do not.
 
 When the classifier cannot be reached:
 
-- **advisory (current default)** — allow the response on layers 1–2 alone, log
+- **advisory (current default)** - allow the response on layers 1–2 alone, log
   that the classifier did not run.
-- **strict** — block the response and show the guard's rewrite.
+- **strict** - block the response and show the guard's rewrite.
 
 ## Why advisory is the default
 
@@ -30,16 +30,16 @@ gap.
 
 ## Why it is still a decision for someone else
 
-It is a compliance posture, not an engineering preference. The question — *"is
+It is a compliance posture, not an engineering preference. The question - *"is
 it acceptable to show a user a response that our strongest semantic check never
-saw?"* — belongs to whoever owns regulatory exposure, especially before real
+saw?"* - belongs to whoever owns regulatory exposure, especially before real
 users and real money.
 
 Two things worth weighing:
 
 - If the assistant is a premium selling point, strict mode means an inference
   outage looks like a product outage.
-- Advisory mode's blind spot is exactly correlated with model trouble — the
+- Advisory mode's blind spot is exactly correlated with model trouble - the
   window where output is most likely to be odd is the window where layer 3 is
   least likely to be running.
 

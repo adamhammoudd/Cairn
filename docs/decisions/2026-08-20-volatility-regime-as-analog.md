@@ -1,7 +1,7 @@
 # Decision needed: is a derived volatility regime a defensible historical analog?
 
 **Owner:** chief-of-staff · **Raised by:** dev-lead · **Date:** 2026-08-20
-**Status:** open — engineering has not changed the behaviour either way
+**Status:** open - engineering has not changed the behaviour either way
 
 ## What is actually in the table
 
@@ -23,7 +23,7 @@ restatement of the price series the band is then computed over.
 Candidly: to clear a gate. `checkCompleteness()` rejects any analysis with zero
 historical analogs, and there was no crypto analog source. Deriving regimes from
 data already on hand made crypto analyses possible. The ingest code says so in
-its own comments — it was not hidden.
+its own comments - it was not hidden.
 
 ## Why it is worth a decision rather than a quiet fix
 
@@ -31,7 +31,7 @@ The product's whole claim is *probability with visible sourcing*. A user
 expanding the methodology on a BTC analysis sees a sample of N "historical
 analogs" and reasonably reads that as *N times something comparable happened
 before*. What it means here is *N windows where this asset was more volatile
-than its own median* — which is close to circular when the output is a
+than its own median* - which is close to circular when the output is a
 volatility-likelihood band. The analog and the thing being predicted are
 computed from the same series.
 
@@ -40,7 +40,7 @@ earnings, dividend and split reactions with `price_before` / `price_after` read
 from `historical_prices`. Those are events. So the two asset classes are now
 making claims of different epistemic quality behind identical UI.
 
-That asymmetry is the actual risk. Not that the crypto number is wrong — that a
+That asymmetry is the actual risk. Not that the crypto number is wrong - that a
 user cannot tell which kind of analog they are looking at.
 
 ## Options
@@ -49,7 +49,7 @@ user cannot tell which kind of analog they are looking at.
 real crypto event source exists.** Most honest. Crypto is a visible chunk of the
 product and it goes dark, having briefly worked.
 
-**B. Keep them, label them distinctly in the methodology card** — "derived
+**B. Keep them, label them distinctly in the methodology card** - "derived
 volatility regime" as its own analog class, with a plain-language note that it
 is computed from this asset's own price history rather than a discrete event,
 and exclude them from the headline sample count. Keeps crypto working and stops
@@ -59,7 +59,7 @@ the claim being stronger than the evidence. Engineering cost is small (a
 **C. Keep as-is.** Cheapest, and the one option that leaves a user unable to
 tell a real analog from a restatement of the price series.
 
-**D. Source real crypto events** — halvings, major protocol upgrades, exchange
+**D. Source real crypto events** - halvings, major protocol upgrades, exchange
 failures, ETF approvals. Genuinely comparable to the equity set. No keyless
 feed identified; this is a research task, not a config change.
 
@@ -70,5 +70,5 @@ immediately; D is the version that makes crypto analyses as good as equity ones.
 A is defensible and I would not argue against it, but shipping a feature and
 withdrawing it costs more trust than labelling it accurately.
 
-**Not a decision engineering should make alone** — it trades product surface
+**Not a decision engineering should make alone** - it trades product surface
 against the strength of a probability claim, which is the core promise.

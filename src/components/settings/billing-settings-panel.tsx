@@ -65,7 +65,7 @@ export function BillingSettingsPanel({ detail }: { detail: BillingDetail }) {
   const analysesAtCap = !usage.unlimited && usage.remaining <= 0;
   const chatCapped = !chat.unlimited && chat.limit !== null;
   const chatAtCap = chatCapped && (chat.remaining ?? 0) <= 0;
-  const adminNote = "Admin account — no cap. Shown for your own tracking.";
+  const adminNote = "Admin account - no cap. Shown for your own tracking.";
 
   return (
     <div className="flex flex-col gap-3.5">
@@ -215,7 +215,7 @@ export function BillingSettingsPanel({ detail }: { detail: BillingDetail }) {
             />
             <div className="border-t border-line-soft pt-3.5 text-micro leading-[1.55] text-dim text-pretty">
               The same meter component the Research page&rsquo;s quota indicator shows and the same count the
-              generation gate enforces — one source of truth.
+              generation gate enforces - one source of truth.
             </div>
           </div>
         </div>
@@ -284,7 +284,7 @@ export function BillingSettingsPanel({ detail }: { detail: BillingDetail }) {
       <div className="flex gap-3 rounded-panel border border-line bg-canvas px-4 py-4">
         <span className="w-1 shrink-0 rounded-xs bg-warning" />
         <div className="min-w-0 text-caption leading-[1.6] text-muted text-pretty">
-          Plan tier changes how much methodology detail is shown — never the analysis itself, its confidence range, or
+          Plan tier changes how much methodology detail is shown - never the analysis itself, its confidence range, or
           its caveats. Downgrading keeps everything you&rsquo;ve already generated readable.
         </div>
       </div>

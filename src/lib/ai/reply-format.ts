@@ -46,7 +46,7 @@ export function normalizeReply(text: string): string {
         continue;
       }
       const paired = cells.map((cell, i) => (header && header[i] ? `${header[i]}: ${cell}` : cell));
-      out.push(`- ${paired.join(" — ")}`);
+      out.push(`- ${paired.join(" - ")}`);
       continue;
     }
 

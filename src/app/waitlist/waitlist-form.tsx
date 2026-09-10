@@ -86,7 +86,7 @@ export function WaitlistForm({ centered = false }: { centered?: boolean }) {
             <>
               You&apos;re <span className="text-primary">#{state.position}</span>.{" "}
               {state.founding
-                ? "As a founding member, your first 2 months of Premium are free — they start the day your access begins at launch, not today."
+                ? "As a founding member, your first 2 months of Premium are free - they start the day your access begins at launch, not today."
                 : "You'll get standard access when Cairn launches; the 50 founding-member places were already taken."}
             </>
           ) : (
@@ -130,7 +130,7 @@ export function WaitlistForm({ centered = false }: { centered?: boolean }) {
       )}
 
       <p className={`mt-3 text-caption leading-[1.6] text-dim text-pretty ${centered ? "" : "max-w-[420px]"}`}>
-        No spam, no newsletter — one confirmation email now and one launch email later. Email address
+        No spam, no newsletter - one confirmation email now and one launch email later. Email address
         only.{" "}
         <Link href="/privacy" className="text-muted underline underline-offset-2 hover:text-accent">
           Privacy Policy

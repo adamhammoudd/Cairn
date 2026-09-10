@@ -376,7 +376,7 @@ export function MethodologyCard({
                 <div className="min-w-0">
                   <div className="text-caption text-primary">Premium shows all {analysis.analogs.length} analogs</div>
                   <div className="mt-1 text-caption leading-[1.5] text-muted text-pretty">
-                    Same analysis, same confidence range, same caveats — more of the underlying comparisons visible.
+                    Same analysis, same confidence range, same caveats - more of the underlying comparisons visible.
                   </div>
                 </div>
                 <a
@@ -410,7 +410,7 @@ export function MethodologyCard({
               card, not just the evidence column. */}
           {analysis.confidence_level === "low" && (
             <div className="mb-4.5 rounded-panel border border-line bg-panel px-3 py-2.5 text-caption leading-relaxed text-muted">
-              Low-confidence output — small historical sample or weak pattern match. Treat as directional, not precise.
+              Low-confidence output - small historical sample or weak pattern match. Treat as directional, not precise.
             </div>
           )}
 

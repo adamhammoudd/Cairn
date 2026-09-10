@@ -1,4 +1,4 @@
-// Scheduled Edge Function: builds the equity side of historical_events —
+// Scheduled Edge Function: builds the equity side of historical_events -
 // the analogs computeProbabilityBand() measures against.
 //
 // Why this exists: historical_events held 36 rows, all crypto volatility
@@ -9,16 +9,16 @@
 // three from sources already in use elsewhere in this codebase.
 //
 // Sources, both keyless:
-//   - Yahoo Finance chart ?events=div,split  — dividend ex-dates and split
+//   - Yahoo Finance chart ?events=div,split  - dividend ex-dates and split
 //     execution dates with ratios (same host as market-adapters.ts).
-//   - Nasdaq api/company/{symbol}/earnings-surprise — reported earnings dates
+//   - Nasdaq api/company/{symbol}/earnings-surprise - reported earnings dates
 //     with EPS vs consensus (same host as ingest-calendar).
 //
 // price_before / price_after are NOT taken from either feed. They are read
 // back out of historical_prices, which is the store the rest of the engine
 // measures against, so an analog's move is computed from the same bars the
 // chart draws. An event whose surrounding bars are missing is skipped rather
-// than written with a null leg — a row with no usable move is invisible to
+// than written with a null leg - a row with no usable move is invisible to
 // the probability band anyway and would only inflate the analog count.
 
 import { createClient } from "jsr:@supabase/supabase-js@2";
@@ -140,7 +140,7 @@ async function fetchNasdaqEarnings(symbol: string): Promise<EarningsRow[]> {
 
 /**
  * The close on the last session strictly before the event, and on the first
- * session strictly after it — the one-session reaction window. Bars are
+ * session strictly after it - the one-session reaction window. Bars are
  * ascending. Returns null if either leg is missing, which is what makes the
  * event unusable as an analog.
  */
@@ -239,7 +239,7 @@ Deno.serve(async (req) => {
           event_date: e.date,
           description:
             `${symbol} reported quarterly earnings` +
-            (e.eps !== null ? ` — EPS ${e.eps} vs consensus ${e.consensus ?? "n/a"}` : "") +
+            (e.eps !== null ? ` - EPS ${e.eps} vs consensus ${e.consensus ?? "n/a"}` : "") +
             (e.surprisePct !== null ? ` (${e.surprisePct}% surprise)` : ""),
           metadata: {
             source: "nasdaq_earnings_surprise",
@@ -253,7 +253,7 @@ Deno.serve(async (req) => {
           sector,
           event_type: "dividend",
           event_date: d.date,
-          description: `${symbol} traded ex-dividend — $${d.amount} per share`,
+          description: `${symbol} traded ex-dividend - $${d.amount} per share`,
           metadata: { source: "yahoo_chart_events", amount: d.amount },
         })),
         ...yahoo.splits.map((s) => ({

@@ -139,7 +139,7 @@ export default function WelcomePage() {
             </h1>
             <p className="mt-5 max-w-[60ch] text-[clamp(1rem,1.4vw,1.125rem)] leading-[1.6] text-muted text-pretty">
               Ask Cairn about a ticker, a sector or the market. The answer comes back with the articles it
-              read, the historical cases it compared, and how confident it is &mdash; so you can judge the
+              read, the historical cases it compared, and how confident it is - so you can judge the
               reasoning, not just the conclusion.
             </p>
 

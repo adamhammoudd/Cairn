@@ -65,7 +65,7 @@ export default async function ConfirmPage({
                   This link isn&apos;t valid
                 </h1>
                 <p className="mt-3 text-lead leading-[1.65] text-muted text-pretty">
-                  The confirmation link is incomplete or has expired. Join again from the waitlist —
+                  The confirmation link is incomplete or has expired. Join again from the waitlist -
                   if your address is already on the list, we&apos;ll just re-send the link.
                 </p>
                 <Link
@@ -93,7 +93,7 @@ export default async function ConfirmPage({
 
                 {outcome.founding ? (
                   <p className="mt-3 text-lead leading-[1.65] text-muted text-pretty">
-                    You made the first <span className="text-primary">{outcome.limit}</span> — you&apos;re
+                    You made the first <span className="text-primary">{outcome.limit}</span> - you&apos;re
                     a <span className="text-primary">founding member</span>. Two months of Premium are
                     reserved for this email address. They begin the day your access starts at launch,
                     not today.
@@ -101,7 +101,7 @@ export default async function ConfirmPage({
                 ) : (
                   <p className="mt-3 text-lead leading-[1.65] text-muted text-pretty">
                     The {outcome.limit} founding-member places are filled, so this isn&apos;t a
-                    founding spot — but you&apos;re on the list and you&apos;ll get standard access
+                    founding spot - but you&apos;re on the list and you&apos;ll get standard access
                     when Cairn launches.
                   </p>
                 )}
@@ -115,7 +115,7 @@ export default async function ConfirmPage({
         </main>
 
         <footer className="border-t border-line py-8 text-micro leading-[1.7] text-dim">
-          Cairn is informational only — not a broker and not investment advice.{" "}
+          Cairn is informational only - not a broker and not investment advice.{" "}
           <Link href="/privacy" className="text-muted hover:text-accent">
             Privacy Policy
           </Link>

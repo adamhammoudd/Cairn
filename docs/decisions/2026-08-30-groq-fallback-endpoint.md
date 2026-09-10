@@ -51,7 +51,7 @@ Cerebras account):
 
 | | Groq free tier | Cerebras free trial |
 |---|---|---|
-| Model **id** | `openai/gpt-oss-120b` | `gpt-oss-120b` — **no `openai/` prefix** (`inference-docs.cerebras.ai/models`) |
+| Model **id** | `openai/gpt-oss-120b` | `gpt-oss-120b` - **no `openai/` prefix** (`inference-docs.cerebras.ai/models`) |
 | Weights | GPT-OSS 120B | the same GPT-OSS 120B weights |
 | Base URL | `https://api.groq.com/openai/v1` | `https://api.cerebras.ai/v1` |
 | Tokens/day | 200,000 | ~1,000,000 |

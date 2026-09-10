@@ -221,7 +221,7 @@ export function ResearchWorkspace({
           <div className="mb-2 font-mono text-eyebrow text-muted uppercase">Assistant · Research</div>
           <h1 className="m-0 font-serif text-display font-normal leading-[1.1] text-primary">Research</h1>
           <p className="mt-2 max-w-[560px] text-lead text-muted text-pretty">
-            Probability analysis with its inputs shown — sources, historical analogs, and a stated confidence level on
+            Probability analysis with its inputs shown - sources, historical analogs, and a stated confidence level on
             every run.
           </p>
         </div>
@@ -427,7 +427,7 @@ export function ResearchWorkspace({
           <div className="rounded-card border border-dashed border-line px-6 py-10 text-center">
             <div className="font-serif text-h3 text-primary">No analyses on your holdings yet</div>
             <p className="mx-auto mt-2 mb-4 max-w-[400px] text-body text-muted text-pretty">
-              Pick a ticker you own above and generate the first one — it&apos;ll show up here afterwards.
+              Pick a ticker you own above and generate the first one - it&apos;ll show up here afterwards.
             </p>
           </div>
         )}

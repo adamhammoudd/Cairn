@@ -465,7 +465,7 @@ export function ChatThread({
             {generatingScope && (
               <div>
                 <p className="mb-2.5 text-body leading-relaxed text-muted text-pretty">
-                  No analysis on record yet for {generatingScope} — generating one now…
+                  No analysis on record yet for {generatingScope} - generating one now…
                 </p>
                 <GeneratingPanel scopeLabel={generatingScope} />
               </div>

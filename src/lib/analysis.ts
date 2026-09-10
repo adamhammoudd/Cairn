@@ -19,4 +19,4 @@ export type GenerateOutcome =
  * depending on where the run was triggered from.
  */
 export const UNAVAILABLE_MESSAGE =
-  "Not enough historical data available for this scope yet — too few comparable situations in the record to put a confidence range on.";
+  "Not enough historical data available for this scope yet - too few comparable situations in the record to put a confidence range on.";

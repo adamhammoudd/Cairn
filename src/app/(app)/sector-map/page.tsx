@@ -42,7 +42,7 @@ async function SectorMapBody() {
         <p className="mt-2 max-w-[540px] text-lead text-muted text-pretty">
           Tile area is market cap; saturation is the size of today&apos;s move. Symbols with no SEC-classified sector
           show under &quot;Unclassified.&quot;
-          {focusedSector && <> Opening on {focusedSector} — your focus sector, set in Settings.</>}
+          {focusedSector && <> Opening on {focusedSector} - your focus sector, set in Settings.</>}
         </p>
       </div>
 

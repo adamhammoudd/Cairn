@@ -144,7 +144,7 @@ export function ChatSettingsPanel({ session, accountDefaults, fallbackTitle }: C
             <div className="text-body text-primary">Portfolio context</div>
             <div className="mt-1 max-w-[440px] text-caption leading-relaxed text-muted text-pretty">
               Let the assistant read your holdings and watchlists when deciding what is relevant in this thread.
-              Answers stay market/sector/ticker-level either way — Cairn never analyses your position or resolves to
+              Answers stay market/sector/ticker-level either way - Cairn never analyses your position or resolves to
               buy, hold, or sell. Account default:{" "}
               <span className="text-primary">{accountDefaults.usePortfolioContext ? "On" : "Off"}</span>.
             </div>

@@ -421,7 +421,7 @@ export function DashboardHome({
           <div className="max-w-[60ch]">
             <p className="text-lead leading-[1.6] text-muted text-pretty">
               Nothing flagged yet. Ask about a ticker, sector or market trend and Cairn answers from stored
-              research — with the sources, historical analogs and confidence behind every figure.
+              research - with the sources, historical analogs and confidence behind every figure.
             </p>
             <Link
               href="/assistant"

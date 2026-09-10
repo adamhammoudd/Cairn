@@ -1,4 +1,4 @@
-# Migration ledger reconciliation — 2026-09-03
+# Migration ledger reconciliation - 2026-09-03
 
 **Owner:** dev-lead · **Trigger:** item 3 of the 2026-09-03 live-deployment scan
 follow-up. Continues `docs/migrations-ledger-reconciliation-2026-08-30.md`.
@@ -12,14 +12,14 @@ editor / MCP `execute_sql`) with **no ledger row**:
 
 | File | Committed | Live objects (verified 2026-09-03) |
 |---|---|---|
-| `0036_email_send_log.sql` | 2026-09-02 | `public.email_send_log(day date pk, sent int default 0)`, `public.record_email_send(integer)` `SECURITY DEFINER` — both present, table has real data (16 + 1 sends) |
-| `0037_signup_consent.sql` | 2026-09-03 | `public.user_consents` (8 columns, RLS on, `own consents are readable` SELECT policy), `user_consents_user_id_idx` — all present |
+| `0036_email_send_log.sql` | 2026-09-02 | `public.email_send_log(day date pk, sent int default 0)`, `public.record_email_send(integer)` `SECURITY DEFINER` - both present, table has real data (16 + 1 sends) |
+| `0037_signup_consent.sql` | 2026-09-03 | `public.user_consents` (8 columns, RLS on, `own consents are readable` SELECT policy), `user_consents_user_id_idx` - all present |
 
 Each live object was diffed against its migration file: they match. This is the
 same "one migration file, one ledger row" convention break the 2026-08-30
 reconciliation doc's "Convention going forward" section calls out.
 
-## The fix (backfill — NOT applied by this pass)
+## The fix (backfill - NOT applied by this pass)
 
 Per the founder's "PR-only" instruction the ledger was **not** written to during
 this pass. The exact statements to run (SQL editor or MCP `execute_sql`),
@@ -42,15 +42,15 @@ relative to each other.
 
 `0038_news_cron_timeout.sql` (item 8) is a **new** migration file. When applied
 (via `supabase db push` or MCP `apply_migration`) it records its own ledger row
-normally — no backfill needed.
+normally - no backfill needed.
 
 ## Known remaining divergences (unchanged from 2026-08-30)
 
 - Pre-`0027` `name` values still diverge from file basenames (cosmetic).
 - `0004`, `0005`, `0007`, `0010`, `0013`, `0014`, `0015` still have no matching
-  ledger row — objects present in the running DB and `schema.sql`, need a
+  ledger row - objects present in the running DB and `schema.sql`, need a
   per-migration object audit.
 - `0023_cron_secret_header` is correctly absent (needs superuser; superseded by
   `0032`). Do not backfill.
 - Duplicate migration number `0016` (`0016_fix_cron_project_ref.sql` +
-  `0016_founder_feedback_pass2.sql`) — pre-existing, left alone.
+  `0016_founder_feedback_pass2.sql`) - pre-existing, left alone.

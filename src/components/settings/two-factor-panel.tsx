@@ -54,7 +54,7 @@ export function TwoFactorPanel({ status }: { status: TwoFactorStatus }) {
           <div className="text-body text-primary">Sign-in is password-only today</div>
           <p className="mt-1.5 text-caption leading-[1.6] text-muted text-pretty">
             When two-factor ships it will use an authenticator app (TOTP) plus one-time recovery codes; SMS is not
-            planned. Nothing on this screen protects your account yet — it would be misleading to show a switch that
+            planned. Nothing on this screen protects your account yet - it would be misleading to show a switch that
             did nothing.
             {requested && " You're on the list and we'll prompt you to enrol the first time you sign in after it ships."}
           </p>
