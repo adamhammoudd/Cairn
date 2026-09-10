@@ -2,6 +2,9 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { ensureSymbolIngested, normalizeSymbol } from "@/lib/market-data/ingest";
+import { ensureProfile } from "@/lib/market-data/reference";
+import { normalizeSector, SECTOR_LABEL } from "@/lib/sectors";
+import { sectorSlugForSic } from "@/lib/sic-sectors";
 import type { AssetType } from "@/lib/supabase/types";
 
 export interface SymbolSearchResult {
@@ -79,38 +82,111 @@ export async function lookupSymbol(query: string): Promise<SymbolSearchResult | 
   };
 }
 
+
 /**
- * The classification fields Add Holding can fill in for a symbol.
+ * The three classification fields Add Holding can fill in for a symbol.
  *
- * Typing a ticker into Add Holding used to leave Sector blank for the user to
- * remember and type by hand - on a field the product already knows the answer
- * to, and one that news relevance reads (see actions/news.ts, which matches
- * headlines against holdings.sector). A blank sector quietly costs the account
- * its sector-matched news.
+ * These are free-text columns on `holdings` that a person typed by hand, and
+ * migration 0041 exists precisely because two holdings were saved with them
+ * blank: ISRG and MSFT fell into "Unclassified" on both the Sector and
+ * Geography allocation charts, and a blank sector also costs the account its
+ * sector-matched news (actions/news.ts matches headlines against
+ * holdings.sector). Asking someone to remember a company's GICS sector while
+ * they are entering a trade is how that happens.
  *
- * `sector` comes from fundamentals.sector - the same SEC SIC description the
- * sector map groups by - so an autofilled value agrees with the rest of the
- * app rather than introducing a second vocabulary.
+ * Source is `symbol_profiles` (Yahoo assetProfile, cached weekly by
+ * ensureProfile) - NOT `fundamentals.sector`. The two carry different
+ * vocabularies: fundamentals holds SEC SIC descriptions like
+ * "SERVICES-PREPACKAGED SOFTWARE", which is what the sector map groups by,
+ * while holdings.sector is GICS-style Title Case ("Technology",
+ * "Healthcare"). Writing a SIC string into this field would put a second
+ * vocabulary into the allocation chart and split one sector across two
+ * slices.
  *
- * Geography is deliberately NOT returned. Nothing in the schema carries a
- * country, region or exchange for a symbol, and guessing one from the ticker
- * would put a fabricated field in front of the user on a page whose whole
- * premise is that figures come with a source.
+ * Everything returned is normalised to the convention already in the table
+ * (see 0041: NVDA/AMZN store "Technology" / "USA" / "Equity"), because these
+ * fields are grouped by exact string - "United States" and "USA" would draw
+ * as two separate countries.
  */
+
+const ASSET_CLASS_LABEL: Record<AssetType, string> = {
+  equity: "Equity",
+  etf: "ETF",
+  crypto: "Crypto",
+  forex: "Forex",
+  index: "Index",
+  future: "Future",
+};
+
+/**
+ * Yahoo says "United States"; the holdings table says "USA". Only the forms
+ * that actually collide are mapped - anything else is passed through as the
+ * provider wrote it rather than guessed at.
+ */
+function normalizeCountry(country: string | null | undefined): string | null {
+  if (!country) return null;
+  const trimmed = country.trim();
+  if (!trimmed) return null;
+  const key = trimmed.toLowerCase().replace(/[^a-z]/g, "");
+  if (key === "unitedstates" || key === "unitedstatesofamerica" || key === "usa" || key === "us") {
+    return "USA";
+  }
+  return trimmed;
+}
+
 export async function getSymbolProfile(
   symbol: string,
-): Promise<{ sector: string | null; assetClass: string | null }> {
+  assetType: AssetType,
+): Promise<{ sector: string | null; geography: string | null; assetClass: string | null }> {
+  const assetClass = ASSET_CLASS_LABEL[assetType] ?? null;
   const normalized = normalizeSymbol(symbol);
-  if (!normalized) return { sector: null, assetClass: null };
+  if (!normalized) return { sector: null, geography: null, assetClass };
 
+  // A coin has no country of incorporation and no assetProfile to fetch. It
+  // does have a sector in this app's own vocabulary, so that is filled and
+  // geography is left alone rather than invented as "Global".
+  if (assetType === "crypto") {
+    return { sector: SECTOR_LABEL.crypto ?? "Crypto", geography: null, assetClass };
+  }
+
+  // Two sources, best first.
+  //
+  // symbol_profiles (Yahoo assetProfile) carries a GICS-style sector AND a
+  // country, which is everything this needs - but the table is empty in this
+  // deployment: the quoteSummary endpoint it reads now requires a crumb and
+  // returns nothing, so ensureProfile writes no row. It is still tried first,
+  // so this starts working on its own the day that fetch is fixed.
+  const profile = await ensureProfile(normalized).catch(() => null);
+  const profileSlug = normalizeSector(profile?.sector);
+  if (profileSlug || profile?.country) {
+    return {
+      sector: profileSlug ? (SECTOR_LABEL[profileSlug] ?? null) : null,
+      geography: normalizeCountry(profile?.country),
+      assetClass,
+    };
+  }
+
+  // Fallback: the SEC SIC code already stored on `fundamentals`, mapped onto
+  // this app's sector vocabulary. The SIC *description* cannot be used
+  // directly - "Services-Prepackaged Software" matches no alias in
+  // lib/sectors.ts and would draw its own wedge on the allocation chart
+  // beside "Technology" - so the mapping is on the numeric code, which is the
+  // stable key. See lib/sic-sectors.ts.
+  //
+  // There is no geography here: `fundamentals` stores no country, and the SEC
+  // filer address that would supply one is not ingested. Left null rather
+  // than guessed from the ticker.
   const supabase = await createClient();
-  const [{ data: fundamentals }, { data: coin }] = await Promise.all([
-    supabase.from("fundamentals").select("sector").eq("symbol", normalized).maybeSingle(),
-    supabase.from("crypto_metrics").select("symbol").eq("symbol", normalized).maybeSingle(),
-  ]);
+  const { data: fundamentals } = await supabase
+    .from("fundamentals")
+    .select("sic")
+    .eq("symbol", normalized)
+    .maybeSingle();
+  const sicSlug = sectorSlugForSic(fundamentals?.sic);
 
-  // "Digital assets" is the same synthesised name the sector map uses for
-  // coins, which carry no SIC classification.
-  if (coin) return { sector: "Digital assets", assetClass: "Crypto" };
-  return { sector: fundamentals?.sector ?? null, assetClass: null };
+  return {
+    sector: sicSlug ? (SECTOR_LABEL[sicSlug] ?? null) : null,
+    geography: null,
+    assetClass,
+  };
 }

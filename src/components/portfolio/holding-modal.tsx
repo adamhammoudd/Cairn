@@ -96,12 +96,12 @@ export function HoldingModal({ holding, initialSymbol, onClose }: HoldingModalPr
                     // costs the account its sector-matched news.
                     //
                     // Only fills an EMPTY field: a value already typed is the
-                    // user's and is never overwritten. Geography is not filled
-                    // - nothing in the schema carries a country or exchange
-                    // for a symbol, and a guessed one would be a fabricated
-                    // field in a product built on showing its sources.
+                    // user's and is never overwritten. Values come back
+                    // normalised to the convention already in the table
+                    // ("Technology" / "USA" / "Equity"), because the
+                    // allocation charts group by exact string.
                     setLookingUp(true);
-                    getSymbolProfile(r.symbol)
+                    getSymbolProfile(r.symbol, r.assetType)
                       .then((profile) => {
                         setFields((prev) => ({
                           ...prev,
@@ -109,6 +109,9 @@ export function HoldingModal({ holding, initialSymbol, onClose }: HoldingModalPr
                           asset_class: prev.asset_class.trim()
                             ? prev.asset_class
                             : (profile.assetClass ?? ""),
+                          geography: prev.geography.trim()
+                            ? prev.geography
+                            : (profile.geography ?? ""),
                         }));
                       })
                       .finally(() => setLookingUp(false));
@@ -192,7 +195,7 @@ export function HoldingModal({ holding, initialSymbol, onClose }: HoldingModalPr
               </datalist>
               {lookingUp && (
                 <p aria-live="polite" className="mt-1.5 text-caption text-dim">
-                  Looking up sector&hellip;
+                  Looking up sector, class and geographyLooking up sector&hellip;hellip;
                 </p>
               )}
             </Field>
