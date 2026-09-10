@@ -11,7 +11,15 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   // getDisplayPrefs() calls below reuse this validation instead of each making
   // their own round-trip to the Auth server.
   const user = await getAuthUser();
-  if (!user) redirect("/login");
+  // Logged-out visitors meet the product, not a password field. This used to
+  // send everyone to /login, which meant the app had no front door at all:
+  // someone arriving at cairn's root with no account saw an empty email box
+  // and no explanation of what they were signing in to. /welcome carries
+  // "Sign in" in its header, so the login path is one click from here.
+  //
+  // Nothing is lost in the swap: the old redirect passed no `next` param, so
+  // there was never any return-to-intended-page behaviour to preserve.
+  if (!user) redirect("/welcome");
 
   const supabase = await createClient();
 
