@@ -185,14 +185,14 @@ export function TopNav({ displayName, plan, isAdmin = false }: TopNavProps) {
                 <div key={entry.route} className="relative">
                   <Link
                     href={entry.route}
-                    className={`flex items-center rounded-lg px-2.75 py-1.75 text-[13.5px] whitespace-nowrap transition-colors duration-fast ease-standard hover:bg-active ${
+                    className={`flex items-center rounded-control px-3 py-2 text-lead whitespace-nowrap transition-colors duration-fast ease-standard hover:bg-active ${
                       isActive ? "text-primary" : "text-muted"
                     }`}
                   >
                     {entry.label}
                   </Link>
                   <span
-                    className={`absolute right-2.75 bottom-[-12px] left-2.75 h-[1.5px] origin-left scale-x-0 rounded-full bg-gradient-to-r from-accent-light to-accent-dark transition-transform duration-base ease-standard ${
+                    className={`absolute right-3 bottom-[-12px] left-3 h-[1.5px] origin-left scale-x-0 rounded-full bg-gradient-to-r from-accent-light to-accent-dark transition-transform duration-base ease-standard ${
                       isActive ? "scale-x-100" : ""
                     }`}
                   />
@@ -213,7 +213,7 @@ export function TopNav({ displayName, plan, isAdmin = false }: TopNavProps) {
                 <button
                   type="button"
                   onClick={() => toggleGroup(entry.label)}
-                  className={`flex items-center gap-1.5 rounded-lg px-2.75 py-1.75 text-[13.5px] whitespace-nowrap transition-colors duration-fast ease-standard hover:bg-active ${
+                  className={`flex items-center gap-1.5 rounded-control px-3 py-2 text-lead whitespace-nowrap transition-colors duration-fast ease-standard hover:bg-active ${
                     hasActive || isOpen ? "text-primary" : "text-muted"
                   }`}
                 >
@@ -241,7 +241,7 @@ export function TopNav({ displayName, plan, isAdmin = false }: TopNavProps) {
                   // the panel itself would drop the pointer out of the group on
                   // the way down and close the menu before it can be clicked.
                   <div className="animate-menu-in absolute top-full left-0 z-50 min-w-52 pt-2.5">
-                    <div className="rounded-xl border border-line bg-panel p-1.25 shadow-[0_18px_40px_rgba(0,0,0,0.6),0_0_0_1px_rgba(47,198,133,0.05)]">
+                    <div className="rounded-panel border border-line bg-panel p-1 shadow-[0_18px_40px_rgba(0,0,0,0.6),0_0_0_1px_rgba(47,198,133,0.05)]">
                       {entry.items.map((item) => {
                         const isActive = isRouteActive(pathname, item.route);
                         return (
@@ -249,8 +249,8 @@ export function TopNav({ displayName, plan, isAdmin = false }: TopNavProps) {
                             key={item.route}
                             href={item.route}
                             onClick={closeGroups}
-                            className={`block rounded-lg px-2.5 py-2 text-[13px] whitespace-nowrap transition-colors duration-fast ease-standard ${
-                              isActive ? "bg-active text-primary" : "text-muted hover:bg-[#191919] hover:text-primary"
+                            className={`block rounded-control px-2.5 py-2 text-body whitespace-nowrap transition-colors duration-fast ease-standard ${
+                              isActive ? "bg-active text-primary" : "text-muted hover:bg-active hover:text-primary"
                             }`}
                           >
                             {item.label}
@@ -278,7 +278,7 @@ export function TopNav({ displayName, plan, isAdmin = false }: TopNavProps) {
           {plan === "free" && (
             <Link
               href="/billing"
-              className="hidden rounded-lg bg-gradient-to-br from-accent-light to-accent-dark px-3 py-1.5 text-[12.5px] font-semibold whitespace-nowrap text-canvas transition-[box-shadow,transform] duration-base ease-standard hover:-translate-y-px hover:shadow-[0_0_22px_rgba(47,198,133,0.35)] min-[1240px]:block"
+              className="hidden rounded-control bg-gradient-to-br from-accent-light to-accent-dark px-3 py-1.5 text-body font-semibold whitespace-nowrap text-canvas transition-[box-shadow,transform] duration-base ease-standard hover:-translate-y-px hover:shadow-[0_0_22px_rgba(47,198,133,0.35)] min-[1240px]:block"
             >
               Upgrade
             </Link>
@@ -288,36 +288,44 @@ export function TopNav({ displayName, plan, isAdmin = false }: TopNavProps) {
             <button
               type="button"
               onClick={() => setAccountOpen((prev) => !prev)}
-              className="flex items-center gap-2 rounded-lg p-1 pr-2 transition-colors duration-fast ease-standard hover:bg-active"
+              className="flex items-center gap-2 rounded-control p-1 pr-2 transition-colors duration-fast ease-standard hover:bg-active"
             >
               <div
-                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11.5px] font-semibold text-canvas"
-                style={{ background: "linear-gradient(135deg, #5EE6A6, #22B573)" }}
+                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-caption font-semibold text-canvas"
+                style={{ background: "var(--gradient-gain)" }}
               >
                 {initialsOf(displayName)}
               </div>
               <div className="hidden min-w-0 flex-col items-start overflow-hidden min-[1000px]:flex">
-                <span className="max-w-[120px] truncate text-[12.5px] leading-tight text-primary">{displayName}</span>
-                <span className="text-[10.5px] leading-tight text-muted capitalize">{plan} plan</span>
+                <span className="max-w-[120px] truncate text-body leading-tight text-primary">{displayName}</span>
+                <span className="text-micro leading-tight text-muted capitalize">{plan} plan</span>
               </div>
             </button>
 
             {accountOpen && (
-              <div className="animate-menu-in absolute top-[calc(100%+10px)] right-0 min-w-50 rounded-xl border border-line bg-panel p-1.5 shadow-2xl">
+              <div className="animate-menu-in absolute top-[calc(100%+10px)] right-0 min-w-50 rounded-panel border border-line bg-panel p-1.5 shadow-2xl">
                 {(isAdmin ? [...ACCOUNT_MENU, ADMIN_MENU_ITEM] : ACCOUNT_MENU).map((item) => (
                   <Link
                     key={item.href}
                     href={item.href}
                     onClick={() => setAccountOpen(false)}
-                    className="block rounded-lg px-2.5 py-2 text-[13px] whitespace-nowrap text-muted transition-colors duration-fast ease-standard hover:bg-active hover:text-primary"
+                    className="block rounded-control px-2.5 py-2 text-body whitespace-nowrap text-muted transition-colors duration-fast ease-standard hover:bg-active hover:text-primary"
                   >
                     {item.label}
                   </Link>
                 ))}
+                {/* Sign out is an exit, not a destination, and it sat flush
+                    against Billing with nothing between them - one mis-aimed
+                    click apart. A divider is the standard separation for a
+                    leave-the-app action; it is also the honest answer to the
+                    open "make sign-out red" request, which would spend the
+                    product's only alarm colour on something that destroys
+                    nothing. See docs/design/coherence-proposals.md. */}
+                <div className="my-1 border-t border-line-soft" />
                 <form action={signOut}>
                   <button
                     type="submit"
-                    className="block w-full rounded-lg px-2.5 py-2 text-left text-[13px] text-muted transition-colors duration-fast ease-standard hover:bg-active hover:text-primary"
+                    className="block w-full rounded-control px-2.5 py-2 text-left text-body text-muted transition-colors duration-fast ease-standard hover:bg-active hover:text-primary"
                   >
                     Sign out
                   </button>
@@ -331,13 +339,13 @@ export function TopNav({ displayName, plan, isAdmin = false }: TopNavProps) {
             onClick={() => setMobileNavOpen((prev) => !prev)}
             aria-label="Toggle navigation"
             aria-expanded={mobileNavOpen}
-            className={`flex h-8 w-8.5 shrink-0 flex-col justify-center gap-1 rounded-lg border bg-transparent px-1.75 transition-colors duration-fast ease-standard hover:border-[#3A3A3A] min-[900px]:hidden ${
+            className={`flex h-8 w-8.5 shrink-0 flex-col justify-center gap-1 rounded-control border bg-transparent px-2 transition-colors duration-fast ease-standard hover:border-line-strong min-[900px]:hidden ${
               mobileNavOpen ? "border-accent" : "border-line"
             }`}
           >
-            <span className="block h-[1.5px] rounded-sm bg-primary" />
-            <span className="block h-[1.5px] rounded-sm bg-primary" />
-            <span className="block h-[1.5px] rounded-sm bg-muted" />
+            <span className="block h-[1.5px] rounded-xs bg-primary" />
+            <span className="block h-[1.5px] rounded-xs bg-primary" />
+            <span className="block h-[1.5px] rounded-xs bg-muted" />
           </button>
         </div>
       </div>
@@ -350,24 +358,24 @@ export function TopNav({ displayName, plan, isAdmin = false }: TopNavProps) {
             <button
               type="button"
               onClick={() => setAccountOpen((prev) => !prev)}
-              className="flex w-full items-center gap-2.5 rounded-lg p-2 text-left transition-colors duration-fast ease-standard hover:bg-[#151515]"
+              className="flex w-full items-center gap-2.5 rounded-control p-2 text-left transition-colors duration-fast ease-standard hover:bg-raised"
             >
               <div
-                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[12.5px] font-semibold text-canvas"
-                style={{ background: "linear-gradient(135deg, #5EE6A6, #22B573)" }}
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-body font-semibold text-canvas"
+                style={{ background: "var(--gradient-gain)" }}
               >
                 {initialsOf(displayName)}
               </div>
               <div className="min-w-0 flex-1">
-                <div className="truncate text-[13.5px] text-primary">{displayName}</div>
-                <div className="mt-0.5 text-[11px] text-muted capitalize">{plan} plan</div>
+                <div className="truncate text-lead text-primary">{displayName}</div>
+                <div className="mt-0.5 text-micro text-muted capitalize">{plan} plan</div>
               </div>
               <svg
                 width="9"
                 height="9"
                 viewBox="0 0 24 24"
                 fill="none"
-                stroke="#8A8A8A"
+                stroke="var(--color-muted)"
                 strokeWidth="3"
                 className={`shrink-0 transition-transform duration-base ease-standard ${accountOpen ? "rotate-180" : ""}`}
               >
@@ -381,15 +389,16 @@ export function TopNav({ displayName, plan, isAdmin = false }: TopNavProps) {
                   <Link
                     key={item.href}
                     href={item.href}
-                    className="rounded-lg px-2 py-2.25 text-[13px] text-muted transition-colors duration-fast ease-standard hover:bg-[#151515] hover:text-primary"
+                    className="rounded-control px-2 py-2 text-body text-muted transition-colors duration-fast ease-standard hover:bg-raised hover:text-primary"
                   >
                     {item.label}
                   </Link>
                 ))}
+                <div className="my-1 border-t border-line-soft" />
                 <form action={signOut}>
                   <button
                     type="submit"
-                    className="w-full rounded-lg px-2 py-2.25 text-left text-[13px] text-muted transition-colors duration-fast ease-standard hover:bg-[#151515] hover:text-primary"
+                    className="w-full rounded-control px-2 py-2 text-left text-body text-muted transition-colors duration-fast ease-standard hover:bg-raised hover:text-primary"
                   >
                     Sign out
                   </button>
@@ -398,7 +407,7 @@ export function TopNav({ displayName, plan, isAdmin = false }: TopNavProps) {
             )}
           </div>
 
-          <div className="mb-1 border-t border-[#1E1E1E]" />
+          <div className="mb-1 border-t border-line-soft" />
 
           {NAV_ITEMS.map((entry) => {
             if (!isNavGroup(entry)) {
@@ -407,7 +416,7 @@ export function TopNav({ displayName, plan, isAdmin = false }: TopNavProps) {
                 <Link
                   key={entry.route}
                   href={entry.route}
-                  className={`block rounded-lg px-2 py-2.5 text-[13.5px] transition-colors duration-fast ease-standard ${
+                  className={`block rounded-control px-2 py-2.5 text-lead transition-colors duration-fast ease-standard ${
                     isActive ? "text-primary" : "text-muted"
                   }`}
                 >
@@ -417,7 +426,7 @@ export function TopNav({ displayName, plan, isAdmin = false }: TopNavProps) {
             }
             return (
               <div key={entry.label}>
-                <div className="px-2 pt-3.5 pb-1 font-mono text-[10px] tracking-[0.14em] text-dim uppercase">
+                <div className="px-2 pt-3.5 pb-1 font-mono text-eyebrow text-dim uppercase">
                   {entry.label}
                 </div>
                 {entry.items.map((item) => {
@@ -426,7 +435,7 @@ export function TopNav({ displayName, plan, isAdmin = false }: TopNavProps) {
                     <Link
                       key={item.route}
                       href={item.route}
-                      className={`block rounded-lg px-2 py-2.5 text-[13.5px] transition-colors duration-fast ease-standard ${
+                      className={`block rounded-control px-2 py-2.5 text-lead transition-colors duration-fast ease-standard ${
                         isActive ? "text-primary" : "text-muted"
                       }`}
                     >

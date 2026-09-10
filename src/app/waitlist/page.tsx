@@ -16,7 +16,7 @@ export const dynamic = "force-dynamic";
 
 function Eyebrow({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={`font-mono text-[10px] tracking-[0.16em] text-muted uppercase ${className}`}>
+    <div className={`font-mono text-eyebrow text-muted uppercase ${className}`}>
       {children}
     </div>
   );
@@ -56,7 +56,7 @@ export default async function WaitlistPage() {
         {/* Header */}
         <header className="flex items-center justify-between border-b border-line py-5">
           <Logo size={26} />
-          <span className="font-mono text-[10px] tracking-[0.18em] text-dim uppercase">
+          <span className="font-mono text-eyebrow text-dim uppercase">
             In development · Waitlist open
           </span>
         </header>
@@ -66,16 +66,16 @@ export default async function WaitlistPage() {
           <div className="min-w-0">
             <span className="inline-flex items-center gap-2 rounded-full border border-line px-3 py-1">
               <span className="h-1.5 w-1.5 rounded-full bg-accent animate-breathe" />
-              <span className="font-mono text-[10px] tracking-[0.16em] text-muted uppercase">
+              <span className="font-mono text-eyebrow text-muted uppercase">
                 Not yet launched
               </span>
             </span>
 
-            <h1 className="mt-5 font-serif text-[38px] leading-[1.08] font-normal text-primary text-balance sm:text-[52px]">
+            <h1 className="mt-5 font-serif text-display leading-[1.08] font-normal text-primary text-balance sm:text-display">
               An AI research assistant that knows your portfolio — and shows its sources.
             </h1>
 
-            <p className="mt-5 max-w-[520px] text-[15px] leading-[1.65] text-muted text-pretty">
+            <p className="mt-5 max-w-[520px] text-title leading-[1.65] text-muted text-pretty">
               Ask what a move means for what you actually hold. Cairn answers with the articles it
               read, the historical cases it compared, and how confident it is — so you can judge the
               reasoning, not just the conclusion.
@@ -85,7 +85,7 @@ export default async function WaitlistPage() {
               {TRUST.map((t) => (
                 <span
                   key={t}
-                  className="rounded-full border border-line px-3 py-1.5 text-[12px] text-muted"
+                  className="rounded-full border border-line px-3 py-1.5 text-caption text-muted"
                 >
                   {t}
                 </span>
@@ -103,7 +103,7 @@ export default async function WaitlistPage() {
         </section>
 
         {/* Founding-member offer */}
-        <section className="relative overflow-hidden rounded-2xl border border-accent/30 bg-[linear-gradient(180deg,rgba(47,198,133,0.06),transparent_60%)] px-6 py-8 sm:px-9 sm:py-10">
+        <section className="relative overflow-hidden rounded-card border border-accent/30 bg-[linear-gradient(180deg,rgba(47,198,133,0.06),transparent_60%)] px-6 py-8 sm:px-9 sm:py-10">
           <div
             className="pointer-events-none absolute inset-0"
             style={{
@@ -113,32 +113,32 @@ export default async function WaitlistPage() {
           <div className="relative grid gap-8 lg:grid-cols-[1fr_0.78fr] lg:gap-12">
             <div>
               <Eyebrow className="text-accent">Founding members · First {FOUNDING_LIMIT}</Eyebrow>
-              <h2 className="mt-3 max-w-[440px] font-serif text-[26px] leading-[1.15] font-normal text-primary text-balance sm:text-[30px]">
+              <h2 className="mt-3 max-w-[440px] font-serif text-h2 leading-[1.15] font-normal text-primary text-balance sm:text-h1">
                 The first {FOUNDING_LIMIT} people on this list get two months of Premium, free.
               </h2>
-              <p className="mt-3.5 max-w-[460px] text-[13px] leading-[1.65] text-muted text-pretty">
+              <p className="mt-3.5 max-w-[460px] text-body leading-[1.65] text-muted text-pretty">
                 A place is claimed only when you confirm your email — the first {FOUNDING_LIMIT} to
                 confirm are the founding members. After that the offer closes; that&apos;s the only
                 limit on this page, and it&apos;s a real one.
               </p>
-              <p className="mt-3 max-w-[460px] text-[13px] leading-[1.65] text-muted text-pretty">
+              <p className="mt-3 max-w-[460px] text-body leading-[1.65] text-muted text-pretty">
                 The two months begin on the day <span className="text-primary">your</span> access
                 starts at launch — not the day you join the waitlist, and not a fixed calendar date.
                 It is not &ldquo;two months from today.&rdquo;
               </p>
-              <p className="mt-3 max-w-[460px] text-[13px] leading-[1.65] text-muted text-pretty">
+              <p className="mt-3 max-w-[460px] text-body leading-[1.65] text-muted text-pretty">
                 Confirm after the {FOUNDING_LIMIT} places are filled and you still get standard access
                 at launch — the same as any new user — but{" "}
                 <span className="text-primary">no free Premium period</span>.
               </p>
               {slotsFull && (
-                <p className="mt-4 inline-flex rounded-[8px] border border-line bg-panel px-3 py-1.5 font-mono text-[10px] tracking-[0.12em] text-muted uppercase">
+                <p className="mt-4 inline-flex rounded-control border border-line bg-panel px-3 py-1.5 font-mono text-eyebrow text-muted uppercase">
                   Founding-member places are now full
                 </p>
               )}
             </div>
 
-            <div className="rounded-[12px] border border-line bg-panel/70 p-5">
+            <div className="rounded-panel border border-line bg-panel/70 p-5">
               <Eyebrow>What Premium adds</Eyebrow>
               <ul className="mt-3.5 flex flex-col gap-3">
                 {PREMIUM_ADDS.map(([title, body]) => (
@@ -153,13 +153,13 @@ export default async function WaitlistPage() {
                     >
                       <path d="M3 8.5l3.5 3.5L13 4.5" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
-                    <span className="text-[12.5px] leading-[1.5] text-muted text-pretty">
+                    <span className="text-body leading-[1.5] text-muted text-pretty">
                       <span className="text-primary">{title}</span> — {body}
                     </span>
                   </li>
                 ))}
               </ul>
-              <p className="mt-4 border-t border-line pt-3 text-[11.5px] leading-[1.55] text-dim text-pretty">
+              <p className="mt-4 border-t border-line pt-3 text-caption leading-[1.55] text-dim text-pretty">
                 Premium never changes an analysis or softens a caveat — it shows more of the
                 methodology behind it.
               </p>
@@ -174,10 +174,10 @@ export default async function WaitlistPage() {
             {FEATURES.map(([title, body]) => (
               <div key={title}>
                 <span className="block h-[2px] w-8 rounded-full bg-gradient-to-r from-accent-light to-accent-dark" />
-                <h3 className="mt-3.5 font-serif text-[18px] leading-[1.2] font-normal text-primary">
+                <h3 className="mt-3.5 font-serif text-h3 leading-[1.2] font-normal text-primary">
                   {title}
                 </h3>
-                <p className="mt-2 text-[12.5px] leading-[1.65] text-muted text-pretty">{body}</p>
+                <p className="mt-2 text-body leading-[1.65] text-muted text-pretty">{body}</p>
               </div>
             ))}
           </div>
@@ -186,7 +186,7 @@ export default async function WaitlistPage() {
         {/* Closing CTA */}
         <section className="border-t border-line py-14 text-center lg:py-16">
           <Eyebrow className="justify-center">Be there when it opens</Eyebrow>
-          <h2 className="mx-auto mt-3 max-w-[420px] font-serif text-[26px] leading-[1.15] font-normal text-primary text-balance sm:text-[30px]">
+          <h2 className="mx-auto mt-3 max-w-[420px] font-serif text-h2 leading-[1.15] font-normal text-primary text-balance sm:text-h1">
             One email address. One launch email.
           </h2>
           <div className="mt-7">
@@ -196,7 +196,7 @@ export default async function WaitlistPage() {
 
         {/* Footer */}
         <footer className="border-t border-line py-8">
-          <div className="flex flex-col gap-4 text-[11px] leading-[1.7] text-dim sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex flex-col gap-4 text-micro leading-[1.7] text-dim sm:flex-row sm:items-start sm:justify-between">
             <p className="max-w-[560px] text-pretty">
               Cairn uses AI to generate market, sector, and ticker analysis. Every output is
               informational market-level context — not investment advice, not a recommendation about

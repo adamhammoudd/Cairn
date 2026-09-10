@@ -25,19 +25,19 @@ export default function AppError({ error, reset }: { error: Error & { digest?: s
   return (
     <div className="animate-page-in flex min-h-[60vh] items-center justify-center px-4">
       <div className="w-full max-w-xl rounded-card border border-line bg-panel p-6">
-        <p className="font-mono text-[10px] tracking-[0.12em] text-warning uppercase">Data unavailable</p>
-        <h1 className="mt-2 text-xl text-primary">This page could not load its data</h1>
-        <p className="mt-3 text-sm leading-relaxed text-muted">
+        <p className="font-mono text-eyebrow text-warning uppercase">Data unavailable</p>
+        <h1 className="mt-2 text-h3 text-primary">This page could not load its data</h1>
+        <p className="mt-3 text-lead leading-relaxed text-muted">
           A required read failed, so this page has no figures to show. It is deliberately blank rather than displaying
           values it could not verify.
         </p>
 
-        <pre className="mt-4 overflow-x-auto rounded-lg border border-line bg-canvas p-3 font-mono text-[11px] leading-relaxed break-words whitespace-pre-wrap text-dim">
+        <pre className="mt-4 overflow-x-auto rounded-control border border-line bg-canvas p-3 font-mono text-micro leading-relaxed break-words whitespace-pre-wrap text-dim">
           {messageWithheld ? `Server error, digest ${error.digest}` : error.message}
         </pre>
 
         {messageWithheld ? (
-          <p className="mt-3 text-xs leading-relaxed text-dim">
+          <p className="mt-3 text-caption leading-relaxed text-dim">
             React withholds server-render messages in production builds. The full cause is logged against this digest -
             Vercel &gt; the deployment &gt; Logs, or <code className="font-mono text-muted">npm run check-db</code> if
             prices and holdings are empty across several pages at once.
@@ -48,13 +48,13 @@ export default function AppError({ error, reset }: { error: Error & { digest?: s
           <button
             type="button"
             onClick={reset}
-            className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-canvas transition-colors duration-base ease-standard hover:bg-accent-dark"
+            className="rounded-control bg-accent px-4 py-2 text-lead font-medium text-canvas transition-colors duration-base ease-standard hover:bg-accent-dark"
           >
             Try again
           </button>
           <Link
             href="/"
-            className="rounded-lg border border-line px-4 py-2 text-sm text-muted transition-colors duration-base ease-standard hover:text-primary"
+            className="rounded-control border border-line px-4 py-2 text-lead text-muted transition-colors duration-base ease-standard hover:text-primary"
           >
             Back to dashboard
           </Link>

@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { CHART_TOOLTIP, CHART_AXIS_TICK, CHART_GRID } from "@/lib/chart-theme";
 import { xAxisConfig } from "@/lib/portfolio";
 import { formatTooltipLabel } from "@/lib/chart-dates";
 import { buildPriceSeries } from "@/lib/ticker";
@@ -81,7 +82,7 @@ export function ComparisonCharts({ rows, timeframe }: { rows: ComparisonRow[]; t
   if (merged.length === 0) {
     return (
       <div className="rounded-card border border-line bg-panel p-4">
-        <div className="flex h-[300px] items-center justify-center text-[12px] text-muted">
+        <div className="flex h-[300px] items-center justify-center text-caption text-muted">
           No overlapping price history for this timeframe.
         </div>
       </div>
@@ -91,30 +92,30 @@ export function ComparisonCharts({ rows, timeframe }: { rows: ComparisonRow[]; t
   return (
     <div className="rounded-card border border-line bg-panel p-4">
       <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
-        <div className="font-mono text-[10px] tracking-[0.14em] text-muted uppercase">
+        <div className="font-mono text-eyebrow text-muted uppercase">
           Indexed to 100 · shared timeline · {timeframe}
         </div>
-        <div className="text-[11.5px] text-dim">
+        <div className="text-caption text-dim">
           Relative move from the start of the window - absolute prices are on the cards above.
         </div>
       </div>
 
       <ResponsiveContainer width="100%" height={320}>
         <LineChart data={merged} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-          <CartesianGrid stroke="#1A1A1A" vertical={false} />
+          <CartesianGrid {...CHART_GRID} />
           <XAxis
             dataKey="date"
             interval={interval}
             tickFormatter={tickFormatter}
-            tick={{ fill: "#8A8A8A", fontSize: 10 }}
-            axisLine={{ stroke: "#2A2A2A" }}
+            tick={CHART_AXIS_TICK}
+            axisLine={{ stroke: "var(--color-line)" }}
             tickLine={false}
             minTickGap={20}
           />
           <YAxis
             width={44}
             domain={["auto", "auto"]}
-            tick={{ fill: "#8A8A8A", fontSize: 10 }}
+            tick={CHART_AXIS_TICK}
             axisLine={false}
             tickLine={false}
             tickFormatter={(v) => Number(v).toFixed(0)}
@@ -122,15 +123,14 @@ export function ComparisonCharts({ rows, timeframe }: { rows: ComparisonRow[]; t
           <Tooltip
             formatter={(value, name) => [`${Number(value).toFixed(1)} (${(Number(value) - 100).toFixed(1)}%)`, name]}
             labelFormatter={(label) => formatTooltipLabel(String(label))}
-            contentStyle={{ background: "#0F0F0F", border: "1px solid #2A2A2A", borderRadius: 8, fontSize: 12 }}
-            labelStyle={{ color: "#8A8A8A" }}
+            {...CHART_TOOLTIP}
             itemSorter={(item) => -Number(item.value ?? 0)}
           />
           <Legend
             verticalAlign="top"
             height={26}
             iconType="plainline"
-            wrapperStyle={{ fontSize: 12, color: "#8A8A8A" }}
+            wrapperStyle={{ fontSize: 12, color: "var(--color-muted)" }}
           />
           {plotted.map((symbol) => (
             <Line
@@ -157,7 +157,7 @@ export function ComparisonCharts({ rows, timeframe }: { rows: ComparisonRow[]; t
       </ResponsiveContainer>
 
       {missing.length > 0 && (
-        <p className="mt-2.5 text-[11.5px] text-dim">
+        <p className="mt-2.5 text-caption text-dim">
           No price history inside this window for {missing.join(", ")} - widen the timeframe to plot{" "}
           {missing.length === 1 ? "it" : "them"}.
         </p>

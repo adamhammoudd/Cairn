@@ -12,6 +12,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { CHART_TOOLTIP, CHART_AXIS_TICK, CHART_GRID } from "@/lib/chart-theme";
 import { sma, ema, rsi, macd, INDICATOR_COLOURS } from "@/lib/indicators";
 import { DataFreshness } from "@/components/data-freshness";
 import { useDisplayPrefs } from "@/components/display-prefs-provider";
@@ -38,7 +39,7 @@ interface TechnicalsPanelProps {
 
 const OVERLAYS = [
   { id: "sma50", label: "SMA 50", colour: INDICATOR_COLOURS.sma },
-  { id: "sma200", label: "SMA 200", colour: "#7A6CC4" },
+  { id: "sma200", label: "SMA 200", colour: "var(--color-violet)" },
   { id: "ema20", label: "EMA 20", colour: INDICATOR_COLOURS.ema },
 ] as const;
 type OverlayId = (typeof OVERLAYS)[number]["id"];
@@ -94,10 +95,6 @@ export function TechnicalsPanel({ symbol, bars, priceSource, priceAsOf }: Techni
   // Settings > Display > Primary currency like the rest of the Ticker page.
   const prefs = useDisplayPrefs();
   const money = (n: number) => formatMoney(n, prefs);
-  const tooltip = {
-    contentStyle: { background: "#0F0F0F", border: "1px solid #2A2A2A", borderRadius: 8, fontSize: 12 },
-    labelStyle: { color: "#8A8A8A" },
-  };
 
   // A window shorter than an indicator's period has no value to draw, and the
   // reader is told which rather than shown an empty axis.
@@ -107,7 +104,7 @@ export function TechnicalsPanel({ symbol, bars, priceSource, priceAsOf }: Techni
 
   if (full.length === 0) {
     return (
-      <div className="rounded-card border border-line bg-panel p-10 text-center text-sm text-muted">
+      <div className="rounded-card border border-line bg-panel p-10 text-center text-lead text-muted">
         No price history stored for {symbol}, so no indicator can be computed. Nothing is drawn rather than a flat line.
       </div>
     );
@@ -118,13 +115,13 @@ export function TechnicalsPanel({ symbol, bars, priceSource, priceAsOf }: Techni
       <div className="overflow-hidden rounded-card border border-line bg-panel">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-3">
           <div className="flex flex-wrap items-center gap-3">
-            <div className="flex gap-1 rounded-xl border border-line p-0.75">
+            <div className="flex gap-1 rounded-panel border border-line p-1">
               {WINDOWS.map((w) => (
                 <button
                   key={w.label}
                   type="button"
                   onClick={() => setWindowLabel(w.label)}
-                  className={`rounded-lg px-3 py-1.5 font-mono text-[11px] transition-colors duration-base ease-standard ${
+                  className={`rounded-control px-3 py-1.5 font-mono text-micro transition-colors duration-base ease-standard ${
                     windowLabel === w.label ? "bg-active text-primary" : "text-muted hover:text-primary"
                   }`}
                 >
@@ -139,14 +136,14 @@ export function TechnicalsPanel({ symbol, bars, priceSource, priceAsOf }: Techni
                   type="button"
                   aria-pressed={enabled[o.id]}
                   onClick={() => setEnabled((prev) => ({ ...prev, [o.id]: !prev[o.id] }))}
-                  className={`flex items-center gap-1.75 rounded-lg border px-2.5 py-1.25 font-mono text-[10.5px] transition-colors duration-base ease-standard ${
-                    enabled[o.id] ? "border-[#3A3A3A] text-primary" : "border-line text-dim hover:text-muted"
+                  className={`flex items-center gap-2 rounded-control border px-2.5 py-1 font-mono text-micro transition-colors duration-base ease-standard ${
+                    enabled[o.id] ? "border-line-strong text-primary" : "border-line text-dim hover:text-muted"
                   }`}
                 >
                   <span
                     aria-hidden
                     className="h-0.5 w-3.5 rounded-full"
-                    style={{ background: enabled[o.id] ? o.colour : "#3A3A3A" }}
+                    style={{ background: enabled[o.id] ? o.colour : "var(--color-line-strong)" }}
                   />
                   {o.label}
                 </button>
@@ -159,15 +156,15 @@ export function TechnicalsPanel({ symbol, bars, priceSource, priceAsOf }: Techni
         <div className="px-2 pt-3.5 pb-2">
           <ResponsiveContainer width="100%" height={280}>
             <ComposedChart data={points} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-              <CartesianGrid stroke="#1C1C1C" vertical={false} />
-              <XAxis dataKey="ts" tickFormatter={tickFormat} minTickGap={48} tick={{ fill: "#5A5A5A", fontSize: 10 }} axisLine={false} tickLine={false} />
-              <YAxis domain={["dataMin", "dataMax"]} width={62} tick={{ fill: "#5A5A5A", fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(v) => money(Number(v))} />
+              <CartesianGrid {...CHART_GRID} />
+              <XAxis dataKey="ts" tickFormatter={tickFormat} minTickGap={48} tick={CHART_AXIS_TICK} axisLine={false} tickLine={false} />
+              <YAxis domain={["dataMin", "dataMax"]} width={62} tick={CHART_AXIS_TICK} axisLine={false} tickLine={false} tickFormatter={(v) => money(Number(v))} />
               <Tooltip
-                {...tooltip}
+                {...CHART_TOOLTIP}
                 formatter={(value, name) => [money(Number(value)), String(name)] as [string, string]}
                 labelFormatter={(l) => new Date(String(l)).toLocaleDateString()}
               />
-              <Line type="monotone" dataKey="close" name="Close" stroke="#2FC685" strokeWidth={1.75} dot={false} isAnimationActive={false} connectNulls={false} />
+              <Line type="monotone" dataKey="close" name="Close" stroke="var(--color-accent)" strokeWidth={1.75} dot={false} isAnimationActive={false} connectNulls={false} />
               {OVERLAYS.filter((o) => enabled[o.id]).map((o) => (
                 <Line
                   key={o.id}
@@ -184,7 +181,7 @@ export function TechnicalsPanel({ symbol, bars, priceSource, priceAsOf }: Techni
             </ComposedChart>
           </ResponsiveContainer>
           {undefinedOverlays.length > 0 && (
-            <p className="px-2 pb-1 text-[11.5px] text-dim">
+            <p className="px-2 pb-1 text-caption text-dim">
               {undefinedOverlays.join(" and ")} {undefinedOverlays.length > 1 ? "have" : "has"} no value over this
               window - the average needs more bars than the window contains. Widen the range to draw{" "}
               {undefinedOverlays.length > 1 ? "them" : "it"}.
@@ -196,28 +193,28 @@ export function TechnicalsPanel({ symbol, bars, priceSource, priceAsOf }: Techni
       <div className="grid grid-cols-1 gap-3.5 min-[1000px]:grid-cols-2">
         <div className="overflow-hidden rounded-card border border-line bg-panel">
           <div className="flex items-center justify-between border-b border-line px-4 py-3">
-            <span className="font-mono text-[10px] tracking-[0.14em] text-muted uppercase">RSI (14)</span>
-            <span className="font-mono text-[11px] tabular-nums text-primary">
+            <span className="font-mono text-eyebrow text-muted uppercase">RSI (14)</span>
+            <span className="font-mono text-micro tabular-nums text-primary">
               {latest?.rsi === null || latest?.rsi === undefined ? "-" : latest.rsi.toFixed(1)}
             </span>
           </div>
           <div className="px-2 pt-3 pb-2">
             <ResponsiveContainer width="100%" height={150}>
               <ComposedChart data={points} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-                <CartesianGrid stroke="#1C1C1C" vertical={false} />
-                <XAxis dataKey="ts" tickFormatter={tickFormat} minTickGap={48} tick={{ fill: "#5A5A5A", fontSize: 10 }} axisLine={false} tickLine={false} />
-                <YAxis domain={[0, 100]} ticks={[0, 30, 50, 70, 100]} width={34} tick={{ fill: "#5A5A5A", fontSize: 10 }} axisLine={false} tickLine={false} />
-                <Tooltip {...tooltip} formatter={(v) => [Number(v).toFixed(1), "RSI"] as [string, string]} labelFormatter={(l) => new Date(String(l)).toLocaleDateString()} />
+                <CartesianGrid {...CHART_GRID} />
+                <XAxis dataKey="ts" tickFormatter={tickFormat} minTickGap={48} tick={CHART_AXIS_TICK} axisLine={false} tickLine={false} />
+                <YAxis domain={[0, 100]} ticks={[0, 30, 50, 70, 100]} width={34} tick={CHART_AXIS_TICK} axisLine={false} tickLine={false} />
+                <Tooltip {...CHART_TOOLTIP} formatter={(v) => [Number(v).toFixed(1), "RSI"] as [string, string]} labelFormatter={(l) => new Date(String(l)).toLocaleDateString()} />
                 {/* 70/30 are the conventional overbought/oversold bands. Drawn
                     in neutral grey, not green/red: this is a level, not a gain
                     or a loss, and the brand reserves red for losses. */}
-                <ReferenceLine y={70} stroke="#3A3A3A" strokeDasharray="3 3" />
-                <ReferenceLine y={30} stroke="#3A3A3A" strokeDasharray="3 3" />
+                <ReferenceLine y={70} stroke="var(--color-line-strong)" strokeDasharray="3 3" />
+                <ReferenceLine y={30} stroke="var(--color-line-strong)" strokeDasharray="3 3" />
                 <Line type="monotone" dataKey="rsi" name="RSI" stroke={INDICATOR_COLOURS.rsi} strokeWidth={1.5} dot={false} isAnimationActive={false} connectNulls={false} />
               </ComposedChart>
             </ResponsiveContainer>
           </div>
-          <p className="px-4 pb-3.5 text-[11.5px] text-dim">
+          <p className="px-4 pb-3.5 text-caption text-dim">
             Wilder&rsquo;s 14-period RSI over stored daily closes. Above 70 and below 30 are the conventional
             overbought/oversold bands - a level, not a recommendation.
           </p>
@@ -225,26 +222,26 @@ export function TechnicalsPanel({ symbol, bars, priceSource, priceAsOf }: Techni
 
         <div className="overflow-hidden rounded-card border border-line bg-panel">
           <div className="flex items-center justify-between border-b border-line px-4 py-3">
-            <span className="font-mono text-[10px] tracking-[0.14em] text-muted uppercase">MACD (12, 26, 9)</span>
-            <span className="font-mono text-[11px] tabular-nums text-primary">
+            <span className="font-mono text-eyebrow text-muted uppercase">MACD (12, 26, 9)</span>
+            <span className="font-mono text-micro tabular-nums text-primary">
               {latest?.macd === null || latest?.macd === undefined ? "-" : latest.macd.toFixed(2)}
             </span>
           </div>
           <div className="px-2 pt-3 pb-2">
             <ResponsiveContainer width="100%" height={150}>
               <ComposedChart data={points} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-                <CartesianGrid stroke="#1C1C1C" vertical={false} />
-                <XAxis dataKey="ts" tickFormatter={tickFormat} minTickGap={48} tick={{ fill: "#5A5A5A", fontSize: 10 }} axisLine={false} tickLine={false} />
-                <YAxis width={44} tick={{ fill: "#5A5A5A", fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(v) => Number(v).toFixed(1)} />
-                <Tooltip {...tooltip} formatter={(v, n) => [Number(v).toFixed(2), String(n)] as [string, string]} labelFormatter={(l) => new Date(String(l)).toLocaleDateString()} />
-                <ReferenceLine y={0} stroke="#3A3A3A" />
-                <Bar dataKey="histogram" name="Histogram" fill="#2A2A2A" isAnimationActive={false} />
+                <CartesianGrid {...CHART_GRID} />
+                <XAxis dataKey="ts" tickFormatter={tickFormat} minTickGap={48} tick={CHART_AXIS_TICK} axisLine={false} tickLine={false} />
+                <YAxis width={44} tick={CHART_AXIS_TICK} axisLine={false} tickLine={false} tickFormatter={(v) => Number(v).toFixed(1)} />
+                <Tooltip {...CHART_TOOLTIP} formatter={(v, n) => [Number(v).toFixed(2), String(n)] as [string, string]} labelFormatter={(l) => new Date(String(l)).toLocaleDateString()} />
+                <ReferenceLine y={0} stroke="var(--color-line-strong)" />
+                <Bar dataKey="histogram" name="Histogram" fill="var(--color-line)" isAnimationActive={false} />
                 <Line type="monotone" dataKey="macd" name="MACD" stroke={INDICATOR_COLOURS.macd} strokeWidth={1.5} dot={false} isAnimationActive={false} connectNulls={false} />
                 <Line type="monotone" dataKey="signal" name="Signal" stroke={INDICATOR_COLOURS.signal} strokeWidth={1.25} dot={false} isAnimationActive={false} connectNulls={false} />
               </ComposedChart>
             </ResponsiveContainer>
           </div>
-          <p className="px-4 pb-3.5 text-[11.5px] text-dim">
+          <p className="px-4 pb-3.5 text-caption text-dim">
             12/26 EMA difference with a 9-period signal line; the bars are the gap between them. Both EMAs are
             SMA-seeded, so the first value appears on the 26th bar rather than the first.
           </p>

@@ -30,7 +30,7 @@ export function LegalShell({
           </Link>
           <Link
             href="/"
-            className="text-[12.5px] text-muted transition-colors duration-base ease-standard hover:text-accent"
+            className="text-body text-muted transition-colors duration-base ease-standard hover:text-accent"
           >
             Back to Cairn
           </Link>
@@ -39,21 +39,21 @@ export function LegalShell({
 
       <main className="mx-auto max-w-[760px] px-6 py-12">
         {draft ? (
-          <div className="mb-6 rounded-[10px] border border-warning/40 bg-warning/8 px-3.5 py-3 text-[12.5px] leading-[1.55] text-warning">
+          <div className="mb-6 rounded-panel border border-warning/40 bg-warning/8 px-3.5 py-3 text-body leading-[1.55] text-warning">
             <strong className="font-semibold">Draft - not legal advice.</strong> This is a first-pass, non-lawyer
             draft. It has not been reviewed by a licensed attorney and is not launch-ready.
           </div>
         ) : null}
 
-        <div className="font-mono text-[10px] tracking-[0.16em] text-muted uppercase">{eyebrow}</div>
-        <h1 className="mt-2 font-serif text-[32px] leading-[1.15] font-normal text-primary">{title}</h1>
-        <p className="mt-2 font-mono text-[11px] tracking-[0.08em] text-dim uppercase">Last updated {updated}</p>
+        <div className="font-mono text-eyebrow text-muted uppercase">{eyebrow}</div>
+        <h1 className="mt-2 font-serif text-display leading-[1.15] font-normal text-primary">{title}</h1>
+        <p className="mt-2 font-mono text-micro tracking-[0.08em] text-dim uppercase">Last updated {updated}</p>
 
         <div className="legal-prose mt-9">{children}</div>
       </main>
 
       <footer className="border-t border-line">
-        <div className="mx-auto flex max-w-[760px] flex-wrap items-center gap-4 px-6 py-6 text-[12px] text-dim">
+        <div className="mx-auto flex max-w-[760px] flex-wrap items-center gap-4 px-6 py-6 text-caption text-dim">
           <Link href="/terms" className="transition-colors duration-base ease-standard hover:text-accent">
             Terms
           </Link>

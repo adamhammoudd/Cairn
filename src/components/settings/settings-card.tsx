@@ -9,15 +9,15 @@ import type { ReactNode } from "react";
 
 export function Card({ children }: { children: ReactNode }) {
   return (
-    <div className="animate-rise-in overflow-hidden rounded-[14px] border border-line bg-panel">{children}</div>
+    <div className="animate-rise-in overflow-hidden rounded-card border border-line bg-panel">{children}</div>
   );
 }
 
 export function CardHeader({ title, note }: { title: string; note?: string }) {
   return (
-    <div className="flex flex-wrap items-baseline justify-between gap-3 border-b border-[#1E1E1E] px-4.5 py-4">
-      <span className="font-serif text-[19px] text-primary">{title}</span>
-      {note && <span className="text-[11.5px] text-dim">{note}</span>}
+    <div className="flex flex-wrap items-baseline justify-between gap-3 border-b border-line-soft px-4.5 py-4">
+      <span className="font-serif text-h3 text-primary">{title}</span>
+      {note && <span className="text-caption text-dim">{note}</span>}
     </div>
   );
 }
@@ -35,11 +35,11 @@ export function CardRow({
   labelClassName?: string;
 }) {
   return (
-    <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#171717] px-4.5 py-4 last:border-b-0">
+    <div className="flex flex-wrap items-center justify-between gap-4 border-b border-line-soft px-4.5 py-4 last:border-b-0">
       <div className="min-w-0 max-sm:w-full">
-        <div className={`text-[13px] ${labelClassName}`}>{label}</div>
+        <div className={`text-body ${labelClassName}`}>{label}</div>
         {desc && (
-          <div className="mt-1 max-w-[460px] text-[11.5px] leading-[1.5] text-muted text-pretty">{desc}</div>
+          <div className="mt-1 max-w-[460px] text-caption leading-[1.5] text-muted text-pretty">{desc}</div>
         )}
       </div>
       {children}
@@ -50,12 +50,12 @@ export function CardRow({
 /** The mockup's dark footer strip (Display card's "Reset to defaults" row). */
 export function CardFooter({ children }: { children: ReactNode }) {
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3.5 bg-[#0C0C0C] px-4.5 py-3.75">{children}</div>
+    <div className="flex flex-wrap items-center justify-between gap-3.5 bg-canvas px-4.5 py-4">{children}</div>
   );
 }
 
 const OUTLINE_BUTTON =
-  "shrink-0 rounded-[9px] border border-line bg-transparent px-3.5 py-2 text-[12.5px] text-primary transition-colors duration-fast ease-standard hover:border-[#3A3A3A]";
+  "shrink-0 rounded-control border border-line bg-transparent px-3.5 py-2 text-body text-primary transition-colors duration-fast ease-standard hover:border-line-strong";
 
 export function OutlineButton({
   children,
@@ -92,7 +92,7 @@ export function Segmented({
 }) {
   return (
     <div
-      className={`flex gap-1 rounded-[10px] border border-[#232323] p-[3px] ${wrap ? "flex-wrap justify-end" : "shrink-0"}`}
+      className={`flex gap-1 rounded-panel border border-line p-[3px] ${wrap ? "flex-wrap justify-end" : "shrink-0"}`}
     >
       {options.map((o) => (
         <label key={o.value}>
@@ -103,7 +103,7 @@ export function Segmented({
             defaultChecked={value === o.value}
             className="peer sr-only"
           />
-          <span className="block cursor-pointer rounded-[7px] px-3.25 py-1.75 text-[12px] text-muted transition-colors duration-fast ease-standard peer-checked:bg-[#1C1C1C] peer-checked:text-primary hover:text-primary">
+          <span className="block cursor-pointer rounded-control px-3 py-2 text-caption text-muted transition-colors duration-fast ease-standard peer-checked:bg-active peer-checked:text-primary hover:text-primary">
             {o.label}
           </span>
         </label>
@@ -137,7 +137,7 @@ export function SelectControl({
       defaultValue={defaultValue}
       disabled={disabled}
       style={{ minWidth }}
-      className="shrink-0 rounded-[10px] border border-line bg-[#0B0B0B] px-3.25 py-2.5 text-[12.5px] text-primary outline-none transition-colors duration-fast ease-standard hover:border-[#3A3A3A] focus:border-accent disabled:opacity-50"
+      className="shrink-0 rounded-panel border border-line bg-canvas px-3 py-2.5 text-body text-primary outline-none transition-colors duration-fast ease-standard hover:border-line-strong focus:border-accent disabled:opacity-50"
     >
       {children}
     </select>

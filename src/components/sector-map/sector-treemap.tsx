@@ -24,7 +24,7 @@ export function SectorTreemap({
   return (
     <div className="flex flex-col gap-3.5">
       <div className="flex items-center gap-2.5 self-end">
-        <span className="font-mono text-[10px] tracking-[0.12em] text-dim uppercase">−5%</span>
+        <span className="font-mono text-eyebrow text-dim uppercase">−5%</span>
         <div
           className="h-2 w-32.5 rounded-full"
           style={{
@@ -32,7 +32,7 @@ export function SectorTreemap({
               "linear-gradient(90deg, rgba(217,108,108,1), rgba(217,108,108,0.15), rgba(47,198,133,0.15), rgba(47,198,133,1))",
           }}
         />
-        <span className="font-mono text-[10px] tracking-[0.12em] text-dim uppercase">+5%</span>
+        <span className="font-mono text-eyebrow text-dim uppercase">+5%</span>
       </div>
 
       <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-3">
@@ -49,18 +49,18 @@ export function SectorTreemap({
               // colour scale: saturation on these tiles means gain/loss and
               // nothing else, so "this is the one you picked" has to be said
               // with the frame.
-              className={`animate-rise-in rounded-card border bg-panel p-3.75 ${
+              className={`animate-rise-in rounded-card border bg-panel p-4 ${
                 sector.name === focusedSector ? "border-accent/45" : "border-line"
               }`}
               style={{ animationDelay: `${index * 50}ms` }}
             >
               <div className="mb-3 flex items-center justify-between gap-3">
-                <span className="flex items-center gap-1.75 font-mono text-[10px] tracking-[0.14em] text-muted uppercase">
+                <span className="flex items-center gap-2 font-mono text-eyebrow text-muted uppercase">
                   {sector.name}
                   {sector.name === focusedSector && <span className="text-accent normal-case">· focus</span>}
                 </span>
                 <span
-                  className={`text-[12.5px] tabular-nums ${
+                  className={`text-body tabular-nums ${
                     avg === null ? "text-muted" : avg >= 0 ? "text-accent" : "text-negative"
                   }`}
                 >
@@ -97,15 +97,15 @@ export function SectorTreemap({
                         minWidth: "34px",
                         background: colorForChange(tile.changePct),
                       }}
-                      className="flex min-w-0 flex-col justify-end gap-0.75 overflow-hidden rounded-[9px] p-2.25 transition-[transform,box-shadow] duration-base ease-standard hover:-translate-y-0.5 hover:shadow-[0_10px_22px_rgba(0,0,0,0.45)]"
+                      className="flex min-w-0 flex-col justify-end gap-1 overflow-hidden rounded-control p-2 transition-[transform,box-shadow] duration-base ease-standard hover:-translate-y-0.5 hover:shadow-[0_10px_22px_rgba(0,0,0,0.45)]"
                     >
                       <span
-                        className={`truncate text-[12px] font-semibold ${tone === "dark" ? "text-canvas" : "text-primary"}`}
+                        className={`truncate text-caption font-semibold ${tone === "dark" ? "text-canvas" : "text-primary"}`}
                       >
                         {tile.name}
                       </span>
                       <span
-                        className={`truncate font-mono text-[10px] tabular-nums ${
+                        className={`truncate font-mono text-eyebrow tabular-nums ${
                           tone === "dark" ? "text-canvas/75" : "text-muted"
                         }`}
                       >
@@ -117,7 +117,7 @@ export function SectorTreemap({
               </div>
 
               {sorted.length > MAX_TILES && (
-                <div className="mt-2 text-[11px] text-dim">+{sorted.length - MAX_TILES} smaller holdings</div>
+                <div className="mt-2 text-micro text-dim">+{sorted.length - MAX_TILES} smaller holdings</div>
               )}
             </div>
           );

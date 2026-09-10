@@ -28,8 +28,8 @@ export function BillingPanel({ detail }: { detail: BillingDetail }) {
   return (
     <div className="flex max-w-[900px] flex-col gap-6">
       <div>
-        <h2 className="font-serif text-2xl text-primary">Billing</h2>
-        <p className="mt-1 text-[13px] text-muted">
+        <h2 className="font-serif text-h2 text-primary">Billing</h2>
+        <p className="mt-1 text-body text-muted">
           {billingEnabled
             ? "Premium is billed monthly through Stripe. Manage your card, invoices, or cancellation from the Stripe portal; your plan updates here automatically once Stripe confirms it."
             : "No payment processor is live on this build yet. Switching plans below is free and instant - it exists so AI-tier gating can be tested before real billing goes live."}
@@ -39,17 +39,17 @@ export function BillingPanel({ detail }: { detail: BillingDetail }) {
       <div className="rounded-card border border-line bg-panel p-6">
         <div className="flex items-center justify-between">
           <div>
-            <div className="text-[11px] tracking-[0.06em] text-muted uppercase">Current plan</div>
-            <div className="mt-1 font-serif text-xl text-primary capitalize">{usage.tier}</div>
+            <div className="text-micro tracking-[0.06em] text-muted uppercase">Current plan</div>
+            <div className="mt-1 font-serif text-h3 text-primary capitalize">{usage.tier}</div>
             {renewsAt && (
-              <div className="mt-1 text-[12px] text-muted">
+              <div className="mt-1 text-caption text-muted">
                 Renews {new Date(renewsAt).toLocaleDateString(undefined, { dateStyle: "long" })}
               </div>
             )}
           </div>
           <div className="text-right">
-            <div className="text-[11px] tracking-[0.06em] text-muted uppercase">AI analyses this month</div>
-            <div className="mt-1 text-[14px] text-primary">
+            <div className="text-micro tracking-[0.06em] text-muted uppercase">AI analyses this month</div>
+            <div className="mt-1 text-lead text-primary">
               {usage.unlimited ? `${usage.used} · no cap` : `${usage.used} / ${usage.limit}`} · {usage.periodLabel}
             </div>
           </div>
@@ -62,10 +62,10 @@ export function BillingPanel({ detail }: { detail: BillingDetail }) {
           />
         </div>
         {usage.unlimited ? (
-          <p className="mt-2 text-[12px] text-muted">Admin account — no analysis cap.</p>
+          <p className="mt-2 text-caption text-muted">Admin account — no analysis cap.</p>
         ) : (
           usage.remaining === 0 && (
-            <p className="mt-2 text-[12px] text-warning">Limit reached for this month. It resets on the 1st.</p>
+            <p className="mt-2 text-caption text-warning">Limit reached for this month. It resets on the 1st.</p>
           )
         )}
 
@@ -73,7 +73,7 @@ export function BillingPanel({ detail }: { detail: BillingDetail }) {
           <form action={portal} className="mt-4">
             <button
               type="submit"
-              className="rounded-lg border border-line px-3.5 py-2 text-[13px] text-primary hover:bg-active"
+              className="rounded-control border border-line px-3.5 py-2 text-body text-primary hover:bg-active"
             >
               Manage billing in Stripe
             </button>
@@ -88,8 +88,8 @@ export function BillingPanel({ detail }: { detail: BillingDetail }) {
           const isUpgrade = tier === "premium" && usage.tier === "free";
           return (
             <div key={tier} className="rounded-card border border-line bg-panel p-6">
-              <div className="mb-1 text-[15px] font-semibold text-primary">{config.label}</div>
-              <div className="mb-4 text-[13px] text-muted">
+              <div className="mb-1 text-title font-semibold text-primary">{config.label}</div>
+              <div className="mb-4 text-body text-muted">
                 {config.monthlyAiAnalyses} AI analyses / month ·{" "}
                 {config.dailyChatMessages === null ? "unlimited chat" : `${config.dailyChatMessages} chats / day`} ·{" "}
                 {config.analysisDepth === "full" ? "full methodology depth" : "top-line methodology"}
@@ -99,7 +99,7 @@ export function BillingPanel({ detail }: { detail: BillingDetail }) {
                 <button
                   type="button"
                   disabled
-                  className="w-full cursor-default rounded-lg border border-line px-3.5 py-2 text-[13px] text-muted"
+                  className="w-full cursor-default rounded-control border border-line px-3.5 py-2 text-body text-muted"
                 >
                   Current plan
                 </button>
@@ -107,7 +107,7 @@ export function BillingPanel({ detail }: { detail: BillingDetail }) {
                 <form action={checkout}>
                   <button
                     type="submit"
-                    className="w-full rounded-lg bg-gradient-to-br from-accent-light to-accent-dark px-3.5 py-2 text-[13px] font-semibold text-canvas hover:shadow-[0_0_22px_rgba(47,198,133,0.35)]"
+                    className="w-full rounded-control bg-gradient-to-br from-accent-light to-accent-dark px-3.5 py-2 text-body font-semibold text-canvas hover:shadow-[0_0_22px_rgba(47,198,133,0.35)]"
                   >
                     Upgrade to Premium
                   </button>
@@ -119,7 +119,7 @@ export function BillingPanel({ detail }: { detail: BillingDetail }) {
                     type="submit"
                     disabled={isUpgrade && !billingEnabled}
                     title={isUpgrade && !billingEnabled ? "Payments aren't set up yet." : undefined}
-                    className="w-full rounded-lg border border-line px-3.5 py-2 text-[13px] text-primary hover:bg-active disabled:cursor-not-allowed disabled:opacity-50"
+                    className="w-full rounded-control border border-line px-3.5 py-2 text-body text-primary hover:bg-active disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {isUpgrade ? "Upgrade to Premium" : `Switch to ${config.label}`}
                   </button>
@@ -129,7 +129,7 @@ export function BillingPanel({ detail }: { detail: BillingDetail }) {
           );
         })}
       </div>
-      {actionError && <p className="text-[13px] text-negative">{actionError}</p>}
+      {actionError && <p className="text-body text-negative">{actionError}</p>}
     </div>
   );
 }

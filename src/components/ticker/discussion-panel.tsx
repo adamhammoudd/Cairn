@@ -13,23 +13,23 @@ function ReportForm({ comment, symbol, onDone }: { comment: DiscussionComment; s
   const [result, formAction, pending] = useActionState(reportComment, null);
   if (result === "reported") {
     return (
-      <p className="mt-2 text-[12px] text-muted">
+      <p className="mt-2 text-caption text-muted">
         Reported. It stays visible until enough people report it or a moderator reviews it.
       </p>
     );
   }
   return (
-    <form action={formAction} className="mt-2.5 flex flex-col gap-2 rounded-lg border border-line bg-active p-3">
+    <form action={formAction} className="mt-2.5 flex flex-col gap-2 rounded-control border border-line bg-active p-3">
       <input type="hidden" name="thread_id" value={comment.id} />
       <input type="hidden" name="symbol" value={symbol} />
-      <label className="font-mono text-[9.5px] tracking-[0.12em] text-dim uppercase" htmlFor={`reason-${comment.id}`}>
+      <label className="font-mono text-eyebrow text-dim uppercase" htmlFor={`reason-${comment.id}`}>
         Reason
       </label>
       <select
         id={`reason-${comment.id}`}
         name="reason"
         defaultValue="spam"
-        className="rounded-lg border border-line bg-panel px-2.5 py-1.75 text-[12.5px] text-primary outline-none"
+        className="rounded-control border border-line bg-panel px-2.5 py-2 text-body text-primary outline-none"
       >
         {REPORT_REASONS.map((r) => (
           <option key={r.id} value={r.id}>
@@ -40,17 +40,17 @@ function ReportForm({ comment, symbol, onDone }: { comment: DiscussionComment; s
       <input
         name="detail"
         placeholder="Anything a moderator should know (optional)"
-        className="rounded-lg border border-line bg-panel px-2.5 py-1.75 text-[12.5px] text-primary outline-none"
+        className="rounded-control border border-line bg-panel px-2.5 py-2 text-body text-primary outline-none"
       />
-      {result && result !== "reported" && <p className="text-[12px] text-negative">{result}</p>}
+      {result && result !== "reported" && <p className="text-caption text-negative">{result}</p>}
       <div className="flex items-center justify-end gap-2">
-        <button type="button" onClick={onDone} className="rounded-lg px-3 py-1.5 text-[12.5px] text-muted hover:text-primary">
+        <button type="button" onClick={onDone} className="rounded-control px-3 py-1.5 text-body text-muted hover:text-primary">
           Cancel
         </button>
         <button
           type="submit"
           disabled={pending}
-          className="rounded-lg border border-line px-3 py-1.5 text-[12.5px] text-primary disabled:opacity-60"
+          className="rounded-control border border-line px-3 py-1.5 text-body text-primary disabled:opacity-60"
         >
           {pending ? "Sending…" : "Submit report"}
         </button>
@@ -65,23 +65,23 @@ function CommentRow({ comment, symbol }: { comment: DiscussionComment; symbol: s
 
   return (
     <div className="border-b border-line py-4 last:border-b-0">
-      <div className="flex items-center gap-2 text-[12px] text-muted">
+      <div className="flex items-center gap-2 text-caption text-muted">
         <span className="text-primary">{comment.authorName}</span>
         <span>·</span>
         <TimeAgo iso={comment.createdAt} />
         {comment.flagged && comment.isOwn && (
-          <span className="rounded-md border border-line px-1.5 py-0.5 text-[10.5px] text-negative">
+          <span className="rounded-control border border-line px-1.5 py-0.5 text-micro text-negative">
             Flagged for review
           </span>
         )}
         {comment.reportCount > 0 && comment.isOwn && !comment.flagged && (
-          <span className="rounded-md border border-line px-1.5 py-0.5 text-[10.5px] text-muted">
+          <span className="rounded-control border border-line px-1.5 py-0.5 text-micro text-muted">
             {comment.reportCount} {comment.reportCount === 1 ? "report" : "reports"}
           </span>
         )}
       </div>
-      <p className="mt-1.5 text-[13.5px] text-primary whitespace-pre-wrap">{comment.body}</p>
-      <div className="mt-2 flex items-center gap-3 text-[12px]">
+      <p className="mt-1.5 text-lead text-primary whitespace-pre-wrap">{comment.body}</p>
+      <div className="mt-2 flex items-center gap-3 text-caption">
         <button
           type="button"
           onClick={() => startVote(() => voteThread(comment.id, 1, symbol))}
@@ -98,13 +98,13 @@ function CommentRow({ comment, symbol }: { comment: DiscussionComment; symbol: s
         </button>
         {!comment.isOwn &&
           (comment.reportedByMe ? (
-            <span className="text-[12px] text-dim">Reported</span>
+            <span className="text-caption text-dim">Reported</span>
           ) : (
             <button
               type="button"
               aria-label={`Report comment by ${comment.authorName}`}
               onClick={() => setReporting((v) => !v)}
-              className="text-[12px] text-dim transition-colors duration-base ease-standard hover:text-primary"
+              className="text-caption text-dim transition-colors duration-base ease-standard hover:text-primary"
             >
               Report
             </button>
@@ -146,15 +146,15 @@ export function DiscussionPanel({
           name="body"
           rows={3}
           placeholder={`Share your thoughts on ${symbol}...`}
-          className="w-full resize-none rounded-lg border border-line bg-active px-3 py-2 text-[13.5px] text-primary outline-none"
+          className="w-full resize-none rounded-control border border-line bg-active px-3 py-2 text-lead text-primary outline-none"
         />
         <div className="flex items-center justify-between">
           {error && error !== "saved" ? (
-            <p className="text-[12.5px] text-negative">{error}</p>
+            <p className="text-body text-negative">{error}</p>
           ) : (
             <span />
           )}
-          <button type="submit" className="rounded-lg border border-line px-3.5 py-2 text-[13px] text-primary">
+          <button type="submit" className="rounded-control border border-line px-3.5 py-2 text-body text-primary">
             Post
           </button>
         </div>
@@ -162,7 +162,7 @@ export function DiscussionPanel({
 
       <div className="mt-2">
         {topLevel.length === 0 ? (
-          <p className="mt-4 text-[13px] text-dim">No discussion yet for {symbol}. Be the first to comment.</p>
+          <p className="mt-4 text-body text-dim">No discussion yet for {symbol}. Be the first to comment.</p>
         ) : (
           topLevel.map((c) => (
             <div key={c.id}>
@@ -180,7 +180,7 @@ export function DiscussionPanel({
       </div>
 
       {canModerate && (
-        <a href="/admin#moderation" className="mt-3 inline-block text-[12px] text-muted hover:text-primary">
+        <a href="/admin#moderation" className="mt-3 inline-block text-caption text-muted hover:text-primary">
           Open the moderation queue →
         </a>
       )}

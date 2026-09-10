@@ -67,7 +67,7 @@ export function HoldingModal({ holding, initialSymbol, onClose }: HoldingModalPr
         className="animate-sheet-in w-full max-w-md rounded-card border border-line bg-panel p-6"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="mb-5 font-serif text-lg text-primary">{holding ? "Edit asset" : "Add holding"}</h2>
+        <h2 className="mb-5 font-serif text-h3 text-primary">{holding ? "Edit asset" : "Add holding"}</h2>
 
         <form ref={formRef} action={formAction} className="flex flex-col gap-4">
           {holding && <input type="hidden" name="id" value={holding.id} />}
@@ -79,7 +79,7 @@ export function HoldingModal({ holding, initialSymbol, onClose }: HoldingModalPr
                   name="symbol"
                   value={fields.symbol}
                   readOnly
-                  className="w-full cursor-not-allowed rounded-lg border border-line bg-active px-3 py-2 text-sm text-muted outline-none uppercase"
+                  className="w-full cursor-not-allowed rounded-control border border-line bg-active px-3 py-2 text-lead text-muted outline-none uppercase"
                 />
               ) : (
                 <SymbolTypeahead
@@ -95,7 +95,7 @@ export function HoldingModal({ holding, initialSymbol, onClose }: HoldingModalPr
                 name="asset_type"
                 value={assetType}
                 onChange={(e) => setAssetType(e.target.value as (typeof ASSET_TYPES)[number])}
-                className="w-full rounded-lg border border-line bg-active px-3 py-2 text-sm text-primary outline-none"
+                className="w-full rounded-control border border-line bg-active px-3 py-2 text-lead text-primary outline-none"
               >
                 {ASSET_TYPES.map((t) => (
                   <option key={t} value={t} className="bg-panel">
@@ -117,7 +117,7 @@ export function HoldingModal({ holding, initialSymbol, onClose }: HoldingModalPr
                 value={fields.quantity}
                 onChange={(e) => setField("quantity", e.target.value)}
                 required
-                className="w-full rounded-lg border border-line bg-active px-3 py-2 text-sm text-primary outline-none"
+                className="w-full rounded-control border border-line bg-active px-3 py-2 text-lead text-primary outline-none"
               />
             </Field>
             <Field label="Purchase price">
@@ -130,7 +130,7 @@ export function HoldingModal({ holding, initialSymbol, onClose }: HoldingModalPr
                 value={fields.purchase_price}
                 onChange={(e) => setField("purchase_price", e.target.value)}
                 required
-                className="w-full rounded-lg border border-line bg-active px-3 py-2 text-sm text-primary outline-none"
+                className="w-full rounded-control border border-line bg-active px-3 py-2 text-lead text-primary outline-none"
               />
             </Field>
           </div>
@@ -142,7 +142,7 @@ export function HoldingModal({ holding, initialSymbol, onClose }: HoldingModalPr
               value={fields.purchase_date}
               onChange={(e) => setField("purchase_date", e.target.value)}
               required
-              className="w-full rounded-lg border border-line bg-active px-3 py-2 text-sm text-primary outline-none"
+              className="w-full rounded-control border border-line bg-active px-3 py-2 text-lead text-primary outline-none"
             />
           </Field>
 
@@ -157,7 +157,7 @@ export function HoldingModal({ holding, initialSymbol, onClose }: HoldingModalPr
                 list="sector-suggestions"
                 value={fields.sector}
                 onChange={(e) => setField("sector", e.target.value)}
-                className="w-full rounded-lg border border-line bg-active px-3 py-2 text-sm text-primary outline-none"
+                className="w-full rounded-control border border-line bg-active px-3 py-2 text-lead text-primary outline-none"
               />
               <datalist id="sector-suggestions">
                 {SECTOR_SUGGESTIONS.map((label) => (
@@ -170,7 +170,7 @@ export function HoldingModal({ holding, initialSymbol, onClose }: HoldingModalPr
                 name="asset_class"
                 value={fields.asset_class}
                 onChange={(e) => setField("asset_class", e.target.value)}
-                className="w-full rounded-lg border border-line bg-active px-3 py-2 text-sm text-primary outline-none"
+                className="w-full rounded-control border border-line bg-active px-3 py-2 text-lead text-primary outline-none"
               />
             </Field>
             <Field label="Geography">
@@ -178,7 +178,7 @@ export function HoldingModal({ holding, initialSymbol, onClose }: HoldingModalPr
                 name="geography"
                 value={fields.geography}
                 onChange={(e) => setField("geography", e.target.value)}
-                className="w-full rounded-lg border border-line bg-active px-3 py-2 text-sm text-primary outline-none"
+                className="w-full rounded-control border border-line bg-active px-3 py-2 text-lead text-primary outline-none"
               />
             </Field>
           </div>
@@ -189,15 +189,15 @@ export function HoldingModal({ holding, initialSymbol, onClose }: HoldingModalPr
               value={fields.notes}
               onChange={(e) => setField("notes", e.target.value)}
               rows={2}
-              className="w-full resize-none rounded-lg border border-line bg-active px-3 py-2 text-sm text-primary outline-none"
+              className="w-full resize-none rounded-control border border-line bg-active px-3 py-2 text-lead text-primary outline-none"
             />
           </Field>
 
-          {result && result !== "saved" && <p className="text-[13px] text-negative">{result}</p>}
+          {result && result !== "saved" && <p className="text-body text-negative">{result}</p>}
 
           <div className="mt-1 flex items-center gap-3">
             <SubmitButton>{holding ? "Save changes" : "Add holding"}</SubmitButton>
-            <button type="button" onClick={onClose} className="text-[13px] text-muted">
+            <button type="button" onClick={onClose} className="text-body text-muted">
               Cancel
             </button>
           </div>

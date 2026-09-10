@@ -45,14 +45,14 @@ export function TrendingDeck({ rows, requestCounts, names, deck, onDeckChange }:
   return (
     <section aria-label="Market movers" className="mb-4.5">
       <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2.5">
-        <div className="flex flex-wrap gap-1.5 rounded-[11px] border border-line bg-panel p-1">
+        <div className="flex flex-wrap gap-1.5 rounded-panel border border-line bg-panel p-1">
           {DECKS.map((d) => (
             <button
               key={d.id}
               type="button"
               aria-pressed={deck === d.id}
               onClick={() => onDeckChange(d.id)}
-              className={`rounded-lg px-3.25 py-1.75 text-[12.5px] transition-colors duration-base ease-standard ${
+              className={`rounded-control px-3 py-2 text-body transition-colors duration-base ease-standard ${
                 deck === d.id ? "bg-active text-primary" : "text-muted hover:text-primary"
               }`}
             >
@@ -60,11 +60,11 @@ export function TrendingDeck({ rows, requestCounts, names, deck, onDeckChange }:
             </button>
           ))}
         </div>
-        <span className="max-w-[46ch] text-[11.5px] text-dim text-pretty">{method}</span>
+        <span className="max-w-[46ch] text-caption text-dim text-pretty">{method}</span>
       </div>
 
       {items.length === 0 ? (
-        <div className="rounded-card border border-dashed border-line px-5 py-7 text-center text-[13px] text-muted text-pretty">
+        <div className="rounded-card border border-dashed border-line px-5 py-7 text-center text-body text-muted text-pretty">
           {deck === "searched"
             ? "No symbol has been looked up more than any other yet, so there is nothing to rank. This deck fills in as the app is used."
             : "Nothing to rank here yet - no stored symbol carries the figure this deck sorts by."}
@@ -77,11 +77,11 @@ export function TrendingDeck({ rows, requestCounts, names, deck, onDeckChange }:
               <Link
                 key={r.symbol}
                 href={`/ticker/${encodeURIComponent(r.symbol)}`}
-                className="group rounded-xl border border-[#232323] bg-panel px-3.5 py-3.25 transition-colors duration-base ease-standard hover:border-[#3A3A3A]"
+                className="group rounded-panel border border-line bg-panel px-3.5 py-3 transition-colors duration-base ease-standard hover:border-line-strong"
               >
                 <div className="flex items-baseline justify-between gap-2">
-                  <span className="truncate text-[13.5px] text-primary">{r.symbol}</span>
-                  <span className={`shrink-0 text-[12px] tabular-nums ${r.changePct === null ? "text-muted" : up ? "text-accent" : "text-negative"}`}>
+                  <span className="truncate text-lead text-primary">{r.symbol}</span>
+                  <span className={`shrink-0 text-caption tabular-nums ${r.changePct === null ? "text-muted" : up ? "text-accent" : "text-negative"}`}>
                     {r.changePct === null ? "-" : `${up ? "+" : ""}${r.changePct.toFixed(2)}%`}
                   </span>
                 </div>
@@ -90,7 +90,7 @@ export function TrendingDeck({ rows, requestCounts, names, deck, onDeckChange }:
                     of those symbols with no symbol_directory.name yet (AMZN,
                     confirmed - the whole original seven are null) fell all
                     the way through to the raw asset type as its "name". */}
-                <div className="mt-0.5 truncate text-[11px] text-dim">
+                <div className="mt-0.5 truncate text-micro text-dim">
                   {r.name ?? names[r.symbol] ?? assetName(r.symbol, r.assetType)}
                 </div>
                 <div className="mt-2">
@@ -102,7 +102,7 @@ export function TrendingDeck({ rows, requestCounts, names, deck, onDeckChange }:
                     ("2 REQUESTS") - an internal demand metric that read as a
                     debug label; the deck's own method caption already says it
                     ranks by lookups, and the asset name is on the line above. */}
-                <div className="mt-1.5 font-mono text-[9.5px] tracking-[0.1em] text-dim uppercase">
+                <div className="mt-1.5 font-mono text-eyebrow text-dim uppercase">
                   {deck === "active" ? `Vol ${formatVolume(r.volume)}` : formatMoney(r.price, prefs)}
                 </div>
               </Link>

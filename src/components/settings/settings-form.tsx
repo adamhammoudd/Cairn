@@ -192,7 +192,7 @@ export function SettingsForm({ settings, activeTab, sectorOptions, watchlists, f
           </CardRow>
 
           <CardFooter>
-            <span className="text-[11.5px] text-dim">
+            <span className="text-caption text-dim">
               Defaults apply to new sessions. Per-page choices you make while browsing aren&rsquo;t overwritten.
             </span>
           </CardFooter>
@@ -210,7 +210,7 @@ export function SettingsForm({ settings, activeTab, sectorOptions, watchlists, f
           >
             <div className="flex max-w-[420px] shrink-0 flex-col gap-2">
               {ALERT_CHANNELS.map((c) => (
-                <label key={c.value} className="flex items-center justify-end gap-2.5 text-[12.5px] text-muted">
+                <label key={c.value} className="flex items-center justify-end gap-2.5 text-body text-muted">
                   <span className={c.deliverable ? "text-primary" : "text-muted"}>{c.label}</span>
                   <input
                     type="checkbox"
@@ -228,23 +228,23 @@ export function SettingsForm({ settings, activeTab, sectorOptions, watchlists, f
             label="Minimum price move"
             desc="Account-wide floor. A price or % change alert whose close-to-close move is smaller than this doesn't fire, whatever its own threshold says. Volume spikes, SMA crossovers and AI-confidence alerts are not affected."
           >
-            <div className="flex shrink-0 items-center gap-2 rounded-[10px] border border-line bg-[#0B0B0B] px-3.25 py-2">
+            <div className="flex shrink-0 items-center gap-2 rounded-panel border border-line bg-canvas px-3 py-2">
               <input
                 type="number"
                 name="price_move_threshold"
                 defaultValue={notificationThreshold}
                 min={0}
                 step={0.1}
-                className="w-16 bg-transparent text-right text-[12.5px] text-primary outline-none"
+                className="w-16 bg-transparent text-right text-body text-primary outline-none"
               />
-              <span className="text-[12.5px] text-dim">%</span>
+              <span className="text-body text-dim">%</span>
             </div>
           </CardRow>
 
           <CardRow label="Your alerts" desc="Individual alerts, their per-alert thresholds, and the delivery log live on the Alerts page. This panel only sets what a new alert starts with.">
             <Link
               href="/alerts"
-              className="shrink-0 rounded-[9px] border border-line px-3.5 py-2 text-[12.5px] text-primary transition-colors duration-fast ease-standard hover:border-[#3A3A3A]"
+              className="shrink-0 rounded-control border border-line px-3.5 py-2 text-body text-primary transition-colors duration-fast ease-standard hover:border-line-strong"
             >
               Manage alerts →
             </Link>
@@ -272,7 +272,7 @@ export function SettingsForm({ settings, activeTab, sectorOptions, watchlists, f
                 defaultValue={settings.briefing_timezone ?? "UTC"}
                 list="briefing-timezones"
                 spellCheck={false}
-                className="w-44 rounded-[10px] border border-line bg-[#0B0B0B] px-3.25 py-2.5 text-[12.5px] text-primary outline-none transition-colors duration-fast ease-standard focus:border-accent"
+                className="w-44 rounded-panel border border-line bg-canvas px-3 py-2.5 text-body text-primary outline-none transition-colors duration-fast ease-standard focus:border-accent"
               />
               <datalist id="briefing-timezones">
                 <option value="UTC" />
@@ -298,13 +298,13 @@ export function SettingsForm({ settings, activeTab, sectorOptions, watchlists, f
             desc={watchlists.length > 0 ? "Leave all unchecked for every watchlist. Checking some narrows the briefing to those." : "No watchlists yet. Create one and it appears here."}
           >
             {watchlists.length === 0 ? (
-              <Link href="/watchlists/new" className="text-[12.5px] text-accent hover:underline">
+              <Link href="/watchlists/new" className="text-body text-accent hover:underline">
                 New watchlist →
               </Link>
             ) : (
               <div className="flex max-w-[420px] shrink-0 flex-wrap justify-end gap-x-3.5 gap-y-2">
                 {watchlists.map((w) => (
-                  <label key={w.id} className="flex items-center gap-2 text-[12.5px] text-muted">
+                  <label key={w.id} className="flex items-center gap-2 text-body text-muted">
                     <input
                       type="checkbox"
                       name="briefing_watchlist_ids"
@@ -322,7 +322,7 @@ export function SettingsForm({ settings, activeTab, sectorOptions, watchlists, f
           <CardRow label="Preferred news categories" desc="Stories tagged with these appear in the briefing's news section. News about a symbol you hold or watch is always included regardless.">
             <div className="flex max-w-[460px] shrink-0 flex-wrap justify-end gap-x-3.5 gap-y-2">
               {SECTORS.map((s) => (
-                <label key={s.slug} className="flex items-center gap-2 text-[12.5px] text-muted">
+                <label key={s.slug} className="flex items-center gap-2 text-body text-muted">
                   <input
                     type="checkbox"
                     name="briefing_news_categories"
@@ -370,8 +370,8 @@ export function SettingsForm({ settings, activeTab, sectorOptions, watchlists, f
       {showSave && (
         <div className="flex items-center gap-3 px-1 pt-1">
           <SubmitButton>Save changes</SubmitButton>
-          {result === "saved" && <span className="text-[13px] text-accent">Saved.</span>}
-          {result && result !== "saved" && <span className="text-[13px] text-negative">{result}</span>}
+          {result === "saved" && <span className="text-body text-accent">Saved.</span>}
+          {result && result !== "saved" && <span className="text-body text-negative">{result}</span>}
         </div>
       )}
     </form>

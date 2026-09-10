@@ -35,10 +35,10 @@ function Unavailable({ symbol, reason, detail }: { symbol: string; reason: "unav
 
   return (
     <div className="animate-page-in mx-auto max-w-[560px] px-6 py-20 text-center">
-      <div className="mb-2 font-mono text-[10.5px] tracking-[0.16em] text-muted uppercase">{symbol}</div>
-      <h1 className="font-serif text-[28px] leading-[1.15] text-primary">{heading}</h1>
-      <p className="mx-auto mt-3 max-w-[440px] text-[13.5px] text-muted text-pretty">{detail}</p>
-      <p className="mx-auto mt-2 max-w-[440px] text-[12.5px] text-dim text-pretty">
+      <div className="mb-2 font-mono text-micro tracking-[0.16em] text-muted uppercase">{symbol}</div>
+      <h1 className="font-serif text-h1 leading-[1.15] text-primary">{heading}</h1>
+      <p className="mx-auto mt-3 max-w-[440px] text-lead text-muted text-pretty">{detail}</p>
+      <p className="mx-auto mt-2 max-w-[440px] text-body text-dim text-pretty">
         {reason === "unavailable"
           ? "Cairn fetches any symbol its data provider carries the first time it's asked for, so this one is either delisted, not a listed symbol, or outside the provider's coverage. Nothing is shown rather than a placeholder price."
           : "Nothing is shown rather than a stale or placeholder price. Try again shortly."}
@@ -46,13 +46,13 @@ function Unavailable({ symbol, reason, detail }: { symbol: string; reason: "unav
       <div className="mt-6 flex flex-wrap justify-center gap-2">
         <Link
           href="/markets"
-          className="rounded-[10px] bg-gradient-to-br from-accent-light to-accent-dark px-4 py-2.25 text-[12.5px] font-semibold text-canvas"
+          className="rounded-panel bg-gradient-to-br from-accent-light to-accent-dark px-4 py-2 text-body font-semibold text-canvas"
         >
           Browse markets
         </Link>
         <Link
           href="/assistant"
-          className="rounded-[10px] border border-line px-4 py-2.25 text-[12.5px] text-primary transition-colors duration-base ease-standard hover:border-[#3A3A3A]"
+          className="rounded-panel border border-line px-4 py-2 text-body text-primary transition-colors duration-base ease-standard hover:border-line-strong"
         >
           Ask the assistant
         </Link>

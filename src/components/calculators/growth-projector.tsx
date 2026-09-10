@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Area, AreaChart, CartesianGrid, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { CHART_TOOLTIP, CHART_AXIS_TICK, CHART_GRID } from "@/lib/chart-theme";
 import { CALC_INPUT, CalcCard, CalcField, CalcStat } from "@/components/calculators/calc-primitives";
 import { clampAmount, clampRate, MAX_AMOUNT_INPUT, MAX_RATE_INPUT, MIN_RATE_INPUT } from "@/lib/input-limits";
 import { project, requiredMonthlyContribution } from "@/lib/projection";
@@ -81,7 +82,7 @@ export function GrowthProjector() {
         </CalcField>
       </div>
 
-      <div className="mt-4.5 grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-4 border-t border-[#1E1E1E] pt-4">
+      <div className="mt-4.5 grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-4 border-t border-line-soft pt-4">
         <CalcStat label={`Balance in ${years}y`} value={money(result.finalBalance)} sub="nominal" />
         <CalcStat
           label="In today's money"
@@ -102,15 +103,15 @@ export function GrowthProjector() {
           <AreaChart data={result.rows} margin={{ top: 6, right: 6, left: 0, bottom: 0 }}>
             <defs>
               <linearGradient id="projectionFill" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#2FC685" stopOpacity={0.28} />
-                <stop offset="100%" stopColor="#2FC685" stopOpacity={0} />
+                <stop offset="0%" stopColor="var(--color-accent)" stopOpacity={0.28} />
+                <stop offset="100%" stopColor="var(--color-accent)" stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid stroke="#1C1C1C" vertical={false} />
-            <XAxis dataKey="year" tick={{ fill: "#5A5A5A", fontSize: 10 }} axisLine={false} tickLine={false} minTickGap={24} />
+            <CartesianGrid {...CHART_GRID} />
+            <XAxis dataKey="year" tick={CHART_AXIS_TICK} axisLine={false} tickLine={false} minTickGap={24} />
             <YAxis
               width={54}
-              tick={{ fill: "#5A5A5A", fontSize: 10 }}
+              tick={CHART_AXIS_TICK}
               axisLine={false}
               tickLine={false}
               tickFormatter={(v) => (Number(v) >= 1e6 ? `${(Number(v) / 1e6).toFixed(1)}M` : `${Math.round(Number(v) / 1000)}K`)}
@@ -118,19 +119,18 @@ export function GrowthProjector() {
             <Tooltip
               formatter={(value, name) => [money(Number(value)), String(name)] as [string, string]}
               labelFormatter={(l) => `Year ${l}`}
-              contentStyle={{ background: "#0F0F0F", border: "1px solid #2A2A2A", borderRadius: 8, fontSize: 12 }}
-              labelStyle={{ color: "#8A8A8A" }}
+              {...CHART_TOOLTIP}
             />
-            <Area type="monotone" dataKey="balance" name="Balance" stroke="#2FC685" strokeWidth={2} fill="url(#projectionFill)" isAnimationActive={false} />
+            <Area type="monotone" dataKey="balance" name="Balance" stroke="var(--color-accent)" strokeWidth={2} fill="url(#projectionFill)" isAnimationActive={false} />
             {/* Contributions drawn against the balance, so the gap between the
                 two lines is exactly the growth - the figure the stat above
                 reports, rather than a separate calculation. */}
-            <Line type="monotone" dataKey="contributed" name="Contributed" stroke="#8A8A8A" strokeWidth={1.25} strokeDasharray="4 3" dot={false} isAnimationActive={false} />
+            <Line type="monotone" dataKey="contributed" name="Contributed" stroke="var(--color-muted)" strokeWidth={1.25} strokeDasharray="4 3" dot={false} isAnimationActive={false} />
           </AreaChart>
         </ResponsiveContainer>
       </div>
 
-      <div className="mt-4 grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-3 border-t border-[#1E1E1E] pt-4">
+      <div className="mt-4 grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-3 border-t border-line-soft pt-4">
         <CalcField label="Target balance">
           <input type="number" min={0} max={MAX_AMOUNT_INPUT} value={target} onChange={num(setTarget, { amount: true })} className={CALC_INPUT} />
         </CalcField>
@@ -155,7 +155,7 @@ export function GrowthProjector() {
         />
       </div>
 
-      <p className="mt-3.5 text-[11.5px] leading-relaxed text-dim text-pretty">
+      <p className="mt-3.5 text-caption leading-relaxed text-dim text-pretty">
         A constant annual return is a modelling assumption, not something markets do - real sequences vary, and a poor
         run of years early in a withdrawal phase produces a materially different outcome from the same average return
         arriving later. Fees are applied as a drag on the return rather than a year-end charge. Nothing here accounts

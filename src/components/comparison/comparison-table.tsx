@@ -68,14 +68,14 @@ export function ComparisonTable({ rows }: { rows: ComparisonRow[] }) {
 
   return (
     <div className="overflow-hidden rounded-card border border-line bg-panel">
-      <div className="border-b border-line px-4.5 py-3.25 font-mono text-[10px] tracking-[0.14em] text-muted uppercase">
+      <div className="border-b border-line px-4.5 py-3 font-mono text-eyebrow text-muted uppercase">
         Aligned metrics
       </div>
 
       <div className="overflow-x-auto">
         <div className="min-w-fit">
           <div
-            className="grid items-center gap-3 border-b border-line px-4.5 py-2.75 font-mono text-[9.5px] tracking-[0.12em] text-dim uppercase"
+            className="grid items-center gap-3 border-b border-line px-4.5 py-3 font-mono text-eyebrow text-dim uppercase"
             style={{ gridTemplateColumns: gridTemplate }}
           >
             <div>Metric</div>
@@ -89,10 +89,10 @@ export function ComparisonTable({ rows }: { rows: ComparisonRow[] }) {
           {METRICS.map((metric, index) => (
             <div
               key={metric.label}
-              className="cn-row animate-rise-in grid items-center gap-3 border-b border-line px-4.5 py-3.25 transition-colors duration-fast ease-standard last:border-b-0 hover:bg-active"
+              className="cn-row animate-rise-in grid items-center gap-3 border-b border-line px-4.5 py-3 transition-colors duration-fast ease-standard last:border-b-0 hover:bg-active"
               style={{ gridTemplateColumns: gridTemplate, animationDelay: `${index * 30}ms` }}
             >
-              <div className="text-[12px] text-muted">{metric.label}</div>
+              <div className="text-caption text-muted">{metric.label}</div>
               {rows.map((row) => {
                 // Every other page shows asset type as an uppercase pill
                 // (see ticker-list.tsx); this table printed the raw
@@ -103,7 +103,7 @@ export function ComparisonTable({ rows }: { rows: ComparisonRow[] }) {
                   return (
                     <div key={row.symbol}>
                       <span
-                        className={`rounded-full border px-2 py-0.75 font-mono text-[9.5px] tracking-[0.1em] uppercase ${
+                        className={`rounded-full border px-2 py-1 font-mono text-eyebrow tracking-[0.1em] uppercase ${
                           ASSET_TYPE_TAG_CLASS[row.assetType] ?? "text-muted border-line"
                         }`}
                       >
@@ -114,7 +114,7 @@ export function ComparisonTable({ rows }: { rows: ComparisonRow[] }) {
                 }
                 const cell = metric.cell(row, prefs);
                 return (
-                  <div key={row.symbol} className={`text-[13px] tabular-nums ${TONE_CLASS[cell.tone]}`}>
+                  <div key={row.symbol} className={`text-body tabular-nums ${TONE_CLASS[cell.tone]}`}>
                     {cell.text}
                   </div>
                 );
@@ -124,7 +124,7 @@ export function ComparisonTable({ rows }: { rows: ComparisonRow[] }) {
         </div>
       </div>
 
-      <p className="border-t border-line px-4.5 py-2.75 text-[11.5px] text-dim">
+      <p className="border-t border-line px-4.5 py-3 text-caption text-dim">
         Change is CoinGecko&apos;s rolling 24 hours for crypto and the last two daily closes for session-based markets -
         the same figure each asset shows on its own page. Prices are last closes, not live quotes.
       </p>

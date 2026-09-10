@@ -31,15 +31,15 @@ const CONFIDENCE_STYLE: Record<
   string,
   { label: string; tint: string; bg: string; border: string; bars: number }
 > = {
-  high: { label: "High confidence", tint: "#2FC685", bg: "rgba(47,198,133,0.12)", border: "rgba(47,198,133,0.4)", bars: 3 },
-  medium: { label: "Medium confidence", tint: "#D9A441", bg: "rgba(217,164,65,0.12)", border: "rgba(217,164,65,0.4)", bars: 2 },
-  low: { label: "Low confidence", tint: "#8A8A8A", bg: "rgba(138,138,138,0.12)", border: "rgba(138,138,138,0.35)", bars: 1 },
+  high: { label: "High confidence", tint: "var(--color-accent)", bg: "rgba(47,198,133,0.12)", border: "rgba(47,198,133,0.4)", bars: 3 },
+  medium: { label: "Medium confidence", tint: "var(--color-warning)", bg: "rgba(217,164,65,0.12)", border: "rgba(217,164,65,0.4)", bars: 2 },
+  low: { label: "Low confidence", tint: "var(--color-muted)", bg: "rgba(138,138,138,0.12)", border: "rgba(138,138,138,0.35)", bars: 1 },
 };
 
-const OFF_BAR = "#232323";
+const OFF_BAR = "var(--color-line)";
 
-const SECTION_LABEL = "font-mono text-[9.5px] tracking-[0.14em] text-muted uppercase";
-const META_LABEL = "font-mono text-[9.5px] tracking-[0.1em] uppercase text-dim";
+const SECTION_LABEL = "font-mono text-eyebrow text-muted uppercase";
+const META_LABEL = "font-mono text-eyebrow uppercase text-dim";
 
 // Relative age, matching the mock's "38m / 3h / Aug 11" ladder. Anything older
 // than a week gets a date rather than an ever-growing hour count.
@@ -83,17 +83,17 @@ export function splitFinding(text: string): { finding: string; body: string } {
 function SourceCard({ source }: { source: Source }) {
   const inner = (
     <>
-      <div className="text-[12.5px] leading-[1.5] text-primary text-pretty">{decodeEntities(source.title)}</div>
+      <div className="text-body leading-[1.5] text-primary text-pretty">{decodeEntities(source.title)}</div>
       <div className="mt-2 flex items-center justify-between gap-2.5">
-        <span className="text-[11px] text-accent">{source.source_name}</span>
-        <span className="font-mono text-[9.5px] tracking-[0.08em] text-dim uppercase" suppressHydrationWarning>
+        <span className="text-micro text-accent">{source.source_name}</span>
+        <span className="font-mono text-eyebrow text-dim uppercase" suppressHydrationWarning>
           {whenLabel(source.published_at)}
         </span>
       </div>
     </>
   );
   const boxClass =
-    "block min-w-0 rounded-[11px] border border-[#232323] bg-[#101010] px-3.5 py-3.25 transition-[border-color,transform] duration-[180ms] ease-[cubic-bezier(0.4,0,0.2,1)] hover:-translate-y-px hover:border-[#3A3A3A]";
+    "block min-w-0 rounded-panel border border-line bg-panel px-3.5 py-3 transition-[border-color,transform] duration-[180ms] ease-[cubic-bezier(0.4,0,0.2,1)] hover:-translate-y-px hover:border-line-strong";
   return source.url ? (
     <a href={source.url} target="_blank" rel="noreferrer" className={boxClass}>
       {inner}
@@ -135,12 +135,12 @@ function SourcesModal({ sources, onClose }: { sources: Source[]; onClose: () => 
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-4 flex items-center justify-between gap-3">
-          <h2 className="font-serif text-lg text-primary">Sources · {sources.length}</h2>
+          <h2 className="font-serif text-h3 text-primary">Sources · {sources.length}</h2>
           <button
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="rounded-lg px-2 py-1 text-lg leading-none text-muted transition-colors duration-base ease-standard hover:text-primary"
+            className="rounded-control px-2 py-1 text-h3 leading-none text-muted transition-colors duration-base ease-standard hover:text-primary"
           >
             ×
           </button>
@@ -208,8 +208,8 @@ export function MethodologyCard({
 
   return (
     <>
-      <div className="animate-rise-in overflow-hidden rounded-[14px] border border-[#262626] bg-[#0C0C0C]">
-        <div className={`border-b border-[#1E1E1E] bg-gradient-to-b from-[#121212] to-[#0C0C0C] ${pad}`}>
+      <div className="animate-rise-in overflow-hidden rounded-card border border-line bg-canvas">
+        <div className={`border-b border-line-soft bg-gradient-to-b from-raised to-canvas ${pad}`}>
           <div className="mb-3 flex flex-wrap items-center gap-2.5">
             <span className={`${SECTION_LABEL} capitalize`}>
               {analysis.scope_type} · {analysis.scope_value}
@@ -219,13 +219,13 @@ export function MethodologyCard({
             </span>
           </div>
 
-          <div className="mb-2.5 font-mono text-[10px] tracking-[0.14em] text-accent uppercase">
+          <div className="mb-2.5 font-mono text-eyebrow text-accent uppercase">
             {analysis.analysis_type.replace(/_/g, " ")}
           </div>
 
           <h2
             className={`m-0 font-serif font-normal leading-[1.25] text-primary text-pretty ${
-              isDense ? "text-[19px]" : "text-[25px]"
+              isDense ? "text-h3" : "text-h2"
             }`}
           >
             {finding}
@@ -233,28 +233,28 @@ export function MethodologyCard({
 
           <div className="mt-4 flex flex-wrap items-center gap-4">
             <div
-              className="flex items-center gap-2.25 rounded-[10px] border px-3.25 py-2.25"
+              className="flex items-center gap-2 rounded-panel border px-3 py-2"
               style={{ borderColor: conf.border, background: conf.bg }}
             >
               <div aria-hidden className="flex items-end gap-0.5">
                 {[8, 12, 16].map((h, i) => (
                   <span
                     key={h}
-                    className="w-0.75 rounded-[1px]"
+                    className="w-1 rounded-xs"
                     style={{ height: h, background: conf.bars >= i + 1 ? conf.tint : OFF_BAR }}
                   />
                 ))}
               </div>
-              <span className="text-[12.5px]" style={{ color: conf.tint }}>
+              <span className="text-body" style={{ color: conf.tint }}>
                 {conf.label}
               </span>
             </div>
 
             <div>
-              <div className="font-mono text-[9px] tracking-[0.12em] text-dim uppercase">Probability range</div>
+              <div className="font-mono text-eyebrow text-dim uppercase">Probability range</div>
               <div
-                className={`mt-1.25 font-serif leading-none tabular-nums text-primary ${
-                  isDense ? "text-[24px]" : "text-[32px]"
+                className={`mt-1 font-serif leading-none tabular-nums text-primary ${
+                  isDense ? "text-h2" : "text-display"
                 }`}
               >
                 {analysis.probability_low}–{analysis.probability_high}%
@@ -264,29 +264,29 @@ export function MethodologyCard({
         </div>
 
         <div className={pad}>
-          {body && <p className="mb-5 text-[13.5px] leading-[1.7] text-primary text-pretty">{body}</p>}
+          {body && <p className="mb-5 text-lead leading-[1.7] text-primary text-pretty">{body}</p>}
 
           <div className="mb-5">
-            <div className="mb-2.75 flex items-center justify-between gap-3">
+            <div className="mb-3 flex items-center justify-between gap-3">
               <span className={SECTION_LABEL}>Sources · {analysis.sources.length}</span>
               {hasMoreSources && (
                 <button
                   type="button"
                   onClick={() => setSourcesOpen(true)}
-                  className="text-[11.5px] text-accent underline decoration-accent/40 underline-offset-2 transition-colors duration-base ease-standard hover:decoration-accent"
+                  className="text-caption text-accent underline decoration-accent/40 underline-offset-2 transition-colors duration-base ease-standard hover:decoration-accent"
                 >
                   View all sources
                 </button>
               )}
             </div>
             {analysis.sources.length === 0 ? (
-              <div className="text-[12px] text-dim">None cited</div>
+              <div className="text-caption text-dim">None cited</div>
             ) : (
               <SourceCard source={previewSource!} />
             )}
           </div>
 
-          <div className="mb-4.5 rounded-[12px] border border-[#1E1E1E] bg-canvas p-4">
+          <div className="mb-4.5 rounded-panel border border-line-soft bg-canvas p-4">
             <div className="mb-3 flex items-baseline justify-between gap-3">
               <span className={SECTION_LABEL}>Historical analogs</span>
               <span className={META_LABEL}>
@@ -295,7 +295,7 @@ export function MethodologyCard({
             </div>
 
             {analysis.analogs.length === 0 ? (
-              <div className="text-[12px] text-dim">None matched</div>
+              <div className="text-caption text-dim">None matched</div>
             ) : (
               <div className="flex flex-col gap-3">
                 {shownAnalogs.map((e, i) => {
@@ -303,24 +303,24 @@ export function MethodologyCard({
                   return (
                     <div key={e.id} className="animate-rise-in" style={{ animationDelay: `${i * 70}ms` }}>
                       <div className="flex items-center justify-between gap-2.5">
-                        <span className="min-w-0 truncate text-[12.5px] text-primary">
+                        <span className="min-w-0 truncate text-body text-primary">
                           {e.symbol ?? e.sector}{" "}
                           <span className="text-muted">
                             · {e.event_type} ·{" "}
                             {new Date(e.event_date).toLocaleDateString(undefined, { month: "short", year: "numeric" })}
                           </span>
                         </span>
-                        <span className="shrink-0 font-mono text-[11px] tabular-nums text-muted">{matchPct}% match</span>
+                        <span className="shrink-0 font-mono text-micro tabular-nums text-muted">{matchPct}% match</span>
                       </div>
-                      <div className="mt-1.5 h-0.75 overflow-hidden rounded-sm bg-[#1C1C1C]">
+                      <div className="mt-1.5 h-1 overflow-hidden rounded-xs bg-active">
                         {/* Match bars grow left-to-right over 620ms with a 70ms
                             stagger, per the mock's motion spec for this panel. */}
                         <div
-                          className="animate-grow-x h-full origin-left rounded-sm bg-gradient-to-r from-accent-light to-accent-dark"
+                          className="animate-grow-x h-full origin-left rounded-xs bg-gradient-to-r from-accent-light to-accent-dark"
                           style={{ width: `${matchPct}%`, animationDelay: `${i * 70}ms` }}
                         />
                       </div>
-                      {e.note && <div className="mt-1.75 text-[11.5px] leading-[1.55] text-muted text-pretty">{e.note}</div>}
+                      {e.note && <div className="mt-2 text-caption leading-[1.55] text-muted text-pretty">{e.note}</div>}
                     </div>
                   );
                 })}
@@ -332,12 +332,12 @@ export function MethodologyCard({
                 type="button"
                 onClick={() => setAnalogsExpanded((v) => !v)}
                 aria-expanded={analogsExpanded}
-                className="mt-3.5 flex w-full items-center justify-center gap-1.5 rounded-[9px] border border-[#232323] bg-[#101010] px-3.5 py-2 text-[12px] text-muted transition-colors duration-base ease-standard hover:border-line hover:text-primary"
+                className="mt-3.5 flex w-full items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3.5 py-2 text-caption text-muted transition-colors duration-base ease-standard hover:border-line hover:text-primary"
               >
                 {analogsExpanded ? "Show fewer" : `Show all ${analysis.analogs.length} historical analogs`}
                 <span
                   aria-hidden
-                  className={`text-[10px] transition-transform duration-base ease-standard ${analogsExpanded ? "rotate-180" : ""}`}
+                  className={`text-eyebrow transition-transform duration-base ease-standard ${analogsExpanded ? "rotate-180" : ""}`}
                 >
                   ⌄
                 </span>
@@ -345,16 +345,16 @@ export function MethodologyCard({
             )}
 
             {hasHidden && (
-              <div className="mt-3.5 flex flex-wrap items-center justify-between gap-3 rounded-[10px] border border-[#232323] bg-[#101010] px-3.25 py-3">
+              <div className="mt-3.5 flex flex-wrap items-center justify-between gap-3 rounded-panel border border-line bg-panel px-3 py-3">
                 <div className="min-w-0">
-                  <div className="text-[12px] text-primary">Premium shows all {analysis.analogs.length} analogs</div>
-                  <div className="mt-1 text-[11.5px] leading-[1.5] text-muted text-pretty">
+                  <div className="text-caption text-primary">Premium shows all {analysis.analogs.length} analogs</div>
+                  <div className="mt-1 text-caption leading-[1.5] text-muted text-pretty">
                     Same analysis, same confidence range, same caveats — more of the underlying comparisons visible.
                   </div>
                 </div>
                 <a
                   href="/billing"
-                  className="shrink-0 rounded-[9px] border border-line px-3.5 py-2 text-[12px] text-primary transition-[border-color] duration-[160ms] ease-[cubic-bezier(0.4,0,0.2,1)] hover:border-accent"
+                  className="shrink-0 rounded-control border border-line px-3.5 py-2 text-caption text-primary transition-[border-color] duration-[160ms] ease-[cubic-bezier(0.4,0,0.2,1)] hover:border-accent"
                 >
                   See all analogs
                 </a>
@@ -363,11 +363,11 @@ export function MethodologyCard({
           </div>
 
           {upcomingEvents.length > 0 && (
-            <div className="mb-4.5 rounded-[10px] border border-[#262626] bg-[#101010] px-3 py-2.5">
+            <div className="mb-4.5 rounded-panel border border-line bg-panel px-3 py-2.5">
               <div className={`${SECTION_LABEL} mb-2`}>Upcoming for {analysis.scope_value}</div>
               <div className="flex flex-col gap-1">
                 {upcomingEvents.slice(0, 3).map((e) => (
-                  <div key={e.id} className="text-[12px] text-muted">
+                  <div key={e.id} className="text-caption text-muted">
                     <span className="capitalize">{e.event_type}</span> ·{" "}
                     {new Date(`${e.event_date}T00:00:00`).toLocaleDateString()}
                   </div>
@@ -377,7 +377,7 @@ export function MethodologyCard({
           )}
 
           {analysis.confidence_level === "low" && (
-            <div className="mb-4.5 rounded-[10px] border border-[#262626] bg-[#101010] px-3 py-2.5 text-[11.5px] leading-relaxed text-muted">
+            <div className="mb-4.5 rounded-panel border border-line bg-panel px-3 py-2.5 text-caption leading-relaxed text-muted">
               Low-confidence output — small historical sample or weak pattern match. Treat as directional, not precise.
             </div>
           )}

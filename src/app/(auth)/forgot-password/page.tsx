@@ -27,7 +27,7 @@ export default function ForgotPasswordPage() {
         </div>
       </form>
 
-      <p className="mt-5 text-center text-[12.5px] text-muted">
+      <p className="mt-5 text-center text-body text-muted">
         <Link href="/login" className="text-accent transition-colors duration-base ease-standard hover:text-accent-light">
           Back to sign in
         </Link>

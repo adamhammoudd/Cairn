@@ -18,9 +18,9 @@ export function CalculatorsWorkspace({
   return (
     <div className="animate-page-in flex flex-col gap-4">
       <div>
-        <div className="mb-2 font-mono text-[10.5px] tracking-[0.16em] text-muted uppercase">Planning · Calculators</div>
-        <h1 className="font-serif text-[32px] leading-[1.1] font-normal text-primary">Calculators</h1>
-        <p className="mt-1.75 max-w-[580px] text-[13.5px] text-muted text-pretty">
+        <div className="mb-2 font-mono text-micro tracking-[0.16em] text-muted uppercase">Planning · Calculators</div>
+        <h1 className="font-serif text-display leading-[1.1] font-normal text-primary">Calculators</h1>
+        <p className="mt-2 max-w-[580px] text-lead text-muted text-pretty">
           Arithmetic on numbers you supply - none of this is a recommendation about any position. The growth
           projection is standalone: it reads nothing from your portfolio and saves nothing.
         </p>

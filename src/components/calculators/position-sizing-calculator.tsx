@@ -40,7 +40,7 @@ export function PositionSizingCalculator({ defaultAccountValue }: { defaultAccou
       title="Position sizing"
       blurb="Fixed-fractional sizing: risks a set % of your account on the distance between entry and stop. A calculator, not a recommendation to enter any position."
     >
-      <div className="grid grid-cols-2 gap-2.75">
+      <div className="grid grid-cols-2 gap-3">
         <CalcField label="Account value ($)">
           <input
             type="number"
@@ -89,11 +89,11 @@ export function PositionSizingCalculator({ defaultAccountValue }: { defaultAccou
       </div>
 
       {hasInputs && (
-        <div className="mt-4 rounded-xl border border-line bg-canvas p-4">
+        <div className="mt-4 rounded-panel border border-line bg-canvas p-4">
           <div className="flex items-baseline justify-between gap-3">
-            <span className="text-[12px] text-muted">Share quantity</span>
+            <span className="text-caption text-muted">Share quantity</span>
             <span
-              className="font-serif text-[28px] tabular-nums text-primary"
+              className="font-serif text-h1 tabular-nums text-primary"
               title={result.shareQty.toLocaleString()}
             >
               {formatCompactNumber(result.shareQty)}

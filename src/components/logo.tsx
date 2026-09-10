@@ -6,7 +6,7 @@ interface LogoProps {
 
 // The Cairn mark: three stacked stones that also read as an ascending bar
 // chart. The geometry here is the source of truth - `public/cairn-mark.svg`
-// mirrors it exactly (kept trivial: three rounded rects) and is what
+// mirrors it exactly (kept trivial: three rounded-xs rects) and is what
 // `scripts/gen-icons.mjs` rasterises into the favicon / app-icon set (plus the
 // cairn-mark.png / cairn-lockup.png exports). The stones sit on equal 3-unit
 // gaps with equal 10-unit top/bottom padding, so they read as evenly stacked.

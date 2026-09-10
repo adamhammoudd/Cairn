@@ -181,25 +181,25 @@ export function TickerWorkspace({
     <div className="animate-page-in">
       <div className="mb-5 flex flex-wrap items-start justify-between gap-4.5">
         <div className="flex items-start gap-3.5">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-accent-light to-accent-dark px-1 font-mono text-[11px] leading-none text-canvas">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-panel bg-gradient-to-br from-accent-light to-accent-dark px-1 font-mono text-micro leading-none text-canvas">
             {data.symbol.slice(0, 5)}
           </div>
           <div className="min-w-0">
             <div className="flex flex-wrap items-baseline gap-3">
-              <h1 className="font-serif text-[30px] leading-[1.1] font-normal text-primary">{data.symbol}</h1>
-              <span className="rounded-full border border-line px-2 py-0.75 font-mono text-[9.5px] tracking-[0.1em] text-muted uppercase">
+              <h1 className="font-serif text-h1 leading-[1.1] font-normal text-primary">{data.symbol}</h1>
+              <span className="rounded-full border border-line px-2 py-1 font-mono text-eyebrow text-muted uppercase">
                 {assetTypeBadge(data.assetType)}
               </span>
             </div>
-            <div className="mt-1.25 text-[13px] text-muted">{subline}</div>
+            <div className="mt-1 text-body text-muted">{subline}</div>
           </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-5.5">
           <div className="text-right">
-            <div className="font-serif text-[30px] leading-none tabular-nums text-primary">{money(data.price)}</div>
+            <div className="font-serif text-h1 leading-none tabular-nums text-primary">{money(data.price)}</div>
             <div
-              className={`mt-1.5 text-[12.5px] tabular-nums ${
+              className={`mt-1.5 text-body tabular-nums ${
                 data.changePct === null ? "text-muted" : positive ? "text-accent" : "text-negative"
               }`}
             >
@@ -231,7 +231,7 @@ export function TickerWorkspace({
             aria-selected={tab === t.id}
             aria-controls={`ticker-panel-${t.id}`}
             onClick={() => setTab(t.id)}
-            className={`-mb-px border-b-2 px-3.5 py-2.5 text-[13px] transition-colors duration-base ease-standard ${
+            className={`-mb-px border-b-2 px-3.5 py-2.5 text-body transition-colors duration-base ease-standard ${
               tab === t.id ? "border-accent text-primary" : "border-transparent text-muted hover:text-primary"
             }`}
           >
@@ -249,16 +249,16 @@ export function TickerWorkspace({
           {stats.length > 0 && (
             <div className="mb-4 grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-3">
               {stats.map((s) => (
-                <div key={s.label} className="rounded-xl border border-[#232323] bg-panel px-3.75 py-3.25">
-                  <div className="font-mono text-[9.5px] tracking-[0.12em] text-dim uppercase">{s.label}</div>
-                  <div className="mt-1.75 text-[13.5px] tabular-nums text-primary">{s.value}</div>
+                <div key={s.label} className="rounded-panel border border-line bg-panel px-4 py-3">
+                  <div className="font-mono text-eyebrow text-dim uppercase">{s.label}</div>
+                  <div className="mt-2 text-lead tabular-nums text-primary">{s.value}</div>
                 </div>
               ))}
             </div>
           )}
 
           {!isCrypto && !isForex && !isIndex && !data.fundamentals && (
-            <p className="mb-4 text-[12px] text-dim">
+            <p className="mb-4 text-caption text-dim">
               No SEC fundamentals filed for this symbol (common for ETFs and funds) - cap, P/E, and yield stay blank
               rather than being estimated.
             </p>
@@ -266,30 +266,30 @@ export function TickerWorkspace({
 
           <div className="grid grid-cols-1 items-start gap-3.5 min-[900px]:grid-cols-[300px_1fr]">
             <div className="overflow-hidden rounded-card border border-line bg-panel">
-              <div className="border-b border-[#1E1E1E] px-4 py-3.25 font-mono text-[10px] tracking-[0.14em] text-muted uppercase">
+              <div className="border-b border-line-soft px-4 py-3 font-mono text-eyebrow text-muted uppercase">
                 Related news
               </div>
               {data.news.length === 0 ? (
-                <p className="px-4 py-4 text-[12.5px] text-dim">No recent news ingested for {data.symbol}.</p>
+                <p className="px-4 py-4 text-body text-dim">No recent news ingested for {data.symbol}.</p>
               ) : (
                 data.news.slice(0, 8).map((n) => (
                   <div
                     key={n.id}
-                    className="border-b border-[#171717] px-4 py-3.25 transition-colors duration-fast ease-standard last:border-b-0 hover:bg-active"
+                    className="border-b border-line-soft px-4 py-3 transition-colors duration-fast ease-standard last:border-b-0 hover:bg-active"
                   >
                     {n.url ? (
                       <a
                         href={n.url}
                         target="_blank"
                         rel="noreferrer"
-                        className="text-[12.5px] leading-[1.5] text-primary hover:text-accent"
+                        className="text-body leading-[1.5] text-primary hover:text-accent"
                       >
                         {decodeEntities(n.title)}
                       </a>
                     ) : (
-                      <span className="text-[12.5px] leading-[1.5] text-primary">{decodeEntities(n.title)}</span>
+                      <span className="text-body leading-[1.5] text-primary">{decodeEntities(n.title)}</span>
                     )}
-                    <div className="mt-1.25 text-[11px] text-dim">
+                    <div className="mt-1 text-micro text-dim">
                       {n.source_name} · {new Date(n.published_at).toLocaleDateString()}
                     </div>
                   </div>
@@ -300,7 +300,7 @@ export function TickerWorkspace({
             <div className="flex flex-col gap-3.5">
               <TickerAnalysisRequest symbol={data.symbol} />
               {analyses.length === 0 ? (
-                <div className="rounded-card border border-dashed border-line p-10 text-center text-sm text-muted">
+                <div className="rounded-card border border-dashed border-line p-10 text-center text-lead text-muted">
                   No Cairn analysis for {data.symbol} yet. Request one above - every answer shows its sources, historical
                   analogs, and confidence.
                 </div>

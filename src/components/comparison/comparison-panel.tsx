@@ -64,13 +64,13 @@ export function ComparisonPanel({
     <div className="animate-page-in flex flex-col gap-3.5">
       <div className="mb-1.5 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <div className="mb-2 font-mono text-[10.5px] tracking-[0.16em] text-muted uppercase">Compare</div>
-          <h1 className="font-serif text-[32px] leading-[1.1] font-normal text-primary">Side by side</h1>
+          <div className="mb-2 font-mono text-micro tracking-[0.16em] text-muted uppercase">Compare</div>
+          <h1 className="font-serif text-display leading-[1.1] font-normal text-primary">Side by side</h1>
         </div>
 
         {canAdd && (
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-[11.5px] text-dim">Add up to {MAX_COMPARE}:</span>
+            <span className="text-caption text-dim">Add up to {MAX_COMPARE}:</span>
             {/* Was a fixed dropdown of the tracked universe, so a symbol Cairn
                 had not ingested could not be compared at all. The shared
                 type-ahead searches the directory and falls through to the
@@ -83,7 +83,7 @@ export function ComparisonPanel({
               placeholder="Add a ticker to compare…"
               onSelect={(r) => addSymbol(r.symbol)}
               className="min-w-[220px]"
-              inputClassName="w-full rounded-full border border-dashed border-line bg-transparent px-3.25 py-1.75 font-mono text-[11px] text-muted uppercase outline-none transition-colors duration-base ease-standard placeholder:normal-case hover:border-accent focus:border-accent focus:text-primary"
+              inputClassName="w-full rounded-full border border-dashed border-line bg-transparent px-3 py-2 font-mono text-micro text-muted uppercase outline-none transition-colors duration-base ease-standard placeholder:normal-case hover:border-accent focus:border-accent focus:text-primary"
             />
             {available.slice(0, 3).map((symbol) => (
               <button
@@ -91,7 +91,7 @@ export function ComparisonPanel({
                 type="button"
                 disabled={isPending}
                 onClick={() => addSymbol(symbol)}
-                className={`rounded-full border border-dashed border-line px-3 py-1.5 font-mono text-[11px] text-muted transition-[opacity,color,border-color] duration-200 ease-standard hover:border-accent hover:text-primary ${
+                className={`rounded-full border border-dashed border-line px-3 py-1.5 font-mono text-micro text-muted transition-[opacity,color,border-color] duration-200 ease-standard hover:border-accent hover:text-primary ${
                   pendingAdd === symbol ? "opacity-40" : isPending ? "opacity-70" : ""
                 }`}
               >
@@ -104,8 +104,8 @@ export function ComparisonPanel({
 
       {rows.length === 0 ? (
         <div className="rounded-card border border-dashed border-line px-6 py-16 text-center">
-          <div className="font-serif text-[21px] text-primary">Nothing to line up yet</div>
-          <p className="mx-auto mt-2 max-w-[400px] text-[13px] text-muted text-pretty">
+          <div className="font-serif text-h3 text-primary">Nothing to line up yet</div>
+          <p className="mx-auto mt-2 max-w-[400px] text-body text-muted text-pretty">
             Add up to {MAX_COMPARE} tickers and Cairn aligns their price action and fundamentals on the same axes.
           </p>
         </div>
@@ -125,12 +125,12 @@ export function ComparisonPanel({
                     <div className="min-w-0">
                       <Link
                         href={`/ticker/${row.symbol}`}
-                        className="flex items-center gap-2 text-[14px] text-primary transition-colors duration-fast ease-standard hover:text-accent"
+                        className="flex items-center gap-2 text-lead text-primary transition-colors duration-fast ease-standard hover:text-accent"
                       >
                         <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: color }} />
                         {row.symbol}
                       </Link>
-                      <div className="mt-0.75 truncate text-[11px] text-muted">
+                      <div className="mt-1 truncate text-micro text-muted">
                         {row.name ?? <span className="font-mono tracking-[0.08em] uppercase">{assetTypeBadge(row.assetType)}</span>}
                       </div>
                     </div>
@@ -138,17 +138,17 @@ export function ComparisonPanel({
                       type="button"
                       onClick={() => removeSymbol(row.symbol)}
                       aria-label={`Remove ${row.symbol}`}
-                      className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[14px] text-dim transition-colors duration-fast ease-standard hover:bg-negative/12 hover:text-negative"
+                      className="flex h-6 w-6 shrink-0 items-center justify-center rounded-control text-lead text-dim transition-colors duration-fast ease-standard hover:bg-negative/12 hover:text-negative"
                     >
                       ×
                     </button>
                   </div>
 
                   <div className="mt-3 flex items-baseline gap-2.5">
-                    <span className="font-serif text-[22px] tabular-nums text-primary">
+                    <span className="font-serif text-h2 tabular-nums text-primary">
                       {formatMoney(row.price, prefs)}
                     </span>
-                    <span className={`text-[12px] tabular-nums ${row.changePct === null ? "text-muted" : positive ? "text-accent" : "text-negative"}`}>
+                    <span className={`text-caption tabular-nums ${row.changePct === null ? "text-muted" : positive ? "text-accent" : "text-negative"}`}>
                       {formatChange(absoluteChangeFrom(row.price, row.changePct), row.changePct, prefs)}
                     </span>
                   </div>
@@ -168,21 +168,21 @@ export function ComparisonPanel({
                     delayMs={i * 60}
                   />
                   <div className="mt-1.5 flex items-center justify-between gap-2">
-                    <span className="font-mono text-[9.5px] tracking-[0.1em] text-dim uppercase">{timeframe} · same window as the chart</span>
-                    <DataFreshness source="last_close" asOf={row.asOf} className="text-[9.5px]" />
+                    <span className="font-mono text-eyebrow text-dim uppercase">{timeframe} · same window as the chart</span>
+                    <DataFreshness source="last_close" asOf={row.asOf} className="text-eyebrow" />
                   </div>
                 </div>
               );
             })}
           </div>
 
-          <div className="flex flex-wrap gap-1.5 rounded-xl border border-line bg-panel p-1">
+          <div className="flex flex-wrap gap-1.5 rounded-panel border border-line bg-panel p-1">
             {TIMEFRAMES.map((tf) => (
               <button
                 key={tf}
                 type="button"
                 onClick={() => setTimeframe(tf)}
-                className={`rounded-lg px-3.25 py-1.75 text-[12.5px] transition-colors duration-base ease-standard ${
+                className={`rounded-control px-3 py-2 text-body transition-colors duration-base ease-standard ${
                   timeframe === tf ? "bg-active text-primary" : "text-muted hover:text-primary"
                 }`}
               >

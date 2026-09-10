@@ -36,27 +36,27 @@ export function ChatMessage({ message, streaming }: ChatMessageProps) {
   const isUser = message.role === "user";
 
   return (
-    <div className={`animate-rise-in flex gap-2.75 ${isUser ? "justify-end" : "justify-start"}`}>
+    <div className={`animate-rise-in flex gap-3 ${isUser ? "justify-end" : "justify-start"}`}>
       <div
-        className={`max-w-[660px] rounded-[13px] border px-3.75 py-3 text-[13.5px] leading-[1.65] ${
+        className={`max-w-[660px] rounded-card border px-4 py-3 text-lead leading-[1.65] ${
           !isUser && !message.failed ? "" : "whitespace-pre-wrap"
         } ${
           message.failed
             ? "border-dashed border-line bg-transparent text-muted"
-            : `text-primary ${isUser ? "border-line bg-[#151515]" : "border-[#232323] bg-[#0C0C0C]"}`
+            : `text-primary ${isUser ? "border-line bg-raised" : "border-line bg-canvas"}`
         }`}
       >
         {/* Not red: red is reserved for loss/destructive indicators (CLAUDE.md).
             A turn that did not complete is neither, so it reads as provisional. */}
         {message.failed && (
-          <span className="mb-1.5 block font-mono text-[9.5px] tracking-[0.14em] text-dim uppercase">Not delivered</span>
+          <span className="mb-1.5 block font-mono text-eyebrow text-dim uppercase">Not delivered</span>
         )}
         {/* Assistant replies render as real markdown; the user's own text and
             failure notices stay literal. The scope guard ran on the raw text
             server-side, so rendering changes nothing it checked. */}
         {isUser || message.failed ? message.content : <MarkdownMessage content={message.content} />}
         {streaming && (
-          <span className="ml-0.75 inline-block h-[15px] w-[7px] translate-y-[2px] animate-blink bg-accent align-middle" />
+          <span className="ml-1 inline-block h-[15px] w-[7px] translate-y-[2px] animate-blink bg-accent align-middle" />
         )}
       </div>
     </div>

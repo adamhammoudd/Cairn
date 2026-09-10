@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { CHART_TOOLTIP, CHART_AXIS_TICK } from "@/lib/chart-theme";
 import { xAxisConfig, type TimelinePoint } from "@/lib/portfolio";
 import { formatTooltipLabel } from "@/lib/chart-dates";
 import { getIntradayPortfolioSeries } from "@/lib/actions/intraday";
@@ -66,7 +67,7 @@ export function PortfolioChart({ seriesByTimeframe, hasHoldings, asOf = null }: 
   // still drew green, in a product where red means loss and nothing else.
   const rangeChange = points.length > 1 ? points[points.length - 1].value - points[0].value : 0;
   const positive = rangeChange >= 0;
-  const color = positive ? "#2FC685" : "#D96C6C";
+  const color = positive ? "var(--color-accent)" : "var(--color-negative)";
 
   // Per-timeframe X-axis: tick spacing that never overlaps, and a label format
   // matched to the window (hour for 1D, weekday for 1W, ... month+year for
@@ -75,15 +76,15 @@ export function PortfolioChart({ seriesByTimeframe, hasHoldings, asOf = null }: 
 
   return (
     <div className="overflow-hidden rounded-card border border-line bg-panel">
-      <div className="flex items-center justify-between gap-3 border-b border-[#1E1E1E] px-4 py-3">
-        <div className="flex gap-1 rounded-[10px] border border-[#232323] p-0.75">
+      <div className="flex items-center justify-between gap-3 border-b border-line-soft px-4 py-3">
+        <div className="flex gap-1 rounded-panel border border-line p-1">
           {TIMEFRAMES.map((tf) => (
             <button
               key={tf}
               type="button"
               onClick={() => selectTimeframe(tf)}
-              className={`rounded-[7px] px-3 py-1.5 font-mono text-[11px] transition-colors duration-base ease-standard hover:text-primary ${
-                timeframe === tf ? "bg-[#1C1C1C] text-primary" : "text-muted"
+              className={`rounded-control px-3 py-1.5 font-mono text-micro transition-colors duration-base ease-standard hover:text-primary ${
+                timeframe === tf ? "bg-active text-primary" : "text-muted"
               }`}
             >
               {tf}
@@ -98,7 +99,7 @@ export function PortfolioChart({ seriesByTimeframe, hasHoldings, asOf = null }: 
               detail={timeframe === "1D" ? "combined value · 1 min" : "combined value · 15 min"}
             />
           ) : (
-            <span className="font-mono text-[10px] tracking-[0.12em] text-dim uppercase">
+            <span className="font-mono text-eyebrow text-dim uppercase">
               {timeframe === "1D" ? "Combined value · 1 min" : "Combined value · 15 min"}
             </span>
           )
@@ -109,13 +110,13 @@ export function PortfolioChart({ seriesByTimeframe, hasHoldings, asOf = null }: 
 
       <div className="px-2 pt-3.5 pb-2">
       {!hasHoldings ? (
-        <div className="flex h-[200px] items-center justify-center text-sm text-muted">
+        <div className="flex h-[200px] items-center justify-center text-lead text-muted">
           Add a holding to see portfolio performance.
         </div>
       ) : loadingIntraday && points.length === 0 ? (
-        <div className="flex h-[200px] items-center justify-center text-sm text-muted">Loading intraday prices…</div>
+        <div className="flex h-[200px] items-center justify-center text-lead text-muted">Loading intraday prices…</div>
       ) : points.length === 0 ? (
-        <div className="flex h-[200px] items-center justify-center px-6 text-center text-sm text-muted">
+        <div className="flex h-[200px] items-center justify-center px-6 text-center text-lead text-muted">
           {timeframe === "1D"
             ? "Intraday isn't available on this deployment - stored prices are one close per day, so an intraday view would draw a straight line between yesterday and today rather than a real session."
             : isIntraday
@@ -135,8 +136,8 @@ export function PortfolioChart({ seriesByTimeframe, hasHoldings, asOf = null }: 
               dataKey="date"
               interval={interval}
               tickFormatter={tickFormatter}
-              tick={{ fill: "#8A8A8A", fontSize: 10 }}
-              axisLine={{ stroke: "#2A2A2A" }}
+              tick={CHART_AXIS_TICK}
+              axisLine={{ stroke: "var(--color-line)" }}
               tickLine={false}
               minTickGap={20}
             />
@@ -144,8 +145,7 @@ export function PortfolioChart({ seriesByTimeframe, hasHoldings, asOf = null }: 
             <Tooltip
               formatter={(value) => [formatMoney(Number(value), prefs), "Close"] as [string, string]}
               labelFormatter={(label) => formatTooltipLabel(String(label))}
-              contentStyle={{ background: "#0F0F0F", border: "1px solid #2A2A2A", borderRadius: 8, fontSize: 12 }}
-              labelStyle={{ color: "#8A8A8A" }}
+              {...CHART_TOOLTIP}
             />
             <Area type="monotone" dataKey="value" stroke={color} strokeWidth={2} fill="url(#portfolioFill)" isAnimationActive={false} />
           </AreaChart>

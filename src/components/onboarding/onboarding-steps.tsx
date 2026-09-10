@@ -75,7 +75,7 @@ export function OnboardingSteps() {
 
   return (
     <div className="mx-auto flex max-w-[860px] flex-col">
-      <div className="animate-page-in relative overflow-hidden rounded-2xl border border-line bg-gradient-to-b from-[#131313] to-panel px-7.5 py-8.5 text-center">
+      <div className="animate-page-in relative overflow-hidden rounded-card border border-line bg-gradient-to-b from-raised to-panel px-7.5 py-8.5 text-center">
         <div
           className="pointer-events-none absolute inset-0"
           style={{ background: "radial-gradient(460px 180px at 50% 0%, rgba(47,198,133,0.12), transparent 70%)" }}
@@ -85,16 +85,16 @@ export function OnboardingSteps() {
           {STONES.map((stone) => (
             <span
               key={stone.width}
-              className={`animate-rise-in h-2.25 ${stone.width} rounded-full bg-gradient-to-br from-accent-light to-accent-dark`}
+              className={`animate-rise-in h-2 ${stone.width} rounded-full bg-gradient-to-br from-accent-light to-accent-dark`}
               style={{ animationDelay: stone.delay, boxShadow: `0 0 14px ${stone.glow}` }}
             />
           ))}
         </div>
 
-        <h1 className="relative m-0 font-serif text-[34px] leading-[1.1] font-normal text-primary">
+        <h1 className="relative m-0 font-serif text-display leading-[1.1] font-normal text-primary">
           Welcome to Cairn
         </h1>
-        <p className="relative mx-auto mt-2.5 max-w-[480px] text-[14px] leading-relaxed text-muted text-pretty">
+        <p className="relative mx-auto mt-2.5 max-w-[480px] text-lead leading-relaxed text-muted text-pretty">
           Three steps and Base Camp fills in with your own numbers. Nothing here is a recommendation - Cairn shows
           sourced context and lets you draw the conclusion.
         </p>
@@ -106,7 +106,7 @@ export function OnboardingSteps() {
               style={{ width: `${pct}%` }}
             />
           </div>
-          <div className="mt-2.25 font-mono text-[10px] tracking-[0.14em] text-dim uppercase">
+          <div className="mt-2 font-mono text-eyebrow text-dim uppercase">
             {done.length} of {STEPS.length} complete
           </div>
         </div>
@@ -118,13 +118,13 @@ export function OnboardingSteps() {
           return (
             <div
               key={step.key}
-              className={`animate-rise-in flex flex-wrap items-center gap-3.5 rounded-[13px] border bg-canvas px-4.5 py-4.25 transition-colors duration-base ease-standard ${
+              className={`animate-rise-in flex flex-wrap items-center gap-3.5 rounded-card border bg-canvas px-4.5 py-4 transition-colors duration-base ease-standard ${
                 isDone ? "border-accent/40" : "border-line"
               }`}
               style={{ animationDelay: `${index * 100}ms` }}
             >
               <div
-                className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full font-mono text-[11.5px] transition-colors duration-base ease-standard ${
+                className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full font-mono text-caption transition-colors duration-base ease-standard ${
                   isDone ? "bg-gradient-to-br from-accent-light to-accent-dark text-canvas" : "bg-active text-muted"
                 }`}
               >
@@ -132,14 +132,14 @@ export function OnboardingSteps() {
               </div>
 
               <div className="min-w-0 flex-1">
-                <div className="text-[13.5px] text-primary">{step.label}</div>
-                <p className="mt-1 text-[12px] leading-relaxed text-muted text-pretty">{step.desc}</p>
+                <div className="text-lead text-primary">{step.label}</div>
+                <p className="mt-1 text-caption leading-relaxed text-muted text-pretty">{step.desc}</p>
               </div>
 
               <Link
                 href={step.href}
                 onClick={() => setDone((prev) => (prev.includes(step.key) ? prev : [...prev, step.key]))}
-                className="shrink-0 rounded-[10px] border border-line px-3.75 py-2.25 text-[12.5px] text-primary transition-colors duration-fast ease-standard hover:border-accent"
+                className="shrink-0 rounded-panel border border-line px-4 py-2 text-body text-primary transition-colors duration-fast ease-standard hover:border-accent"
               >
                 {isDone ? "Revisit" : step.cta}
               </Link>
@@ -150,24 +150,24 @@ export function OnboardingSteps() {
 
       <div className="mt-3.5 grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-3">
         {EMPTY_PREVIEWS.map((card) => (
-          <div key={card.key} className="rounded-[13px] border border-dashed border-line/70 p-4.5">
-            <div className="mb-2.5 font-mono text-[9.5px] tracking-[0.14em] text-dim uppercase">{card.tag}</div>
-            <div className="font-serif text-[17px] text-primary">{card.title}</div>
-            <p className="mt-1.75 text-[12px] leading-relaxed text-muted text-pretty">{card.desc}</p>
+          <div key={card.key} className="rounded-card border border-dashed border-line/70 p-4.5">
+            <div className="mb-2.5 font-mono text-eyebrow text-dim uppercase">{card.tag}</div>
+            <div className="font-serif text-title text-primary">{card.title}</div>
+            <p className="mt-2 text-caption leading-relaxed text-muted text-pretty">{card.desc}</p>
           </div>
         ))}
       </div>
 
-      <div className="mt-4.5 flex justify-center gap-2.25">
+      <div className="mt-4.5 flex justify-center gap-2">
         <Link
           href="/"
-          className="rounded-[10px] border border-line px-4.5 py-2.75 text-[12.5px] text-muted transition-colors duration-fast ease-standard hover:border-[#3A3A3A] hover:text-primary"
+          className="rounded-panel border border-line px-4.5 py-3 text-body text-muted transition-colors duration-fast ease-standard hover:border-line-strong hover:text-primary"
         >
           Skip for now
         </Link>
         <Link
           href="/"
-          className="rounded-[10px] bg-gradient-to-br from-accent-light to-accent-dark px-5 py-2.75 text-[12.5px] font-semibold text-canvas transition-shadow duration-base ease-standard hover:shadow-[0_0_24px_rgba(47,198,133,0.35)]"
+          className="rounded-panel bg-gradient-to-br from-accent-light to-accent-dark px-5 py-3 text-body font-semibold text-canvas transition-shadow duration-base ease-standard hover:shadow-[0_0_24px_rgba(47,198,133,0.35)]"
         >
           Go to Base Camp
         </Link>
@@ -175,14 +175,14 @@ export function OnboardingSteps() {
 
       {allDone && (
         <div className="animate-menu-in mt-4.5 rounded-card border border-accent/40 bg-panel p-4.5 text-center">
-          <div className="font-serif text-[20px] text-primary">Trail marked</div>
-          <p className="mx-auto mt-2 mb-4 max-w-[420px] text-[13px] text-muted text-pretty">
+          <div className="font-serif text-h3 text-primary">Trail marked</div>
+          <p className="mx-auto mt-2 mb-4 max-w-[420px] text-body text-muted text-pretty">
             That&apos;s the whole walkthrough. Base Camp now has your portfolio, watchlist, and the assistant&apos;s
             first read.
           </p>
           <Link
             href="/"
-            className="inline-block rounded-lg bg-gradient-to-br from-accent-light to-accent-dark px-4.5 py-2.5 text-[13px] font-semibold text-canvas transition-[box-shadow,transform] duration-base ease-standard hover:-translate-y-px hover:shadow-[0_0_26px_rgba(47,198,133,0.35)]"
+            className="inline-block rounded-control bg-gradient-to-br from-accent-light to-accent-dark px-4.5 py-2.5 text-body font-semibold text-canvas transition-[box-shadow,transform] duration-base ease-standard hover:-translate-y-px hover:shadow-[0_0_26px_rgba(47,198,133,0.35)]"
           >
             Go to Base Camp
           </Link>

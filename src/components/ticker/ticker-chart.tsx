@@ -2,6 +2,7 @@
 
 import { useMemo, useRef, useState } from "react";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { CHART_TOOLTIP, CHART_AXIS_TICK } from "@/lib/chart-theme";
 import { buildPriceSeries } from "@/lib/ticker";
 import { xAxisConfig } from "@/lib/portfolio";
 import { formatTooltipLabel } from "@/lib/chart-dates";
@@ -66,7 +67,7 @@ export function TickerChart({ symbol, bars, priceSource = "last_close", priceAsO
   // last session happened to close up - green here has to mean "this line is
   // up over this window", the same thing red means on every other surface.
   const rangeChange = points.length > 1 ? points[points.length - 1].value - points[0].value : 0;
-  const color = rangeChange >= 0 ? "#2FC685" : "#D96C6C";
+  const color = rangeChange >= 0 ? "var(--color-accent)" : "var(--color-negative)";
 
   // Per-timeframe X-axis, same helper the Compare page uses: tick spacing that
   // never overlaps and a label format matched to the window.
@@ -75,13 +76,13 @@ export function TickerChart({ symbol, bars, priceSource = "last_close", priceAsO
   return (
     <div className="overflow-hidden rounded-card border border-line bg-panel">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-3">
-        <div className="flex flex-wrap gap-1 rounded-xl border border-line p-0.75">
+        <div className="flex flex-wrap gap-1 rounded-panel border border-line p-1">
           {TIMEFRAMES.map((tf) => (
             <button
               key={tf}
               type="button"
               onClick={() => selectTimeframe(tf)}
-              className={`rounded-lg px-3 py-1.5 font-mono text-[11px] transition-colors duration-base ease-standard ${
+              className={`rounded-control px-3 py-1.5 font-mono text-micro transition-colors duration-base ease-standard ${
                 timeframe === tf ? "bg-active text-primary" : "text-muted hover:text-primary"
               }`}
             >
@@ -99,7 +100,7 @@ export function TickerChart({ symbol, bars, priceSource = "last_close", priceAsO
               detail={timeframe === "1D" ? "1 min bars" : "15 min bars"}
             />
           ) : (
-            <span className="font-mono text-[10px] tracking-[0.12em] text-dim uppercase">
+            <span className="font-mono text-eyebrow text-dim uppercase">
               {timeframe === "1D" ? "Live · 1 min bars" : "Live · 15 min bars"}
             </span>
           )
@@ -110,9 +111,9 @@ export function TickerChart({ symbol, bars, priceSource = "last_close", priceAsO
 
       <div className="px-2 pt-3.5 pb-2">
         {loadingIntraday && points.length === 0 ? (
-          <div className="flex h-[220px] items-center justify-center text-sm text-muted">Loading intraday prices…</div>
+          <div className="flex h-[220px] items-center justify-center text-lead text-muted">Loading intraday prices…</div>
         ) : points.length === 0 ? (
-          <div className="flex h-[220px] items-center justify-center px-6 text-center text-sm text-muted">
+          <div className="flex h-[220px] items-center justify-center px-6 text-center text-lead text-muted">
             {isIntraday
               ? "No intraday bars for this range - the market may not have opened yet, or the provider has nothing for this symbol."
               : "No price history for this range yet."}
@@ -130,8 +131,8 @@ export function TickerChart({ symbol, bars, priceSource = "last_close", priceAsO
               dataKey="date"
               interval={interval}
               tickFormatter={tickFormatter}
-              tick={{ fill: "#8A8A8A", fontSize: 10 }}
-              axisLine={{ stroke: "#2A2A2A" }}
+              tick={CHART_AXIS_TICK}
+              axisLine={{ stroke: "var(--color-line)" }}
               tickLine={false}
               minTickGap={20}
             />
@@ -139,8 +140,7 @@ export function TickerChart({ symbol, bars, priceSource = "last_close", priceAsO
             <Tooltip
               formatter={(value) => [formatMoney(Number(value), prefs), "Close"] as [string, string]}
               labelFormatter={(label) => formatTooltipLabel(String(label))}
-              contentStyle={{ background: "#0F0F0F", border: "1px solid #2A2A2A", borderRadius: 8, fontSize: 12 }}
-              labelStyle={{ color: "#8A8A8A" }}
+              {...CHART_TOOLTIP}
             />
             <Area type="monotone" dataKey="value" stroke={color} strokeWidth={2} fill="url(#tickerFill)" isAnimationActive={false} />
           </AreaChart>

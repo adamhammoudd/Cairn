@@ -65,7 +65,7 @@ export default function ResetPasswordPage() {
         />
         <Link
           href="/forgot-password"
-          className="mt-5 block w-full rounded-[10px] bg-gradient-to-br from-accent-light to-accent-dark py-2.75 text-center text-[13.5px] font-semibold text-canvas transition-[box-shadow,transform] duration-base ease-standard hover:-translate-y-px hover:shadow-[0_0_26px_rgba(47,198,133,0.35)]"
+          className="mt-5 block w-full rounded-panel bg-gradient-to-br from-accent-light to-accent-dark py-3 text-center text-lead font-semibold text-canvas transition-[box-shadow,transform] duration-base ease-standard hover:-translate-y-px hover:shadow-[0_0_26px_rgba(47,198,133,0.35)]"
         >
           Request a new link
         </Link>
@@ -102,7 +102,7 @@ export default function ResetPasswordPage() {
         <button
           type="submit"
           disabled={status !== "ready" || pending}
-          className="mt-5 w-full rounded-[10px] bg-gradient-to-br from-accent-light to-accent-dark py-2.75 text-[13.5px] font-semibold text-canvas transition-[box-shadow,transform] duration-base ease-standard hover:-translate-y-px hover:shadow-[0_0_26px_rgba(47,198,133,0.35)] disabled:opacity-60"
+          className="mt-5 w-full rounded-panel bg-gradient-to-br from-accent-light to-accent-dark py-3 text-lead font-semibold text-canvas transition-[box-shadow,transform] duration-base ease-standard hover:-translate-y-px hover:shadow-[0_0_26px_rgba(47,198,133,0.35)] disabled:opacity-60"
         >
           {pending ? "Updating…" : "Update password"}
         </button>

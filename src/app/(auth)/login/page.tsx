@@ -22,7 +22,7 @@ function LoginMessage() {
 
 function Notice({ children }: { children: React.ReactNode }) {
   return (
-    <p className="mb-4 rounded-[10px] border border-accent/40 bg-accent/8 px-3 py-2.5 text-[12.5px] text-accent">
+    <p className="mb-4 rounded-panel border border-accent/40 bg-accent/8 px-3 py-2.5 text-body text-accent">
       {children}
     </p>
   );
@@ -58,13 +58,13 @@ export default function LoginPage() {
         />
 
         <div className="mb-3.5">
-          <div className="mb-1.75 flex items-baseline justify-between gap-3">
-            <label htmlFor="password" className="font-mono text-[9.5px] tracking-[0.12em] text-dim uppercase">
+          <div className="mb-2 flex items-baseline justify-between gap-3">
+            <label htmlFor="password" className="font-mono text-eyebrow text-dim uppercase">
               Password
             </label>
             <Link
               href="/forgot-password"
-              className="text-[11.5px] text-muted transition-colors duration-base ease-standard hover:text-accent"
+              className="text-caption text-muted transition-colors duration-base ease-standard hover:text-accent"
             >
               Forgot password?
             </Link>
@@ -75,7 +75,7 @@ export default function LoginPage() {
             type="password"
             placeholder="••••••••"
             required
-            className="w-full rounded-[10px] border border-line bg-[#0B0B0B] px-3 py-2.5 text-[13px] text-primary transition-colors duration-base ease-standard outline-none placeholder:text-dim focus:border-accent"
+            className="w-full rounded-panel border border-line bg-canvas px-3 py-2.5 text-body text-primary transition-colors duration-base ease-standard outline-none placeholder:text-dim focus:border-accent"
           />
         </div>
 
@@ -84,7 +84,7 @@ export default function LoginPage() {
         </div>
       </form>
 
-      <p className="mt-5 text-center text-[12.5px] text-muted">
+      <p className="mt-5 text-center text-body text-muted">
         Don&apos;t have an account?{" "}
         <Link href="/signup" className="text-accent transition-colors duration-base ease-standard hover:text-accent-light">
           Sign up

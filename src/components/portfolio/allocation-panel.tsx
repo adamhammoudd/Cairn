@@ -11,7 +11,7 @@ const DIMENSIONS = [
   { key: "geography", label: "Geography" },
 ] as const;
 
-const COLORS = ["#2FC685", "#5EE6A6", "#22B573", "#8A8A8A", "#6A6A6A"];
+const COLORS = ["var(--color-accent)", "var(--color-accent-light)", "var(--color-accent-dark)", "var(--color-muted)", "var(--color-dim)"];
 
 interface AllocationPanelProps {
   byDimension: Record<(typeof DIMENSIONS)[number]["key"], AllocationSlice[]>;
@@ -30,7 +30,7 @@ export function AllocationPanel({ byDimension }: AllocationPanelProps) {
             key={d.key}
             type="button"
             onClick={() => setDimension(d.key)}
-            className={`rounded-md px-3 py-1.5 text-xs ${
+            className={`rounded-control px-3 py-1.5 text-caption ${
               dimension === d.key ? "bg-active text-primary" : "text-muted"
             }`}
           >
@@ -40,12 +40,12 @@ export function AllocationPanel({ byDimension }: AllocationPanelProps) {
       </div>
 
       {slices.length === 0 ? (
-        <div className="py-8 text-center text-sm text-muted">No holdings to allocate yet.</div>
+        <div className="py-8 text-center text-lead text-muted">No holdings to allocate yet.</div>
       ) : (
         <div className="flex flex-col gap-3">
           {slices.map((s, i) => (
             <div key={s.label}>
-              <div className="mb-1.5 flex justify-between text-[13px] text-primary">
+              <div className="mb-1.5 flex justify-between text-body text-primary">
                 <span>
                   {s.label} · {s.pct.toFixed(0)}%
                 </span>

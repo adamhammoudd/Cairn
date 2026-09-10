@@ -84,15 +84,15 @@ export function CalendarPanel({ events }: { events: CalendarEvent[] }) {
     <div className="animate-page-in flex flex-col gap-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <div className="mb-2 font-mono text-[10.5px] tracking-[0.16em] text-muted uppercase">Planning · Calendar</div>
-          <h1 className="font-serif text-[32px] leading-[1.1] font-normal text-primary">{monthLabel}</h1>
+          <div className="mb-2 font-mono text-micro tracking-[0.16em] text-muted uppercase">Planning · Calendar</div>
+          <h1 className="font-serif text-display leading-[1.1] font-normal text-primary">{monthLabel}</h1>
         </div>
         <div className="flex items-center gap-1.5">
           <button
             type="button"
             onClick={() => setMonthOffset((o) => o - 1)}
             aria-label="Previous month"
-            className="flex h-8 w-8 items-center justify-center rounded-lg border border-line text-muted transition-colors duration-fast ease-standard hover:border-[#3A3A3A] hover:text-primary"
+            className="flex h-8 w-8 items-center justify-center rounded-control border border-line text-muted transition-colors duration-fast ease-standard hover:border-line-strong hover:text-primary"
           >
             ‹
           </button>
@@ -105,10 +105,10 @@ export function CalendarPanel({ events }: { events: CalendarEvent[] }) {
             // here", not "broken" - a plain opacity-40 disabled state looks
             // identical to any other inert control. Same accent treatment the
             // calendar grid already uses for today's cell.
-            className={`rounded-lg border px-3 py-1.5 text-[12.5px] transition-colors duration-fast ease-standard ${
+            className={`rounded-control border px-3 py-1.5 text-body transition-colors duration-fast ease-standard ${
               monthOffset === 0
                 ? "border-accent/45 bg-active text-accent"
-                : "border-line text-muted hover:border-[#3A3A3A] hover:text-primary"
+                : "border-line text-muted hover:border-line-strong hover:text-primary"
             }`}
           >
             Today
@@ -117,18 +117,18 @@ export function CalendarPanel({ events }: { events: CalendarEvent[] }) {
             type="button"
             onClick={() => setMonthOffset((o) => o + 1)}
             aria-label="Next month"
-            className="flex h-8 w-8 items-center justify-center rounded-lg border border-line text-muted transition-colors duration-fast ease-standard hover:border-[#3A3A3A] hover:text-primary"
+            className="flex h-8 w-8 items-center justify-center rounded-control border border-line text-muted transition-colors duration-fast ease-standard hover:border-line-strong hover:text-primary"
           >
             ›
           </button>
         </div>
       </div>
 
-      <div className="flex w-fit flex-wrap gap-1.5 rounded-xl border border-line bg-panel p-1">
+      <div className="flex w-fit flex-wrap gap-1.5 rounded-panel border border-line bg-panel p-1">
         <button
           type="button"
           onClick={() => setActiveTypes([])}
-          className={`rounded-lg px-3.25 py-1.75 text-[12.5px] transition-colors duration-base ease-standard ${
+          className={`rounded-control px-3 py-2 text-body transition-colors duration-base ease-standard ${
             activeTypes.length === 0 ? "bg-active text-primary" : "text-muted hover:text-primary"
           }`}
         >
@@ -139,7 +139,7 @@ export function CalendarPanel({ events }: { events: CalendarEvent[] }) {
             key={t}
             type="button"
             onClick={() => toggle(t)}
-            className={`flex items-center gap-1.75 rounded-lg px-3.25 py-1.75 text-[12.5px] capitalize transition-colors duration-base ease-standard ${
+            className={`flex items-center gap-2 rounded-control px-3 py-2 text-body capitalize transition-colors duration-base ease-standard ${
               activeTypes.includes(t) ? "bg-active text-primary" : "text-muted hover:text-primary"
             }`}
           >
@@ -151,26 +151,26 @@ export function CalendarPanel({ events }: { events: CalendarEvent[] }) {
 
       <div className="grid grid-cols-1 items-start gap-3.5 min-[900px]:grid-cols-[300px_1fr]">
         <aside className="overflow-hidden rounded-card border border-line bg-panel">
-          <div className="border-b border-line px-4 py-3.25 font-mono text-[10px] tracking-[0.14em] text-muted uppercase">
+          <div className="border-b border-line px-4 py-3 font-mono text-eyebrow text-muted uppercase">
             Next up
           </div>
 
           {upcoming.length === 0 ? (
-            <p className="px-4 py-5 text-[12.5px] text-dim">
+            <p className="px-4 py-5 text-body text-dim">
               No upcoming events{activeTypes.length > 0 ? " of this type" : ""}.
             </p>
           ) : (
             upcoming.map((e) => (
-              <div key={e.id} className="flex gap-2.75 border-b border-line/70 px-4 py-3.5 last:border-b-0">
-                <span className="w-0.75 shrink-0 rounded-sm" style={{ background: tintForEvent(e.event_type) }} />
+              <div key={e.id} className="flex gap-3 border-b border-line/70 px-4 py-3.5 last:border-b-0">
+                <span className="w-1 shrink-0 rounded-xs" style={{ background: tintForEvent(e.event_type) }} />
                 <div className="min-w-0">
                   <div
-                    className="font-mono text-[9.5px] tracking-[0.12em] uppercase"
+                    className="font-mono text-eyebrow uppercase"
                     style={{ color: tintForEvent(e.event_type) }}
                   >
                     {e.event_type} · {formatDayLabel(e.event_date, todayIso)}
                   </div>
-                  <div className="mt-1.5 text-[13px] text-primary">
+                  <div className="mt-1.5 text-body text-primary">
                     {e.symbol ? `${e.symbol} - ${e.title}` : e.title}
                   </div>
                 </div>
@@ -182,7 +182,7 @@ export function CalendarPanel({ events }: { events: CalendarEvent[] }) {
         <div className="rounded-card border border-line bg-panel p-4">
           <div className="grid grid-cols-7 gap-1.5 pb-2">
             {DOW.map((d) => (
-              <div key={d} className="text-center font-mono text-[9.5px] tracking-[0.12em] text-dim uppercase">
+              <div key={d} className="text-center font-mono text-eyebrow text-dim uppercase">
                 {d}
               </div>
             ))}
@@ -192,29 +192,29 @@ export function CalendarPanel({ events }: { events: CalendarEvent[] }) {
             {cells.map((cell) => (
               <div
                 key={cell.iso}
-                className={`min-h-[74px] rounded-lg border p-1.75 transition-colors duration-fast ease-standard hover:border-line ${
+                className={`min-h-[74px] rounded-control border p-2 transition-colors duration-fast ease-standard hover:border-line ${
                   cell.isToday ? "border-accent bg-active" : "border-line/70"
                 } ${cell.inMonth ? "" : "opacity-40"}`}
               >
                 <div
-                  className={`font-mono text-[10.5px] tabular-nums ${
+                  className={`font-mono text-micro tabular-nums ${
                     cell.isToday ? "text-accent" : cell.inMonth ? "text-primary" : "text-dim"
                   }`}
                 >
                   {cell.day}
                 </div>
-                <div className="mt-1.5 flex flex-col gap-0.75">
+                <div className="mt-1.5 flex flex-col gap-1">
                   {cell.events.slice(0, 2).map((e) => (
-                    <div key={e.id} className="flex items-center gap-1.25" title={`${e.symbol ?? ""} ${e.title}`.trim()}>
+                    <div key={e.id} className="flex items-center gap-1" title={`${e.symbol ?? ""} ${e.title}`.trim()}>
                       <span
                         className="h-1 w-1 shrink-0 rounded-full"
                         style={{ background: tintForEvent(e.event_type) }}
                       />
-                      <span className="truncate text-[10px] text-muted">{e.symbol ?? e.title}</span>
+                      <span className="truncate text-eyebrow text-muted">{e.symbol ?? e.title}</span>
                     </div>
                   ))}
                   {cell.events.length > 2 && (
-                    <span className="text-[10px] text-dim">+{cell.events.length - 2} more</span>
+                    <span className="text-eyebrow text-dim">+{cell.events.length - 2} more</span>
                   )}
                 </div>
               </div>

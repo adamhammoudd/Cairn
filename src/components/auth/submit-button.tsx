@@ -16,7 +16,7 @@ export function SubmitButton({
     <button
       type="submit"
       disabled={pending || disabled}
-      className="w-full rounded-[10px] bg-gradient-to-br from-accent-light to-accent-dark py-3.5 text-[15px] font-semibold text-canvas disabled:opacity-60"
+      className="w-full rounded-panel bg-gradient-to-br from-accent-light to-accent-dark py-3.5 text-title font-semibold text-canvas disabled:opacity-60"
     >
       {pending ? "Please wait…" : children}
     </button>

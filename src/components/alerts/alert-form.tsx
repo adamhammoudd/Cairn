@@ -29,7 +29,7 @@ const CHANNELS: { value: AlertChannel; hint?: string }[] = [
 
 const LABEL = FIELD_LABEL;
 const inputClass =
-  "w-full rounded-lg border border-line bg-canvas px-3 py-2.25 text-[12.5px] text-primary outline-none transition-colors duration-base ease-standard focus:border-accent";
+  "w-full rounded-control border border-line bg-canvas px-3 py-2 text-body text-primary outline-none transition-colors duration-base ease-standard focus:border-accent";
 
 function num(condition: Record<string, unknown>, key: string, fallback: number) {
   const v = Number(condition[key]);
@@ -84,13 +84,13 @@ export function AlertForm({ alert, defaultChannels, onDone, onCancel }: AlertFor
     <form action={formAction} className="animate-menu-in rounded-card border border-line bg-panel p-4.5">
       {alert && <input type="hidden" name="id" value={alert.id} />}
       <div className="mb-3.5 flex items-center justify-between gap-3">
-        <div className="font-mono text-[10px] tracking-[0.14em] text-muted uppercase">
+        <div className="font-mono text-eyebrow text-muted uppercase">
           {editing ? `Edit alert · ${alert!.scope_value}` : "New alert"}
         </div>
         <button
           type="button"
           onClick={onCancel}
-          className="rounded-lg px-2 py-1 text-[12px] text-muted transition-colors duration-fast ease-standard hover:bg-active hover:text-primary"
+          className="rounded-control px-2 py-1 text-caption text-muted transition-colors duration-fast ease-standard hover:bg-active hover:text-primary"
         >
           Cancel
         </button>
@@ -272,7 +272,7 @@ export function AlertForm({ alert, defaultChannels, onDone, onCancel }: AlertFor
             <label
               key={c.value}
               title={c.hint}
-              className={`flex items-center gap-2 text-[13px] ${c.value === "in_app" ? "text-primary" : "text-muted"}`}
+              className={`flex items-center gap-2 text-body ${c.value === "in_app" ? "text-primary" : "text-muted"}`}
             >
               <input
                 type="checkbox"
@@ -285,16 +285,16 @@ export function AlertForm({ alert, defaultChannels, onDone, onCancel }: AlertFor
             </label>
           ))}
         </div>
-        <p className="mt-2 text-[11.5px] text-dim">
+        <p className="mt-2 text-caption text-dim">
           Push and email are recorded but not delivered - no provider is wired yet, so those rows are logged as{" "}
           <span className="text-muted">unconfigured</span> rather than silently dropped.
         </p>
       </div>
 
-      {error && error !== "saved" && <p className="mt-3 text-[13px] text-negative">{error}</p>}
+      {error && error !== "saved" && <p className="mt-3 text-body text-negative">{error}</p>}
 
       {editing && (
-        <p className="mt-3 text-[11.5px] text-dim">
+        <p className="mt-3 text-caption text-dim">
           Saving an edit clears this alert&apos;s cooldown, so the new condition can fire straight away instead of
           staying quiet under the old one&apos;s timer.
         </p>
@@ -302,7 +302,7 @@ export function AlertForm({ alert, defaultChannels, onDone, onCancel }: AlertFor
 
       <button
         type="submit"
-        className="mt-4 rounded-lg bg-gradient-to-br from-accent-light to-accent-dark px-4 py-2.5 text-[13px] font-semibold text-canvas transition-[box-shadow,transform] duration-base ease-standard hover:-translate-y-px hover:shadow-[0_0_26px_rgba(47,198,133,0.35)]"
+        className="mt-4 rounded-control bg-gradient-to-br from-accent-light to-accent-dark px-4 py-2.5 text-body font-semibold text-canvas transition-[box-shadow,transform] duration-base ease-standard hover:-translate-y-px hover:shadow-[0_0_26px_rgba(47,198,133,0.35)]"
       >
         {editing ? "Save changes" : "Create alert"}
       </button>

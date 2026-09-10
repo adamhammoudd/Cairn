@@ -65,7 +65,7 @@ export default function SignupPage() {
             onChange={(e) => setAgreed(e.target.checked)}
             className="mt-0.5 size-4 shrink-0 accent-accent"
           />
-          <label htmlFor="consent" className="text-[12.5px] leading-[1.5] text-muted">
+          <label htmlFor="consent" className="text-body leading-[1.5] text-muted">
             I agree to the{" "}
             <Link
               href="/terms"
@@ -93,7 +93,7 @@ export default function SignupPage() {
         </div>
       </form>
 
-      <p className="mt-5 text-center text-[12.5px] text-muted">
+      <p className="mt-5 text-center text-body text-muted">
         Already have an account?{" "}
         <Link href="/login" className="text-accent transition-colors duration-base ease-standard hover:text-accent-light">
           Sign in

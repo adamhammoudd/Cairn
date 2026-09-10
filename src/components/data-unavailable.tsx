@@ -28,27 +28,27 @@ export function DataUnavailable({ error }: { error: DataReadError }): ReactEleme
   return (
     <div className="animate-page-in mx-auto max-w-[620px] px-6 py-20">
       <div className="rounded-card border border-line bg-panel p-6">
-        <p className="font-mono text-[10.5px] tracking-[0.16em] text-warning uppercase">Data unavailable</p>
-        <h1 className="mt-2 font-serif text-[26px] leading-[1.15] text-primary">
+        <p className="font-mono text-micro tracking-[0.16em] text-warning uppercase">Data unavailable</p>
+        <h1 className="mt-2 font-serif text-h2 leading-[1.15] text-primary">
           {error.missingObject && showDiagnostics
             ? "This deployment is ahead of its database"
             : "This page could not read its data"}
         </h1>
 
-        <p className="mt-3 text-[13.5px] leading-relaxed text-muted text-pretty">
+        <p className="mt-3 text-lead leading-relaxed text-muted text-pretty">
           {error.missingObject && showDiagnostics
             ? "The build is reading tables and functions the connected Supabase project does not have, so prices, holdings and market listings cannot be loaded. No figures are shown rather than a zero that would look like a real balance."
             : "Some data could not be loaded right now, so no figures are shown rather than values that could not be verified. Please try again shortly."}
         </p>
 
         {showDiagnostics ? (
-          <pre className="mt-4 overflow-x-auto rounded-lg border border-line bg-canvas p-3 font-mono text-[11px] leading-relaxed break-words whitespace-pre-wrap text-dim">
+          <pre className="mt-4 overflow-x-auto rounded-control border border-line bg-canvas p-3 font-mono text-micro leading-relaxed break-words whitespace-pre-wrap text-dim">
             {error.message}
           </pre>
         ) : null}
 
         {error.missingObject && showDiagnostics ? (
-          <p className="mt-3 text-[12.5px] leading-relaxed text-dim text-pretty">
+          <p className="mt-3 text-body leading-relaxed text-dim text-pretty">
             Run <code className="font-mono text-muted">npm run check-db</code> to list every missing object, then apply
             the migration above in the Supabase SQL editor. Migrations are not applied by deploying - see{" "}
             <code className="font-mono text-muted">supabase/README.md</code>.
@@ -63,7 +63,7 @@ export function DataUnavailable({ error }: { error: DataReadError }): ReactEleme
           {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
           <a
             href="/"
-            className="rounded-[10px] bg-gradient-to-br from-accent-light to-accent-dark px-4 py-2.25 text-[12.5px] font-semibold text-canvas"
+            className="rounded-panel bg-gradient-to-br from-accent-light to-accent-dark px-4 py-2 text-body font-semibold text-canvas"
           >
             Back to dashboard
           </a>

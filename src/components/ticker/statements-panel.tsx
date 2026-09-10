@@ -36,13 +36,13 @@ export function StatementsPanel({ symbol }: { symbol: string }) {
   return (
     <div className="overflow-hidden rounded-card border border-line bg-panel">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-3">
-        <div className="flex gap-1 rounded-xl border border-line p-0.75">
+        <div className="flex gap-1 rounded-panel border border-line p-1">
           {STATEMENTS.map((s) => (
             <button
               key={s.id}
               type="button"
               onClick={() => setStatement(s.id)}
-              className={`rounded-lg px-3 py-1.5 font-mono text-[11px] transition-colors duration-base ease-standard ${
+              className={`rounded-control px-3 py-1.5 font-mono text-micro transition-colors duration-base ease-standard ${
                 statement === s.id ? "bg-active text-primary" : "text-muted hover:text-primary"
               }`}
             >
@@ -50,13 +50,13 @@ export function StatementsPanel({ symbol }: { symbol: string }) {
             </button>
           ))}
         </div>
-        <div className="flex gap-1 rounded-xl border border-line p-0.75">
+        <div className="flex gap-1 rounded-panel border border-line p-1">
           {(["annual", "quarterly"] as PeriodType[]).map((p) => (
             <button
               key={p}
               type="button"
               onClick={() => setPeriodType(p)}
-              className={`rounded-lg px-3 py-1.5 font-mono text-[11px] capitalize transition-colors duration-base ease-standard ${
+              className={`rounded-control px-3 py-1.5 font-mono text-micro capitalize transition-colors duration-base ease-standard ${
                 periodType === p ? "bg-active text-primary" : "text-muted hover:text-primary"
               }`}
             >
@@ -67,19 +67,19 @@ export function StatementsPanel({ symbol }: { symbol: string }) {
       </div>
 
       {loading ? (
-        <p className="px-4 py-10 text-center text-sm text-muted">Checking for filed statements on {symbol}…</p>
+        <p className="px-4 py-10 text-center text-lead text-muted">Checking for filed statements on {symbol}…</p>
       ) : !table || table.periods.length === 0 ? (
-        <p className="mx-auto max-w-[52ch] px-4 py-10 text-center text-[13px] text-muted text-pretty">{table?.detail}</p>
+        <p className="mx-auto max-w-[52ch] px-4 py-10 text-center text-body text-muted text-pretty">{table?.detail}</p>
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[560px] border-collapse text-[12.5px]">
+          <table className="w-full min-w-[560px] border-collapse text-body">
             <thead>
               <tr className="border-b border-line">
-                <th className="px-4 py-2.75 text-left font-mono text-[9.5px] tracking-[0.12em] text-dim uppercase">
+                <th className="px-4 py-3 text-left font-mono text-eyebrow text-dim uppercase">
                   {currency ? `Line item · ${currency}` : "Line item"}
                 </th>
                 {table.periods.map((p) => (
-                  <th key={p.period_end} className="px-4 py-2.75 text-right font-mono text-[9.5px] tracking-[0.12em] text-dim uppercase">
+                  <th key={p.period_end} className="px-4 py-3 text-right font-mono text-eyebrow text-dim uppercase">
                     {p.period_end}
                   </th>
                 ))}
@@ -87,7 +87,7 @@ export function StatementsPanel({ symbol }: { symbol: string }) {
             </thead>
             <tbody>
               {table.lines.map((line) => (
-                <tr key={line.key} className="border-b border-[#171717] last:border-b-0 hover:bg-active">
+                <tr key={line.key} className="border-b border-line-soft last:border-b-0 hover:bg-active">
                   <td className={`px-4 py-2.5 ${line.emphasis ? "text-primary" : "text-muted"}`}>{line.label}</td>
                   {table.periods.map((p) => (
                     <td
@@ -101,7 +101,7 @@ export function StatementsPanel({ symbol }: { symbol: string }) {
               ))}
             </tbody>
           </table>
-          <p className="border-t border-line px-4 py-3 text-[11.5px] text-dim">
+          <p className="border-t border-line px-4 py-3 text-caption text-dim">
             As filed with the market-data provider. Only lines the filing reported are listed - an omitted line is left
             out rather than shown as zero. Figures are not restated, adjusted, or estimated by Cairn.
           </p>

@@ -25,7 +25,7 @@ function renderInline(nodes: InlineNode[]): React.ReactNode {
         );
       case "code":
         return (
-          <code key={i} className="rounded bg-active px-1 py-0.5 font-mono text-[0.85em] text-primary">
+          <code key={i} className="rounded-xs bg-active px-1 py-0.5 font-mono text-[0.85em] text-primary">
             {node.value}
           </code>
         );
@@ -51,7 +51,7 @@ function renderBlock(block: Block, i: number): React.ReactNode {
       // h1/h2 -> a serif sub-title; h3+ -> the mock's uppercase mono label.
       if (block.level <= 2) {
         return (
-          <h3 key={i} className="mt-3 mb-1.5 font-serif text-[15px] font-normal text-primary first:mt-0">
+          <h3 key={i} className="mt-3 mb-1.5 font-serif text-title font-normal text-primary first:mt-0">
             {renderInline(block.children)}
           </h3>
         );
@@ -59,7 +59,7 @@ function renderBlock(block: Block, i: number): React.ReactNode {
       return (
         <h4
           key={i}
-          className="mt-3 mb-1 font-mono text-[10px] tracking-[0.14em] text-muted uppercase first:mt-0"
+          className="mt-3 mb-1 font-mono text-eyebrow text-muted uppercase first:mt-0"
         >
           {renderInline(block.children)}
         </h4>

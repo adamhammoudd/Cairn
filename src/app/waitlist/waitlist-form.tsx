@@ -13,7 +13,7 @@ function SubmitButton({ centered }: { centered?: boolean }) {
     <button
       type="submit"
       disabled={pending}
-      className={`shrink-0 rounded-[10px] bg-gradient-to-br from-accent-light to-accent-dark px-5 py-3 text-[14px] font-semibold text-canvas transition-[box-shadow] duration-base ease-standard hover:shadow-[0_0_24px_rgba(47,198,133,0.35)] disabled:opacity-60 ${
+      className={`shrink-0 rounded-panel bg-gradient-to-br from-accent-light to-accent-dark px-5 py-3 text-lead font-semibold text-canvas transition-[box-shadow] duration-base ease-standard hover:shadow-[0_0_24px_rgba(47,198,133,0.35)] disabled:opacity-60 ${
         centered ? "" : ""
       }`}
     >
@@ -30,9 +30,9 @@ function Confirmed({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-[12px] border border-accent/40 bg-accent/[0.06] px-4 py-4">
-      <p className="font-serif text-[18px] leading-[1.25] text-primary">{title}</p>
-      <p className="mt-1.5 text-[13px] leading-[1.6] text-muted text-pretty">{children}</p>
+    <div className="rounded-panel border border-accent/40 bg-accent/[0.06] px-4 py-4">
+      <p className="font-serif text-h3 leading-[1.25] text-primary">{title}</p>
+      <p className="mt-1.5 text-body leading-[1.6] text-muted text-pretty">{children}</p>
     </div>
   );
 }
@@ -69,7 +69,7 @@ export function WaitlistForm({ centered = false }: { centered?: boolean }) {
           2&nbsp;months of Premium to this address.
         </Confirmed>
         {!state.emailDelivered && (
-          <p className="mt-2.5 rounded-[8px] border border-warning/40 bg-warning/8 px-2.5 py-2 text-[11.5px] leading-[1.5] text-warning text-pretty">
+          <p className="mt-2.5 rounded-control border border-warning/40 bg-warning/8 px-2.5 py-2 text-caption leading-[1.5] text-warning text-pretty">
             Email delivery isn&apos;t configured on this environment, so the link was written to the
             server log instead of sent. This must be set up before the page goes live.
           </p>
@@ -114,7 +114,7 @@ export function WaitlistForm({ centered = false }: { centered?: boolean }) {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             aria-describedby={state.status === "error" ? "wl-error" : undefined}
-            className="w-full rounded-[10px] border border-line bg-[#0B0B0B] px-3.5 py-3 text-[14px] text-primary transition-colors duration-base ease-standard outline-none placeholder:text-dim focus:border-accent sm:max-w-[320px]"
+            className="w-full rounded-panel border border-line bg-canvas px-3.5 py-3 text-lead text-primary transition-colors duration-base ease-standard outline-none placeholder:text-dim focus:border-accent sm:max-w-[320px]"
           />
           <SubmitButton centered={centered} />
         </div>
@@ -123,13 +123,13 @@ export function WaitlistForm({ centered = false }: { centered?: boolean }) {
       {state.status === "error" && (
         <p
           id="wl-error"
-          className="mt-2.5 rounded-[10px] border border-negative/40 bg-negative/8 px-3 py-2.5 text-[12.5px] text-negative"
+          className="mt-2.5 rounded-panel border border-negative/40 bg-negative/8 px-3 py-2.5 text-body text-negative"
         >
           {state.message}
         </p>
       )}
 
-      <p className={`mt-3 text-[11.5px] leading-[1.6] text-dim text-pretty ${centered ? "" : "max-w-[420px]"}`}>
+      <p className={`mt-3 text-caption leading-[1.6] text-dim text-pretty ${centered ? "" : "max-w-[420px]"}`}>
         No spam, no newsletter — one confirmation email now and one launch email later. Email address
         only.{" "}
         <Link href="/privacy" className="text-muted underline underline-offset-2 hover:text-accent">

@@ -9,7 +9,7 @@ interface DisclosureProps {
 export function Disclosure({ variant = "inline" }: DisclosureProps) {
   if (variant === "banner") {
     return (
-      <div className="rounded-card border border-line bg-panel px-4 py-3 text-[12.5px] leading-relaxed text-muted">
+      <div className="rounded-card border border-line bg-panel px-4 py-3 text-body leading-relaxed text-muted">
         <span className="font-semibold text-primary">Informational only, not investment advice.</span>{" "}
         Cairn&apos;s analysis is market/sector/ticker-level output - it never resolves to a
         personalized buy, hold, or sell recommendation. Always verify sources and consult a
@@ -23,9 +23,9 @@ export function Disclosure({ variant = "inline" }: DisclosureProps) {
     // Context/mockups/Cairn.dc.html: 1px #262626 border, #101010 fill, 10px
     // radius, and a 5px warning rule stretched to the text height.
     return (
-      <div className="flex items-stretch gap-2.25 rounded-[10px] border border-[#262626] bg-[#101010] px-3 py-2.5">
-        <span aria-hidden className="w-1.25 flex-shrink-0 self-stretch rounded-sm bg-warning" />
-        <p className="text-[11.5px] leading-relaxed text-muted text-pretty">
+      <div className="flex items-stretch gap-2 rounded-panel border border-line bg-panel px-3 py-2.5">
+        <span aria-hidden className="w-1 flex-shrink-0 self-stretch rounded-xs bg-warning" />
+        <p className="text-caption leading-relaxed text-muted text-pretty">
           Market/sector/ticker-level analytical output, not personalized financial advice. Not a
           recommendation to buy, hold, or sell anything.
         </p>
@@ -34,7 +34,7 @@ export function Disclosure({ variant = "inline" }: DisclosureProps) {
   }
 
   return (
-    <p className="text-[11px] leading-relaxed text-dim">
+    <p className="text-micro leading-relaxed text-dim">
       Market/sector/ticker-level analytical output, not personalized financial advice. Not a
       recommendation to buy, hold, or sell anything.
     </p>

@@ -49,7 +49,7 @@ export default async function ConfirmPage({
           <Link href="/" aria-label="Cairn">
             <Logo size={26} />
           </Link>
-          <span className="font-mono text-[10px] tracking-[0.18em] text-dim uppercase">
+          <span className="font-mono text-eyebrow text-dim uppercase">
             In development · Waitlist open
           </span>
         </header>
@@ -58,29 +58,29 @@ export default async function ConfirmPage({
           <div className="mx-auto max-w-[520px]">
             {outcome.kind === "invalid" ? (
               <>
-                <div className="font-mono text-[10px] tracking-[0.16em] text-muted uppercase">
+                <div className="font-mono text-eyebrow text-muted uppercase">
                   Waitlist
                 </div>
-                <h1 className="mt-2 font-serif text-[30px] leading-[1.12] font-normal text-primary">
+                <h1 className="mt-2 font-serif text-h1 leading-[1.12] font-normal text-primary">
                   This link isn&apos;t valid
                 </h1>
-                <p className="mt-3 text-[13.5px] leading-[1.65] text-muted text-pretty">
+                <p className="mt-3 text-lead leading-[1.65] text-muted text-pretty">
                   The confirmation link is incomplete or has expired. Join again from the waitlist —
                   if your address is already on the list, we&apos;ll just re-send the link.
                 </p>
                 <Link
                   href="/waitlist"
-                  className="mt-6 inline-block rounded-[10px] border border-line px-4 py-2.5 text-[13px] text-primary transition-colors duration-base ease-standard hover:border-[#3A3A3A] hover:bg-active"
+                  className="mt-6 inline-block rounded-panel border border-line px-4 py-2.5 text-body text-primary transition-colors duration-base ease-standard hover:border-line-strong hover:bg-active"
                 >
                   Back to the waitlist
                 </Link>
               </>
             ) : (
               <>
-                <div className="font-mono text-[10px] tracking-[0.16em] text-accent uppercase">
+                <div className="font-mono text-eyebrow text-accent uppercase">
                   {outcome.kind === "already" ? "Already confirmed" : "You're confirmed"}
                 </div>
-                <h1 className="mt-2 font-serif text-[30px] leading-[1.12] font-normal text-primary">
+                <h1 className="mt-2 font-serif text-h1 leading-[1.12] font-normal text-primary">
                   {outcome.position !== null ? (
                     <>
                       You&apos;re <span className="text-accent">#{outcome.position}</span> on the
@@ -92,21 +92,21 @@ export default async function ConfirmPage({
                 </h1>
 
                 {outcome.founding ? (
-                  <p className="mt-3 text-[13.5px] leading-[1.65] text-muted text-pretty">
+                  <p className="mt-3 text-lead leading-[1.65] text-muted text-pretty">
                     You made the first <span className="text-primary">{outcome.limit}</span> — you&apos;re
                     a <span className="text-primary">founding member</span>. Two months of Premium are
                     reserved for this email address. They begin the day your access starts at launch,
                     not today.
                   </p>
                 ) : (
-                  <p className="mt-3 text-[13.5px] leading-[1.65] text-muted text-pretty">
+                  <p className="mt-3 text-lead leading-[1.65] text-muted text-pretty">
                     The {outcome.limit} founding-member places are filled, so this isn&apos;t a
                     founding spot — but you&apos;re on the list and you&apos;ll get standard access
                     when Cairn launches.
                   </p>
                 )}
 
-                <p className="mt-4 text-[12px] leading-[1.6] text-dim text-pretty">
+                <p className="mt-4 text-caption leading-[1.6] text-dim text-pretty">
                   Nothing else to do now. We&apos;ll email this address once when access opens.
                 </p>
               </>
@@ -114,7 +114,7 @@ export default async function ConfirmPage({
           </div>
         </main>
 
-        <footer className="border-t border-line py-8 text-[11px] leading-[1.7] text-dim">
+        <footer className="border-t border-line py-8 text-micro leading-[1.7] text-dim">
           Cairn is informational only — not a broker and not investment advice.{" "}
           <Link href="/privacy" className="text-muted hover:text-accent">
             Privacy Policy
