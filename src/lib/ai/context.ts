@@ -45,6 +45,16 @@ export interface ChatContext {
   portfolio: PortfolioSummary | null;
 }
 
+/**
+ * How many stored analyses one answer may cite.
+ *
+ * Each one renders as a full methodology card - claim, probability range,
+ * confidence, sources and analogs - so six of them buried the reply that was
+ * supposed to be the point. Two is enough to compare against, and an answer
+ * that needs more than two is really two questions.
+ */
+const MAX_CONTEXT_ANALYSES = 2;
+
 // Relevance ranking only - never used to shape what's said, only which stored
 // analyses are worth surfacing. Shared by chat context and the daily briefing.
 //
@@ -91,14 +101,44 @@ export async function buildChatContext(
   // explicit mention in the message wins; otherwise fall back to portfolio symbols for relevance
   const relevantSymbols = mentioned.length > 0 ? mentioned : portfolioSymbols;
 
-  let analysisQuery = supabase
-    .from("ai_analyses")
-    .select("id, scope_type, scope_value, analysis_type, probability_low, probability_high, confidence_level, reasoning_text, sample_size")
-    .eq("status", "validated")
-    .order("created_at", { ascending: false })
-    .limit(6);
-  if (relevantSymbols.length > 0) analysisQuery = analysisQuery.in("scope_value", relevantSymbols);
-  const { data: analyses } = await analysisQuery;
+  // Relevant analyses, or none.
+  //
+  // The `.in()` filter was conditional, so a question naming no ticker - with
+  // Portfolio context off, leaving nothing to fall back on - ran the query
+  // unfiltered and returned "the newest 6 validated analyses" whatever they
+  // were about. Ask "what's moving semiconductors this week" and the answer
+  // came back with an AMZN analysis and three separate BTC ones stapled
+  // underneath, each rendered as a full methodology card.
+  //
+  // Unrelated evidence beneath a claim is worse than no evidence: it reads as
+  // support and invites the reader to join it to the argument. An answer with
+  // nothing relevant on file should say so - and it already does, pointing at
+  // the Research page - rather than dressing itself in whatever happened to be
+  // generated last.
+  let analyses: ChatContext["analyses"] = [];
+  if (relevantSymbols.length > 0) {
+    const { data } = await supabase
+      .from("ai_analyses")
+      .select("id, scope_type, scope_value, analysis_type, probability_low, probability_high, confidence_level, reasoning_text, sample_size")
+      .eq("status", "validated")
+      .in("scope_value", relevantSymbols)
+      .order("created_at", { ascending: false })
+      .limit(12);
+
+    // One card per scope and type. Re-running the same analysis stores a new
+    // row each time, and the briefing was listing "BTC 21-100%" three times
+    // over - three runs of one question is one piece of evidence, not three.
+    // Ordered newest-first above, so the first of each pair is the current one.
+    const seen = new Set<string>();
+    analyses = (data ?? [])
+      .filter((a) => {
+        const key = `${a.scope_type}:${a.scope_value}:${a.analysis_type}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      })
+      .slice(0, MAX_CONTEXT_ANALYSES);
+  }
 
   let newsQuery = supabase
     .from("news_items")
