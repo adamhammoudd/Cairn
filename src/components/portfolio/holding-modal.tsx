@@ -5,6 +5,7 @@ import { addHolding, updateHolding } from "@/lib/actions/holdings";
 import { MAX_AMOUNT_INPUT } from "@/lib/input-limits";
 import { SubmitButton } from "@/components/auth/submit-button";
 import { SymbolTypeahead } from "@/components/symbol-typeahead";
+import { getSymbolProfile } from "@/lib/actions/symbols";
 import type { Holding } from "@/lib/portfolio";
 import type { AssetType } from "@/lib/supabase/types";
 import { FIELD_LABEL } from "@/components/field-label";
@@ -31,6 +32,8 @@ export function HoldingModal({ holding, initialSymbol, onClose }: HoldingModalPr
   // wipe everything the user had entered in add mode. Keeping the values in
   // state preserves them across a failed submit - the same reason
   // new-watchlist-form.tsx is controlled.
+  // True while the sector lookup for a just-picked symbol is in flight.
+  const [lookingUp, setLookingUp] = useState(false);
   const [fields, setFields] = useState({
     symbol: holding?.symbol ?? initialSymbol?.symbol ?? "",
     quantity: holding?.quantity != null ? String(holding.quantity) : "",
@@ -86,6 +89,29 @@ export function HoldingModal({ holding, initialSymbol, onClose }: HoldingModalPr
                   onSelect={(r) => {
                     setField("symbol", r.symbol);
                     setAssetType(r.assetType);
+                    // Fill in what the product already knows. Sector was left
+                    // blank for the user to remember and type, on a field news
+                    // relevance reads (actions/news.ts matches headlines
+                    // against holdings.sector), so a forgotten sector quietly
+                    // costs the account its sector-matched news.
+                    //
+                    // Only fills an EMPTY field: a value already typed is the
+                    // user's and is never overwritten. Geography is not filled
+                    // - nothing in the schema carries a country or exchange
+                    // for a symbol, and a guessed one would be a fabricated
+                    // field in a product built on showing its sources.
+                    setLookingUp(true);
+                    getSymbolProfile(r.symbol)
+                      .then((profile) => {
+                        setFields((prev) => ({
+                          ...prev,
+                          sector: prev.sector.trim() ? prev.sector : (profile.sector ?? ""),
+                          asset_class: prev.asset_class.trim()
+                            ? prev.asset_class
+                            : (profile.assetClass ?? ""),
+                        }));
+                      })
+                      .finally(() => setLookingUp(false));
                   }}
                 />
               )}
@@ -164,6 +190,11 @@ export function HoldingModal({ holding, initialSymbol, onClose }: HoldingModalPr
                   <option key={label} value={label} />
                 ))}
               </datalist>
+              {lookingUp && (
+                <p aria-live="polite" className="mt-1.5 text-caption text-dim">
+                  Looking up sector&hellip;
+                </p>
+              )}
             </Field>
             <Field label="Asset class">
               <input

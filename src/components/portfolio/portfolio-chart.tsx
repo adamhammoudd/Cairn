@@ -19,9 +19,23 @@ interface PortfolioChartProps {
   hasHoldings: boolean;
   /** Date of the newest close behind the series, for the freshness label. */
   asOf?: string | null;
+  /**
+   * Held symbols with no stored price history. They contribute nothing to the
+   * line, so the header names them rather than letting the chart read as the
+   * whole portfolio - see timelineCoverage() in lib/portfolio.ts.
+   */
+  missingHistory?: string[];
+  /** Total held positions, so the header can say "2 of 4". */
+  positionCount?: number;
 }
 
-export function PortfolioChart({ seriesByTimeframe, hasHoldings, asOf = null }: PortfolioChartProps) {
+export function PortfolioChart({
+  seriesByTimeframe,
+  hasHoldings,
+  asOf = null,
+  missingHistory = [],
+  positionCount = 0,
+}: PortfolioChartProps) {
   // Opens on Settings > Display > "Default chart timeframe", same as the
   // ticker chart. Base Camp's summary sparkline stays pinned to 1M - it plots
   // from the daily series with no intraday path, so it cannot honour a 1D or
@@ -104,9 +118,33 @@ export function PortfolioChart({ seriesByTimeframe, hasHoldings, asOf = null }: 
             </span>
           )
         ) : (
-          <DataFreshness source="last_close" asOf={asOf} detail="combined holdings value" />
+          <DataFreshness
+            source="last_close"
+            asOf={asOf}
+            detail={
+              missingHistory.length > 0 && positionCount > 0
+                ? `${positionCount - missingHistory.length} of ${positionCount} positions`
+                : "combined holdings value"
+            }
+          />
         )}
       </div>
+
+      {/* A position with no stored bars adds nothing on any date, so the line
+          is a subset of the portfolio - and said so nowhere, which is how a
+          EUR 146 account came to be shown a chart topping out near EUR 74.
+          Naming the gap is the honest option: the alternative is carrying a
+          current price backwards as flat history, and this product does not
+          invent prices it does not have. */}
+      {missingHistory.length > 0 && (
+        <div className="border-b border-line-soft px-4 py-2.5 text-caption leading-[1.5] text-muted">
+          Not in this line:{" "}
+          <span className="text-primary">{missingHistory.join(", ")}</span> &middot; no stored price
+          history yet, so {missingHistory.length === 1 ? "it contributes" : "they contribute"} nothing to
+          the plotted value. The totals above still include{" "}
+          {missingHistory.length === 1 ? "it" : "them"}.
+        </div>
+      )}
 
       <div className="px-2 pt-3.5 pb-2">
       {!hasHoldings ? (

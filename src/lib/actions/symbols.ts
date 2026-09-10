@@ -78,3 +78,39 @@ export async function lookupSymbol(query: string): Promise<SymbolSearchResult | 
           : `No market data available for ${result.symbol}.`,
   };
 }
+
+/**
+ * The classification fields Add Holding can fill in for a symbol.
+ *
+ * Typing a ticker into Add Holding used to leave Sector blank for the user to
+ * remember and type by hand - on a field the product already knows the answer
+ * to, and one that news relevance reads (see actions/news.ts, which matches
+ * headlines against holdings.sector). A blank sector quietly costs the account
+ * its sector-matched news.
+ *
+ * `sector` comes from fundamentals.sector - the same SEC SIC description the
+ * sector map groups by - so an autofilled value agrees with the rest of the
+ * app rather than introducing a second vocabulary.
+ *
+ * Geography is deliberately NOT returned. Nothing in the schema carries a
+ * country, region or exchange for a symbol, and guessing one from the ticker
+ * would put a fabricated field in front of the user on a page whose whole
+ * premise is that figures come with a source.
+ */
+export async function getSymbolProfile(
+  symbol: string,
+): Promise<{ sector: string | null; assetClass: string | null }> {
+  const normalized = normalizeSymbol(symbol);
+  if (!normalized) return { sector: null, assetClass: null };
+
+  const supabase = await createClient();
+  const [{ data: fundamentals }, { data: coin }] = await Promise.all([
+    supabase.from("fundamentals").select("sector").eq("symbol", normalized).maybeSingle(),
+    supabase.from("crypto_metrics").select("symbol").eq("symbol", normalized).maybeSingle(),
+  ]);
+
+  // "Digital assets" is the same synthesised name the sector map uses for
+  // coins, which carry no SIC classification.
+  if (coin) return { sector: "Digital assets", assetClass: "Crypto" };
+  return { sector: fundamentals?.sector ?? null, assetClass: null };
+}

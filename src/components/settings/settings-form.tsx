@@ -95,7 +95,7 @@ export function SettingsForm({ settings, activeTab, sectorOptions, watchlists, f
 
           <CardRow
             label="Refresh rate"
-            desc="How often pages re-run their queries, while the market is open and this tab is in the foreground. The ticker and portfolio pages carry a live quote and refresh it on this cadence (never faster than once a minute — the quote provider is rate-limited). Other surfaces show the last daily close, so a refresh there refetches the same figure."
+            desc="How often pages re-run their queries, while the market is open and this tab is in the foreground. The ticker and portfolio pages carry a live quote and refresh it on this cadence (never faster than once a minute - the quote provider is rate-limited). Other surfaces show the last daily close, so a refresh there refetches the same figure."
           >
             <SelectControl name="refresh_rate_seconds" defaultValue={settings.refresh_rate_seconds}>
               {REFRESH_RATES.map((r) => (
@@ -118,7 +118,7 @@ export function SettingsForm({ settings, activeTab, sectorOptions, watchlists, f
 
           <CardRow
             label="Metric style"
-            desc="Whether gains and losses lead with the amount or the percentage. Both stay visible where there is room — this reorders them, it doesn't hide one."
+            desc="Whether gains and losses lead with the amount or the percentage. Both stay visible where there is room - this reorders them, it doesn't hide one."
           >
             <Segmented
               name="metric_style"
@@ -132,7 +132,7 @@ export function SettingsForm({ settings, activeTab, sectorOptions, watchlists, f
             />
           </CardRow>
 
-          <CardRow label="Compact mode" desc="Tighter rows and smaller cards on Holdings, Markets, Watchlists and the Screener — fits roughly a third more on screen.">
+          <CardRow label="Compact mode" desc="Tighter rows and smaller cards on Holdings, Markets, Watchlists and the Screener - fits roughly a third more on screen.">
             <Toggle name="compact_mode" defaultChecked={settings.compact_mode} />
           </CardRow>
 
@@ -228,7 +228,7 @@ export function SettingsForm({ settings, activeTab, sectorOptions, watchlists, f
             label="Minimum price move"
             desc="Account-wide floor. A price or % change alert whose close-to-close move is smaller than this doesn't fire, whatever its own threshold says. Volume spikes, SMA crossovers and AI-confidence alerts are not affected."
           >
-            <div className="flex shrink-0 items-center gap-2 rounded-panel border border-line bg-canvas px-3 py-2">
+            <div className="flex shrink-0 items-center gap-2 rounded-panel border border-line bg-canvas px-3 py-2 transition-colors duration-base ease-standard focus-within:border-accent">
               <input
                 type="number"
                 name="price_move_threshold"
@@ -336,7 +336,7 @@ export function SettingsForm({ settings, activeTab, sectorOptions, watchlists, f
             </div>
           </CardRow>
 
-          <CardRow label="Briefing delivery" desc="In-app is the only channel Cairn can deliver on today — the briefing appears on the Assistant page. Choosing email or push records the preference and changes nothing else until a provider is wired.">
+          <CardRow label="Briefing delivery" desc="In-app is the only channel Cairn can deliver on today - the briefing appears on the Assistant page. Choosing email or push records the preference and changes nothing else until a provider is wired.">
             <SelectControl name="briefing_delivery" defaultValue={settings.briefing_delivery ?? "in_app"}>
               <option value="in_app" className="bg-panel">
                 In-app only
@@ -360,7 +360,7 @@ export function SettingsForm({ settings, activeTab, sectorOptions, watchlists, f
 
           <CardRow
             label="Portfolio context"
-            desc="Let the assistant read your holdings and watchlists when deciding what is relevant. Answers stay market/sector/ticker-level either way — Cairn never analyses your position or resolves to buy, hold, or sell."
+            desc="Let the assistant read your holdings and watchlists when deciding what is relevant. Answers stay market/sector/ticker-level either way - Cairn never analyses your position or resolves to buy, hold, or sell."
           >
             <Toggle name="assistant_use_portfolio_context" defaultChecked={settings.assistant_use_portfolio_context ?? true} />
           </CardRow>

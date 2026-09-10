@@ -99,7 +99,7 @@ export function MarketsPanel({ rows, cryptoRows, defaultFilter = "all", requestC
             </button>
           ))}
         </div>
-        <div className="flex min-w-[220px] flex-1 items-center gap-2 rounded-panel border border-line bg-panel px-3 py-2 transition-colors duration-base ease-standard hover:border-line-strong">
+        <div className="flex min-w-[220px] flex-1 items-center gap-2 rounded-panel border border-line bg-panel px-3 py-2 transition-colors duration-base ease-standard hover:border-line-strong focus-within:border-accent">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--color-dim)" strokeWidth="2" className="shrink-0">
             <circle cx="11" cy="11" r="7" />
             <line x1="21" y1="21" x2="16.65" y2="16.65" />

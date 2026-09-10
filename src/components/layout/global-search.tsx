@@ -35,7 +35,7 @@ export function GlobalSearch({ className = "" }: { className?: string }) {
   return (
     <div
       ref={containerRef}
-      className={`flex items-center gap-2 rounded-control border border-line px-3 py-2 transition-colors duration-base ease-standard hover:border-line-strong ${className}`}
+      className={`flex items-center gap-2 rounded-control border border-line px-3 py-2 transition-colors duration-base ease-standard hover:border-line-strong focus-within:border-accent ${className}`}
     >
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--color-dim)" strokeWidth="2" className="shrink-0">
         <circle cx="11" cy="11" r="7" />

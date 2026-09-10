@@ -305,17 +305,44 @@ input::placeholder {
  * :focus-visible, not :focus, so a pointer click never paints it. The rule is
  * scoped to interactive elements and yields to any component that defines its
  * own focus treatment. */
-:where(a, button, input, select, textarea, summary, [tabindex]:not([tabindex="-1"])):focus-visible {
+/* Controls with no border of their own - links, buttons, summaries - take a
+   ring set off from the element. No border-radius here: an outline already
+   follows the element's own corners, and setting one would change the shape of
+   the control on focus rather than describe it. */
+:where(a, button, summary, [tabindex]:not([tabindex="-1"])):focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
-  border-radius: var(--radius-xs);
 }
 
+/* Form fields already draw a 1px border. A ring set off from that border reads
+   as two borders stacked - which is what focusing an input looked like. The
+   field's own border turns accent instead, so focus changes the border that is
+   already there rather than adding a second one around it.
+ *
+ * Deliberately not :where(): this has to outrank the static `border-line`
+ * utility sitting on the same element, so it needs real specificity. */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+/* A field with no border of its own (a bare input inside a bordered shell)
+   has nothing to recolour, so the shell carries the focus instead - see the
+   `focus-within:border-accent` on those wrappers. */
+
 /* Windows High Contrast / forced-colors: the accent is replaced by the user's
-   own highlight colour, so keep the ring and drop the hand-picked hue. */
+   own highlight colour, so keep the indicator and drop the hand-picked hue. */
 @media (forced-colors: active) {
-  :where(a, button, input, select, textarea, summary, [tabindex]:not([tabindex="-1"])):focus-visible {
+  :where(a, button, summary, [tabindex]:not([tabindex="-1"])):focus-visible {
     outline-color: Highlight;
+  }
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: -1px;
   }
 }
 

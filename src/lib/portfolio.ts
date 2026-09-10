@@ -172,6 +172,29 @@ const RANGE_DAYS: Record<Exclude<ChartView, "1D">, number> = {
 // Builds a portfolio-value-over-time series honoring each holding's own
 // purchase_date (not counted before it was bought) using daily close prices
 // with last-known-value carry-forward across non-trading days.
+/**
+ * Which held symbols the timeline can actually plot.
+ *
+ * computeTimelineSeries skips any holding with no stored bars (it has no value
+ * to add on any date), which is correct arithmetic and was invisible: the chart
+ * carried on calling itself "combined holdings value" while covering a subset.
+ * An account holding four positions worth EUR 146 was shown a line topping out
+ * around EUR 74, because two of the four had no price history at all.
+ *
+ * The chart uses this to say what it is a line of, instead of overstating it.
+ */
+export function timelineCoverage(
+  holdings: Holding[],
+  prices: PriceBar[],
+): { covered: string[]; missing: string[] } {
+  const withBars = new Set(prices.filter((p) => p.close !== null).map((p) => p.symbol));
+  const held = Array.from(new Set(holdings.map((h) => h.symbol)));
+  return {
+    covered: held.filter((s) => withBars.has(s)),
+    missing: held.filter((s) => !withBars.has(s)),
+  };
+}
+
 export function computeTimelineSeries(holdings: Holding[], prices: PriceBar[], timeframe: ChartView): TimelinePoint[] {
   if (holdings.length === 0) return [];
 
