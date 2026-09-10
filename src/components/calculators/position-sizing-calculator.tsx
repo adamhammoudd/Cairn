@@ -5,7 +5,7 @@ import { computePositionSize } from "@/lib/planning";
 import { CALC_INPUT, CalcCard, CalcField, CalcStat } from "@/components/calculators/calc-primitives";
 import { clampAmount, MAX_AMOUNT_INPUT } from "@/lib/input-limits";
 import { useDisplayPrefs } from "@/components/display-prefs-provider";
-import { formatAmount, formatCompactNumber } from "@/lib/display-prefs";
+import { formatAmount, formatCompactNumber, currencySymbol } from "@/lib/display-prefs";
 
 export function PositionSizingCalculator({ defaultAccountValue }: { defaultAccountValue: number }) {
   // The seeded account value is a real portfolio figure, so it is converted
@@ -41,7 +41,7 @@ export function PositionSizingCalculator({ defaultAccountValue }: { defaultAccou
       blurb="Fixed-fractional sizing: risks a set % of your account on the distance between entry and stop. A calculator, not a recommendation to enter any position."
     >
       <div className="grid grid-cols-2 gap-3">
-        <CalcField label="Account value ($)">
+        <CalcField label={`Account value (${currencySymbol(prefs)})`}>
           <input
             type="number"
             min={0}
@@ -64,7 +64,7 @@ export function PositionSizingCalculator({ defaultAccountValue }: { defaultAccou
             className={CALC_INPUT}
           />
         </CalcField>
-        <CalcField label="Entry price ($)">
+        <CalcField label={`Entry price (${currencySymbol(prefs)})`}>
           <input
             type="number"
             min={0}
@@ -75,7 +75,7 @@ export function PositionSizingCalculator({ defaultAccountValue }: { defaultAccou
             className={CALC_INPUT}
           />
         </CalcField>
-        <CalcField label="Stop price ($)">
+        <CalcField label={`Stop price (${currencySymbol(prefs)})`}>
           <input
             type="number"
             min={0}

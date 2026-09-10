@@ -97,15 +97,27 @@ export function SectorTreemap({
                         minWidth: "34px",
                         background: colorForChange(tile.changePct),
                       }}
-                      className="flex min-w-0 flex-col justify-end gap-1 overflow-hidden rounded-control p-2 transition-[transform,box-shadow] duration-base ease-standard hover:-translate-y-0.5 hover:shadow-[0_10px_22px_rgba(0,0,0,0.45)]"
+                      className="@container flex min-w-0 flex-col justify-end gap-1 overflow-hidden rounded-control p-2 transition-[transform,box-shadow] duration-base ease-standard hover:-translate-y-0.5 hover:shadow-[0_10px_22px_rgba(0,0,0,0.45)]"
                     >
+                      {/* A 34px tile minus p-2 leaves ~18px of text - two
+                          characters. The earlier pass added the title tooltip
+                          and raised the floor, but the labels still rendered
+                          as "P…" and "-0…", which read as data while carrying
+                          none, and on a treemap where area and colour already
+                          encode the values that is worse than nothing.
+                          Each tile is its own @container, so a label appears
+                          only on a tile wide enough to hold it; below that the
+                          tile stays a clean block and the full symbol, name
+                          and move remain available via title/aria-label. */}
                       <span
-                        className={`truncate text-caption font-semibold ${tone === "dark" ? "text-canvas" : "text-primary"}`}
+                        className={`hidden truncate text-caption font-semibold @[52px]:block ${
+                          tone === "dark" ? "text-canvas" : "text-primary"
+                        }`}
                       >
                         {tile.name}
                       </span>
                       <span
-                        className={`truncate font-mono text-eyebrow tabular-nums ${
+                        className={`hidden truncate font-mono text-eyebrow tabular-nums @[68px]:block ${
                           tone === "dark" ? "text-canvas/75" : "text-muted"
                         }`}
                       >

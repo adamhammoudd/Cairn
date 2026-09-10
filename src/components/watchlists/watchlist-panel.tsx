@@ -97,12 +97,23 @@ export function WatchlistPanel({ watchlists }: { watchlists: WatchlistWithItems[
       )}
 
       {!active ? (
+        // The action belongs inside the empty state. It was rendered
+        // unconditionally at the foot of the panel, so an empty account got a
+        // large dashed box explaining watchlists and then a button floating
+        // on its own below it, reading as an orphan rather than the obvious
+        // next step.
         <div className="rounded-card border border-dashed border-line px-6 py-16 text-center">
           <div className="font-serif text-h3 text-primary">No lists marked out yet</div>
           <p className="mx-auto mt-2 max-w-[400px] text-body text-muted text-pretty">
             Group the tickers you&apos;re tracking but don&apos;t own yet, and Cairn keeps their prices and trends
             beside your portfolio.
           </p>
+          <Link
+            href="/watchlists/new"
+            className="mt-6 inline-flex items-center gap-2 rounded-panel bg-gradient-to-br from-accent-light to-accent-dark px-5.5 py-3 text-body font-semibold text-canvas transition-[box-shadow,transform] duration-base ease-standard hover:-translate-y-px hover:shadow-[0_0_30px_rgba(47,198,133,0.35)]"
+          >
+            <span className="text-title leading-none">+</span> New watchlist
+          </Link>
         </div>
       ) : (
         <>
@@ -259,14 +270,16 @@ export function WatchlistPanel({ watchlists }: { watchlists: WatchlistWithItems[
         </>
       )}
 
-      <div className="mt-1 flex justify-center">
-        <Link
-          href="/watchlists/new"
-          className="flex items-center gap-2 rounded-panel bg-gradient-to-br from-accent-light to-accent-dark px-5.5 py-3 text-body font-semibold text-canvas transition-[box-shadow,transform] duration-base ease-standard hover:-translate-y-px hover:shadow-[0_0_30px_rgba(47,198,133,0.35)]"
-        >
-          <span className="text-title leading-none">+</span> New watchlist
-        </Link>
-      </div>
+      {active && (
+        <div className="mt-1 flex justify-center">
+          <Link
+            href="/watchlists/new"
+            className="flex items-center gap-2 rounded-panel bg-gradient-to-br from-accent-light to-accent-dark px-5.5 py-3 text-body font-semibold text-canvas transition-[box-shadow,transform] duration-base ease-standard hover:-translate-y-px hover:shadow-[0_0_30px_rgba(47,198,133,0.35)]"
+          >
+            <span className="text-title leading-none">+</span> New watchlist
+          </Link>
+        </div>
+      )}
     </div>
   );
 }

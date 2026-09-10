@@ -4,6 +4,8 @@ import { useActionState, useEffect, useState } from "react";
 import { createAlert, updateAlert } from "@/lib/actions/alerts";
 import { MAX_AMOUNT_INPUT } from "@/lib/input-limits";
 import { SymbolTypeahead } from "@/components/symbol-typeahead";
+import { useDisplayPrefs } from "@/components/display-prefs-provider";
+import { currencySymbol } from "@/lib/display-prefs";
 import {
   ALERT_TYPE_LABELS,
   COOLDOWN_OPTIONS,
@@ -52,6 +54,7 @@ interface AlertFormProps {
 
 export function AlertForm({ alert, defaultChannels, onDone, onCancel }: AlertFormProps) {
   const editing = Boolean(alert);
+  const prefs = useDisplayPrefs();
   const [error, formAction] = useActionState(editing ? updateAlert : createAlert, null);
   const [alertType, setAlertType] = useState<AlertType>(alert?.alert_type ?? "price");
   const condition = alert?.condition ?? {};
@@ -147,7 +150,12 @@ export function AlertForm({ alert, defaultChannels, onDone, onCancel }: AlertFor
               </select>
             </label>
             <label className="block">
-              <span className={LABEL}>{alertType === "price" ? "Price ($)" : "Day change (%)"}</span>
+              {/* The alert threshold is entered in the account's display currency, so
+                  the label has to name it. A hardcoded "$" here told a EUR account
+                  to type dollars for a figure the rest of the page shows in euro. */}
+              <span className={LABEL}>
+                {alertType === "price" ? `Price (${currencySymbol(prefs)})` : "Day change (%)"}
+              </span>
               <input
                 name="value"
                 type="number"

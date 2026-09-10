@@ -22,7 +22,7 @@ import {
 } from "@/lib/screener";
 import { DataFreshness } from "@/components/data-freshness";
 import { useDisplayPrefs } from "@/components/display-prefs-provider";
-import { absoluteChangeFrom, formatChange, formatMoney } from "@/lib/display-prefs";
+import { absoluteChangeFrom, formatChange, formatMoney, currencySymbol } from "@/lib/display-prefs";
 
 type NumericField = (typeof SCREENER_NUMERIC_FIELDS)[number];
 type FilterText = Record<NumericField, string>;
@@ -198,7 +198,7 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
           <FieldLabel>Min volume</FieldLabel>
           <FilterInput field="minVolume" placeholder="e.g. 1000000" text={filterText} onEdit={editFilter} />
 
-          <FieldLabel>Market cap ($M)</FieldLabel>
+          <FieldLabel>Market cap ({currencySymbol(prefs)}M)</FieldLabel>
           <div className="flex items-center gap-2">
             <FilterInput field="minMarketCapM" placeholder="Min" text={filterText} onEdit={editFilter} />
             <FilterInput field="maxMarketCapM" placeholder="Max" text={filterText} onEdit={editFilter} />

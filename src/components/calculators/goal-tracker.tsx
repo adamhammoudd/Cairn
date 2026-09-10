@@ -6,7 +6,7 @@ import type { GoalProgress } from "@/lib/planning";
 import { CALC_INPUT, CalcCard, CalcField } from "@/components/calculators/calc-primitives";
 import { MAX_AMOUNT_INPUT } from "@/lib/input-limits";
 import { useDisplayPrefs } from "@/components/display-prefs-provider";
-import { formatMoney } from "@/lib/display-prefs";
+import { formatMoney, currencySymbol } from "@/lib/display-prefs";
 
 export function GoalTracker({ goals }: { goals: GoalProgress[] }) {
   // Both sides convert: currentValue is the portfolio's market value, and the
@@ -28,7 +28,7 @@ export function GoalTracker({ goals }: { goals: GoalProgress[] }) {
           <CalcField label="Goal name">
             <input name="name" placeholder="e.g. Retirement fund" className={CALC_INPUT} />
           </CalcField>
-          <CalcField label="Target value ($)">
+          <CalcField label={`Target value (${currencySymbol(prefs)})`}>
             <input name="target_value" type="number" min={0} max={MAX_AMOUNT_INPUT} placeholder="e.g. 250000" className={CALC_INPUT} />
           </CalcField>
           <CalcField label="Target date">
