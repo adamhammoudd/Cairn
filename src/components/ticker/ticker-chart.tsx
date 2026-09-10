@@ -2,7 +2,7 @@
 
 import { useMemo, useRef, useState } from "react";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { CHART_TOOLTIP, CHART_AXIS_TICK } from "@/lib/chart-theme";
+import { CHART_TOOLTIP, CHART_AXIS_TICK, paddedDomain } from "@/lib/chart-theme";
 import { buildPriceSeries } from "@/lib/ticker";
 import { xAxisConfig } from "@/lib/portfolio";
 import { formatTooltipLabel } from "@/lib/chart-dates";
@@ -136,13 +136,30 @@ export function TickerChart({ symbol, bars, priceSource = "last_close", priceAsO
               tickLine={false}
               minTickGap={20}
             />
-            <YAxis hide domain={["dataMin", "dataMax"]} />
+            {/* The price axis was `hide`, so this chart showed a shape and no
+                prices - you could not read what the line was worth at any
+                point, only that it went up or down. With the domain pinned to
+                dataMin/dataMax as well, the series filled the full height
+                whatever the move was, which is what made a quiet month look
+                like a rally. Axis shown, domain padded. */}
+            <YAxis
+              width={62}
+              domain={paddedDomain(points.map((p) => p.value))}
+              tick={CHART_AXIS_TICK}
+              axisLine={false}
+              tickLine={false}
+              tickFormatter={(v) => formatMoney(Number(v), prefs)}
+            />
             <Tooltip
               formatter={(value) => [formatMoney(Number(value), prefs), "Close"] as [string, string]}
               labelFormatter={(label) => formatTooltipLabel(String(label))}
               {...CHART_TOOLTIP}
             />
-            <Area type="monotone" dataKey="value" stroke={color} strokeWidth={2} fill="url(#tickerFill)" isAnimationActive={false} />
+            {/* `monotone` draws a spline through the closes, implying a smooth
+                path between them that the data does not contain. These are
+                discrete observations; `linear` connects what was actually
+                recorded and nothing else. */}
+            <Area type="linear" dataKey="value" stroke={color} strokeWidth={2} fill="url(#tickerFill)" isAnimationActive={false} />
           </AreaChart>
           </ResponsiveContainer>
         )}

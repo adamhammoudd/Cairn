@@ -35,7 +35,15 @@ export function AppShell({
         className="flex min-h-screen max-w-screen flex-col overflow-x-clip bg-canvas"
       >
         <TopNav displayName={displayName} plan={plan} isAdmin={isAdmin} />
-        <main className="mx-auto w-full max-w-[1560px] flex-1 overflow-auto px-5.5 pt-6.5 pb-15">{children}</main>
+        {/* The assistant button is fixed at bottom-6 and is 56px tall, so it
+            covers the bottom 80px of the viewport's right edge - but the page
+            reserved only 60px, which put it on top of whatever landed in that
+            corner ("See all analogs" on a ticker, the last row of a table).
+            The extra padding applies from 900px, the same breakpoint that
+            shows the button. */}
+        <main className="mx-auto w-full max-w-[1560px] flex-1 overflow-auto px-5.5 pt-6.5 pb-15 min-[900px]:pb-28">
+          {children}
+        </main>
         <ChatPanel />
       </div>
     </DisplayPrefsProvider>

@@ -80,6 +80,56 @@ function sessionWhen(session: ChatSession): string {
   return new Date(session.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
+/**
+ * The methodology behind one assistant turn.
+ *
+ * `open` renders the cards inline; otherwise they sit behind a disclosure that
+ * still names how many analyses are there, so a collapsed turn advertises its
+ * evidence rather than hiding that any exists.
+ */
+function MethodologyBlock({
+  analyses,
+  depth,
+  dense,
+  open,
+}: {
+  analyses: React.ComponentProps<typeof MethodologyCard>["analysis"][];
+  depth: React.ComponentProps<typeof MethodologyCard>["depth"];
+  dense: boolean;
+  open: boolean;
+}) {
+  const cards = (
+    <div className="flex flex-col gap-3">
+      {analyses.map((a) => (
+        <MethodologyCard key={a.id} analysis={a} depth={depth} dense={dense} />
+      ))}
+    </div>
+  );
+
+  if (open) return cards;
+
+  return (
+    <details className="group flex flex-col gap-2">
+      <summary className="flex cursor-pointer list-none items-center gap-2 font-mono text-eyebrow text-muted uppercase transition-colors duration-fast ease-standard hover:text-primary">
+        <svg
+          width="9"
+          height="9"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="3"
+          className="shrink-0 transition-transform duration-base ease-standard group-open:rotate-180"
+          aria-hidden
+        >
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+        Methodology · {analyses.length === 1 ? "1 analysis" : `${analyses.length} analyses`}
+      </summary>
+      <div className="mt-1">{cards}</div>
+    </details>
+  );
+}
+
 export function ChatThread({
   compact = false,
   briefing,
@@ -118,24 +168,32 @@ export function ChatThread({
   // the view is synced to the persisted turn rather than left truncated.
   const abortRef = useRef<AbortController | null>(null);
 
-  // Only the most recent turn that cited an analysis needs its methodology
-  // fetched - that is the one card the thread shows (mock's `showAnalysis`).
-  // Older turns keep their text; their card is not re-rendered, so it is not
-  // re-fetched.
+  // Every turn that cited an analysis gets its methodology, not just the most
+  // recent one.
+  //
+  // This used to resolve only the last message with referenced ids and hand
+  // every earlier turn `analyses: undefined`. Scroll back through a
+  // conversation and each previous answer was left as a bare probability claim
+  // with its sources, analogs and confidence no longer reachable - the exact
+  // thing the product's guardrail forbids, produced by the history loader
+  // rather than by the model.
+  //
+  // Still one round trip: the ids are unioned across the whole page of history
+  // and fetched together, then handed back to the turns that cited them.
   async function withAnalyses(history: Awaited<ReturnType<typeof listChatMessages>>): Promise<Message[]> {
-    let lastWithIds = -1;
-    for (let i = history.length - 1; i >= 0; i--) {
-      if (history[i].referenced_analysis_ids.length > 0) {
-        lastWithIds = i;
-        break;
-      }
-    }
-    const latest = lastWithIds >= 0 ? await getAnalysesByIds(history[lastWithIds].referenced_analysis_ids) : [];
-    return history.map((m, i) => ({
-      role: m.role,
-      content: m.content,
-      analyses: i === lastWithIds ? latest : undefined,
-    }));
+    const allIds = Array.from(new Set(history.flatMap((m) => m.referenced_analysis_ids)));
+    const fetched = allIds.length > 0 ? await getAnalysesByIds(allIds) : [];
+    const byId = new Map(fetched.map((a) => [a.id, a]));
+    return history.map((m) => {
+      const analyses = m.referenced_analysis_ids
+        .map((id) => byId.get(id))
+        .filter((a): a is (typeof fetched)[number] => a !== undefined);
+      return {
+        role: m.role,
+        content: m.content,
+        analyses: analyses.length > 0 ? analyses : undefined,
+      };
+    });
   }
 
   async function loadSession(id: string) {
@@ -342,12 +400,18 @@ export function ChatThread({
 
   const filteredSessions = sessions.filter((s) => sessionLabel(s).toLowerCase().includes(search.toLowerCase()));
 
-  // The one methodology card the thread shows: the analyses the LAST assistant
-  // reply cited, and only that reply's. The mock has a single `showAnalysis`
-  // block after the message list, tied to the current answer - not one card
-  // per turn, which is what made a long thread feel chaotic.
-  const lastAssistant = [...messages].reverse().find((m) => m.role === "assistant" && !m.failed);
-  const latestAnalyses = lastAssistant?.analyses ?? [];
+  // Methodology travels with the turn that cited it.
+  //
+  // It used to render once, at the foot of the thread, for the newest reply
+  // only. That kept a long thread tidy at the cost of the guardrail: every
+  // answer above the fold became a probability claim with no visible sources,
+  // analogs or confidence. Attaching each card to its own turn keeps the
+  // evidence with the claim; collapsing every turn but the newest keeps the
+  // thread from becoming a wall of cards, which was the original concern.
+  const lastAssistantIndex = messages.reduce(
+    (found, m, i) => (m.role === "assistant" && !m.failed ? i : found),
+    -1,
+  );
 
   const conversation = (
     <>
@@ -375,13 +439,26 @@ export function ChatThread({
                 {loadingOlder ? "Loading…" : "Load earlier messages"}
               </button>
             )}
-            {messages.map((m, i) => (
-              <ChatMessage
-                key={i}
-                message={m}
-                streaming={streaming && m.role === "assistant" && i === messages.length - 1}
-              />
-            ))}
+            {messages.map((m, i) => {
+              const isStreaming = streaming && m.role === "assistant" && i === messages.length - 1;
+              const analyses = m.role === "assistant" && !m.failed && !isStreaming ? (m.analyses ?? []) : [];
+              return (
+                <div key={i} className="flex flex-col gap-3">
+                  <ChatMessage message={m} streaming={isStreaming} />
+                  {analyses.length > 0 && (
+                    <MethodologyBlock
+                      analyses={analyses}
+                      depth={depth}
+                      dense={compact}
+                      // The newest reply follows Settings > AI Assistant >
+                      // "Show methodology by default"; older turns always
+                      // start collapsed.
+                      open={i === lastAssistantIndex && expandMethodology}
+                    />
+                  )}
+                </div>
+              );
+            })}
 
             {/* Chat-triggered generation, shown inline. These are the Research
                 page's own panels, not chat-specific copies. */}
@@ -405,41 +482,6 @@ export function ChatThread({
               />
             )}
 
-            {/* One card, for the latest cited analysis - the mock's showAnalysis
-                block. Older turns keep only their text. Rendered inline when
-                "Show methodology by default" is on (Settings > AI Assistant),
-                behind a disclosure summary when it's off. */}
-            {!streaming && latestAnalyses.length > 0 && (
-              expandMethodology ? (
-                <div className="flex flex-col gap-3">
-                  {latestAnalyses.map((a) => (
-                    <MethodologyCard key={a.id} analysis={a} depth={depth} dense={compact} />
-                  ))}
-                </div>
-              ) : (
-                <details className="group flex flex-col gap-2">
-                  <summary className="flex cursor-pointer list-none items-center gap-2 font-mono text-eyebrow text-muted uppercase transition-colors duration-fast ease-standard hover:text-primary">
-                    <svg
-                      width="9"
-                      height="9"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="3"
-                      className="shrink-0 transition-transform duration-base ease-standard group-open:rotate-180"
-                    >
-                      <polyline points="6 9 12 15 18 9" />
-                    </svg>
-                    Methodology · {latestAnalyses.length === 1 ? "1 analysis" : `${latestAnalyses.length} analyses`}
-                  </summary>
-                  <div className="mt-1 flex flex-col gap-3">
-                    {latestAnalyses.map((a) => (
-                      <MethodologyCard key={a.id} analysis={a} depth={depth} dense={compact} />
-                    ))}
-                  </div>
-                </details>
-              )
-            )}
           </div>
         )}
       </div>

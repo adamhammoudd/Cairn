@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { CHART_TOOLTIP, CHART_AXIS_TICK } from "@/lib/chart-theme";
+import { CHART_TOOLTIP, CHART_AXIS_TICK, paddedDomain } from "@/lib/chart-theme";
 import { xAxisConfig, type TimelinePoint } from "@/lib/portfolio";
 import { formatTooltipLabel } from "@/lib/chart-dates";
 import { getIntradayPortfolioSeries } from "@/lib/actions/intraday";
@@ -141,13 +141,24 @@ export function PortfolioChart({ seriesByTimeframe, hasHoldings, asOf = null }: 
               tickLine={false}
               minTickGap={20}
             />
-            <YAxis hide domain={["dataMin", "dataMax"]} />
+            {/* Same fix as the ticker chart: a hidden axis over a dataMin/
+                dataMax domain drew every portfolio as a full-height mountain
+                with no values on it. See paddedDomain() for why the padding
+                matters. */}
+            <YAxis
+              width={68}
+              domain={paddedDomain(points.map((p) => p.value))}
+              tick={CHART_AXIS_TICK}
+              axisLine={false}
+              tickLine={false}
+              tickFormatter={(v) => formatMoney(Number(v), prefs)}
+            />
             <Tooltip
-              formatter={(value) => [formatMoney(Number(value), prefs), "Close"] as [string, string]}
+              formatter={(value) => [formatMoney(Number(value), prefs), "Value"] as [string, string]}
               labelFormatter={(label) => formatTooltipLabel(String(label))}
               {...CHART_TOOLTIP}
             />
-            <Area type="monotone" dataKey="value" stroke={color} strokeWidth={2} fill="url(#portfolioFill)" isAnimationActive={false} />
+            <Area type="linear" dataKey="value" stroke={color} strokeWidth={2} fill="url(#portfolioFill)" isAnimationActive={false} />
           </AreaChart>
         </ResponsiveContainer>
       )}

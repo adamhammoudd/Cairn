@@ -208,7 +208,11 @@ export function MethodologyCard({
 
   return (
     <>
-      <div className="animate-rise-in overflow-hidden rounded-card border border-line bg-canvas">
+      {/* @container, not a viewport breakpoint: this same card renders at
+          ~1000px in the assistant thread and at ~340px in the docked chat
+          panel, on the same screen. Only the card's own width can decide
+          whether the two-column reading layout below fits. */}
+      <div className="@container animate-rise-in overflow-hidden rounded-card border border-line bg-canvas">
         <div className={`border-b border-line-soft bg-gradient-to-b from-raised to-canvas ${pad}`}>
           <div className="mb-3 flex flex-wrap items-center gap-2.5">
             <span className={`${SECTION_LABEL} capitalize`}>
@@ -223,8 +227,13 @@ export function MethodologyCard({
             {analysis.analysis_type.replace(/_/g, " ")}
           </div>
 
+          {/* Measure, not width. On a wide card the claim ran the full
+              container - well past 100 characters a line - and a serif display
+              face at that length is genuinely hard to track back to the next
+              line. Capped in `ch` so the limit follows the font size at every
+              density instead of a pixel guess. */}
           <h2
-            className={`m-0 font-serif font-normal leading-[1.25] text-primary text-pretty ${
+            className={`m-0 max-w-[44ch] font-serif font-normal leading-[1.25] text-primary text-pretty ${
               isDense ? "text-h3" : "text-h2"
             }`}
           >
@@ -264,8 +273,26 @@ export function MethodologyCard({
         </div>
 
         <div className={pad}>
-          {body && <p className="mb-5 text-lead leading-[1.7] text-primary text-pretty">{body}</p>}
+          {/* Argument left, evidence right.
+           *
+           * Everything here used to stack in one column at the card's full
+           * width: ten to twelve lines of dense statistical prose set about
+           * 150 characters to the line, roughly twice a comfortable measure,
+           * on the one block the product most needs actually read. Capping the
+           * measure alone would have left half the card empty, so the width
+           * that was hurting the prose now carries the sources and analogs it
+           * is arguing from - which is the pairing this product is about.
+           *
+           * Below ~860px of card the two columns stack and the order is
+           * unchanged: reasoning, then what it rests on. */}
+          <div className="@[860px]:grid @[860px]:grid-cols-[minmax(0,1fr)_minmax(0,360px)] @[860px]:gap-x-7">
+            <div>
+              {/* 76ch fills the reading column almost exactly at this size, and
+                  still caps the measure when the columns stack. */}
+              {body && <p className="mb-5 max-w-[76ch] text-lead leading-[1.7] text-primary text-pretty">{body}</p>}
+            </div>
 
+            <div>
           <div className="mb-5">
             <div className="mb-3 flex items-center justify-between gap-3">
               <span className={SECTION_LABEL}>Sources · {analysis.sources.length}</span>
@@ -376,6 +403,11 @@ export function MethodologyCard({
             </div>
           )}
 
+            </div>
+          </div>
+
+          {/* Caveat and disclosure stay full width: they qualify the whole
+              card, not just the evidence column. */}
           {analysis.confidence_level === "low" && (
             <div className="mb-4.5 rounded-panel border border-line bg-panel px-3 py-2.5 text-caption leading-relaxed text-muted">
               Low-confidence output — small historical sample or weak pattern match. Treat as directional, not precise.
