@@ -64,7 +64,7 @@ export function ComparisonPanel({
     <div className="animate-page-in flex flex-col gap-3.5">
       <div className="mb-1.5 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <div className="mb-2 font-mono text-micro tracking-[0.16em] text-muted uppercase">Compare</div>
+          <div className="mb-2 font-mono text-eyebrow text-muted uppercase">Compare</div>
           <h1 className="font-serif text-display leading-[1.1] font-normal text-primary">Side by side</h1>
         </div>
 

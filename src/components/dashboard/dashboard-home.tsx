@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { getMarketStatus } from "@/lib/market-hours";
 import { useLiveRefresh } from "@/components/use-live-refresh";
 import { useDisplayPrefs } from "@/components/display-prefs-provider";
@@ -64,18 +65,23 @@ interface DashboardHomeProps {
   };
 }
 
-const NEWS_TINT: Record<"accent" | "violet" | "warning", string> = {
-  accent: "bg-accent",
-  violet: "bg-violet",
-  warning: "bg-warning",
+// A headline's rule says how it reaches you: a symbol you hold, one you watch,
+// or neither. That was encoded in colour alone, with no legend anywhere on the
+// card - unreadable to anyone who cannot separate the three hues, and to
+// everyone else too, since nothing said what they meant. The label travels with
+// the colour now: announced to assistive tech, and shown on hover/focus.
+const NEWS_TINT: Record<"accent" | "violet" | "warning", { className: string; label: string }> = {
+  accent: { className: "bg-accent", label: "Mentions a holding" },
+  violet: { className: "bg-violet", label: "Mentions a watchlist symbol" },
+  warning: { className: "bg-warning", label: "General market news" },
 };
 
-const MODULES: { key: ModuleKey; label: string; href: string; cta: string; tint: "accent" | "info" | "violet" | "warning" }[] = [
-  { key: "portfolio", label: "Portfolio", href: "/portfolio", cta: "Open holdings", tint: "accent" },
-  { key: "markets", label: "Markets", href: "/markets", cta: "Browse markets", tint: "info" },
-  { key: "watchlist", label: "Watchlist", href: "/watchlists", cta: "Open watchlists", tint: "violet" },
-  { key: "news", label: "News", href: "/news", cta: "Read all", tint: "warning" },
-  { key: "assistant", label: "AI Assistant", href: "/assistant", cta: "Open assistant", tint: "accent" },
+const MODULES: { key: ModuleKey; label: string; href: string; cta: string }[] = [
+  { key: "portfolio", label: "Portfolio", href: "/portfolio", cta: "Open holdings" },
+  { key: "markets", label: "Markets", href: "/markets", cta: "Browse markets" },
+  { key: "watchlist", label: "Watchlist", href: "/watchlists", cta: "Open watchlists" },
+  { key: "news", label: "News", href: "/news", cta: "Read all" },
+  { key: "assistant", label: "AI Assistant", href: "/assistant", cta: "Open assistant" },
 ];
 
 const DEFAULT_LAYOUT: ModuleKey[] = ["portfolio", "markets", "watchlist", "news", "assistant"];
@@ -179,7 +185,7 @@ export function DashboardHome({
     switch (key) {
       case "portfolio":
         return (
-          <DashboardSummaryCard key={key} title={card.label} href={card.href} ctaLabel={card.cta} tint={card.tint} delay={delay} {...arrangeProps}>
+          <DashboardSummaryCard key={key} title={card.label} href={card.href} ctaLabel={card.cta} delay={delay} {...arrangeProps}>
             <div className="flex flex-wrap items-end justify-between gap-4">
               <div>
                 <div className="font-serif text-h1 leading-none text-primary">
@@ -206,10 +212,14 @@ export function DashboardHome({
                 />
               )}
             </div>
+            {/* Was "1M · same series as the portfolio chart". The second half
+                is a note to ourselves - it reassures a developer that the
+                sparkline and the Portfolio chart cannot disagree, and tells a
+                reader nothing they asked. The timeframe is the part that
+                labels the graphic; the invariant lives in the comment on
+                DASHBOARD_SPARKLINE_TIMEFRAME, where it belongs. */}
             <div className="mt-1.5 flex items-center gap-2">
-              <span className="font-mono text-eyebrow text-dim uppercase">
-                {portfolio.sparklineTimeframe} · same series as the portfolio chart
-              </span>
+              <span className="font-mono text-eyebrow text-dim uppercase">{portfolio.sparklineTimeframe}</span>
             </div>
             {portfolio.topHoldings.length > 0 && (
               <div className="mt-4 flex flex-col gap-2">
@@ -228,7 +238,7 @@ export function DashboardHome({
         );
       case "markets":
         return (
-          <DashboardSummaryCard key={key} title={card.label} href={card.href} ctaLabel={card.cta} tint={card.tint} delay={delay} {...arrangeProps}>
+          <DashboardSummaryCard key={key} title={card.label} href={card.href} ctaLabel={card.cta} delay={delay} {...arrangeProps}>
             <div className="flex flex-col gap-2.5">
               {markets.top.map((r) => (
                 <div key={r.symbol} className="flex items-center justify-between gap-3">
@@ -246,7 +256,28 @@ export function DashboardHome({
         );
       case "watchlist":
         return (
-          <DashboardSummaryCard key={key} title={card.label} href={card.href} ctaLabel={card.cta} tint={card.tint} delay={delay} {...arrangeProps}>
+          <DashboardSummaryCard key={key} title={card.label} href={card.href} ctaLabel={card.cta} delay={delay} {...arrangeProps}>
+            {/* With no lists, this card read "0 lists · 0 symbols · none past
+                an alert threshold" over a band of empty space - a count of
+                nothing, three times, and no way to act on it. It is also the
+                first card a new account sees. An empty state gets one sentence
+                saying what the feature is for and one control that starts it. */}
+            {watchlist.lists === 0 ? (
+              <div>
+                <p className="text-body text-muted text-pretty">
+                  Track symbols you don&rsquo;t own yet, and get told when one crosses a price
+                  or percentage you care about.
+                </p>
+                <Link
+                  href="/watchlists/new"
+                  className="mt-3.5 inline-flex items-center gap-1.5 rounded-control border border-line px-3 py-2 text-body text-primary transition-colors duration-fast ease-standard hover:border-accent hover:text-accent"
+                >
+                  Create a watchlist
+                  <span aria-hidden>→</span>
+                </Link>
+              </div>
+            ) : (
+              <>
             <div className="mb-3 text-body text-muted">
               {watchlist.lists} lists · {watchlist.symbols} symbols ·{" "}
               {watchlist.alertsPastThreshold > 0 ? `${watchlist.alertsPastThreshold} past an alert threshold` : "none past an alert threshold"}
@@ -262,21 +293,27 @@ export function DashboardHome({
                 </span>
               ))}
             </div>
+              </>
+            )}
           </DashboardSummaryCard>
         );
       case "news":
         return (
-          <DashboardSummaryCard key={key} title={card.label} href={card.href} ctaLabel={card.cta} tint={card.tint} delay={delay} {...arrangeProps}>
+          <DashboardSummaryCard key={key} title={card.label} href={card.href} ctaLabel={card.cta} delay={delay} {...arrangeProps}>
             {news.items.length === 0 ? (
               <div className="text-body text-muted">No headlines yet</div>
             ) : (
               <div className="flex flex-col gap-3">
                 {news.items.map((item, i) => (
                   <div key={i} className="flex gap-2.5">
-                    <span className={`w-[3px] shrink-0 rounded-xs ${NEWS_TINT[item.tint]}`} />
+                    <span
+                      className={`w-[3px] shrink-0 rounded-xs ${NEWS_TINT[item.tint].className}`}
+                      title={NEWS_TINT[item.tint].label}
+                    />
                     <div>
                       <div className="text-body leading-normal text-primary">{decodeEntities(item.title)}</div>
                       <div className="mt-1 text-micro text-dim">
+                        <span className="sr-only">{NEWS_TINT[item.tint].label} · </span>
                         {item.source} · <TimeAgo iso={item.publishedAt} />
                       </div>
                     </div>
@@ -288,7 +325,7 @@ export function DashboardHome({
         );
       case "assistant":
         return (
-          <DashboardSummaryCard key={key} title={card.label} href={card.href} ctaLabel={card.cta} tint={card.tint} delay={delay} {...arrangeProps}>
+          <DashboardSummaryCard key={key} title={card.label} href={card.href} ctaLabel={card.cta} delay={delay} {...arrangeProps}>
             {assistant.latestAnalysis ? (
               <>
                 {/* The stored reasoning_text already comes as 2-3 real
@@ -329,7 +366,7 @@ export function DashboardHome({
     <div className="animate-page-in">
       <div className="mb-5.5 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <div className="mb-2 flex flex-wrap items-center gap-2 font-mono text-micro tracking-[0.16em] text-muted uppercase">
+          <div className="mb-2 flex flex-wrap items-center gap-2 font-mono text-eyebrow text-muted uppercase">
             <span>
               {today} · {marketStatus.label}
             </span>
@@ -404,7 +441,7 @@ export function DashboardHome({
 
       {hidden.length > 0 && (
         <div className="mt-4 flex flex-wrap items-center gap-2.5 rounded-panel border border-dashed border-line px-4 py-3">
-          <span className="font-mono text-micro tracking-[0.14em] text-dim uppercase">Hidden</span>
+          <span className="font-mono text-eyebrow text-dim uppercase">Hidden</span>
           {hidden.map((key) => (
             <button
               key={key}

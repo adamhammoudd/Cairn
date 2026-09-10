@@ -135,7 +135,32 @@ spending the colour.
 
 ---
 
-## 6. `/crypto` — **no action, working as intended**
+## 6. "Day gainers" is all sub-cent crypto — **recommend a liquidity floor**
+
+**Found live, logged in.** Base Camp's Markets pulse and the top of `/markets` both lead
+with APEPE (€0.00), CHIP (€0.05), BTW (€0.37), BC (€0.03) — because "ranked by the last
+session's percent change, largest first" over a board that includes all crypto is always
+won by whatever micro-cap moved most. AMD at +3.04% is the first name most users would
+recognise, in sixth place.
+
+The ranking is doing exactly what it says. The problem is that what it says is not what a
+"Day gainers" deck is for.
+
+**Recommend.** Add a floor to the gainers/losers decks — a minimum price, market cap, or
+traded volume — so the deck answers "what moved that matters" rather than "what moved".
+The methodology string under the deck already exists and should state the floor, since
+showing the rule is the product's whole stance.
+
+**Note.** I fixed the *display* half of this on the branch: a €0.0004 move on a €0.00 asset
+was rendering as `+€0.00` next to a symbol leading the day's gainers, which reads as
+"unchanged". `formatChange()` now falls back to percent when the absolute unit rounds to
+nothing. The ranking question above is yours.
+
+**Effort.** ~30 min, plus a decision on the threshold.
+
+---
+
+## 7. `/crypto` — **no action, working as intended**
 
 Flagged during the audit as an orphan route (a 7-line redirect outside the nav). It is not:
 crypto was deliberately folded into Markets as a filterable asset type, and the route

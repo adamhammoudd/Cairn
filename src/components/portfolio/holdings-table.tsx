@@ -54,7 +54,7 @@ export function HoldingsTable({
     <>
       <div className="mb-5.5 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <div className="mb-2 font-mono text-micro tracking-[0.16em] text-muted uppercase">Portfolio</div>
+          <div className="mb-2 font-mono text-eyebrow text-muted uppercase">Portfolio</div>
           <h1 className="font-serif text-display leading-[1.1] font-normal text-primary">Holdings</h1>
         </div>
         <button
@@ -91,7 +91,7 @@ export function HoldingsTable({
       ) : (
         <div className="overflow-hidden rounded-card border border-line bg-panel">
           <div className="flex items-center justify-between border-b border-line px-4.5 py-3.5">
-            <span className="font-mono text-micro tracking-[0.14em] text-muted uppercase">
+            <span className="font-mono text-eyebrow text-muted uppercase">
               {metrics.length} {metrics.length === 1 ? "position" : "positions"}
             </span>
             <span className="text-caption text-dim">Sorted by value</span>

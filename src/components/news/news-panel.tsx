@@ -52,7 +52,7 @@ export function NewsPanel({ items }: { items: NewsFeedItem[] }) {
   return (
     <div className="animate-page-in">
       <div className="mb-4.5">
-        <div className="mb-2 font-mono text-micro tracking-[0.16em] text-muted uppercase">News</div>
+        <div className="mb-2 font-mono text-eyebrow text-muted uppercase">News</div>
         <h1 className="font-serif text-display leading-[1.1] font-normal text-primary">Ranked for you</h1>
         <p className="mt-2 max-w-[580px] text-lead text-muted text-pretty">
           Items touching your holdings surface first, then your sectors, then macro. Every item carries its source and

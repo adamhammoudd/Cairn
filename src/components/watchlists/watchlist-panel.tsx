@@ -67,7 +67,7 @@ export function WatchlistPanel({ watchlists }: { watchlists: WatchlistWithItems[
   return (
     <div className="animate-page-in flex flex-col gap-4">
       <div>
-        <div className="mb-2 font-mono text-micro tracking-[0.16em] text-muted uppercase">Watchlists</div>
+        <div className="mb-2 font-mono text-eyebrow text-muted uppercase">Watchlists</div>
         <h1 className="font-serif text-display leading-[1.1] font-normal text-primary">
           {active?.name ?? "Watchlists"}
         </h1>

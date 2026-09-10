@@ -47,7 +47,7 @@ export function LegalShell({
 
         <div className="font-mono text-eyebrow text-muted uppercase">{eyebrow}</div>
         <h1 className="mt-2 font-serif text-display leading-[1.15] font-normal text-primary">{title}</h1>
-        <p className="mt-2 font-mono text-micro tracking-[0.08em] text-dim uppercase">Last updated {updated}</p>
+        <p className="mt-2 font-mono text-eyebrow text-dim uppercase">Last updated {updated}</p>
 
         <div className="legal-prose mt-9">{children}</div>
       </main>

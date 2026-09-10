@@ -97,7 +97,7 @@ export function ChatSettingsPanel({ session, accountDefaults, fallbackTitle }: C
       </Link>
 
       <div className="mb-5.5">
-        <div className="mb-2 font-mono text-micro tracking-[0.16em] text-muted uppercase">Assistant · Conversation</div>
+        <div className="mb-2 font-mono text-eyebrow text-muted uppercase">Assistant · Conversation</div>
         <h1 className="font-serif text-h1 leading-[1.1] font-normal text-primary">Conversation settings</h1>
         <p className="mt-2 max-w-[560px] text-lead text-muted text-pretty">
           Name this thread and set how the assistant answers inside it. Anything left on the account default keeps

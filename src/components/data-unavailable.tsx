@@ -28,7 +28,7 @@ export function DataUnavailable({ error }: { error: DataReadError }): ReactEleme
   return (
     <div className="animate-page-in mx-auto max-w-[620px] px-6 py-20">
       <div className="rounded-card border border-line bg-panel p-6">
-        <p className="font-mono text-micro tracking-[0.16em] text-warning uppercase">Data unavailable</p>
+        <p className="font-mono text-eyebrow text-warning uppercase">Data unavailable</p>
         <h1 className="mt-2 font-serif text-h2 leading-[1.15] text-primary">
           {error.missingObject && showDiagnostics
             ? "This deployment is ahead of its database"

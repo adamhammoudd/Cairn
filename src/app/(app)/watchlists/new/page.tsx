@@ -12,7 +12,7 @@ export default function NewWatchlistPage() {
       </Link>
 
       <div>
-        <div className="mb-2 font-mono text-micro tracking-[0.16em] text-muted uppercase">New watchlist</div>
+        <div className="mb-2 font-mono text-eyebrow text-muted uppercase">New watchlist</div>
         <h1 className="font-serif text-h1 leading-[1.1] font-normal text-primary">Mark a new trail</h1>
         <p className="mt-2 max-w-[560px] text-lead text-muted text-pretty">
           Name it and decide how it should behave. You can change any of this later.

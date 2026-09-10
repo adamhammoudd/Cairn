@@ -33,7 +33,7 @@ export function AlertPanel({ alerts, deliveries, defaultChannels }: AlertPanelPr
     <div className="animate-page-in flex flex-col gap-3.5">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <div className="mb-2 font-mono text-micro tracking-[0.16em] text-muted uppercase">Portfolio · Alerts</div>
+          <div className="mb-2 font-mono text-eyebrow text-muted uppercase">Portfolio · Alerts</div>
           <h1 className="font-serif text-display leading-[1.1] font-normal text-primary">Alerts</h1>
           <p className="mt-2 max-w-[560px] text-lead text-muted text-pretty">
             {activeCount} active. Each fires once per cooldown window, then goes quiet.

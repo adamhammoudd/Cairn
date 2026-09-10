@@ -82,7 +82,7 @@ export function AdminDashboard({ snapshot, reports }: { snapshot: AdminSnapshot;
   return (
     <div className="animate-page-in flex flex-col gap-3.5">
       <div>
-        <div className="mb-2 font-mono text-micro tracking-[0.16em] text-muted uppercase">Internal · role-gated</div>
+        <div className="mb-2 font-mono text-eyebrow text-muted uppercase">Internal · role-gated</div>
         <h1 className="font-serif text-display leading-[1.1] font-normal text-primary">Operations</h1>
         <p className="mt-2 max-w-[620px] text-lead text-muted text-pretty">
           Data refresh status, provider rate-limit outcomes, analysis-engine health and the moderation queue. Every

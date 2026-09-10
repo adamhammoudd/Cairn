@@ -5,7 +5,6 @@ interface DashboardSummaryCardProps {
   title: string;
   href: string;
   ctaLabel: string;
-  tint?: "accent" | "info" | "violet" | "warning";
   value?: string;
   valueTone?: "primary" | "positive" | "negative";
   detail?: string;
@@ -22,13 +21,6 @@ interface DashboardSummaryCardProps {
 const ARRANGE_BTN =
   "flex h-6 w-6 items-center justify-center rounded-control border border-line text-micro text-muted transition-colors duration-fast ease-standard hover:border-accent hover:text-primary";
 
-const TINT_CLASSES: Record<NonNullable<DashboardSummaryCardProps["tint"]>, string> = {
-  accent: "bg-accent",
-  info: "bg-info",
-  violet: "bg-violet",
-  warning: "bg-warning",
-};
-
 const VALUE_TONE_CLASSES: Record<NonNullable<DashboardSummaryCardProps["valueTone"]>, string> = {
   primary: "text-primary",
   positive: "text-accent",
@@ -39,7 +31,6 @@ export function DashboardSummaryCard({
   title,
   href,
   ctaLabel,
-  tint = "accent",
   value,
   valueTone = "primary",
   detail,
@@ -59,10 +50,17 @@ export function DashboardSummaryCard({
       }`}
       style={{ animationDelay: `${delay}ms` }}
     >
+      {/* The card header used to carry a small coloured rule before the label -
+          four tints across five cards, green on two of them. It encoded
+          nothing: no legend, no meaning, and green is the gain colour.
+          The same idiom one card down *is* semantic (a news item's rule says
+          whether you hold the symbol, watch it, or neither), so the decorative
+          copy was teaching readers that the shape means nothing. Removed, so
+          the rule has exactly one meaning on this screen. The mono eyebrow
+          alone also now matches every other page header in the product. */}
       <div className="mb-3.5 flex items-center justify-between gap-2.5">
         <div className="flex items-center gap-2">
-          <span className={`h-3.5 w-1 rounded-xs ${TINT_CLASSES[tint]}`} />
-          <span className="font-mono text-micro tracking-[0.14em] text-muted uppercase">{title}</span>
+          <span className="font-mono text-eyebrow text-muted uppercase">{title}</span>
         </div>
         {arranging ? (
           <div className="flex items-center gap-1">

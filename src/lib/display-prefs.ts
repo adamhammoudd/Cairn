@@ -151,13 +151,35 @@ export function formatPercent(pct: number | null | undefined, digits = 2): strin
  * for both, `secondaryChange` gives the other one - so the setting reorders
  * rather than hides.
  */
+/**
+ * True when a formatted money string carries no significant figures - "+€0.00",
+ * "-$0.00". Tested on the rendered string rather than the raw number so it
+ * follows the locale's actual precision and currency, instead of assuming two
+ * decimal places and a symbol we happen to know about.
+ */
+function roundsToZero(formatted: string): boolean {
+  const digits = formatted.replace(/\D/g, "");
+  return digits.length > 0 && !/[1-9]/.test(digits);
+}
+
 export function formatChange(
   absoluteUsd: number | null | undefined,
   pct: number | null | undefined,
   prefs: DisplayPrefs,
   digits = 2,
 ): string {
-  return prefs.metricStyle === "absolute" ? formatSignedMoney(absoluteUsd, prefs) : formatPercent(pct, digits);
+  if (prefs.metricStyle !== "absolute") return formatPercent(pct, digits);
+
+  const money = formatSignedMoney(absoluteUsd, prefs);
+  // A sub-cent asset moving 20% still moves less than one cent, so the absolute
+  // unit renders "+€0.00" - which reads as "unchanged" beside a symbol that led
+  // the day's gainers. Where the chosen unit has nothing to say, fall back to
+  // the one that does rather than print a confident zero. The preference still
+  // wins everywhere it is informative, which is everywhere else.
+  if (roundsToZero(money) && pct !== null && pct !== undefined && Number.isFinite(pct) && pct !== 0) {
+    return formatPercent(pct, digits);
+  }
+  return money;
 }
 
 /** The unit `formatChange` did not use, for surfaces that show both. */
