@@ -8,7 +8,6 @@ import type { AllocationSlice } from "@/lib/portfolio";
 const DIMENSIONS = [
   { key: "asset_class", label: "Asset class" },
   { key: "sector", label: "Sector" },
-  { key: "geography", label: "Geography" },
 ] as const;
 
 const COLORS = ["var(--color-accent)", "var(--color-accent-light)", "var(--color-accent-dark)", "var(--color-muted)", "var(--color-dim)"];

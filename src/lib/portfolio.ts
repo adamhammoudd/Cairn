@@ -138,7 +138,7 @@ const ASSET_TYPE_CLASS_LABEL: Record<string, string> = {
 
 export function computeAllocation(
   metrics: HoldingMetrics[],
-  groupBy: "asset_class" | "sector" | "geography" | "asset_type",
+  groupBy: "asset_class" | "sector" | "asset_type",
 ): AllocationSlice[] {
   const totals = new Map<string, number>();
   let grandTotal = 0;

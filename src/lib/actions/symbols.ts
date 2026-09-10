@@ -84,29 +84,29 @@ export async function lookupSymbol(query: string): Promise<SymbolSearchResult | 
 
 
 /**
- * The three classification fields Add Holding can fill in for a symbol.
+ * The classification fields Add Holding can fill in for a symbol.
  *
- * These are free-text columns on `holdings` that a person typed by hand, and
+ * Both are free-text columns on `holdings` that a person typed by hand, and
  * migration 0041 exists precisely because two holdings were saved with them
- * blank: ISRG and MSFT fell into "Unclassified" on both the Sector and
- * Geography allocation charts, and a blank sector also costs the account its
- * sector-matched news (actions/news.ts matches headlines against
- * holdings.sector). Asking someone to remember a company's GICS sector while
- * they are entering a trade is how that happens.
+ * blank: ISRG and MSFT fell into "Unclassified" on the allocation chart, and a
+ * blank sector also costs the account its sector-matched news (actions/news.ts
+ * matches headlines against holdings.sector). Asking someone to remember a
+ * company's GICS sector while they are entering a trade is how that happens.
  *
- * Source is `symbol_profiles` (Yahoo assetProfile, cached weekly by
- * ensureProfile) - NOT `fundamentals.sector`. The two carry different
+ * Sector is NOT read from `fundamentals.sector`. The two carry different
  * vocabularies: fundamentals holds SEC SIC descriptions like
- * "SERVICES-PREPACKAGED SOFTWARE", which is what the sector map groups by,
+ * "Services-Prepackaged Software", which is what the sector map groups by,
  * while holdings.sector is GICS-style Title Case ("Technology",
  * "Healthcare"). Writing a SIC string into this field would put a second
- * vocabulary into the allocation chart and split one sector across two
- * slices.
+ * vocabulary into the allocation chart and split one sector across two slices.
  *
- * Everything returned is normalised to the convention already in the table
- * (see 0041: NVDA/AMZN store "Technology" / "USA" / "Equity"), because these
- * fields are grouped by exact string - "United States" and "USA" would draw
- * as two separate countries.
+ * Values are normalised to the convention already in the table (see 0041:
+ * NVDA/AMZN store "Technology" / "Equity"), because the allocation chart
+ * groups by exact string.
+ *
+ * There is no geography here. That field was removed from the product: no
+ * table carries a country for a symbol, so it could only ever be typed by
+ * hand, and mostly wasn't.
  */
 
 const ASSET_CLASS_LABEL: Record<AssetType, string> = {
@@ -118,35 +118,19 @@ const ASSET_CLASS_LABEL: Record<AssetType, string> = {
   future: "Future",
 };
 
-/**
- * Yahoo says "United States"; the holdings table says "USA". Only the forms
- * that actually collide are mapped - anything else is passed through as the
- * provider wrote it rather than guessed at.
- */
-function normalizeCountry(country: string | null | undefined): string | null {
-  if (!country) return null;
-  const trimmed = country.trim();
-  if (!trimmed) return null;
-  const key = trimmed.toLowerCase().replace(/[^a-z]/g, "");
-  if (key === "unitedstates" || key === "unitedstatesofamerica" || key === "usa" || key === "us") {
-    return "USA";
-  }
-  return trimmed;
-}
-
 export async function getSymbolProfile(
   symbol: string,
   assetType: AssetType,
-): Promise<{ sector: string | null; geography: string | null; assetClass: string | null }> {
+): Promise<{ sector: string | null; assetClass: string | null }> {
   const assetClass = ASSET_CLASS_LABEL[assetType] ?? null;
   const normalized = normalizeSymbol(symbol);
-  if (!normalized) return { sector: null, geography: null, assetClass };
+  if (!normalized) return { sector: null, assetClass };
 
   // A coin has no country of incorporation and no assetProfile to fetch. It
   // does have a sector in this app's own vocabulary, so that is filled and
   // geography is left alone rather than invented as "Global".
   if (assetType === "crypto") {
-    return { sector: SECTOR_LABEL.crypto ?? "Crypto", geography: null, assetClass };
+    return { sector: SECTOR_LABEL.crypto ?? "Crypto", assetClass };
   }
 
   // Two sources, best first.
@@ -158,12 +142,8 @@ export async function getSymbolProfile(
   // so this starts working on its own the day that fetch is fixed.
   const profile = await ensureProfile(normalized).catch(() => null);
   const profileSlug = normalizeSector(profile?.sector);
-  if (profileSlug || profile?.country) {
-    return {
-      sector: profileSlug ? (SECTOR_LABEL[profileSlug] ?? null) : null,
-      geography: normalizeCountry(profile?.country),
-      assetClass,
-    };
+  if (profileSlug) {
+    return { sector: SECTOR_LABEL[profileSlug] ?? null, assetClass };
   }
 
   // Fallback: the SEC SIC code already stored on `fundamentals`, mapped onto
@@ -184,9 +164,5 @@ export async function getSymbolProfile(
     .maybeSingle();
   const sicSlug = sectorSlugForSic(fundamentals?.sic);
 
-  return {
-    sector: sicSlug ? (SECTOR_LABEL[sicSlug] ?? null) : null,
-    geography: null,
-    assetClass,
-  };
+  return { sector: sicSlug ? (SECTOR_LABEL[sicSlug] ?? null) : null, assetClass };
 }

@@ -91,7 +91,6 @@ async function PortfolioBody() {
   const allocationByDimension = {
     asset_class: computeAllocation(metrics, "asset_class"),
     sector: computeAllocation(metrics, "sector"),
-    geography: computeAllocation(metrics, "geography"),
   };
 
   // Last 30 closes per symbol, oldest-first, for the holdings table's inline

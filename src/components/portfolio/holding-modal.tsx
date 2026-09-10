@@ -41,7 +41,6 @@ export function HoldingModal({ holding, initialSymbol, onClose }: HoldingModalPr
     purchase_date: holding?.purchase_date ?? "",
     sector: holding?.sector ?? "",
     asset_class: holding?.asset_class ?? "",
-    geography: holding?.geography ?? "",
     notes: holding?.notes ?? "",
   });
   const setField = <K extends keyof typeof fields>(key: K, value: string) =>
@@ -109,9 +108,6 @@ export function HoldingModal({ holding, initialSymbol, onClose }: HoldingModalPr
                           asset_class: prev.asset_class.trim()
                             ? prev.asset_class
                             : (profile.assetClass ?? ""),
-                          geography: prev.geography.trim()
-                            ? prev.geography
-                            : (profile.geography ?? ""),
                         }));
                       })
                       .finally(() => setLookingUp(false));
@@ -195,7 +191,7 @@ export function HoldingModal({ holding, initialSymbol, onClose }: HoldingModalPr
               </datalist>
               {lookingUp && (
                 <p aria-live="polite" className="mt-1.5 text-caption text-dim">
-                  Looking up sector, class and geographyLooking up sector&hellip;hellip;
+                  Looking up sector and class&hellip;
                 </p>
               )}
             </Field>
@@ -204,14 +200,6 @@ export function HoldingModal({ holding, initialSymbol, onClose }: HoldingModalPr
                 name="asset_class"
                 value={fields.asset_class}
                 onChange={(e) => setField("asset_class", e.target.value)}
-                className="w-full rounded-control border border-line bg-active px-3 py-2 text-lead text-primary outline-none"
-              />
-            </Field>
-            <Field label="Geography">
-              <input
-                name="geography"
-                value={fields.geography}
-                onChange={(e) => setField("geography", e.target.value)}
                 className="w-full rounded-control border border-line bg-active px-3 py-2 text-lead text-primary outline-none"
               />
             </Field>

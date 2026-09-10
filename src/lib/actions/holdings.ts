@@ -15,7 +15,9 @@ interface HoldingFields {
   purchase_date: string;
   sector: string | null;
   asset_class: string | null;
-  geography: string | null;
+  // No `geography`. The column still exists and keeps the values already in
+  // it; leaving the key out of this payload is what stops an update from
+  // overwriting them, since Supabase only writes the keys it is given.
   notes: string | null;
 }
 
@@ -48,7 +50,17 @@ function parseHoldingForm(formData: FormData): { ok: true; fields: HoldingFields
       purchase_date,
       sector: String(formData.get("sector") ?? "").trim() || null,
       asset_class: String(formData.get("asset_class") ?? "").trim() || null,
-      geography: String(formData.get("geography") ?? "").trim() || null,
+      // `geography` is deliberately not written here.
+      //
+      // The field was removed from the holding form: nothing in the schema
+      // carries a country for a symbol, so it could only ever be typed by
+      // hand, and it mostly wasn't - which is what put ISRG and MSFT in
+      // "Unclassified" and prompted migration 0041.
+      //
+      // The column and its existing values are left in place. Reading a now
+      // absent form field would resolve to null and silently overwrite the
+      // "USA" that migration with the next edit of any holding, which is the
+      // one outcome removing a field must not cause.
       notes: String(formData.get("notes") ?? "").trim() || null,
     },
   };
