@@ -33,8 +33,8 @@ const PREMIUM_ADDS = [
 
 const FEATURES = [
   [
-    "Portfolio-aware",
-    "The assistant already has your holdings and watchlist in context. Ask how your portfolio did today without re-explaining it - your positions rank what's relevant to you, and are never sent to the model as a request for advice about your specific position.",
+    "Ranked around what you hold",
+    "Your holdings and watchlist decide what Cairn surfaces first - which tickers, which headlines, which analyses. The assistant answers at market, sector and ticker level; it never evaluates your specific position, and never tells you what to do with it.",
   ],
   [
     "Sourced and transparent",
@@ -76,7 +76,7 @@ export default async function WaitlistPage() {
             </h1>
 
             <p className="mt-5 max-w-[520px] text-title leading-[1.65] text-muted text-pretty">
-              Ask what a move means for what you actually hold. Cairn answers with the articles it
+              Ask what a move means for the tickers you follow. Cairn answers with the articles it
               read, the historical cases it compared, and how confident it is - so you can judge the
               reasoning, not just the conclusion.
             </p>

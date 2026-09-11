@@ -1,8 +1,26 @@
-// The hero's right column: a representative Assistant answer, lifted from the
-// design mock (Cairn Waitlist.dc.html). It is proof of what the product does -
-// sources, historical analogs, a computed range, a confidence glyph, and the
-// same amber-rule disclosure the app carries everywhere - not decoration. The
-// numbers are illustrative and the card says so.
+// The hero's right column: an illustrative Assistant answer, lifted from the
+// design mock (Cairn Waitlist.dc.html). It shows the SHAPE of what the product
+// returns - sources, historical analogs, a computed range, a confidence glyph,
+// and the same amber-rule disclosure the app carries everywhere.
+//
+// Three things about this card are load-bearing, because it renders on
+// /waitlist and /welcome to logged-out visitors and it puts a number next to a
+// real, tradeable ticker:
+//
+//   1. It must not claim to be real output. It previously badged itself "From
+//      the build", which asserts these are figures Cairn actually produced.
+//      They are not - they came from a design mock.
+//   2. Its sources must be sources Cairn actually reads. It previously listed
+//      Reuters and Bloomberg, neither of which is a Cairn provider - a false
+//      association with two of the most recognisable marks in financial data,
+//      entirely separate from the securities question.
+//   3. The illustrative label must be legible, not 10px grey at the bottom.
+//
+// A specific probability attached to a named security on a public page is
+// plausibly a financial promotion (UK FSMA s.21) and sits under EU UCPD and
+// FTC/UDAP misleading-advertising rules. This version is honest about what it
+// is; whether an illustrative figure against a real ticker should appear here
+// at all is a founder/cmo-strategist call that still needs legal review.
 
 function Eyebrow({ children, accent = false }: { children: React.ReactNode; accent?: boolean }) {
   return (
@@ -20,10 +38,12 @@ const ANALOGS = [
   { sym: "AVGO", pct: 76 },
 ];
 
+// Cairn's actual configured providers (supabase/seed/providers.sql), not the
+// mock's invented newswires.
 const SOURCES = [
-  { name: "Reuters", when: "38m ago" },
-  { name: "Bloomberg", when: "3h ago" },
-  { name: "SIA", when: "Aug 11" },
+  { name: "MarketWatch", when: "38m ago" },
+  { name: "Yahoo Finance", when: "3h ago" },
+  { name: "SEC EDGAR", when: "Aug 11" },
 ];
 
 export function ProofCard() {
@@ -32,7 +52,7 @@ export function ProofCard() {
       <div className="rounded-card border border-line bg-panel p-5">
         <div className="flex items-center justify-between">
           <Eyebrow>Assistant · NVDA</Eyebrow>
-          <Eyebrow>From the build</Eyebrow>
+          <Eyebrow accent>Illustrative example</Eyebrow>
         </div>
 
         <div className="mt-3 rounded-panel border border-line bg-canvas px-3.5 py-3 text-body text-primary">
@@ -56,7 +76,7 @@ export function ProofCard() {
 
         <div className="mt-4 grid grid-cols-2 gap-4">
           <div>
-            <Eyebrow>Sources · 4</Eyebrow>
+            <Eyebrow>Sources · {SOURCES.length}</Eyebrow>
             <ul className="mt-2 flex flex-col gap-1.5">
               {SOURCES.map((s) => (
                 <li key={s.name} className="text-caption">
@@ -67,7 +87,7 @@ export function ProofCard() {
             </ul>
           </div>
           <div>
-            <Eyebrow>Analogs · 34</Eyebrow>
+            <Eyebrow>Analogs · {ANALOGS.length}</Eyebrow>
             <ul className="mt-2 flex flex-col gap-2">
               {ANALOGS.map((a) => (
                 <li key={a.sym}>
@@ -96,12 +116,13 @@ export function ProofCard() {
         <div className="mt-4 flex items-stretch gap-2 rounded-panel border border-line bg-panel px-3 py-2.5">
           <span aria-hidden className="w-1 flex-shrink-0 self-stretch rounded-xs bg-warning" />
           <p className="text-caption leading-[1.5] text-muted text-pretty">
-            Market-level context from the sources above - not a recommendation to buy, hold, or sell.
+            Illustrative figures, not real output and not a recommendation to buy, hold, or sell. Cairn
+            reports market-level context from sources like those above and never advises on a position.
           </p>
         </div>
       </div>
-      <p className="mt-2 text-center text-micro text-dim">
-        A view from the current build. Data shown is representative.
+      <p className="mt-2.5 text-center text-caption text-muted text-pretty">
+        An example of the shape of a Cairn answer. The ticker, figures and dates are illustrative.
       </p>
     </div>
   );

@@ -299,7 +299,11 @@ export interface Database {
           model_version: string;
           status?: AnalysisStatus;
         };
-        Update: never;
+        // Status only. An analysis is written `pending_review` and promoted to
+        // `validated` once its sources and analogs are on disk (lib/ai/generate.ts);
+        // nothing else about a stored analysis is ever rewritten, so the rest of
+        // the row stays immutable.
+        Update: { status: AnalysisStatus };
         Relationships: [];
       };
       ai_analysis_sources: {

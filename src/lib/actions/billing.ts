@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getAuthUser } from "@/lib/supabase/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { stripeConfigured } from "@/lib/stripe";
+import { stripeConfigured, stripeLiveMode } from "@/lib/stripe";
 import {
   computeUsageSummary,
   computeChatUsageSummary,
@@ -90,7 +90,12 @@ export async function getChatUsageSummary(): Promise<ChatUsageSummary> {
 // Absent env var means disabled -- the safe direction. Also requires Stripe
 // to actually be configured, so the UI can't offer a checkout that 500s.
 function billingEnabled(): boolean {
-  return process.env.BILLING_ENABLED === "true" && stripeConfigured();
+  if (process.env.BILLING_ENABLED !== "true" || !stripeConfigured()) return false;
+  // Never sell from a production runtime holding test-mode keys: the button
+  // would be real, the card form would be real, and the money would not be.
+  // Outside production a test key is the correct thing to be holding.
+  if (process.env.NODE_ENV === "production" && !stripeLiveMode()) return false;
+  return true;
 }
 
 // Plan changes the user can make WITHOUT paying: only downgrade to free, and
@@ -131,7 +136,14 @@ export async function setTier(_prevState: string | null, formData: FormData) {
     return "You have an active subscription - cancel it from 'Manage billing' so you're not charged again. The plan changes here once Stripe confirms.";
   }
 
-  const { error } = await supabase.from("subscriptions").upsert({ user_id: user.id, tier });
+  // Through the service-role client. Migration 0042 revoked write access to
+  // `subscriptions` from `authenticated`, because a row-level write grant on a
+  // table whose `tier` column decides entitlement is a self-serve upgrade: the
+  // anon key is in the browser bundle, so `update({ tier: 'premium' })` was one
+  // console paste away. This downgrade is the only write the app ever made as
+  // the user, and it is safe to run privileged - `tier` is pinned to "free"
+  // above, and the branch is unreachable for any other value.
+  const { error } = await createAdminClient().from("subscriptions").upsert({ user_id: user.id, tier });
   if (error) return error.message;
 
   if (fromTier !== tier) {
