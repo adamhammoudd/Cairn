@@ -90,7 +90,13 @@ function subUnitDigits(value: number): { minimumFractionDigits: number; maximumF
   const abs = Math.abs(value);
   if (abs === 0 || abs >= 1 || !Number.isFinite(abs)) return undefined;
   // First significant digit sits at 10^floor(log10(abs)); two more after it.
-  const digits = Math.min(8, Math.ceil(-Math.log10(abs)) + 2);
+  // Capped at six, not eight. Eight is the satoshi-grade figure and it is
+  // honest, but "EUR 0.00000097" is eleven characters in a summary-card cell
+  // sized for "EUR 164.20" and it breaks the row rhythm the dashboard is built
+  // on. Six keeps every tracked asset non-zero - which was the whole point,
+  // since EUR 0.00 beside +16.27% reads as broken - while staying inside the
+  // column.
+  const digits = Math.min(6, Math.ceil(-Math.log10(abs)) + 2);
   // Minimum stays at the currency's own two, so 0.23 renders "0.23" rather
   // than a padded "0.230"; only the ceiling moves.
   return { minimumFractionDigits: 2, maximumFractionDigits: digits };

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { getMarketStatus } from "@/lib/market-hours";
 import { useLiveRefresh } from "@/components/use-live-refresh";
 import { useDisplayPrefs } from "@/components/display-prefs-provider";
-import { absoluteChangeFrom, formatChange, formatMoney } from "@/lib/display-prefs";
+import { formatMoney } from "@/lib/display-prefs";
 import { useActionState } from "react";
 import { updateDashboardLayout } from "@/lib/actions/dashboard";
 import { ArrangeControls, DashboardSummaryCard, type ModuleTint } from "@/components/dashboard/dashboard-summary-card";
@@ -198,8 +198,15 @@ export function DashboardHome({
                   <span className="font-mono text-body tabular-nums text-muted">
                     {formatMoney(r.price, prefs)}
                   </span>
+                  {/* Percent, not the absolute delta the display preference
+                      would otherwise pick. On a summary card the move is the
+                      scannable figure, and for the sub-cent assets that fill
+                      this list the absolute change is unreadable noise
+                      (+EUR 0.00000015). The full board on /markets still
+                      honours the preference. */}
                   <span className={`font-mono text-caption tabular-nums ${r.changePct >= 0 ? "text-accent" : "text-negative"}`}>
-                    {formatChange(absoluteChangeFrom(r.price, r.changePct), r.changePct, prefs)}
+                    {r.changePct >= 0 ? "+" : ""}
+                    {r.changePct.toFixed(2)}%
                   </span>
                 </div>
               ))}
@@ -367,7 +374,8 @@ export function DashboardHome({
               // Holdings read as a row here rather than a stacked list: at this
               // size they are a supporting detail on the headline number, not a
               // table of their own. The full table is one click away.
-              <div className="mt-5 flex flex-wrap items-center gap-2.5">
+              <div className="mt-5 flex flex-col items-start gap-2.5">
+                <div className="flex flex-wrap items-center gap-2.5">
                 {portfolio.topHoldings.map((h) => (
                   <Link
                     key={h.symbol}
@@ -381,6 +389,10 @@ export function DashboardHome({
                     </span>
                   </Link>
                 ))}
+                </div>
+                {/* Its own row, as the mock has it. Inline, it read as a
+                    fourth holding chip; on its own line it reads as the way
+                    out of the summary and into the table. */}
                 <Link
                   href="/portfolio"
                   className="rounded-panel border border-line px-3 py-1.5 text-body text-dim transition-[border-color,color,transform] duration-fast ease-standard hover:-translate-y-0.5 hover:border-line-strong hover:text-accent"
@@ -391,7 +403,13 @@ export function DashboardHome({
             )}
           </div>
 
-          <div className="min-h-[220px] min-w-0">
+          {/* An explicit height, not a minimum. The chart's SVG carries a
+              viewBox and no intrinsic height, so with only a min-height it
+              fell back to its own aspect ratio - at this column width that is
+              ~260px, which drove the whole panel 40px taller than the mock and
+              made the hero's height depend on the viewport rather than on the
+              design. Fixing the box makes the SVG fill it instead. */}
+          <div className="h-[280px] min-w-0">
             <PortfolioValueChart series={portfolio.series} initialTimeframe={portfolio.defaultTimeframe} />
           </div>
         </div>
@@ -450,9 +468,13 @@ export function DashboardHome({
                 <p
                   key={i}
                   className={
+                    // text-title, not text-h3. At 20px the lead ran ~67
+                    // characters to the line in this column; the mock sets it
+                    // near 86, which is the measure the paragraph was written
+                    // for and the size the card is proportioned around.
                     i === 0
-                      ? "font-serif text-h3 leading-[1.35] text-primary text-pretty"
-                      : "mt-3 text-lead leading-[1.65] text-muted text-pretty"
+                      ? "font-serif text-title leading-[1.5] text-primary text-pretty"
+                      : "mt-3 text-body leading-[1.65] text-muted text-pretty"
                   }
                 >
                   {i === 0 ? <QuoteLead text={para} /> : para}
@@ -506,12 +528,23 @@ export function DashboardHome({
 
   return (
     <div className="animate-page-in">
-      {/* Full-bleed against the shell's main container: `main` carries px-5.5
-          and pt-6.5, and the strip has to sit flush under the header the way
-          a tape does, not inset from it like a card. */}
-      <div className="-mx-5.5 -mt-6.5 mb-6.5">
+      {/* Edge to edge, escaping both the shell's px-5.5 and the reading column
+          below. A tape runs the width of the screen; boxing it inside the
+          content column makes it read as another card. `w-screen` plus a
+          half-width shift is the standard break-out - the shell's wrapper
+          carries `overflow-x-clip`, so the 100vw scrollbar overshoot cannot
+          introduce a horizontal scroll. */}
+      <div className="relative left-1/2 -mt-6.5 mb-6.5 w-screen -translate-x-1/2">
         <TickerStrip items={tickerItems} />
       </div>
+
+      {/* Base Camp reads in a narrower column than the shell's 1560px.
+          The page is one long read - a headline figure, a chart, a paragraph
+          of reasoning - and at 1516px the prose measure runs past what anyone
+          tracks comfortably and the hero's two halves drift apart. The shell
+          keeps its own width for the header and for the table-shaped pages
+          that need it; this is Base Camp's column, not a global change. */}
+      <div className="mx-auto w-full max-w-[1240px]">
 
       <div className="mb-5.5 flex flex-wrap items-end justify-between gap-4">
         <div>
@@ -632,6 +665,7 @@ export function DashboardHome({
       <p className="mt-6 text-center text-caption text-dim text-pretty">
         Prices are daily closes, not a live feed. Nothing here is a recommendation.
       </p>
+      </div>
     </div>
   );
 }
