@@ -6,6 +6,7 @@ import {
   computeHoldingMetrics,
   computeTimelineSeries,
   computeTotals,
+  timelineCoverage,
   type PriceBar,
 } from "@/lib/portfolio";
 import { getLatestCloses, latestDataDate, groupBarsBySymbol } from "@/lib/market-data/current-price";
@@ -79,6 +80,10 @@ async function PortfolioBody() {
   const metrics = computeHoldingMetrics(rows, closes);
   const totals = computeTotals(metrics, closes);
 
+  // Which held symbols the line can actually plot - the chart names the rest
+  // rather than quietly leaving them out of a "combined holdings value".
+  const coverage = timelineCoverage(rows, priceRows);
+
   const seriesByTimeframe = Object.fromEntries(
     TIMEFRAMES.map((tf) => [tf, computeTimelineSeries(rows, priceRows, tf)]),
   ) as Record<ChartView, ReturnType<typeof computeTimelineSeries>>;
@@ -86,7 +91,6 @@ async function PortfolioBody() {
   const allocationByDimension = {
     asset_class: computeAllocation(metrics, "asset_class"),
     sector: computeAllocation(metrics, "sector"),
-    geography: computeAllocation(metrics, "geography"),
   };
 
   // Last 30 closes per symbol, oldest-first, for the holdings table's inline
@@ -117,7 +121,13 @@ async function PortfolioBody() {
         />
 
         <div className="mb-3.5">
-          <PortfolioChart seriesByTimeframe={seriesByTimeframe} hasHoldings={rows.length > 0} asOf={asOf} />
+          <PortfolioChart
+            seriesByTimeframe={seriesByTimeframe}
+            hasHoldings={rows.length > 0}
+            asOf={asOf}
+            missingHistory={coverage.missing}
+            positionCount={symbols.length}
+          />
         </div>
       </HoldingsTable>
 

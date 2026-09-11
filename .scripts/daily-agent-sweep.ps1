@@ -1,10 +1,10 @@
 # Cairn nightly agent sweep.
 # Runs Claude Code headless against the standing prompt in this same folder, so dev-lead
-# can find and fix real bugs, open PRs, and log an audit doc — unattended, every night,
+# can find and fix real bugs, open PRs, and log an audit doc - unattended, every night,
 # independent of any particular Claude Code / Cowork session being open.
 #
 # Registered once via Task Scheduler (see the schtasks command Claude gave you). To change
-# what the sweep does, edit daily-agent-sweep-prompt.txt in this folder — this script itself
+# what the sweep does, edit daily-agent-sweep-prompt.txt in this folder - this script itself
 # shouldn't need touching.
 
 $ErrorActionPreference = "Stop"

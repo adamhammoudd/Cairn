@@ -16,7 +16,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
           </Link>
         </div>
 
-        <div className="relative overflow-hidden rounded-2xl border border-line bg-[linear-gradient(180deg,#131313,#0F0F0F)] px-7 py-8">
+        <div className="relative overflow-hidden rounded-card border border-line bg-gradient-to-b from-raised to-panel px-7 py-8">
           <div
             className="pointer-events-none absolute inset-0"
             style={{ background: "radial-gradient(420px 160px at 50% 0%, rgba(47,198,133,0.12), transparent 70%)" }}

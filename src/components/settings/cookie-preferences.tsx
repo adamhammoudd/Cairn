@@ -74,31 +74,31 @@ export function CookiePreferences() {
 
   return (
     <div>
-      <div className="text-[13px] text-primary">Cookie preferences</div>
-      <p className="mt-1 max-w-[60ch] text-[11.5px] leading-relaxed text-muted text-pretty">
-        Cairn sets authentication cookies only — the ones that keep you signed in. It runs no analytics, advertising
+      <div className="text-body text-primary">Cookie preferences</div>
+      <p className="mt-1 max-w-[60ch] text-caption leading-relaxed text-muted text-pretty">
+        Cairn sets authentication cookies only - the ones that keep you signed in. It runs no analytics, advertising
         or tracking cookies and loads no third-party tracking scripts, so there is nothing here to consent to or
         switch off. Strictly-necessary cookies cannot be declined without signing you out, which is why they are
         listed rather than toggled.
       </p>
 
-      <div className="mt-3 max-w-[420px] overflow-hidden rounded-[10px] border border-[#232323]">
-        <div className="border-b border-[#232323] bg-canvas/60 px-3 py-2 font-mono text-[9.5px] tracking-[0.14em] text-dim uppercase">
+      <div className="mt-3 max-w-[420px] overflow-hidden rounded-panel border border-line">
+        <div className="border-b border-line bg-canvas/60 px-3 py-2 font-mono text-eyebrow text-dim uppercase">
           Cookies in this browser
         </div>
         {cookies === null ? (
-          <div className="px-3 py-2.5 text-[11.5px] text-dim">Reading…</div>
+          <div className="px-3 py-2.5 text-caption text-dim">Reading…</div>
         ) : cookies.length === 0 ? (
-          <div className="px-3 py-2.5 text-[11.5px] text-dim">None readable from this page.</div>
+          <div className="px-3 py-2.5 text-caption text-dim">None readable from this page.</div>
         ) : (
           cookies.map((c) => (
             <div
               key={c.name}
-              className="flex flex-wrap items-center justify-between gap-2 border-b border-[#1A1A1A] px-3 py-2 last:border-b-0"
+              className="flex flex-wrap items-center justify-between gap-2 border-b border-line-soft px-3 py-2 last:border-b-0"
             >
-              <span className="truncate font-mono text-[11px] text-muted">{c.name}</span>
-              <span className={`shrink-0 text-[10.5px] ${c.necessary ? "text-dim" : "text-warning"}`}>
-                {c.necessary ? "strictly necessary" : "not classified — needs consent"}
+              <span className="truncate font-mono text-micro text-muted">{c.name}</span>
+              <span className={`shrink-0 text-micro ${c.necessary ? "text-dim" : "text-warning"}`}>
+                {c.necessary ? "strictly necessary" : "not classified - needs consent"}
               </span>
             </div>
           ))
@@ -106,15 +106,15 @@ export function CookiePreferences() {
       </div>
 
       {optional.length > 0 && (
-        <p className="mt-2 max-w-[60ch] text-[11.5px] leading-relaxed text-warning text-pretty">
+        <p className="mt-2 max-w-[60ch] text-caption leading-relaxed text-warning text-pretty">
           {optional.length} cookie{optional.length === 1 ? " is" : "s are"} present that Cairn does not classify as
-          strictly necessary. That should not happen on this build — please report it, and treat the &ldquo;no
+          strictly necessary. That should not happen on this build - please report it, and treat the &ldquo;no
           tracking&rdquo; statement above as unverified until it is explained.
         </p>
       )}
 
-      <p className="mt-2 text-[11px] text-dim">
-        HttpOnly cookies are not readable by this page by design, so this lists what the browser exposes to scripts —
+      <p className="mt-2 text-micro text-dim">
+        HttpOnly cookies are not readable by this page by design, so this lists what the browser exposes to scripts -
         the full set is described in the{" "}
         <a href="/privacy#cookies" className="text-accent hover:underline">
           privacy policy

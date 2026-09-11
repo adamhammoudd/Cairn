@@ -14,7 +14,7 @@ export function Field({ label, id, ...inputProps }: FieldProps) {
       <input
         id={id}
         {...inputProps}
-        className="w-full rounded-[10px] border border-line bg-[#0B0B0B] px-3 py-2.5 text-[13px] text-primary transition-colors duration-base ease-standard outline-none placeholder:text-dim focus:border-accent"
+        className="w-full rounded-panel border border-line bg-canvas px-3 py-2.5 text-body text-primary transition-colors duration-base ease-standard outline-none placeholder:text-dim focus:border-accent"
       />
     </div>
   );

@@ -253,7 +253,7 @@ function confirmationEmailHtml(confirmUrl: string): string {
           </tr>
           <tr>
             <td style="padding:16px 32px 0;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.6;color:#3f3f46;">
-              Cairn is a pre-launch, portfolio-aware market research assistant. The app isn&rsquo;t open yet &mdash; confirming this address holds your place in line, and your founding-member status if you&rsquo;re among the first 50 to confirm.
+              Cairn is a pre-launch, portfolio-aware market research assistant. The app isn&rsquo;t open yet - confirming this address holds your place in line, and your founding-member status if you&rsquo;re among the first 50 to confirm.
             </td>
           </tr>
           <tr>
@@ -278,7 +278,7 @@ function confirmationEmailHtml(confirmUrl: string): string {
           <tr>
             <td style="padding:24px 32px 32px;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:12px;line-height:1.6;color:#a1a1aa;">
               If you didn&rsquo;t sign up for Cairn, ignore this email and nothing happens.<br>
-              Cairn is informational only &mdash; not a broker and not investment advice.
+              Cairn is informational only - not a broker and not investment advice.
             </td>
           </tr>
         </table>

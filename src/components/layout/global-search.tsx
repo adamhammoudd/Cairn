@@ -35,9 +35,9 @@ export function GlobalSearch({ className = "" }: { className?: string }) {
   return (
     <div
       ref={containerRef}
-      className={`flex items-center gap-2 rounded-lg border border-line px-2.75 py-1.75 transition-colors duration-base ease-standard hover:border-[#3A3A3A] ${className}`}
+      className={`flex items-center gap-2 rounded-control border border-line px-3 py-2 transition-colors duration-base ease-standard hover:border-line-strong focus-within:border-accent ${className}`}
     >
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6A6A6A" strokeWidth="2" className="shrink-0">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--color-dim)" strokeWidth="2" className="shrink-0">
         <circle cx="11" cy="11" r="7" />
         <line x1="21" y1="21" x2="16.65" y2="16.65" />
       </svg>
@@ -48,9 +48,9 @@ export function GlobalSearch({ className = "" }: { className?: string }) {
         placeholder="Search tickers, news"
         onSelect={(r) => router.push(`/ticker/${encodeURIComponent(r.symbol)}`)}
         className="min-w-0 flex-1"
-        inputClassName="w-full min-w-0 bg-transparent text-[12.5px] text-primary placeholder:text-dim outline-none"
+        inputClassName="w-full min-w-0 bg-transparent text-body text-primary placeholder:text-dim outline-none"
       />
-      <span className="hidden rounded border border-line px-1 py-0.5 font-mono text-[10px] text-[#4A4A4A] min-[1080px]:inline">
+      <span className="hidden rounded-xs border border-line px-1 py-0.5 font-mono text-eyebrow text-dim min-[1080px]:inline">
         /
       </span>
     </div>

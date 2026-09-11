@@ -16,14 +16,14 @@ export function StatCard({ label, value, exact, sub, tone = "primary", delayMs =
       className="animate-rise-in rounded-card border border-line bg-panel px-4.5 py-4"
       style={{ animationDelay: `${delayMs}ms` }}
     >
-      <div className="font-mono text-[10px] tracking-[0.14em] text-muted uppercase">{label}</div>
+      <div className="font-mono text-eyebrow text-muted uppercase">{label}</div>
       <div
-        className={`mt-2.25 truncate font-serif text-[26px] leading-none tabular-nums ${color}`}
+        className={`mt-2 truncate font-serif text-h2 leading-none tabular-nums ${color}`}
         title={exact && exact !== value ? exact : undefined}
       >
         {value}
       </div>
-      {sub && <div className="mt-1.5 text-[11.5px] text-dim">{sub}</div>}
+      {sub && <div className="mt-1.5 text-caption text-dim">{sub}</div>}
     </div>
   );
 }

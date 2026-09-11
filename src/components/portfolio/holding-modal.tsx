@@ -5,6 +5,7 @@ import { addHolding, updateHolding } from "@/lib/actions/holdings";
 import { MAX_AMOUNT_INPUT } from "@/lib/input-limits";
 import { SubmitButton } from "@/components/auth/submit-button";
 import { SymbolTypeahead } from "@/components/symbol-typeahead";
+import { getSymbolProfile } from "@/lib/actions/symbols";
 import type { Holding } from "@/lib/portfolio";
 import type { AssetType } from "@/lib/supabase/types";
 import { FIELD_LABEL } from "@/components/field-label";
@@ -31,6 +32,8 @@ export function HoldingModal({ holding, initialSymbol, onClose }: HoldingModalPr
   // wipe everything the user had entered in add mode. Keeping the values in
   // state preserves them across a failed submit - the same reason
   // new-watchlist-form.tsx is controlled.
+  // True while the sector lookup for a just-picked symbol is in flight.
+  const [lookingUp, setLookingUp] = useState(false);
   const [fields, setFields] = useState({
     symbol: holding?.symbol ?? initialSymbol?.symbol ?? "",
     quantity: holding?.quantity != null ? String(holding.quantity) : "",
@@ -38,7 +41,6 @@ export function HoldingModal({ holding, initialSymbol, onClose }: HoldingModalPr
     purchase_date: holding?.purchase_date ?? "",
     sector: holding?.sector ?? "",
     asset_class: holding?.asset_class ?? "",
-    geography: holding?.geography ?? "",
     notes: holding?.notes ?? "",
   });
   const setField = <K extends keyof typeof fields>(key: K, value: string) =>
@@ -67,7 +69,7 @@ export function HoldingModal({ holding, initialSymbol, onClose }: HoldingModalPr
         className="animate-sheet-in w-full max-w-md rounded-card border border-line bg-panel p-6"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="mb-5 font-serif text-lg text-primary">{holding ? "Edit asset" : "Add holding"}</h2>
+        <h2 className="mb-5 font-serif text-h3 text-primary">{holding ? "Edit asset" : "Add holding"}</h2>
 
         <form ref={formRef} action={formAction} className="flex flex-col gap-4">
           {holding && <input type="hidden" name="id" value={holding.id} />}
@@ -79,13 +81,36 @@ export function HoldingModal({ holding, initialSymbol, onClose }: HoldingModalPr
                   name="symbol"
                   value={fields.symbol}
                   readOnly
-                  className="w-full cursor-not-allowed rounded-lg border border-line bg-active px-3 py-2 text-sm text-muted outline-none uppercase"
+                  className="w-full cursor-not-allowed rounded-control border border-line bg-active px-3 py-2 text-lead text-muted outline-none uppercase"
                 />
               ) : (
                 <SymbolTypeahead
                   onSelect={(r) => {
                     setField("symbol", r.symbol);
                     setAssetType(r.assetType);
+                    // Fill in what the product already knows. Sector was left
+                    // blank for the user to remember and type, on a field news
+                    // relevance reads (actions/news.ts matches headlines
+                    // against holdings.sector), so a forgotten sector quietly
+                    // costs the account its sector-matched news.
+                    //
+                    // Only fills an EMPTY field: a value already typed is the
+                    // user's and is never overwritten. Values come back
+                    // normalised to the convention already in the table
+                    // ("Technology" / "USA" / "Equity"), because the
+                    // allocation charts group by exact string.
+                    setLookingUp(true);
+                    getSymbolProfile(r.symbol, r.assetType)
+                      .then((profile) => {
+                        setFields((prev) => ({
+                          ...prev,
+                          sector: prev.sector.trim() ? prev.sector : (profile.sector ?? ""),
+                          asset_class: prev.asset_class.trim()
+                            ? prev.asset_class
+                            : (profile.assetClass ?? ""),
+                        }));
+                      })
+                      .finally(() => setLookingUp(false));
                   }}
                 />
               )}
@@ -95,7 +120,7 @@ export function HoldingModal({ holding, initialSymbol, onClose }: HoldingModalPr
                 name="asset_type"
                 value={assetType}
                 onChange={(e) => setAssetType(e.target.value as (typeof ASSET_TYPES)[number])}
-                className="w-full rounded-lg border border-line bg-active px-3 py-2 text-sm text-primary outline-none"
+                className="w-full rounded-control border border-line bg-active px-3 py-2 text-lead text-primary outline-none"
               >
                 {ASSET_TYPES.map((t) => (
                   <option key={t} value={t} className="bg-panel">
@@ -117,7 +142,7 @@ export function HoldingModal({ holding, initialSymbol, onClose }: HoldingModalPr
                 value={fields.quantity}
                 onChange={(e) => setField("quantity", e.target.value)}
                 required
-                className="w-full rounded-lg border border-line bg-active px-3 py-2 text-sm text-primary outline-none"
+                className="w-full rounded-control border border-line bg-active px-3 py-2 text-lead text-primary outline-none"
               />
             </Field>
             <Field label="Purchase price">
@@ -130,7 +155,7 @@ export function HoldingModal({ holding, initialSymbol, onClose }: HoldingModalPr
                 value={fields.purchase_price}
                 onChange={(e) => setField("purchase_price", e.target.value)}
                 required
-                className="w-full rounded-lg border border-line bg-active px-3 py-2 text-sm text-primary outline-none"
+                className="w-full rounded-control border border-line bg-active px-3 py-2 text-lead text-primary outline-none"
               />
             </Field>
           </div>
@@ -142,7 +167,7 @@ export function HoldingModal({ holding, initialSymbol, onClose }: HoldingModalPr
               value={fields.purchase_date}
               onChange={(e) => setField("purchase_date", e.target.value)}
               required
-              className="w-full rounded-lg border border-line bg-active px-3 py-2 text-sm text-primary outline-none"
+              className="w-full rounded-control border border-line bg-active px-3 py-2 text-lead text-primary outline-none"
             />
           </Field>
 
@@ -157,28 +182,25 @@ export function HoldingModal({ holding, initialSymbol, onClose }: HoldingModalPr
                 list="sector-suggestions"
                 value={fields.sector}
                 onChange={(e) => setField("sector", e.target.value)}
-                className="w-full rounded-lg border border-line bg-active px-3 py-2 text-sm text-primary outline-none"
+                className="w-full rounded-control border border-line bg-active px-3 py-2 text-lead text-primary outline-none"
               />
               <datalist id="sector-suggestions">
                 {SECTOR_SUGGESTIONS.map((label) => (
                   <option key={label} value={label} />
                 ))}
               </datalist>
+              {lookingUp && (
+                <p aria-live="polite" className="mt-1.5 text-caption text-dim">
+                  Looking up sector and class&hellip;
+                </p>
+              )}
             </Field>
             <Field label="Asset class">
               <input
                 name="asset_class"
                 value={fields.asset_class}
                 onChange={(e) => setField("asset_class", e.target.value)}
-                className="w-full rounded-lg border border-line bg-active px-3 py-2 text-sm text-primary outline-none"
-              />
-            </Field>
-            <Field label="Geography">
-              <input
-                name="geography"
-                value={fields.geography}
-                onChange={(e) => setField("geography", e.target.value)}
-                className="w-full rounded-lg border border-line bg-active px-3 py-2 text-sm text-primary outline-none"
+                className="w-full rounded-control border border-line bg-active px-3 py-2 text-lead text-primary outline-none"
               />
             </Field>
           </div>
@@ -189,15 +211,15 @@ export function HoldingModal({ holding, initialSymbol, onClose }: HoldingModalPr
               value={fields.notes}
               onChange={(e) => setField("notes", e.target.value)}
               rows={2}
-              className="w-full resize-none rounded-lg border border-line bg-active px-3 py-2 text-sm text-primary outline-none"
+              className="w-full resize-none rounded-control border border-line bg-active px-3 py-2 text-lead text-primary outline-none"
             />
           </Field>
 
-          {result && result !== "saved" && <p className="text-[13px] text-negative">{result}</p>}
+          {result && result !== "saved" && <p className="text-body text-negative">{result}</p>}
 
           <div className="mt-1 flex items-center gap-3">
             <SubmitButton>{holding ? "Save changes" : "Add holding"}</SubmitButton>
-            <button type="button" onClick={onClose} className="text-[13px] text-muted">
+            <button type="button" onClick={onClose} className="text-body text-muted">
               Cancel
             </button>
           </div>

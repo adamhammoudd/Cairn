@@ -26,7 +26,7 @@ export function LivePricePoll({ refreshRateSeconds }: { refreshRateSeconds: numb
     : null;
 
   return (
-    <span className="inline-flex items-center gap-1.5 font-mono text-[10px] tracking-[0.12em] whitespace-nowrap text-dim uppercase">
+    <span className="inline-flex items-center gap-1.5 font-mono text-eyebrow whitespace-nowrap text-dim uppercase">
       <span
         aria-hidden
         className={`size-1.5 rounded-full ${active ? "bg-accent" : "bg-dim"}`}
@@ -35,7 +35,7 @@ export function LivePricePoll({ refreshRateSeconds }: { refreshRateSeconds: numb
       <button
         type="button"
         onClick={() => setPaused(!paused)}
-        className="ml-1 rounded border border-line px-1.5 py-0.5 text-[9px] tracking-normal text-muted normal-case transition-colors hover:border-[#3A3A3A] hover:text-primary"
+        className="ml-1 rounded-xs border border-line px-1.5 py-0.5 text-eyebrow tracking-normal text-muted normal-case transition-colors hover:border-line-strong hover:text-primary"
       >
         {paused ? "Resume" : "Pause"}
       </button>

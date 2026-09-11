@@ -255,15 +255,25 @@ export async function generateBriefing(userId: string): Promise<BriefingContent>
 
   const symbols = await briefingSymbols(supabase, userId, sources);
 
-  let analysisQuery = supabase
-    .from("ai_analyses")
-    .select("id, scope_value, analysis_type, probability_low, probability_high, confidence_level")
-    .eq("status", "validated")
-    .order("created_at", { ascending: false })
-    .limit(10);
-  if (symbols.length > 0) analysisQuery = analysisQuery.in("scope_value", symbols);
-  const { data: rawAnalyses } = await analysisQuery;
-  const analyses = dedupeLatestPerSymbol(rawAnalyses ?? []);
+  // Same conditional-filter bug the chat context had (see buildChatContext):
+  // with no symbols to scope to, the `.in()` was skipped and the query
+  // returned the newest validated analyses about anything at all - which is
+  // how a briefing headed "Built from your holdings and every watchlist"
+  // came to lead with AMZN for an account holding NVDA, ISRG and BTC.
+  // No symbols means nothing to report on, not everything.
+  const rawAnalyses =
+    symbols.length > 0
+      ? (
+          await supabase
+            .from("ai_analyses")
+            .select("id, scope_value, analysis_type, probability_low, probability_high, confidence_level")
+            .eq("status", "validated")
+            .in("scope_value", symbols)
+            .order("created_at", { ascending: false })
+            .limit(10)
+        ).data ?? []
+      : [];
+  const analyses = dedupeLatestPerSymbol(rawAnalyses);
 
   const today = new Date().toISOString().slice(0, 10);
   const twoWeeksOut = new Date();

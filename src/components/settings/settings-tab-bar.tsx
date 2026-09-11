@@ -27,17 +27,17 @@ export function SettingsTabBar({ active, onSelect, twoFactorOff }: SettingsTabBa
               <button
                 type="button"
                 onClick={() => onSelect(tab.id)}
-                className="flex items-center gap-2 border-0 bg-transparent px-3.25 py-3.25 text-[13.5px] whitespace-nowrap transition-colors duration-fast ease-standard hover:text-primary"
+                className="flex items-center gap-2 border-0 bg-transparent px-3 py-3 text-lead whitespace-nowrap transition-colors duration-fast ease-standard hover:text-primary"
               >
                 <span className={isActive ? "text-primary" : "text-muted"}>{tab.label}</span>
                 {showBadge && (
-                  <span className="rounded-[5px] border border-[rgba(217,164,65,0.35)] bg-[rgba(217,164,65,0.08)] px-1.5 py-0.5 font-mono text-[9px] tracking-[0.08em] text-warning uppercase">
+                  <span className="rounded-xs border border-[rgba(217,164,65,0.35)] bg-[rgba(217,164,65,0.08)] px-1.5 py-0.5 font-mono text-eyebrow text-warning uppercase">
                     2FA off
                   </span>
                 )}
               </button>
               <div
-                className="absolute right-3.25 bottom-0 left-3.25 h-0.5 origin-left rounded-[2px] bg-gradient-to-r from-accent-light to-accent-dark transition-transform duration-base ease-standard"
+                className="absolute right-3 bottom-0 left-3 h-0.5 origin-left rounded-xs bg-gradient-to-r from-accent-light to-accent-dark transition-transform duration-base ease-standard"
                 style={{ transform: `scaleX(${isActive ? 1 : 0})` }}
               />
             </div>

@@ -66,7 +66,7 @@ function labelFor(result: SymbolSearchResult) {
 const TICKER_RE = /^[A-Za-z0-9^][A-Za-z0-9.\-^=]{0,14}$/;
 
 const DEFAULT_INPUT_CLASS =
-  "w-full rounded-lg border border-line bg-active px-3 py-2 text-sm text-primary outline-none uppercase placeholder:normal-case";
+  "w-full rounded-control border border-line bg-active px-3 py-2 text-lead text-primary outline-none uppercase placeholder:normal-case";
 
 export function SymbolTypeahead({
   onSelect,
@@ -204,20 +204,20 @@ export function SymbolTypeahead({
         // min-w: the header search input is deliberately narrow, and a result
         // row inside a 160px menu had its symbol clipped to nothing by the
         // badge beside it. The menu may be wider than the input it hangs off.
-        <div className="animate-menu-in absolute top-full left-0 z-30 mt-1 w-full min-w-[260px] overflow-hidden rounded-lg border border-line bg-panel py-1 shadow-lg">
+        <div className="animate-menu-in absolute top-full left-0 z-30 mt-1 w-full min-w-[260px] overflow-hidden rounded-control border border-line bg-panel py-1 shadow-lg">
           {visible.map((r) => (
             <button
               key={r.symbol}
               type="button"
               onClick={() => pick(r)}
-              className="flex w-full items-center justify-between px-3.5 py-2 text-left text-[13px] text-muted transition-colors duration-fast ease-standard hover:bg-active hover:text-primary"
+              className="flex w-full items-center justify-between px-3.5 py-2 text-left text-body text-muted transition-colors duration-fast ease-standard hover:bg-active hover:text-primary"
             >
               <span className="flex min-w-0 flex-1 items-baseline gap-2">
                 {/* The ticker never truncates; the name gives way first. */}
                 <span className="shrink-0 text-primary">{highlightMatch(r.symbol, query)}</span>
-                {r.name && <span className="truncate text-[12px] text-muted">{highlightMatch(r.name, query)}</span>}
+                {r.name && <span className="truncate text-caption text-muted">{highlightMatch(r.name, query)}</span>}
               </span>
-              <span className="ml-2 shrink-0 text-[11px] text-dim">{assetTypeBadge(r.assetType)}</span>
+              <span className="ml-2 shrink-0 text-micro text-dim">{assetTypeBadge(r.assetType)}</span>
             </button>
           ))}
 
@@ -225,33 +225,33 @@ export function SymbolTypeahead({
             <button
               type="button"
               onClick={() => pick(newlyAvailable)}
-              className="flex w-full items-center justify-between border-t border-line px-3.5 py-2 text-left text-[13px] text-muted transition-colors duration-fast ease-standard hover:bg-active hover:text-primary"
+              className="flex w-full items-center justify-between border-t border-line px-3.5 py-2 text-left text-body text-muted transition-colors duration-fast ease-standard hover:bg-active hover:text-primary"
             >
               <span className="flex min-w-0 flex-1 items-baseline gap-2">
                 <span className="shrink-0 text-primary">{highlightMatch(newlyAvailable.symbol, query)}</span>
-                {newlyAvailable.name && <span className="truncate text-[12px] text-muted">{newlyAvailable.name}</span>}
+                {newlyAvailable.name && <span className="truncate text-caption text-muted">{newlyAvailable.name}</span>}
               </span>
-              <span className="ml-2 shrink-0 rounded-full border border-accent/40 px-1.75 py-0.5 font-mono text-[9px] tracking-[0.1em] text-accent uppercase">
+              <span className="ml-2 shrink-0 rounded-full border border-accent/40 px-2 py-0.5 font-mono text-eyebrow text-accent uppercase">
                 Just added
               </span>
             </button>
           )}
 
           {activeProbing && (
-            <div className="flex items-center gap-2 px-3.5 py-2 text-[12.5px] text-dim">
+            <div className="flex items-center gap-2 px-3.5 py-2 text-body text-dim">
               <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-accent" />
               Checking for data on {activeProbing}…
             </div>
           )}
 
           {!activeProbing && unavailable && (
-            <div className="border-t border-line px-3.5 py-2 text-[12.5px] text-dim">
+            <div className="border-t border-line px-3.5 py-2 text-body text-dim">
               {unavailable.detail ?? `No market data available for ${unavailable.symbol}.`}
             </div>
           )}
 
           {!activeProbing && !unavailable && visible.length === 0 && !newlyAvailable && (
-            <div className="px-3.5 py-2 text-[12.5px] text-dim">
+            <div className="px-3.5 py-2 text-body text-dim">
               {TICKER_RE.test(query.trim()) ? "Searching…" : "No symbol or company name matches that."}
             </div>
           )}

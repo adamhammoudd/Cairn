@@ -24,18 +24,18 @@ import type { ScopeType } from "@/lib/supabase/types";
 // Free vs Premium depth from getUserPlan().
 
 const CONF_STYLE: Record<string, { label: string; tint: string; bars: number }> = {
-  high: { label: "High confidence", tint: "#2FC685", bars: 3 },
-  medium: { label: "Medium confidence", tint: "#D9A441", bars: 2 },
-  low: { label: "Low confidence", tint: "#8A8A8A", bars: 1 },
+  high: { label: "High confidence", tint: "var(--color-accent)", bars: 3 },
+  medium: { label: "Medium confidence", tint: "var(--color-warning)", bars: 2 },
+  low: { label: "Low confidence", tint: "var(--color-muted)", bars: 1 },
 };
-const OFF_BAR = "#232323";
+const OFF_BAR = "var(--color-line)";
 
-const MONO_LABEL = "font-mono text-[9.5px] tracking-[0.14em] text-dim uppercase";
+const MONO_LABEL = "font-mono text-eyebrow text-dim uppercase";
 
 const SCOPE_TAG_COLOR: Record<ScopeType, string> = {
-  ticker: "#2FC685",
-  sector: "#5B8DEF",
-  market: "#9B8CE0",
+  ticker: "var(--color-accent)",
+  sector: "var(--color-info)",
+  market: "var(--color-violet)",
 };
 
 interface Scope {
@@ -67,7 +67,7 @@ function ConfidenceBars({ level }: { level: string }) {
       {[7, 10, 13].map((h, i) => (
         <span
           key={h}
-          className="w-0.75 rounded-[1px]"
+          className="w-1 rounded-xs"
           style={{ height: h, background: c.bars >= i + 1 ? c.tint : OFF_BAR }}
         />
       ))}
@@ -218,36 +218,36 @@ export function ResearchWorkspace({
       {/* Header + quota indicator */}
       <div className="mb-5 flex flex-wrap items-end justify-between gap-4.5">
         <div className="min-w-0">
-          <div className="mb-2 font-mono text-[10.5px] tracking-[0.16em] text-muted uppercase">Assistant · Research</div>
-          <h1 className="m-0 font-serif text-[34px] font-normal leading-[1.1] text-primary">Research</h1>
-          <p className="mt-1.75 max-w-[560px] text-[13.5px] text-muted text-pretty">
-            Probability analysis with its inputs shown — sources, historical analogs, and a stated confidence level on
+          <div className="mb-2 font-mono text-eyebrow text-muted uppercase">Assistant · Research</div>
+          <h1 className="m-0 font-serif text-display font-normal leading-[1.1] text-primary">Research</h1>
+          <p className="mt-2 max-w-[560px] text-lead text-muted text-pretty">
+            Probability analysis with its inputs shown - sources, historical analogs, and a stated confidence level on
             every run.
           </p>
         </div>
 
         <div
-          className={`min-w-[250px] rounded-[13px] border bg-panel px-4 py-3.5 ${
+          className={`min-w-[250px] rounded-card border bg-panel px-4 py-3.5 ${
             atCap ? "border-[rgba(217,164,65,0.35)]" : "border-line"
           }`}
         >
           <div className="flex items-baseline justify-between gap-3">
             <span className={MONO_LABEL}>This month</span>
-            <span className={`text-[12.5px] tabular-nums ${atCap ? "text-warning" : "text-muted"}`}>
+            <span className={`text-body tabular-nums ${atCap ? "text-warning" : "text-muted"}`}>
               {usage.unlimited ? `${usage.used} used · no cap` : `${usage.used} of ${usage.limit} used`}
             </span>
           </div>
-          <div className="mt-2.5 h-1 overflow-hidden rounded-sm bg-[#1C1C1C]">
+          <div className="mt-2.5 h-1 overflow-hidden rounded-xs bg-active">
             <div
-              className={`h-full origin-left rounded-sm transition-[width] duration-[340ms] ease-[cubic-bezier(0.4,0,0.2,1)] ${
+              className={`h-full origin-left rounded-xs transition-[width] duration-[340ms] ease-[cubic-bezier(0.4,0,0.2,1)] ${
                 atCap ? "bg-warning" : "bg-gradient-to-r from-accent-light to-accent-dark"
               }`}
               style={{ width: usage.unlimited ? "100%" : `${Math.min((usage.used / usage.limit) * 100, 100)}%` }}
             />
           </div>
           {(atCap || nearCap) && (
-            <div className="mt-2.75">
-              <div className="text-[11.5px] leading-[1.55] text-muted text-pretty">
+            <div className="mt-3">
+              <div className="text-caption leading-[1.55] text-muted text-pretty">
                 {/* Both tiers have a monthly analysis cap - Premium raises it
                     (5 -> 100), it does not remove it. Only chat is unlimited on
                     Premium. */}
@@ -262,7 +262,7 @@ export function ResearchWorkspace({
               {isFreePlan && (
                 <a
                   href="/billing"
-                  className="mt-2.5 inline-block rounded-[9px] bg-gradient-to-br from-accent-light to-accent-dark px-3.25 py-1.75 text-[12px] font-semibold text-canvas transition-[box-shadow] duration-[180ms] ease-[cubic-bezier(0.4,0,0.2,1)] hover:shadow-[0_0_22px_rgba(47,198,133,0.35)]"
+                  className="mt-2.5 inline-block rounded-control bg-gradient-to-br from-accent-light to-accent-dark px-3 py-2 text-caption font-semibold text-canvas transition-[box-shadow] duration-[180ms] ease-[cubic-bezier(0.4,0,0.2,1)] hover:shadow-[0_0_22px_rgba(47,198,133,0.35)]"
                 >
                   Upgrade to Premium
                 </a>
@@ -273,21 +273,21 @@ export function ResearchWorkspace({
       </div>
 
       {/* Scope selector */}
-      <div className="mb-5.5 rounded-[14px] border border-line bg-panel px-4.5 py-4">
+      <div className="mb-5.5 rounded-card border border-line bg-panel px-4.5 py-4">
         <div className={`${MONO_LABEL} mb-2.5`}>What should Cairn research?</div>
         <div className="flex flex-wrap items-center gap-2.5">
           <div className="relative min-w-[260px] flex-1">
             {scope ? (
-              <div className="flex items-center gap-2.5 rounded-[10px] border border-[rgba(47,198,133,0.4)] bg-[#0B0B0B] px-3.25 py-2.75">
+              <div className="flex items-center gap-2.5 rounded-panel border border-[rgba(47,198,133,0.4)] bg-canvas px-3 py-3">
                 <span
-                  className="shrink-0 rounded-full border border-[#262626] px-2 py-0.75 font-mono text-[9px] tracking-[0.1em] uppercase"
+                  className="shrink-0 rounded-full border border-line px-2 py-1 font-mono text-eyebrow uppercase"
                   style={{ color: SCOPE_TAG_COLOR[scope.type] }}
                 >
                   {scope.type}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <div className="text-[13.5px] text-primary">{scope.label}</div>
-                  <div className="mt-0.5 truncate text-[11px] text-muted">{scope.sub}</div>
+                  <div className="text-lead text-primary">{scope.label}</div>
+                  <div className="mt-0.5 truncate text-micro text-muted">{scope.sub}</div>
                 </div>
                 <button
                   type="button"
@@ -297,14 +297,14 @@ export function ResearchWorkspace({
                     setQuery("");
                     setPhase("idle");
                   }}
-                  className="h-6.5 w-6.5 shrink-0 rounded-[7px] bg-transparent text-[15px] text-muted hover:bg-active hover:text-primary"
+                  className="h-6.5 w-6.5 shrink-0 rounded-control bg-transparent text-title text-muted hover:bg-active hover:text-primary"
                 >
                   ×
                 </button>
               </div>
             ) : (
               <>
-                <div className="flex items-center gap-2.25 rounded-[10px] border border-line bg-[#0B0B0B] px-3.25 py-2.75 transition-[border-color] duration-[160ms] ease-[cubic-bezier(0.4,0,0.2,1)] focus-within:border-accent">
+                <div className="flex items-center gap-2 rounded-panel border border-line bg-canvas px-3 py-3 transition-[border-color] duration-[160ms] ease-[cubic-bezier(0.4,0,0.2,1)] focus-within:border-accent">
                   <svg
                     aria-hidden
                     width="14"
@@ -325,12 +325,12 @@ export function ResearchWorkspace({
                     onChange={(e) => setQuery(e.target.value)}
                     placeholder="A ticker, a sector, or “market-wide”"
                     aria-label="Analysis scope"
-                    className="min-w-0 flex-1 border-0 bg-transparent text-[13.5px] text-primary outline-none"
+                    className="min-w-0 flex-1 border-0 bg-transparent text-lead text-primary outline-none"
                   />
                 </div>
 
                 {suggestions && suggestions.length > 0 && (
-                  <div className="animate-menu-in absolute top-[calc(100%+6px)] right-0 left-0 z-20 max-h-[250px] overflow-y-auto rounded-[11px] border border-line bg-[#121212] p-1.25 shadow-[0_20px_40px_rgba(0,0,0,0.6)]">
+                  <div className="animate-menu-in absolute top-[calc(100%+6px)] right-0 left-0 z-20 max-h-[250px] overflow-y-auto rounded-panel border border-line bg-panel p-1 shadow-[0_20px_40px_rgba(0,0,0,0.6)]">
                     {suggestions.map((sg) => (
                       <button
                         key={`${sg.type}:${sg.label}`}
@@ -340,17 +340,17 @@ export function ResearchWorkspace({
                           setQuery("");
                           setPhase("idle");
                         }}
-                        className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2.25 text-left transition-[background] duration-[120ms] ease-[cubic-bezier(0.4,0,0.2,1)] hover:bg-[#1A1A1A]"
+                        className="flex w-full items-center gap-2.5 rounded-control px-2.5 py-2 text-left transition-[background] duration-[120ms] ease-[cubic-bezier(0.4,0,0.2,1)] hover:bg-active"
                       >
                         <span
-                          className="shrink-0 rounded-full border border-[#262626] px-1.75 py-0.5 font-mono text-[8.5px] tracking-[0.1em] uppercase"
+                          className="shrink-0 rounded-full border border-line px-2 py-0.5 font-mono text-eyebrow uppercase"
                           style={{ color: SCOPE_TAG_COLOR[sg.type] }}
                         >
                           {sg.kind}
                         </span>
                         <span className="min-w-0">
-                          <span className="block text-[12.5px] text-primary">{sg.label}</span>
-                          <span className="mt-0.5 block truncate text-[11px] text-muted">{sg.sub}</span>
+                          <span className="block text-body text-primary">{sg.label}</span>
+                          <span className="mt-0.5 block truncate text-micro text-muted">{sg.sub}</span>
                         </span>
                       </button>
                     ))}
@@ -358,7 +358,7 @@ export function ResearchWorkspace({
                 )}
 
                 {suggestions && suggestions.length === 0 && (
-                  <div className="absolute top-[calc(100%+6px)] right-0 left-0 z-20 rounded-[11px] border border-line bg-[#121212] px-3 py-3.5 text-center text-[12px] text-dim">
+                  <div className="absolute top-[calc(100%+6px)] right-0 left-0 z-20 rounded-panel border border-line bg-panel px-3 py-3.5 text-center text-caption text-dim">
                     Nothing matches “{query}”. Try a ticker symbol, a sector name, or “market-wide”.
                   </div>
                 )}
@@ -370,7 +370,7 @@ export function ResearchWorkspace({
             type="button"
             onClick={generate}
             aria-disabled={!generateEnabled}
-            className={`rounded-[10px] px-5 py-3 text-[13px] font-semibold whitespace-nowrap transition-[box-shadow,transform] duration-[180ms] ease-[cubic-bezier(0.4,0,0.2,1)] ${
+            className={`rounded-panel px-5 py-3 text-body font-semibold whitespace-nowrap transition-[box-shadow,transform] duration-[180ms] ease-[cubic-bezier(0.4,0,0.2,1)] ${
               generateEnabled
                 ? "bg-gradient-to-br from-accent-light to-accent-dark text-canvas hover:-translate-y-px hover:shadow-[0_0_24px_rgba(47,198,133,0.28)]"
                 : "cursor-not-allowed bg-active text-dim"
@@ -379,14 +379,14 @@ export function ResearchWorkspace({
             {atCap ? "Monthly limit reached" : pending ? "Generating…" : "Generate analysis"}
           </button>
         </div>
-        {error && <p className="mt-2.5 text-[12.5px] text-warning">{error}</p>}
+        {error && <p className="mt-2.5 text-body text-warning">{error}</p>}
       </div>
 
       {/* Relevant to your portfolio */}
       <div className="mb-6">
         <div className="mb-3 flex items-baseline justify-between gap-3">
-          <span className="font-mono text-[10px] tracking-[0.14em] text-muted uppercase">Relevant to your portfolio</span>
-          <span className="text-[11.5px] text-dim">Analyses touching what you hold</span>
+          <span className="font-mono text-eyebrow text-muted uppercase">Relevant to your portfolio</span>
+          <span className="text-caption text-dim">Analyses touching what you hold</span>
         </div>
         {portfolioCards.length > 0 ? (
           <div className="grid grid-cols-[repeat(auto-fit,minmax(min(260px,100%),1fr))] gap-3">
@@ -401,22 +401,22 @@ export function ResearchWorkspace({
                     setPhase("idle");
                   }}
                   style={{ animationDelay: `${i * 50}ms` }}
-                  className="animate-rise-in min-w-0 rounded-[13px] border border-[#232323] bg-panel p-4 text-left transition-[border-color,transform] duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] hover:-translate-y-0.5 hover:border-[#3A3A3A]"
+                  className="animate-rise-in min-w-0 rounded-card border border-line bg-panel p-4 text-left transition-[border-color,transform] duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] hover:-translate-y-0.5 hover:border-line-strong"
                 >
                   <div className="flex items-center justify-between gap-2.5">
-                    <span className="text-[14px] text-primary">{a.scope_value}</span>
+                    <span className="text-lead text-primary">{a.scope_value}</span>
                     <span
-                      className="rounded-full border px-2 py-0.75 font-mono text-[8.5px] tracking-[0.08em] whitespace-nowrap uppercase"
+                      className="rounded-full border px-2 py-1 font-mono text-eyebrow whitespace-nowrap uppercase"
                       style={{ borderColor: `${c.tint}66`, background: `${c.tint}1F`, color: c.tint }}
                     >
                       {c.label}
                     </span>
                   </div>
-                  <div className="mt-2.25 text-[12px] text-muted capitalize">{a.analysis_type.replace(/_/g, " ")}</div>
-                  <div className="mt-2.5 font-serif text-[24px] tabular-nums text-primary">
+                  <div className="mt-2 text-caption text-muted capitalize">{a.analysis_type.replace(/_/g, " ")}</div>
+                  <div className="mt-2.5 font-serif text-h2 tabular-nums text-primary">
                     {a.probability_low}–{a.probability_high}%
                   </div>
-                  <div className="mt-2.5 font-mono text-[9.5px] tracking-[0.1em] text-dim uppercase" suppressHydrationWarning>
+                  <div className="mt-2.5 font-mono text-eyebrow text-dim uppercase" suppressHydrationWarning>
                     {whenLabel(a.created_at)}
                   </div>
                 </button>
@@ -424,10 +424,10 @@ export function ResearchWorkspace({
             })}
           </div>
         ) : (
-          <div className="rounded-[13px] border border-dashed border-[#262626] px-6 py-10 text-center">
-            <div className="font-serif text-[19px] text-primary">No analyses on your holdings yet</div>
-            <p className="mx-auto mt-2 mb-4 max-w-[400px] text-[12.5px] text-muted text-pretty">
-              Pick a ticker you own above and generate the first one — it&apos;ll show up here afterwards.
+          <div className="rounded-card border border-dashed border-line px-6 py-10 text-center">
+            <div className="font-serif text-h3 text-primary">No analyses on your holdings yet</div>
+            <p className="mx-auto mt-2 mb-4 max-w-[400px] text-body text-muted text-pretty">
+              Pick a ticker you own above and generate the first one - it&apos;ll show up here afterwards.
             </p>
           </div>
         )}
@@ -436,10 +436,10 @@ export function ResearchWorkspace({
       {/* Library rail + detail column */}
       {/* The mock's researchGrid switches at w >= 1100, not at Tailwind's xl. */}
       <div className="grid grid-cols-1 items-start gap-4 min-[1100px]:grid-cols-[340px_1fr]">
-        <div className="min-w-0 overflow-hidden rounded-[14px] border border-line bg-panel">
-          <div className="border-b border-[#1E1E1E] px-4 py-3.5">
-            <div className="font-mono text-[10px] tracking-[0.14em] text-muted uppercase">Library · {library.length}</div>
-            <div className="mt-2.75 flex flex-wrap gap-1">
+        <div className="min-w-0 overflow-hidden rounded-card border border-line bg-panel">
+          <div className="border-b border-line-soft px-4 py-3.5">
+            <div className="font-mono text-eyebrow text-muted uppercase">Library · {library.length}</div>
+            <div className="mt-3 flex flex-wrap gap-1">
               {(
                 [
                   ["all", "All"],
@@ -452,7 +452,7 @@ export function ResearchWorkspace({
                   key={value}
                   type="button"
                   onClick={() => setFilter(value)}
-                  className={`rounded-[7px] px-2.5 py-1.25 text-[11.5px] transition-[background,color] duration-[160ms] ease-[cubic-bezier(0.4,0,0.2,1)] hover:text-primary ${
+                  className={`rounded-control px-2.5 py-1 text-caption transition-[background,color] duration-[160ms] ease-[cubic-bezier(0.4,0,0.2,1)] hover:text-primary ${
                     filter === value ? "bg-active text-primary" : "bg-transparent text-muted"
                   }`}
                 >
@@ -461,7 +461,7 @@ export function ResearchWorkspace({
               ))}
             </div>
             <div className="mt-2 flex items-center gap-1.5">
-              <span className="font-mono text-[9px] tracking-[0.1em] text-dim uppercase">Sort</span>
+              <span className="font-mono text-eyebrow text-dim uppercase">Sort</span>
               {(
                 [
                   ["date", "Newest"],
@@ -472,7 +472,7 @@ export function ResearchWorkspace({
                   key={value}
                   type="button"
                   onClick={() => setSort(value)}
-                  className={`rounded-[7px] px-2.25 py-1 text-[11px] transition-[background,color] duration-[160ms] ease-[cubic-bezier(0.4,0,0.2,1)] hover:text-primary ${
+                  className={`rounded-control px-2 py-1 text-micro transition-[background,color] duration-[160ms] ease-[cubic-bezier(0.4,0,0.2,1)] hover:text-primary ${
                     sort === value ? "bg-active text-primary" : "bg-transparent text-muted"
                   }`}
                 >
@@ -483,7 +483,7 @@ export function ResearchWorkspace({
           </div>
 
           {library.length === 0 ? (
-            <div className="px-4 py-8 text-center text-[12px] text-dim">Nothing in the library yet.</div>
+            <div className="px-4 py-8 text-center text-caption text-dim">Nothing in the library yet.</div>
           ) : (
             library.map((a, i) => {
               const c = CONF_STYLE[a.confidence_level] ?? CONF_STYLE.low;
@@ -497,26 +497,26 @@ export function ResearchWorkspace({
                     setPhase("idle");
                   }}
                   style={{ animationDelay: `${i * 40}ms` }}
-                  className={`animate-rise-in block w-full border-b border-[#171717] px-4 py-3.5 text-left transition-[background] duration-[140ms] ease-[cubic-bezier(0.4,0,0.2,1)] hover:bg-active ${
+                  className={`animate-rise-in block w-full border-b border-line-soft px-4 py-3.5 text-left transition-[background] duration-[140ms] ease-[cubic-bezier(0.4,0,0.2,1)] hover:bg-active ${
                     isOpen ? "bg-active" : ""
                   }`}
                 >
                   <div className="flex items-center justify-between gap-2.5">
                     <div className="flex min-w-0 items-center gap-2">
-                      <span className="truncate text-[13px] text-primary">{a.scope_value}</span>
-                      <span className="font-mono text-[8.5px] tracking-[0.1em] text-dim uppercase">{a.scope_type}</span>
+                      <span className="truncate text-body text-primary">{a.scope_value}</span>
+                      <span className="font-mono text-eyebrow text-dim uppercase">{a.scope_type}</span>
                     </div>
                     <ConfidenceBars level={a.confidence_level} />
                   </div>
-                  <div className="mt-1.75 text-[12px] leading-[1.5] text-muted text-pretty">
+                  <div className="mt-2 text-caption leading-[1.5] text-muted text-pretty">
                     <span className="capitalize">{a.analysis_type.replace(/_/g, " ")}</span> · {a.probability_low}–
                     {a.probability_high}%
                   </div>
-                  <div className="mt-2.25 flex items-center justify-between gap-2.5">
-                    <span className="font-mono text-[9.5px] tracking-[0.1em] uppercase" style={{ color: c.tint }}>
+                  <div className="mt-2 flex items-center justify-between gap-2.5">
+                    <span className="font-mono text-eyebrow uppercase" style={{ color: c.tint }}>
                       {c.label}
                     </span>
-                    <span className="font-mono text-[9.5px] tracking-[0.1em] text-dim uppercase" suppressHydrationWarning>
+                    <span className="font-mono text-eyebrow text-dim uppercase" suppressHydrationWarning>
                       {whenLabel(a.created_at)}
                     </span>
                   </div>

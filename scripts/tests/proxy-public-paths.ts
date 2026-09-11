@@ -42,6 +42,17 @@ export function runProxyPublicPathsSuite(): SuiteResult {
       "",
     ),
   );
+  // The landing page is where the app layout sends every logged-out visitor.
+  // If it ever stops being public the gate bounces it to /waitlist and the
+  // redirect loops.
+  cases.push(check("/welcome (the landing page) is public", isPublicPath("/welcome") === true, ""));
+  cases.push(
+    check(
+      "/welcome matches exactly (/welcome-back is NOT public)",
+      isPublicPath("/welcome-back") === false,
+      "",
+    ),
+  );
   cases.push(
     check(
       "/api routes are public at the gate (they do their own auth)",

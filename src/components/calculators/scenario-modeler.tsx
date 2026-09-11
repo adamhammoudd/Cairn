@@ -41,8 +41,8 @@ export function ScenarioModeler({ holdings }: { holdings: ScenarioHolding[] }) {
   if (holdings.length === 0) {
     return (
       <div className="rounded-card border border-dashed border-line px-6 py-16 text-center">
-        <div className="font-serif text-[20px] text-primary">Nothing to model against</div>
-        <p className="mx-auto mt-2 max-w-[380px] text-[13px] text-muted text-pretty">
+        <div className="font-serif text-h3 text-primary">Nothing to model against</div>
+        <p className="mx-auto mt-2 max-w-[380px] text-body text-muted text-pretty">
           Add holdings on the Portfolio page and you can shock them here to see what it does to total value.
         </p>
       </div>
@@ -69,7 +69,7 @@ export function ScenarioModeler({ holdings }: { holdings: ScenarioHolding[] }) {
           </CalcField>
         </div>
         <div
-          className={`font-serif text-[20px] tabular-nums ${
+          className={`font-serif text-h3 tabular-nums ${
             (Number(globalShockPct) || 0) > 0
               ? "text-accent"
               : (Number(globalShockPct) || 0) < 0
@@ -82,11 +82,11 @@ export function ScenarioModeler({ holdings }: { holdings: ScenarioHolding[] }) {
         </div>
       </div>
 
-      <div className="mt-4 overflow-hidden rounded-xl border border-line">
+      <div className="mt-4 overflow-hidden rounded-panel border border-line">
         <div className="overflow-x-auto">
           <div className="min-w-[720px]">
             <div
-              className={`grid ${COLS} gap-3 border-b border-line px-4 py-2.5 font-mono text-[9.5px] tracking-[0.12em] text-dim uppercase`}
+              className={`grid ${COLS} gap-3 border-b border-line px-4 py-2.5 font-mono text-eyebrow text-dim uppercase`}
             >
               <div>Symbol</div>
               <div>Current price</div>
@@ -98,7 +98,7 @@ export function ScenarioModeler({ holdings }: { holdings: ScenarioHolding[] }) {
             {rows.map((r) => (
               <div
                 key={r.symbol}
-                className={`grid ${COLS} items-center gap-3 border-b border-line px-4 py-2.75 text-[12.5px] transition-colors duration-fast ease-standard last:border-b-0 hover:bg-active`}
+                className={`grid ${COLS} items-center gap-3 border-b border-line px-4 py-3 text-body transition-colors duration-fast ease-standard last:border-b-0 hover:bg-active`}
               >
                 <div className="text-primary">{r.symbol}</div>
                 <div className="tabular-nums text-muted">{fmtCurrency(r.currentPrice)}</div>
@@ -110,7 +110,7 @@ export function ScenarioModeler({ holdings }: { holdings: ScenarioHolding[] }) {
                   onChange={(e) => setOverride(r.symbol, e.target.value)}
                   placeholder={globalShockPct}
                   aria-label={`${r.symbol} price move override, percent`}
-                  className="w-20 rounded-md border border-line bg-canvas px-2 py-1 text-[12px] tabular-nums text-primary outline-none transition-colors duration-base ease-standard focus:border-accent"
+                  className="w-20 rounded-control border border-line bg-canvas px-2 py-1 text-caption tabular-nums text-primary outline-none transition-colors duration-base ease-standard focus:border-accent"
                 />
                 <div className="tabular-nums text-muted">{fmtCurrency(r.hypotheticalPrice)}</div>
                 <div className="tabular-nums text-primary">{fmtCurrency(r.currentValue)}</div>

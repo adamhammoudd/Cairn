@@ -22,7 +22,8 @@ import {
 } from "@/lib/screener";
 import { DataFreshness } from "@/components/data-freshness";
 import { useDisplayPrefs } from "@/components/display-prefs-provider";
-import { absoluteChangeFrom, formatChange, formatMoney } from "@/lib/display-prefs";
+import { PromptDialog } from "@/components/dialog";
+import { absoluteChangeFrom, formatChange, formatMoney, currencySymbol } from "@/lib/display-prefs";
 
 type NumericField = (typeof SCREENER_NUMERIC_FIELDS)[number];
 type FilterText = Record<NumericField, string>;
@@ -47,11 +48,11 @@ interface ScreenerPanelProps {
 }
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
-  return <div className="mt-4 mb-2 font-mono text-[9.5px] tracking-[0.12em] text-dim uppercase first:mt-0">{children}</div>;
+  return <div className="mt-4 mb-2 font-mono text-eyebrow text-dim uppercase first:mt-0">{children}</div>;
 }
 
 const NUM_INPUT_CLASS =
-  "w-full rounded-[10px] border border-line bg-[#0B0B0B] px-3 py-2.5 text-[12.5px] text-primary outline-none transition-colors duration-fast ease-standard placeholder:text-dim focus:border-accent";
+  "w-full rounded-panel border border-line bg-canvas px-3 py-2.5 text-body text-primary outline-none transition-colors duration-fast ease-standard placeholder:text-dim focus:border-accent";
 
 function FilterInput({
   field,
@@ -90,6 +91,7 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
   const [preset, setPreset] = useState<string | null>(null);
   const [sort, setSort] = useState<ScreenSort | null>(null);
   const [savedScreens, setSavedScreens] = useState<SavedScreen[]>(initialSavedScreens);
+  const [namingScreen, setNamingScreen] = useState(false);
   const [, startMutate] = useTransition();
 
   const matched = useMemo(() => applyScreenerFilters(initialRows, filters), [initialRows, filters]);
@@ -142,11 +144,14 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
   }
 
   function handleSave() {
-    const name = window.prompt("Name this screen:");
-    if (!name?.trim()) return;
+    setNamingScreen(true);
+  }
+
+  function submitScreenName(name: string) {
+    setNamingScreen(false);
     startMutate(async () => {
-      await saveScreen(name.trim(), filters);
-      setSavedScreens((prev) => [...prev, { id: crypto.randomUUID(), name: name.trim(), filters }]);
+      await saveScreen(name, filters);
+      setSavedScreens((prev) => [...prev, { id: crypto.randomUUID(), name, filters }]);
     });
   }
 
@@ -158,14 +163,14 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
   return (
     <div className="animate-page-in">
       <div className="mb-4.5">
-        <div className="mb-2 font-mono text-[10.5px] tracking-[0.16em] text-muted uppercase">Markets · Screener</div>
-        <h1 className="font-serif text-[32px] leading-[1.1] font-normal text-primary">Screener</h1>
+        <div className="mb-2 font-mono text-eyebrow text-muted uppercase">Markets · Screener</div>
+        <h1 className="font-serif text-display leading-[1.1] font-normal text-primary">Screener</h1>
       </div>
 
       <div className="grid grid-cols-1 items-start gap-3.5 min-[900px]:grid-cols-[232px_1fr]">
         <aside className="rounded-card border border-line bg-panel p-4.5">
-          <div className="font-mono text-[9.5px] tracking-[0.12em] text-dim uppercase">Asset type</div>
-          <div className="mt-2.25 flex flex-wrap gap-1.5">
+          <div className="font-mono text-eyebrow text-dim uppercase">Asset type</div>
+          <div className="mt-2 flex flex-wrap gap-1.5">
             {ASSET_TYPES.map((t) => {
               const active = filters.assetTypes.includes(t);
               return (
@@ -173,7 +178,7 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
                   key={t}
                   type="button"
                   onClick={() => toggleAssetType(t)}
-                  className={`rounded-full border px-2.75 py-1.5 text-[11.5px] transition-colors duration-fast ease-standard hover:border-[#3A3A3A] ${
+                  className={`rounded-full border px-3 py-1.5 text-caption transition-colors duration-fast ease-standard hover:border-line-strong ${
                     active ? "border-accent bg-accent/10 text-primary" : "border-line bg-transparent text-muted"
                   }`}
                 >
@@ -198,7 +203,7 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
           <FieldLabel>Min volume</FieldLabel>
           <FilterInput field="minVolume" placeholder="e.g. 1000000" text={filterText} onEdit={editFilter} />
 
-          <FieldLabel>Market cap ($M)</FieldLabel>
+          <FieldLabel>Market cap ({currencySymbol(prefs)}M)</FieldLabel>
           <div className="flex items-center gap-2">
             <FilterInput field="minMarketCapM" placeholder="Min" text={filterText} onEdit={editFilter} />
             <FilterInput field="maxMarketCapM" placeholder="Max" text={filterText} onEdit={editFilter} />
@@ -216,12 +221,12 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
           <button
             type="button"
             onClick={clearPreset}
-            className="mt-4 w-full rounded-[10px] border border-line bg-transparent py-2.25 text-[12px] text-muted transition-colors duration-fast ease-standard hover:border-[#3A3A3A] hover:text-primary"
+            className="mt-4 w-full rounded-panel border border-line bg-transparent py-2 text-caption text-muted transition-colors duration-fast ease-standard hover:border-line-strong hover:text-primary"
           >
             Reset filters
           </button>
 
-          <div className="mt-4.5 mb-2.25 font-mono text-[9.5px] tracking-[0.12em] text-dim uppercase">Pre-built screens</div>
+          <div className="mt-4.5 mb-2 font-mono text-eyebrow text-dim uppercase">Pre-built screens</div>
           <div className="flex flex-col gap-1">
             {PRESET_SCREENS.map((p) => (
               <button
@@ -229,7 +234,7 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
                 type="button"
                 aria-pressed={preset === p.id}
                 onClick={() => applyPreset(p.id)}
-                className={`truncate rounded-lg px-2.5 py-2 text-left text-[12.5px] transition-colors duration-fast ease-standard hover:bg-active hover:text-primary ${
+                className={`truncate rounded-control px-2.5 py-2 text-left text-body transition-colors duration-fast ease-standard hover:bg-active hover:text-primary ${
                   preset === p.id ? "bg-active text-primary" : "text-muted"
                 }`}
               >
@@ -238,11 +243,11 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
             ))}
           </div>
 
-          <div className="mt-4.5 mb-2.25 font-mono text-[9.5px] tracking-[0.12em] text-dim uppercase">Saved screens</div>
+          <div className="mt-4.5 mb-2 font-mono text-eyebrow text-dim uppercase">Saved screens</div>
           {savedScreens.length === 0 ? (
-            <div className="rounded-lg border border-dashed border-line px-3 py-2.5">
-              <p className="text-[12.5px] text-muted">No saved screens</p>
-              <p className="mt-0.5 text-[11px] text-dim text-pretty">
+            <div className="rounded-control border border-dashed border-line px-3 py-2.5">
+              <p className="text-body text-muted">No saved screens</p>
+              <p className="mt-0.5 text-micro text-dim text-pretty">
                 Adjust the filters, then <span className="text-muted">Save screen</span> to pin one here.
               </p>
             </div>
@@ -257,14 +262,14 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
                       setSort(null);
                       setFilterSet(s.filters);
                     }}
-                    className="flex-1 truncate rounded-lg px-2.5 py-2 text-left text-[12.5px] text-muted transition-colors duration-fast ease-standard hover:bg-active hover:text-primary"
+                    className="flex-1 truncate rounded-control px-2.5 py-2 text-left text-body text-muted transition-colors duration-fast ease-standard hover:bg-active hover:text-primary"
                   >
                     {s.name}
                   </button>
                   <button
                     type="button"
                     onClick={() => handleDelete(s.id)}
-                    className="text-[12px] text-dim transition-colors duration-fast ease-standard hover:text-negative"
+                    className="text-caption text-dim transition-colors duration-fast ease-standard hover:text-negative"
                   >
                     ✕
                   </button>
@@ -273,7 +278,7 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
             </div>
           )}
 
-          <p className="mt-4.5 text-[11.5px] leading-relaxed text-dim">
+          <p className="mt-4.5 text-caption leading-relaxed text-dim">
             Market cap, P/E, and dividend yield are derived from SEC XBRL filings against the latest
             close. Funds and ETFs don&apos;t file those concepts, so they&apos;re excluded by those
             filters.
@@ -282,18 +287,18 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
 
         <div className="overflow-hidden rounded-card border border-line bg-panel">
           <div className="flex items-center justify-between gap-3 border-b border-line px-4.5 py-3">
-            <span className="font-mono text-[10px] tracking-[0.14em] text-muted uppercase">
+            <span className="font-mono text-eyebrow text-muted uppercase">
               {`${visibleRows.length} match${visibleRows.length === 1 ? "" : "es"}`}
             </span>
             <div className="flex items-center gap-3">
               {/* Same numbers as Markets and the ticker page, so the same
                   freshness statement. */}
               <DataFreshness source="last_close" asOf={asOf} className="hidden sm:inline" />
-              <span className="hidden text-[11.5px] text-dim sm:inline">Market cap derived at query time</span>
+              <span className="hidden text-caption text-dim sm:inline">Market cap derived at query time</span>
               <button
                 type="button"
                 onClick={handleSave}
-                className="rounded-lg border border-line px-3 py-1.75 text-[12.5px] text-primary transition-colors duration-fast ease-standard hover:border-[#3A3A3A]"
+                className="rounded-control border border-line px-3 py-2 text-body text-primary transition-colors duration-fast ease-standard hover:border-line-strong"
               >
                 Save screen
               </button>
@@ -302,30 +307,30 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
 
           {activePreset && (
             <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-line bg-active px-4.5 py-2.5">
-              <span className="text-[12.5px] text-primary">{activePreset.name}</span>
+              <span className="text-body text-primary">{activePreset.name}</span>
               {/* A preset that does not say what it selected is an opaque list.
                   This is the same method text the deck on Markets prints. */}
-              <span className="max-w-[62ch] text-[11.5px] text-dim text-pretty">{activePreset.method}</span>
+              <span className="max-w-[62ch] text-caption text-dim text-pretty">{activePreset.method}</span>
             </div>
           )}
 
           {visibleRows.length === 0 ? (
             <div className="px-6 py-15 text-center">
-              <div className="font-serif text-[20px] text-primary">No asset clears every filter</div>
-              <p className="mx-auto mt-2 mb-4.5 max-w-[380px] text-[13px] text-muted text-pretty">
+              <div className="font-serif text-h3 text-primary">No asset clears every filter</div>
+              <p className="mx-auto mt-2 mb-4.5 max-w-[380px] text-body text-muted text-pretty">
                 Loosen one constraint at a time - price and change are usually the binding pair.
               </p>
               <button
                 type="button"
                 onClick={clearPreset}
-                className="rounded-[10px] bg-gradient-to-br from-accent-light to-accent-dark px-4 py-2.25 text-[12.5px] font-semibold text-canvas"
+                className="rounded-panel bg-gradient-to-br from-accent-light to-accent-dark px-4 py-2 text-body font-semibold text-canvas"
               >
                 Reset filters
               </button>
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-[1fr_0.8fr_0.9fr_0.8fr_0.9fr_0.9fr_0.7fr_0.8fr] gap-2.5 border-b border-line px-4.5 py-2.5 font-mono text-[9.5px] tracking-[0.1em] text-dim uppercase">
+              <div className="grid grid-cols-[1fr_0.8fr_0.9fr_0.8fr_0.9fr_0.9fr_0.7fr_0.8fr] gap-2.5 border-b border-line px-4.5 py-2.5 font-mono text-eyebrow text-dim uppercase">
                 <div>Symbol</div>
                 <div>Type</div>
                 <div>Price</div>
@@ -342,34 +347,34 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
                   className="cn-row animate-rise-in grid grid-cols-[1fr_0.8fr_0.9fr_0.8fr_0.9fr_0.9fr_0.7fr_0.8fr] items-center gap-2.5 border-b border-line px-4.5 py-3 transition-colors duration-fast ease-standard last:border-b-0 hover:bg-active"
                   style={{ animationDelay: `${index * 25}ms` }}
                 >
-                  <div className="text-sm text-primary">{r.symbol}</div>
-                  <div className={`font-mono text-[10px] tracking-[0.08em] uppercase ${(ASSET_TYPE_TAG_CLASS[r.assetType] ?? "text-muted").split(" ")[0]}`}>
+                  <div className="text-lead text-primary">{r.symbol}</div>
+                  <div className={`font-mono text-eyebrow uppercase ${(ASSET_TYPE_TAG_CLASS[r.assetType] ?? "text-muted").split(" ")[0]}`}>
                     {assetTypeBadge(r.assetType)}
                   </div>
-                  <div className="text-[12.5px] tabular-nums text-primary">
+                  <div className="text-body tabular-nums text-primary">
                     {formatMoney(r.price, prefs)}
                   </div>
                   <div
-                    className={`text-[12.5px] tabular-nums ${
+                    className={`text-body tabular-nums ${
                       r.changePct === null ? "text-muted" : r.changePct >= 0 ? "text-accent" : "text-negative"
                     }`}
                   >
                     {formatChange(absoluteChangeFrom(r.price, r.changePct), r.changePct, prefs)}
                   </div>
                   <div
-                    className="text-[12.5px] tabular-nums text-muted"
+                    className="text-body tabular-nums text-muted"
                     title={r.volume === null ? "Volume not reported for this asset" : undefined}
                   >
                     {formatVolume(r.volume)}
                   </div>
                   <div
-                    className={`text-[12.5px] tabular-nums ${r.marketCap === null ? "text-muted" : "text-primary"}`}
+                    className={`text-body tabular-nums ${r.marketCap === null ? "text-muted" : "text-primary"}`}
                     title={r.marketCap === null ? "Market cap not reported - funds and ETFs don't file it" : undefined}
                   >
                     {formatMarketCap(r.marketCap, prefs)}
                   </div>
-                  <div className="text-[12.5px] tabular-nums text-muted">{r.pe === null ? "n/a" : `${r.pe.toFixed(1)}\u00d7`}</div>
-                  <div className="text-[12.5px] tabular-nums text-muted">
+                  <div className="text-body tabular-nums text-muted">{r.pe === null ? "n/a" : `${r.pe.toFixed(1)}\u00d7`}</div>
+                  <div className="text-body tabular-nums text-muted">
                     {r.dividendYield === null ? "n/a" : `${r.dividendYield.toFixed(2)}%`}
                   </div>
                 </Link>
@@ -378,6 +383,16 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
           )}
         </div>
       </div>
+
+      <PromptDialog
+        open={namingScreen}
+        title="Name this screen"
+        description="Saved screens keep the filters currently applied and reappear in the sidebar."
+        placeholder="e.g. Large-cap dividend payers"
+        confirmLabel="Save screen"
+        onSubmit={submitScreenName}
+        onCancel={() => setNamingScreen(false)}
+      />
     </div>
   );
 }

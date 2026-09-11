@@ -9,9 +9,9 @@ import { TimeAgo } from "@/components/time-ago";
 function Panel({ title, note, children }: { title: string; note?: string; children: React.ReactNode }) {
   return (
     <section className="rounded-card border border-line bg-panel">
-      <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-line px-4.5 py-3.25">
-        <span className="font-mono text-[10px] tracking-[0.14em] text-muted uppercase">{title}</span>
-        {note && <span className="max-w-[52ch] text-[11.5px] text-dim text-pretty">{note}</span>}
+      <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-line px-4.5 py-3">
+        <span className="font-mono text-eyebrow text-muted uppercase">{title}</span>
+        {note && <span className="max-w-[52ch] text-caption text-dim text-pretty">{note}</span>}
       </div>
       <div className="p-4.5">{children}</div>
     </section>
@@ -21,11 +21,11 @@ function Panel({ title, note, children }: { title: string; note?: string; childr
 function Stat({ label, value, sub, tone }: { label: string; value: string; sub?: string; tone?: "warn" }) {
   return (
     <div>
-      <div className="font-mono text-[9.5px] tracking-[0.12em] text-dim uppercase">{label}</div>
-      <div className={`mt-1.5 font-serif text-[22px] leading-none tabular-nums ${tone === "warn" ? "text-negative" : "text-primary"}`}>
+      <div className="font-mono text-eyebrow text-dim uppercase">{label}</div>
+      <div className={`mt-1.5 font-serif text-h2 leading-none tabular-nums ${tone === "warn" ? "text-negative" : "text-primary"}`}>
         {value}
       </div>
-      {sub && <div className="mt-1.25 text-[11.5px] text-dim">{sub}</div>}
+      {sub && <div className="mt-1 text-caption text-dim">{sub}</div>}
     </div>
   );
 }
@@ -33,12 +33,12 @@ function Stat({ label, value, sub, tone }: { label: string; value: string; sub?:
 function ReportRow({ item }: { item: ModerationItem }) {
   const [result, formAction, pending] = useActionState(resolveReport, null);
   if (result === "resolved") {
-    return <div className="border-b border-[#171717] py-3.5 text-[12.5px] text-muted last:border-b-0">Resolved.</div>;
+    return <div className="border-b border-line-soft py-3.5 text-body text-muted last:border-b-0">Resolved.</div>;
   }
   return (
-    <div className="border-b border-[#171717] py-3.5 last:border-b-0">
-      <div className="flex flex-wrap items-center gap-2 text-[11.5px] text-dim">
-        <span className="rounded-md border border-line px-1.5 py-0.5 font-mono text-[9.5px] tracking-[0.1em] uppercase">
+    <div className="border-b border-line-soft py-3.5 last:border-b-0">
+      <div className="flex flex-wrap items-center gap-2 text-caption text-dim">
+        <span className="rounded-control border border-line px-1.5 py-0.5 font-mono text-eyebrow uppercase">
           {item.reason.replace(/_/g, " ")}
         </span>
         <span className="text-muted">{item.symbol}</span>
@@ -47,9 +47,9 @@ function ReportRow({ item }: { item: ModerationItem }) {
         <span>· {item.openReports} open {item.openReports === 1 ? "report" : "reports"}</span>
         {item.autoFlagged && <span className="text-negative">· already hidden by the spam filter</span>}
       </div>
-      <p className="mt-1.5 text-[13px] whitespace-pre-wrap text-primary">{item.body}</p>
-      {item.detail && <p className="mt-1 text-[12px] text-muted">Reporter note: {item.detail}</p>}
-      {result && <p className="mt-1 text-[12px] text-negative">{result}</p>}
+      <p className="mt-1.5 text-body whitespace-pre-wrap text-primary">{item.body}</p>
+      {item.detail && <p className="mt-1 text-caption text-muted">Reporter note: {item.detail}</p>}
+      {result && <p className="mt-1 text-caption text-negative">{result}</p>}
       <form action={formAction} className="mt-2 flex items-center gap-2">
         <input type="hidden" name="report_id" value={item.reportId} />
         <button
@@ -57,7 +57,7 @@ function ReportRow({ item }: { item: ModerationItem }) {
           name="decision"
           value="upheld"
           disabled={pending}
-          className="rounded-lg border border-line px-3 py-1.5 text-[12.5px] text-primary transition-colors duration-fast ease-standard hover:bg-active disabled:opacity-60"
+          className="rounded-control border border-line px-3 py-1.5 text-body text-primary transition-colors duration-fast ease-standard hover:bg-active disabled:opacity-60"
         >
           Uphold &amp; hide
         </button>
@@ -66,7 +66,7 @@ function ReportRow({ item }: { item: ModerationItem }) {
           name="decision"
           value="dismissed"
           disabled={pending}
-          className="rounded-lg px-3 py-1.5 text-[12.5px] text-muted transition-colors duration-fast ease-standard hover:text-primary disabled:opacity-60"
+          className="rounded-control px-3 py-1.5 text-body text-muted transition-colors duration-fast ease-standard hover:text-primary disabled:opacity-60"
         >
           Dismiss
         </button>
@@ -82,9 +82,9 @@ export function AdminDashboard({ snapshot, reports }: { snapshot: AdminSnapshot;
   return (
     <div className="animate-page-in flex flex-col gap-3.5">
       <div>
-        <div className="mb-2 font-mono text-[10.5px] tracking-[0.16em] text-muted uppercase">Internal · role-gated</div>
-        <h1 className="font-serif text-[32px] leading-[1.1] font-normal text-primary">Operations</h1>
-        <p className="mt-1.75 max-w-[620px] text-[13.5px] text-muted text-pretty">
+        <div className="mb-2 font-mono text-eyebrow text-muted uppercase">Internal · role-gated</div>
+        <h1 className="font-serif text-display leading-[1.1] font-normal text-primary">Operations</h1>
+        <p className="mt-2 max-w-[620px] text-lead text-muted text-pretty">
           Data refresh status, provider rate-limit outcomes, analysis-engine health and the moderation queue. Every
           figure is counted from stored rows at page load - nothing here is sampled or cached.
         </p>
@@ -105,20 +105,20 @@ export function AdminDashboard({ snapshot, reports }: { snapshot: AdminSnapshot;
             sub="available symbols the refresh has not revisited"
           />
         </div>
-        <div className="mt-4 flex flex-wrap gap-2 border-t border-[#1E1E1E] pt-3.5">
+        <div className="mt-4 flex flex-wrap gap-2 border-t border-line-soft pt-3.5">
           {ingestion.byStatus.map((s) => (
-            <span key={s.status} className="rounded-full border border-line px-2.5 py-1 font-mono text-[10px] tracking-[0.1em] text-muted uppercase">
+            <span key={s.status} className="rounded-full border border-line px-2.5 py-1 font-mono text-eyebrow text-muted uppercase">
               {s.status} · {s.count}
             </span>
           ))}
         </div>
         {ingestion.oldest.length > 0 && (
           <div className="mt-4 overflow-x-auto">
-            <table className="w-full min-w-[440px] border-collapse text-[12.5px]">
+            <table className="w-full min-w-[440px] border-collapse text-body">
               <thead>
                 <tr className="border-b border-line">
                   {["Longest since check", "Bars", "Last checked"].map((h) => (
-                    <th key={h} className="px-1 py-2 text-left font-mono text-[9.5px] tracking-[0.12em] text-dim uppercase last:text-right">
+                    <th key={h} className="px-1 py-2 text-left font-mono text-eyebrow text-dim uppercase last:text-right">
                       {h}
                     </th>
                   ))}
@@ -126,7 +126,7 @@ export function AdminDashboard({ snapshot, reports }: { snapshot: AdminSnapshot;
               </thead>
               <tbody>
                 {ingestion.oldest.map((r) => (
-                  <tr key={r.symbol} className="border-b border-[#171717] last:border-b-0">
+                  <tr key={r.symbol} className="border-b border-line-soft last:border-b-0">
                     <td className="px-1 py-2 text-primary">{r.symbol}</td>
                     <td className="px-1 py-2 tabular-nums text-muted">{r.bars}</td>
                     <td className="px-1 py-2 text-right text-muted"><TimeAgo iso={r.last_checked_at} /></td>
@@ -160,9 +160,9 @@ export function AdminDashboard({ snapshot, reports }: { snapshot: AdminSnapshot;
           <Stat label="AI analyses 24h" value={String(rateLimits.aiEvents24h)} sub={`${rateLimits.chatEvents24h} chat turns`} />
         </div>
         {[...rateLimits.rateLimited, ...rateLimits.errored].length > 0 && (
-          <ul className="mt-4 flex flex-col gap-1.5 border-t border-[#1E1E1E] pt-3.5">
+          <ul className="mt-4 flex flex-col gap-1.5 border-t border-line-soft pt-3.5">
             {[...rateLimits.rateLimited, ...rateLimits.errored].slice(0, 10).map((r) => (
-              <li key={r.symbol} className="text-[12.5px] text-muted">
+              <li key={r.symbol} className="text-body text-muted">
                 <span className="text-primary">{r.symbol}</span> · {r.detail ?? "no detail recorded"} ·{" "}
                 <TimeAgo iso={r.last_checked_at} />
               </li>
@@ -189,19 +189,19 @@ export function AdminDashboard({ snapshot, reports }: { snapshot: AdminSnapshot;
             sub="production traffic only; the adversarial suite is excluded"
           />
         </div>
-        <div className="mt-4 flex flex-wrap gap-2 border-t border-[#1E1E1E] pt-3.5">
+        <div className="mt-4 flex flex-wrap gap-2 border-t border-line-soft pt-3.5">
           {engine.confidenceDistribution.length === 0 ? (
-            <span className="text-[12.5px] text-dim">No analyses stored yet.</span>
+            <span className="text-body text-dim">No analyses stored yet.</span>
           ) : (
             engine.confidenceDistribution.map((c) => (
-              <span key={c.confidence_level} className="rounded-full border border-line px-2.5 py-1 font-mono text-[10px] tracking-[0.1em] text-muted uppercase">
+              <span key={c.confidence_level} className="rounded-full border border-line px-2.5 py-1 font-mono text-eyebrow text-muted uppercase">
                 {c.confidence_level} · {c.count}
               </span>
             ))
           )}
         </div>
         {engine.weekly.length > 0 && (
-          <div className="mt-3.5 flex flex-wrap gap-3 text-[11.5px] text-dim">
+          <div className="mt-3.5 flex flex-wrap gap-3 text-caption text-dim">
             {engine.weekly.map((w) => (
               <span key={w.week}>
                 w/c {w.week}: <span className="text-muted tabular-nums">{w.count}</span>
@@ -213,11 +213,11 @@ export function AdminDashboard({ snapshot, reports }: { snapshot: AdminSnapshot;
 
       <Panel title="Providers" note="From the data_providers table - the point of that table is that this list changes without a deploy.">
         {providers.length === 0 ? (
-          <p className="text-[12.5px] text-dim">No providers configured.</p>
+          <p className="text-body text-dim">No providers configured.</p>
         ) : (
           <ul className="flex flex-col gap-2">
             {providers.map((p) => (
-              <li key={p.name} className="flex flex-wrap items-baseline justify-between gap-2 text-[12.5px]">
+              <li key={p.name} className="flex flex-wrap items-baseline justify-between gap-2 text-body">
                 <span className="text-primary">
                   {p.name} <span className="text-dim">· {p.provider_type}</span>
                 </span>
@@ -236,7 +236,7 @@ export function AdminDashboard({ snapshot, reports }: { snapshot: AdminSnapshot;
           note="Manual reports from readers. Upholding hides the comment; neither decision deletes anything."
         >
           {reports.length === 0 ? (
-            <p className="text-[12.5px] text-dim">No open reports.</p>
+            <p className="text-body text-dim">No open reports.</p>
           ) : (
             <div>
               {reports.map((r) => (

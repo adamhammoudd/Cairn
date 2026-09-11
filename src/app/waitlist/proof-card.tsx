@@ -7,7 +7,7 @@
 function Eyebrow({ children, accent = false }: { children: React.ReactNode; accent?: boolean }) {
   return (
     <div
-      className={`font-mono text-[9.5px] tracking-[0.16em] uppercase ${accent ? "text-accent" : "text-dim"}`}
+      className={`font-mono text-eyebrow uppercase ${accent ? "text-accent" : "text-dim"}`}
     >
       {children}
     </div>
@@ -29,27 +29,27 @@ const SOURCES = [
 export function ProofCard() {
   return (
     <div>
-      <div className="rounded-[14px] border border-line bg-panel p-5">
+      <div className="rounded-card border border-line bg-panel p-5">
         <div className="flex items-center justify-between">
           <Eyebrow>Assistant · NVDA</Eyebrow>
           <Eyebrow>From the build</Eyebrow>
         </div>
 
-        <div className="mt-3 rounded-[10px] border border-line bg-[#0B0B0B] px-3.5 py-3 text-[12.5px] text-primary">
+        <div className="mt-3 rounded-panel border border-line bg-canvas px-3.5 py-3 text-body text-primary">
           What&apos;s the drawdown risk on NVDA after today&apos;s move?
         </div>
 
         <div className="mt-4">
           <Eyebrow accent>Drawdown probability · 30D</Eyebrow>
-          <p className="mt-2 font-serif text-[16px] leading-[1.3] font-normal text-primary text-pretty">
+          <p className="mt-2 font-serif text-title leading-[1.3] font-normal text-primary text-pretty">
             A 10%+ drawdown followed this setup in roughly one case in five
           </p>
           <div className="mt-2 flex items-end gap-2">
-            <span className="font-serif text-[28px] leading-none text-primary">18–24%</span>
+            <span className="font-serif text-h1 leading-none text-primary">18–24%</span>
             <span className="mb-1 flex items-end gap-[3px]" aria-hidden="true">
-              <span className="h-2 w-[3px] rounded-sm bg-accent/50" />
-              <span className="h-3 w-[3px] rounded-sm bg-accent/70" />
-              <span className="h-4 w-[3px] rounded-sm bg-accent" />
+              <span className="h-2 w-[3px] rounded-xs bg-accent/50" />
+              <span className="h-3 w-[3px] rounded-xs bg-accent/70" />
+              <span className="h-4 w-[3px] rounded-xs bg-accent" />
             </span>
           </div>
         </div>
@@ -59,7 +59,7 @@ export function ProofCard() {
             <Eyebrow>Sources · 4</Eyebrow>
             <ul className="mt-2 flex flex-col gap-1.5">
               {SOURCES.map((s) => (
-                <li key={s.name} className="text-[12px]">
+                <li key={s.name} className="text-caption">
                   <span className="text-accent">{s.name}</span>{" "}
                   <span className="text-dim">· {s.when}</span>
                 </li>
@@ -71,7 +71,7 @@ export function ProofCard() {
             <ul className="mt-2 flex flex-col gap-2">
               {ANALOGS.map((a) => (
                 <li key={a.sym}>
-                  <div className="flex items-baseline justify-between text-[11.5px]">
+                  <div className="flex items-baseline justify-between text-caption">
                     <span className="text-primary">{a.sym}</span>
                     <span className="font-mono text-dim">{a.pct}%</span>
                   </div>
@@ -87,11 +87,20 @@ export function ProofCard() {
           </div>
         </div>
 
-        <div className="mt-4 border-l-2 border-warning bg-warning/5 py-2 pl-3 text-[11.5px] leading-[1.5] text-muted text-pretty">
-          Market-level context from the sources above — not a recommendation to buy, hold, or sell.
+        {/* Matches the Disclosure `callout` idiom exactly - a self-stretching
+            warning rule inside a bordered panel - rather than a border-l on the
+            container. Same meaning, same shape, one visual language for "this
+            is a caveat on the content beside it". The copy still lives here
+            because this card describes a representative mock rather than a live
+            analysis; see docs/design/coherence-proposals.md. */}
+        <div className="mt-4 flex items-stretch gap-2 rounded-panel border border-line bg-panel px-3 py-2.5">
+          <span aria-hidden className="w-1 flex-shrink-0 self-stretch rounded-xs bg-warning" />
+          <p className="text-caption leading-[1.5] text-muted text-pretty">
+            Market-level context from the sources above - not a recommendation to buy, hold, or sell.
+          </p>
         </div>
       </div>
-      <p className="mt-2 text-center text-[10.5px] text-dim">
+      <p className="mt-2 text-center text-micro text-dim">
         A view from the current build. Data shown is representative.
       </p>
     </div>

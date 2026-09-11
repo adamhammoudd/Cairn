@@ -40,21 +40,21 @@ export function TwoFactorPanel({ status }: { status: TwoFactorStatus }) {
   const chip = CHIP[requested ? "requested" : "not_enrolled"];
 
   return (
-    <div className="animate-rise-in overflow-hidden rounded-[14px] border border-line bg-panel">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#1E1E1E] px-4.5 py-4">
-        <span className="font-serif text-[19px] text-primary">Two-factor authentication</span>
-        <span className={`inline-flex items-center gap-1.75 rounded-full border px-2.75 py-1 ${chip.border} ${chip.bg}`}>
+    <div className="animate-rise-in overflow-hidden rounded-card border border-line bg-panel">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line-soft px-4.5 py-4">
+        <span className="font-serif text-h3 text-primary">Two-factor authentication</span>
+        <span className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 ${chip.border} ${chip.bg}`}>
           <span className={`h-[5px] w-[5px] rounded-full ${chip.dot}`} />
-          <span className={`font-mono text-[9.5px] tracking-[0.12em] uppercase ${chip.tone}`}>{chip.label}</span>
+          <span className={`font-mono text-eyebrow uppercase ${chip.tone}`}>{chip.label}</span>
         </span>
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-4 px-4.5 py-4.5">
         <div className="min-w-0 max-w-[540px]">
-          <div className="text-[13px] text-primary">Sign-in is password-only today</div>
-          <p className="mt-1.5 text-[12px] leading-[1.6] text-muted text-pretty">
+          <div className="text-body text-primary">Sign-in is password-only today</div>
+          <p className="mt-1.5 text-caption leading-[1.6] text-muted text-pretty">
             When two-factor ships it will use an authenticator app (TOTP) plus one-time recovery codes; SMS is not
-            planned. Nothing on this screen protects your account yet — it would be misleading to show a switch that
+            planned. Nothing on this screen protects your account yet - it would be misleading to show a switch that
             did nothing.
             {requested && " You're on the list and we'll prompt you to enrol the first time you sign in after it ships."}
           </p>
@@ -64,7 +64,7 @@ export function TwoFactorPanel({ status }: { status: TwoFactorStatus }) {
           <button
             type="submit"
             disabled={pending}
-            className="rounded-[10px] border border-line px-4 py-2.5 text-[12.5px] text-primary transition-colors duration-fast ease-standard hover:border-[#3A3A3A] disabled:opacity-60"
+            className="rounded-panel border border-line px-4 py-2.5 text-body text-primary transition-colors duration-fast ease-standard hover:border-line-strong disabled:opacity-60"
           >
             {pending ? "Saving…" : requested ? "Remove me from the list" : "Notify me when it ships"}
           </button>

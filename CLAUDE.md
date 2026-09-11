@@ -34,8 +34,8 @@ chief-of-staff sign-off. Current revision-pass feedback is tracked separately - 
 founder for the latest status if unsure what's already shipped.
 
 ## Departments & agents
-- chief-of-staff — cross-department sequencing, escalation point
-- dev-lead (Engineering Manager) — bug-finder, bug-fixer, feature-builder, codebase-organizer
-- design-lead — brand/UI consistency
-- cfo-legal-advisor — economics + legal drafting
-- cmo-strategist (Marketing Manager) — social-media-manager, creative-designer
+- chief-of-staff - cross-department sequencing, escalation point
+- dev-lead (Engineering Manager) - bug-finder, bug-fixer, feature-builder, codebase-organizer
+- design-lead - brand/UI consistency
+- cfo-legal-advisor - economics + legal drafting
+- cmo-strategist (Marketing Manager) - social-media-manager, creative-designer

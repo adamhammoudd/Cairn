@@ -33,16 +33,16 @@ export function AlertPanel({ alerts, deliveries, defaultChannels }: AlertPanelPr
     <div className="animate-page-in flex flex-col gap-3.5">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <div className="mb-2 font-mono text-[10.5px] tracking-[0.16em] text-muted uppercase">Portfolio · Alerts</div>
-          <h1 className="font-serif text-[32px] leading-[1.1] font-normal text-primary">Alerts</h1>
-          <p className="mt-1.75 max-w-[560px] text-[13.5px] text-muted text-pretty">
+          <div className="mb-2 font-mono text-eyebrow text-muted uppercase">Portfolio · Alerts</div>
+          <h1 className="font-serif text-display leading-[1.1] font-normal text-primary">Alerts</h1>
+          <p className="mt-2 max-w-[560px] text-lead text-muted text-pretty">
             {activeCount} active. Each fires once per cooldown window, then goes quiet.
           </p>
         </div>
         <button
           type="button"
           onClick={() => setOpenForm((prev) => (prev === "new" ? null : "new"))}
-          className="rounded-[10px] bg-gradient-to-br from-accent-light to-accent-dark px-4 py-2.5 text-[13px] font-semibold text-canvas transition-[box-shadow,transform] duration-base ease-standard hover:-translate-y-px hover:shadow-[0_0_26px_rgba(47,198,133,0.35)]"
+          className="rounded-panel bg-gradient-to-br from-accent-light to-accent-dark px-4 py-2.5 text-body font-semibold text-canvas transition-[box-shadow,transform] duration-base ease-standard hover:-translate-y-px hover:shadow-[0_0_26px_rgba(47,198,133,0.35)]"
         >
           {openForm === "new" ? "Close" : "+ New alert"}
         </button>
@@ -63,20 +63,20 @@ export function AlertPanel({ alerts, deliveries, defaultChannels }: AlertPanelPr
 
       <div className="grid grid-cols-1 items-start gap-3.5 min-[900px]:grid-cols-[300px_1fr]">
         <aside className="overflow-hidden rounded-card border border-line bg-panel">
-          <div className="border-b border-line px-4 py-3.25 font-mono text-[10px] tracking-[0.14em] text-muted uppercase">
+          <div className="border-b border-line px-4 py-3 font-mono text-eyebrow text-muted uppercase">
             Recent deliveries
           </div>
           {deliveries.length === 0 ? (
-            <p className="px-4 py-5 text-[12.5px] text-dim">Nothing yet - alerts appear here when they fire.</p>
+            <p className="px-4 py-5 text-body text-dim">Nothing yet - alerts appear here when they fire.</p>
           ) : (
             deliveries.map((d) => (
-              <div key={d.id} className="flex gap-2.75 border-b border-line px-4 py-3.5 last:border-b-0">
+              <div key={d.id} className="flex gap-3 border-b border-line px-4 py-3.5 last:border-b-0">
                 <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
                 <div className="min-w-0">
-                  <div className="text-[12.5px] leading-relaxed text-primary text-pretty">
+                  <div className="text-body leading-relaxed text-primary text-pretty">
                     {d.message ?? `${d.scope_value} alert fired.`}
                   </div>
-                  <div className="mt-1.25 text-[11px] text-dim" suppressHydrationWarning>
+                  <div className="mt-1 text-micro text-dim" suppressHydrationWarning>
                     {CHANNEL_LABELS[d.channel] ?? d.channel} ·{" "}
                     {new Date(d.sent_at).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
                   </div>
@@ -89,8 +89,8 @@ export function AlertPanel({ alerts, deliveries, defaultChannels }: AlertPanelPr
         <div className="flex flex-col gap-2.5">
           {alerts.length === 0 ? (
             <div className="rounded-card border border-dashed border-line px-6 py-16 text-center">
-              <div className="font-serif text-[20px] text-primary">No markers set</div>
-              <p className="mx-auto mt-2 max-w-[380px] text-[13px] text-muted text-pretty">
+              <div className="font-serif text-h3 text-primary">No markers set</div>
+              <p className="mx-auto mt-2 max-w-[380px] text-body text-muted text-pretty">
                 Create an alert and Cairn watches for the condition, then goes quiet for the cooldown window.
               </p>
             </div>
@@ -98,35 +98,35 @@ export function AlertPanel({ alerts, deliveries, defaultChannels }: AlertPanelPr
             alerts.map((a, index) => (
               <div
                 key={a.id}
-                className={`animate-rise-in flex flex-wrap items-center gap-4 rounded-xl border bg-panel p-4.5 transition-colors duration-base ease-standard ${
-                  a.enabled ? "border-line" : "border-[#1C1C1C]"
+                className={`animate-rise-in flex flex-wrap items-center gap-4 rounded-panel border bg-panel p-4.5 transition-colors duration-base ease-standard ${
+                  a.enabled ? "border-line" : "border-line-soft"
                 }`}
                 style={{ animationDelay: `${index * 40}ms` }}
               >
                 <div className="min-w-[180px] flex-1">
                   <div className="flex flex-wrap items-center gap-2.5">
                     <span
-                      className={`text-[14px] transition-colors duration-base ease-standard ${
+                      className={`text-lead transition-colors duration-base ease-standard ${
                         a.enabled ? "text-primary" : "text-dim"
                       }`}
                     >
                       {a.scope_value}
                     </span>
-                    <span className="rounded-full border border-line px-2 py-0.75 font-mono text-[9.5px] tracking-[0.1em] text-muted uppercase">
+                    <span className="rounded-full border border-line px-2 py-1 font-mono text-eyebrow text-muted uppercase">
                       {ALERT_TYPE_LABELS[a.alert_type]}
                     </span>
                   </div>
 
-                  <div className="mt-1.75 text-[12.5px] text-muted">
+                  <div className="mt-2 text-body text-muted">
                     {describeCondition(a.alert_type, a.condition, prefs)}
                   </div>
 
-                  <div className="mt-2.25 flex flex-wrap items-center gap-2">
-                    <span className="font-mono text-[10px] tracking-[0.1em] text-dim uppercase">
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <span className="font-mono text-eyebrow text-dim uppercase">
                       Cooldown {cooldownLabel(a.cooldown_seconds)}
                     </span>
                     {a.channels.map((ch) => (
-                      <span key={ch} className="rounded-full border border-line px-2 py-0.75 text-[10.5px] text-muted">
+                      <span key={ch} className="rounded-full border border-line px-2 py-1 text-micro text-muted">
                         {CHANNEL_LABELS[ch] ?? ch}
                       </span>
                     ))}
@@ -134,7 +134,7 @@ export function AlertPanel({ alerts, deliveries, defaultChannels }: AlertPanelPr
                 </div>
 
                 <div
-                  className={`min-w-[130px] text-[11.5px] ${a.last_triggered_at ? "text-accent" : "text-dim"}`}
+                  className={`min-w-[130px] text-caption ${a.last_triggered_at ? "text-accent" : "text-dim"}`}
                   suppressHydrationWarning
                 >
                   {a.last_triggered_at
@@ -151,7 +151,7 @@ export function AlertPanel({ alerts, deliveries, defaultChannels }: AlertPanelPr
                     onClick={() => setOpenForm((prev) => (prev === a.id ? null : a.id))}
                     aria-label={`Edit ${a.scope_value} alert`}
                     title="Edit"
-                    className={`flex h-7 w-7 items-center justify-center rounded-lg transition-colors duration-fast ease-standard hover:bg-active ${
+                    className={`flex h-7 w-7 items-center justify-center rounded-control transition-colors duration-fast ease-standard hover:bg-active ${
                       openForm === a.id ? "text-accent" : "text-muted hover:text-primary"
                     }`}
                   >
@@ -170,7 +170,7 @@ export function AlertPanel({ alerts, deliveries, defaultChannels }: AlertPanelPr
                     onClick={() => startMutate(() => deleteAlert(a.id))}
                     aria-label={`Delete ${a.scope_value} alert`}
                     title="Delete"
-                    className="flex h-7 w-7 items-center justify-center rounded-lg text-negative transition-colors duration-fast ease-standard hover:bg-negative/12"
+                    className="flex h-7 w-7 items-center justify-center rounded-control text-negative transition-colors duration-fast ease-standard hover:bg-negative/12"
                   >
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M3 6h18" />

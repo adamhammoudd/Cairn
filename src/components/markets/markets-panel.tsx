@@ -69,9 +69,9 @@ export function MarketsPanel({ rows, cryptoRows, defaultFilter = "all", requestC
   return (
     <div className="animate-page-in">
       <div className="mb-5">
-        <div className="mb-2 font-mono text-[10.5px] tracking-[0.16em] text-muted uppercase">Markets</div>
-        <h1 className="font-serif text-[32px] leading-[1.1] font-normal text-primary">The whole board</h1>
-        <p className="mt-1.75 max-w-[560px] text-[13.5px] text-muted text-pretty">
+        <div className="mb-2 font-mono text-eyebrow text-muted uppercase">Markets</div>
+        <h1 className="font-serif text-display leading-[1.1] font-normal text-primary">The whole board</h1>
+        <p className="mt-2 max-w-[560px] text-lead text-muted text-pretty">
           Equities, ETFs, crypto, forex and indices in one filterable view. Any symbol the data provider carries is
           fetched the first time it is searched for.
         </p>
@@ -85,13 +85,13 @@ export function MarketsPanel({ rows, cryptoRows, defaultFilter = "all", requestC
       <TrendingDeck rows={rows} requestCounts={requestCounts} names={names} deck={deck} onDeckChange={setDeck} />
 
       <div className="mb-4 flex flex-wrap items-center gap-2.5">
-        <div className="flex flex-wrap gap-1.5 rounded-[11px] border border-line bg-panel p-1">
+        <div className="flex flex-wrap gap-1.5 rounded-panel border border-line bg-panel p-1">
           {TABS.map((t) => (
             <button
               key={t}
               type="button"
               onClick={() => setTab(t)}
-              className={`rounded-lg px-3.25 py-1.75 text-[12.5px] transition-colors duration-base ease-standard ${
+              className={`rounded-control px-3 py-2 text-body transition-colors duration-base ease-standard ${
                 tab === t ? "bg-active text-primary" : "text-muted hover:text-primary"
               }`}
             >
@@ -99,8 +99,8 @@ export function MarketsPanel({ rows, cryptoRows, defaultFilter = "all", requestC
             </button>
           ))}
         </div>
-        <div className="flex min-w-[220px] flex-1 items-center gap-2 rounded-[11px] border border-line bg-panel px-3 py-2 transition-colors duration-base ease-standard hover:border-[#3A3A3A]">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6A6A6A" strokeWidth="2" className="shrink-0">
+        <div className="flex min-w-[220px] flex-1 items-center gap-2 rounded-panel border border-line bg-panel px-3 py-2 transition-colors duration-base ease-standard hover:border-line-strong focus-within:border-accent">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--color-dim)" strokeWidth="2" className="shrink-0">
             <circle cx="11" cy="11" r="7" />
             <line x1="21" y1="21" x2="16.65" y2="16.65" />
           </svg>
@@ -109,12 +109,12 @@ export function MarketsPanel({ rows, cryptoRows, defaultFilter = "all", requestC
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Filter this view"
-            className="w-full min-w-0 bg-transparent text-[12.5px] text-primary placeholder:text-dim outline-none"
+            className="w-full min-w-0 bg-transparent text-body text-primary placeholder:text-dim outline-none"
           />
         </div>
       </div>
 
-      <p className="mb-2 text-[11.5px] text-dim">{deckMethod}</p>
+      <p className="mb-2 text-caption text-dim">{deckMethod}</p>
 
       <TickerList
         rows={filtered}
@@ -122,13 +122,13 @@ export function MarketsPanel({ rows, cryptoRows, defaultFilter = "all", requestC
         marketCaps={marketCaps}
         emptyState={
           <div className="px-6 py-16 text-center">
-            <div className="mb-4.5 flex items-end justify-center gap-1.25">
-              <span className="h-2.25 w-8.5 rounded-full bg-[#1E1E1E]" />
-              <span className="h-2.25 w-6.5 rounded-full bg-[#1E1E1E]" />
-              <span className="h-2.25 w-4.5 rounded-full bg-[#262626]" />
+            <div className="mb-4.5 flex items-end justify-center gap-1">
+              <span className="h-2 w-8.5 rounded-full bg-active" />
+              <span className="h-2 w-6.5 rounded-full bg-active" />
+              <span className="h-2 w-4.5 rounded-full bg-active" />
             </div>
-            <div className="font-serif text-[21px] text-primary">No marker here</div>
-            <p className="mx-auto mt-2 mb-4.5 max-w-[400px] text-[13px] text-muted text-pretty">
+            <div className="font-serif text-h3 text-primary">No marker here</div>
+            <p className="mx-auto mt-2 mb-4.5 max-w-[400px] text-body text-muted text-pretty">
               {query
                 ? `Nothing matches "${query}" in ${activeFilterLabel}. Try another asset type, or search the full universe.`
                 : `Nothing tracked yet in ${activeFilterLabel}.`}
@@ -137,13 +137,13 @@ export function MarketsPanel({ rows, cryptoRows, defaultFilter = "all", requestC
               <button
                 type="button"
                 onClick={clearFilters}
-                className="rounded-[10px] bg-gradient-to-br from-accent-light to-accent-dark px-4 py-2.25 text-[12.5px] font-semibold text-canvas"
+                className="rounded-panel bg-gradient-to-br from-accent-light to-accent-dark px-4 py-2 text-body font-semibold text-canvas"
               >
                 Clear filters
               </button>
               <Link
                 href="/assistant"
-                className="rounded-[10px] border border-line px-4 py-2.25 text-[12.5px] text-primary transition-colors duration-base ease-standard hover:border-[#3A3A3A]"
+                className="rounded-panel border border-line px-4 py-2 text-body text-primary transition-colors duration-base ease-standard hover:border-line-strong"
               >
                 Ask the assistant
               </Link>

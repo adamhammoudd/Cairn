@@ -8,7 +8,7 @@ Run against your project's SQL editor (or `psql`), in order:
 2. `seed/providers.sql` - example news/market-data/filings providers (edit
    weights, enable/disable, or add rows directly in `data_providers` - no
    code deploy needed for that part)
-3. `migrations/0002_schedule_ingestion.sql` — pg_cron schedule for the two
+3. `migrations/0002_schedule_ingestion.sql` - pg_cron schedule for the two
    ingestion Edge Functions. The function URLs are written out with this
    project's real ref; forking to another Supabase project means replacing
    `vvferejzawkhzlmvvaog` throughout `migrations/`. Set

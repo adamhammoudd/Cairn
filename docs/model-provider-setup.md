@@ -34,10 +34,10 @@ The model writes **prose only**. It never produces a number or picks a citation.
 
 | Output | Produced by |
 |---|---|
-| `probability_low` / `probability_high` | **Code** — Wilson score interval over historical analogs (`src/lib/ai/analytics.ts`) |
-| Confidence level | **Code** — graded on sample size + interval width |
-| Sample size | **Code** — count of analogs with usable price data |
-| Cited sources / analogs | **Code** — the rows actually fed into the computation |
+| `probability_low` / `probability_high` | **Code** - Wilson score interval over historical analogs (`src/lib/ai/analytics.ts`) |
+| Confidence level | **Code** - graded on sample size + interval width |
+| Sample size | **Code** - count of analogs with usable price data |
+| Cited sources / analogs | **Code** - the rows actually fed into the computation |
 | `analysis_type` label + `reasoning_text` | **Model** |
 | Chat responses | **Model** |
 
@@ -48,7 +48,7 @@ retrieved. Do not relax it.
 
 `src/lib/ai/chat-generate.ts` buffers the full response, runs the scope guard,
 and replaces any violation with a deterministic template built from stored,
-already-validated analyses — before anything is streamed to the user or written
+already-validated analyses - before anything is streamed to the user or written
 to `chat_messages`. Check how often that is firing:
 
 ```sql

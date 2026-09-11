@@ -1,12 +1,12 @@
 // Lightweight keyword tagging so ticker/sector-scoped analysis (Phase 4) has
-// something to filter on. Not NLP — word-boundary matching against a tracked
+// something to filter on. Not NLP - word-boundary matching against a tracked
 // list. A name here with no matching symbol still tags fine, it just won't
 // join against historical_prices for that ticker yet.
 //
 // Equities are a curated list (a ticker needs a company alias to be findable
 // in prose, and that mapping cannot be derived). Crypto is passed in at call
 // time from crypto_metrics, because the tracked coin set is the CoinGecko
-// top-N by market cap and rotates — hardcoding it would go stale silently.
+// top-N by market cap and rotates - hardcoding it would go stale silently.
 // Before this, the tagger knew only the 7 equity symbols, so no crypto scope
 // could ever clear the "must cite at least one source" gate.
 

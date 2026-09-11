@@ -21,7 +21,7 @@ export default async function ChatSettingsPage({ params }: { params: Promise<{ s
         expandMethodology: settings?.assistant_expand_methodology ?? true,
         usePortfolioContext: settings?.assistant_use_portfolio_context ?? true,
       }}
-      fallbackTitle={`Chat — ${new Date(session.created_at).toLocaleDateString()}`}
+      fallbackTitle={`Chat - ${new Date(session.created_at).toLocaleDateString()}`}
     />
   );
 }

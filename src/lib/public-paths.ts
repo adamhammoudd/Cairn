@@ -9,7 +9,10 @@
 // so no signup could ever be confirmed in production. The legal pages have no
 // sub-routes and stay exact.
 
-const PUBLIC_EXACT = new Set(["/privacy", "/terms", "/accessibility"]);
+// `/welcome` is the marketing landing page - the front door a logged-out
+// visitor is sent to instead of a bare password field. It has to be reachable
+// without a session for the same reason the waitlist page did.
+const PUBLIC_EXACT = new Set(["/privacy", "/terms", "/accessibility", "/welcome"]);
 const PUBLIC_PREFIXES = ["/waitlist"];
 
 // Static files served from public/ that must never be bounced to the waitlist.

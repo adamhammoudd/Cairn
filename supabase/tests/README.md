@@ -12,12 +12,12 @@ against it. A failing case aborts with a non-zero exit.
 ## Why these exist
 
 Several server actions carry comments asserting that RLS makes a foreign
-resource id safe — `listChatMessages()`, `addWatchlistItem()`,
+resource id safe - `listChatMessages()`, `addWatchlistItem()`,
 `listDeliveries()` all say some version of *"RLS joins through the owner, so a
 foreign id returns no rows."* That claim was never tested. `rls_idor.sql`
 tests it: two real users, real rows, and every read and write a malicious
 client could aim at the other user's primary keys, executed as role
-`authenticated` with the attacker's `sub` claim — the same security context
+`authenticated` with the attacker's `sub` claim - the same security context
 PostgREST establishes from a real JWT.
 
 The actions now also check ownership themselves rather than delegating the
@@ -27,7 +27,7 @@ decision to the policy. These tests cover the backstop; the explicit checks in
 ## These tests can fail
 
 A test that cannot fail is not a test. The IDOR suite was verified by negative
-control — weakening one policy to `using (true)`:
+control - weakening one policy to `using (true)`:
 
 ```
 $ psql -d cairn -c 'drop policy "own row" on holdings;' \
@@ -50,11 +50,11 @@ other rather than the fix being asserted alone.
 ## Local Postgres
 
 `pg_cron` and `pg_net` are Supabase-managed and cannot be installed locally, so
-`harness/01_cron_shim.sql` provides stand-ins — enough to execute the
+`harness/01_cron_shim.sql` provides stand-ins - enough to execute the
 scheduling migrations and inspect the job commands they register. Likewise
 `harness/00_supabase_shim.sql` supplies `auth.users`, `auth.uid()` and the
 `anon` / `authenticated` / `service_role` roles, and `harness/02_grants.sql`
-mirrors the table grants Supabase issues so that RLS — not a missing GRANT — is
+mirrors the table grants Supabase issues so that RLS - not a missing GRANT - is
 what the tests actually exercise.
 
 To spin up a cluster on port 5433:
@@ -70,4 +70,4 @@ su cairnpg -c "/usr/lib/postgresql/16/bin/pg_ctl -D /home/cairnpg/pgdata -o '-p 
 They run against a local Postgres built from the committed files, not against
 the production Supabase project. They prove the *policies and query shapes in
 this repository* are correct. They cannot prove production's live database
-matches this repository — that needs a run against production credentials.
+matches this repository - that needs a run against production credentials.

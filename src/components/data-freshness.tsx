@@ -46,7 +46,7 @@ export function DataFreshness({ source, asOf, detail, className = "" }: DataFres
           ? "Prices from the live quote provider."
           : "No live-quote provider is configured, so prices are the last daily close from the trend store."
       }
-      className={`font-mono text-[10px] tracking-[0.12em] whitespace-nowrap text-dim uppercase ${className}`}
+      className={`font-mono text-eyebrow whitespace-nowrap text-dim uppercase ${className}`}
     >
       {freshnessText({ source, asOf, detail })}
     </span>

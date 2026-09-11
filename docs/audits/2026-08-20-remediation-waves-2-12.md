@@ -1,4 +1,4 @@
-# Remediation pass 2 — Waves 2, 5, 7, 10, 12
+# Remediation pass 2 - Waves 2, 5, 7, 10, 12
 
 **Date:** 2026-08-20 · **Role:** dev-lead
 **Standard:** every "fixed" claim carries the query result, test output, or HTTP
@@ -14,19 +14,19 @@ against the repository rather than the database.
 
 | Check | Reported | Actual, 2026-08-20 |
 |---|---|---|
-| Migrations applied | through 0023 | **through 0018** — 0019–0023 never ran |
+| Migrations applied | through 0023 | **through 0018** - 0019–0023 never ran |
 | `search_symbols()` RPC | fixed | **did not exist**; the app called a missing function |
 | `auth_attempts` table | rate limiting live | **did not exist**; limiter silently inert |
-| `ingest-historical-events` | deployed | **HTTP 404** — never deployed |
+| `ingest-historical-events` | deployed | **HTTP 404** - never deployed |
 | Edge function hardening | shipped | **not deployed**; fleet still on pre-hardening versions |
 
 This is the same failure class the original audit caught with the cron jobs:
 correct code, plausible commit message, nothing running. The lesson that
-generalises — **a migration in the repo is not a migration in the database**.
+generalises - **a migration in the repo is not a migration in the database**.
 
 ---
 
-## Wave 2 — the analog/news gap (root cause of `ai_analyses` = 0)
+## Wave 2 - the analog/news gap (root cause of `ai_analyses` = 0)
 
 Two independent bugs, either of which alone produced a silent zero-row run.
 
@@ -49,7 +49,7 @@ Two independent bugs, either of which alone produced a silent zero-row run.
    `string[]`, but `0020` rewrote it into a mixed string/object array, so the
    first object entry threw and cost the entire run.
 
-### Result — `historical_events`
+### Result - `historical_events`
 
 | event_type | rows | usable (before+after price) | symbols |
 |---|---|---|---|
@@ -82,16 +82,16 @@ LEO, GRAM).
 | TSLA | 3 | 4 (was 0) |
 
 Both audit failure cases now have data on both required axes. **Generation
-itself remains blocked on Wave 3** — see Blockers.
+itself remains blocked on Wave 3** - see Blockers.
 
 ---
 
-## Wave 5 — universe size
+## Wave 5 - universe size
 
 Re-ran the audit's exact 24-ticker list.
 
 - Before: **0/24** present. After: **24/24**, 0 missing.
-- `search("RK")` → `RKLB` — the exact reported failure.
+- `search("RK")` → `RKLB` - the exact reported failure.
 - `asset_type` spread: crypto 26, equity 21, **etf 10** (the ETF tab held 1).
 
 Bounded on purpose. `ingest-market-data` fetches serially with no backoff and
@@ -101,7 +101,7 @@ still stands; this stops the reported failure at a size verifiable today.
 
 ---
 
-## Waves 7 & 10 — security, verified by attack
+## Waves 7 & 10 - security, verified by attack
 
 ### Authorization / IDOR
 
@@ -147,7 +147,7 @@ intentional in `0025`.
 
 ### Rate limiting
 
-`npm run test:auth-rate-limit` — **10/10 against the live table**, including an
+`npm run test:auth-rate-limit` - **10/10 against the live table**, including an
 assertion that the rows actually persisted. That assertion is the one that
 catches the missing-migration case, where `recordAuthAttempt` swallows the
 error and every other check passes by failing open.
@@ -158,7 +158,7 @@ error and every other check passes by failing open.
   jwt.io **sample** token inside a vendored third-party skill fixture.
 - No `.env` file has ever been committed; `.gitignore` covers `.env.local`.
 - Client bundle (39 assets): service-role key **absent**, market-data key
-  **absent**, anon key present — correct, and RLS is proven above.
+  **absent**, anon key present - correct, and RLS is proven above.
 
 ### Headers, verified on a real response
 
@@ -172,10 +172,10 @@ Sessions are cookie-based via `@supabase/ssr`; `grep` for
 
 ---
 
-## Wave 12 — compliance
+## Wave 12 - compliance
 
 - **AI-use disclosure** stated plainly in the privacy policy and in the footer
-  of every public page. Cairn has no separate marketing site — `/` is the
+  of every public page. Cairn has no separate marketing site - `/` is the
   authenticated dashboard, so the auth surface *is* the landing page.
 - **ToS §6** user-submitted content and takedown; **§7** arbitration, drafted
   as intent and explicitly flagged in the body as needing per-jurisdiction
@@ -189,14 +189,14 @@ Sessions are cookie-based via `@supabase/ssr`; `grep` for
 ## Billing (the part worth doing without a Stripe account)
 
 `setTier()` accepted `tier=premium` from any signed-in user and wrote it
-straight to `subscriptions` — a single form POST was an unlimited free upgrade,
+straight to `subscriptions` - a single form POST was an unlimited free upgrade,
 and every premium feature routes through `getUserPlan()`, which reads that
 column. Now refused **server-side** behind `BILLING_ENABLED` (absent =
 disabled), not by hiding the button. Downgrades remain unconditionally allowed.
 
 ---
 
-## Blockers — not fixable from here
+## Blockers - not fixable from here
 
 ### 1. `CRON_SECRET` is not set (one command)
 
@@ -210,7 +210,7 @@ disabled), not by hiding the button. Downgrades remain unconditionally allowed.
 The hardened Edge Function code is committed and correct, and fails closed by
 design. But the secret can only be set with the Supabase CLI or dashboard, and
 no access token is available in this environment. **Consequence:** the other 7
-functions were deliberately left on their older, working deployments — pushing
+functions were deliberately left on their older, working deployments - pushing
 the hardened build to them without the secret would 503 every ingestion job and
 take a working system down. They therefore still run with `CORS: *` and no
 caller authentication.
@@ -223,7 +223,7 @@ alter database postgres set app.settings.cron_secret = 'VALUE';
 # then apply 0023 and redeploy all 8 functions
 ```
 
-### 2. No model endpoint (Wave 3 — a founder decision, still open)
+### 2. No model endpoint (Wave 3 - a founder decision, still open)
 
 `LLM_BASE_URL` points at `http://127.0.0.1:11434/v1`; nothing is listening, and
 Ollama is not installed. A localhost URL cannot work from Vercel regardless.
@@ -255,4 +255,4 @@ Tier B (live pipeline), Citation freshness check
 ```
 
 Both are LLM-dependent. The false-green CI signal the original audit caught is
-genuinely fixed — a zero-test gating suite now fails the build.
+genuinely fixed - a zero-test gating suite now fails the build.
