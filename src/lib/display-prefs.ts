@@ -64,7 +64,36 @@ export function formatMoney(usd: number | null | undefined, prefs: DisplayPrefs)
   // a 20-digit string that overflows every cell it lands in. Ordinary money
   // (below a quadrillion) is unaffected.
   const notation = Math.abs(value) >= 1e15 ? "compact" : "standard";
-  return value.toLocaleString(undefined, { style: "currency", currency: prefs.effectiveCurrency, notation });
+  return value.toLocaleString(undefined, {
+    style: "currency",
+    currency: prefs.effectiveCurrency,
+    notation,
+    ...subUnitDigits(value),
+  });
+}
+
+/**
+ * Extra decimal places for prices below one unit of currency.
+ *
+ * `style: "currency"` defaults to the currency's own minor-unit count - two for
+ * EUR and USD - which is right for a portfolio total and wrong for an asset
+ * that trades under a cent. 21 of the 305 tracked symbols price below EUR 0.01
+ * and 147 below EUR 1, so the Markets board was rendering rows like
+ * "APEPE EUR 0.00 +16.27%": a real price, a real move, and a figure that reads
+ * as broken rather than as small.
+ *
+ * Enough decimals to carry three significant figures, capped at eight - which
+ * is the convention every crypto venue uses and, not incidentally, one satoshi.
+ * Values at or above 1 are untouched, so nothing else in the product moves.
+ */
+function subUnitDigits(value: number): { minimumFractionDigits: number; maximumFractionDigits: number } | undefined {
+  const abs = Math.abs(value);
+  if (abs === 0 || abs >= 1 || !Number.isFinite(abs)) return undefined;
+  // First significant digit sits at 10^floor(log10(abs)); two more after it.
+  const digits = Math.min(8, Math.ceil(-Math.log10(abs)) + 2);
+  // Minimum stays at the currency's own two, so 0.23 renders "0.23" rather
+  // than a padded "0.230"; only the ceiling moves.
+  return { minimumFractionDigits: 2, maximumFractionDigits: digits };
 }
 
 /**

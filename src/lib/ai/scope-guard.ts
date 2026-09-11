@@ -128,6 +128,19 @@ const ADVICE_FRAMES: { pattern: RegExp; reason: string }[] = [
     pattern: /\b(?:i\s+(?:recommend|suggest|advise|would\s+recommend|would\s+suggest|would\s+advise)|i'd\s+(?:recommend|suggest|advise)?|i\s+would\b|my\s+(?:advice|recommendation|suggestion|take|call)\b|personally,?\s+i)\b/i,
     reason: "first_person_advice",
   },
+  // The same advice attributed to a third party rather than to "I" - "this
+  // assistant suggests you sell", "Cairn recommends you trim", "the model
+  // advises you to rotate out". Displacing the speaker does not make it less
+  // of a recommendation, and it is the shape a model reaches for when told not
+  // to advise in the first person.
+  //
+  // Anchored on the reader as the object, so factual attribution is untouched:
+  // "the data suggests volatility rose" and "the filing recommends a vote"
+  // carry no "you" and never match.
+  {
+    pattern: /\b(?:suggests?|recommends?|advises?|would\s+(?:suggest|recommend|advise))\s+(?:that\s+)?you\b/i,
+    reason: "attributed_advice",
+  },
   // Evaluative-prescriptive: no modal, no pronoun, still a recommendation.
   {
     pattern: /\b(?:(?:it\s+)?(?:makes|(?:would|could|might)\s+make)\s+sense\s+to|it(?:'s|\s+is)\s+worth\b|worth\s+(?:considering|taking|trimming|adding|buying|selling|holding)|the\s+(?:smart|right|best|obvious|sensible)\s+(?:move|play|thing|call|approach)|the\s+(?:move|play)\s+(?:here|now)\s+is|no\s+reason\s+not\s+to|you\s+can't\s+go\s+wrong|there(?:'s|\s+is)\s+a\s+case\s+for)\b/i,
@@ -247,39 +260,72 @@ const LEADING_WORD_IS_SUBJECT =
 // disclaiming, quoting the question back, or describing what someone else did
 // - none of which is the assistant telling the reader what to do.
 // --------------------------------------------------------------------------
-const NON_ASSERTION =
-  new RegExp(
-    [
-      // explicit refusal / inability
-      "\\b(?:i\\s+(?:don't|do\\s+not|cannot|can't|won't|will\\s+not|am\\s+not\\s+able|couldn't))\\b",
-      "\\bi'm\\s+(?:not\\s+able|unable)\\b",
-      "\\b(?:cannot|can't)\\s+(?:advise|recommend|tell\\s+you|provide|give)\\b",
-      // absence of data
-      "\\bthere(?:'s|\\s+is|\\s+are)\\s+no\\b",
-      "\\bno\\s+(?:specific|stored|relevant|matching)\\b",
-      "\\b(?:don't|do\\s+not|doesn't|does\\s+not)\\s+have\\b",
-      "\\bnothing\\s+(?:in|on)\\s+(?:the\\s+)?(?:record|context)\\b",
-      // scope disclaimers - including this guard's own rewrite text
-      "\\b(?:does\\s+not|doesn't|never)\\s+(?:give|provide|offer|make)\\b",
-      "\\bnot\\s+(?:investment|financial|personal)\\s+advice\\b",
-      "\\bthis\\s+assistant\\b",
-      "\\binformational\\s+only\\b",
-      "\\b(?:general|market|sector|ticker)[- ]level\\s+only\\b",
-      // attribution / quotation of the question
-      "\\bwhether\\b",
-      "\\byou\\s+asked\\b",
-      "\\byour\\s+question\\b",
-      "\\bthe\\s+question\\s+of\\b",
-      "\\basked\\s+(?:about|if|whether)\\b",
-    ].join("|"),
-    "i",
-  );
+// A REFUSAL is a clause that negates its own content: the assistant saying it
+// will not or cannot answer, or that the record holds nothing. There is no
+// directive left to extract, so these keep full immunity.
+const REFUSAL = new RegExp(
+  [
+    // explicit refusal / inability
+    "\\b(?:i\\s+(?:don't|do\\s+not|cannot|can't|won't|will\\s+not|am\\s+not\\s+able|couldn't))\\b",
+    "\\bi'm\\s+(?:not\\s+able|unable)\\b",
+    "\\b(?:cannot|can't)\\s+(?:advise|recommend|tell\\s+you|provide|give)\\b",
+    // absence of data
+    "\\bthere(?:'s|\\s+is|\\s+are)\\s+no\\b",
+    "\\bno\\s+(?:specific|stored|relevant|matching)\\b",
+    "\\b(?:don't|do\\s+not|doesn't|does\\s+not)\\s+have\\b",
+    "\\bnothing\\s+(?:in|on)\\s+(?:the\\s+)?(?:record|context)\\b",
+    "\\b(?:does\\s+not|doesn't|never)\\s+(?:give|provide|offer|make)\\b",
+  ].join("|"),
+  "i",
+);
+
+// A DISCLAIMER is a label a clause wears, not something it negates. "You should
+// sell NVDA now (not financial advice)" is still the assistant telling the
+// reader to sell.
+//
+// These used to sit in the same list as the refusals above, under a single
+// `continue` that skipped every check - so appending any one of these strings
+// switched the guard off for that clause entirely. That is precisely what a
+// model does when it half-complies with "do not give advice": it gives the
+// advice and then labels it. Seven variants of that shape passed unflagged.
+//
+// They still suppress the personal-possession rule, which is what the carve-out
+// was written for (see PERSONAL_POSSESSION below) - but never the imperative
+// check and never the advice frames.
+const DISCLAIMER = new RegExp(
+  [
+    // scope disclaimers - including this guard's own rewrite text
+    "\\bnot\\s+(?:investment|financial|personal)\\s+advice\\b",
+    "\\bthis\\s+assistant\\b",
+    "\\binformational\\s+only\\b",
+    "\\b(?:general|market|sector|ticker)[- ]level\\s+only\\b",
+    // attribution / quotation of the question
+    "\\bwhether\\b",
+    "\\byou\\s+asked\\b",
+    "\\byour\\s+question\\b",
+    "\\bthe\\s+question\\s+of\\b",
+    "\\basked\\s+(?:about|if|whether)\\b",
+  ].join("|"),
+  "i",
+);
+
+/** Retained for callers and tests that want "is this clause non-asserting at all". */
+export function isNonAssertion(clause: string): boolean {
+  return REFUSAL.test(clause) || DISCLAIMER.test(clause);
+}
 
 // --------------------------------------------------------------------------
 // Clause splitting. Sentence terminators first, then contrastive conjunctions,
 // so a refusal cannot be used as cover for a directive appended after "but".
 // --------------------------------------------------------------------------
-const CONTRASTIVE = /\s*(?:,\s*)?\b(?:but|however|although|though|that\s+said|still|nevertheless|nonetheless|even\s+so|on\s+the\s+other\s+hand)\b\s*/i;
+// Contrastives and consequentials both. A refusal is routinely used as a run-up
+// to the directive rather than as cover behind it - "there is no stored
+// analysis, so the smart move is to exit semiconductors" - and with `so` absent
+// from this list that whole sentence was one clause, immunised by its own first
+// half. `even so` stays ahead of bare `so` in the alternation so it still
+// matches as a unit.
+const CONTRASTIVE =
+  /\s*(?:,\s*)?\b(?:but|however|although|though|that\s+said|still|nevertheless|nonetheless|even\s+so|on\s+the\s+other\s+hand|so\s+that|so|therefore|thus|which\s+means|in\s+which\s+case)\b\s*/i;
 
 // Models routinely emit typographic apostrophes (U+2019), while every pattern
 // in this file is written with an ASCII one. That mismatch silently defeated
@@ -292,7 +338,10 @@ function normalizeQuotes(text: string): string {
 
 export function splitClauses(text: string): string[] {
   return normalizeQuotes(text)
-    .split(/(?<=[.!?])\s+|\n+/)
+    // Semicolons and em-dashes terminate a clause as surely as a full stop.
+    // Without them, everything after a `;` inherited the first half's
+    // suppression and was never checked on its own terms.
+    .split(/(?<=[.!?;])\s+|\s*[;—]\s*|\n+/)
     .flatMap((sentence) => sentence.split(CONTRASTIVE))
     .map((c) => c.trim())
     .filter((c) => c.length > 0);
@@ -308,8 +357,14 @@ function isImperativeDirective(clause: string): boolean {
 
 export function checkScopeGuard(text: string): ScopeGuardResult {
   for (const clause of splitClauses(text)) {
-    // A refusal, disclaimer, or quoted question is not a directive.
-    if (NON_ASSERTION.test(clause)) continue;
+    // A refusal negates its own content - there is no directive left in it, so
+    // it is skipped outright. A disclaimer does not: it is a label the clause
+    // wears, and "you should sell NVDA (not financial advice)" is still the
+    // assistant telling the reader to sell. Disclaimers therefore fall through
+    // to the imperative and advice-frame checks below, and only suppress the
+    // personal-possession rule at the end of the loop.
+    if (REFUSAL.test(clause)) continue;
+    const disclaimed = DISCLAIMER.test(clause);
 
     const hasAction = TRADE_ACTION.test(clause);
 
@@ -325,7 +380,7 @@ export function checkScopeGuard(text: string): ScopeGuardResult {
       }
     }
 
-    if (PERSONAL_POSSESSION.test(clause)) {
+    if (PERSONAL_POSSESSION.test(clause) && !disclaimed) {
       // This rule targets ADVICE about a personal position, not every mention
       // of one. A clause that names the reader's holdings but carries no trade
       // action and no advice frame is a neutral factual statement ("your

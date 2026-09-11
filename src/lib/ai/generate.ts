@@ -269,7 +269,23 @@ Respond with only a JSON object matching the required schema.`,
       // rather than assuming Groq, now that a fallback endpoint can serve a
       // request when Groq's daily quota is exhausted (see lib/ai/llm.ts).
       model_version: modelVersion,
-      status: "validated",
+      // Written as `pending`, promoted to `validated` only once the sources and
+      // analogs are actually on disk.
+      //
+      // These are three separate statements with no transaction around them.
+      // Inserting the parent as `validated` first made it live and
+      // user-visible immediately, and neither child insert had its error
+      // checked - so any failure on either left a probability range sitting in
+      // the Research list and on Base Camp with no sources and no analogs
+      // behind it. checkCompleteness() guards the in-memory counts, not the
+      // persisted rows, so nothing downstream would have noticed.
+      //
+      // CLAUDE.md: "Every probability or analytical output must show its
+      // sources, historical analogs, and confidence level - never a bare
+      // score." A bare score is exactly what the failure mode produced. RLS
+      // (migration 0034) already scopes child reads to a `validated` parent,
+      // so a row that never gets promoted is invisible rather than half-shown.
+      status: "pending_review",
     })
     .select()
     .single();
@@ -278,12 +294,12 @@ Respond with only a JSON object matching the required schema.`,
     throw new Error(insertError?.message ?? "Failed to store analysis.");
   }
 
-  await admin
+  const { error: sourcesError } = await admin
     .from("ai_analysis_sources")
     .insert(sourceIds.map((news_item_id) => ({ analysis_id: analysis.id, news_item_id })));
 
   const eventDateById = new Map(usableAnalogs.map((e) => [e.id, e.event_date]));
-  await admin.from("ai_analysis_historical_analogs").insert(
+  const { error: analogsError } = await admin.from("ai_analysis_historical_analogs").insert(
     analogIds.map((historical_event_id) => ({
       analysis_id: analysis.id,
       historical_event_id,
@@ -291,5 +307,27 @@ Respond with only a JSON object matching the required schema.`,
     })),
   );
 
-  return analysis;
+  if (sourcesError || analogsError) {
+    // Leave the parent `pending` and take the row back out. Failing loudly is
+    // the point: a missing analysis is a retry, a sourceless one is a bare
+    // score the product promises never to show.
+    await admin.from("ai_analyses").delete().eq("id", analysis.id);
+    throw new Error(
+      `Failed to store analysis evidence: ${sourcesError?.message ?? analogsError?.message}`,
+    );
+  }
+
+  const { data: promoted, error: promoteError } = await admin
+    .from("ai_analyses")
+    .update({ status: "validated" })
+    .eq("id", analysis.id)
+    .select()
+    .single();
+
+  if (promoteError || !promoted) {
+    await admin.from("ai_analyses").delete().eq("id", analysis.id);
+    throw new Error(promoteError?.message ?? "Failed to publish analysis.");
+  }
+
+  return promoted;
 }

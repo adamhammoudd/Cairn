@@ -19,9 +19,38 @@ import type { SubscriptionTier } from "@/lib/supabase/types";
 
 const SECRET = process.env.STRIPE_SECRET_KEY ?? "";
 
-/** True when the secret key and the Premium price are both configured. */
+/**
+ * True when everything needed to take a payment AND deliver what was paid for
+ * is present.
+ *
+ * The webhook secret belongs in this check, not beside it. The webhook is the
+ * only writer of a premium tier and it returns 503 without its secret, so a
+ * deploy carrying three of these four vars showed a live Upgrade button,
+ * redirected to real Stripe Checkout, charged the card, and then dropped every
+ * resulting event on the floor - a charge with no delivery and no in-app trace.
+ * That is not a hypothetical shape of config: it is what re-entering env vars
+ * by hand produces, which is exactly what happened when the Vercel project was
+ * rebuilt on 2026-09-03.
+ */
 export function stripeConfigured(): boolean {
-  return SECRET.startsWith("sk_") && !!process.env.STRIPE_PRICE_PREMIUM;
+  return (
+    SECRET.startsWith("sk_") &&
+    !!process.env.STRIPE_PRICE_PREMIUM &&
+    !!process.env.STRIPE_WEBHOOK_SECRET
+  );
+}
+
+/**
+ * True when the configured key is a live-mode key.
+ *
+ * `startsWith("sk_")` accepts `sk_test_`, and nothing else in the codebase
+ * inspects mode - so a production deploy left on test keys offers a real
+ * Upgrade button and grants genuine Premium to anyone paying with
+ * 4242 4242 4242 4242. Callers use this to refuse to sell in the one
+ * combination that is always wrong: production runtime, test-mode key.
+ */
+export function stripeLiveMode(): boolean {
+  return SECRET.startsWith("sk_live_");
 }
 
 // Pinned API version so a Stripe-side default bump can't change our types.

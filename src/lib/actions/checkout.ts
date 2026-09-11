@@ -58,6 +58,22 @@ export async function createCheckoutSession(): Promise<string | void> {
     return "Premium isn't available yet - payments aren't set up. Nothing has been charged.";
   }
 
+  // Refuse to start a second subscription. Nothing here read the current tier
+  // before, and a server action is directly invocable - so a stale tab, a
+  // double submit, or a hand-rolled POST billed the same person twice. Stripe
+  // permits multiple subscriptions per customer, and the sync reads
+  // `subscriptions.list({ limit: 1 })`, so the second charge would not even be
+  // visible in the app.
+  const admin = createAdminClient();
+  const { data: existing } = await admin
+    .from("subscriptions")
+    .select("tier, stripe_subscription_id, status")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (existing?.stripe_subscription_id && existing.status !== "canceled") {
+    return "You already have an active subscription. Manage it from 'Manage billing'.";
+  }
+
   const customerId = await ensureStripeCustomer(user.id, user.email);
   const session = await stripe.checkout.sessions.create({
     mode: "subscription",
@@ -68,6 +84,27 @@ export async function createCheckoutSession(): Promise<string | void> {
     cancel_url: `${siteUrl()}/billing?checkout=cancelled`,
     subscription_data: { metadata: { cairn_user_id: user.id } },
     client_reference_id: user.id,
+
+    // VAT. Stripe Tax is active on the account and the Premium price is
+    // tax_behavior: "exclusive" - i.e. VAT is meant to be added on top - but
+    // none of that engages unless the session asks for it, so every sale was
+    // being made at a flat EUR 12 with no tax collected and no way to tell
+    // which country the buyer was in.
+    //
+    // EU B2C digital services are taxed at the *buyer's* rate and require two
+    // non-contradictory pieces of location evidence; the address collected
+    // here is the first, and Stripe's own IP geolocation the second. Without
+    // this block the VAT owed comes out of the EUR 12.
+    automatic_tax: { enabled: true },
+    billing_address_collection: "required",
+    // Required whenever automatic tax runs against a pre-created Customer:
+    // ensureStripeCustomer() creates it with an email and nothing else, so
+    // without this the address collected at checkout is never written back and
+    // tax cannot be computed on renewal invoices.
+    customer_update: { address: "auto", name: "auto" },
+    // B2B buyers in the EU reverse-charge. Without a VAT ID field every
+    // business customer is charged consumer VAT instead.
+    tax_id_collection: { enabled: true },
   });
 
   if (!session.url) return "Stripe did not return a checkout URL. Please try again.";

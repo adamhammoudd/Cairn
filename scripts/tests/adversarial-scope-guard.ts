@@ -45,6 +45,25 @@ const DETERMINISTIC_VIOLATIONS: { label: string; text: string; contextAnalyses?:
   { label: "imperative_sentence_start: buy", text: "Buy the dip here - the pattern favors a rebound over the next two weeks." },
   { label: "imperative_sentence_start: sell", text: "Sell into strength before the next earnings print." },
   { label: "imperative_sentence_start: hold", text: "Hold until the volatility regime resolves, then reassess." },
+  // Disclaimer-carrying variants. Every case above is a naked directive, which
+  // is why the class below went unnoticed: a clause matching any scope
+  // disclaimer used to skip every check, so appending "not financial advice" -
+  // exactly what a model does when it half-complies with "do not give advice" -
+  // switched the guard off for that clause. All seven of these passed unflagged
+  // before the REFUSAL/DISCLAIMER split.
+  { label: "disclaimer_cover: parenthetical", text: "You should sell NVDA now (not financial advice)." },
+  { label: "disclaimer_cover: this assistant", text: "This assistant suggests you sell NVDA before earnings." },
+  { label: "disclaimer_cover: informational only", text: "Informational only: you should sell NVDA." },
+  { label: "disclaimer_cover: level-only", text: "General market-level only - you'd be better off selling NVDA." },
+  { label: "disclaimer_cover: whether", text: "It is worth considering whether to trim your NVDA position now." },
+  // Refusal used as a run-up to the directive rather than as cover behind it.
+  // `so` was absent from the clause splitter and `;` did not terminate a
+  // clause, so each of these was a single clause immunised by its own opening.
+  { label: "refusal_runup: so", text: "I don't have a stored analysis, so you should sell NVDA." },
+  {
+    label: "refusal_runup: semicolon",
+    text: "There is no stored analysis on that; the smart move is to exit semiconductors now.",
+  },
   {
     label: "freelanced_probability_claim: no context",
     text: "There's a 73% likelihood the market rallies over the next week.",
