@@ -1,6 +1,24 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+/**
+ * Which module a card is, expressed as a colour.
+ *
+ * This is identity, not data: "markets" is blue on every surface that shows a
+ * markets card, the way a section in a newspaper keeps its colour. It never
+ * encodes a value, a direction or a state - those stay with the gain/loss
+ * rules, which is why `accent` is reserved here for the assistant band rather
+ * than being handed out to whichever card is up.
+ */
+export type ModuleTint = "accent" | "info" | "violet" | "warning";
+
+const TINT_CLASSES: Record<ModuleTint, { label: string; edge: string }> = {
+  accent: { label: "text-accent", edge: "border-t-accent" },
+  info: { label: "text-info", edge: "border-t-info" },
+  violet: { label: "text-violet", edge: "border-t-violet" },
+  warning: { label: "text-warning", edge: "border-t-warning" },
+};
+
 interface DashboardSummaryCardProps {
   title: string;
   href: string;
@@ -9,6 +27,9 @@ interface DashboardSummaryCardProps {
   valueTone?: "primary" | "positive" | "negative";
   detail?: string;
   delay?: number;
+  /** Module identity colour. Omit for a card with no section colour. */
+  tint?: ModuleTint;
+  className?: string;
   children?: ReactNode;
   arranging?: boolean;
   onMoveUp?: () => void;
@@ -68,28 +89,36 @@ export function DashboardSummaryCard({
   valueTone = "primary",
   detail,
   delay = 0,
+  tint,
+  className = "",
   children,
   arranging = false,
   onMoveUp,
   onMoveDown,
   onHide,
 }: DashboardSummaryCardProps) {
+  const tintClasses = tint ? TINT_CLASSES[tint] : null;
   return (
     <div
-      className="animate-rise-in group relative self-start rounded-card border border-line bg-panel p-4.5 transition-[border-color,transform,box-shadow] duration-base ease-standard hover:-translate-y-0.5 hover:border-line-strong hover:shadow-[0_12px_30px_rgba(0,0,0,0.45)]"
+      className={`animate-rise-in group relative self-start rounded-card border border-line bg-panel p-4.5 transition-[border-color,transform,box-shadow] duration-base ease-standard hover:-translate-y-0.5 hover:border-line-strong hover:shadow-[0_12px_30px_rgba(0,0,0,0.45)] ${
+        tintClasses ? `border-t-2 ${tintClasses.edge}` : ""
+      } ${className}`}
       style={{ animationDelay: `${delay}ms` }}
     >
-      {/* The card header used to carry a small coloured rule before the label -
-          four tints across five cards, green on two of them. It encoded
-          nothing: no legend, no meaning, and green is the gain colour.
-          The same idiom one card down *is* semantic (a news item's rule says
-          whether you hold the symbol, watch it, or neither), so the decorative
-          copy was teaching readers that the shape means nothing. Removed, so
-          the rule has exactly one meaning on this screen. The mono eyebrow
-          alone also now matches every other page header in the product. */}
+      {/* An earlier pass stripped a coloured rule from this header, because at
+          the time four tints were sprinkled across five cards with no rule
+          behind them - green included, which is the gain colour. The tint is
+          back, but bound: it is a fixed per-module identity set in one map,
+          carried on the card's top edge and its label together, and green
+          belongs to the assistant band alone. It still encodes no value, so a
+          reader never has to ask what a colour here is worth - the one place
+          on this page where a coloured rule *is* semantic (a news item's, which
+          says whether you hold the symbol) keeps its own legend. */}
       <div className="mb-3.5 flex items-center justify-between gap-2.5">
         <div className="flex items-center gap-2">
-          <span className="font-mono text-eyebrow text-muted uppercase">{title}</span>
+          <span className={`font-mono text-eyebrow uppercase ${tintClasses ? tintClasses.label : "text-muted"}`}>
+            {title}
+          </span>
         </div>
         {arranging ? (
           <ArrangeControls onMoveUp={onMoveUp} onMoveDown={onMoveDown} onHide={onHide} />

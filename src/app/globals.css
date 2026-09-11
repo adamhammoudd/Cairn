@@ -277,6 +277,34 @@
   animation: cn-blink 1s steps(1) infinite;
 }
 
+/* Base Camp's ticker strip. The track renders its symbols twice and slides by
+   exactly half its width, so the loop restarts on an identical frame and reads
+   as continuous rather than snapping. Duration is set per-instance from the
+   symbol count, so a short strip does not race a long one. */
+@keyframes cn-ticker {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-ticker {
+  animation: cn-ticker var(--ticker-duration, 60s) linear infinite;
+}
+
+/* The blanket reduced-motion rule below collapses every animation to 0.01ms,
+   which would leave the track parked at -50% rather than at its start. The
+   strip is legible either way, but pinning it to 0 keeps the first symbol
+   where the eye expects it. */
+@media (prefers-reduced-motion: reduce) {
+  .animate-ticker {
+    animation: none !important;
+    transform: translateX(0) !important;
+  }
+}
+
 html {
   color-scheme: dark;
 }

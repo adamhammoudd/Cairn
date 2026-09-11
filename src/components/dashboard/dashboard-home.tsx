@@ -5,15 +5,20 @@ import Link from "next/link";
 import { getMarketStatus } from "@/lib/market-hours";
 import { useLiveRefresh } from "@/components/use-live-refresh";
 import { useDisplayPrefs } from "@/components/display-prefs-provider";
-import { absoluteChangeFrom, formatChange, formatMoney, formatSignedMoney } from "@/lib/display-prefs";
+import { absoluteChangeFrom, formatChange, formatMoney } from "@/lib/display-prefs";
 import { useActionState } from "react";
 import { updateDashboardLayout } from "@/lib/actions/dashboard";
-import { ArrangeControls, DashboardSummaryCard } from "@/components/dashboard/dashboard-summary-card";
+import { ArrangeControls, DashboardSummaryCard, type ModuleTint } from "@/components/dashboard/dashboard-summary-card";
 import { decodeEntities } from "@/lib/news";
 import { TimeAgo } from "@/components/time-ago";
 import { MODULE_KEYS, type ModuleKey } from "@/lib/dashboard-modules";
 import { DataFreshness } from "@/components/data-freshness";
-import { Sparkline } from "@/components/sparkline";
+import { TickerStrip, type TickerStripItem } from "@/components/dashboard/ticker-strip";
+import {
+  PortfolioValueChart,
+  type ValueSeries,
+  type ValueTimeframe,
+} from "@/components/dashboard/portfolio-value-chart";
 
 // MODULE_KEYS / ModuleKey now live in lib/dashboard-modules.ts. The dashboard
 // page is a Server Component and imported them from this "use client" module,
@@ -27,6 +32,8 @@ interface DashboardHomeProps {
   refreshRateSeconds?: number;
   /** Date of the newest close behind every price on this page. */
   dataAsOf?: string | null;
+  /** Symbols for the moving strip under the header. */
+  tickerItems: TickerStripItem[];
   portfolio: {
     /** Raw USD - formatted here through the shared display-prefs formatter. */
     totalValue: number;
@@ -34,10 +41,14 @@ interface DashboardHomeProps {
     totalGainPct: number;
     positive: boolean;
     positions: number;
-    sparkline: number[];
-    /** Direction of the sparkline's own window, not of all-time gain. */
-    sparklinePositive: boolean;
-    sparklineTimeframe: string;
+    /**
+     * One series per selectable range for the hero chart. Ranges with fewer
+     * than two stored closes are omitted rather than sent empty, so the chart
+     * only offers a button it can actually draw.
+     */
+    series: Partial<Record<ValueTimeframe, ValueSeries>>;
+    /** Which range the chart opens on. */
+    defaultTimeframe: ValueTimeframe;
     topHoldings: { symbol: string; gainPct: number }[];
   };
   markets: {
@@ -76,13 +87,20 @@ const NEWS_TINT: Record<"accent" | "violet" | "warning", { className: string; la
   warning: { className: "bg-warning", label: "General market news" },
 };
 
-const MODULES: { key: ModuleKey; label: string; href: string; cta: string }[] = [
+const MODULES: { key: ModuleKey; label: string; href: string; cta: string; tint?: ModuleTint }[] = [
   { key: "portfolio", label: "Portfolio", href: "/portfolio", cta: "Open holdings" },
-  { key: "markets", label: "Markets", href: "/markets", cta: "Browse markets" },
-  { key: "watchlist", label: "Watchlist", href: "/watchlists", cta: "Open watchlists" },
-  { key: "news", label: "News", href: "/news", cta: "Read all" },
-  { key: "assistant", label: "AI Assistant", href: "/assistant", cta: "Open assistant" },
+  { key: "markets", label: "Markets", href: "/markets", cta: "Browse", tint: "info" },
+  { key: "watchlist", label: "Watchlist", href: "/watchlists", cta: "Open", tint: "violet" },
+  { key: "news", label: "News", href: "/news", cta: "Read all", tint: "warning" },
+  { key: "assistant", label: "AI Assistant", href: "/assistant", cta: "Open assistant", tint: "accent" },
 ];
+
+/**
+ * Modules that sit in the right rail beside the assistant band, in this order.
+ * `news` is deliberately not among them: it is a three-across band under the
+ * fold, because headlines are the one thing here read by scanning sideways.
+ */
+const RAIL_MODULES: ModuleKey[] = ["markets", "watchlist"];
 
 const DEFAULT_LAYOUT: ModuleKey[] = ["portfolio", "markets", "watchlist", "news", "assistant"];
 
@@ -113,6 +131,7 @@ function QuoteLead({ text }: { text: string }) {
 export function DashboardHome({
   initialLayout,
   today,
+  tickerItems,
   portfolio,
   markets,
   watchlist,
@@ -171,7 +190,7 @@ export function DashboardHome({
     switch (key) {
       case "markets":
         return (
-          <DashboardSummaryCard key={key} title={card.label} href={card.href} ctaLabel={card.cta} delay={delay} {...arrangeProps}>
+          <DashboardSummaryCard key={key} title={card.label} href={card.href} ctaLabel={card.cta} tint={card.tint} delay={delay} {...arrangeProps}>
             <div className="flex flex-col gap-2.5">
               {markets.top.map((r) => (
                 <div key={r.symbol} className="flex items-center justify-between gap-3">
@@ -189,7 +208,7 @@ export function DashboardHome({
         );
       case "watchlist":
         return (
-          <DashboardSummaryCard key={key} title={card.label} href={card.href} ctaLabel={card.cta} delay={delay} {...arrangeProps}>
+          <DashboardSummaryCard key={key} title={card.label} href={card.href} ctaLabel={card.cta} tint={card.tint} delay={delay} {...arrangeProps}>
             {/* With no lists, this card read "0 lists · 0 symbols · none past
                 an alert threshold" over a band of empty space - a count of
                 nothing, three times, and no way to act on it. It is also the
@@ -201,12 +220,15 @@ export function DashboardHome({
                   Track symbols you don&rsquo;t own yet, and get told when one crosses a price
                   or percentage you care about.
                 </p>
+                {/* A dashed, full-width control rather than a solid button:
+                    it reads as a slot waiting to be filled, which is what an
+                    empty watchlist is, and it does not compete with the one
+                    real CTA on the page. */}
                 <Link
                   href="/watchlists/new"
-                  className="mt-3.5 inline-flex items-center gap-1.5 rounded-control border border-line px-3 py-2 text-body text-primary transition-colors duration-fast ease-standard hover:border-accent hover:text-accent"
+                  className="mt-3.5 flex w-full items-center justify-center gap-1.5 rounded-control border border-dashed border-line px-3 py-2.5 text-body text-muted transition-colors duration-fast ease-standard hover:border-violet hover:text-primary"
                 >
-                  Create a watchlist
-                  <span aria-hidden>→</span>
+                  + Add your first symbol
                 </Link>
               </div>
             ) : (
@@ -232,18 +254,31 @@ export function DashboardHome({
         );
       case "news":
         return (
-          <DashboardSummaryCard key={key} title={card.label} href={card.href} ctaLabel={card.cta} delay={delay} {...arrangeProps}>
+          // A full-width band of three, not a column of three in a quarter of
+          // the page. Headlines are the one thing here that is read by
+          // scanning sideways, and at a third of the width each one gets a
+          // measure that fits a real headline without wrapping four times.
+          <DashboardSummaryCard
+            key={key}
+            title={card.label}
+            href={card.href}
+            ctaLabel={card.cta}
+            tint={card.tint}
+            delay={delay}
+            className="w-full"
+            {...arrangeProps}
+          >
             {news.items.length === 0 ? (
               <div className="text-body text-muted">No headlines yet</div>
             ) : (
-              <div className="flex flex-col gap-3">
+              <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
                 {news.items.map((item, i) => (
                   <div key={i} className="flex gap-2.5">
                     <span
                       className={`w-[3px] shrink-0 rounded-xs ${NEWS_TINT[item.tint].className}`}
                       title={NEWS_TINT[item.tint].label}
                     />
-                    <div>
+                    <div className="min-w-0">
                       <div className="text-body leading-normal text-primary">{decodeEntities(item.title)}</div>
                       <div className="mt-1 text-micro text-dim">
                         <span className="sr-only">{NEWS_TINT[item.tint].label} · </span>
@@ -264,18 +299,24 @@ export function DashboardHome({
   /**
    * Tier 1 - where you stand.
    *
-   * Not a card. Base Camp used to be five equal panels in a two-column grid,
-   * which is a layout that says every one of these matters the same amount.
-   * They do not: this is a portfolio tracker, and the first question anyone
-   * opens it with is "where do I stand". Setting the total on the page itself,
-   * at display scale, with the month behind it, answers that before anything
-   * else can compete for the look.
+   * Base Camp used to be five equal panels in a two-column grid, which is a
+   * layout that says every one of these matters the same amount. They do not:
+   * this is a portfolio tracker, and the first question anyone opens it with
+   * is "where do I stand".
+   *
+   * It is a panel again now, but not one of five - it is the only thing in its
+   * tier, it carries the page's one display-scale figure, and it is the only
+   * surface here that gets the sheet radius. The chart beside it is the same
+   * series the Portfolio page plots, now at a size worth reading and with its
+   * own range control rather than pinned to one month with no way to ask for
+   * another.
    */
   function renderStanding() {
+    const gainTone = portfolio.positive ? "text-accent" : "text-negative";
     return (
-      <section className="border-b border-line pb-7">
+      <section className="animate-rise-in rounded-sheet border border-line bg-panel p-5.5">
         {arranging && (
-          <div className="mb-3 flex items-center justify-between gap-3">
+          <div className="mb-4 flex items-center justify-between gap-3">
             <span className="font-mono text-eyebrow text-muted uppercase">Portfolio</span>
             <ArrangeControls
               onMoveUp={() => moveModule("portfolio", -1)}
@@ -284,16 +325,36 @@ export function DashboardHome({
             />
           </div>
         )}
-        <div className="flex flex-wrap items-end justify-between gap-x-10 gap-y-5">
+
+        {/* Figure left, chart right, stacking under lg. The chart is given a
+            fixed minimum height rather than matching the column beside it, so
+            it cannot collapse to a sliver when the figure wraps short. */}
+        <div className="grid gap-x-9 gap-y-6 lg:grid-cols-[minmax(0,auto)_minmax(0,1fr)]">
           <div className="min-w-0">
             <div className="font-mono text-eyebrow text-muted uppercase">Total value</div>
             <div className="mt-2 font-serif text-[clamp(2.75rem,6vw,4rem)] leading-[0.95] font-normal tabular-nums text-primary">
               {formatMoney(portfolio.totalValue, prefs)}
             </div>
-            <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-lead">
-              <span className={portfolio.positive ? "text-accent" : "text-negative"}>
-                {formatSignedMoney(portfolio.totalGain, prefs)} {portfolio.totalGainPct >= 0 ? "+" : ""}
-                {portfolio.totalGainPct.toFixed(2)}%
+
+            {/* The gain sat as bare coloured text beside two grey phrases, so
+                the single most-read number after the total had no more weight
+                than the word "positions". In a pill it is a thing rather than
+                a run of text, and the arrow states the direction for anyone
+                who cannot separate the two hues. */}
+            <div className="mt-3.5 flex flex-wrap items-center gap-x-3 gap-y-2 text-lead">
+              <span
+                className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-mono text-caption tabular-nums ${gainTone} ${
+                  portfolio.positive ? "border-accent/35 bg-accent/10" : "border-negative/35 bg-negative/10"
+                }`}
+              >
+                {/* The arrow carries the sign, so the figures are set
+                    unsigned: "▼ -€6.65 · -4.35%" states the direction three
+                    times in six glyphs. Screen readers get the word instead of
+                    the glyph, which is the one place the sign has to survive. */}
+                <span aria-hidden>{portfolio.positive ? "▲" : "▼"}</span>
+                <span className="sr-only">{portfolio.positive ? "Up" : "Down"} </span>
+                {formatMoney(Math.abs(portfolio.totalGain), prefs)} ·{" "}
+                {Math.abs(portfolio.totalGainPct).toFixed(2)}%
               </span>
               <span className="text-muted">all time</span>
               <span className="text-dim">·</span>
@@ -301,54 +362,39 @@ export function DashboardHome({
                 {portfolio.positions} {portfolio.positions === 1 ? "position" : "positions"}
               </span>
             </div>
+
+            {portfolio.topHoldings.length > 0 && (
+              // Holdings read as a row here rather than a stacked list: at this
+              // size they are a supporting detail on the headline number, not a
+              // table of their own. The full table is one click away.
+              <div className="mt-5 flex flex-wrap items-center gap-2.5">
+                {portfolio.topHoldings.map((h) => (
+                  <Link
+                    key={h.symbol}
+                    href={`/ticker/${h.symbol}`}
+                    className="flex items-center gap-2 rounded-panel border border-line px-3 py-1.5 transition-[border-color,transform] duration-fast ease-standard hover:-translate-y-0.5 hover:border-line-strong hover:bg-active"
+                  >
+                    <span className="text-body text-primary">{h.symbol}</span>
+                    <span className={`font-mono text-caption tabular-nums ${h.gainPct >= 0 ? "text-accent" : "text-negative"}`}>
+                      {h.gainPct >= 0 ? "+" : ""}
+                      {h.gainPct.toFixed(1)}%
+                    </span>
+                  </Link>
+                ))}
+                <Link
+                  href="/portfolio"
+                  className="rounded-panel border border-line px-3 py-1.5 text-body text-dim transition-[border-color,color,transform] duration-fast ease-standard hover:-translate-y-0.5 hover:border-line-strong hover:text-accent"
+                >
+                  All holdings →
+                </Link>
+              </div>
+            )}
           </div>
 
-          {portfolio.sparkline.length > 1 && (
-            <div className="flex shrink-0 flex-col items-end gap-1.5">
-              {/* Coloured by the window it draws, not by all-time gain - the
-                  same rule the Portfolio chart and the table rows follow. */}
-              {/* The size classes have to be passed, not just width/height:
-                  Sparkline's default className is "h-7 w-[90px]", and those
-                  win over the SVG attributes, so a 260x72 request rendered at
-                  90x28. */}
-              <Sparkline
-                values={portfolio.sparkline}
-                positive={portfolio.sparklinePositive}
-                width={260}
-                height={72}
-                className="h-[72px] w-[260px] shrink-0"
-              />
-              <span className="font-mono text-eyebrow text-dim uppercase">{portfolio.sparklineTimeframe}</span>
-            </div>
-          )}
+          <div className="min-h-[220px] min-w-0">
+            <PortfolioValueChart series={portfolio.series} initialTimeframe={portfolio.defaultTimeframe} />
+          </div>
         </div>
-
-        {portfolio.topHoldings.length > 0 && (
-          // Holdings read as a row here rather than a stacked list: at this
-          // size they are a supporting detail on the headline number, not a
-          // table of their own. The full table is one click away.
-          <div className="mt-6 flex flex-wrap items-center gap-x-2.5 gap-y-2">
-            {portfolio.topHoldings.map((h) => (
-              <Link
-                key={h.symbol}
-                href={`/ticker/${h.symbol}`}
-                className="flex items-center gap-2 rounded-panel border border-line px-3 py-1.5 transition-colors duration-fast ease-standard hover:border-line-strong hover:bg-active"
-              >
-                <span className="text-body text-primary">{h.symbol}</span>
-                <span className={`font-mono text-caption tabular-nums ${h.gainPct >= 0 ? "text-accent" : "text-negative"}`}>
-                  {h.gainPct >= 0 ? "+" : ""}
-                  {h.gainPct.toFixed(1)}%
-                </span>
-              </Link>
-            ))}
-            <Link
-              href="/portfolio"
-              className="ml-auto text-body text-dim transition-colors duration-fast ease-standard hover:text-accent"
-            >
-              All holdings →
-            </Link>
-          </div>
-        )}
       </section>
     );
   }
@@ -365,9 +411,16 @@ export function DashboardHome({
   function renderFlagged() {
     const analysis = assistant.latestAnalysis;
     return (
-      <section className="rounded-card border border-line bg-panel p-5.5">
+      <section className="animate-rise-in h-full rounded-card border border-line border-t-2 border-t-accent bg-panel p-5.5">
         <div className="mb-4 flex items-center justify-between gap-3">
-          <span className="font-mono text-eyebrow text-muted uppercase">What Cairn flagged</span>
+          <span className="flex items-center gap-2 font-mono text-eyebrow text-accent uppercase">
+            {/* The dot breathes only while the page is actually re-fetching,
+                so it reports the same thing the header's toggle does rather
+                than being an ornament that implies live data on a page of
+                daily closes. */}
+            <span className={`h-1.5 w-1.5 rounded-full bg-accent ${live ? "animate-breathe" : ""}`} />
+            What Cairn flagged
+          </span>
           {arranging ? (
             <ArrangeControls
               onMoveUp={() => moveModule("assistant", -1)}
@@ -385,13 +438,14 @@ export function DashboardHome({
         </div>
 
         {analysis ? (
-          // Reading column left, evidence rail right - the same shape the
-          // methodology card uses, so "what it says" and "what it rests on"
-          // sit in the same relationship everywhere in the product. A single
-          // full-width column would have run the prose to ~150 characters or
-          // left two thirds of the band empty.
-          <div className="grid gap-x-9 gap-y-5 lg:grid-cols-[minmax(0,44rem)_minmax(0,1fr)]">
-            <div>
+          // The evidence used to sit in a right-hand rail. Now that this band
+          // shares a row with the markets rail rather than owning the page's
+          // full width, that second column would have squeezed the prose to a
+          // ~40-character measure. The chips read as a footing under the
+          // reading column instead - still "what it rests on", still directly
+          // beneath what it rests under.
+          <div>
+            <div className="max-w-[68ch]">
               {quoteParagraphs(analysis.quote).map((para, i) => (
                 <p
                   key={i}
@@ -405,7 +459,7 @@ export function DashboardHome({
                 </p>
               ))}
             </div>
-            <div className="flex flex-wrap gap-2 lg:flex-col lg:items-start">
+            <div className="mt-5 flex flex-wrap gap-2">
               <span className="rounded-full border border-line px-2.5 py-1 text-caption text-muted">
                 {analysis.sourceCount} sources
               </span>
@@ -442,10 +496,23 @@ export function DashboardHome({
   // preference the reader has to set.
   const showStanding = layout.includes("portfolio");
   const showFlagged = layout.includes("assistant");
-  const supporting = layout.filter((k) => k !== "portfolio" && k !== "assistant");
+  // The rail keeps the reader's own order, but only among the modules that
+  // belong in it; anything else the layout carries falls through to the band
+  // row below, so a hidden-then-shown module always lands somewhere.
+  const rail = layout.filter((k) => RAIL_MODULES.includes(k));
+  const bands = layout.filter(
+    (k) => k !== "portfolio" && k !== "assistant" && !RAIL_MODULES.includes(k),
+  );
 
   return (
     <div className="animate-page-in">
+      {/* Full-bleed against the shell's main container: `main` carries px-5.5
+          and pt-6.5, and the strip has to sit flush under the header the way
+          a tape does, not inset from it like a card. */}
+      <div className="-mx-5.5 -mt-6.5 mb-6.5">
+        <TickerStrip items={tickerItems} />
+      </div>
+
       <div className="mb-5.5 flex flex-wrap items-end justify-between gap-4">
         <div>
           <div className="mb-2 flex flex-wrap items-center gap-2 font-mono text-eyebrow text-muted uppercase">
@@ -515,18 +582,31 @@ export function DashboardHome({
           two-column grid of five equal cards, which gave a four-line news
           widget the same visual claim as the total value of the account and
           left the page with nothing to look at first. */}
-      <div className="flex flex-col gap-7">
+      <div className="flex flex-col gap-3.5">
         {showStanding && renderStanding()}
-        {showFlagged && renderFlagged()}
 
-        {supporting.length > 0 && (
-          // `self-start` and a fixed track, as before: an auto-fit grid
-          // stretched every tile in a row to the tallest, so a short module
-          // grew a band of empty space under its content.
-          <div className="grid grid-cols-1 items-start gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
-            {supporting.map((key, index) => renderCard(key, index))}
+        {/* The assistant's finding beside the market rail, rather than a
+            full-width band above it. At full width its prose ran to a measure
+            no one reads comfortably, and it pushed the three supporting cards
+            entirely below the fold; sharing the row puts the page's one piece
+            of real reading next to the numbers it is about. */}
+        {(showFlagged || rail.length > 0) && (
+          <div className="grid grid-cols-1 items-start gap-3.5 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
+            {showFlagged ? renderFlagged() : <div />}
+            {rail.length > 0 && (
+              // A grid, not a flex column. The cards carry `self-start` so a
+              // short module does not stretch to a tall neighbour's height -
+              // and in a flex column `self-start` is the *horizontal* axis,
+              // which shrank each card to the width of its own text. In a
+              // single-column grid it means what it was written to mean.
+              <div className="grid gap-3.5">
+                {rail.map((key, index) => renderCard(key, index))}
+              </div>
+            )}
           </div>
         )}
+
+        {bands.map((key, index) => renderCard(key, rail.length + index))}
       </div>
 
       {hidden.length > 0 && (
@@ -544,6 +624,14 @@ export function DashboardHome({
           ))}
         </div>
       )}
+
+      {/* The strip above scrolls and the chart animates, which together imply
+          a live tape. One line, once, says what the page is actually made of -
+          and carries the standing non-advice line the product is required to
+          show rather than leaving it to the assistant's own surfaces. */}
+      <p className="mt-6 text-center text-caption text-dim text-pretty">
+        Prices are daily closes, not a live feed. Nothing here is a recommendation.
+      </p>
     </div>
   );
 }
