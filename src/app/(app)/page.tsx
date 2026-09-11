@@ -17,13 +17,17 @@ export default async function DashboardPage() {
 
 
 
-// Base Camp's summary sparkline is pinned to 1M rather than following
-// Settings > Display > "Default chart timeframe" like the Portfolio and ticker
-// charts do. It draws from the daily close series with no intraday path, so a
-// 1D default would give it a single point and a 1W default five - the two
-// ranges the real charts serve from the provider instead. Pinned, and said so,
-// rather than honouring the setting into an empty sparkline.
-const DASHBOARD_SPARKLINE_TIMEFRAME = "1M" as const;
+// Base Camp's hero chart offers its own ranges rather than following
+// Settings > Display > "Default chart timeframe". It draws from the daily
+// close series with no intraday path, so the setting's 1D would give it a
+// single point - the range the real charts serve from the provider instead.
+// 1W and up are drawable from stored closes, so those are what it offers, and
+// it opens on the month.
+//
+// Ranges with fewer than two stored closes are dropped before they reach the
+// component, so the control never shows a button that renders an empty box.
+const DASHBOARD_TIMEFRAMES = ["1W", "1M", "3M", "1Y"] as const;
+const DASHBOARD_DEFAULT_TIMEFRAME = "1M" as const;
 
 async function DashboardBody() {
   const supabase = await createClient();
@@ -81,13 +85,19 @@ async function DashboardBody() {
     symbols.length > 0
       ? await supabase.rpc("recent_prices", { symbols, per_symbol: 1500 })
       : { data: [] };
-  const sparklineSeries = computeTimelineSeries(holdings, (priceRows ?? []) as PriceBar[], DASHBOARD_SPARKLINE_TIMEFRAME);
-  const sparkline = sparklineSeries.map((p) => p.value);
-
-  // Direction of the sparkline itself, so the dashboard's line is coloured by
-  // what it draws (1M) rather than by all-time gain, which is a different
-  // number and was the only one this card had.
-  const sparklinePositive = sparkline.length > 1 ? sparkline[sparkline.length - 1] >= sparkline[0] : true;
+  // One series per offered range, off the single `priceRows` read above -
+  // computeTimelineSeries only slices and sums what it is given, so four
+  // ranges cost four passes over rows already in memory, not four queries.
+  const portfolioSeries: Partial<Record<(typeof DASHBOARD_TIMEFRAMES)[number], { values: number[]; dates: string[] }>> = {};
+  for (const timeframe of DASHBOARD_TIMEFRAMES) {
+    const points = computeTimelineSeries(holdings, (priceRows ?? []) as PriceBar[], timeframe);
+    if (points.length > 1) {
+      portfolioSeries[timeframe] = {
+        values: points.map((p) => p.value),
+        dates: points.map((p) => p.date),
+      };
+    }
+  }
 
   const topHoldings = [...metrics]
     .filter((m) => m.value !== null)
@@ -100,6 +110,26 @@ async function DashboardBody() {
     .filter((r) => r.price !== null && r.changePct !== null)
     .slice(0, 4)
     .map((r) => ({ symbol: r.symbol, price: r.price ?? 0, changePct: r.changePct ?? 0 }));
+
+  // The strip under the header. It is drawn from the same screen the Markets
+  // card reads, so the two cannot disagree about a symbol's day - holdings
+  // first, because a moving band the reader does not own is wallpaper, then
+  // the rest of the screen's movers to fill the track out. Capped, because
+  // beyond ~18 the loop is long enough that a symbol leaves and does not come
+  // back inside a glance.
+  const heldOrder = new Map(symbols.map((sym, i) => [sym, i]));
+  const tickerItems = marketRows
+    .filter((r) => r.changePct !== null)
+    .sort((a, b) => {
+      const aHeld = heldOrder.get(a.symbol);
+      const bHeld = heldOrder.get(b.symbol);
+      if (aHeld !== undefined && bHeld !== undefined) return aHeld - bHeld;
+      if (aHeld !== undefined) return -1;
+      if (bHeld !== undefined) return 1;
+      return Math.abs(b.changePct ?? 0) - Math.abs(a.changePct ?? 0);
+    })
+    .slice(0, 18)
+    .map((r) => ({ symbol: r.symbol, changePct: r.changePct ?? 0 }));
 
   const watchlistSymbols = new Set((watchlistItemsRes.data ?? []).map((item) => item.symbol));
   const watchlistCloses = await getLatestCloses(Array.from(watchlistSymbols));
@@ -158,6 +188,7 @@ async function DashboardBody() {
       dataAsOf={dataAsOf}
       initialLayout={initialLayout}
       today={today}
+      tickerItems={tickerItems}
       portfolio={{
         // Raw USD, formatted in the client component through the shared
         // display-prefs formatter. Formatting here would have pinned Base
@@ -168,9 +199,8 @@ async function DashboardBody() {
         totalGainPct: totals.totalGainPct,
         positive: totals.totalGain >= 0,
         positions: holdings.length,
-        sparkline,
-        sparklinePositive,
-        sparklineTimeframe: DASHBOARD_SPARKLINE_TIMEFRAME,
+        series: portfolioSeries,
+        defaultTimeframe: DASHBOARD_DEFAULT_TIMEFRAME,
         topHoldings,
       }}
       markets={{
