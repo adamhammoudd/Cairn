@@ -43,17 +43,30 @@ export function TrendingDeck({ rows, requestCounts, names, deck, onDeckChange }:
   const method = DECKS.find((d) => d.id === deck)?.method ?? "";
 
   return (
-    <section aria-label="Market movers" className="mb-4.5">
-      <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2.5">
-        <div className="flex flex-wrap gap-1.5 rounded-panel border border-line bg-panel p-1">
+    <section
+      aria-label="Market movers"
+      className="animate-rise-in relative mb-3.5 overflow-hidden rounded-2xl border border-[#232323] px-[22px] py-5"
+      style={{ background: "linear-gradient(180deg,#101110,#0d0d0d)" }}
+    >
+      <div
+        aria-hidden
+        className="pointer-events-none absolute"
+        style={{
+          inset: "-60% 55% 45% -12%",
+          background: "radial-gradient(closest-side, rgba(47,198,133,.16), transparent)",
+          animation: "cn-glow 7s ease-in-out infinite",
+        }}
+      />
+      <div className="relative mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap gap-[3px] rounded-[11px] border border-[#232323] bg-[#0c0c0c] p-[3px]">
           {DECKS.map((d) => (
             <button
               key={d.id}
               type="button"
               aria-pressed={deck === d.id}
               onClick={() => onDeckChange(d.id)}
-              className={`rounded-control px-3 py-2 text-body transition-colors duration-base ease-standard ${
-                deck === d.id ? "bg-active text-primary" : "text-muted hover:text-primary"
+              className={`rounded-[9px] px-[13px] py-[7px] text-[12.5px] whitespace-nowrap transition-colors duration-base ease-standard ${
+                deck === d.id ? "bg-[#1e1e1e] text-primary" : "text-muted hover:text-primary"
               }`}
             >
               {d.label}
@@ -64,24 +77,24 @@ export function TrendingDeck({ rows, requestCounts, names, deck, onDeckChange }:
       </div>
 
       {items.length === 0 ? (
-        <div className="rounded-card border border-dashed border-line px-5 py-7 text-center text-body text-muted text-pretty">
+        <div className="relative rounded-[13px] border border-dashed border-line px-5 py-7 text-center text-body text-muted text-pretty">
           {deck === "searched"
             ? "No symbol has been looked up more than any other yet, so there is nothing to rank. This deck fills in as the app is used."
             : "Nothing to rank here yet - no stored symbol carries the figure this deck sorts by."}
         </div>
       ) : (
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(196px,1fr))] gap-2.5">
+        <div className="relative grid grid-cols-[repeat(auto-fit,minmax(184px,1fr))] gap-[11px]">
           {items.map((r, i) => {
             const up = (r.changePct ?? 0) >= 0;
             return (
               <Link
                 key={r.symbol}
                 href={`/ticker/${encodeURIComponent(r.symbol)}`}
-                className="group rounded-panel border border-line bg-panel px-3.5 py-3 transition-colors duration-base ease-standard hover:border-line-strong"
+                className="group flex flex-col gap-1.5 rounded-[13px] border border-[#232323] bg-[#101010] px-3.5 py-[13px] transition-[transform,border-color,background] duration-[220ms] ease-standard hover:-translate-y-[3px] hover:border-line-strong hover:bg-[#131313]"
               >
                 <div className="flex items-baseline justify-between gap-2">
-                  <span className="truncate text-lead text-primary">{r.symbol}</span>
-                  <span className={`shrink-0 text-caption tabular-nums ${r.changePct === null ? "text-muted" : up ? "text-accent" : "text-negative"}`}>
+                  <span className="truncate text-[13.5px] font-semibold tracking-[0.01em] text-primary">{r.symbol}</span>
+                  <span className={`shrink-0 font-mono text-caption tabular-nums ${r.changePct === null ? "text-muted" : up ? "text-accent" : "text-negative"}`}>
                     {r.changePct === null ? "-" : `${up ? "+" : ""}${r.changePct.toFixed(2)}%`}
                   </span>
                 </div>
@@ -90,19 +103,17 @@ export function TrendingDeck({ rows, requestCounts, names, deck, onDeckChange }:
                     of those symbols with no symbol_directory.name yet (AMZN,
                     confirmed - the whole original seven are null) fell all
                     the way through to the raw asset type as its "name". */}
-                <div className="mt-0.5 truncate text-micro text-dim">
+                <div className="truncate text-[11.5px] text-dim">
                   {r.name ?? names[r.symbol] ?? assetName(r.symbol, r.assetType)}
                 </div>
-                <div className="mt-2">
-                  <Sparkline values={r.trend} positive={up} delayMs={i * 40} className="h-6 w-full" />
-                </div>
+                <Sparkline values={r.trend} positive={up} delayMs={120 + i * 60} className="h-8.5 w-full" />
                 {/* The eyebrow shows the card's price on every deck except
                     "active" (which shows the volume it ranked by). The
                     "searched" deck used to print the raw request count here
                     ("2 REQUESTS") - an internal demand metric that read as a
                     debug label; the deck's own method caption already says it
                     ranks by lookups, and the asset name is on the line above. */}
-                <div className="mt-1.5 font-mono text-eyebrow text-dim uppercase">
+                <div className="font-mono text-[11.5px] text-muted">
                   {deck === "active" ? `Vol ${formatVolume(r.volume)}` : formatMoney(r.price, prefs)}
                 </div>
               </Link>

@@ -19,27 +19,35 @@ interface TickerListProps {
   /** Market caps sourced outside fundamentals (crypto_metrics), keyed by symbol. */
   marketCaps?: Record<string, number | null>;
   emptyState?: React.ReactNode;
+  /** Date of the newest close behind these rows, for the table's own footer. */
+  asOf?: string | null;
 }
 
-const GRID = "sm:grid-cols-[1.6fr_0.9fr_1fr_0.9fr_1fr_1fr_100px]";
+// The design's proportions, plus the Volume column it drops. Volume stays:
+// the "Most active" deck above ranks by it, and a ranking whose measure is
+// nowhere in the table it sorts is a ranking you cannot check.
+const GRID = "sm:grid-cols-[minmax(0,2.2fr)_92px_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_92px]";
 
 function initialsOf(symbol: string) {
   return symbol.slice(0, 2).toUpperCase();
 }
 
-export function TickerList({ rows, names, marketCaps, emptyState }: TickerListProps) {
+export function TickerList({ rows, names, marketCaps, emptyState, asOf = null }: TickerListProps) {
   // Settings > Display: currency converts the price column, and the change
   // column follows the percent-vs-dollar choice. ScreenerRow carries only
   // changePct, so the dollar move is derived from it and the price rather than
   // the column silently staying in percent when the user asked for dollars.
   const prefs = useDisplayPrefs();
   const money = (n: number | null) => formatMoney(n, prefs);
+  // The 24h bar is scaled to the largest move on screen, not to a fixed span:
+  // on a quiet day a 0.4% move should still read as the biggest one here.
+  const maxAbsPct = Math.max(...rows.map((r) => Math.abs(r.changePct ?? 0)), 1);
   const change = (r: ScreenerRow) => formatChange(absoluteChangeFrom(r.price, r.changePct), r.changePct, prefs);
 
   return (
-    <div className="overflow-hidden rounded-card border border-line bg-panel">
+    <div className="overflow-hidden rounded-2xl border border-[#232323] bg-panel">
       <div
-        className={`hidden gap-3 border-b border-line-soft px-5 py-3 font-mono text-eyebrow text-dim uppercase sm:grid ${GRID}`}
+        className={`hidden gap-3.5 border-b border-[#1c1c1c] bg-[#0c0c0c] px-5 py-3 font-mono text-eyebrow tracking-[0.16em] text-dim uppercase sm:grid ${GRID}`}
       >
         <div>Asset</div>
         <div>Type</div>
@@ -69,7 +77,7 @@ export function TickerList({ rows, names, marketCaps, emptyState }: TickerListPr
           <Link
             key={r.symbol}
             href={`/ticker/${r.symbol}`}
-            className={`cn-row block border-b border-line-soft transition-colors duration-fast ease-standard last:border-b-0 hover:bg-active sm:grid sm:items-center sm:gap-3 sm:px-5 sm:py-3 ${GRID}`}
+            className={`cn-row block border-b border-[#171717] transition-colors duration-fast ease-standard last:border-b-0 hover:bg-raised sm:grid sm:items-center sm:gap-3.5 sm:px-5 sm:py-3 ${GRID}`}
           >
             {/* Phone (<640px): the mock collapses the row into a card. */}
             <div className="flex flex-col gap-2 px-4 py-3.5 sm:hidden">
@@ -108,54 +116,65 @@ export function TickerList({ rows, names, marketCaps, emptyState }: TickerListPr
             </div>
 
             <div className="hidden min-w-0 items-center gap-2.5 sm:flex">
+              {/* Tinted by asset type, not by gain/loss. The row already
+                  says which way it moved in two places; the avatar is the one
+                  slot free to carry what the thing *is*. */}
               <div
-                className="flex h-6.5 w-6.5 shrink-0 items-center justify-center rounded-control font-mono text-eyebrow text-canvas"
-                style={{
-                  backgroundImage:
-                    r.changePct === null || r.changePct >= 0
-                      ? "linear-gradient(135deg, var(--color-accent-light), var(--color-accent-dark))"
-                      : "var(--gradient-loss)",
-                }}
+                className={`flex h-7.5 w-7.5 shrink-0 items-center justify-center rounded-[9px] border bg-panel font-mono text-[10.5px] ${
+                  ASSET_TYPE_TAG_CLASS[r.assetType] ?? "text-muted border-line"
+                }`}
               >
                 {initialsOf(r.symbol)}
               </div>
               <div className="min-w-0">
-                <div className="text-body text-primary">{r.symbol}</div>
-                <div className="truncate text-micro text-muted">{displayName}</div>
+                <div className="text-[13.5px] font-semibold tracking-[0.01em] text-primary">{r.symbol}</div>
+                <div className="truncate text-[11.5px] text-dim">{displayName}</div>
               </div>
             </div>
             <div className="hidden sm:block">
               <span
-                className={`rounded-full border px-2 py-1 font-mono text-eyebrow tracking-[0.1em] uppercase ${
+                className={`rounded-full border px-[9px] py-[3px] font-mono text-[9.5px] tracking-[0.12em] uppercase ${
                   ASSET_TYPE_TAG_CLASS[r.assetType] ?? "text-muted border-line"
                 }`}
               >
                 {assetTypeBadge(r.assetType)}
               </span>
             </div>
-            <div className="hidden text-body tabular-nums text-primary sm:block">{money(r.price)}</div>
-            <div
-              className={`hidden text-body tabular-nums sm:block ${
-                r.changePct === null ? "text-muted" : r.changePct >= 0 ? "text-accent" : "text-negative"
-              }`}
-            >
-              {change(r)}
+            <div className="hidden font-mono text-[12.5px] tabular-nums text-primary sm:block">{money(r.price)}</div>
+            <div className="hidden min-w-0 items-center gap-2 sm:flex">
+              <span
+                className={`shrink-0 font-mono text-[12.5px] tabular-nums ${
+                  r.changePct === null ? "text-muted" : r.changePct >= 0 ? "text-accent" : "text-negative"
+                }`}
+              >
+                {change(r)}
+              </span>
+              {r.changePct !== null && (
+                <span aria-hidden className="h-1 min-w-0 flex-1 overflow-hidden rounded-xs bg-[#191919]">
+                  <span
+                    className={`block h-full origin-left rounded-xs opacity-65 ${
+                      r.changePct >= 0 ? "bg-accent" : "bg-negative"
+                    }`}
+                    style={{ width: `${Math.max(4, (Math.abs(r.changePct) / maxAbsPct) * 100).toFixed(0)}%` }}
+                  />
+                </span>
+              )}
             </div>
             <div
-              className="hidden text-body tabular-nums text-muted sm:block"
+              className="hidden font-mono text-[12.5px] tabular-nums text-muted sm:block"
               title={marketCap === null ? "Market cap not reported for this asset" : undefined}
             >
               {formatMarketCap(marketCap, prefs)}
             </div>
             <div
-              className="hidden text-body tabular-nums text-muted sm:block"
+              className="hidden font-mono text-[12.5px] tabular-nums text-muted sm:block"
               title={r.volume === null ? "Volume not reported for this asset" : undefined}
             >
               {formatVolume(r.volume)}
             </div>
             <div className="hidden sm:block">
               {r.trend.length > 1 && (
-                <Sparkline values={r.trend} positive={(r.changePct ?? 0) >= 0} color={changeColor} className="h-6.5 w-23.5" />
+                <Sparkline values={r.trend} positive={(r.changePct ?? 0) >= 0} color={changeColor} className="h-7.5 w-23" />
               )}
             </div>
           </Link>
@@ -163,6 +182,20 @@ export function TickerList({ rows, names, marketCaps, emptyState }: TickerListPr
       })}
 
       {rows.length === 0 && emptyState}
+
+      {rows.length > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-2.5 border-t border-[#1c1c1c] bg-[#0c0c0c] px-5 py-3 text-caption text-dim">
+          <span>
+            {rows.length} {rows.length === 1 ? "symbol" : "symbols"}
+          </span>
+          {asOf && (
+            <span className="flex items-center gap-[7px]">
+              <span aria-hidden className="animate-breathe h-1.5 w-1.5 rounded-full bg-accent" />
+              Updated at close · {asOf}
+            </span>
+          )}
+        </div>
+      )}
     </div>
   );
 }
