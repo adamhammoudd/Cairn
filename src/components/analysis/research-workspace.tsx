@@ -214,21 +214,31 @@ export function ResearchWorkspace({
   const suggestions = suggest && suggest.q === query.trim() ? suggest.items : null;
 
   return (
-    <div className="animate-page-in">
+    <div
+      className="animate-page-in"
+      style={{
+        backgroundImage:
+          "radial-gradient(880px 420px at 8% -8%, rgba(155,140,224,.10), transparent 70%), radial-gradient(720px 380px at 95% 0%, rgba(47,198,133,.07), transparent 72%)",
+      }}
+    >
       {/* Header + quota indicator */}
-      <div className="mb-5 flex flex-wrap items-end justify-between gap-4.5">
+      <div className="mb-5 flex flex-wrap items-end justify-between gap-[18px]">
         <div className="min-w-0">
-          <div className="mb-2 font-mono text-eyebrow text-muted uppercase">Assistant · Research</div>
-          <h1 className="m-0 font-serif text-display font-normal leading-[1.1] text-primary">Research</h1>
-          <p className="mt-2 max-w-[560px] text-lead text-muted text-pretty">
+          <div className="mb-2 font-mono text-[10.5px] tracking-[0.18em] text-muted uppercase">
+            Assistant · Research library
+          </div>
+          <h1 className="m-0 font-serif text-[40px] leading-[1.05] font-normal tracking-[-0.015em] text-primary">
+            Research library
+          </h1>
+          <p className="mt-2 max-w-[540px] text-[13.5px] leading-[1.55] text-muted text-pretty">
             Probability analysis with its inputs shown - sources, historical analogs, and a stated confidence level on
             every run.
           </p>
         </div>
 
         <div
-          className={`min-w-[250px] rounded-card border bg-panel px-4 py-3.5 ${
-            atCap ? "border-[rgba(217,164,65,0.35)]" : "border-line"
+          className={`min-w-[250px] rounded-2xl border bg-panel px-4 py-3.5 ${
+            atCap ? "border-[rgba(217,164,65,0.35)]" : "border-[#232323]"
           }`}
         >
           <div className="flex items-baseline justify-between gap-3">
@@ -273,7 +283,7 @@ export function ResearchWorkspace({
       </div>
 
       {/* Scope selector */}
-      <div className="mb-5.5 rounded-card border border-line bg-panel px-4.5 py-4">
+      <div className="mb-3.5 rounded-2xl border border-[#232323] bg-panel px-[22px] py-5">
         <div className={`${MONO_LABEL} mb-2.5`}>What should Cairn research?</div>
         <div className="flex flex-wrap items-center gap-2.5">
           <div className="relative min-w-[260px] flex-1">
@@ -401,7 +411,7 @@ export function ResearchWorkspace({
                     setPhase("idle");
                   }}
                   style={{ animationDelay: `${i * 50}ms` }}
-                  className="animate-rise-in min-w-0 rounded-card border border-line bg-panel p-4 text-left transition-[border-color,transform] duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] hover:-translate-y-0.5 hover:border-line-strong"
+                  className="animate-rise-in min-w-0 rounded-[14px] border border-[#232323] bg-panel p-4 text-left transition-[border-color,transform,background] duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] hover:-translate-y-0.5 hover:border-line-strong hover:bg-[#121212]"
                 >
                   <div className="flex items-center justify-between gap-2.5">
                     <span className="text-lead text-primary">{a.scope_value}</span>
@@ -424,7 +434,7 @@ export function ResearchWorkspace({
             })}
           </div>
         ) : (
-          <div className="rounded-card border border-dashed border-line px-6 py-10 text-center">
+          <div className="rounded-2xl border border-dashed border-line px-6 py-10 text-center">
             <div className="font-serif text-h3 text-primary">No analyses on your holdings yet</div>
             <p className="mx-auto mt-2 mb-4 max-w-[400px] text-body text-muted text-pretty">
               Pick a ticker you own above and generate the first one - it&apos;ll show up here afterwards.
@@ -436,8 +446,8 @@ export function ResearchWorkspace({
       {/* Library rail + detail column */}
       {/* The mock's researchGrid switches at w >= 1100, not at Tailwind's xl. */}
       <div className="grid grid-cols-1 items-start gap-4 min-[1100px]:grid-cols-[340px_1fr]">
-        <div className="min-w-0 overflow-hidden rounded-card border border-line bg-panel">
-          <div className="border-b border-line-soft px-4 py-3.5">
+        <div className="min-w-0 overflow-hidden rounded-2xl border border-[#232323] bg-panel">
+          <div className="border-b border-[#1c1c1c] bg-[#0c0c0c] px-4 py-3.5">
             <div className="font-mono text-eyebrow text-muted uppercase">Library · {library.length}</div>
             <div className="mt-3 flex flex-wrap gap-1">
               {(
@@ -497,18 +507,28 @@ export function ResearchWorkspace({
                     setPhase("idle");
                   }}
                   style={{ animationDelay: `${i * 40}ms` }}
-                  className={`animate-rise-in block w-full border-b border-line-soft px-4 py-3.5 text-left transition-[background] duration-[140ms] ease-[cubic-bezier(0.4,0,0.2,1)] hover:bg-active ${
-                    isOpen ? "bg-active" : ""
+                  className={`animate-rise-in relative block w-full border-b border-[#171717] px-4 py-3.5 pl-[15px] text-left transition-[background] duration-[140ms] ease-[cubic-bezier(0.4,0,0.2,1)] hover:bg-raised ${
+                    isOpen ? "bg-raised" : ""
                   }`}
                 >
+                  {/* The rail carries the analysis's own confidence tint, so a
+                      scan down the list separates a high-confidence read from
+                      a thin one before any of the text is read. */}
+                  <span
+                    aria-hidden
+                    className="absolute top-0 bottom-0 left-0 w-[3px]"
+                    style={{ background: c.tint, opacity: isOpen ? 1 : 0.55 }}
+                  />
                   <div className="flex items-center justify-between gap-2.5">
                     <div className="flex min-w-0 items-center gap-2">
-                      <span className="truncate text-body text-primary">{a.scope_value}</span>
-                      <span className="font-mono text-eyebrow text-dim uppercase">{a.scope_type}</span>
+                      <span className="truncate text-[13.5px] font-semibold text-primary">{a.scope_value}</span>
+                      <span className="rounded-full border border-line px-[7px] py-px font-mono text-[9.5px] tracking-[0.12em] text-dim uppercase">
+                        {a.scope_type}
+                      </span>
                     </div>
                     <ConfidenceBars level={a.confidence_level} />
                   </div>
-                  <div className="mt-2 text-caption leading-[1.5] text-muted text-pretty">
+                  <div className="mt-2 text-[12.5px] leading-[1.65] text-muted text-pretty">
                     <span className="capitalize">{a.analysis_type.replace(/_/g, " ")}</span> · {a.probability_low}–
                     {a.probability_high}%
                   </div>
