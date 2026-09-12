@@ -228,3 +228,61 @@ export async function getAnalysesByIds(ids: string[]): Promise<AnalysisWithMetho
   const { data: analyses } = await supabase.from("ai_analyses").select("*").in("id", ids);
   return attachMethodology(supabase, analyses ?? []);
 }
+
+/**
+ * The analysis ids this user has pinned, newest pin first.
+ *
+ * `ai_analyses` has no user_id - an analysis is market/sector/ticker-scoped and
+ * read by every account - so a pin is a row in ai_analysis_pins rather than a
+ * column on the analysis. See migration 0043.
+ */
+export async function listPinnedAnalysisIds(): Promise<string[]> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  const { data } = await supabase
+    .from("ai_analysis_pins")
+    .select("analysis_id")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false });
+
+  return (data ?? []).map((row) => row.analysis_id as string);
+}
+
+/**
+ * Pin or unpin one analysis for the calling user. Returns an error string for
+ * the caller to surface, or null on success - the same shape the other
+ * mutating actions on this page use.
+ *
+ * Unpinning is a delete: a pin carries no mutable state, so there is nothing
+ * to toggle in place, and migration 0043 grants no UPDATE policy.
+ */
+export async function toggleAnalysisPin(analysisId: string, pinned: boolean): Promise<string | null> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return "You need to be signed in to pin an analysis.";
+
+  if (pinned) {
+    // upsert, not insert: double-clicking the star must not fail on the
+    // composite primary key.
+    const { error } = await supabase
+      .from("ai_analysis_pins")
+      .upsert({ user_id: user.id, analysis_id: analysisId }, { onConflict: "user_id,analysis_id" });
+    if (error) return `Couldn't pin that analysis: ${error.message}`;
+  } else {
+    const { error } = await supabase
+      .from("ai_analysis_pins")
+      .delete()
+      .eq("user_id", user.id)
+      .eq("analysis_id", analysisId);
+    if (error) return `Couldn't unpin that analysis: ${error.message}`;
+  }
+
+  revalidatePath("/research");
+  return null;
+}
