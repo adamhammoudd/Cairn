@@ -89,16 +89,28 @@ export function PortfolioChart({
   const { interval, tickFormatter } = xAxisConfig(points, timeframe);
 
   return (
-    <div className="overflow-hidden rounded-card border border-line bg-panel">
-      <div className="flex items-center justify-between gap-3 border-b border-line-soft px-4 py-3">
-        <div className="flex gap-1 rounded-panel border border-line p-1">
+    <div
+      className="relative overflow-hidden rounded-2xl border border-[#232323] px-[22px] py-5"
+      style={{ background: "linear-gradient(180deg,#111010,#0d0d0d)" }}
+    >
+      <div
+        aria-hidden
+        className="pointer-events-none absolute"
+        style={{
+          inset: "-60% 55% 45% -12%",
+          background: "radial-gradient(closest-side, rgba(217,108,108,.15), transparent)",
+          animation: "cn-glow 7s ease-in-out infinite",
+        }}
+      />
+      <div className="relative flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap gap-[3px] rounded-[10px] border border-[#232323] bg-[#0c0c0c] p-[3px]">
           {TIMEFRAMES.map((tf) => (
             <button
               key={tf}
               type="button"
               onClick={() => selectTimeframe(tf)}
-              className={`rounded-control px-3 py-1.5 font-mono text-micro transition-colors duration-base ease-standard hover:text-primary ${
-                timeframe === tf ? "bg-active text-primary" : "text-muted"
+              className={`rounded-[7px] px-3 py-1.5 font-mono text-micro transition-colors duration-base ease-standard hover:text-primary ${
+                timeframe === tf ? "bg-[#1e1e1e] text-primary" : "text-dim"
               }`}
             >
               {tf}
@@ -137,16 +149,19 @@ export function PortfolioChart({
           current price backwards as flat history, and this product does not
           invent prices it does not have. */}
       {missingHistory.length > 0 && (
-        <div className="border-b border-line-soft px-4 py-2.5 text-caption leading-[1.5] text-muted">
+        <div className="relative mt-3.5 flex items-start gap-2.5 rounded-[11px] border border-[#2a2418] bg-warning/[0.07] px-3.5 py-[11px] text-[12.5px] leading-[1.55] text-[#c8c0ad] text-pretty">
+          <span aria-hidden className="w-[3px] flex-none self-stretch rounded-xs bg-warning" />
+          <span>
           Not in this line:{" "}
           <span className="text-primary">{missingHistory.join(", ")}</span> &middot; no stored price
           history yet, so {missingHistory.length === 1 ? "it contributes" : "they contribute"} nothing to
           the plotted value. The totals above still include{" "}
           {missingHistory.length === 1 ? "it" : "them"}.
+          </span>
         </div>
       )}
 
-      <div className="px-2 pt-3.5 pb-2">
+      <div className="relative pt-4">
       {!hasHoldings ? (
         <div className="flex h-[200px] items-center justify-center text-lead text-muted">
           Add a holding to see portfolio performance.
