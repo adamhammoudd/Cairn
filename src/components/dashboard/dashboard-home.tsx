@@ -321,7 +321,24 @@ export function DashboardHome({
   function renderStanding() {
     const gainTone = portfolio.positive ? "text-accent" : "text-negative";
     return (
-      <section className="animate-rise-in rounded-sheet border border-line bg-panel p-5.5">
+      <section
+        className="animate-rise-in relative overflow-hidden rounded-2xl border border-[#232323] px-[26px] py-6"
+        style={{ background: "linear-gradient(180deg,#101110,#0d0d0d)" }}
+      >
+        {/* The wash behind the headline figure takes the figure's own tone, so
+            a bad week is lit red and a good one green. It is the only place on
+            Base Camp where colour is doing more than labelling a module. */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute"
+          style={{
+            inset: "-40% 45% 40% -10%",
+            background: `radial-gradient(closest-side, ${
+              portfolio.positive ? "rgba(47,198,133,.16)" : "rgba(217,108,108,.16)"
+            }, transparent)`,
+            animation: "cn-glow 7s ease-in-out infinite",
+          }}
+        />
         {arranging && (
           <div className="mb-4 flex items-center justify-between gap-3">
             <span className="font-mono text-eyebrow text-muted uppercase">Portfolio</span>
@@ -336,10 +353,10 @@ export function DashboardHome({
         {/* Figure left, chart right, stacking under lg. The chart is given a
             fixed minimum height rather than matching the column beside it, so
             it cannot collapse to a sliver when the figure wraps short. */}
-        <div className="grid gap-x-9 gap-y-6 lg:grid-cols-[minmax(0,auto)_minmax(0,1fr)]">
+        <div className="relative grid gap-x-9 gap-y-6 lg:grid-cols-[minmax(0,auto)_minmax(0,1fr)]">
           <div className="min-w-0">
             <div className="font-mono text-eyebrow text-muted uppercase">Total value</div>
-            <div className="mt-2 font-serif text-[clamp(2.75rem,6vw,4rem)] leading-[0.95] font-normal tabular-nums text-primary">
+            <div className="mt-2 font-serif text-[clamp(2.5rem,5.2vw,62px)] leading-none font-normal tracking-[-0.02em] tabular-nums text-primary">
               {formatMoney(portfolio.totalValue, prefs)}
             </div>
 
@@ -380,10 +397,10 @@ export function DashboardHome({
                   <Link
                     key={h.symbol}
                     href={`/ticker/${h.symbol}`}
-                    className="flex items-center gap-2 rounded-panel border border-line px-3 py-1.5 transition-[border-color,transform] duration-fast ease-standard hover:-translate-y-0.5 hover:border-line-strong hover:bg-active"
+                    className="flex items-center gap-2 rounded-full border border-line bg-[#101010] px-[11px] py-[7px] transition-[border-color,transform,background] duration-fast ease-standard hover:-translate-y-0.5 hover:border-line-strong hover:bg-active"
                   >
-                    <span className="text-body text-primary">{h.symbol}</span>
-                    <span className={`font-mono text-caption tabular-nums ${h.gainPct >= 0 ? "text-accent" : "text-negative"}`}>
+                    <span className="text-[12.5px] text-primary">{h.symbol}</span>
+                    <span className={`font-mono text-[11.5px] tabular-nums ${h.gainPct >= 0 ? "text-accent" : "text-negative"}`}>
                       {h.gainPct >= 0 ? "+" : ""}
                       {h.gainPct.toFixed(1)}%
                     </span>
@@ -395,7 +412,7 @@ export function DashboardHome({
                     out of the summary and into the table. */}
                 <Link
                   href="/portfolio"
-                  className="rounded-panel border border-line px-3 py-1.5 text-body text-dim transition-[border-color,color,transform] duration-fast ease-standard hover:-translate-y-0.5 hover:border-line-strong hover:text-accent"
+                  className="rounded-full border border-dashed border-line px-[11px] py-[7px] text-[12.5px] text-muted transition-[border-color,color] duration-fast ease-standard hover:border-line-strong hover:text-primary"
                 >
                   All holdings →
                 </Link>
@@ -429,7 +446,12 @@ export function DashboardHome({
   function renderFlagged() {
     const analysis = assistant.latestAnalysis;
     return (
-      <section className="animate-rise-in h-full rounded-card border border-line border-t-2 border-t-accent bg-panel p-5.5">
+      <section className="animate-rise-in relative h-full overflow-hidden rounded-2xl border border-[#232323] bg-panel px-6 py-[22px]">
+        <span
+          aria-hidden
+          className="absolute top-0 right-0 left-0 h-px"
+          style={{ background: "linear-gradient(90deg,#2fc685,rgba(47,198,133,0))" }}
+        />
         <div className="mb-4 flex items-center justify-between gap-3">
           <span className="flex items-center gap-2 font-mono text-eyebrow text-accent uppercase">
             {/* The dot breathes only while the page is actually re-fetching,
@@ -527,7 +549,13 @@ export function DashboardHome({
   );
 
   return (
-    <div className="animate-page-in">
+    <div
+      className="animate-page-in"
+      style={{
+        backgroundImage:
+          "radial-gradient(900px 420px at 12% -8%, rgba(47,198,133,.10), transparent 70%), radial-gradient(700px 380px at 92% 0%, rgba(91,141,239,.07), transparent 70%)",
+      }}
+    >
       {/* Edge to edge, escaping both the shell's px-5.5 and the reading column
           below. A tape runs the width of the screen; boxing it inside the
           content column makes it read as another card. `w-screen` plus a
@@ -548,17 +576,17 @@ export function DashboardHome({
 
       <div className="mb-5.5 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <div className="mb-2 flex flex-wrap items-center gap-2 font-mono text-eyebrow text-muted uppercase">
+          <div className="mb-2 flex flex-wrap items-center gap-2.5 font-mono text-[10.5px] tracking-[0.16em] text-muted uppercase">
             <span>
               {today} · {marketStatus.label}
             </span>
-            <span className="text-dim">·</span>
+            <span className="text-line-strong">·</span>
             {/* Every number on this page is a stored daily close; the page used
                 to say so nowhere while showing a green "Live" dot. */}
             <DataFreshness source="last_close" asOf={dataAsOf} className="text-micro" />
           </div>
-          <h1 className="font-serif text-display leading-[1.1] font-normal text-primary">Base Camp</h1>
-          <p className="mt-2 max-w-[560px] text-lead text-muted text-pretty">
+          <h1 className="font-serif text-[40px] leading-[1.05] font-normal tracking-[-0.015em] text-primary">Base Camp</h1>
+          <p className="mt-2 max-w-[520px] text-[13.5px] leading-[1.55] text-muted text-pretty">
             Your marker for the day - portfolio, markets, and what the assistant flagged while you were away.
           </p>
         </div>

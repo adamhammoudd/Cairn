@@ -209,6 +209,21 @@
   }
 }
 
+/* The wash behind Base Camp's headline figure. Slow enough to read as light
+   rather than as motion; paused entirely under prefers-reduced-motion by the
+   global guard below. */
+@keyframes cn-glow {
+  0%,
+  100% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.06);
+  }
+}
+
 @keyframes cn-breathe {
   0%,
   100% {
