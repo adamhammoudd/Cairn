@@ -64,13 +64,7 @@ export function AlertPanel({ alerts, deliveries, defaultChannels }: AlertPanelPr
   ];
 
   return (
-    <div
-      className="animate-page-in flex flex-col gap-3.5"
-      style={{
-        backgroundImage:
-          "radial-gradient(880px 420px at 10% -8%, rgba(217,164,65,.09), transparent 70%), radial-gradient(700px 380px at 94% 0%, rgba(47,198,133,.07), transparent 72%)",
-      }}
-    >
+    <div className="animate-page-in flex flex-col gap-3.5">
       <div className="flex flex-wrap items-end justify-between gap-[18px]">
         <div>
           {/* "Portfolio", not the design file's "Planning": the shipped nav

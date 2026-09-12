@@ -549,20 +549,15 @@ export function DashboardHome({
   );
 
   return (
-    <div
-      className="animate-page-in"
-      style={{
-        backgroundImage:
-          "radial-gradient(900px 420px at 12% -8%, rgba(47,198,133,.10), transparent 70%), radial-gradient(700px 380px at 92% 0%, rgba(91,141,239,.07), transparent 70%)",
-      }}
-    >
+    <div className="animate-page-in">
       {/* Edge to edge, escaping both the shell's px-5.5 and the reading column
           below. A tape runs the width of the screen; boxing it inside the
-          content column makes it read as another card. `w-screen` plus a
-          half-width shift is the standard break-out - the shell's wrapper
-          carries `overflow-x-clip`, so the 100vw scrollbar overshoot cannot
-          introduce a horizontal scroll. */}
-      <div className="relative left-1/2 -mt-6.5 mb-6.5 w-screen -translate-x-1/2">
+          content column makes it read as another card. The width is
+          `100vw - --sbw`, not `100vw`: the latter includes the scrollbar
+          gutter, which had the strip running -7 -> 1913 against a usable
+          1905 - overshooting both edges unevenly. See
+          layout/scrollbar-width-var.tsx. */}
+      <div className="relative left-1/2 -mt-6.5 mb-6.5 w-[calc(100vw-var(--sbw,0px))] -translate-x-1/2">
         <TickerStrip items={tickerItems} />
       </div>
 

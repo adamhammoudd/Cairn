@@ -70,13 +70,7 @@ export function WatchlistPanel({ watchlists }: { watchlists: WatchlistWithItems[
   const mostlyUp = listSize > 0 && greens >= listSize / 2;
 
   return (
-    <div
-      className="animate-page-in flex flex-col gap-3.5"
-      style={{
-        backgroundImage:
-          "radial-gradient(880px 420px at 8% -8%, rgba(155,140,224,.10), transparent 70%), radial-gradient(720px 380px at 96% 0%, rgba(47,198,133,.07), transparent 72%)",
-      }}
-    >
+    <div className="animate-page-in flex flex-col gap-3.5">
       <div className="flex flex-wrap items-end justify-between gap-[18px]">
         <div className="min-w-0">
           <div className="mb-2 font-mono text-[10.5px] tracking-[0.18em] text-muted uppercase">

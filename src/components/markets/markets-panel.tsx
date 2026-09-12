@@ -67,13 +67,7 @@ export function MarketsPanel({ rows, cryptoRows, defaultFilter = "all", requestC
   }
 
   return (
-    <div
-      className="animate-page-in"
-      style={{
-        backgroundImage:
-          "radial-gradient(900px 420px at 8% -6%, rgba(47,198,133,.10), transparent 70%), radial-gradient(760px 400px at 96% 2%, rgba(91,141,239,.08), transparent 72%)",
-      }}
-    >
+    <div className="animate-page-in">
       <div className="mb-5">
         <div className="mb-2 font-mono text-[10.5px] tracking-[0.18em] text-muted uppercase">Markets</div>
         <h1 className="font-serif text-[40px] leading-[1.05] font-normal tracking-[-0.015em] text-primary">The whole board</h1>

@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 import { TopNav } from "@/components/layout/top-nav";
+import { PageWash } from "@/components/layout/page-wash";
+import { ScrollbarWidthVar } from "@/components/layout/scrollbar-width-var";
 import { ChatPanel } from "@/components/chat/chat-panel";
 import { DisplayPrefsProvider } from "@/components/display-prefs-provider";
 import { DEFAULT_DISPLAY_PREFS, type DisplayPrefs } from "@/lib/display-prefs";
@@ -32,8 +34,12 @@ export function AppShell({
     <DisplayPrefsProvider value={displayPrefs}>
       <div
         data-density={displayPrefs.compactMode ? "compact" : "comfortable"}
-        className="flex min-h-screen max-w-screen flex-col overflow-x-clip bg-canvas"
+        className="relative isolate flex min-h-screen max-w-screen flex-col overflow-x-clip bg-canvas"
       >
+        {/* Anchored to this element, not to the content column, so the
+            corner washes reach the real page edges. See page-wash.tsx. */}
+        <PageWash />
+        <ScrollbarWidthVar />
         <TopNav displayName={displayName} plan={plan} isAdmin={isAdmin} />
         {/* The assistant button is fixed at bottom-6 and is 56px tall, so it
             covers the bottom 80px of the viewport's right edge - but the page
