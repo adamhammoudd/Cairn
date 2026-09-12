@@ -113,7 +113,7 @@ export function PortfolioChart({
               detail={timeframe === "1D" ? "combined value · 1 min" : "combined value · 15 min"}
             />
           ) : (
-            <span className="font-mono text-eyebrow text-dim uppercase">
+            <span className="font-mono text-colhead text-faint uppercase">
               {timeframe === "1D" ? "Combined value · 1 min" : "Combined value · 15 min"}
             </span>
           )

@@ -250,7 +250,7 @@ export function TickerWorkspace({
             <div className="mb-4 grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-3">
               {stats.map((s) => (
                 <div key={s.label} className="rounded-panel border border-line bg-panel px-4 py-3">
-                  <div className="font-mono text-eyebrow text-dim uppercase">{s.label}</div>
+                  <div className="font-mono text-colhead text-faint uppercase">{s.label}</div>
                   <div className="mt-2 text-lead tabular-nums text-primary">{s.value}</div>
                 </div>
               ))}
@@ -258,7 +258,7 @@ export function TickerWorkspace({
           )}
 
           {!isCrypto && !isForex && !isIndex && !data.fundamentals && (
-            <p className="mb-4 text-caption text-dim">
+            <p className="mb-4 text-sub text-faint">
               No SEC fundamentals filed for this symbol (common for ETFs and funds) - cap, P/E, and yield stay blank
               rather than being estimated.
             </p>
@@ -275,7 +275,7 @@ export function TickerWorkspace({
                 data.news.slice(0, 8).map((n) => (
                   <div
                     key={n.id}
-                    className="border-b border-line-soft px-4 py-3 transition-colors duration-fast ease-standard last:border-b-0 hover:bg-active"
+                    className="border-b border-line-row px-4 py-3 transition-colors duration-fast ease-standard last:border-b-0 hover:bg-row-hover"
                   >
                     {n.url ? (
                       <a

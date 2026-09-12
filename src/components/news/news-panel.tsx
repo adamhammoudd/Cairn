@@ -93,7 +93,7 @@ export function NewsPanel({ items }: { items: NewsFeedItem[] }) {
                 >
                   {RELEVANCE_LABEL[item.relevance]}
                 </span>
-                <span className="text-caption text-dim" suppressHydrationWarning>
+                <span className="text-sub text-faint" suppressHydrationWarning>
                   {item.source_name} · {relativeTime(item.published_at)}
                 </span>
               </div>

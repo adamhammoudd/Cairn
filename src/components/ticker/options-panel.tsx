@@ -28,7 +28,7 @@ function ChainTable({ rows, title, spot }: { rows: OptionRow[]; title: string; s
             <thead className="sticky top-0 bg-panel">
               <tr className="border-b border-line">
                 {["Strike", "Last", "Bid", "Ask", "Vol", "OI", "IV"].map((h) => (
-                  <th key={h} className="px-3 py-2.5 text-right font-mono text-eyebrow text-dim uppercase first:text-left">
+                  <th key={h} className="px-3 py-2.5 text-right font-mono text-colhead text-faint uppercase first:text-left">
                     {h}
                   </th>
                 ))}
@@ -38,7 +38,7 @@ function ChainTable({ rows, title, spot }: { rows: OptionRow[]; title: string; s
               {rows.map((r) => (
                 <tr
                   key={r.strike}
-                  className={`border-b border-line-soft last:border-b-0 hover:bg-active ${r.in_the_money ? "bg-panel" : ""}`}
+                  className={`border-b border-line-row last:border-b-0 hover:bg-row-hover ${r.in_the_money ? "bg-panel" : ""}`}
                 >
                   <td className="px-3 py-2 text-left tabular-nums text-primary">
                     {num(r.strike)}
@@ -95,7 +95,7 @@ export function OptionsPanel({ symbol, spot }: { symbol: string; spot: number | 
             </button>
           ))}
         </div>
-        <span className="font-mono text-eyebrow text-dim uppercase">
+        <span className="font-mono text-colhead text-faint uppercase">
           {chain.asOf ? `Quoted ${new Date(chain.asOf).toLocaleString()}` : "Quote time not reported"}
         </span>
       </div>
@@ -105,7 +105,7 @@ export function OptionsPanel({ symbol, spot }: { symbol: string; spot: number | 
         <ChainTable rows={chain.puts} title="Puts" spot={spot} />
       </div>
 
-      <p className="text-caption text-dim text-pretty">
+      <p className="text-sub text-faint text-pretty">
         Bid, ask, last, volume, open interest and implied volatility are as quoted by the market-data provider. Cairn
         does not compute Greeks - those require a pricing model and rate assumptions, and a modelled figure shown
         beside quoted ones would be indistinguishable from market data.

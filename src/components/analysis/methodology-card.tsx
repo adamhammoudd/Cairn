@@ -86,7 +86,7 @@ function SourceCard({ source }: { source: Source }) {
       <div className="text-body leading-[1.5] text-primary text-pretty">{decodeEntities(source.title)}</div>
       <div className="mt-2 flex items-center justify-between gap-2.5">
         <span className="text-micro text-accent">{source.source_name}</span>
-        <span className="font-mono text-eyebrow text-dim uppercase" suppressHydrationWarning>
+        <span className="font-mono text-colhead text-faint uppercase" suppressHydrationWarning>
           {whenLabel(source.published_at)}
         </span>
       </div>
@@ -260,7 +260,7 @@ export function MethodologyCard({
             </div>
 
             <div>
-              <div className="font-mono text-eyebrow text-dim uppercase">Probability range</div>
+              <div className="font-mono text-colhead text-faint uppercase">Probability range</div>
               <div
                 className={`mt-1 font-serif leading-none tabular-nums text-primary ${
                   isDense ? "text-h2" : "text-display"
@@ -307,7 +307,7 @@ export function MethodologyCard({
               )}
             </div>
             {analysis.sources.length === 0 ? (
-              <div className="text-caption text-dim">None cited</div>
+              <div className="text-sub text-faint">None cited</div>
             ) : (
               <SourceCard source={previewSource!} />
             )}
@@ -322,7 +322,7 @@ export function MethodologyCard({
             </div>
 
             {analysis.analogs.length === 0 ? (
-              <div className="text-caption text-dim">None matched</div>
+              <div className="text-sub text-faint">None matched</div>
             ) : (
               <div className="flex flex-col gap-3">
                 {shownAnalogs.map((e, i) => {

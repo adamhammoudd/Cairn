@@ -65,7 +65,7 @@ export function BriefingCard({ briefing }: BriefingCardProps) {
 
             {(briefing.price_moves ?? []).length > 0 && (
               <div className="relative mt-4 flex flex-col gap-2">
-                <div className="font-mono text-eyebrow text-dim uppercase">
+                <div className="font-mono text-colhead text-faint uppercase">
                   Notable moves · last session
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -91,7 +91,7 @@ export function BriefingCard({ briefing }: BriefingCardProps) {
 
             {(briefing.symbol_news ?? []).length > 0 && (
               <div className="relative mt-4 flex flex-col gap-2">
-                <div className="font-mono text-eyebrow text-dim uppercase">
+                <div className="font-mono text-colhead text-faint uppercase">
                   On your holdings &amp; watchlist
                 </div>
                 {briefing.symbol_news.slice(0, 4).map((n) => (
@@ -110,7 +110,7 @@ export function BriefingCard({ briefing }: BriefingCardProps) {
 
             {(briefing.news ?? []).length > 0 && (
               <div className="relative mt-4 flex flex-col gap-2">
-                <div className="font-mono text-eyebrow text-dim uppercase">
+                <div className="font-mono text-colhead text-faint uppercase">
                   In your news categories
                 </div>
                 {briefing.news.slice(0, 3).map((n) => (
@@ -155,7 +155,7 @@ export function BriefingCard({ briefing }: BriefingCardProps) {
 
             {briefing.analyses.length > 0 && (
               <div className="relative mt-4 flex flex-col gap-2">
-                <div className="font-mono text-eyebrow text-dim uppercase">Recent analyses</div>
+                <div className="font-mono text-colhead text-faint uppercase">Recent analyses</div>
                 <div className="flex flex-wrap gap-2">
                   {briefing.analyses.slice(0, 6).map((a) => (
                     <Link

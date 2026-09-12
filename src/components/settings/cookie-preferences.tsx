@@ -83,13 +83,13 @@ export function CookiePreferences() {
       </p>
 
       <div className="mt-3 max-w-[420px] overflow-hidden rounded-panel border border-line">
-        <div className="border-b border-line bg-canvas/60 px-3 py-2 font-mono text-eyebrow text-dim uppercase">
+        <div className="border-b border-line bg-canvas/60 px-3 py-2 font-mono text-colhead text-faint uppercase">
           Cookies in this browser
         </div>
         {cookies === null ? (
-          <div className="px-3 py-2.5 text-caption text-dim">Reading…</div>
+          <div className="px-3 py-2.5 text-sub text-faint">Reading…</div>
         ) : cookies.length === 0 ? (
-          <div className="px-3 py-2.5 text-caption text-dim">None readable from this page.</div>
+          <div className="px-3 py-2.5 text-sub text-faint">None readable from this page.</div>
         ) : (
           cookies.map((c) => (
             <div

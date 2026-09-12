@@ -47,13 +47,13 @@ export function LegalShell({
 
         <div className="font-mono text-eyebrow text-muted uppercase">{eyebrow}</div>
         <h1 className="mt-2 font-serif text-display leading-[1.15] font-normal text-primary">{title}</h1>
-        <p className="mt-2 font-mono text-eyebrow text-dim uppercase">Last updated {updated}</p>
+        <p className="mt-2 font-mono text-colhead text-faint uppercase">Last updated {updated}</p>
 
         <div className="legal-prose mt-9">{children}</div>
       </main>
 
       <footer className="border-t border-line">
-        <div className="mx-auto flex max-w-[760px] flex-wrap items-center gap-4 px-6 py-6 text-caption text-dim">
+        <div className="mx-auto flex max-w-[760px] flex-wrap items-center gap-4 px-6 py-6 text-sub text-faint">
           <Link href="/terms" className="transition-colors duration-base ease-standard hover:text-accent">
             Terms
           </Link>

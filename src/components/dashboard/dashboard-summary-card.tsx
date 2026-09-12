@@ -125,7 +125,7 @@ export function DashboardSummaryCard({
         ) : (
           <Link
             href={href}
-            className="text-caption text-dim transition-colors duration-fast ease-standard hover:text-accent"
+            className="text-sub text-faint transition-colors duration-fast ease-standard hover:text-accent"
           >
             {ctaLabel} →
           </Link>

@@ -6,7 +6,7 @@ import { createWatchlist } from "@/lib/actions/watchlists";
 import { SubmitButton } from "@/components/auth/submit-button";
 import { Toggle } from "@/components/settings/toggle";
 
-const LABEL = "font-mono text-eyebrow text-dim uppercase";
+const LABEL = "font-mono text-colhead text-faint uppercase";
 const FIELD =
   "w-full rounded-control border border-line bg-canvas px-3 py-3 text-lead text-primary outline-none transition-colors duration-base ease-standard focus:border-accent";
 

@@ -113,7 +113,7 @@ export function PortfolioValueChart({ series, initialTimeframe }: PortfolioValue
   if (values.length < 2) {
     return (
       <div className="flex h-full min-h-[190px] items-center justify-center">
-        <span className="font-mono text-caption text-dim">Not enough history to chart</span>
+        <span className="font-mono text-sub text-faint">Not enough history to chart</span>
       </div>
     );
   }
@@ -229,7 +229,7 @@ export function PortfolioValueChart({ series, initialTimeframe }: PortfolioValue
       </div>
 
       {dates.length > 1 && (
-        <div className="mt-2 flex justify-between font-mono text-eyebrow text-dim uppercase">
+        <div className="mt-2 flex justify-between font-mono text-colhead text-faint uppercase">
           {axisIndices.map((i, n) => (
             <span key={n}>{formatAxisDate(dates[i])}</span>
           ))}

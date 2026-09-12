@@ -24,7 +24,7 @@ export function SectorTreemap({
   return (
     <div className="flex flex-col gap-3.5">
       <div className="flex items-center gap-2.5 self-end">
-        <span className="font-mono text-eyebrow text-dim uppercase">−5%</span>
+        <span className="font-mono text-colhead text-faint uppercase">−5%</span>
         <div
           className="h-2 w-32.5 rounded-full"
           style={{
@@ -32,7 +32,7 @@ export function SectorTreemap({
               "linear-gradient(90deg, rgba(217,108,108,1), rgba(217,108,108,0.15), rgba(47,198,133,0.15), rgba(47,198,133,1))",
           }}
         />
-        <span className="font-mono text-eyebrow text-dim uppercase">+5%</span>
+        <span className="font-mono text-colhead text-faint uppercase">+5%</span>
       </div>
 
       <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-3">

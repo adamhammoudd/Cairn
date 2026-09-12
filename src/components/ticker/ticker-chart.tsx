@@ -100,7 +100,7 @@ export function TickerChart({ symbol, bars, priceSource = "last_close", priceAsO
               detail={timeframe === "1D" ? "1 min bars" : "15 min bars"}
             />
           ) : (
-            <span className="font-mono text-eyebrow text-dim uppercase">
+            <span className="font-mono text-colhead text-faint uppercase">
               {timeframe === "1D" ? "Live · 1 min bars" : "Live · 15 min bars"}
             </span>
           )

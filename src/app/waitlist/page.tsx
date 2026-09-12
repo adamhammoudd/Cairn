@@ -56,7 +56,7 @@ export default async function WaitlistPage() {
         {/* Header */}
         <header className="flex items-center justify-between border-b border-line py-5">
           <Logo size={26} />
-          <span className="font-mono text-eyebrow text-dim uppercase">
+          <span className="font-mono text-colhead text-faint uppercase">
             In development · Waitlist open
           </span>
         </header>

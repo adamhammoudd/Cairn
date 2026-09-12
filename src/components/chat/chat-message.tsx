@@ -49,7 +49,7 @@ export function ChatMessage({ message, streaming }: ChatMessageProps) {
         {/* Not red: red is reserved for loss/destructive indicators (CLAUDE.md).
             A turn that did not complete is neither, so it reads as provisional. */}
         {message.failed && (
-          <span className="mb-1.5 block font-mono text-eyebrow text-dim uppercase">Not delivered</span>
+          <span className="mb-1.5 block font-mono text-colhead text-faint uppercase">Not delivered</span>
         )}
         {/* Assistant replies render as real markdown; the user's own text and
             failure notices stay literal. The scope guard ran on the raw text

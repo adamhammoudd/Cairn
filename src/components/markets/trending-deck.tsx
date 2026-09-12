@@ -60,7 +60,7 @@ export function TrendingDeck({ rows, requestCounts, names, deck, onDeckChange }:
             </button>
           ))}
         </div>
-        <span className="max-w-[46ch] text-caption text-dim text-pretty">{method}</span>
+        <span className="max-w-[46ch] text-sub text-faint text-pretty">{method}</span>
       </div>
 
       {items.length === 0 ? (
@@ -102,7 +102,7 @@ export function TrendingDeck({ rows, requestCounts, names, deck, onDeckChange }:
                     ("2 REQUESTS") - an internal demand metric that read as a
                     debug label; the deck's own method caption already says it
                     ranks by lookups, and the asset name is on the line above. */}
-                <div className="mt-1.5 font-mono text-eyebrow text-dim uppercase">
+                <div className="mt-1.5 font-mono text-colhead text-faint uppercase">
                   {deck === "active" ? `Vol ${formatVolume(r.volume)}` : formatMoney(r.price, prefs)}
                 </div>
               </Link>

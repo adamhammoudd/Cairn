@@ -48,7 +48,7 @@ interface ScreenerPanelProps {
 }
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
-  return <div className="mt-4 mb-2 font-mono text-eyebrow text-dim uppercase first:mt-0">{children}</div>;
+  return <div className="mt-4 mb-2 font-mono text-colhead text-faint uppercase first:mt-0">{children}</div>;
 }
 
 const NUM_INPUT_CLASS =
@@ -169,7 +169,7 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
 
       <div className="grid grid-cols-1 items-start gap-3.5 min-[900px]:grid-cols-[232px_1fr]">
         <aside className="rounded-card border border-line bg-panel p-4.5">
-          <div className="font-mono text-eyebrow text-dim uppercase">Asset type</div>
+          <div className="font-mono text-colhead text-faint uppercase">Asset type</div>
           <div className="mt-2 flex flex-wrap gap-1.5">
             {ASSET_TYPES.map((t) => {
               const active = filters.assetTypes.includes(t);
@@ -226,7 +226,7 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
             Reset filters
           </button>
 
-          <div className="mt-4.5 mb-2 font-mono text-eyebrow text-dim uppercase">Pre-built screens</div>
+          <div className="mt-4.5 mb-2 font-mono text-colhead text-faint uppercase">Pre-built screens</div>
           <div className="flex flex-col gap-1">
             {PRESET_SCREENS.map((p) => (
               <button
@@ -243,7 +243,7 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
             ))}
           </div>
 
-          <div className="mt-4.5 mb-2 font-mono text-eyebrow text-dim uppercase">Saved screens</div>
+          <div className="mt-4.5 mb-2 font-mono text-colhead text-faint uppercase">Saved screens</div>
           {savedScreens.length === 0 ? (
             <div className="rounded-control border border-dashed border-line px-3 py-2.5">
               <p className="text-body text-muted">No saved screens</p>
@@ -269,7 +269,7 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
                   <button
                     type="button"
                     onClick={() => handleDelete(s.id)}
-                    className="text-caption text-dim transition-colors duration-fast ease-standard hover:text-negative"
+                    className="text-sub text-faint transition-colors duration-fast ease-standard hover:text-negative"
                   >
                     ✕
                   </button>
@@ -294,7 +294,7 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
               {/* Same numbers as Markets and the ticker page, so the same
                   freshness statement. */}
               <DataFreshness source="last_close" asOf={asOf} className="hidden sm:inline" />
-              <span className="hidden text-caption text-dim sm:inline">Market cap derived at query time</span>
+              <span className="hidden text-sub text-faint sm:inline">Market cap derived at query time</span>
               <button
                 type="button"
                 onClick={handleSave}
@@ -310,7 +310,7 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
               <span className="text-body text-primary">{activePreset.name}</span>
               {/* A preset that does not say what it selected is an opaque list.
                   This is the same method text the deck on Markets prints. */}
-              <span className="max-w-[62ch] text-caption text-dim text-pretty">{activePreset.method}</span>
+              <span className="max-w-[62ch] text-sub text-faint text-pretty">{activePreset.method}</span>
             </div>
           )}
 
@@ -330,7 +330,7 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-[1fr_0.8fr_0.9fr_0.8fr_0.9fr_0.9fr_0.7fr_0.8fr] gap-2.5 border-b border-line px-4.5 py-2.5 font-mono text-eyebrow text-dim uppercase">
+              <div className="grid grid-cols-[1fr_0.8fr_0.9fr_0.8fr_0.9fr_0.9fr_0.7fr_0.8fr] gap-2.5 border-b border-line px-4.5 py-2.5 font-mono text-colhead text-faint uppercase">
                 <div>Symbol</div>
                 <div>Type</div>
                 <div>Price</div>
@@ -344,7 +344,7 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
                 <Link
                   key={r.symbol}
                   href={`/ticker/${r.symbol}`}
-                  className="cn-row animate-rise-in grid grid-cols-[1fr_0.8fr_0.9fr_0.8fr_0.9fr_0.9fr_0.7fr_0.8fr] items-center gap-2.5 border-b border-line px-4.5 py-3 transition-colors duration-fast ease-standard last:border-b-0 hover:bg-active"
+                  className="cn-row animate-rise-in grid grid-cols-[1fr_0.8fr_0.9fr_0.8fr_0.9fr_0.9fr_0.7fr_0.8fr] items-center gap-2.5 border-b border-line-row px-4.5 py-3 transition-colors duration-fast ease-standard last:border-b-0 hover:bg-row-hover"
                   style={{ animationDelay: `${index * 25}ms` }}
                 >
                   <div className="text-lead text-primary">{r.symbol}</div>

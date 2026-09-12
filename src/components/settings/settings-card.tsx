@@ -17,7 +17,7 @@ export function CardHeader({ title, note }: { title: string; note?: string }) {
   return (
     <div className="flex flex-wrap items-baseline justify-between gap-3 border-b border-line-soft px-4.5 py-4">
       <span className="font-serif text-h3 text-primary">{title}</span>
-      {note && <span className="text-caption text-dim">{note}</span>}
+      {note && <span className="text-sub text-faint">{note}</span>}
     </div>
   );
 }

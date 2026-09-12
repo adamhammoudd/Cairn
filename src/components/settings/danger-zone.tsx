@@ -73,7 +73,7 @@ export function DangerZone() {
       <div className="animate-rise-in overflow-hidden rounded-card border border-negative/35 bg-panel">
         <div className="flex items-center gap-2.5 border-b border-negative/20 bg-negative/[0.06] px-4.5 py-4">
           <span className="font-mono text-eyebrow text-negative uppercase">Danger zone</span>
-          <span className="text-caption text-dim">These actions can&rsquo;t be undone</span>
+          <span className="text-sub text-faint">These actions can&rsquo;t be undone</span>
         </div>
 
         {!confirming ? (
@@ -110,7 +110,7 @@ export function DangerZone() {
                 </span>
               ))}
             </div>
-            <div className="mt-4.5 mb-2 font-mono text-eyebrow text-dim uppercase">
+            <div className="mt-4.5 mb-2 font-mono text-colhead text-faint uppercase">
               Type DELETE to confirm
             </div>
             <div className="flex flex-wrap gap-2">

@@ -70,7 +70,7 @@ export function ComparisonPanel({
 
         {canAdd && (
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-caption text-dim">Add up to {MAX_COMPARE}:</span>
+            <span className="text-sub text-faint">Add up to {MAX_COMPARE}:</span>
             {/* Was a fixed dropdown of the tracked universe, so a symbol Cairn
                 had not ingested could not be compared at all. The shared
                 type-ahead searches the directory and falls through to the
@@ -168,7 +168,7 @@ export function ComparisonPanel({
                     delayMs={i * 60}
                   />
                   <div className="mt-1.5 flex items-center justify-between gap-2">
-                    <span className="font-mono text-eyebrow text-dim uppercase">{timeframe} · same window as the chart</span>
+                    <span className="font-mono text-colhead text-faint uppercase">{timeframe} · same window as the chart</span>
                     <DataFreshness source="last_close" asOf={row.asOf} className="text-eyebrow" />
                   </div>
                 </div>

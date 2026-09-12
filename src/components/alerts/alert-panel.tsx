@@ -122,7 +122,7 @@ export function AlertPanel({ alerts, deliveries, defaultChannels }: AlertPanelPr
                   </div>
 
                   <div className="mt-2 flex flex-wrap items-center gap-2">
-                    <span className="font-mono text-eyebrow text-dim uppercase">
+                    <span className="font-mono text-colhead text-faint uppercase">
                       Cooldown {cooldownLabel(a.cooldown_seconds)}
                     </span>
                     {a.channels.map((ch) => (

@@ -42,7 +42,7 @@ export function ProfilePanel({ symbol, esg, assetType }: ProfilePanelProps) {
         <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
           <span className="font-mono text-eyebrow text-muted uppercase">Profile</span>
           {profile && (
-            <span className="font-mono text-eyebrow text-dim uppercase">
+            <span className="font-mono text-colhead text-faint uppercase">
               {profile.source.replace(/_/g, " ")} · as of {new Date(profile.as_of).toLocaleDateString()}
             </span>
           )}
@@ -72,7 +72,7 @@ export function ProfilePanel({ symbol, esg, assetType }: ProfilePanelProps) {
               <div className="mt-4.5 grid grid-cols-[repeat(auto-fit,minmax(160px,1fr))] gap-3.5 border-t border-line-soft pt-4">
                 {facts.map((f) => (
                   <div key={f.label}>
-                    <div className="font-mono text-eyebrow text-dim uppercase">{f.label}</div>
+                    <div className="font-mono text-colhead text-faint uppercase">{f.label}</div>
                     <div className="mt-1.5 text-body text-primary">{f.value}</div>
                   </div>
                 ))}
@@ -98,12 +98,12 @@ export function ProfilePanel({ symbol, esg, assetType }: ProfilePanelProps) {
               { label: "Total", value: esg.total ?? "-" },
             ].map((s) => (
               <div key={s.label}>
-                <div className="font-mono text-eyebrow text-dim uppercase">{s.label}</div>
+                <div className="font-mono text-colhead text-faint uppercase">{s.label}</div>
                 <div className="mt-1.5 text-lead tabular-nums text-primary">{s.value}</div>
               </div>
             ))}
           </div>
-          <p className="mt-3 text-caption text-dim">
+          <p className="mt-3 text-sub text-faint">
             ESG scores are illustrative demo data ({esg.source}), not sourced from a live ESG data provider.
           </p>
         </div>

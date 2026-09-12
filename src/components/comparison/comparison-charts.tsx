@@ -95,7 +95,7 @@ export function ComparisonCharts({ rows, timeframe }: { rows: ComparisonRow[]; t
         <div className="font-mono text-eyebrow text-muted uppercase">
           Indexed to 100 · shared timeline · {timeframe}
         </div>
-        <div className="text-caption text-dim">
+        <div className="text-sub text-faint">
           Relative move from the start of the window - absolute prices are on the cards above.
         </div>
       </div>
@@ -157,7 +157,7 @@ export function ComparisonCharts({ rows, timeframe }: { rows: ComparisonRow[]; t
       </ResponsiveContainer>
 
       {missing.length > 0 && (
-        <p className="mt-2.5 text-caption text-dim">
+        <p className="mt-2.5 text-sub text-faint">
           No price history inside this window for {missing.join(", ")} - widen the timeframe to plot{" "}
           {missing.length === 1 ? "it" : "them"}.
         </p>

@@ -79,7 +79,7 @@ export function GeneratingPanel({
         <div className={`font-mono text-eyebrow uppercase ${analogsMatched ? "text-accent" : "text-dim"}`}>
           {analogsMatched ? `✓ ${analogsMatched} analogs matched` : "· matching analogs"}
         </div>
-        <div className="animate-blink font-mono text-eyebrow text-dim uppercase">· computing range</div>
+        <div className="animate-blink font-mono text-colhead text-faint uppercase">· computing range</div>
       </div>
     </div>
   );

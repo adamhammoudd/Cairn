@@ -49,7 +49,7 @@ export default async function ConfirmPage({
           <Link href="/" aria-label="Cairn">
             <Logo size={26} />
           </Link>
-          <span className="font-mono text-eyebrow text-dim uppercase">
+          <span className="font-mono text-colhead text-faint uppercase">
             In development · Waitlist open
           </span>
         </header>

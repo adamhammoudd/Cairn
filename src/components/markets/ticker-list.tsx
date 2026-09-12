@@ -39,7 +39,7 @@ export function TickerList({ rows, names, marketCaps, emptyState }: TickerListPr
   return (
     <div className="overflow-hidden rounded-card border border-line bg-panel">
       <div
-        className={`hidden gap-3 border-b border-line-soft px-5 py-3 font-mono text-eyebrow text-dim uppercase sm:grid ${GRID}`}
+        className={`hidden gap-3 border-b border-line-soft px-5 py-3 font-mono text-colhead text-faint uppercase sm:grid ${GRID}`}
       >
         <div>Asset</div>
         <div>Type</div>
@@ -69,7 +69,7 @@ export function TickerList({ rows, names, marketCaps, emptyState }: TickerListPr
           <Link
             key={r.symbol}
             href={`/ticker/${r.symbol}`}
-            className={`cn-row block border-b border-line-soft transition-colors duration-fast ease-standard last:border-b-0 hover:bg-active sm:grid sm:items-center sm:gap-3 sm:px-5 sm:py-3 ${GRID}`}
+            className={`cn-row block border-b border-line-row transition-colors duration-fast ease-standard last:border-b-0 hover:bg-row-hover sm:grid sm:items-center sm:gap-3 sm:px-5 sm:py-3 ${GRID}`}
           >
             {/* Phone (<640px): the mock collapses the row into a card. */}
             <div className="flex flex-col gap-2 px-4 py-3.5 sm:hidden">

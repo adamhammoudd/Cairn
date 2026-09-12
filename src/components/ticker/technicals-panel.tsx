@@ -181,7 +181,7 @@ export function TechnicalsPanel({ symbol, bars, priceSource, priceAsOf }: Techni
             </ComposedChart>
           </ResponsiveContainer>
           {undefinedOverlays.length > 0 && (
-            <p className="px-2 pb-1 text-caption text-dim">
+            <p className="px-2 pb-1 text-sub text-faint">
               {undefinedOverlays.join(" and ")} {undefinedOverlays.length > 1 ? "have" : "has"} no value over this
               window - the average needs more bars than the window contains. Widen the range to draw{" "}
               {undefinedOverlays.length > 1 ? "them" : "it"}.
@@ -214,7 +214,7 @@ export function TechnicalsPanel({ symbol, bars, priceSource, priceAsOf }: Techni
               </ComposedChart>
             </ResponsiveContainer>
           </div>
-          <p className="px-4 pb-3.5 text-caption text-dim">
+          <p className="px-4 pb-3.5 text-sub text-faint">
             Wilder&rsquo;s 14-period RSI over stored daily closes. Above 70 and below 30 are the conventional
             overbought/oversold bands - a level, not a recommendation.
           </p>
@@ -241,7 +241,7 @@ export function TechnicalsPanel({ symbol, bars, priceSource, priceAsOf }: Techni
               </ComposedChart>
             </ResponsiveContainer>
           </div>
-          <p className="px-4 pb-3.5 text-caption text-dim">
+          <p className="px-4 pb-3.5 text-sub text-faint">
             12/26 EMA difference with a 9-period signal line; the bars are the gap between them. Both EMAs are
             SMA-seeded, so the first value appears on the 26th bar rather than the first.
           </p>

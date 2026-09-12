@@ -190,7 +190,7 @@ export function HoldingModal({ holding, initialSymbol, onClose }: HoldingModalPr
                 ))}
               </datalist>
               {lookingUp && (
-                <p aria-live="polite" className="mt-1.5 text-caption text-dim">
+                <p aria-live="polite" className="mt-1.5 text-sub text-faint">
                   Looking up sector and class&hellip;
                 </p>
               )}

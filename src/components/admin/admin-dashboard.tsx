@@ -11,7 +11,7 @@ function Panel({ title, note, children }: { title: string; note?: string; childr
     <section className="rounded-card border border-line bg-panel">
       <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-line px-4.5 py-3">
         <span className="font-mono text-eyebrow text-muted uppercase">{title}</span>
-        {note && <span className="max-w-[52ch] text-caption text-dim text-pretty">{note}</span>}
+        {note && <span className="max-w-[52ch] text-sub text-faint text-pretty">{note}</span>}
       </div>
       <div className="p-4.5">{children}</div>
     </section>
@@ -21,11 +21,11 @@ function Panel({ title, note, children }: { title: string; note?: string; childr
 function Stat({ label, value, sub, tone }: { label: string; value: string; sub?: string; tone?: "warn" }) {
   return (
     <div>
-      <div className="font-mono text-eyebrow text-dim uppercase">{label}</div>
+      <div className="font-mono text-colhead text-faint uppercase">{label}</div>
       <div className={`mt-1.5 font-serif text-h2 leading-none tabular-nums ${tone === "warn" ? "text-negative" : "text-primary"}`}>
         {value}
       </div>
-      {sub && <div className="mt-1 text-caption text-dim">{sub}</div>}
+      {sub && <div className="mt-1 text-sub text-faint">{sub}</div>}
     </div>
   );
 }
@@ -37,7 +37,7 @@ function ReportRow({ item }: { item: ModerationItem }) {
   }
   return (
     <div className="border-b border-line-soft py-3.5 last:border-b-0">
-      <div className="flex flex-wrap items-center gap-2 text-caption text-dim">
+      <div className="flex flex-wrap items-center gap-2 text-sub text-faint">
         <span className="rounded-control border border-line px-1.5 py-0.5 font-mono text-eyebrow uppercase">
           {item.reason.replace(/_/g, " ")}
         </span>
@@ -118,7 +118,7 @@ export function AdminDashboard({ snapshot, reports }: { snapshot: AdminSnapshot;
               <thead>
                 <tr className="border-b border-line">
                   {["Longest since check", "Bars", "Last checked"].map((h) => (
-                    <th key={h} className="px-1 py-2 text-left font-mono text-eyebrow text-dim uppercase last:text-right">
+                    <th key={h} className="px-1 py-2 text-left font-mono text-colhead text-faint uppercase last:text-right">
                       {h}
                     </th>
                   ))}
@@ -201,7 +201,7 @@ export function AdminDashboard({ snapshot, reports }: { snapshot: AdminSnapshot;
           )}
         </div>
         {engine.weekly.length > 0 && (
-          <div className="mt-3.5 flex flex-wrap gap-3 text-caption text-dim">
+          <div className="mt-3.5 flex flex-wrap gap-3 text-sub text-faint">
             {engine.weekly.map((w) => (
               <span key={w.week}>
                 w/c {w.week}: <span className="text-muted tabular-nums">{w.count}</span>

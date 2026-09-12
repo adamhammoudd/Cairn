@@ -293,7 +293,7 @@ export function AlertForm({ alert, defaultChannels, onDone, onCancel }: AlertFor
             </label>
           ))}
         </div>
-        <p className="mt-2 text-caption text-dim">
+        <p className="mt-2 text-sub text-faint">
           Push and email are recorded but not delivered - no provider is wired yet, so those rows are logged as{" "}
           <span className="text-muted">unconfigured</span> rather than silently dropped.
         </p>
@@ -302,7 +302,7 @@ export function AlertForm({ alert, defaultChannels, onDone, onCancel }: AlertFor
       {error && error !== "saved" && <p className="mt-3 text-body text-negative">{error}</p>}
 
       {editing && (
-        <p className="mt-3 text-caption text-dim">
+        <p className="mt-3 text-sub text-faint">
           Saving an edit clears this alert&apos;s cooldown, so the new condition can fire straight away instead of
           staying quiet under the old one&apos;s timer.
         </p>

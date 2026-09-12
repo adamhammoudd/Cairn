@@ -176,7 +176,7 @@ export function WatchlistPanel({ watchlists }: { watchlists: WatchlistWithItems[
               <div className="overflow-x-auto">
                 <div className="min-w-[640px]">
                   <div
-                    className={`grid ${cols} gap-3 border-b border-line-soft px-4.5 py-3 font-mono text-eyebrow text-dim uppercase`}
+                    className={`grid ${cols} gap-3 border-b border-line-soft px-4.5 py-3 font-mono text-colhead text-faint uppercase`}
                   >
                     <div />
                     <div>Symbol</div>
@@ -195,7 +195,7 @@ export function WatchlistPanel({ watchlists }: { watchlists: WatchlistWithItems[
                         onDragStart={() => setDragId(item.id)}
                         onDragOver={(e) => e.preventDefault()}
                         onDrop={() => handleDrop(item.id)}
-                        className={`cn-row animate-rise-in grid ${cols} items-center gap-3 border-b border-line-soft px-4.5 py-3 transition-colors duration-fast ease-standard last:border-b-0 hover:bg-active ${
+                        className={`cn-row animate-rise-in grid ${cols} items-center gap-3 border-b border-line-row px-4.5 py-3 transition-colors duration-fast ease-standard last:border-b-0 hover:bg-row-hover ${
                           dragId === item.id ? "opacity-50" : ""
                         }`}
                         style={{ animationDelay: `${index * 50}ms` }}

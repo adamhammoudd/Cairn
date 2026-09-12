@@ -192,7 +192,7 @@ export function SettingsForm({ settings, activeTab, sectorOptions, watchlists, f
           </CardRow>
 
           <CardFooter>
-            <span className="text-caption text-dim">
+            <span className="text-sub text-faint">
               Defaults apply to new sessions. Per-page choices you make while browsing aren&rsquo;t overwritten.
             </span>
           </CardFooter>

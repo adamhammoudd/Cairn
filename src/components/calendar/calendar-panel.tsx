@@ -182,7 +182,7 @@ export function CalendarPanel({ events }: { events: CalendarEvent[] }) {
         <div className="rounded-card border border-line bg-panel p-4">
           <div className="grid grid-cols-7 gap-1.5 pb-2">
             {DOW.map((d) => (
-              <div key={d} className="text-center font-mono text-eyebrow text-dim uppercase">
+              <div key={d} className="text-center font-mono text-colhead text-faint uppercase">
                 {d}
               </div>
             ))}

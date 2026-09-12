@@ -114,7 +114,7 @@ export function MarketsPanel({ rows, cryptoRows, defaultFilter = "all", requestC
         </div>
       </div>
 
-      <p className="mb-2 text-caption text-dim">{deckMethod}</p>
+      <p className="mb-2 text-sub text-faint">{deckMethod}</p>
 
       <TickerList
         rows={filtered}

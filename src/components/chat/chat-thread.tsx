@@ -421,7 +421,7 @@ export function ChatThread({
           // border/background to separate them - close enough in size and
           // position to read as the input field itself. Smaller, dimmer,
           // italic and with a leading glyph reads as a caption instead.
-          <p className="flex items-start gap-1.5 text-caption text-dim italic">
+          <p className="flex items-start gap-1.5 text-sub text-faint italic">
             <span aria-hidden className="not-italic">
               ↳
             </span>
@@ -551,7 +551,7 @@ export function ChatThread({
             </button>
           </div>
           <div className="px-2 py-2.5">
-            <div className="px-2 pt-1 pb-2 font-mono text-eyebrow text-dim uppercase">History</div>
+            <div className="px-2 pt-1 pb-2 font-mono text-colhead text-faint uppercase">History</div>
             {sessionsLoading ? (
               // Three inert bars, not the empty-state copy. Saying "no
               // conversations yet" before the fetch resolves told returning
@@ -563,7 +563,7 @@ export function ChatThread({
                 ))}
               </div>
             ) : sessions.length === 0 ? (
-              <div className="px-2.5 py-2 text-caption text-dim">No conversations yet.</div>
+              <div className="px-2.5 py-2 text-sub text-faint">No conversations yet.</div>
             ) : (
               sessions.map((sess) => (
                 <div
@@ -640,14 +640,14 @@ export function ChatThread({
                 className="w-full rounded-control border border-line bg-active px-2.5 py-1.5 text-body text-primary outline-none"
               />
             </div>
-            <div className="px-3 pt-2 pb-1 font-mono text-eyebrow text-dim uppercase">History</div>
+            <div className="px-3 pt-2 pb-1 font-mono text-colhead text-faint uppercase">History</div>
             <div className="max-h-64 overflow-y-auto py-1">
               {sessionsLoading ? (
-                <div className="px-3 py-2 text-caption text-dim" aria-busy="true" aria-live="polite">
+                <div className="px-3 py-2 text-sub text-faint" aria-busy="true" aria-live="polite">
                   Loading conversations…
                 </div>
               ) : filteredSessions.length === 0 ? (
-                <div className="px-3 py-2 text-caption text-dim">No conversations found.</div>
+                <div className="px-3 py-2 text-sub text-faint">No conversations found.</div>
               ) : (
                 filteredSessions.map((sess) => (
                   <div

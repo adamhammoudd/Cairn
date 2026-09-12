@@ -40,7 +40,12 @@ above a stat" is a role that must not drift, while "small" is an invitation to i
 | Token | Size | Line-height | Use |
 |---|---|---|---|
 | `text-eyebrow` | 10px | 1.3 | Mono uppercase labels: `PORTFOLIO`, timestamps, column heads |
-| `text-eyebrow-page` | 10px | 1.3 | The eyebrow above a **page title** - same size, tracked `0.16em` |
+| `text-colhead` | 9.5px | 1.3 | Mono-uppercase rule above a data-table column, tracked `0.12em` |
+| `text-label` | 10px | 1.3 | Mono-uppercase label inside a stat card, tracked `0.14em` |
+| `text-eyebrow-page` | 10.5px | 1.3 | The eyebrow above a **page title**, tracked `0.16em` |
+| `text-sub` | 11.5px | 1.35 | The line under a stat figure, or beside a row title |
+| `text-data` | 12.5px | 1.45 | A figure in a table cell - half a step under `body` |
+| `text-meta` | 13.5px | 1.45 | Names and meta that sit between `body` and `lead` |
 | `text-micro` | 11px | 1.3 | Dense secondary metadata |
 | `text-caption` | 12px | 1.35 | Captions, helper text, chart labels |
 | `text-body` | 13px | 1.45 | **Default.** UI copy, table cells, list rows |
@@ -79,7 +84,8 @@ A four-step elevation ramp. Every near-black resolves to one of these.
 | `bg-canvas` | `#0A0A0A` | Page ground |
 | `bg-panel` | `#0F0F0F` | Cards, panels, table bodies |
 | `bg-raised` | `#151515` | Menus, popovers, sheets, tooltips - above a panel |
-| `bg-active` | `#171717` | Interactive fill: hover, pressed, selected |
+| `bg-active` | `#171717` | Interactive fill on a control: hover, pressed, selected |
+| `bg-row-hover` | `#141414` | A data row under the pointer - quieter than `active`, so scanning a table stays stable |
 
 `bg-active` was `#141414`, one step off the canvas, which read as dead under a pointer -
 which is precisely why call sites kept substituting `#171717`/`#191919`/`#1C1C1C` by hand.
@@ -90,7 +96,8 @@ Three weights, because a dense UI genuinely needs three.
 
 | Token | Value | Use |
 |---|---|---|
-| `border-line-soft` | `#1E1E1E` | Row dividers, internal splits |
+| `border-line-soft` | `#1E1E1E` | Internal splits, the rule under a column head |
+| `border-line-row` | `#171717` | The separator between two rows of data |
 | `border-line` | `#2A2A2A` | Default 1px border |
 | `border-line-strong` | `#3A3A3A` | Hover, focus, emphasis |
 
@@ -100,7 +107,8 @@ Three weights, because a dense UI genuinely needs three.
 |---|---|---|
 | `text-primary` | `#F5F5F5` | 18.1:1 |
 | `text-muted` | `#8A8A8A` | 4.6:1 |
-| `text-dim` | `#7B7B7B` | 4.68:1 - the floor. Nothing recedes further. |
+| `text-dim` | `#7B7B7B` | 4.68:1 - the floor for text stated once. |
+| `text-faint` | `#6A6A6A` | 3.66:1 - **below AA.** The mock's faintest grey, carried deliberately. Only for text that repeats something already on screen (a column head above its own data, a "sorted by" note); never for a figure given once. |
 
 `#6A6A6A` measured 3.66:1 and is **retired**. If a value needs to look fainter than
 `text-dim`, the answer is less weight or more space, not less contrast.

@@ -247,7 +247,7 @@ export default function WelcomePage() {
                   <h3 className="font-serif text-h2 leading-none text-primary">{plan.name}</h3>
                   <span className="font-mono text-caption text-muted">{plan.price}</span>
                 </div>
-                <p className="mt-2 text-caption text-dim">{plan.note}</p>
+                <p className="mt-2 text-sub text-faint">{plan.note}</p>
                 <ul className="mt-5 flex flex-col gap-2.5">
                   {plan.lines.map((line) => (
                     <li key={line} className="flex gap-2.5 text-body leading-[1.55] text-muted text-pretty">
@@ -292,7 +292,7 @@ export default function WelcomePage() {
           >
             Create your free account
           </Link>
-          <p className="mt-4 text-caption text-dim">Free to start &middot; no card required</p>
+          <p className="mt-4 text-sub text-faint">Free to start &middot; no card required</p>
         </section>
 
         <footer className="border-t border-line py-8">
@@ -303,7 +303,7 @@ export default function WelcomePage() {
             before making financial decisions.
           </p>
           <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2">
-            <span className="font-mono text-eyebrow text-dim uppercase">Cairn</span>
+            <span className="font-mono text-colhead text-faint uppercase">Cairn</span>
             <Link href="/terms" className="text-caption text-muted transition-colors hover:text-primary">
               Terms
             </Link>

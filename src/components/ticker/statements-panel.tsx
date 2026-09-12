@@ -75,11 +75,11 @@ export function StatementsPanel({ symbol }: { symbol: string }) {
           <table className="w-full min-w-[560px] border-collapse text-body">
             <thead>
               <tr className="border-b border-line">
-                <th className="px-4 py-3 text-left font-mono text-eyebrow text-dim uppercase">
+                <th className="px-4 py-3 text-left font-mono text-colhead text-faint uppercase">
                   {currency ? `Line item · ${currency}` : "Line item"}
                 </th>
                 {table.periods.map((p) => (
-                  <th key={p.period_end} className="px-4 py-3 text-right font-mono text-eyebrow text-dim uppercase">
+                  <th key={p.period_end} className="px-4 py-3 text-right font-mono text-colhead text-faint uppercase">
                     {p.period_end}
                   </th>
                 ))}
@@ -87,7 +87,7 @@ export function StatementsPanel({ symbol }: { symbol: string }) {
             </thead>
             <tbody>
               {table.lines.map((line) => (
-                <tr key={line.key} className="border-b border-line-soft last:border-b-0 hover:bg-active">
+                <tr key={line.key} className="border-b border-line-row last:border-b-0 hover:bg-row-hover">
                   <td className={`px-4 py-2.5 ${line.emphasis ? "text-primary" : "text-muted"}`}>{line.label}</td>
                   {table.periods.map((p) => (
                     <td
@@ -101,7 +101,7 @@ export function StatementsPanel({ symbol }: { symbol: string }) {
               ))}
             </tbody>
           </table>
-          <p className="border-t border-line px-4 py-3 text-caption text-dim">
+          <p className="border-t border-line px-4 py-3 text-sub text-faint">
             As filed with the market-data provider. Only lines the filing reported are listed - an omitted line is left
             out rather than shown as zero. Figures are not restated, adjusted, or estimated by Cairn.
           </p>

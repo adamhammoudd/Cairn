@@ -22,7 +22,7 @@ function ReportForm({ comment, symbol, onDone }: { comment: DiscussionComment; s
     <form action={formAction} className="mt-2.5 flex flex-col gap-2 rounded-control border border-line bg-active p-3">
       <input type="hidden" name="thread_id" value={comment.id} />
       <input type="hidden" name="symbol" value={symbol} />
-      <label className="font-mono text-eyebrow text-dim uppercase" htmlFor={`reason-${comment.id}`}>
+      <label className="font-mono text-colhead text-faint uppercase" htmlFor={`reason-${comment.id}`}>
         Reason
       </label>
       <select
@@ -98,13 +98,13 @@ function CommentRow({ comment, symbol }: { comment: DiscussionComment; symbol: s
         </button>
         {!comment.isOwn &&
           (comment.reportedByMe ? (
-            <span className="text-caption text-dim">Reported</span>
+            <span className="text-sub text-faint">Reported</span>
           ) : (
             <button
               type="button"
               aria-label={`Report comment by ${comment.authorName}`}
               onClick={() => setReporting((v) => !v)}
-              className="text-caption text-dim transition-colors duration-base ease-standard hover:text-primary"
+              className="text-sub text-faint transition-colors duration-base ease-standard hover:text-primary"
             >
               Report
             </button>

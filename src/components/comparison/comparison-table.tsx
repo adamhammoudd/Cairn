@@ -75,7 +75,7 @@ export function ComparisonTable({ rows }: { rows: ComparisonRow[] }) {
       <div className="overflow-x-auto">
         <div className="min-w-fit">
           <div
-            className="grid items-center gap-3 border-b border-line px-4.5 py-3 font-mono text-eyebrow text-dim uppercase"
+            className="grid items-center gap-3 border-b border-line px-4.5 py-3 font-mono text-colhead text-faint uppercase"
             style={{ gridTemplateColumns: gridTemplate }}
           >
             <div>Metric</div>
@@ -89,7 +89,7 @@ export function ComparisonTable({ rows }: { rows: ComparisonRow[] }) {
           {METRICS.map((metric, index) => (
             <div
               key={metric.label}
-              className="cn-row animate-rise-in grid items-center gap-3 border-b border-line px-4.5 py-3 transition-colors duration-fast ease-standard last:border-b-0 hover:bg-active"
+              className="cn-row animate-rise-in grid items-center gap-3 border-b border-line-row px-4.5 py-3 transition-colors duration-fast ease-standard last:border-b-0 hover:bg-row-hover"
               style={{ gridTemplateColumns: gridTemplate, animationDelay: `${index * 30}ms` }}
             >
               <div className="text-caption text-muted">{metric.label}</div>
@@ -124,7 +124,7 @@ export function ComparisonTable({ rows }: { rows: ComparisonRow[] }) {
         </div>
       </div>
 
-      <p className="border-t border-line px-4.5 py-3 text-caption text-dim">
+      <p className="border-t border-line px-4.5 py-3 text-sub text-faint">
         Change is CoinGecko&apos;s rolling 24 hours for crypto and the last two daily closes for session-based markets -
         the same figure each asset shows on its own page. Prices are last closes, not live quotes.
       </p>

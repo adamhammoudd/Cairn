@@ -59,7 +59,7 @@ export default function LoginPage() {
 
         <div className="mb-3.5">
           <div className="mb-2 flex items-baseline justify-between gap-3">
-            <label htmlFor="password" className="font-mono text-eyebrow text-dim uppercase">
+            <label htmlFor="password" className="font-mono text-colhead text-faint uppercase">
               Password
             </label>
             <Link

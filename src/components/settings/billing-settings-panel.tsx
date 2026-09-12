@@ -157,7 +157,7 @@ export function BillingSettingsPanel({ detail }: { detail: BillingDetail }) {
 
             <div className="mt-4.5 flex flex-wrap gap-x-5.5 gap-y-3 border-t border-line-soft pt-4">
               <div>
-                <div className="font-mono text-eyebrow text-dim uppercase">
+                <div className="font-mono text-colhead text-faint uppercase">
                   {premium ? "Renews" : "Allowance resets"}
                 </div>
                 <div className="mt-1.5 text-body text-primary">
@@ -167,11 +167,11 @@ export function BillingSettingsPanel({ detail }: { detail: BillingDetail }) {
                 </div>
               </div>
               <div>
-                <div className="font-mono text-eyebrow text-dim uppercase">Billing period</div>
+                <div className="font-mono text-colhead text-faint uppercase">Billing period</div>
                 <div className="mt-1.5 text-body text-primary">{premium ? "Monthly" : "Monthly · no charge"}</div>
               </div>
               <div>
-                <div className="font-mono text-eyebrow text-dim uppercase">Payment method</div>
+                <div className="font-mono text-colhead text-faint uppercase">Payment method</div>
                 <div className={`mt-1.5 text-body ${premium && hasStripeCustomer ? "text-primary" : "text-dim"}`}>
                   {premium && hasStripeCustomer ? "Managed in Stripe" : "None on file"}
                 </div>
@@ -233,7 +233,7 @@ export function BillingSettingsPanel({ detail }: { detail: BillingDetail }) {
             <form action={portal}>
               <button
                 type="submit"
-                className="rounded-control border border-line px-3 py-2 text-caption text-dim transition-colors duration-fast ease-standard hover:border-line-strong hover:text-primary"
+                className="rounded-control border border-line px-3 py-2 text-sub text-faint transition-colors duration-fast ease-standard hover:border-line-strong hover:text-primary"
               >
                 Invoices in Stripe →
               </button>

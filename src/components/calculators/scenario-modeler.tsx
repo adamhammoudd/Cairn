@@ -86,7 +86,7 @@ export function ScenarioModeler({ holdings }: { holdings: ScenarioHolding[] }) {
         <div className="overflow-x-auto">
           <div className="min-w-[720px]">
             <div
-              className={`grid ${COLS} gap-3 border-b border-line px-4 py-2.5 font-mono text-eyebrow text-dim uppercase`}
+              className={`grid ${COLS} gap-3 border-b border-line px-4 py-2.5 font-mono text-colhead text-faint uppercase`}
             >
               <div>Symbol</div>
               <div>Current price</div>

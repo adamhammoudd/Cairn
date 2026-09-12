@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 export const CALC_INPUT =
   "rounded-control border border-line bg-canvas px-3 py-2.5 text-body text-primary outline-none transition-colors duration-base ease-standard focus:border-accent";
 
-export const CALC_LABEL = "font-mono text-eyebrow text-dim uppercase";
+export const CALC_LABEL = "font-mono text-colhead text-faint uppercase";
 
 export function CalcField({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -32,7 +32,7 @@ export function CalcStat({
     <div>
       <div className={CALC_LABEL}>{label}</div>
       <div className={`mt-2 font-serif text-h2 leading-none tabular-nums ${color}`}>{value}</div>
-      {sub && <div className="mt-1 text-caption text-dim">{sub}</div>}
+      {sub && <div className="mt-1 text-sub text-faint">{sub}</div>}
     </div>
   );
 }

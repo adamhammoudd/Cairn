@@ -30,7 +30,7 @@ const CONF_STYLE: Record<string, { label: string; tint: string; bars: number }> 
 };
 const OFF_BAR = "var(--color-line)";
 
-const MONO_LABEL = "font-mono text-eyebrow text-dim uppercase";
+const MONO_LABEL = "font-mono text-colhead text-faint uppercase";
 
 const SCOPE_TAG_COLOR: Record<ScopeType, string> = {
   ticker: "var(--color-accent)",
@@ -358,7 +358,7 @@ export function ResearchWorkspace({
                 )}
 
                 {suggestions && suggestions.length === 0 && (
-                  <div className="absolute top-[calc(100%+6px)] right-0 left-0 z-20 rounded-panel border border-line bg-panel px-3 py-3.5 text-center text-caption text-dim">
+                  <div className="absolute top-[calc(100%+6px)] right-0 left-0 z-20 rounded-panel border border-line bg-panel px-3 py-3.5 text-center text-sub text-faint">
                     Nothing matches “{query}”. Try a ticker symbol, a sector name, or “market-wide”.
                   </div>
                 )}
@@ -386,7 +386,7 @@ export function ResearchWorkspace({
       <div className="mb-6">
         <div className="mb-3 flex items-baseline justify-between gap-3">
           <span className="font-mono text-eyebrow text-muted uppercase">Relevant to your portfolio</span>
-          <span className="text-caption text-dim">Analyses touching what you hold</span>
+          <span className="text-sub text-faint">Analyses touching what you hold</span>
         </div>
         {portfolioCards.length > 0 ? (
           <div className="grid grid-cols-[repeat(auto-fit,minmax(min(260px,100%),1fr))] gap-3">
@@ -416,7 +416,7 @@ export function ResearchWorkspace({
                   <div className="mt-2.5 font-serif text-h2 tabular-nums text-primary">
                     {a.probability_low}–{a.probability_high}%
                   </div>
-                  <div className="mt-2.5 font-mono text-eyebrow text-dim uppercase" suppressHydrationWarning>
+                  <div className="mt-2.5 font-mono text-colhead text-faint uppercase" suppressHydrationWarning>
                     {whenLabel(a.created_at)}
                   </div>
                 </button>
@@ -461,7 +461,7 @@ export function ResearchWorkspace({
               ))}
             </div>
             <div className="mt-2 flex items-center gap-1.5">
-              <span className="font-mono text-eyebrow text-dim uppercase">Sort</span>
+              <span className="font-mono text-colhead text-faint uppercase">Sort</span>
               {(
                 [
                   ["date", "Newest"],
@@ -483,7 +483,7 @@ export function ResearchWorkspace({
           </div>
 
           {library.length === 0 ? (
-            <div className="px-4 py-8 text-center text-caption text-dim">Nothing in the library yet.</div>
+            <div className="px-4 py-8 text-center text-sub text-faint">Nothing in the library yet.</div>
           ) : (
             library.map((a, i) => {
               const c = CONF_STYLE[a.confidence_level] ?? CONF_STYLE.low;
@@ -497,14 +497,14 @@ export function ResearchWorkspace({
                     setPhase("idle");
                   }}
                   style={{ animationDelay: `${i * 40}ms` }}
-                  className={`animate-rise-in block w-full border-b border-line-soft px-4 py-3.5 text-left transition-[background] duration-[140ms] ease-[cubic-bezier(0.4,0,0.2,1)] hover:bg-active ${
+                  className={`animate-rise-in block w-full border-b border-line-row px-4 py-3.5 text-left transition-[background] duration-[140ms] ease-[cubic-bezier(0.4,0,0.2,1)] hover:bg-row-hover ${
                     isOpen ? "bg-active" : ""
                   }`}
                 >
                   <div className="flex items-center justify-between gap-2.5">
                     <div className="flex min-w-0 items-center gap-2">
                       <span className="truncate text-body text-primary">{a.scope_value}</span>
-                      <span className="font-mono text-eyebrow text-dim uppercase">{a.scope_type}</span>
+                      <span className="font-mono text-colhead text-faint uppercase">{a.scope_type}</span>
                     </div>
                     <ConfidenceBars level={a.confidence_level} />
                   </div>
@@ -516,7 +516,7 @@ export function ResearchWorkspace({
                     <span className="font-mono text-eyebrow uppercase" style={{ color: c.tint }}>
                       {c.label}
                     </span>
-                    <span className="font-mono text-eyebrow text-dim uppercase" suppressHydrationWarning>
+                    <span className="font-mono text-colhead text-faint uppercase" suppressHydrationWarning>
                       {whenLabel(a.created_at)}
                     </span>
                   </div>

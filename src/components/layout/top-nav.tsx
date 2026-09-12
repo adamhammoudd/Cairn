@@ -426,7 +426,7 @@ export function TopNav({ displayName, plan, isAdmin = false }: TopNavProps) {
             }
             return (
               <div key={entry.label}>
-                <div className="px-2 pt-3.5 pb-1 font-mono text-eyebrow text-dim uppercase">
+                <div className="px-2 pt-3.5 pb-1 font-mono text-colhead text-faint uppercase">
                   {entry.label}
                 </div>
                 {entry.items.map((item) => {

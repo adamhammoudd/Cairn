@@ -106,7 +106,7 @@ export function OnboardingSteps() {
               style={{ width: `${pct}%` }}
             />
           </div>
-          <div className="mt-2 font-mono text-eyebrow text-dim uppercase">
+          <div className="mt-2 font-mono text-colhead text-faint uppercase">
             {done.length} of {STEPS.length} complete
           </div>
         </div>
@@ -151,7 +151,7 @@ export function OnboardingSteps() {
       <div className="mt-3.5 grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-3">
         {EMPTY_PREVIEWS.map((card) => (
           <div key={card.key} className="rounded-card border border-dashed border-line/70 p-4.5">
-            <div className="mb-2.5 font-mono text-eyebrow text-dim uppercase">{card.tag}</div>
+            <div className="mb-2.5 font-mono text-colhead text-faint uppercase">{card.tag}</div>
             <div className="font-serif text-title text-primary">{card.title}</div>
             <p className="mt-2 text-caption leading-relaxed text-muted text-pretty">{card.desc}</p>
           </div>

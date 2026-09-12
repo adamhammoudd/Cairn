@@ -9,7 +9,7 @@ import { SubmitButton } from "@/components/auth/submit-button";
 // the email. Saved inline - `updateProfile` sends the email-change confirmation
 // link when the address actually changes.
 
-const LABEL = "mb-2 font-mono text-eyebrow text-dim uppercase";
+const LABEL = "mb-2 font-mono text-colhead text-faint uppercase";
 const FIELD =
   "w-full rounded-panel border border-line bg-canvas px-3 py-3 text-body text-primary outline-none transition-colors duration-fast ease-standard focus:border-accent";
 
