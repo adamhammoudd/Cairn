@@ -306,6 +306,15 @@ export interface Database {
         Update: { status: AnalysisStatus };
         Relationships: [];
       };
+      // Per-user pins on the shared ai_analyses rows (migration 0043).
+      // No Update: a pin has no mutable field, and the migration grants no
+      // UPDATE policy - unpinning is a delete.
+      ai_analysis_pins: {
+        Row: { user_id: string; analysis_id: string; created_at: string };
+        Insert: { user_id: string; analysis_id: string; created_at?: string };
+        Update: never;
+        Relationships: [];
+      };
       ai_analysis_sources: {
         Row: { id: string; analysis_id: string; news_item_id: string; weight: number };
         Insert: { analysis_id: string; news_item_id: string; weight?: number };
