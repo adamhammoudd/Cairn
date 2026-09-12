@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Logo } from "@/components/logo";
+import { MarketingMotion } from "@/components/marketing-motion";
 import { ProofCard } from "@/app/waitlist/proof-card";
 
 export const metadata: Metadata = {
@@ -28,49 +29,88 @@ export const metadata: Metadata = {
  * about showing your sources cannot do.
  */
 
-function Eyebrow({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return <div className={`font-mono text-eyebrow text-muted uppercase ${className}`}>{children}</div>;
-}
-
-const TRUST = ["Research & analysis only", "No brokerage account", "No trade execution"];
+const GUARANTEES = [
+  { label: "Research & analysis only", color: "#2fc685" },
+  { label: "No brokerage account", color: "#5b8def" },
+  { label: "No trade execution", color: "#9b8ce0" },
+];
 
 const HOW = [
-  [
-    "Sources",
-    "Every article behind an answer, named and dated, with a link out. If a claim has no source on file, the answer says so instead of filling the gap.",
-  ],
-  [
-    "Historical analogs",
-    "The comparable past events the estimate is drawn from, each with how closely it matches. You can see the sample it is reasoning from, and how small it is.",
-  ],
-  [
-    "Confidence",
-    "A Wilson score interval over those analogs, computed in code - not a number a language model chose. A thin sample produces a wide range, and the range is shown.",
-  ],
+  {
+    num: "01",
+    title: "Sources",
+    body: "Every article behind an answer, named and dated, with a link out. If a claim has no source on file, the answer says so instead of filling the gap.",
+    color: "#2fc685",
+  },
+  {
+    num: "02",
+    title: "Historical analogs",
+    body: "The comparable past events the estimate is drawn from, each with how closely it matches. You can see the sample it is reasoning from, and how small it is.",
+    color: "#5b8def",
+  },
+  {
+    num: "03",
+    title: "Confidence",
+    body: "A Wilson score interval over those analogs, computed in code — not a number a language model chose. A thin sample produces a wide range, and the range is shown.",
+    color: "#9b8ce0",
+  },
 ];
 
 const SURFACES = [
-  ["Portfolio", "Holdings, cost basis and performance over any window."],
-  ["Markets", "Equities, ETFs, crypto, forex and indices in one filterable board."],
-  ["Screener", "Filter the board on price, change, volume, market cap, P/E or yield."],
-  ["Watchlists & alerts", "Track what you don't own yet, and get told when it crosses a threshold."],
-  ["Calendar", "Earnings, dividends and splits for the symbols you follow."],
-  ["Assistant", "Ask about a ticker, sector or market trend - answered from stored research."],
+  {
+    label: "Portfolio",
+    body: "Holdings, cost basis and performance over any window.",
+    href: "/portfolio",
+    color: "#2fc685",
+  },
+  {
+    label: "Markets",
+    body: "Equities, ETFs, crypto, forex and indices in one filterable board.",
+    href: "/markets",
+    color: "#5b8def",
+  },
+  {
+    label: "Screener",
+    body: "Filter the board on price, change, volume, market cap, P/E or yield.",
+    href: "/screener",
+    color: "#9b8ce0",
+  },
+  {
+    label: "Watchlists & alerts",
+    body: "Track what you don't own yet, and get told when it crosses a threshold.",
+    href: "/watchlists",
+    color: "#d9a441",
+  },
+  {
+    label: "Calendar",
+    body: "Earnings, dividends and splits for the symbols you follow.",
+    href: "/calendar",
+    color: "#e07b7b",
+  },
+  {
+    label: "Assistant",
+    body: "Ask about a ticker, sector or market trend — answered from stored research.",
+    href: "/assistant",
+    color: "#2fc685",
+  },
 ];
 
-const NEVER = [
-  [
-    "Never tells you what to do",
-    "Cairn analyses markets, sectors and tickers. It does not resolve to buy, hold or sell - on any plan. A server-side validator checks every answer before it reaches you, so this is enforced in code rather than asked of a prompt.",
-  ],
-  [
-    "Never analyses your position",
-    "Your holdings decide what is relevant to you. They are never submitted as a request for advice about your specific position.",
-  ],
-  [
-    "Never touches your money",
-    "No brokerage account, no order routing, no trade execution. Cairn is informational software and holds nothing.",
-  ],
+const LIMITS = [
+  {
+    title: "Never tells you what to do",
+    body: "Cairn analyses markets, sectors and tickers. It does not resolve to buy, hold or sell — on any plan. A server-side validator checks every answer before it reaches you, so this is enforced in code rather than asked of a prompt.",
+    color: "#d9a441",
+  },
+  {
+    title: "Never analyses your position",
+    body: "Your holdings decide what is relevant to you. They are never submitted as a request for advice about your specific position.",
+    color: "#5b8def",
+  },
+  {
+    title: "Never touches your money",
+    body: "No brokerage account, no order routing, no trade execution. Cairn is informational software and holds nothing.",
+    color: "#9b8ce0",
+  },
 ];
 
 const PLANS = [
@@ -78,93 +118,128 @@ const PLANS = [
     name: "Free",
     price: "€0",
     note: "No card required",
-    lines: [
+    color: "#2fc685",
+    primary: true,
+    cta: "Create your account",
+    href: "/signup",
+    features: [
       "A daily allowance of assistant messages",
       "A handful of full analyses each month",
       "Sources and confidence on every answer",
       "Portfolio, markets, screener, watchlists and alerts",
     ],
-    cta: "Create your account",
-    href: "/signup",
-    primary: true,
   },
   {
     name: "Premium",
     price: "Billed monthly",
     note: "Upgrade any time from Settings",
-    lines: [
+    color: "#9b8ce0",
+    primary: false,
+    // Premium is bought from inside the app, so this cannot promise a pricing
+    // page it would not reach. It says what actually happens next.
+    cta: "Start free, then upgrade",
+    href: "/signup",
+    features: [
       "No daily cap on assistant messages",
       "A much larger monthly analysis quota",
       "Every historical analog behind a probability, not just the closest",
       "The complete source trail an answer was built from",
     ],
-    // Premium is bought from inside the app, so this cannot promise a pricing
-    // page it would not reach. It says what actually happens next.
-    cta: "Start free, then upgrade",
-    href: "/signup",
-    primary: false,
   },
 ];
 
+const SECTION_LABEL = "font-mono text-[10px] tracking-[0.18em] text-[#7b7b7b] uppercase";
+const SECTION_H2 =
+  "mt-3.5 max-w-[660px] font-serif text-[clamp(26px,3vw,34px)] leading-[1.2] font-normal tracking-[-0.015em] text-primary text-pretty";
+
 export default function WelcomePage() {
   return (
-    <div className="min-h-dvh bg-canvas">
-      <div className="mx-auto w-full max-w-[1120px] px-6">
-        <header className="flex flex-wrap items-center justify-between gap-4 border-b border-line py-5">
-          <Logo size={26} />
-          <nav className="flex items-center gap-2.5">
-            <Link
-              href="/login"
-              className="rounded-control px-3.5 py-2 text-body text-muted transition-colors duration-fast ease-standard hover:text-primary"
-            >
-              Sign in
-            </Link>
-            <Link
-              href="/signup"
-              className="rounded-control bg-gradient-to-br from-accent-light to-accent-dark px-4 py-2 text-body font-semibold text-canvas transition-[box-shadow,transform] duration-base ease-standard hover:-translate-y-px hover:shadow-[0_0_26px_rgba(47,198,133,0.35)]"
-            >
-              Create account
-            </Link>
-          </nav>
-        </header>
+    <div
+      className="min-h-dvh"
+      style={{
+        background: "#080908",
+        backgroundImage:
+          "radial-gradient(1000px 500px at 14% -10%, rgba(47,198,133,.12), transparent 70%), radial-gradient(820px 440px at 92% 2%, rgba(91,141,239,.07), transparent 72%)",
+      }}
+    >
+      <MarketingMotion />
 
-        {/* Hero. The proof sits beside the claim rather than below it: the
-            argument of this page is the artifact, so it should be visible
-            without scrolling on a laptop. */}
-        <section className="grid items-center gap-x-12 gap-y-10 py-16 lg:grid-cols-[minmax(0,1fr)_minmax(0,560px)] lg:py-20">
-          <div>
-            <Eyebrow>Finance, clearly marked</Eyebrow>
-            <h1 className="mt-4 max-w-[19ch] font-serif text-[clamp(2.5rem,5.4vw,3.75rem)] leading-[1.05] font-normal text-primary text-pretty">
-              Market analysis that shows its work.
+      <header
+        className="sticky top-0 z-30 flex flex-wrap items-center gap-3.5 border-b border-[#1a1a1a] px-7 py-3"
+        style={{ background: "rgba(8,9,8,.84)", backdropFilter: "blur(14px)" }}
+      >
+        <Logo size={26} />
+        <div className="flex-1" />
+        <nav className="flex items-center gap-3">
+          <Link
+            href="/login"
+            className="px-1 py-2.5 text-body text-[#9a9a9a] transition-colors duration-200 hover:text-primary"
+          >
+            Sign in
+          </Link>
+          <Link
+            href="/signup"
+            className="rounded-[10px] bg-[#2fc685] px-4 py-2.5 text-body font-bold text-[#07120d] transition-[background,transform] duration-200 hover:-translate-y-0.5 hover:bg-[#5ee6a6]"
+            style={{ boxShadow: "0 8px 24px rgba(47,198,133,.2)" }}
+          >
+            Create account
+          </Link>
+        </nav>
+      </header>
+
+      <main className="mx-auto max-w-[1140px] px-7 pb-[72px]">
+        {/* ---------- Hero ---------- */}
+        <section className="flex flex-wrap gap-11 pt-[62px] pb-[68px]">
+          <div
+            className="wl-anim min-w-0 flex-[1_1_420px]"
+            style={{ animation: "wl-rise 420ms cubic-bezier(.4,0,.2,1) both" }}
+          >
+            <span className="inline-flex items-center gap-2.5 rounded-full border border-[#2a2a2a] bg-[#0d0f0e] px-[13px] py-1.5 font-mono text-[10px] tracking-[0.18em] text-[#9a9a9a] uppercase">
+              <span className="relative h-1.5 w-1.5">
+                <span className="absolute inset-0 rounded-full bg-[#2fc685]" />
+                <span
+                  className="absolute inset-0 rounded-full bg-[#2fc685]"
+                  style={{ animation: "wl-ping 2.4s cubic-bezier(0,0,.2,1) infinite" }}
+                />
+              </span>
+              Finance, clearly marked
+            </span>
+
+            <h1 className="mt-[22px] font-serif text-[clamp(38px,4.6vw,58px)] leading-[1.08] font-normal tracking-[-0.02em] text-primary text-pretty">
+              Market analysis that <span className="text-[#5ee6a6]">shows its work.</span>
             </h1>
-            <p className="mt-5 max-w-[60ch] text-[clamp(1rem,1.4vw,1.125rem)] leading-[1.6] text-muted text-pretty">
-              Ask Cairn about a ticker, a sector or the market. The answer comes back with the articles it
-              read, the historical cases it compared, and how confident it is - so you can judge the
-              reasoning, not just the conclusion.
+
+            <p className="mt-5 max-w-[520px] text-[15px] leading-[1.72] text-[#9a9a9a] text-pretty">
+              Ask Cairn about a ticker, a sector or the market. The answer comes back with the
+              articles it read, the historical cases it compared, and how confident it is — so you
+              can judge the reasoning, not just the conclusion.
             </p>
 
-            <div className="mt-8 flex flex-wrap items-center gap-3">
+            <div className="mt-[26px] flex flex-wrap gap-2.5">
               <Link
                 href="/signup"
-                className="rounded-panel bg-gradient-to-br from-accent-light to-accent-dark px-6 py-3.5 text-lead font-semibold text-canvas transition-[box-shadow,transform] duration-base ease-standard hover:-translate-y-px hover:shadow-[0_0_34px_rgba(47,198,133,0.4)]"
+                className="rounded-xl bg-[#2fc685] px-[22px] py-3.5 text-lead font-bold text-[#07120d] transition-[background,transform] duration-200 hover:-translate-y-0.5 hover:bg-[#5ee6a6]"
+                style={{ boxShadow: "0 8px 26px rgba(47,198,133,.22)" }}
               >
                 Create your free account
               </Link>
               <Link
                 href="/login"
-                className="rounded-panel border border-line px-6 py-3.5 text-lead text-primary transition-colors duration-base ease-standard hover:border-line-strong hover:bg-active"
+                className="rounded-xl border border-[#2a2a2a] px-[22px] py-3.5 text-lead text-primary transition-[border-color,background] duration-200 hover:border-[#3a3a3a] hover:bg-[#121212]"
               >
                 Sign in
               </Link>
             </div>
 
-            <ul className="mt-7 flex flex-wrap gap-2">
-              {TRUST.map((t) => (
+            <ul className="mt-[22px] flex flex-wrap gap-2">
+              {GUARANTEES.map((g, i) => (
                 <li
-                  key={t}
-                  className="rounded-full border border-line px-3 py-1.5 text-caption text-muted"
+                  key={g.label}
+                  className="inline-flex items-center gap-2 rounded-full border border-[#232323] bg-[#0d0d0d] px-[13px] py-2 text-[12.5px] text-[#c9c9c9]"
+                  style={{ animation: `wl-fade 400ms ease ${200 + i * 70}ms both` }}
                 >
-                  {t}
+                  <span aria-hidden className="h-1.5 w-1.5 rounded-xs" style={{ background: g.color }} />
+                  {g.label}
                 </li>
               ))}
             </ul>
@@ -172,150 +247,251 @@ export default function WelcomePage() {
 
           {/* ProofCard carries its own "representative figures" caption - do
               not add a second one here. */}
-          <div className="min-w-0">
+          <div
+            className="wl-anim relative min-w-0 flex-[1_1_400px]"
+            style={{ animation: "wl-rise 460ms cubic-bezier(.4,0,.2,1) 100ms both" }}
+          >
+            <div
+              aria-hidden
+              className="pointer-events-none absolute"
+              style={{
+                inset: "-16% 10% 30% -10%",
+                background: "radial-gradient(closest-side, rgba(47,198,133,.16), transparent)",
+                animation: "wl-glow 8s ease-in-out infinite",
+              }}
+            />
             <ProofCard />
           </div>
         </section>
 
-        {/* The differentiator, given its own section rather than a bullet. */}
-        <section className="border-t border-line py-16 lg:py-20">
-          <Eyebrow>How an answer is built</Eyebrow>
-          <h2 className="mt-4 max-w-[24ch] font-serif text-[clamp(1.75rem,3.2vw,2.5rem)] leading-[1.15] font-normal text-primary text-pretty">
+        {/* ---------- How an answer is built ---------- */}
+        <section
+          className="wl-anim border-t border-[#1a1a1a] py-[52px]"
+          style={{ animation: "wl-rise 400ms cubic-bezier(.4,0,.2,1) 140ms both" }}
+        >
+          <div className={SECTION_LABEL}>How an answer is built</div>
+          <h2 className={SECTION_H2}>
             A number on its own is a guess. Cairn shows you the three things behind it.
           </h2>
-          <div className="mt-10 grid gap-x-9 gap-y-9 sm:grid-cols-2 lg:grid-cols-3">
-            {HOW.map(([title, body], i) => (
-              <div key={title}>
-                <div className="font-mono text-eyebrow text-accent uppercase">{String(i + 1).padStart(2, "0")}</div>
-                <h3 className="mt-3 font-serif text-h3 leading-[1.25] text-primary">{title}</h3>
-                <p className="mt-2.5 max-w-[46ch] text-body leading-[1.65] text-muted text-pretty">{body}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section className="border-t border-line py-16 lg:py-20">
-          <Eyebrow>What&rsquo;s inside</Eyebrow>
-          <h2 className="mt-4 max-w-[27ch] font-serif text-[clamp(1.75rem,3.2vw,2.5rem)] leading-[1.15] font-normal text-primary text-pretty">
-            The assistant is the centre. The rest is the desk around it.
-          </h2>
-          <div className="mt-10 grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
-            {SURFACES.map(([title, body]) => (
+          <div className="mt-7 grid grid-cols-[repeat(auto-fit,minmax(258px,1fr))] gap-[26px]">
+            {HOW.map((h, i) => (
               <div
-                key={title}
-                className="rounded-card border border-line bg-panel p-4.5 transition-colors duration-base ease-standard hover:border-line-strong"
+                key={h.title}
+                className="flex min-w-0 flex-col items-start"
+                style={{ animation: `wl-rise 360ms cubic-bezier(.4,0,.2,1) ${180 + i * 80}ms both` }}
               >
-                <h3 className="text-lead font-semibold text-primary">{title}</h3>
-                <p className="mt-1.5 text-body leading-[1.6] text-muted text-pretty">{body}</p>
+                <span
+                  className="font-mono text-[10px] tracking-[0.18em]"
+                  style={{ color: h.color }}
+                >
+                  {h.num}
+                </span>
+                <span
+                  aria-hidden
+                  className="mt-2.5 block h-[3px] w-9 origin-left rounded-xs"
+                  style={{
+                    background: h.color,
+                    animation: `wl-grow 520ms cubic-bezier(.4,0,.2,1) ${200 + i * 90}ms both`,
+                  }}
+                />
+                <h3 className="mt-[13px] font-serif text-[21px] font-normal text-primary">
+                  {h.title}
+                </h3>
+                <p className="mt-[9px] text-[13.5px] leading-[1.72] text-[#9a9a9a] text-pretty">
+                  {h.body}
+                </p>
               </div>
             ))}
           </div>
         </section>
 
-        {/* The constraints are a feature here, not small print. They are the
-            reason the rest of the page can be trusted, so they get the same
-            typographic weight as everything else. */}
-        <section className="border-t border-line py-16 lg:py-20">
-          <Eyebrow>Where Cairn stops</Eyebrow>
-          <h2 className="mt-4 max-w-[24ch] font-serif text-[clamp(1.75rem,3.2vw,2.5rem)] leading-[1.15] font-normal text-primary text-pretty">
-            A trail marker points the way. It doesn&rsquo;t walk it for you.
+        {/* ---------- What's inside ---------- */}
+        <section
+          className="wl-anim border-t border-[#1a1a1a] py-[52px]"
+          style={{ animation: "wl-rise 400ms cubic-bezier(.4,0,.2,1) 180ms both" }}
+        >
+          <div className={SECTION_LABEL}>What&rsquo;s inside</div>
+          <h2 className={SECTION_H2}>
+            The assistant is the centre.{" "}
+            <span className="text-[#5ee6a6]">The rest is the desk around it.</span>
           </h2>
-          <div className="mt-10 grid gap-x-9 gap-y-8 lg:grid-cols-3">
-            {NEVER.map(([title, body]) => (
-              <div key={title} className="border-t border-line-soft pt-5">
-                <h3 className="font-serif text-h3 leading-[1.25] text-primary">{title}</h3>
-                <p className="mt-2.5 max-w-[46ch] text-body leading-[1.65] text-muted text-pretty">{body}</p>
+          <div className="mt-[26px] grid grid-cols-[repeat(auto-fit,minmax(248px,1fr))] gap-3">
+            {SURFACES.map((s, i) => (
+              <Link
+                key={s.label}
+                href={s.href}
+                className="relative flex flex-col gap-[9px] overflow-hidden rounded-[14px] border border-[#232323] bg-panel px-[19px] py-[17px] transition-[transform,border-color,background] duration-[220ms] ease-standard hover:-translate-y-[3px] hover:border-[#3a3a3a] hover:bg-[#121212]"
+                style={{ animation: `wl-rise 340ms cubic-bezier(.4,0,.2,1) ${140 + i * 55}ms both` }}
+              >
+                <span
+                  aria-hidden
+                  className="absolute top-0 right-0 left-0 h-px"
+                  style={{ background: `linear-gradient(90deg,${s.color},transparent)` }}
+                />
+                <span className="flex items-center justify-between gap-2.5">
+                  <span
+                    className="font-mono text-micro tracking-[0.14em] uppercase"
+                    style={{ color: s.color }}
+                  >
+                    {s.label}
+                  </span>
+                  <span aria-hidden className="text-body text-[#5f5f5f]">
+                    →
+                  </span>
+                </span>
+                <span className="text-[12.5px] leading-[1.65] text-[#9a9a9a] text-pretty">
+                  {s.body}
+                </span>
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        {/* ---------- Where Cairn stops ----------
+            The constraints are a feature here, not small print. They are the
+            reason the rest of the page can be trusted. */}
+        <section
+          className="wl-anim border-t border-[#1a1a1a] py-[52px]"
+          style={{ animation: "wl-rise 400ms cubic-bezier(.4,0,.2,1) 220ms both" }}
+        >
+          <div className={SECTION_LABEL}>Where Cairn stops</div>
+          <h2 className={SECTION_H2}>
+            A trail marker points the way.{" "}
+            <span className="text-[#d9a441]">It doesn&rsquo;t walk it for you.</span>
+          </h2>
+          <div className="mt-[26px] grid grid-cols-[repeat(auto-fit,minmax(258px,1fr))] gap-[26px]">
+            {LIMITS.map((l, i) => (
+              <div
+                key={l.title}
+                className="min-w-0"
+                style={{ animation: `wl-rise 360ms cubic-bezier(.4,0,.2,1) ${180 + i * 80}ms both` }}
+              >
+                <span
+                  aria-hidden
+                  className="block h-[3px] w-9 origin-left rounded-xs"
+                  style={{
+                    background: l.color,
+                    animation: `wl-grow 520ms cubic-bezier(.4,0,.2,1) ${200 + i * 90}ms both`,
+                  }}
+                />
+                <h3 className="mt-3.5 text-[15px] font-semibold text-primary">{l.title}</h3>
+                <p className="mt-2 text-body leading-[1.7] text-[#9a9a9a] text-pretty">{l.body}</p>
               </div>
             ))}
           </div>
         </section>
 
-        <section className="border-t border-line py-16 lg:py-20">
-          <Eyebrow>Plans</Eyebrow>
-          <h2 className="mt-4 font-serif text-[clamp(1.75rem,3.2vw,2.5rem)] leading-[1.15] font-normal text-primary">
+        {/* ---------- Plans ---------- */}
+        <section
+          className="wl-anim border-t border-[#1a1a1a] py-[52px]"
+          style={{ animation: "wl-rise 400ms cubic-bezier(.4,0,.2,1) 260ms both" }}
+        >
+          <div className={SECTION_LABEL}>Plans</div>
+          <h2 className="mt-3.5 font-serif text-[clamp(26px,3vw,34px)] leading-[1.2] font-normal tracking-[-0.015em] text-primary">
             Start free. Upgrade if you outgrow it.
           </h2>
-          <div className="mt-10 grid gap-4 lg:grid-cols-2">
-            {PLANS.map((plan) => (
+          <div className="mt-[26px] flex flex-wrap gap-3.5">
+            {PLANS.map((p, i) => (
               <div
-                key={plan.name}
-                className={`flex flex-col rounded-card border bg-panel p-6 ${
-                  plan.primary ? "border-accent/40" : "border-line"
-                }`}
+                key={p.name}
+                className="relative flex min-w-0 flex-[1_1_320px] flex-col gap-2.5 overflow-hidden rounded-2xl px-[26px] py-6"
+                style={{
+                  border: `1px solid ${p.primary ? "rgba(47,198,133,.28)" : "#232323"}`,
+                  background: p.primary
+                    ? "linear-gradient(170deg,#0e1512,#0c0c0c 62%)"
+                    : "#0f0f0f",
+                  animation: `wl-rise 360ms cubic-bezier(.4,0,.2,1) ${180 + i * 90}ms both`,
+                }}
               >
-                <div className="flex items-baseline justify-between gap-3">
-                  <h3 className="font-serif text-h2 leading-none text-primary">{plan.name}</h3>
-                  <span className="font-mono text-caption text-muted">{plan.price}</span>
-                </div>
-                <p className="mt-2 text-caption text-dim">{plan.note}</p>
-                <ul className="mt-5 flex flex-col gap-2.5">
-                  {plan.lines.map((line) => (
-                    <li key={line} className="flex gap-2.5 text-body leading-[1.55] text-muted text-pretty">
-                      <svg
-                        width="14"
-                        height="14"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="var(--color-accent)"
-                        strokeWidth="3"
-                        className="mt-1 shrink-0"
+                <span
+                  aria-hidden
+                  className="absolute top-0 right-0 left-0 h-px"
+                  style={{ background: `linear-gradient(90deg,${p.color},transparent)` }}
+                />
+                <span className="flex flex-wrap items-baseline justify-between gap-2.5">
+                  <span className="font-serif text-[25px] text-primary">{p.name}</span>
+                  <span className="font-mono text-body" style={{ color: p.color }}>
+                    {p.price}
+                  </span>
+                </span>
+                <span className="text-[12.5px] text-[#8a8a8a]">{p.note}</span>
+                <ul className="mt-1 flex flex-col gap-[11px]">
+                  {p.features.map((f) => (
+                    <li key={f} className="flex gap-2.5">
+                      <span
                         aria-hidden
+                        className="mt-px grid h-[18px] w-[18px] flex-none place-items-center rounded-md text-[10px]"
+                        style={{
+                          background: `${p.color}22`,
+                          border: `1px solid ${p.color}55`,
+                          color: p.color,
+                        }}
                       >
-                        <polyline points="20 6 9 17 4 12" />
-                      </svg>
-                      {line}
+                        ✓
+                      </span>
+                      <span className="text-body leading-[1.6] text-[#9a9a9a] text-pretty">{f}</span>
                     </li>
                   ))}
                 </ul>
                 <Link
-                  href={plan.href}
-                  className={`mt-7 rounded-control px-4 py-2.5 text-center text-body font-semibold transition-[box-shadow,transform,border-color] duration-base ease-standard ${
-                    plan.primary
-                      ? "bg-gradient-to-br from-accent-light to-accent-dark text-canvas hover:-translate-y-px hover:shadow-[0_0_26px_rgba(47,198,133,0.35)]"
-                      : "border border-line text-primary hover:border-line-strong"
-                  }`}
+                  href={p.href}
+                  className="mt-auto rounded-[11px] px-3 py-3 text-center text-body font-bold transition-[background,transform,border-color] duration-200 hover:-translate-y-0.5"
+                  style={
+                    p.primary
+                      ? { background: "#2fc685", color: "#07120d" }
+                      : {
+                          border: `1px solid ${p.color}55`,
+                          background: `${p.color}14`,
+                          color: "#c7bcf0",
+                        }
+                  }
                 >
-                  {plan.cta}
+                  {p.cta}
                 </Link>
               </div>
             ))}
           </div>
         </section>
 
-        <section className="border-t border-line py-16 text-center lg:py-20">
-          <h2 className="mx-auto max-w-[20ch] font-serif text-[clamp(1.875rem,3.6vw,2.75rem)] leading-[1.15] font-normal text-primary text-pretty">
+        {/* ---------- Closing CTA ---------- */}
+        <section
+          className="wl-anim border-t border-[#1a1a1a] px-7 py-[62px] text-center"
+          style={{ animation: "wl-rise 400ms cubic-bezier(.4,0,.2,1) 300ms both" }}
+        >
+          <h2 className="mx-auto max-w-[600px] font-serif text-[clamp(28px,3.4vw,40px)] leading-[1.16] font-normal tracking-[-0.015em] text-[#5ee6a6] text-pretty">
             See the reasoning before you trust the number.
           </h2>
           <Link
             href="/signup"
-            className="mt-8 inline-block rounded-panel bg-gradient-to-br from-accent-light to-accent-dark px-7 py-3.5 text-lead font-semibold text-canvas transition-[box-shadow,transform] duration-base ease-standard hover:-translate-y-px hover:shadow-[0_0_34px_rgba(47,198,133,0.4)]"
+            className="mt-6 inline-block rounded-xl bg-[#2fc685] px-[26px] py-3.5 text-lead font-bold text-[#07120d] transition-[background,transform] duration-200 hover:-translate-y-0.5 hover:bg-[#5ee6a6]"
+            style={{ boxShadow: "0 8px 26px rgba(47,198,133,.22)" }}
           >
             Create your free account
           </Link>
-          <p className="mt-4 text-caption text-dim">Free to start &middot; no card required</p>
+          <p className="mt-[13px] text-caption text-[#6b6b6b]">Free to start · no card required</p>
         </section>
 
-        <footer className="border-t border-line py-8">
-          <p className="max-w-[76ch] text-caption leading-[1.7] text-dim text-pretty">
-            Cairn is informational software, not a broker, and not investment advice. Analysis and chat content
-            is generated by AI and can be wrong. Probability figures are statistical estimates over small
-            historical samples and are not predictions. Always verify sources and consult a licensed advisor
-            before making financial decisions.
+        {/* ---------- Footer ---------- */}
+        <footer className="flex flex-wrap items-start justify-between gap-5 border-t border-[#1a1a1a] pt-7">
+          <p className="max-w-[560px] text-[11.5px] leading-[1.7] text-[#5f5f5f] text-pretty">
+            Cairn is informational software, not a broker, and not investment advice. Analysis and
+            chat content is generated by AI and can be wrong. Probability figures are statistical
+            estimates over small historical samples and are not predictions. Always verify sources
+            and consult a licensed advisor before making financial decisions.
           </p>
-          <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2">
-            <span className="font-mono text-eyebrow text-dim uppercase">Cairn</span>
-            <Link href="/terms" className="text-caption text-muted transition-colors hover:text-primary">
+          <nav className="flex flex-wrap gap-[18px] text-caption text-[#8a8a8a]">
+            <Link href="/terms" className="hover:text-[#5ee6a6]">
               Terms
             </Link>
-            <Link href="/privacy" className="text-caption text-muted transition-colors hover:text-primary">
+            <Link href="/privacy" className="hover:text-[#5ee6a6]">
               Privacy
             </Link>
-            <Link href="/accessibility" className="text-caption text-muted transition-colors hover:text-primary">
+            <Link href="/accessibility" className="hover:text-[#5ee6a6]">
               Accessibility
             </Link>
-          </div>
+          </nav>
         </footer>
-      </div>
+      </main>
     </div>
   );
 }
