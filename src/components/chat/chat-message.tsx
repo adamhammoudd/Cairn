@@ -38,14 +38,33 @@ export function ChatMessage({ message, streaming }: ChatMessageProps) {
   return (
     <div className={`animate-rise-in flex gap-3 ${isUser ? "justify-end" : "justify-start"}`}>
       <div
-        className={`max-w-[660px] rounded-card border px-4 py-3 text-lead leading-[1.65] ${
+        className={`border text-lead leading-[1.65] ${
           !isUser && !message.failed ? "" : "whitespace-pre-wrap"
         } ${
           message.failed
-            ? "border-dashed border-line bg-transparent text-muted"
-            : `text-primary ${isUser ? "border-line bg-raised" : "border-line bg-canvas"}`
+            ? "max-w-[min(560px,86%)] rounded-2xl border-dashed border-line bg-transparent px-4 py-3 text-muted"
+            : isUser
+              ? // The design gives the visitor's own turn a tinted bubble with
+                // one squared corner on the side it came from, so a thread
+                // reads as a conversation rather than a stack of panels.
+                "max-w-[min(560px,86%)] rounded-[16px_16px_4px_16px] border-accent/25 bg-[#1c2a23] px-[17px] py-[13px] text-[#e6f5ee]"
+              : "w-full rounded-[16px_16px_16px_4px] border-[#232323] bg-panel px-[22px] py-5 text-primary"
         }`}
       >
+        {/* Cairn's turns are signed. An answer that carries sources and a
+            confidence level should say who is making the claim; the visitor's
+            own turn needs no attribution. */}
+        {!isUser && !message.failed && (
+          <div className="mb-3 flex items-center gap-2.5">
+            <span
+              aria-hidden
+              className="grid h-6 w-6 place-items-center rounded-control border border-accent/35 bg-accent/15 font-mono text-[9px] tracking-[0.06em] text-accent"
+            >
+              AI
+            </span>
+            <span className="font-mono text-eyebrow tracking-[0.16em] text-dim uppercase">Cairn</span>
+          </div>
+        )}
         {/* Not red: red is reserved for loss/destructive indicators (CLAUDE.md).
             A turn that did not complete is neither, so it reads as provisional. */}
         {message.failed && (

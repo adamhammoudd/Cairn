@@ -15,13 +15,21 @@ export default async function AssistantPage() {
   const [briefing, settings] = await Promise.all([getTodayBriefing(), getUserSettings()]);
 
   return (
-    <div className="animate-page-in">
-      <div className="mb-4.5">
-        <div className="mb-2 font-mono text-eyebrow text-muted uppercase">AI Assistant</div>
-        <h1 className="font-serif text-display leading-[1.1] font-normal text-primary">Ask, with sources</h1>
-        <p className="mt-2 max-w-[640px] text-lead text-muted text-pretty">
-          Market, sector, and ticker analysis - every answer shows its sources, historical analogs, and confidence.
-          Cairn never advises on your personal positions.
+    <div
+      className="animate-page-in"
+      style={{
+        backgroundImage:
+          "radial-gradient(900px 440px at 12% -8%, rgba(47,198,133,.11), transparent 70%), radial-gradient(740px 400px at 94% 0%, rgba(155,140,224,.08), transparent 72%)",
+      }}
+    >
+      <div className="mb-5">
+        <div className="mb-2 font-mono text-[10.5px] tracking-[0.18em] text-muted uppercase">Assistant</div>
+        <h1 className="font-serif text-[40px] leading-[1.05] font-normal tracking-[-0.015em] text-primary">
+          Ask Cairn
+        </h1>
+        <p className="mt-2 max-w-[540px] text-[13.5px] leading-[1.55] text-muted text-pretty">
+          Grounded in your holdings, the last close, and the filings and headlines Cairn has indexed. Every answer
+          shows its sources, historical analogs, and confidence - and never advises on your personal positions.
         </p>
       </div>
 
