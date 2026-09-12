@@ -7,32 +7,25 @@ import { joinWaitlist, type JoinState } from "@/lib/actions/waitlist";
 
 const JOIN_IDLE: JoinState = { status: "idle" };
 
-function SubmitButton({ centered }: { centered?: boolean }) {
+function SubmitButton() {
   const { pending } = useFormStatus();
   return (
     <button
       type="submit"
       disabled={pending}
-      className={`shrink-0 rounded-panel bg-gradient-to-br from-accent-light to-accent-dark px-5 py-3 text-lead font-semibold text-canvas transition-[box-shadow] duration-base ease-standard hover:shadow-[0_0_24px_rgba(47,198,133,0.35)] disabled:opacity-60 ${
-        centered ? "" : ""
-      }`}
+      className="flex-none rounded-xl bg-[#2fc685] px-6 py-3.5 text-lead font-bold text-[#07120d] transition-[background,transform] duration-200 hover:-translate-y-0.5 hover:bg-[#5ee6a6] disabled:opacity-60 disabled:hover:translate-y-0 disabled:hover:bg-[#2fc685]"
+      style={{ boxShadow: "0 8px 26px rgba(47,198,133,.22)" }}
     >
       {pending ? "Joining…" : "Join the waitlist"}
     </button>
   );
 }
 
-function Confirmed({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
+function Confirmed({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-panel border border-accent/40 bg-accent/[0.06] px-4 py-4">
-      <p className="font-serif text-h3 leading-[1.25] text-primary">{title}</p>
-      <p className="mt-1.5 text-body leading-[1.6] text-muted text-pretty">{children}</p>
+    <div className="rounded-xl border border-[rgba(47,198,133,0.4)] bg-[rgba(47,198,133,0.06)] px-4 py-4">
+      <p className="font-serif text-[18px] leading-[1.35] text-primary">{title}</p>
+      <p className="mt-1.5 text-body leading-[1.6] text-[#9a9a9a] text-pretty">{children}</p>
     </div>
   );
 }
@@ -63,13 +56,15 @@ export function WaitlistForm({ centered = false }: { centered?: boolean }) {
     return (
       <div className={align}>
         <Confirmed title="Check your inbox">
-          {state.resent ? "We've re-sent a confirmation link to " : "We've sent a confirmation link to "}
-          <span className="text-primary">{state.email}</span>. Your place is held once you click it. If
-          you&apos;re among the first 50 to confirm, that click is what locks the founding-member
+          {state.resent
+            ? "We've re-sent a confirmation link to "
+            : "We've sent a confirmation link to "}
+          <span className="text-primary">{state.email}</span>. Your place is held once you click it.
+          If you&apos;re among the first 50 to confirm, that click is what locks the founding-member
           2&nbsp;months of Premium to this address.
         </Confirmed>
         {!state.emailDelivered && (
-          <p className="mt-2.5 rounded-control border border-warning/40 bg-warning/8 px-2.5 py-2 text-caption leading-[1.5] text-warning text-pretty">
+          <p className="mt-2.5 rounded-[9px] border border-warning/40 bg-warning/8 px-2.5 py-2 text-caption leading-[1.5] text-warning text-pretty">
             Email delivery isn&apos;t configured on this environment, so the link was written to the
             server log instead of sent. This must be set up before the page goes live.
           </p>
@@ -98,12 +93,12 @@ export function WaitlistForm({ centered = false }: { centered?: boolean }) {
   }
 
   return (
-    <div className={centered ? "mx-auto max-w-[520px]" : ""}>
+    <div className={centered ? "mx-auto max-w-[520px]" : "max-w-[520px]"}>
       <form action={submit} noValidate>
         <label htmlFor={`wl-email${centered ? "-2" : ""}`} className="sr-only">
           Email address
         </label>
-        <div className={`flex flex-col gap-2.5 sm:flex-row ${centered ? "sm:justify-center" : ""}`}>
+        <div className={`flex flex-wrap gap-2.5 ${centered ? "justify-center" : ""}`}>
           <input
             id={`wl-email${centered ? "-2" : ""}`}
             name="email"
@@ -114,28 +109,34 @@ export function WaitlistForm({ centered = false }: { centered?: boolean }) {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             aria-describedby={state.status === "error" ? "wl-error" : undefined}
-            className="w-full rounded-panel border border-line bg-canvas px-3.5 py-3 text-lead text-primary transition-colors duration-base ease-standard outline-none placeholder:text-dim focus:border-accent sm:max-w-[320px]"
+            className="min-w-0 flex-[1_1_240px] rounded-xl border border-[#2a2a2a] bg-[#0d0d0d] px-4 py-3.5 text-lead text-primary transition-[border-color,box-shadow] duration-200 outline-none placeholder:text-[#5f5f5f] focus:border-[#2fc685] focus:shadow-[0_0_0_3px_rgba(47,198,133,0.14)]"
           />
-          <SubmitButton centered={centered} />
+          <SubmitButton />
         </div>
       </form>
 
       {state.status === "error" && (
         <p
           id="wl-error"
-          className="mt-2.5 rounded-panel border border-negative/40 bg-negative/8 px-3 py-2.5 text-body text-negative"
+          className="mt-2.5 rounded-xl border border-negative/40 bg-negative/8 px-3 py-2.5 text-body text-negative"
         >
           {state.message}
         </p>
       )}
 
-      <p className={`mt-3 text-caption leading-[1.6] text-dim text-pretty ${centered ? "" : "max-w-[420px]"}`}>
-        No spam, no newsletter - one confirmation email now and one launch email later. Email address
-        only.{" "}
-        <Link href="/privacy" className="text-muted underline underline-offset-2 hover:text-accent">
+      <p
+        className={`mt-[11px] text-caption leading-[1.6] text-[#6b6b6b] text-pretty ${
+          centered ? "mx-auto max-w-[440px]" : "max-w-[460px]"
+        }`}
+      >
+        No spam, no newsletter — one confirmation email now and one launch email later.
+        {centered ? " " : " Email address only. "}
+        <Link
+          href="/privacy"
+          className="text-[#8a8a8a] underline underline-offset-[3px] hover:text-[#5ee6a6]"
+        >
           Privacy Policy
         </Link>
-        .
       </p>
     </div>
   );
