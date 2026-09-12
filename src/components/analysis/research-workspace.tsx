@@ -247,13 +247,7 @@ export function ResearchWorkspace({
   const suggestions = suggest && suggest.q === query.trim() ? suggest.items : null;
 
   return (
-    <div
-      className="animate-page-in"
-      style={{
-        backgroundImage:
-          "radial-gradient(880px 420px at 8% -8%, rgba(155,140,224,.10), transparent 70%), radial-gradient(720px 380px at 95% 0%, rgba(47,198,133,.07), transparent 72%)",
-      }}
-    >
+    <div className="animate-page-in">
       {/* Header + quota indicator */}
       <div className="mb-5 flex flex-wrap items-end justify-between gap-[18px]">
         <div className="min-w-0">

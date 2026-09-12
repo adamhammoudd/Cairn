@@ -35,12 +35,7 @@ async function SectorMapBody() {
   const unclassified = data.find((s) => s.name === "Unclassified");
 
   return (
-    <div
-      className="animate-page-in"
-      style={{
-        backgroundImage: "radial-gradient(900px 400px at 50% -10%, rgba(47,198,133,.07), transparent 70%)",
-      }}
-    >
+    <div className="animate-page-in">
       <div className="mb-5">
         <div className="mb-2 font-mono text-[10.5px] tracking-[0.18em] text-muted uppercase">Markets · Sector map</div>
         <h1 className="font-serif text-[40px] leading-[1.05] font-normal tracking-[-0.015em] text-primary">

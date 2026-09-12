@@ -161,13 +161,7 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
   }
 
   return (
-    <div
-      className="animate-page-in"
-      style={{
-        backgroundImage:
-          "radial-gradient(880px 400px at 10% -8%, rgba(91,141,239,.09), transparent 70%)",
-      }}
-    >
+    <div className="animate-page-in">
       <div className="mb-4.5">
         <div className="mb-2 font-mono text-[10.5px] tracking-[0.18em] text-muted uppercase">Markets · Screener</div>
         <h1 className="font-serif text-[40px] leading-[1.05] font-normal tracking-[-0.015em] text-primary">Screener</h1>

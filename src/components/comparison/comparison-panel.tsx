@@ -61,13 +61,7 @@ export function ComparisonPanel({
   const canAdd = selected.length < MAX_COMPARE;
 
   return (
-    <div
-      className="animate-page-in flex flex-col gap-3.5"
-      style={{
-        backgroundImage:
-          "radial-gradient(880px 420px at 8% -6%, rgba(91,141,239,.10), transparent 70%), radial-gradient(700px 380px at 94% 0%, rgba(47,198,133,.08), transparent 72%)",
-      }}
-    >
+    <div className="animate-page-in flex flex-col gap-3.5">
       <div className="mb-1.5 flex flex-wrap items-end justify-between gap-[18px]">
         <div>
           <div className="mb-2 font-mono text-[10.5px] tracking-[0.18em] text-muted uppercase">Compare</div>
