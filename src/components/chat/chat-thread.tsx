@@ -488,7 +488,12 @@ export function ChatThread({
 
       {/* Composer: input row, quick prompts, and the single compliance
           disclosure - one dark footer, matching the artboard. */}
-      <div className="border-t border-line bg-canvas px-4 py-3.5">
+      <div className="relative border-t border-line bg-canvas px-4 py-3.5">
+        <span
+          aria-hidden
+          className="absolute top-0 right-0 left-0 h-px"
+          style={{ background: "linear-gradient(90deg,#2fc685,rgba(47,198,133,0))" }}
+        />
         <div className="flex items-end gap-2.5">
           <input
             value={input}
@@ -496,17 +501,17 @@ export function ChatThread({
             onKeyDown={(e) => e.key === "Enter" && send()}
             placeholder="Ask about your holdings, a ticker, or today's move…"
             disabled={streaming}
-            className="min-w-0 flex-1 rounded-panel border border-line bg-panel px-3 py-3 text-body text-primary outline-none transition-colors duration-fast ease-standard focus:border-accent disabled:opacity-60"
+            className="min-w-0 flex-1 rounded-[12px] border border-line bg-panel px-3.5 py-3.5 text-lead text-primary outline-none transition-[border-color,box-shadow] duration-fast ease-standard placeholder:text-[#5f5f5f] focus:border-accent focus:shadow-[0_0_0_3px_rgba(47,198,133,0.14)] disabled:opacity-60"
           />
           <button
             type="button"
             onClick={() => (streaming ? skipAnimation() : send())}
             disabled={!streaming && !input.trim()}
             title={streaming ? "Show the full answer now (it's already generated)" : undefined}
-            className={`shrink-0 rounded-panel px-4.5 py-3 text-body font-semibold transition-[box-shadow] duration-base ease-standard disabled:opacity-50 ${
+            className={`shrink-0 rounded-[10px] px-[18px] py-3.5 text-[12.5px] font-bold transition-[background,transform] duration-base ease-standard disabled:opacity-50 ${
               streaming
                 ? "border border-line bg-transparent text-primary hover:border-line-strong"
-                : "bg-gradient-to-br from-accent-light to-accent-dark text-canvas hover:shadow-[0_0_22px_rgba(47,198,133,0.35)]"
+                : "bg-accent text-canvas hover:-translate-y-px hover:bg-accent-light"
             }`}
           >
             {streaming ? "Skip" : "Send"}
@@ -540,7 +545,7 @@ export function ChatThread({
   if (!compact) {
     return (
       <div className="grid items-start gap-4 min-[900px]:grid-cols-[232px_1fr]">
-        <aside className="overflow-hidden rounded-card border border-line bg-panel">
+        <aside className="overflow-hidden rounded-2xl border border-[#232323] bg-panel">
           <div className="border-b border-line px-4 py-3.5">
             <button
               type="button"
@@ -604,7 +609,7 @@ export function ChatThread({
 
         <div className="flex min-w-0 flex-col gap-4">
           {briefing}
-          <div className="flex min-h-75 flex-col overflow-hidden rounded-card border border-line bg-panel">
+          <div className="flex min-h-75 flex-col overflow-hidden rounded-2xl border border-[#232323] bg-panel">
             {conversation}
           </div>
         </div>
