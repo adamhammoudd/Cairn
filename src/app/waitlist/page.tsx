@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Logo } from "@/components/logo";
+import { MarketingMotion } from "@/components/marketing-motion";
 import { foundingSlotsRemaining, FOUNDING_LIMIT } from "@/lib/waitlist";
 import { ProofCard } from "./proof-card";
 import { WaitlistForm } from "./waitlist-form";
@@ -67,19 +68,7 @@ export default async function WaitlistPage() {
           "radial-gradient(1000px 500px at 14% -10%, rgba(47,198,133,.13), transparent 70%), radial-gradient(820px 440px at 92% 4%, rgba(91,141,239,.08), transparent 72%)",
       }}
     >
-      {/* Page-local motion. Every one respects prefers-reduced-motion through
-          the global guard in globals.css. */}
-      <style>{`
-        @keyframes wl-rise { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:none; } }
-        @keyframes wl-fade { from { opacity:0; } to { opacity:1; } }
-        @keyframes wl-grow { from { transform:scaleX(0); } to { transform:scaleX(1); } }
-        @keyframes wl-glow { 0%,100% { opacity:.4; transform:scale(1); } 50% { opacity:.85; transform:scale(1.08); } }
-        @keyframes wl-ping { 0% { transform:scale(1); opacity:.7; } 70%,100% { transform:scale(2.2); opacity:0; } }
-        @keyframes wl-drift { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-7px); } }
-        @media (prefers-reduced-motion: reduce) {
-          .wl-anim, .wl-anim * { animation-duration:.01ms !important; animation-iteration-count:1 !important; }
-        }
-      `}</style>
+      <MarketingMotion />
 
       <header className="mx-auto flex max-w-[1140px] flex-wrap items-center justify-between gap-3.5 border-b border-[#1a1a1a] px-7 pt-[22px] pb-5">
         <Logo size={27} />
