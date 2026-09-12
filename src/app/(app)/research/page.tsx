@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { listAnalyses } from "@/lib/actions/analysis";
+import { listAnalyses, listPinnedAnalysisIds } from "@/lib/actions/analysis";
 import { getEventsForScopes } from "@/lib/actions/calendar";
 import { getBillingSummary } from "@/lib/actions/billing";
 import { TIER_LIMITS } from "@/lib/billing";
@@ -16,8 +16,9 @@ export default async function ResearchPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const [analyses, usage, { data: holdings }, { data: fundamentals }] = await Promise.all([
+  const [analyses, pinnedIds, usage, { data: holdings }, { data: fundamentals }] = await Promise.all([
     listAnalyses(),
+    listPinnedAnalysisIds(),
     // Same shared plan gate every billing-gated feature routes through -
     // getBillingSummary() reads getUserPlan()'s tier plus this month's
     // ai_usage_events count, so the quota shown here is the quota enforced.
@@ -47,6 +48,7 @@ export default async function ResearchPage() {
       planLabel={TIER_LIMITS[usage.tier].label}
       usage={{ used: usage.used, limit: usage.limit, unlimited: usage.unlimited }}
       resetLabel={nextResetLabel()}
+      pinnedIds={pinnedIds}
     />
   );
 }
