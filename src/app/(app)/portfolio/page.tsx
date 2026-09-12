@@ -111,7 +111,13 @@ async function PortfolioBody() {
   const assetTypeCount = new Set(rows.map((h) => h.asset_type)).size;
 
   return (
-    <div className="animate-page-in">
+    <div
+      className="animate-page-in"
+      style={{
+        backgroundImage:
+          "radial-gradient(900px 420px at 10% -8%, rgba(217,108,108,.09), transparent 70%), radial-gradient(760px 400px at 95% 0%, rgba(47,198,133,.08), transparent 72%)",
+      }}
+    >
       <HoldingsTable metrics={metrics} sparklines={sparklines}>
         <PortfolioStats
           totals={totals}
