@@ -61,16 +61,29 @@ export function ComparisonPanel({
   const canAdd = selected.length < MAX_COMPARE;
 
   return (
-    <div className="animate-page-in flex flex-col gap-3.5">
-      <div className="mb-1.5 flex flex-wrap items-end justify-between gap-4">
+    <div
+      className="animate-page-in flex flex-col gap-3.5"
+      style={{
+        backgroundImage:
+          "radial-gradient(880px 420px at 8% -6%, rgba(91,141,239,.10), transparent 70%), radial-gradient(700px 380px at 94% 0%, rgba(47,198,133,.08), transparent 72%)",
+      }}
+    >
+      <div className="mb-1.5 flex flex-wrap items-end justify-between gap-[18px]">
         <div>
-          <div className="mb-2 font-mono text-eyebrow text-muted uppercase">Compare</div>
-          <h1 className="font-serif text-display leading-[1.1] font-normal text-primary">Side by side</h1>
+          <div className="mb-2 font-mono text-[10.5px] tracking-[0.18em] text-muted uppercase">Compare</div>
+          <h1 className="font-serif text-[40px] leading-[1.05] font-normal tracking-[-0.015em] text-primary">
+            Side by side
+          </h1>
+          <p className="mt-2 max-w-[520px] text-[13.5px] leading-[1.55] text-muted text-pretty">
+            Add up to {MAX_COMPARE} tickers and Cairn aligns their price action and fundamentals on the same axes.
+          </p>
         </div>
 
         {canAdd && (
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-caption text-dim">Add up to {MAX_COMPARE}:</span>
+            <span className="text-[12.5px] text-dim">
+              {selected.length} of {MAX_COMPARE} slots used
+            </span>
             {/* Was a fixed dropdown of the tracked universe, so a symbol Cairn
                 had not ingested could not be compared at all. The shared
                 type-ahead searches the directory and falls through to the
@@ -103,7 +116,7 @@ export function ComparisonPanel({
       </div>
 
       {rows.length === 0 ? (
-        <div className="rounded-card border border-dashed border-line px-6 py-16 text-center">
+        <div className="rounded-2xl border border-dashed border-line px-6 py-16 text-center">
           <div className="font-serif text-h3 text-primary">Nothing to line up yet</div>
           <p className="mx-auto mt-2 max-w-[400px] text-body text-muted text-pretty">
             Add up to {MAX_COMPARE} tickers and Cairn aligns their price action and fundamentals on the same axes.
@@ -118,14 +131,14 @@ export function ComparisonPanel({
               return (
                 <div
                   key={row.symbol}
-                  className="animate-rise-in rounded-card border border-line bg-panel p-4"
+                  className="animate-rise-in rounded-[14px] border border-[#232323] bg-panel p-4"
                   style={{ animationDelay: `${i * 60}ms` }}
                 >
                   <div className="flex items-start justify-between gap-2.5">
                     <div className="min-w-0">
                       <Link
                         href={`/ticker/${row.symbol}`}
-                        className="flex items-center gap-2 text-lead text-primary transition-colors duration-fast ease-standard hover:text-accent"
+                        className="flex items-center gap-2 text-[13.5px] font-semibold text-primary transition-colors duration-fast ease-standard hover:text-accent"
                       >
                         <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: color }} />
                         {row.symbol}
@@ -176,14 +189,14 @@ export function ComparisonPanel({
             })}
           </div>
 
-          <div className="flex flex-wrap gap-1.5 rounded-panel border border-line bg-panel p-1">
+          <div className="flex w-fit flex-wrap gap-[3px] rounded-[10px] border border-[#232323] bg-[#0c0c0c] p-[3px]">
             {TIMEFRAMES.map((tf) => (
               <button
                 key={tf}
                 type="button"
                 onClick={() => setTimeframe(tf)}
-                className={`rounded-control px-3 py-2 text-body transition-colors duration-base ease-standard ${
-                  timeframe === tf ? "bg-active text-primary" : "text-muted hover:text-primary"
+                className={`rounded-[7px] px-[11px] py-[5px] font-mono text-micro transition-colors duration-base ease-standard ${
+                  timeframe === tf ? "bg-[#1e1e1e] text-primary" : "text-dim hover:text-primary"
                 }`}
               >
                 {tf}
