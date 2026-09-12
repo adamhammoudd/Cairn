@@ -1,0 +1,16 @@
+# The repo is LF throughout. Without this, a tool that writes files on Windows
+# can silently convert a file to CRLF, and the next diff reports every line as
+# changed - which happened across a 14-PR design pass and turned ~1,500 real
+# line changes into ~14,000. Git now normalises on the way in, so a stray CRLF
+# write cannot reach a commit.
+* text=auto eol=lf
+
+# Binary, so never touched.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.pdf binary
