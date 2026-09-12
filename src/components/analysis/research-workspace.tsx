@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
+import { toggleAnalysisPin } from "@/lib/actions/analysis";
 import { useRouter } from "next/navigation";
 import { runAnalysisGeneration, type AnalysisWithMethodology } from "@/lib/actions/analysis";
 import { searchSymbols, type SymbolSearchResult } from "@/lib/actions/symbols";
@@ -87,6 +88,8 @@ interface ResearchWorkspaceProps {
   usage: { used: number; limit: number; unlimited: boolean };
   /** e.g. "1 September" - when the monthly allowance rolls over. */
   resetLabel: string;
+  /** Analysis ids this user has pinned. Per-user, from ai_analysis_pins. */
+  pinnedIds?: string[];
 }
 
 export function ResearchWorkspace({
@@ -98,9 +101,11 @@ export function ResearchWorkspace({
   planLabel,
   usage,
   resetLabel,
+  pinnedIds = [],
 }: ResearchWorkspaceProps) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  const [, startPin] = useTransition();
 
   const [query, setQuery] = useState("");
   const [scope, setScope] = useState<Scope | null>(null);
@@ -108,7 +113,12 @@ export function ResearchWorkspace({
   // keystroke is simply not rendered - no clearing setState in the effect.
   const [suggest, setSuggest] = useState<{ q: string; items: Suggestion[] } | null>(null);
   const [openId, setOpenId] = useState<string | null>(analyses[0]?.id ?? null);
-  const [filter, setFilter] = useState<"all" | ScopeType>("all");
+  const [filter, setFilter] = useState<"all" | "pinned" | ScopeType>("all");
+  // Optimistic: the star flips on click and the server action reconciles.
+  // A pin is a one-bit preference - waiting on a round trip to redraw it
+  // makes the control feel broken.
+  const [pins, setPins] = useState<Set<string>>(() => new Set(pinnedIds));
+  const [pinError, setPinError] = useState<string | null>(null);
   const [sort, setSort] = useState<"date" | "confidence">("date");
   const [phase, setPhase] = useState<"idle" | "generating" | "unavailable" | "quota">("idle");
   const [error, setError] = useState<string | null>(null);
@@ -197,13 +207,36 @@ export function ResearchWorkspace({
   }
 
   const library = analyses
-    .filter((a) => filter === "all" || a.scope_type === filter)
+    .filter((a) => (filter === "all" ? true : filter === "pinned" ? pins.has(a.id) : a.scope_type === filter))
     .slice()
     .sort((a, b) =>
       sort === "confidence"
         ? (CONF_STYLE[b.confidence_level]?.bars ?? 0) - (CONF_STYLE[a.confidence_level]?.bars ?? 0)
         : 0,
     );
+
+  function togglePin(id: string) {
+    const next = new Set(pins);
+    const pinning = !next.has(id);
+    if (pinning) next.add(id);
+    else next.delete(id);
+    setPins(next);
+    setPinError(null);
+    startPin(async () => {
+      const err = await toggleAnalysisPin(id, pinning);
+      if (err) {
+        // Put the star back where it was rather than leaving the row
+        // claiming a state the server rejected.
+        setPins((current) => {
+          const reverted = new Set(current);
+          if (pinning) reverted.delete(id);
+          else reverted.add(id);
+          return reverted;
+        });
+        setPinError(err);
+      }
+    });
+  }
 
   const portfolioCards = analyses.filter((a) => a.scope_type === "ticker" && held.has(a.scope_value));
   const open = analyses.find((a) => a.id === openId) ?? null;
@@ -453,6 +486,7 @@ export function ResearchWorkspace({
               {(
                 [
                   ["all", "All"],
+                  ["pinned", `Pinned${pins.size > 0 ? ` · ${pins.size}` : ""}`],
                   ["ticker", "Tickers"],
                   ["sector", "Sectors"],
                   ["market", "Market-wide"],
@@ -492,22 +526,31 @@ export function ResearchWorkspace({
             </div>
           </div>
 
+          {pinError && (
+            <p role="alert" className="border-b border-[#171717] px-4 py-2.5 text-caption text-negative">
+              {pinError}
+            </p>
+          )}
+
           {library.length === 0 ? (
-            <div className="px-4 py-8 text-center text-caption text-dim">Nothing in the library yet.</div>
+            <div className="px-4 py-8 text-center text-caption text-dim">
+              {filter === "pinned" ? "Nothing pinned yet. Star an analysis to keep it here." : "Nothing in the library yet."}
+            </div>
           ) : (
             library.map((a, i) => {
               const c = CONF_STYLE[a.confidence_level] ?? CONF_STYLE.low;
               const isOpen = a.id === openId && phase === "idle";
+              const pinned = pins.has(a.id);
               return (
+                <div key={a.id} className="relative">
                 <button
-                  key={a.id}
                   type="button"
                   onClick={() => {
                     setOpenId(a.id);
                     setPhase("idle");
                   }}
                   style={{ animationDelay: `${i * 40}ms` }}
-                  className={`animate-rise-in relative block w-full border-b border-[#171717] px-4 py-3.5 pl-[15px] text-left transition-[background] duration-[140ms] ease-[cubic-bezier(0.4,0,0.2,1)] hover:bg-raised ${
+                  className={`animate-rise-in relative block w-full border-b border-[#171717] px-4 py-3.5 pr-10 pl-[15px] text-left transition-[background] duration-[140ms] ease-[cubic-bezier(0.4,0,0.2,1)] hover:bg-raised ${
                     isOpen ? "bg-raised" : ""
                   }`}
                 >
@@ -541,6 +584,23 @@ export function ResearchWorkspace({
                     </span>
                   </div>
                 </button>
+                {/* Sibling, not a child: the row is itself a button, and a
+                    nested one is invalid HTML. Violet rather than the accent
+                    because a pin says nothing about the analysis's direction
+                    or confidence - green here would read as a verdict. */}
+                <button
+                  type="button"
+                  onClick={() => togglePin(a.id)}
+                  aria-pressed={pinned}
+                  aria-label={pinned ? `Unpin the ${a.scope_value} analysis` : `Pin the ${a.scope_value} analysis`}
+                  title={pinned ? "Unpin" : "Pin"}
+                  className={`absolute top-2.5 right-2 flex h-7 w-7 items-center justify-center rounded-control text-title leading-none transition-colors duration-fast ease-standard hover:bg-active ${
+                    pinned ? "text-violet" : "text-dim hover:text-muted"
+                  }`}
+                >
+                  <span aria-hidden>{pinned ? "★" : "☆"}</span>
+                </button>
+                </div>
               );
             })
           )}
