@@ -102,10 +102,10 @@ export function HoldingsTable({
       ) : (
         <div className="overflow-hidden rounded-card border border-line bg-panel">
           <div className="flex items-center justify-between border-b border-line px-4.5 py-3.5">
-            <span className="font-mono text-eyebrow text-muted uppercase">
+            <span className="font-mono text-label text-muted uppercase">
               {metrics.length} {metrics.length === 1 ? "position" : "positions"}
             </span>
-            <span className="text-caption text-dim">Sorted by value</span>
+            <span className="text-sub text-faint">Sorted by value</span>
           </div>
 
           {/* Phone (<640px): the mock swaps the table for stacked cards. */}
@@ -114,7 +114,7 @@ export function HoldingsTable({
               const positive = (m.gain ?? 0) >= 0;
               const series = sparklines[m.symbol] ?? [];
               return (
-                <div key={m.id} className="cn-row flex flex-col gap-2.5 border-b border-line-soft px-4 py-3.5 last:border-b-0">
+                <div key={m.id} className="cn-row flex flex-col gap-2.5 border-b border-line-row px-4 py-3.5 last:border-b-0">
                   <div className="flex items-center justify-between gap-2.5">
                     <div className="flex min-w-0 items-center gap-2.5">
                       <div
@@ -168,13 +168,13 @@ export function HoldingsTable({
 
                   <div className="grid grid-cols-3 gap-2">
                     <div>
-                      <div className="text-eyebrow text-dim">Value</div>
-                      <div className="mt-1 text-body tabular-nums text-primary">{fmtCurrency(m.value)}</div>
+                      <div className="text-eyebrow text-faint">Value</div>
+                      <div className="mt-1 text-data tabular-nums text-primary">{fmtCurrency(m.value)}</div>
                     </div>
                     <div>
-                      <div className="text-eyebrow text-dim">Price</div>
+                      <div className="text-eyebrow text-faint">Price</div>
                       <div
-                        className="mt-1 flex items-center gap-1 text-body tabular-nums text-primary"
+                        className="mt-1 flex items-center gap-1 text-data tabular-nums text-primary"
                         title={m.priceStale ? `Stale - last updated ${m.priceAsOf ?? "unknown"}` : undefined}
                       >
                         {fmtCurrency(m.currentPrice)}
@@ -186,9 +186,9 @@ export function HoldingsTable({
                       </div>
                     </div>
                     <div>
-                      <div className="text-eyebrow text-dim">Gain / loss</div>
+                      <div className="text-eyebrow text-faint">Gain / loss</div>
                       <div
-                        className={`mt-1 text-body tabular-nums ${positive ? "text-accent" : "text-negative"}`}
+                        className={`mt-1 text-data tabular-nums ${positive ? "text-accent" : "text-negative"}`}
                       >
                         {formatChange(m.gain, m.gainPct, prefs, 1)}
                       </div>
@@ -202,7 +202,7 @@ export function HoldingsTable({
           <div className="hidden overflow-x-auto sm:block">
             <div className="min-w-[860px]">
               <div
-                className={`grid ${COLS} gap-3 border-b border-line-soft px-4.5 py-2.5 font-mono text-eyebrow text-dim uppercase`}
+                className={`grid ${COLS} gap-3 border-b border-line-soft px-4.5 py-2.5 font-mono text-colhead text-faint uppercase`}
               >
                 <div>Holding</div>
                 <div>Qty</div>
@@ -220,7 +220,7 @@ export function HoldingsTable({
                 return (
                   <div
                     key={m.id}
-                    className={`cn-row grid ${COLS} items-center gap-3 border-b border-line-soft px-4.5 py-3 transition-colors duration-fast ease-standard last:border-b-0 hover:bg-active`}
+                    className={`cn-row grid ${COLS} items-center gap-3 border-b border-line-row px-4.5 py-3 transition-colors duration-fast ease-standard last:border-b-0 hover:bg-row-hover`}
                   >
                     <div className="flex min-w-0 items-center gap-2.5">
                       <div
@@ -244,11 +244,11 @@ export function HoldingsTable({
                       </div>
                     </div>
 
-                    <div className="text-body tabular-nums text-primary" title={m.quantity.toLocaleString()}>
+                    <div className="text-data tabular-nums text-primary" title={m.quantity.toLocaleString()}>
                       {formatQuantity(m.quantity)}
                     </div>
                     <div
-                      className="flex items-center gap-1 text-body tabular-nums text-primary"
+                      className="flex items-center gap-1 text-data tabular-nums text-primary"
                       title={m.priceStale ? `Stale - last updated ${m.priceAsOf ?? "unknown"}` : undefined}
                     >
                       {fmtCurrency(m.currentPrice)}
@@ -259,12 +259,12 @@ export function HoldingsTable({
                       )}
                     </div>
                     <div
-                      className="text-body tabular-nums text-muted"
+                      className="text-data tabular-nums text-muted"
                       title={fmtExact(m.purchase_price * m.quantity)}
                     >
                       {fmtCurrency(m.purchase_price * m.quantity)}
                     </div>
-                    <div className="text-body tabular-nums text-primary" title={fmtExact(m.value)}>
+                    <div className="text-data tabular-nums text-primary" title={fmtExact(m.value)}>
                       {fmtCurrency(m.value)}
                     </div>
 
@@ -273,7 +273,7 @@ export function HoldingsTable({
                         reorders them rather than hiding one, so nothing a
                         reader could want is taken away by a display choice. */}
                     <div className="flex flex-col gap-0.5">
-                      <span className={`text-body tabular-nums ${positive ? "text-accent" : "text-negative"}`}>
+                      <span className={`text-data tabular-nums ${positive ? "text-accent" : "text-negative"}`}>
                         {formatChange(m.gain, m.gainPct, prefs, 1)}
                       </span>
                       <span
