@@ -7,6 +7,26 @@ import { AlertForm, CHANNEL_LABELS } from "@/components/alerts/alert-form";
 import { ALERT_TYPE_LABELS, COOLDOWN_OPTIONS, describeCondition, type Alert, type AlertChannel } from "@/lib/alerts";
 import { useDisplayPrefs } from "@/components/display-prefs-provider";
 
+type AlertTab = "armed" | "triggered" | "paused";
+
+/** Kind identity, shared by a card's avatar, its kind pill and its rail.
+ *
+ *  A price alert takes the gain/loss pair, because "above" and "below" mean
+ *  exactly what green and red already mean everywhere else in the product -
+ *  the direction lives on `condition.comparator`. Everything else is
+ *  directionless, so it takes a secondary tint and never the gain colour. */
+function alertTone(a: Alert): { text: string; rail: string } {
+  if (a.alert_type === "price") {
+    const below = a.condition?.comparator === "below";
+    return below
+      ? { text: "text-negative border-negative/35", rail: "bg-negative" }
+      : { text: "text-accent border-accent/35", rail: "bg-accent" };
+  }
+  if (a.alert_type === "pct_change") return { text: "text-info border-info/35", rail: "bg-info" };
+  if (a.alert_type === "ai_confidence") return { text: "text-warning border-warning/35", rail: "bg-warning" };
+  return { text: "text-violet border-violet/35", rail: "bg-violet" };
+}
+
 interface AlertPanelProps {
   alerts: Alert[];
   deliveries: DeliveryWithAlert[];
@@ -18,6 +38,7 @@ export function AlertPanel({ alerts, deliveries, defaultChannels }: AlertPanelPr
   // null = closed, "new" = create form, otherwise the id of the alert being
   // edited. One form at a time, so the page can't hold two conflicting drafts.
   const [openForm, setOpenForm] = useState<string | null>(null);
+  const [tab, setTab] = useState<AlertTab>("armed");
   const [, startMutate] = useTransition();
   const prefs = useDisplayPrefs();
 
@@ -29,24 +50,88 @@ export function AlertPanel({ alerts, deliveries, defaultChannels }: AlertPanelPr
     return COOLDOWN_OPTIONS.find((o) => o.value === seconds)?.label ?? `${seconds}s`;
   }
 
+  // The design splits alerts three ways, and the split is already in the data:
+  // enabled-and-never-fired is armed, enabled-and-fired is triggered, disabled
+  // is paused.
+  const armed = alerts.filter((a) => a.enabled && !a.last_triggered_at);
+  const triggered = alerts.filter((a) => a.enabled && a.last_triggered_at);
+  const paused = alerts.filter((a) => !a.enabled);
+  const shown = tab === "armed" ? armed : tab === "triggered" ? triggered : paused;
+  const TABS: { key: AlertTab; label: string; count: number }[] = [
+    { key: "armed", label: "Armed", count: armed.length },
+    { key: "triggered", label: "Triggered", count: triggered.length },
+    { key: "paused", label: "Paused", count: paused.length },
+  ];
+
   return (
-    <div className="animate-page-in flex flex-col gap-3.5">
-      <div className="flex flex-wrap items-end justify-between gap-4">
+    <div
+      className="animate-page-in flex flex-col gap-3.5"
+      style={{
+        backgroundImage:
+          "radial-gradient(880px 420px at 10% -8%, rgba(217,164,65,.09), transparent 70%), radial-gradient(700px 380px at 94% 0%, rgba(47,198,133,.07), transparent 72%)",
+      }}
+    >
+      <div className="flex flex-wrap items-end justify-between gap-[18px]">
         <div>
-          <div className="mb-2 font-mono text-eyebrow text-muted uppercase">Portfolio · Alerts</div>
-          <h1 className="font-serif text-display leading-[1.1] font-normal text-primary">Alerts</h1>
-          <p className="mt-2 max-w-[560px] text-lead text-muted text-pretty">
-            {activeCount} active. Each fires once per cooldown window, then goes quiet.
+          {/* "Portfolio", not the design file's "Planning": the shipped nav
+              (lib/nav-items.ts) files Alerts under Portfolio, and a breadcrumb
+              that disagrees with the menu you arrived through is worse than one
+              that disagrees with the mock. */}
+          <div className="mb-2 font-mono text-[10.5px] tracking-[0.18em] text-muted uppercase">Portfolio · Alerts</div>
+          <h1 className="font-serif text-[40px] leading-[1.05] font-normal tracking-[-0.015em] text-primary">
+            Alerts
+          </h1>
+          <p className="mt-2 max-w-[520px] text-[13.5px] leading-[1.55] text-muted text-pretty">
+            Price levels, percentage moves and event reminders. Each fires once per cooldown window, then goes quiet.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => setOpenForm((prev) => (prev === "new" ? null : "new"))}
-          className="rounded-panel bg-gradient-to-br from-accent-light to-accent-dark px-4 py-2.5 text-body font-semibold text-canvas transition-[box-shadow,transform] duration-base ease-standard hover:-translate-y-px hover:shadow-[0_0_26px_rgba(47,198,133,0.35)]"
-        >
-          {openForm === "new" ? "Close" : "+ New alert"}
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="flex items-center gap-[7px] rounded-[9px] border border-accent/35 bg-accent/8 px-3 py-2 text-[12.5px] text-accent-light">
+            <span aria-hidden className="relative h-1.5 w-1.5">
+              <span className="absolute inset-0 rounded-full bg-accent" />
+              <span className="absolute inset-0 animate-ping rounded-full bg-accent" />
+            </span>
+            {activeCount} armed · checked at every close
+          </span>
+          <button
+            type="button"
+            onClick={() => setOpenForm((prev) => (prev === "new" ? null : "new"))}
+            className="rounded-[9px] bg-accent px-4 py-[9px] text-[12.5px] font-bold text-canvas transition-[background,transform] duration-base ease-standard hover:-translate-y-px hover:bg-accent-light"
+          >
+            {openForm === "new" ? "Close" : "+ New alert"}
+          </button>
+        </div>
       </div>
+
+      {/* Armed / Triggered / Paused, with counts. Before this the page listed
+          every alert in one column, so a paused alert and one actively watching
+          a level sat indistinguishable except for a switch position. */}
+      {alerts.length > 0 && (
+        <div className="flex w-fit flex-wrap gap-[3px] rounded-[11px] border border-[#232323] bg-[#0c0c0c] p-[3px]">
+          {TABS.map((t) => {
+            const on = t.key === tab;
+            return (
+              <button
+                key={t.key}
+                type="button"
+                onClick={() => setTab(t.key)}
+                className={`inline-flex items-center gap-[7px] rounded-[9px] px-[13px] py-[7px] text-[12.5px] whitespace-nowrap transition-colors duration-base ease-standard ${
+                  on ? "bg-[#1e1e1e] text-primary" : "text-muted hover:text-primary"
+                }`}
+              >
+                {t.label}
+                <span
+                  className={`rounded-[5px] px-[5px] py-px font-mono text-eyebrow ${
+                    on ? "bg-accent/15 text-accent-light" : "bg-[#161616] text-dim"
+                  }`}
+                >
+                  {t.count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {/* One form component serves create and edit -- keyed so switching
           between rows remounts it with the right defaults instead of keeping
@@ -62,15 +147,20 @@ export function AlertPanel({ alerts, deliveries, defaultChannels }: AlertPanelPr
       )}
 
       <div className="grid grid-cols-1 items-start gap-3.5 min-[900px]:grid-cols-[300px_1fr]">
-        <aside className="overflow-hidden rounded-card border border-line bg-panel">
-          <div className="border-b border-line px-4 py-3 font-mono text-eyebrow text-muted uppercase">
+        <aside className="relative overflow-hidden rounded-2xl border border-[#232323] bg-panel min-[900px]:sticky min-[900px]:top-[78px]">
+          <span
+            aria-hidden
+            className="absolute top-0 right-0 left-0 h-px"
+            style={{ background: "linear-gradient(90deg,#d9a441,rgba(217,164,65,0))" }}
+          />
+          <div className="border-b border-[#1c1c1c] px-4 py-3.5 font-mono text-eyebrow tracking-[0.18em] text-warning uppercase">
             Recent deliveries
           </div>
           {deliveries.length === 0 ? (
             <p className="px-4 py-5 text-body text-dim">Nothing yet - alerts appear here when they fire.</p>
           ) : (
             deliveries.map((d) => (
-              <div key={d.id} className="flex gap-3 border-b border-line px-4 py-3.5 last:border-b-0">
+              <div key={d.id} className="flex gap-3 border-b border-[#171717] px-4 py-3.5 last:border-b-0">
                 <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
                 <div className="min-w-0">
                   <div className="text-body leading-relaxed text-primary text-pretty">
@@ -86,7 +176,7 @@ export function AlertPanel({ alerts, deliveries, defaultChannels }: AlertPanelPr
           )}
         </aside>
 
-        <div className="flex flex-col gap-2.5">
+        <div className="flex flex-col gap-3">
           {alerts.length === 0 ? (
             <div className="rounded-card border border-dashed border-line px-6 py-16 text-center">
               <div className="font-serif text-h3 text-primary">No markers set</div>
@@ -95,29 +185,58 @@ export function AlertPanel({ alerts, deliveries, defaultChannels }: AlertPanelPr
               </p>
             </div>
           ) : (
-            alerts.map((a, index) => (
+            shown.map((a, index) => (
               <div
                 key={a.id}
-                className={`animate-rise-in flex flex-wrap items-center gap-4 rounded-panel border bg-panel p-4.5 transition-colors duration-base ease-standard ${
-                  a.enabled ? "border-line" : "border-line-soft"
-                }`}
-                style={{ animationDelay: `${index * 40}ms` }}
+                className="animate-rise-in flex gap-[15px] overflow-hidden rounded-[14px] border border-[#232323] bg-panel transition-[border-color,background] duration-base ease-standard hover:border-line-strong hover:bg-[#121212]"
+                style={{ animationDelay: `${140 + index * 55}ms` }}
               >
-                <div className="min-w-[180px] flex-1">
+                {/* The rail carries the alert's kind, and dims when it is not
+                    being evaluated - so a paused alert reads as paused from
+                    the edge of the card rather than from a switch position. */}
+                <span
+                  aria-hidden
+                  className={`w-[3px] shrink-0 self-stretch ${alertTone(a).rail} ${
+                    a.enabled ? "" : "opacity-40"
+                  }`}
+                />
+                <div className="min-w-[180px] flex-1 py-[15px] pr-[18px]">
                   <div className="flex flex-wrap items-center gap-2.5">
                     <span
-                      className={`text-lead transition-colors duration-base ease-standard ${
+                      className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-control border bg-panel font-mono text-eyebrow ${
+                        alertTone(a).text
+                      }`}
+                    >
+                      {a.scope_value.slice(0, 2)}
+                    </span>
+                    <span
+                      className={`text-[13.5px] font-semibold transition-colors duration-base ease-standard ${
                         a.enabled ? "text-primary" : "text-dim"
                       }`}
                     >
                       {a.scope_value}
                     </span>
-                    <span className="rounded-full border border-line px-2 py-1 font-mono text-eyebrow text-muted uppercase">
+                    <span
+                      className={`rounded-full border px-[9px] py-[3px] font-mono text-[9.5px] tracking-[0.1em] uppercase ${
+                        alertTone(a).text
+                      }`}
+                    >
                       {ALERT_TYPE_LABELS[a.alert_type]}
+                    </span>
+                    <span
+                      className={`rounded-full border px-[9px] py-[3px] font-mono text-[9.5px] tracking-[0.12em] uppercase ${
+                        !a.enabled
+                          ? "border-line text-dim"
+                          : a.last_triggered_at
+                            ? "border-warning/35 bg-warning/10 text-warning"
+                            : "border-accent/35 bg-accent/10 text-accent"
+                      }`}
+                    >
+                      {!a.enabled ? "Paused" : a.last_triggered_at ? "Triggered" : "Armed"}
                     </span>
                   </div>
 
-                  <div className="mt-2 text-body text-muted">
+                  <div className="mt-2.5 text-body leading-[1.55] text-[#c9c9c9] text-pretty">
                     {describeCondition(a.alert_type, a.condition, prefs)}
                   </div>
 
