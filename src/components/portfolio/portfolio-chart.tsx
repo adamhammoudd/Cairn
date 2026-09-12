@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { useReportPageTone } from "@/components/layout/page-tone";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { CHART_TOOLTIP, CHART_AXIS_TICK, paddedDomain } from "@/lib/chart-theme";
 import { xAxisConfig, type TimelinePoint } from "@/lib/portfolio";
@@ -82,6 +83,8 @@ export function PortfolioChart({
   const rangeChange = points.length > 1 ? points[points.length - 1].value - points[0].value : 0;
   const positive = rangeChange >= 0;
   const color = positive ? "var(--color-accent)" : "var(--color-negative)";
+  // The page's corner wash takes the same colour as this line.
+  useReportPageTone(positive ? "positive" : "negative");
 
   // Per-timeframe X-axis: tick spacing that never overlaps, and a label format
   // matched to the window (hour for 1D, weekday for 1W, ... month+year for
@@ -98,7 +101,11 @@ export function PortfolioChart({
         className="pointer-events-none absolute"
         style={{
           inset: "-60% 55% 45% -12%",
-          background: "radial-gradient(closest-side, rgba(217,108,108,.15), transparent)",
+          // Follows this panel's own line rather than being fixed red, which
+          // was only correct while the sample portfolio happened to be down.
+          background: `radial-gradient(closest-side, ${
+            positive ? "rgba(47,198,133,.15)" : "rgba(217,108,108,.15)"
+          }, transparent)`,
           animation: "cn-glow 7s ease-in-out infinite",
         }}
       />

@@ -1,6 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { usePageTone, type PageTone } from "@/components/layout/page-tone";
 
 /**
  * The two radial washes in a page's top corners.
@@ -85,6 +86,32 @@ const WASHES: [prefix: string, gradient: string][] = [
   ],
 ];
 
+/**
+ * Routes whose leading corner follows the chart on them.
+ *
+ * Only the leading wash takes the tone. The trailing corner keeps a fixed,
+ * non-directional accent so the page still reads as itself - and so a losing
+ * day does not arrive as two red glows, which stops being information and
+ * starts being a mood. Gain/loss colour stays the one thing on the page that
+ * means direction and nothing else.
+ */
+const TONED: Record<string, { trailing: string }> = {
+  "/": { trailing: "radial-gradient(700px 380px at 92% 0%, rgba(91,141,239,.07), transparent 70%)" },
+  "/portfolio": { trailing: "radial-gradient(760px 400px at 95% 0%, rgba(91,141,239,.07), transparent 72%)" },
+  "/ticker": { trailing: "radial-gradient(740px 390px at 95% 0%, rgba(91,141,239,.07), transparent 72%)" },
+};
+
+/** The leading corner, in the chart's own colour. */
+const LEADING: Record<PageTone, string> = {
+  positive: "radial-gradient(900px 430px at 10% -8%, rgba(47,198,133,.11), transparent 70%)",
+  negative: "radial-gradient(900px 430px at 10% -8%, rgba(217,108,108,.10), transparent 70%)",
+};
+
+function tonedKey(pathname: string): string | null {
+  if (pathname === "/") return "/";
+  return Object.keys(TONED).find((k) => k !== "/" && (pathname === k || pathname.startsWith(`${k}/`))) ?? null;
+}
+
 /** Base Camp. Exact-matched, so it cannot swallow every other route. */
 const BASE_CAMP =
   "radial-gradient(900px 420px at 12% -8%, rgba(47,198,133,.10), transparent 70%), radial-gradient(700px 380px at 92% 0%, rgba(91,141,239,.07), transparent 70%)";
@@ -98,7 +125,14 @@ function washFor(pathname: string): string | null {
 }
 
 export function PageWash() {
-  const wash = washFor(usePathname());
+  const pathname = usePathname();
+  const tone = usePageTone();
+
+  // A toned route swaps its leading corner for the chart's colour. Until the
+  // chart reports (first paint, or a page whose chart has no data), the
+  // route's own static wash is used, so the corner is never empty.
+  const key = tonedKey(pathname);
+  const wash = key && tone ? `${LEADING[tone]}, ${TONED[key].trailing}` : washFor(pathname);
   if (!wash) return null;
 
   return (

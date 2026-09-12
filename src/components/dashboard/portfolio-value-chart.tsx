@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useReportPageTone } from "@/components/layout/page-tone";
 
 export type ValueTimeframe = "1W" | "1M" | "3M" | "1Y";
 
@@ -110,6 +111,14 @@ export function PortfolioValueChart({ series, initialTimeframe }: PortfolioValue
   const values = active?.values ?? [];
   const dates = active?.dates ?? [];
 
+  // Coloured by the window it draws, not by all-time gain - the same rule the
+  // Portfolio chart, the sparklines and the table rows follow.
+  const positive = values.length >= 2 ? values[values.length - 1] >= values[0] : null;
+  // The page's corner wash takes the same colour as this line. Reported above
+  // the early return below, because a hook cannot be called conditionally -
+  // and null while there is no line is the honest value anyway.
+  useReportPageTone(positive === null ? null : positive ? "positive" : "negative");
+
   if (values.length < 2) {
     return (
       <div className="flex h-full min-h-[190px] items-center justify-center">
@@ -128,9 +137,6 @@ export function PortfolioValueChart({ series, initialTimeframe }: PortfolioValue
     y: PAD_Y + (1 - (v - min) / span) * usable,
   }));
 
-  // Coloured by the window it draws, not by all-time gain - the same rule the
-  // Portfolio chart, the sparklines and the table rows follow.
-  const positive = values[values.length - 1] >= values[0];
   const stroke = positive ? "var(--color-accent)" : "var(--color-negative)";
   const gradientId = `value-chart-fill-${positive ? "gain" : "loss"}`;
 

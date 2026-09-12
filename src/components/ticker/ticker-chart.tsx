@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
+import { useReportPageTone } from "@/components/layout/page-tone";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { CHART_TOOLTIP, CHART_AXIS_TICK, paddedDomain } from "@/lib/chart-theme";
 import { buildPriceSeries } from "@/lib/ticker";
@@ -68,6 +69,8 @@ export function TickerChart({ symbol, bars, priceSource = "last_close", priceAsO
   // up over this window", the same thing red means on every other surface.
   const rangeChange = points.length > 1 ? points[points.length - 1].value - points[0].value : 0;
   const color = rangeChange >= 0 ? "var(--color-accent)" : "var(--color-negative)";
+  // The page's corner wash takes the same colour as this line.
+  useReportPageTone(rangeChange >= 0 ? "positive" : "negative");
 
   // Per-timeframe X-axis, same helper the Compare page uses: tick spacing that
   // never overlaps and a label format matched to the window.
