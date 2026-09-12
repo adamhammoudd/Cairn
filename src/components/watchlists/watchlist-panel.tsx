@@ -50,10 +50,6 @@ export function WatchlistPanel({ watchlists }: { watchlists: WatchlistWithItems[
 
   const manualSort = active?.displayPrefs.sortBy === "manual";
   const showSparkline = active?.displayPrefs.showSparkline ?? false;
-  const cols = showSparkline
-    ? "grid-cols-[24px_1.7fr_1fr_0.9fr_100px_44px]"
-    : "grid-cols-[24px_1.7fr_1fr_0.9fr_44px]";
-
   function handleDrop(targetId: string) {
     if (!active || !dragId || dragId === targetId || !manualSort) return;
     const ids = active.items.map((i) => i.id);
@@ -66,14 +62,53 @@ export function WatchlistPanel({ watchlists }: { watchlists: WatchlistWithItems[
     startMutate(() => reorderWatchlistItems(ids));
   }
 
+  // Breadth across the active list: how many of its symbols are up today.
+  // The design puts this beside the list name, because "is this basket
+  // working" is the question a watchlist is opened with.
+  const greens = active ? active.items.filter((i) => (i.changePct ?? 0) >= 0).length : 0;
+  const listSize = active?.items.length ?? 0;
+  const mostlyUp = listSize > 0 && greens >= listSize / 2;
+
   return (
-    <div className="animate-page-in flex flex-col gap-4">
-      <div>
-        <div className="mb-2 font-mono text-eyebrow text-muted uppercase">Watchlists</div>
-        <h1 className="font-serif text-display leading-[1.1] font-normal text-primary">
-          {active?.name ?? "Watchlists"}
-        </h1>
-        {active?.description && <p className="mt-2 text-lead text-muted text-pretty">{active.description}</p>}
+    <div
+      className="animate-page-in flex flex-col gap-3.5"
+      style={{
+        backgroundImage:
+          "radial-gradient(880px 420px at 8% -8%, rgba(155,140,224,.10), transparent 70%), radial-gradient(720px 380px at 96% 0%, rgba(47,198,133,.07), transparent 72%)",
+      }}
+    >
+      <div className="flex flex-wrap items-end justify-between gap-[18px]">
+        <div className="min-w-0">
+          <div className="mb-2 font-mono text-[10.5px] tracking-[0.18em] text-muted uppercase">
+            Portfolio · Watchlists
+          </div>
+          <h1 className="font-serif text-[40px] leading-[1.05] font-normal tracking-[-0.015em] text-primary">
+            {active?.name ?? "Watchlists"}
+          </h1>
+          {active?.description ? (
+            <p className="mt-2 max-w-[520px] text-[13.5px] leading-[1.55] text-muted text-pretty">
+              {active.description}
+            </p>
+          ) : (
+            <p className="mt-2 max-w-[520px] text-[13.5px] leading-[1.55] text-muted text-pretty">
+              Names you don&apos;t own yet. Group them however you think, and Cairn tells you when one crosses a level
+              you care about.
+            </p>
+          )}
+        </div>
+        {active && (
+          <span
+            className={`rounded-full border px-3 py-[7px] font-mono text-micro ${
+              listSize === 0
+                ? "border-line text-dim"
+                : mostlyUp
+                  ? "border-accent/35 bg-accent/10 text-accent-light"
+                  : "border-negative/35 bg-negative/10 text-negative-light"
+            }`}
+          >
+            {listSize === 0 ? "No symbols yet" : `${greens} up · ${listSize - greens} down`}
+          </span>
+        )}
       </div>
 
       {watchlists.length > 0 && (
@@ -85,13 +120,21 @@ export function WatchlistPanel({ watchlists }: { watchlists: WatchlistWithItems[
                 key={w.id}
                 type="button"
                 onClick={() => setActiveId(w.id)}
-                className={`flex items-center gap-2 rounded-panel border px-3.5 py-2 transition-colors duration-base ease-standard hover:border-line-strong ${
-                  isActive ? "border-line-strong bg-active" : "border-line bg-transparent"
+                className={`flex items-center gap-2.5 rounded-[10px] border px-3.5 py-2.5 transition-colors duration-base ease-standard hover:border-line-strong ${
+                  isActive ? "border-line-strong bg-[#181818]" : "border-[#232323] bg-transparent"
                 }`}
               >
-                <span className={`h-3.5 w-1 shrink-0 rounded-xs ${tintForWatchlist(w.id)}`} />
-                <span className={`text-body ${isActive ? "text-primary" : "text-muted"}`}>{w.name}</span>
-                <span className="font-mono text-eyebrow text-dim">{w.items.length}</span>
+                <span
+                  className={`h-2 w-2 shrink-0 rounded-xs ${tintForWatchlist(w.id)} ${isActive ? "" : "opacity-55"}`}
+                />
+                <span className={`text-[12.5px] ${isActive ? "text-primary" : "text-muted"}`}>{w.name}</span>
+                <span
+                  className={`rounded-[5px] px-1.5 py-px font-mono text-eyebrow ${
+                    isActive ? "bg-active text-primary" : "bg-[#161616] text-dim"
+                  }`}
+                >
+                  {w.items.length}
+                </span>
               </button>
             );
           })}
@@ -164,27 +207,17 @@ export function WatchlistPanel({ watchlists }: { watchlists: WatchlistWithItems[
               </p>
             </div>
           ) : (
-            <div className="overflow-hidden rounded-card border border-line bg-panel">
+            <div className="flex flex-col gap-3.5">
               {/* The same stored closes Markets and the ticker page show, so
                   the same freshness statement rather than none at all. */}
-              <div className="flex items-center justify-between gap-3 border-b border-line px-4.5 py-3">
-                <span className="font-mono text-eyebrow text-muted uppercase">
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#232323] bg-panel px-[22px] py-4">
+                <span className="font-mono text-eyebrow tracking-[0.16em] text-primary uppercase">
                   {sortedItems.length} {sortedItems.length === 1 ? "symbol" : "symbols"}
                 </span>
                 <DataFreshness source="last_close" asOf={listAsOf} />
               </div>
-              <div className="overflow-x-auto">
-                <div className="min-w-[640px]">
-                  <div
-                    className={`grid ${cols} gap-3 border-b border-line-soft px-4.5 py-3 font-mono text-eyebrow text-dim uppercase`}
-                  >
-                    <div />
-                    <div>Symbol</div>
-                    <div>Price</div>
-                    <div>24h</div>
-                    {showSparkline && <div>30d</div>}
-                    <div />
-                  </div>
+              <div>
+                <div className="grid grid-cols-[repeat(auto-fit,minmax(252px,1fr))] gap-3">
 
                   {sortedItems.map((item, index) => {
                     const positive = (item.changePct ?? 0) >= 0;
@@ -195,62 +228,63 @@ export function WatchlistPanel({ watchlists }: { watchlists: WatchlistWithItems[
                         onDragStart={() => setDragId(item.id)}
                         onDragOver={(e) => e.preventDefault()}
                         onDrop={() => handleDrop(item.id)}
-                        className={`cn-row animate-rise-in grid ${cols} items-center gap-3 border-b border-line-soft px-4.5 py-3 transition-colors duration-fast ease-standard last:border-b-0 hover:bg-active ${
+                        className={`cn-row animate-rise-in flex flex-col gap-2.5 rounded-[14px] border border-[#232323] bg-panel px-4 py-[15px] transition-[transform,border-color,background] duration-[220ms] ease-standard hover:-translate-y-[3px] hover:border-line-strong hover:bg-[#131313] ${
                           dragId === item.id ? "opacity-50" : ""
                         }`}
-                        style={{ animationDelay: `${index * 50}ms` }}
+                        style={{ animationDelay: `${120 + index * 50}ms` }}
                       >
-                        <div
-                          className={`text-lead text-muted select-none ${manualSort ? "cursor-grab" : "opacity-30"}`}
-                        >
-                          ⠿
-                        </div>
-
-                        <Link href={`/ticker/${item.symbol}`} className="flex min-w-0 items-center gap-2.5">
+                        <div className="flex items-center gap-2.5">
                           <span
-                            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-control font-mono text-eyebrow text-canvas"
-                            style={{
-                              background: positive
-                                ? "var(--gradient-gain)"
-                                : "var(--gradient-loss)",
-                            }}
+                            className={`shrink-0 text-lead text-dim select-none ${
+                              manualSort ? "cursor-grab" : "hidden"
+                            }`}
+                            aria-hidden
                           >
-                            {item.symbol.slice(0, 2)}
+                            ⠿
                           </span>
-                          <span className="truncate text-body text-primary transition-colors duration-fast ease-standard hover:text-accent">
-                            {item.symbol}
+                          <Link href={`/ticker/${item.symbol}`} className="flex min-w-0 items-center gap-2.5">
+                            <span
+                              className={`flex h-7.5 w-7.5 shrink-0 items-center justify-center rounded-[9px] border bg-panel font-mono text-[10.5px] ${tintForWatchlist(
+                                active.id,
+                              ).replace("bg-", "text-")} border-line`}
+                            >
+                              {item.symbol.slice(0, 2)}
+                            </span>
+                            <span className="truncate text-[13.5px] font-semibold text-primary transition-colors duration-fast ease-standard hover:text-accent">
+                              {item.symbol}
+                            </span>
+                          </Link>
+                          <span className="flex-1" />
+                          <span
+                            className={`shrink-0 font-mono text-caption tabular-nums ${
+                              item.changePct === null ? "text-muted" : positive ? "text-accent" : "text-negative"
+                            }`}
+                          >
+                            {formatChange(
+                              absoluteChangeFrom(item.latestClose, item.changePct),
+                              item.changePct,
+                              prefs,
+                            )}
                           </span>
-                        </Link>
-
-                        <div className="text-body tabular-nums text-primary">{fmtCurrency(item.latestClose)}</div>
-                        <div
-                          className={`text-body tabular-nums ${
-                            item.changePct === null ? "text-muted" : positive ? "text-accent" : "text-negative"
-                          }`}
-                        >
-                          {formatChange(
-                            absoluteChangeFrom(item.latestClose, item.changePct),
-                            item.changePct,
-                            prefs,
-                          )}
                         </div>
 
                         {showSparkline && (
                           <Sparkline
                             values={item.sparkline}
                             positive={positive}
-                            className="h-6.5 w-[94px]"
-                            delayMs={index * 50}
+                            className="h-10 w-full"
+                            delayMs={140 + index * 60}
                           />
                         )}
 
-                        <div className="flex justify-end">
+                        <div className="flex items-center justify-between gap-2 font-mono text-[11.5px]">
+                          <span className="tabular-nums text-primary">{fmtCurrency(item.latestClose)}</span>
                           <button
                             type="button"
                             onClick={() => startMutate(() => removeWatchlistItem(item.id))}
                             aria-label={`Remove ${item.symbol}`}
                             title="Remove"
-                            className="flex h-7 w-7 items-center justify-center rounded-control text-negative transition-colors duration-fast ease-standard hover:bg-negative/12"
+                            className="flex h-6 w-6 items-center justify-center rounded-control text-negative transition-colors duration-fast ease-standard hover:bg-negative/12"
                           >
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                               <path d="M3 6h18" />
