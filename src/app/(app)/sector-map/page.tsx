@@ -35,11 +35,18 @@ async function SectorMapBody() {
   const unclassified = data.find((s) => s.name === "Unclassified");
 
   return (
-    <div className="animate-page-in">
+    <div
+      className="animate-page-in"
+      style={{
+        backgroundImage: "radial-gradient(900px 400px at 50% -10%, rgba(47,198,133,.07), transparent 70%)",
+      }}
+    >
       <div className="mb-5">
-        <div className="mb-2 font-mono text-eyebrow text-muted uppercase">Markets · Sector map</div>
-        <h1 className="font-serif text-display leading-[1.1] font-normal text-primary">Sector map</h1>
-        <p className="mt-2 max-w-[540px] text-lead text-muted text-pretty">
+        <div className="mb-2 font-mono text-[10.5px] tracking-[0.18em] text-muted uppercase">Markets · Sector map</div>
+        <h1 className="font-serif text-[40px] leading-[1.05] font-normal tracking-[-0.015em] text-primary">
+          Sector map
+        </h1>
+        <p className="mt-2 max-w-[560px] text-[13.5px] leading-[1.55] text-muted text-pretty">
           Tile area is market cap; saturation is the size of today&apos;s move. Symbols with no SEC-classified sector
           show under &quot;Unclassified.&quot;
           {focusedSector && <> Opening on {focusedSector} - your focus sector, set in Settings.</>}
@@ -47,7 +54,7 @@ async function SectorMapBody() {
       </div>
 
       {data.length === 0 ? (
-        <div className="rounded-card border border-dashed border-line px-6 py-16 text-center">
+        <div className="rounded-2xl border border-dashed border-line px-6 py-16 text-center">
           <div className="font-serif text-h3 text-primary">No ground mapped yet</div>
           <p className="mx-auto mt-2 max-w-[400px] text-body text-muted text-pretty">
             Once price data lands for your tracked symbols, they&apos;ll group into sectors here.
