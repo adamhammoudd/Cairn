@@ -69,8 +69,8 @@ export function MarketsPanel({ rows, cryptoRows, defaultFilter = "all", requestC
   return (
     <div className="animate-page-in">
       <div className="mb-5">
-        <div className="mb-2 font-mono text-eyebrow text-muted uppercase">Markets</div>
-        <h1 className="font-serif text-display leading-[1.1] font-normal text-primary">The whole board</h1>
+        <div className="mb-2 font-mono text-eyebrow-page text-muted uppercase">Markets</div>
+        <h1 className="font-serif text-h1 leading-[1.1] font-normal text-primary">The whole board</h1>
         <p className="mt-2 max-w-[560px] text-lead text-muted text-pretty">
           Equities, ETFs, crypto, forex and indices in one filterable view. Any symbol the data provider carries is
           fetched the first time it is searched for.

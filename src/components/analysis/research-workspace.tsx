@@ -218,7 +218,7 @@ export function ResearchWorkspace({
       {/* Header + quota indicator */}
       <div className="mb-5 flex flex-wrap items-end justify-between gap-4.5">
         <div className="min-w-0">
-          <div className="mb-2 font-mono text-eyebrow text-muted uppercase">Assistant · Research</div>
+          <div className="mb-2 font-mono text-eyebrow-page text-muted uppercase">Assistant · Research</div>
           <h1 className="m-0 font-serif text-display font-normal leading-[1.1] text-primary">Research</h1>
           <p className="mt-2 max-w-[560px] text-lead text-muted text-pretty">
             Probability analysis with its inputs shown - sources, historical analogs, and a stated confidence level on

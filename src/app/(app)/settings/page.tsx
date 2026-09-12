@@ -38,8 +38,8 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
       {/* The mockup's intro block. The app header/top-nav above it is left
           as-is per the task - this pass excludes it. */}
       <div className="mb-5">
-        <div className="mb-2 font-mono text-eyebrow text-muted uppercase">Account</div>
-        <h1 className="font-serif text-display leading-[1.1] font-normal text-primary">Settings</h1>
+        <div className="mb-2 font-mono text-eyebrow-page text-muted uppercase">Account</div>
+        <h1 className="font-serif text-h1 leading-[1.1] font-normal text-primary">Settings</h1>
         <p className="mt-2 max-w-[560px] text-lead text-muted text-pretty">
           Grouped by what they affect. Changes save as you make them.
         </p>

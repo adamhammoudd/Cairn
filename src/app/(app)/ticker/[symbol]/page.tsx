@@ -35,7 +35,7 @@ function Unavailable({ symbol, reason, detail }: { symbol: string; reason: "unav
 
   return (
     <div className="animate-page-in mx-auto max-w-[560px] px-6 py-20 text-center">
-      <div className="mb-2 font-mono text-eyebrow text-muted uppercase">{symbol}</div>
+      <div className="mb-2 font-mono text-eyebrow-page text-muted uppercase">{symbol}</div>
       <h1 className="font-serif text-h1 leading-[1.15] text-primary">{heading}</h1>
       <p className="mx-auto mt-3 max-w-[440px] text-lead text-muted text-pretty">{detail}</p>
       <p className="mx-auto mt-2 max-w-[440px] text-body text-dim text-pretty">

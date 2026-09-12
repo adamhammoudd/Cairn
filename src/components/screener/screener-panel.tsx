@@ -163,8 +163,8 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
   return (
     <div className="animate-page-in">
       <div className="mb-4.5">
-        <div className="mb-2 font-mono text-eyebrow text-muted uppercase">Markets · Screener</div>
-        <h1 className="font-serif text-display leading-[1.1] font-normal text-primary">Screener</h1>
+        <div className="mb-2 font-mono text-eyebrow-page text-muted uppercase">Markets · Screener</div>
+        <h1 className="font-serif text-h1 leading-[1.1] font-normal text-primary">Screener</h1>
       </div>
 
       <div className="grid grid-cols-1 items-start gap-3.5 min-[900px]:grid-cols-[232px_1fr]">

@@ -65,8 +65,8 @@ export function HoldingsTable({
     <>
       <div className="mb-5.5 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <div className="mb-2 font-mono text-eyebrow text-muted uppercase">Portfolio</div>
-          <h1 className="font-serif text-display leading-[1.1] font-normal text-primary">Holdings</h1>
+          <div className="mb-2 font-mono text-eyebrow-page text-muted uppercase">Portfolio</div>
+          <h1 className="font-serif text-h1 leading-[1.1] font-normal text-primary">Holdings</h1>
         </div>
         <button
           type="button"

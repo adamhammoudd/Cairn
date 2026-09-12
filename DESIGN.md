@@ -40,6 +40,7 @@ above a stat" is a role that must not drift, while "small" is an invitation to i
 | Token | Size | Line-height | Use |
 |---|---|---|---|
 | `text-eyebrow` | 10px | 1.3 | Mono uppercase labels: `PORTFOLIO`, timestamps, column heads |
+| `text-eyebrow-page` | 10px | 1.3 | The eyebrow above a **page title** - same size, tracked `0.16em` |
 | `text-micro` | 11px | 1.3 | Dense secondary metadata |
 | `text-caption` | 12px | 1.35 | Captions, helper text, chart labels |
 | `text-body` | 13px | 1.45 | **Default.** UI copy, table cells, list rows |
@@ -47,10 +48,10 @@ above a stat" is a role that must not drift, while "small" is an invitation to i
 | `text-title` | 16px | 1.35 | Card titles, section heads |
 | `text-h3` | 20px | 1.25 | Sub-section headings |
 | `text-h2` | 24px | 1.2 | Page section headings |
-| `text-h1` | 30px | 1.15 | Page titles |
-| `text-display` | 34px | 1.1 | Hero figures, headline stats |
+| `text-h1` | 32px | 1.1 | **Page titles.** The standard title on every app screen |
+| `text-display` | 34px | 1.1 | Hero figures, headline stats, and the three arrival screens (Base Camp, Welcome, Research) |
 
-**`text-eyebrow` carries its own `letter-spacing: 0.12em`.** Do not add `tracking-*`
+**`text-eyebrow` carries its own `letter-spacing: 0.12em`, and `text-eyebrow-page` its own `0.16em`.** Do not add `tracking-*`
 beside it - that one binding is what collapsed eight competing tracking values, and
 re-adding one reopens the drift.
 

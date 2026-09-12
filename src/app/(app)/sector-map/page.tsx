@@ -37,8 +37,8 @@ async function SectorMapBody() {
   return (
     <div className="animate-page-in">
       <div className="mb-5">
-        <div className="mb-2 font-mono text-eyebrow text-muted uppercase">Markets · Sector map</div>
-        <h1 className="font-serif text-display leading-[1.1] font-normal text-primary">Sector map</h1>
+        <div className="mb-2 font-mono text-eyebrow-page text-muted uppercase">Markets · Sector map</div>
+        <h1 className="font-serif text-h1 leading-[1.1] font-normal text-primary">Sector map</h1>
         <p className="mt-2 max-w-[540px] text-lead text-muted text-pretty">
           Tile area is market cap; saturation is the size of today&apos;s move. Symbols with no SEC-classified sector
           show under &quot;Unclassified.&quot;

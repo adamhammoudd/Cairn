@@ -17,8 +17,8 @@ export default async function AssistantPage() {
   return (
     <div className="animate-page-in">
       <div className="mb-4.5">
-        <div className="mb-2 font-mono text-eyebrow text-muted uppercase">AI Assistant</div>
-        <h1 className="font-serif text-display leading-[1.1] font-normal text-primary">Ask, with sources</h1>
+        <div className="mb-2 font-mono text-eyebrow-page text-muted uppercase">AI Assistant</div>
+        <h1 className="font-serif text-h1 leading-[1.1] font-normal text-primary">Ask, with sources</h1>
         <p className="mt-2 max-w-[640px] text-lead text-muted text-pretty">
           Market, sector, and ticker analysis - every answer shows its sources, historical analogs, and confidence.
           Cairn never advises on your personal positions.
