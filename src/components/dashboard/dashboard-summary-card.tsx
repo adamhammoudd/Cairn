@@ -12,11 +12,15 @@ import type { ReactNode } from "react";
  */
 export type ModuleTint = "accent" | "info" | "violet" | "warning";
 
-const TINT_CLASSES: Record<ModuleTint, { label: string; edge: string }> = {
-  accent: { label: "text-accent", edge: "border-t-accent" },
-  info: { label: "text-info", edge: "border-t-info" },
-  violet: { label: "text-violet", edge: "border-t-violet" },
-  warning: { label: "text-warning", edge: "border-t-warning" },
+// The design marks a module's identity with a 1px hairline that fades out
+// across the top of the card, not a 2px border. A full-weight coloured edge
+// reads as a state (selected, erroring); a hairline that dissolves reads as a
+// label, which is what this is.
+const TINT_CLASSES: Record<ModuleTint, { label: string; hairline: string }> = {
+  accent: { label: "text-accent", hairline: "#2fc685" },
+  info: { label: "text-info", hairline: "#5b8def" },
+  violet: { label: "text-violet", hairline: "#9b8ce0" },
+  warning: { label: "text-warning", hairline: "#d9a441" },
 };
 
 interface DashboardSummaryCardProps {
@@ -100,11 +104,16 @@ export function DashboardSummaryCard({
   const tintClasses = tint ? TINT_CLASSES[tint] : null;
   return (
     <div
-      className={`animate-rise-in group relative self-start rounded-card border border-line bg-panel p-4.5 transition-[border-color,transform,box-shadow] duration-base ease-standard hover:-translate-y-0.5 hover:border-line-strong hover:shadow-[0_12px_30px_rgba(0,0,0,0.45)] ${
-        tintClasses ? `border-t-2 ${tintClasses.edge}` : ""
-      } ${className}`}
+      className={`animate-rise-in group relative self-start overflow-hidden rounded-2xl border border-[#232323] bg-panel px-[22px] py-5 transition-[border-color,transform,box-shadow] duration-base ease-standard hover:-translate-y-0.5 hover:border-line-strong hover:shadow-[0_12px_30px_rgba(0,0,0,0.45)] ${className}`}
       style={{ animationDelay: `${delay}ms` }}
     >
+      {tintClasses && (
+        <span
+          aria-hidden
+          className="absolute top-0 right-0 left-0 h-px"
+          style={{ background: `linear-gradient(90deg,${tintClasses.hairline},transparent)` }}
+        />
+      )}
       {/* An earlier pass stripped a coloured rule from this header, because at
           the time four tints were sprinkled across five cards with no rule
           behind them - green included, which is the gain colour. The tint is
