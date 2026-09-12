@@ -3,7 +3,7 @@
 import { ASSET_TYPE_TAG_CLASS, assetTypeBadge, formatMarketCap } from "@/lib/screener";
 import { useDisplayPrefs } from "@/components/display-prefs-provider";
 import { absoluteChangeFrom, formatChange, formatMoney, type DisplayPrefs } from "@/lib/display-prefs";
-import type { ComparisonRow } from "@/lib/comparison";
+import { COMPARISON_COLORS, type ComparisonRow } from "@/lib/comparison";
 
 interface Cell {
   text: string;
@@ -67,20 +67,27 @@ export function ComparisonTable({ rows }: { rows: ComparisonRow[] }) {
   const gridTemplate = `minmax(120px, 170px) repeat(${rows.length}, minmax(0, 1fr))`;
 
   return (
-    <div className="overflow-hidden rounded-card border border-line bg-panel">
-      <div className="border-b border-line px-4.5 py-3 font-mono text-eyebrow text-muted uppercase">
+    <div className="overflow-hidden rounded-2xl border border-[#232323] bg-panel">
+      <div className="border-b border-[#1c1c1c] bg-[#0c0c0c] px-5 py-3.5 font-mono text-eyebrow tracking-[0.16em] text-primary uppercase">
         Aligned metrics
       </div>
 
       <div className="overflow-x-auto">
         <div className="min-w-fit">
           <div
-            className="grid items-center gap-3 border-b border-line px-4.5 py-3 font-mono text-eyebrow text-dim uppercase"
+            className="grid items-center gap-3.5 border-b border-[#1c1c1c] bg-[#0c0c0c] px-5 py-3.5 font-mono text-eyebrow tracking-[0.16em] text-dim uppercase"
             style={{ gridTemplateColumns: gridTemplate }}
           >
             <div>Metric</div>
-            {rows.map((row) => (
-              <div key={row.symbol} className="text-primary">
+            {/* Each column head takes its series colour, so a column in the
+                table and a line in the chart above are the same ticker
+                without having to re-read the header. */}
+            {rows.map((row, i) => (
+              <div
+                key={row.symbol}
+                className="tracking-[0.12em]"
+                style={{ color: COMPARISON_COLORS[i % COMPARISON_COLORS.length] }}
+              >
                 {row.symbol}
               </div>
             ))}
@@ -89,10 +96,10 @@ export function ComparisonTable({ rows }: { rows: ComparisonRow[] }) {
           {METRICS.map((metric, index) => (
             <div
               key={metric.label}
-              className="cn-row animate-rise-in grid items-center gap-3 border-b border-line px-4.5 py-3 transition-colors duration-fast ease-standard last:border-b-0 hover:bg-active"
+              className="cn-row animate-rise-in grid items-center gap-3.5 border-b border-[#171717] px-5 py-3 transition-colors duration-fast ease-standard last:border-b-0 hover:bg-raised"
               style={{ gridTemplateColumns: gridTemplate, animationDelay: `${index * 30}ms` }}
             >
-              <div className="text-caption text-muted">{metric.label}</div>
+              <div className="text-[12.5px] text-muted">{metric.label}</div>
               {rows.map((row) => {
                 // Every other page shows asset type as an uppercase pill
                 // (see ticker-list.tsx); this table printed the raw
