@@ -36,7 +36,7 @@ export function PortfolioStats({
       <div className="mb-2 flex min-h-[18px] justify-end">
         <LivePricePoll refreshRateSeconds={refreshRateSeconds} />
       </div>
-      <div className="mb-4 grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-3">
+      <div className="mb-3.5 grid grid-cols-[repeat(auto-fit,minmax(196px,1fr))] gap-3">
       <StatCard
         label="Total value"
         value={formatCompactMoney(totals.totalValue, prefs)}
@@ -64,6 +64,7 @@ export function PortfolioStats({
         exact={formatMoney(totals.totalCostBasis, prefs)}
         sub={`Across ${assetTypeCount} asset ${assetTypeCount === 1 ? "type" : "types"}`}
         delayMs={150}
+        accent="var(--color-info)"
       />
       </div>
     </>

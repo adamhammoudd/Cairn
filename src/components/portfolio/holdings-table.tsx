@@ -8,7 +8,7 @@ import { Sparkline } from "@/components/sparkline";
 import { useDisplayPrefs } from "@/components/display-prefs-provider";
 import { formatMoney, formatCompactMoney, formatChange, formatSecondaryChange } from "@/lib/display-prefs";
 import { formatQuantity, type Holding, type HoldingMetrics } from "@/lib/portfolio";
-import { assetTypeBadge } from "@/lib/screener";
+import { assetTypeBadge, ASSET_TYPE_TAG_CLASS } from "@/lib/screener";
 import { ConfirmDialog } from "@/components/dialog";
 
 const COLS = "grid-cols-[1.5fr_0.7fr_0.9fr_1fr_1fr_1.1fr_96px_72px]";
@@ -63,15 +63,15 @@ export function HoldingsTable({
 
   return (
     <>
-      <div className="mb-5.5 flex flex-wrap items-end justify-between gap-4">
+      <div className="mb-5 flex flex-wrap items-end justify-between gap-[18px]">
         <div>
-          <div className="mb-2 font-mono text-eyebrow text-muted uppercase">Portfolio</div>
-          <h1 className="font-serif text-display leading-[1.1] font-normal text-primary">Holdings</h1>
+          <div className="mb-2 font-mono text-[10.5px] tracking-[0.18em] text-muted uppercase">Portfolio</div>
+          <h1 className="font-serif text-[40px] leading-[1.05] font-normal tracking-[-0.015em] text-primary">Holdings</h1>
         </div>
         <button
           type="button"
           onClick={() => setEditing("new")}
-          className="flex items-center gap-2 rounded-panel bg-gradient-to-br from-accent-light to-accent-dark px-4 py-2.5 text-body font-semibold text-canvas transition-[box-shadow,transform] duration-base ease-standard hover:-translate-y-px hover:shadow-[0_0_26px_rgba(47,198,133,0.35)]"
+          className="flex items-center gap-1.5 rounded-[9px] bg-accent px-4 py-[9px] text-[12.5px] font-bold text-canvas transition-[background,transform] duration-base ease-standard hover:-translate-y-px hover:bg-accent-light"
         >
           <span className="text-title leading-none">+</span> Add holding
         </button>
@@ -100,9 +100,9 @@ export function HoldingsTable({
           </button>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-card border border-line bg-panel">
-          <div className="flex items-center justify-between border-b border-line px-4.5 py-3.5">
-            <span className="font-mono text-eyebrow text-muted uppercase">
+        <div className="overflow-hidden rounded-2xl border border-[#232323] bg-panel">
+          <div className="flex flex-wrap items-center justify-between gap-2.5 border-b border-[#1c1c1c] bg-[#0c0c0c] px-5 py-3.5">
+            <span className="font-mono text-eyebrow tracking-[0.16em] text-primary uppercase">
               {metrics.length} {metrics.length === 1 ? "position" : "positions"}
             </span>
             <span className="text-caption text-dim">Sorted by value</span>
@@ -114,7 +114,7 @@ export function HoldingsTable({
               const positive = (m.gain ?? 0) >= 0;
               const series = sparklines[m.symbol] ?? [];
               return (
-                <div key={m.id} className="cn-row flex flex-col gap-2.5 border-b border-line-soft px-4 py-3.5 last:border-b-0">
+                <div key={m.id} className="cn-row flex flex-col gap-2.5 border-b border-[#171717] px-4 py-3.5 last:border-b-0">
                   <div className="flex items-center justify-between gap-2.5">
                     <div className="flex min-w-0 items-center gap-2.5">
                       <div
@@ -202,7 +202,7 @@ export function HoldingsTable({
           <div className="hidden overflow-x-auto sm:block">
             <div className="min-w-[860px]">
               <div
-                className={`grid ${COLS} gap-3 border-b border-line-soft px-4.5 py-2.5 font-mono text-eyebrow text-dim uppercase`}
+                className={`grid ${COLS} gap-3 border-b border-[#1c1c1c] bg-[#0c0c0c] px-5 py-2.5 font-mono text-eyebrow tracking-[0.14em] text-dim uppercase`}
               >
                 <div>Holding</div>
                 <div>Qty</div>
@@ -220,35 +220,32 @@ export function HoldingsTable({
                 return (
                   <div
                     key={m.id}
-                    className={`cn-row grid ${COLS} items-center gap-3 border-b border-line-soft px-4.5 py-3 transition-colors duration-fast ease-standard last:border-b-0 hover:bg-active`}
+                    className={`cn-row grid ${COLS} items-center gap-3 border-b border-[#171717] px-5 py-[13px] transition-colors duration-fast ease-standard last:border-b-0 hover:bg-raised`}
                   >
                     <div className="flex min-w-0 items-center gap-2.5">
                       <div
-                        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-control font-mono text-eyebrow font-medium text-canvas"
-                        style={{
-                          background: positive
-                            ? "var(--gradient-gain)"
-                            : "var(--gradient-loss)",
-                        }}
+                        className={`flex h-7.5 w-7.5 shrink-0 items-center justify-center rounded-[9px] border bg-panel font-mono text-[10.5px] ${
+                          ASSET_TYPE_TAG_CLASS[m.asset_type] ?? "text-muted border-line"
+                        }`}
                       >
                         {m.symbol.slice(0, 2)}
                       </div>
                       <div className="min-w-0">
                         <Link
                           href={`/ticker/${encodeURIComponent(m.symbol)}`}
-                          className="text-body text-primary hover:text-accent"
+                          className="text-[13.5px] font-semibold text-primary hover:text-accent"
                         >
                           {m.symbol}
                         </Link>
-                        <div className="truncate text-micro text-muted">{assetTypeBadge(m.asset_type)}</div>
+                        <div className="truncate text-micro text-dim">{assetTypeBadge(m.asset_type)}</div>
                       </div>
                     </div>
 
-                    <div className="text-body tabular-nums text-primary" title={m.quantity.toLocaleString()}>
+                    <div className="font-mono text-[12.5px] tabular-nums text-muted" title={m.quantity.toLocaleString()}>
                       {formatQuantity(m.quantity)}
                     </div>
                     <div
-                      className="flex items-center gap-1 text-body tabular-nums text-primary"
+                      className="flex items-center gap-1 font-mono text-[12.5px] tabular-nums text-primary"
                       title={m.priceStale ? `Stale - last updated ${m.priceAsOf ?? "unknown"}` : undefined}
                     >
                       {fmtCurrency(m.currentPrice)}
@@ -259,12 +256,12 @@ export function HoldingsTable({
                       )}
                     </div>
                     <div
-                      className="text-body tabular-nums text-muted"
+                      className="font-mono text-[12.5px] tabular-nums text-muted"
                       title={fmtExact(m.purchase_price * m.quantity)}
                     >
                       {fmtCurrency(m.purchase_price * m.quantity)}
                     </div>
-                    <div className="text-body tabular-nums text-primary" title={fmtExact(m.value)}>
+                    <div className="font-mono text-[12.5px] tabular-nums text-primary" title={fmtExact(m.value)}>
                       {fmtCurrency(m.value)}
                     </div>
 
@@ -273,11 +270,11 @@ export function HoldingsTable({
                         reorders them rather than hiding one, so nothing a
                         reader could want is taken away by a display choice. */}
                     <div className="flex flex-col gap-0.5">
-                      <span className={`text-body tabular-nums ${positive ? "text-accent" : "text-negative"}`}>
+                      <span className={`font-mono text-[12.5px] tabular-nums ${positive ? "text-accent" : "text-negative"}`}>
                         {formatChange(m.gain, m.gainPct, prefs, 1)}
                       </span>
                       <span
-                        className={`text-micro tabular-nums opacity-70 ${positive ? "text-accent" : "text-negative"}`}
+                        className={`font-mono text-micro tabular-nums opacity-75 ${positive ? "text-accent" : "text-negative"}`}
                       >
                         {m.gain === null && m.gainPct === null ? "" : formatSecondaryChange(m.gain, m.gainPct, prefs, 1)}
                       </span>
