@@ -81,11 +81,25 @@ export function CalendarPanel({ events }: { events: CalendarEvent[] }) {
   }
 
   return (
-    <div className="animate-page-in flex flex-col gap-4">
-      <div className="flex flex-wrap items-end justify-between gap-3">
+    <div
+      className="animate-page-in flex flex-col gap-3.5"
+      style={{
+        backgroundImage:
+          "radial-gradient(880px 420px at 10% -8%, rgba(91,141,239,.10), transparent 70%), radial-gradient(700px 380px at 94% 0%, rgba(217,164,65,.07), transparent 72%)",
+      }}
+    >
+      <div className="flex flex-wrap items-end justify-between gap-[18px]">
         <div>
-          <div className="mb-2 font-mono text-eyebrow text-muted uppercase">Planning · Calendar</div>
-          <h1 className="font-serif text-display leading-[1.1] font-normal text-primary">{monthLabel}</h1>
+          <div className="mb-2 font-mono text-[10.5px] tracking-[0.18em] text-muted uppercase">Planning · Calendar</div>
+          {/* The title is the page's job, not its position. The month moves
+              down onto the grid it actually labels, beside the controls that
+              change it - so the h1 stops shifting every time you page. */}
+          <h1 className="font-serif text-[40px] leading-[1.05] font-normal tracking-[-0.015em] text-primary">
+            What&apos;s coming
+          </h1>
+          <p className="mt-2 max-w-[520px] text-[13.5px] leading-[1.55] text-muted text-pretty">
+            Earnings, dividends and macro prints for the names you hold and watch.
+          </p>
         </div>
         <div className="flex items-center gap-1.5">
           <button
@@ -124,34 +138,46 @@ export function CalendarPanel({ events }: { events: CalendarEvent[] }) {
         </div>
       </div>
 
-      <div className="flex w-fit flex-wrap gap-1.5 rounded-panel border border-line bg-panel p-1">
+      <div className="flex w-fit flex-wrap gap-[3px] rounded-[11px] border border-[#232323] bg-[#0c0c0c] p-[3px]">
         <button
           type="button"
           onClick={() => setActiveTypes([])}
-          className={`rounded-control px-3 py-2 text-body transition-colors duration-base ease-standard ${
-            activeTypes.length === 0 ? "bg-active text-primary" : "text-muted hover:text-primary"
+          className={`rounded-[9px] px-3 py-[7px] text-caption whitespace-nowrap transition-colors duration-base ease-standard ${
+            activeTypes.length === 0 ? "bg-[#1e1e1e] text-primary" : "text-muted hover:text-primary"
           }`}
         >
           All
         </button>
-        {EVENT_TYPES.map((t) => (
-          <button
-            key={t}
-            type="button"
-            onClick={() => toggle(t)}
-            className={`flex items-center gap-2 rounded-control px-3 py-2 text-body capitalize transition-colors duration-base ease-standard ${
-              activeTypes.includes(t) ? "bg-active text-primary" : "text-muted hover:text-primary"
-            }`}
-          >
-            <span className="h-1.5 w-1.5 rounded-full" style={{ background: tintForEvent(t) }} />
-            {t}
-          </button>
-        ))}
+        {EVENT_TYPES.map((t) => {
+          const on = activeTypes.includes(t);
+          return (
+            <button
+              key={t}
+              type="button"
+              onClick={() => toggle(t)}
+              className={`inline-flex items-center gap-[7px] rounded-[9px] px-3 py-[7px] text-caption whitespace-nowrap capitalize transition-colors duration-base ease-standard ${
+                on ? "bg-[#1e1e1e] text-primary" : "text-muted hover:text-primary"
+              }`}
+            >
+              <span
+                aria-hidden
+                className={`h-[7px] w-[7px] rounded-xs ${on ? "" : "opacity-50"}`}
+                style={{ background: tintForEvent(t) }}
+              />
+              {t}
+            </button>
+          );
+        })}
       </div>
 
       <div className="grid grid-cols-1 items-start gap-3.5 min-[900px]:grid-cols-[300px_1fr]">
-        <aside className="overflow-hidden rounded-card border border-line bg-panel">
-          <div className="border-b border-line px-4 py-3 font-mono text-eyebrow text-muted uppercase">
+        <aside className="relative overflow-hidden rounded-2xl border border-[#232323] bg-panel min-[900px]:sticky min-[900px]:top-[78px]">
+          <span
+            aria-hidden
+            className="absolute top-0 right-0 left-0 h-px"
+            style={{ background: "linear-gradient(90deg,#5b8def,rgba(91,141,239,0))" }}
+          />
+          <div className="border-b border-[#1c1c1c] px-4 py-3.5 font-mono text-eyebrow tracking-[0.18em] text-info uppercase">
             Next up
           </div>
 
@@ -161,8 +187,8 @@ export function CalendarPanel({ events }: { events: CalendarEvent[] }) {
             </p>
           ) : (
             upcoming.map((e) => (
-              <div key={e.id} className="flex gap-3 border-b border-line/70 px-4 py-3.5 last:border-b-0">
-                <span className="w-1 shrink-0 rounded-xs" style={{ background: tintForEvent(e.event_type) }} />
+              <div key={e.id} className="flex gap-3 border-b border-[#171717] px-4 py-3.5 last:border-b-0">
+                <span aria-hidden className="w-[3px] shrink-0 self-stretch rounded-xs" style={{ background: tintForEvent(e.event_type) }} />
                 <div className="min-w-0">
                   <div
                     className="font-mono text-eyebrow uppercase"
@@ -179,10 +205,23 @@ export function CalendarPanel({ events }: { events: CalendarEvent[] }) {
           )}
         </aside>
 
-        <div className="rounded-card border border-line bg-panel p-4">
+        <div className="rounded-2xl border border-[#232323] bg-panel px-[22px] py-5">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <span className="font-mono text-eyebrow tracking-[0.18em] text-dim uppercase">{monthLabel}</span>
+            {/* A legend, because the chips below carry their type in colour
+                alone and nothing on the page said what the colours meant. */}
+            <div className="flex flex-wrap items-center gap-3.5 text-[11.5px] text-dim">
+              {EVENT_TYPES.map((t) => (
+                <span key={t} className="flex items-center gap-1.5 capitalize">
+                  <span aria-hidden className="h-2 w-2 rounded-xs" style={{ background: tintForEvent(t) }} />
+                  {t}
+                </span>
+              ))}
+            </div>
+          </div>
           <div className="grid grid-cols-7 gap-1.5 pb-2">
             {DOW.map((d) => (
-              <div key={d} className="text-center font-mono text-eyebrow text-dim uppercase">
+              <div key={d} className="font-mono text-[9.5px] tracking-[0.14em] text-dim uppercase">
                 {d}
               </div>
             ))}
@@ -192,26 +231,35 @@ export function CalendarPanel({ events }: { events: CalendarEvent[] }) {
             {cells.map((cell) => (
               <div
                 key={cell.iso}
-                className={`min-h-[74px] rounded-control border p-2 transition-colors duration-fast ease-standard hover:border-line ${
-                  cell.isToday ? "border-accent bg-active" : "border-line/70"
-                } ${cell.inMonth ? "" : "opacity-40"}`}
+                className={`flex min-h-[82px] flex-col gap-1.5 rounded-[10px] border p-2 transition-colors duration-fast ease-standard hover:border-line-strong ${
+                  cell.isToday ? "border-accent/40" : "border-[#1c1c1c]"
+                } ${cell.events.length > 0 ? "bg-[#121212]" : "bg-[#0d0d0d]"} ${cell.inMonth ? "" : "opacity-40"}`}
               >
                 <div
                   className={`font-mono text-micro tabular-nums ${
-                    cell.isToday ? "text-accent" : cell.inMonth ? "text-primary" : "text-dim"
+                    cell.isToday
+                      ? "self-start rounded-[5px] bg-accent px-1.5 py-px font-semibold text-canvas"
+                      : cell.events.length > 0
+                        ? "text-primary"
+                        : "text-dim"
                   }`}
                 >
                   {cell.day}
                 </div>
-                <div className="mt-1.5 flex flex-col gap-1">
+                <div className="flex min-w-0 flex-col gap-[3px]">
                   {cell.events.slice(0, 2).map((e) => (
-                    <div key={e.id} className="flex items-center gap-1" title={`${e.symbol ?? ""} ${e.title}`.trim()}>
-                      <span
-                        className="h-1 w-1 shrink-0 rounded-full"
-                        style={{ background: tintForEvent(e.event_type) }}
-                      />
-                      <span className="truncate text-eyebrow text-muted">{e.symbol ?? e.title}</span>
-                    </div>
+                    <span
+                      key={e.id}
+                      title={`${e.symbol ?? ""} ${e.title}`.trim()}
+                      className="truncate rounded-[5px] border px-1.5 py-px font-mono text-[9.5px] tracking-[0.06em]"
+                      style={{
+                        color: tintForEvent(e.event_type),
+                        borderColor: `${tintForEvent(e.event_type)}55`,
+                        background: `${tintForEvent(e.event_type)}1a`,
+                      }}
+                    >
+                      {e.symbol ?? e.title}
+                    </span>
                   ))}
                   {cell.events.length > 2 && (
                     <span className="text-eyebrow text-dim">+{cell.events.length - 2} more</span>
