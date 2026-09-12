@@ -14,6 +14,7 @@ import { TimeAgo } from "@/components/time-ago";
 import { MODULE_KEYS, type ModuleKey } from "@/lib/dashboard-modules";
 import { DataFreshness } from "@/components/data-freshness";
 import { TickerStrip, type TickerStripItem } from "@/components/dashboard/ticker-strip";
+import { usePageTone } from "@/components/layout/page-tone";
 import {
   PortfolioValueChart,
   type ValueSeries,
@@ -150,6 +151,8 @@ export function DashboardHome({
   // Settings > Display: currency and percent-vs-dollar, the same source every
   // other price surface reads.
   const prefs = useDisplayPrefs();
+  // Reported by the value chart below; see layout/page-tone.tsx.
+  const chartTone = usePageTone();
   const [result, formAction] = useActionState(updateDashboardLayout, null);
 
   const moduleMap = new Map(MODULES.map((m) => [m.key, m]));
@@ -325,16 +328,20 @@ export function DashboardHome({
         className="animate-rise-in relative overflow-hidden rounded-2xl border border-[#232323] px-[26px] py-6"
         style={{ background: "linear-gradient(180deg,#101110,#0d0d0d)" }}
       >
-        {/* The wash behind the headline figure takes the figure's own tone, so
-            a bad week is lit red and a good one green. It is the only place on
-            Base Camp where colour is doing more than labelling a module. */}
+        {/* The wash behind the headline figure follows the chart beside it,
+            not all-time gain. Those two disagree whenever the selected range
+            points the other way, and a green glow next to a red line reads as
+            a contradiction rather than as two different measures. Falls back
+            to all-time until the chart reports. */}
         <div
           aria-hidden
           className="pointer-events-none absolute"
           style={{
             inset: "-40% 45% 40% -10%",
             background: `radial-gradient(closest-side, ${
-              portfolio.positive ? "rgba(47,198,133,.16)" : "rgba(217,108,108,.16)"
+              (chartTone ?? (portfolio.positive ? "positive" : "negative")) === "positive"
+                ? "rgba(47,198,133,.16)"
+                : "rgba(217,108,108,.16)"
             }, transparent)`,
             animation: "cn-glow 7s ease-in-out infinite",
           }}

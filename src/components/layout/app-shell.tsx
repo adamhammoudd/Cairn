@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { TopNav } from "@/components/layout/top-nav";
 import { PageWash } from "@/components/layout/page-wash";
+import { PageToneProvider } from "@/components/layout/page-tone";
 import { ScrollbarWidthVar } from "@/components/layout/scrollbar-width-var";
 import { ChatPanel } from "@/components/chat/chat-panel";
 import { DisplayPrefsProvider } from "@/components/display-prefs-provider";
@@ -32,6 +33,9 @@ export function AppShell({
   // toggle reach surfaces uniformly instead of the three someone remembered.
   return (
     <DisplayPrefsProvider value={displayPrefs}>
+      {/* The chart on a page reports which way it points; the wash reads it.
+          See layout/page-tone.tsx. */}
+      <PageToneProvider>
       <div
         data-density={displayPrefs.compactMode ? "compact" : "comfortable"}
         className="relative isolate flex min-h-screen max-w-screen flex-col overflow-x-clip bg-canvas"
@@ -52,6 +56,7 @@ export function AppShell({
         </main>
         <ChatPanel />
       </div>
+      </PageToneProvider>
     </DisplayPrefsProvider>
   );
 }
