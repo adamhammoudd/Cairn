@@ -57,6 +57,27 @@ export function AlertPanel({ alerts, deliveries, defaultChannels }: AlertPanelPr
   const triggered = alerts.filter((a) => a.enabled && a.last_triggered_at);
   const paused = alerts.filter((a) => !a.enabled);
   const shown = tab === "armed" ? armed : tab === "triggered" ? triggered : paused;
+
+  // Real counts only - no "closest to firing" card here, since that needs a
+  // live price/threshold distance this component isn't given (alerts +
+  // deliveries only). Adding it means passing current prices in as a prop,
+  // which is a data-plumbing decision, not a styling one.
+  const now = new Date();
+  const deliveriesThisMonth = deliveries.filter((d) => {
+    const sent = new Date(d.sent_at);
+    return sent.getFullYear() === now.getFullYear() && sent.getMonth() === now.getMonth();
+  });
+  const STATS: { label: string; value: string; note: string; textClass: string; accent: string }[] = [
+    { label: "Armed", value: String(armed.length), note: "watching at every close", textClass: "text-accent", accent: "#2fc685" },
+    {
+      label: "Fired this month",
+      value: String(deliveriesThisMonth.length),
+      note: `across ${new Set(deliveriesThisMonth.map((d) => d.alert_id)).size} alerts`,
+      textClass: "text-warning",
+      accent: "#d9a441",
+    },
+    { label: "Paused", value: String(paused.length), note: "not being evaluated", textClass: "text-muted", accent: "#3a3a3a" },
+  ];
   const TABS: { key: AlertTab; label: string; count: number }[] = [
     { key: "armed", label: "Armed", count: armed.length },
     { key: "triggered", label: "Triggered", count: triggered.length },
@@ -95,6 +116,24 @@ export function AlertPanel({ alerts, deliveries, defaultChannels }: AlertPanelPr
             {openForm === "new" ? "Close" : "+ New alert"}
           </button>
         </div>
+      </div>
+
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(210px,1fr))] gap-3">
+        {STATS.map((stat) => (
+          <div
+            key={stat.label}
+            className="relative flex flex-col gap-1.5 overflow-hidden rounded-[15px] border border-[#232323] bg-panel px-[19px] py-[17px]"
+          >
+            <span
+              aria-hidden
+              className="absolute top-0 right-0 left-0 h-px"
+              style={{ background: `linear-gradient(90deg,${stat.accent},transparent)` }}
+            />
+            <div className="font-mono text-eyebrow tracking-[0.18em] text-dim uppercase">{stat.label}</div>
+            <div className={`font-serif text-[32px] leading-[1.05] ${stat.textClass}`}>{stat.value}</div>
+            <div className="text-caption text-muted">{stat.note}</div>
+          </div>
+        ))}
       </div>
 
       {/* Armed / Triggered / Paused, with counts. Before this the page listed

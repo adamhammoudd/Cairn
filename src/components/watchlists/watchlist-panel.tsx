@@ -27,6 +27,10 @@ export function WatchlistPanel({ watchlists }: { watchlists: WatchlistWithItems[
   const [, startMutate] = useTransition();
   const [dragId, setDragId] = useState<string | null>(null);
   const [confirmingDeleteList, setConfirmingDeleteList] = useState(false);
+  // Client-side filter on the active list only - the design's "Filter list"
+  // input. Symbols are already loaded for the active list, so this narrows
+  // what's rendered rather than issuing a new fetch.
+  const [query, setQuery] = useState("");
 
   const active = watchlists.find((w) => w.id === activeId) ?? watchlists[0] ?? null;
 
@@ -44,6 +48,12 @@ export function WatchlistPanel({ watchlists }: { watchlists: WatchlistWithItems[
         return items; // manual -- already sort_order from the query
     }
   }, [active]);
+
+  const visibleItems = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return sortedItems;
+    return sortedItems.filter((item) => item.symbol.toLowerCase().includes(q));
+  }, [sortedItems, query]);
 
   // Newest bar behind any row in this list.
   const listAsOf = sortedItems.reduce<string | null>((newest, i) => (i.asOf && (!newest || i.asOf > newest) ? i.asOf : newest), null);
@@ -113,7 +123,10 @@ export function WatchlistPanel({ watchlists }: { watchlists: WatchlistWithItems[
               <button
                 key={w.id}
                 type="button"
-                onClick={() => setActiveId(w.id)}
+                onClick={() => {
+                  setActiveId(w.id);
+                  setQuery("");
+                }}
                 className={`flex items-center gap-2.5 rounded-[10px] border px-3.5 py-2.5 transition-colors duration-base ease-standard hover:border-line-strong ${
                   isActive ? "border-line-strong bg-[#181818]" : "border-[#232323] bg-transparent"
                 }`}
@@ -208,12 +221,33 @@ export function WatchlistPanel({ watchlists }: { watchlists: WatchlistWithItems[
                 <span className="font-mono text-eyebrow tracking-[0.16em] text-primary uppercase">
                   {sortedItems.length} {sortedItems.length === 1 ? "symbol" : "symbols"}
                 </span>
-                <DataFreshness source="last_close" asOf={listAsOf} />
+                <div className="flex items-center gap-3">
+                  <label className="flex items-center gap-2 rounded-control border border-line bg-canvas px-3 py-2">
+                    <span aria-hidden className="text-caption text-dim">
+                      ⌕
+                    </span>
+                    <input
+                      value={query}
+                      onChange={(e) => setQuery(e.target.value)}
+                      placeholder="Filter list"
+                      className="w-[130px] bg-transparent text-body text-primary outline-none placeholder:text-dim"
+                    />
+                  </label>
+                  <DataFreshness source="last_close" asOf={listAsOf} />
+                </div>
               </div>
+              {visibleItems.length === 0 ? (
+                <div className="rounded-card border border-dashed border-line px-6 py-16 text-center">
+                  <div className="font-serif text-h3 text-primary">No match for &quot;{query}&quot;</div>
+                  <p className="mx-auto mt-2 max-w-[380px] text-body text-muted text-pretty">
+                    Nothing on this list matches that filter.
+                  </p>
+                </div>
+              ) : (
               <div>
                 <div className="grid grid-cols-[repeat(auto-fit,minmax(252px,1fr))] gap-3">
 
-                  {sortedItems.map((item, index) => {
+                  {visibleItems.map((item, index) => {
                     const positive = (item.changePct ?? 0) >= 0;
                     return (
                       <div
@@ -291,6 +325,7 @@ export function WatchlistPanel({ watchlists }: { watchlists: WatchlistWithItems[
                   })}
                 </div>
               </div>
+              )}
             </div>
           )}
         </>
