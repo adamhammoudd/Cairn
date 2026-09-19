@@ -39,7 +39,7 @@ Complete HTML structure with navigation, tokens, and Chart.js integration.
 
         @media (min-width: 769px) {
             .slide-deck {
-                /* Lock to 16:9 — letterbox if viewport ratio differs */
+                /* Lock to 16:9 - letterbox if viewport ratio differs */
                 max-width: calc(100vh * 16 / 9);
                 max-height: calc(100vw * 9 / 16);
                 margin: auto;
@@ -66,7 +66,7 @@ Complete HTML structure with navigation, tokens, and Chart.js integration.
 
         .slide.active { opacity: 1; visibility: visible; }
 
-        /* Slide inner wrapper — constrains content within safe area */
+        /* Slide inner wrapper - constrains content within safe area */
         .slide-content {
             width: 100%;
             max-width: 100%;

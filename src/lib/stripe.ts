@@ -79,12 +79,40 @@ export function siteUrl(): string {
 }
 
 /**
+ * How long after the paid-for period ends a `past_due` subscription keeps
+ * Premium. Stripe's own Smart Retries run for about two weeks before the
+ * subscription moves to its final state, so this matches the window in which
+ * a recovery is genuinely still expected.
+ */
+export const PAST_DUE_GRACE_DAYS = 14;
+
+/**
  * Map a Stripe subscription status to the Cairn tier. Only a subscription that
  * is actually paid up grants premium; `past_due` keeps premium through the
- * grace window Stripe itself allows, everything else is free.
+ * grace window above, everything else is free.
+ *
+ * `past_due` USED TO BE UNBOUNDED. It mapped straight to premium with no
+ * reference to time, so an account whose payment never recovered kept Premium
+ * indefinitely - free, forever - for as long as the status stayed `past_due`.
+ * The grace window is what closes that: past the period end plus
+ * PAST_DUE_GRACE_DAYS, an unpaid subscription is no longer premium.
+ *
+ * `currentPeriodEnd` is optional only so existing call sites keep compiling.
+ * When it is absent the old unbounded behaviour applies, because the
+ * alternative - downgrading a paying customer because we could not read a date
+ * - is the worse failure. Pass it wherever it is known; syncSubscriptionForCustomer does.
  */
-export function tierForStripeStatus(status: Stripe.Subscription.Status | string): SubscriptionTier {
-  return status === "active" || status === "trialing" || status === "past_due" ? "premium" : "free";
+export function tierForStripeStatus(
+  status: Stripe.Subscription.Status | string,
+  currentPeriodEnd?: Date | null,
+  now: Date = new Date(),
+): SubscriptionTier {
+  if (status === "active" || status === "trialing") return "premium";
+  if (status !== "past_due") return "free";
+
+  if (!currentPeriodEnd) return "premium";
+  const graceEnds = new Date(currentPeriodEnd.getTime() + PAST_DUE_GRACE_DAYS * 24 * 60 * 60 * 1000);
+  return now <= graceEnds ? "premium" : "free";
 }
 
 interface SyncResult {
@@ -124,14 +152,19 @@ export async function syncSubscriptionForCustomer(customerId: string): Promise<S
   const sub = subs.data[0] ?? null;
 
   const fromTier: SubscriptionTier = existing?.tier ?? "free";
-  const toTier: SubscriptionTier = sub ? tierForStripeStatus(sub.status) : "free";
   const status = sub?.status ?? "canceled";
   // `current_period_end` moved to the subscription item in recent API
   // versions; read the item first and fall back to the top-level field.
+  //
+  // Read BEFORE the tier is decided, not after: tierForStripeStatus needs it to
+  // bound how long a `past_due` subscription keeps Premium.
   const periodEndUnix =
     (sub?.items?.data?.[0] as { current_period_end?: number } | undefined)?.current_period_end ??
     (sub as unknown as { current_period_end?: number } | null)?.current_period_end ??
     null;
+  const periodEnd = periodEndUnix ? new Date(periodEndUnix * 1000) : null;
+
+  const toTier: SubscriptionTier = sub ? tierForStripeStatus(sub.status, periodEnd) : "free";
 
   await admin.from("subscriptions").upsert(
     {
@@ -140,7 +173,7 @@ export async function syncSubscriptionForCustomer(customerId: string): Promise<S
       status,
       stripe_customer_id: customerId,
       stripe_subscription_id: sub?.id ?? null,
-      current_period_end: periodEndUnix ? new Date(periodEndUnix * 1000).toISOString() : null,
+      current_period_end: periodEnd ? periodEnd.toISOString() : null,
       updated_at: new Date().toISOString(),
     },
     { onConflict: "user_id" },

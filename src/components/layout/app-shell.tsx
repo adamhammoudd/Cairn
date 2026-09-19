@@ -51,7 +51,16 @@ export function AppShell({
             corner ("See all analogs" on a ticker, the last row of a table).
             The extra padding applies from 900px, the same breakpoint that
             shows the button. */}
-        <main className="mx-auto w-full max-w-[1560px] flex-1 overflow-auto px-5.5 pt-6.5 pb-15 min-[900px]:pb-28">
+        {/* No overflow of its own. `overflow-auto` here clipped every child
+            at this element's own 1560px box, which is what cut the full-bleed
+            ticker strip short on any window wider than that - measured at
+            1920px it ran 180 -> 1740 with a gap at each edge instead of
+            touching them. Nothing needed the scroll container: the wide
+            tables each carry their own `overflow-x-auto`, and the root above
+            already has `overflow-x-clip`. Removing it also lets the sticky
+            rails (screener, alerts, calendar) stick to the viewport, which is
+            what their `top-[78px]` was always written for. */}
+        <main className="mx-auto w-full max-w-[1560px] flex-1 px-5.5 pt-6.5 pb-15 min-[900px]:pb-28">
           {children}
         </main>
         <ChatPanel />

@@ -1,6 +1,6 @@
 ---
 name: growth-log
-description: "Use after a complex task, failure, or when reviewing what was learned. Teaches how to write growth logs that extract reusable patterns — not diary entries."
+description: "Use after a complex task, failure, or when reviewing what was learned. Teaches how to write growth logs that extract reusable patterns - not diary entries."
 metadata:
   version: 1.1.0
   origin: ECC
@@ -10,7 +10,7 @@ metadata:
 
 > **The problem:** Most people write "fixed a bug in X" as a learning log. That's a diary entry, not a learning artifact. A real growth log extracts the *pattern* so you recognize it next time.
 >
-> **This skill teaches:** How to write learning entries that compound across sessions. Works with any note-taking system — Markdown files, Notion, Obsidian, plain text. Templates are generic; adapt to your setup.
+> **This skill teaches:** How to write learning entries that compound across sessions. Works with any note-taking system - Markdown files, Notion, Obsidian, plain text. Templates are generic; adapt to your setup.
 
 ## When to Activate
 
@@ -38,7 +38,7 @@ Same root cause, different symptom → **merge**, don't duplicate. New root caus
 
 **How to check:** Search existing entries for keywords from your root cause before writing. If you find a match, add your new symptom as an additional example under the existing entry rather than creating a duplicate.
 
-**Example:** "Forgot to update the output index after creating a file" and "Forgot to update skill ratings after a task" — same root cause (no automatic capture trigger). Merge into one entry about "post-task capture gaps."
+**Example:** "Forgot to update the output index after creating a file" and "Forgot to update skill ratings after a task" - same root cause (no automatic capture trigger). Merge into one entry about "post-task capture gaps."
 
 ### Rule 3: Must Be Transferable
 
@@ -103,8 +103,8 @@ Before finalizing a growth log entry:
 - Avoid: "Fixed bug in payment module" (event, not pattern)
 - Avoid: Copying the git commit message verbatim (commits describe what changed; logs extract why it matters)
 - Avoid: Writing an entry for every commit (only when a pattern emerges)
-- Avoid: Skipping the transferable sentence (without it, it's just a diary — this is non-negotiable)
-- Avoid: Duplicating the same pattern under different titles (violates Bole Principle — search before writing)
+- Avoid: Skipping the transferable sentence (without it, it's just a diary - this is non-negotiable)
+- Avoid: Duplicating the same pattern under different titles (violates Bole Principle - search before writing)
 
 ## Storage
 
@@ -117,12 +117,12 @@ Pick one convention and stick to it. Searchability matters more than format.
 
 ## If You Use Delivery Gate
 
-The `delivery-gate` Stop hook checks that learning files were modified today via filesystem timestamps. This skill teaches *what to write* — so the file that delivery-gate checks actually contains useful patterns, not empty timestamps.
+The `delivery-gate` Stop hook checks that learning files were modified today via filesystem timestamps. This skill teaches *what to write* - so the file that delivery-gate checks actually contains useful patterns, not empty timestamps.
 
 ```
 Task completes → delivery-gate checks: was the learning file touched today?
-  → Stale (no file modified): block — "what did you learn?"
-  → Fresh (file touched): pass — this skill ensures the content is useful
+  → Stale (no file modified): block - "what did you learn?"
+  → Fresh (file touched): pass - this skill ensures the content is useful
 ```
 
 Having enforcement without methodology → empty entries. Having methodology without enforcement → forgotten captures. Each is independently useful; together they close the loop.

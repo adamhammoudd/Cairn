@@ -51,7 +51,7 @@ const HOW = [
   {
     num: "03",
     title: "Confidence",
-    body: "A Wilson score interval over those analogs, computed in code — not a number a language model chose. A thin sample produces a wide range, and the range is shown.",
+    body: "A Wilson score interval over those analogs, computed in code - not a number a language model chose. A thin sample produces a wide range, and the range is shown.",
     color: "#9b8ce0",
   },
 ];
@@ -89,7 +89,7 @@ const SURFACES = [
   },
   {
     label: "Assistant",
-    body: "Ask about a ticker, sector or market trend — answered from stored research.",
+    body: "Ask about a ticker, sector or market trend - answered from stored research.",
     href: "/assistant",
     color: "#2fc685",
   },
@@ -98,7 +98,7 @@ const SURFACES = [
 const LIMITS = [
   {
     title: "Never tells you what to do",
-    body: "Cairn analyses markets, sectors and tickers. It does not resolve to buy, hold or sell — on any plan. A server-side validator checks every answer before it reaches you, so this is enforced in code rather than asked of a prompt.",
+    body: "Cairn analyses markets, sectors and tickers. It does not resolve to buy, hold or sell - on any plan. A server-side validator checks every answer before it reaches you, so this is enforced in code rather than asked of a prompt.",
     color: "#d9a441",
   },
   {
@@ -211,7 +211,7 @@ export default function WelcomePage() {
 
             <p className="mt-5 max-w-[520px] text-[15px] leading-[1.72] text-[#9a9a9a] text-pretty">
               Ask Cairn about a ticker, a sector or the market. The answer comes back with the
-              articles it read, the historical cases it compared, and how confident it is — so you
+              articles it read, the historical cases it compared, and how confident it is - so you
               can judge the reasoning, not just the conclusion.
             </p>
 

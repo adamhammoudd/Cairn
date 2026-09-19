@@ -12,10 +12,28 @@
 // pages and the consent record both read from here.
 
 /** ISO date of the current Terms of Service revision. */
-export const TOS_VERSION = "2026-08-30";
+// 2026-09-19: the four sections that were explicitly unfinished are now
+// written - §7 (the arbitration/class-waiver clause was REMOVED rather than
+// completed, being unenforceable against EU consumers, and replaced with a
+// complaints and mediation route), §9 (VAT, the 14-day withdrawal right,
+// refunds, proration, price-change notice), §10 (the "as is / no warranties"
+// exclusion was removed as unenforceable under Directive (EU) 2019/770 and
+// replaced with a conformity promise, a €100-or-fees cap and mandatory
+// carve-outs), and §12 (Belgian law, preserving the consumer's own courts and
+// mandatory local protections). §3 gained an explicit 18+ requirement and §14
+// now points at the new Legal notice page. Material by any measure, so the
+// date moves and existing consent rows correctly point at the older text.
+export const TOS_VERSION = "2026-09-19";
 
 /** ISO date of the current Privacy Policy revision. */
-export const PRIVACY_VERSION = "2026-08-30";
+// 2026-09-18: subprocessor list made complete (Vercel, Stripe, the email
+// provider were all missing), the waitlist clause corrected - it claimed
+// entries were "not shared with anyone else" while confirmation mail routes
+// through Resend or Gmail SMTP - and the Vercel function region stated now
+// that vercel.json pins it. All three were material, so the date moves with
+// them rather than leaving consent rows pointing at a document that no longer
+// exists.
+export const PRIVACY_VERSION = "2026-09-18";
 
 /**
  * "30 August 2026" - the format LegalShell's "Last updated" line expects.

@@ -3,14 +3,30 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { stripe, stripeConfigured, PREMIUM_PRICE_ID, siteUrl, customerIdempotencyKey } from "@/lib/stripe";
+import { stripe, stripeConfigured, stripeLiveMode, PREMIUM_PRICE_ID, siteUrl, customerIdempotencyKey } from "@/lib/stripe";
 
 // Phase 12. These start Stripe-hosted flows only. The webhook
 // (app/api/stripe/webhook) is what actually writes a premium tier - so a user
 // who abandons checkout, or forges the return redirect, gets nothing.
 
+/**
+ * This used to be `BILLING_ENABLED === "true" && stripeConfigured()`, a second
+ * copy of the check in lib/actions/billing.ts that had drifted from it. The
+ * copy in billing.ts also refuses to sell in production on test-mode keys;
+ * this one did not. Since checkout is the path that actually takes money, the
+ * weaker of the two duplicates was guarding the only call that mattered: a
+ * production deploy left on `sk_test_` would show a real Upgrade button and
+ * grant genuine Premium to anyone paying with 4242 4242 4242 4242.
+ *
+ * Kept local rather than imported because billing.ts is a "use server" module
+ * and may only export async functions - importing a sync predicate from it is
+ * not possible. The live-mode condition is duplicated instead, with this
+ * comment as the reason the two must stay in step.
+ */
 function billingEnabled(): boolean {
-  return process.env.BILLING_ENABLED === "true" && stripeConfigured();
+  if (process.env.BILLING_ENABLED !== "true" || !stripeConfigured()) return false;
+  if (process.env.NODE_ENV === "production" && !stripeLiveMode()) return false;
+  return true;
 }
 
 /**
@@ -105,6 +121,36 @@ export async function createCheckoutSession(): Promise<string | void> {
     // B2B buyers in the EU reverse-charge. Without a VAT ID field every
     // business customer is charged consumer VAT instead.
     tax_id_collection: { enabled: true },
+
+    // The 14-day withdrawal right, captured at the only moment it counts.
+    //
+    // Under the Consumer Rights Directive an EU consumer has 14 days to
+    // withdraw from a distance contract. Article 16(m) removes that right for
+    // digital services ONLY where the consumer gave prior express consent to
+    // performance beginning immediately AND acknowledged losing the right. If
+    // that is not collected, the withdrawal period never starts and stays open
+    // for up to 12 months - on every subscription sold.
+    //
+    // Terms section 9 and the /refunds page both now state that this is asked
+    // at checkout, so this block is what makes those statements true. Stripe
+    // records the acceptance against the session, which is the evidence that
+    // the consent was actually given.
+    //
+    // PREREQUISITE, OR THIS CALL 400s: Stripe requires a Terms of Service URL
+    // on the account before `consent_collection[terms_of_service]` may be used.
+    // Set it at Dashboard -> Settings -> Business -> Public details -> Terms of
+    // service URL, pointing at <site>/terms. Without it, every checkout attempt
+    // fails at session creation. It fails loudly rather than silently, but it
+    // fails completely, so set it before testing checkout.
+    consent_collection: { terms_of_service: "required" },
+    custom_text: {
+      terms_of_service_acceptance: {
+        message:
+          "I agree to the Terms of Service and the Cancellation and Refunds policy. " +
+          "I expressly request that my Premium access begin immediately, and I acknowledge " +
+          "that I lose my 14-day right of withdrawal once the service has been fully performed.",
+      },
+    },
   });
 
   if (!session.url) return "Stripe did not return a checkout URL. Please try again.";

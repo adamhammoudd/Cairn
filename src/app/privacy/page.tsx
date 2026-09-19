@@ -31,9 +31,17 @@ export default function PrivacyPolicyPage() {
             are not used to build a profile or track you across sites.
           </p>
           <p>
-            Waitlist entries are stored in our database (Supabase) and are not shared with anyone
-            else. You can ask us to remove your waitlist entry at any time via the contact address
-            below; if you never confirm your email, the entry stays unconfirmed and grants nothing.
+            Waitlist entries are stored in our database (Supabase). We do not sell them, and we do
+            not share them for anyone else&apos;s marketing. Your email address is passed to the
+            provider that delivers the confirmation and launch emails - currently{" "}
+            <strong>Resend</strong> (a US email provider) or, while a sending domain is still being
+            set up, <strong>Google</strong> over authenticated Gmail SMTP. That provider processes
+            the address only to deliver those messages on our instructions. No other party receives
+            it.
+          </p>
+          <p>
+            You can ask us to remove your waitlist entry at any time via the contact address below;
+            if you never confirm your email, the entry stays unconfirmed and grants nothing.
           </p>
         </section>
         <section>
@@ -56,13 +64,43 @@ export default function PrivacyPolicyPage() {
         <section>
           <h2>Third parties</h2>
           <p>
-            Supabase (database, auth, storage), configured news/market data providers, and Groq -
-            a third-party hosted AI model provider. The analysis engine and the assistant are not
-            self-hosted: they call Groq over its API, which means the text of your chat messages,
-            prior turns in the same session, and the ticker/sector scope used to generate an
-            analysis are transmitted to Groq for processing. Groq acts as a processor on Cairn&apos;s
-            instructions; Cairn does not send Groq a user identifier, account, email, or position
-            size, and does not use your data to train any model.
+            The full list of processors Cairn uses, and what each one receives:
+          </p>
+          <ul>
+            <li>
+              <strong>Supabase</strong> - database, authentication and storage. Holds your account
+              data, portfolio data, settings and chat history.
+            </li>
+            <li>
+              <strong>Vercel</strong> - application hosting. Every page render, server action and
+              API route runs on Vercel&apos;s infrastructure, so your data passes through it in
+              transit and appears in short-lived operational logs.
+            </li>
+            <li>
+              <strong>Groq</strong> - hosted AI model provider. See below.
+            </li>
+            <li>
+              <strong>Stripe</strong> - payments, if you subscribe to Premium. Stripe receives your
+              email address, billing address and country, any tax ID you enter, and your card
+              details. Card numbers go directly to Stripe and are never seen or stored by Cairn.
+            </li>
+            <li>
+              <strong>Resend</strong>, or <strong>Google</strong> (Gmail SMTP) while a sending
+              domain is being set up - delivery of waitlist confirmation and launch emails. Receives
+              your email address only.
+            </li>
+            <li>
+              <strong>Configured news and market data providers</strong> - Cairn fetches data
+              <em>from</em> these; no personal data is sent to them.
+            </li>
+          </ul>
+          <p>
+            On Groq specifically: the analysis engine and the assistant are not self-hosted. They
+            call Groq over its API, which means the text of your chat messages, prior turns in the
+            same session, and the ticker/sector scope used to generate an analysis are transmitted
+            to Groq for processing. Groq acts as a processor on Cairn&apos;s instructions; Cairn
+            does not send Groq a user identifier, account, email, or position size, and does not use
+            your data to train any model.
           </p>
         </section>
         <section>
@@ -159,6 +197,14 @@ export default function PrivacyPolicyPage() {
             chat data is stored in the EU.
           </p>
           <p>
+            The application itself runs on <strong>Vercel</strong>. Cairn&apos;s server functions
+            are configured to execute in Vercel&apos;s <strong>Dublin (dub1)</strong> region, so
+            page renders, server actions and API routes process your data in the EU alongside the
+            database. Vercel is a US company and operates a global edge network, so some request
+            metadata (such as the IP address a request arrives from) may be handled outside the EU
+            before reaching those functions.
+          </p>
+          <p>
             Chat message text and the ticker/sector scope of an analysis request are sent to{" "}
             <strong>Groq (a US company)</strong> for model inference (see &quot;Third parties&quot;
             above). For UK/EU users this is a transfer outside the UK/EEA.{" "}
@@ -183,7 +229,16 @@ export default function PrivacyPolicyPage() {
             You can export your data as JSON and delete your account at any time from Settings.
             The export includes your profile, settings, holdings, watchlists and their items, chat
             sessions and messages, alerts and their delivery history, saved screens, daily
-            briefings, goals, subscription record, and any discussion posts.
+            briefings, goals, subscription record, any discussion posts, your consent history
+            (which revision of these documents you agreed to, and when), your AI analysis and chat
+            usage records, and every tier change on your account.
+          </p>
+          <p>
+            One store is deliberately not in the export: the rate-limit ledger behind the sign-in
+            and sign-up forms. It records only a one-way hash of an email address or IP, never the
+            address itself, carries no account identifier, and is deleted automatically after 24
+            hours - so there is no way to identify which of its rows relate to you, and nothing
+            there outlives a day.
           </p>
           <p>
             Deleting your account removes the account itself; every table holding your data is

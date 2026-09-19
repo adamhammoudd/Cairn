@@ -48,7 +48,7 @@ Pick one. Do not run RTL + Vitest AND Playwright CT in the same repo unless you 
 
 ## Query Priority
 
-React Testing Library exposes queries in three tiers — use top-down:
+React Testing Library exposes queries in three tiers - use top-down:
 
 1. **Accessible to everyone**: `getByRole`, `getByLabelText`, `getByPlaceholderText`, `getByText`, `getByDisplayValue`
 2. **Semantic**: `getByAltText`, `getByTitle`
@@ -67,9 +67,9 @@ screen.getByTestId("save-btn");
 
 Variants:
 
-- `getBy*` — throws if no match
-- `queryBy*` — returns `null` (use for "assert absence")
-- `findBy*` — async, returns a Promise (use for elements that appear after async work)
+- `getBy*` - throws if no match
+- `queryBy*` - returns `null` (use for "assert absence")
+- `findBy*` - async, returns a Promise (use for elements that appear after async work)
 
 ## User Interaction with `userEvent`
 
@@ -90,7 +90,7 @@ test("submits the form", async () => {
 
 - Always `await` userEvent calls
 - Call `userEvent.setup()` once per test, reuse the returned `user`
-- `userEvent` simulates a real browser sequence; `fireEvent` dispatches a single synthetic event — prefer `userEvent`
+- `userEvent` simulates a real browser sequence; `fireEvent` dispatches a single synthetic event - prefer `userEvent`
 
 ## Async Patterns
 
@@ -105,7 +105,7 @@ await waitFor(() => expect(saveSpy).toHaveBeenCalled());
 await waitForElementToBeRemoved(() => screen.queryByText("Loading"));
 ```
 
-Never `setTimeout` + assertion — flaky. Use the matchers above.
+Never `setTimeout` + assertion - flaky. Use the matchers above.
 
 ## Network Mocking with MSW
 
@@ -135,7 +135,7 @@ afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 ```
 
-Configure `onUnhandledRequest: "error"` so any unmocked request fails the test loudly — silent passes are worse than red.
+Configure `onUnhandledRequest: "error"` so any unmocked request fails the test loudly - silent passes are worse than red.
 
 ### Per-test override
 
@@ -240,7 +240,7 @@ Run axe in component tests for every interactive component. Catches:
 
 - Missing labels on form inputs
 - Invalid ARIA usage
-- Poor color contrast (limited — JSDOM has no real CSS engine, so this works for inline styles only; visual contrast belongs in Playwright)
+- Poor color contrast (limited - JSDOM has no real CSS engine, so this works for inline styles only; visual contrast belongs in Playwright)
 - Missing alt text on images
 - Heading order violations
 
@@ -259,7 +259,7 @@ Acceptable snapshot uses:
 - Pure data serialization functions (`formatInvoice(invoice)` -> stable string)
 - Generated config files (e.g., webpack config output)
 
-For visual regression on components, use Playwright/Cypress screenshots or Percy/Chromatic — actual visual diffs, not DOM strings.
+For visual regression on components, use Playwright/Cypress screenshots or Percy/Chromatic - actual visual diffs, not DOM strings.
 
 ## When to Reach for Playwright / Cypress
 
@@ -285,8 +285,8 @@ Decision boundary:
 |---|---|
 | Pure utilities | >=90% |
 | Custom hooks | >=85% |
-| Presentational components | >=80% — behavior, not lines |
-| Container components | >=70% — golden paths + error states |
+| Presentational components | >=80% - behavior, not lines |
+| Container components | >=70% - golden paths + error states |
 | Pages | E2E covered separately; smoke test minimum |
 
 Configure via `vitest.config.ts` / `jest.config.js`:
@@ -309,13 +309,13 @@ test: {
 
 ## Anti-Patterns
 
-- `container.querySelector("...")` — bypasses accessibility queries, lets tests pass when real users would fail
-- Asserting on number of renders — implementation detail
-- `jest.mock("react", ...)` — never mock React. Refactor the component instead
-- Mocking child components by default — tests the integration, not isolation. Mock only when the child has heavy side effects
-- Ignoring `act()` warnings — they signal real bugs (state update after unmount, missing async wrapping)
-- Sharing mutable state across tests — flakes when test order changes
-- Tests that pass with `it.skip()` removed — your test does not actually assert what you think
+- `container.querySelector("...")` - bypasses accessibility queries, lets tests pass when real users would fail
+- Asserting on number of renders - implementation detail
+- `jest.mock("react", ...)` - never mock React. Refactor the component instead
+- Mocking child components by default - tests the integration, not isolation. Mock only when the child has heavy side effects
+- Ignoring `act()` warnings - they signal real bugs (state update after unmount, missing async wrapping)
+- Sharing mutable state across tests - flakes when test order changes
+- Tests that pass with `it.skip()` removed - your test does not actually assert what you think
 
 ## TDD Workflow
 

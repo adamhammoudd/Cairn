@@ -13,9 +13,29 @@ export function Card({ children }: { children: ReactNode }) {
   );
 }
 
-export function CardHeader({ title, note }: { title: string; note?: string }) {
+// The mock tints each panel header with its section's accent, fading to
+// nothing over the header's own height, so a tab change reads as a change of
+// place and not just of content.
+const HEADER_TINT: Record<string, string> = {
+  accent: "bg-gradient-to-b from-accent/[0.06] to-transparent",
+  warning: "bg-gradient-to-b from-warning/[0.07] to-transparent",
+  violet: "bg-gradient-to-b from-violet/[0.07] to-transparent",
+  none: "",
+};
+
+export function CardHeader({
+  title,
+  note,
+  tint = "none",
+}: {
+  title: string;
+  note?: string;
+  tint?: "accent" | "warning" | "violet" | "none";
+}) {
   return (
-    <div className="flex flex-wrap items-baseline justify-between gap-3 border-b border-line-soft px-4.5 py-4">
+    <div
+      className={`flex flex-wrap items-baseline justify-between gap-3 border-b border-line-soft px-4.5 py-4 ${HEADER_TINT[tint]}`}
+    >
       <span className="font-serif text-h3 text-primary">{title}</span>
       {note && <span className="text-caption text-dim">{note}</span>}
     </div>
@@ -35,7 +55,7 @@ export function CardRow({
   labelClassName?: string;
 }) {
   return (
-    <div className="flex flex-wrap items-center justify-between gap-4 border-b border-line-soft px-4.5 py-4 last:border-b-0">
+    <div className="flex flex-wrap items-center justify-between gap-4 border-b border-line-soft px-4.5 py-4 transition-colors duration-base ease-standard last:border-b-0 hover:bg-active">
       <div className="min-w-0 max-sm:w-full">
         <div className={`text-body ${labelClassName}`}>{label}</div>
         {desc && (
@@ -137,9 +157,72 @@ export function SelectControl({
       defaultValue={defaultValue}
       disabled={disabled}
       style={{ minWidth }}
-      className="shrink-0 rounded-panel border border-line bg-canvas px-3 py-2.5 text-body text-primary outline-none transition-colors duration-fast ease-standard hover:border-line-strong focus:border-accent disabled:opacity-50"
+      className="shrink-0 rounded-panel border border-line bg-active px-3 py-2.5 text-body text-primary outline-none transition-colors duration-fast ease-standard hover:border-line-strong focus:border-accent disabled:opacity-50"
     >
       {children}
     </select>
+  );
+}
+
+/**
+ * The mock's checkable card - a bordered button with a label, a status note,
+ * and a tick box on the right, used where a plain checkbox row would not carry
+ * the "live now" / "coming soon" distinction the copy needs to make. Wraps a
+ * real checkbox so it still submits with the form and is still reachable and
+ * announced as a checkbox.
+ */
+export function CheckCard({
+  name,
+  value,
+  label,
+  note,
+  defaultChecked,
+}: {
+  name: string;
+  value: string;
+  label: string;
+  note?: string;
+  defaultChecked?: boolean;
+}) {
+  return (
+    <label className="group flex cursor-pointer items-center justify-between gap-2.5 rounded-panel border border-line bg-active px-3 py-2.5 transition-colors duration-base ease-standard has-[:checked]:border-accent/45 has-[:checked]:bg-accent/[0.09] has-[:focus-visible]:border-accent">
+      <input type="checkbox" name={name} value={value} defaultChecked={defaultChecked} className="peer sr-only" />
+      <span className="flex flex-col items-start leading-[1.3]">
+        <span className="text-body text-muted peer-checked:group-[]:text-primary">{label}</span>
+        {note && <span className="font-mono text-eyebrow text-dim uppercase">{note}</span>}
+      </span>
+      <span
+        aria-hidden
+        className="grid h-[18px] w-[18px] shrink-0 place-items-center rounded-xs border border-line-strong text-eyebrow text-canvas transition-colors duration-base ease-standard peer-checked:border-accent peer-checked:bg-accent"
+      >
+        <span className="opacity-0 peer-checked:group-[]:opacity-100">✓</span>
+      </span>
+    </label>
+  );
+}
+
+/**
+ * The mock's chip form of the same control, for the long news-category list
+ * where a stack of cards would be taller than the panel.
+ */
+export function CheckChip({
+  name,
+  value,
+  label,
+  defaultChecked,
+}: {
+  name: string;
+  value: string;
+  label: string;
+  defaultChecked?: boolean;
+}) {
+  return (
+    <label className="group flex cursor-pointer items-center gap-2 rounded-control border border-line bg-active px-2.5 py-1.5 text-body text-muted transition-colors duration-base ease-standard has-[:checked]:border-accent/45 has-[:checked]:bg-accent/10 has-[:checked]:text-primary has-[:focus-visible]:border-accent">
+      <input type="checkbox" name={name} value={value} defaultChecked={defaultChecked} className="peer sr-only" />
+      <span aria-hidden className="w-2.5 shrink-0 text-eyebrow text-accent opacity-0 peer-checked:group-[]:opacity-100">
+        ✓
+      </span>
+      {label}
+    </label>
   );
 }

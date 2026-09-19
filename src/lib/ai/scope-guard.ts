@@ -341,7 +341,7 @@ export function splitClauses(text: string): string[] {
     // Semicolons and em-dashes terminate a clause as surely as a full stop.
     // Without them, everything after a `;` inherited the first half's
     // suppression and was never checked on its own terms.
-    .split(/(?<=[.!?;])\s+|\s*[;—]\s*|\n+/)
+    .split(/(?<=[.!?;])\s+|\s*[;-]\s*|\n+/)
     .flatMap((sentence) => sentence.split(CONTRASTIVE))
     .map((c) => c.trim())
     .filter((c) => c.length > 0);

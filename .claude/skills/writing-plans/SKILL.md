@@ -20,7 +20,7 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 ## Scope Check
 
-If the spec covers multiple independent subsystems, it should have been broken into sub-project specs during brainstorming. If it wasn't, suggest breaking this into separate plans — one per subsystem. Each plan should produce working, testable software on its own.
+If the spec covers multiple independent subsystems, it should have been broken into sub-project specs during brainstorming. If it wasn't, suggest breaking this into separate plans - one per subsystem. Each plan should produce working, testable software on its own.
 
 ## File Structure
 
@@ -66,13 +66,13 @@ independently testable deliverable.
 
 **Tech Stack:** [Key technologies/libraries]
 
-**Spec:** [path to the spec/design doc this plan implements — the plan
+**Spec:** [path to the spec/design doc this plan implements - the plan
 argues from the spec, so the spec travels with it; executors read both]
 
 ## Global Constraints
 
-[The spec's project-wide requirements — version floors, dependency limits,
-naming and copy rules, platform requirements — one line each, with exact
+[The spec's project-wide requirements - version floors, dependency limits,
+naming and copy rules, platform requirements - one line each, with exact
 values copied verbatim from the spec. Every task's requirements implicitly
 include this section.]
 
@@ -90,8 +90,8 @@ include this section.]
 - Test: `tests/exact/path/to/test.py`
 
 **Interfaces:**
-- Consumes: [what this task uses from earlier tasks — exact signatures]
-- Produces: [what later tasks rely on — exact function names, parameter
+- Consumes: [what this task uses from earlier tasks - exact signatures]
+- Produces: [what later tasks rely on - exact function names, parameter
   and return types. A task's implementer sees only their own task; this
   block is how they learn the names and types neighboring tasks use.]
 
@@ -130,25 +130,25 @@ git commit -m "feat: add specific feature"
 
 ## No Placeholders
 
-Every step must contain the actual content an engineer needs. These are **plan failures** — never write them:
+Every step must contain the actual content an engineer needs. These are **plan failures** - never write them:
 - "TBD", "TODO", "implement later", "fill in details"
 - "Add appropriate error handling" / "add validation" / "handle edge cases"
 - "Write tests for the above" (without actual test code)
-- "Similar to Task N" (repeat the code — the engineer may be reading tasks out of order)
+- "Similar to Task N" (repeat the code - the engineer may be reading tasks out of order)
 - Steps that describe what to do without showing how (code blocks required for code steps)
 - References to types, functions, or methods not defined in any task
 
 ## Self-Review
 
-After writing the complete plan, look at the spec with fresh eyes and check the plan against it. This is a checklist you run yourself — not a subagent dispatch.
+After writing the complete plan, look at the spec with fresh eyes and check the plan against it. This is a checklist you run yourself - not a subagent dispatch.
 
 **1. Spec coverage:** Skim each section/requirement in the spec. Can you point to a task that implements it? List any gaps.
 
-**2. Placeholder scan:** Search your plan for red flags — any of the patterns from the "No Placeholders" section above. Fix them.
+**2. Placeholder scan:** Search your plan for red flags - any of the patterns from the "No Placeholders" section above. Fix them.
 
 **3. Type consistency:** Do the types, method signatures, and property names you used in later tasks match what you defined in earlier tasks? A function called `clearLayers()` in Task 3 but `clearFullLayers()` in Task 7 is a bug.
 
-If you find issues, fix them inline. No need to re-review — just fix and move on. If you find a spec requirement with no task, add the task.
+If you find issues, fix them inline. No need to re-review - just fix and move on. If you find a spec requirement with no task, add the task.
 
 ## Execution Handoff
 

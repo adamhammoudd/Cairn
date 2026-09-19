@@ -509,3 +509,88 @@ select,
 [data-density="compact"] .cn-row-gap {
   row-gap: 0.4rem;
 }
+
+/* The live-quote pulse on the Ticker hero: a second dot expanding out from
+   under the first. Non-informational - the "Live"/"Delayed" wording beside it
+   is what actually states the source - so it is purely the ring, and the
+   reduced-motion guard below stops it. */
+@keyframes cn-ping {
+  0% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  70%,
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+
+.animate-ping-ring {
+  animation: cn-ping 2.2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+/* Settings' unsaved-changes dock, which slides up from the bottom edge. */
+@keyframes cn-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.animate-slide-up {
+  animation: cn-slide-up 260ms var(--ease-standard) both;
+}
+
+/* The "Saved" toast is horizontally centred, so its entry animation has to
+   carry the -50% through every frame or the toast jumps left as it lands. */
+@keyframes cn-slide-up-centred {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 18px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+.animate-slide-up-centred {
+  animation: cn-slide-up-centred 240ms var(--ease-standard) both;
+}
+
+@keyframes cn-pop {
+  0% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.12);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-pop-in {
+  animation: cn-pop 340ms cubic-bezier(0.34, 1.4, 0.64, 1) both;
+}
+
+/* Everything above is decoration on top of a state change the copy already
+   states in words, so none of it is load-bearing. */
+@media (prefers-reduced-motion: reduce) {
+  .animate-ping-ring,
+  .animate-slide-up,
+  .animate-slide-up-centred,
+  .animate-pop-in {
+    animation: none !important;
+  }
+  .animate-slide-up-centred {
+    transform: translate(-50%, 0) !important;
+  }
+}

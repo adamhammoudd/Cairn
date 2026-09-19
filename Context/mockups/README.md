@@ -31,7 +31,7 @@ own `github.md` screen map:
 | `Waitlist.dc.html` | `/waitlist` |
 | `Welcome.dc.html` | `/welcome` |
 
-Read a file with the design MCP rather than by fetching the page — the preview
+Read a file with the design MCP rather than by fetching the page - the preview
 iframe is cross-origin, so the rendered DOM is not reachable, and the file
 contents are what carry the values:
 
@@ -51,7 +51,7 @@ screenshot for this job.
 design project (see `github.md`: sync dated 2026-08-14). They describe a
 design that has since been replaced.
 
-They are kept rather than deleted because this folder is a **sync target** —
+They are kept rather than deleted because this folder is a **sync target** -
 `github.md` names `repo: adamhammoudd/Cairn, branch: main`, so a design project
 writes into it. Deleting the files here would likely see them re-pushed on the
 next sync, and a file that keeps reappearing is worse than one that is
@@ -66,7 +66,7 @@ the live design:
 - **Page titles.** The old export sets them at 32px; the current design sets
   them at **40px**.
 - **Secondary text.** The old export uses `#6A6A6A`, which measures 3.66:1 on
-  canvas — below the WCAG AA floor. `globals.css` raised it to `#7b7b7b` after
+  canvas - below the WCAG AA floor. `globals.css` raised it to `#7b7b7b` after
   axe-core flagged it, and the current design agrees, defining
   `--ink-faint: #7b7b7b /* dim (raised to AA) */`.
 

@@ -192,12 +192,29 @@ export async function changePassword(_prevState: string | null, formData: FormDa
 // Deletion is the other half and is genuinely correct: deleteAccount() removes
 // the auth user and every user_id column cascades, verified in
 // supabase/tests/gdpr_erasure.sql.
+//
+// Second pass: the export covered everything the USER entered but none of what
+// the system recorded ABOUT them - consent history, the AI and chat usage
+// meters, and the tier-change ledger. Art. 15 is "all personal data concerning
+// the data subject", not "everything they typed", so those four are exported
+// too. auth_attempts stays out on purpose, for the reason given on /privacy:
+// hashed identifiers, no account id, 24-hour retention, so no row there can be
+// attributed to a specific person in the first place.
 export async function exportUserData() {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
+
+  // Four of the tables below are written by the service-role client (usage
+  // meters, consent records, tier-change history) and carry read policies that
+  // vary - subscription_events has none at all. Under the user-scoped client an
+  // RLS-denied select returns an empty array rather than an error, so those
+  // sections would silently export as [] and the policy's "here is everything
+  // we hold" claim would quietly be false. They are read through the admin
+  // client instead, each one filtered on this authenticated user's own id.
+  const admin = createAdminClient();
 
   const [
     { data: profile },
@@ -214,6 +231,10 @@ export async function exportUserData() {
     { data: goals },
     { data: subscription },
     { data: discussion },
+    { data: consents },
+    { data: aiUsage },
+    { data: chatUsage },
+    { data: subscriptionEvents },
   ] = await Promise.all([
     supabase.from("profiles").select("*").eq("user_id", user.id).maybeSingle(),
     supabase.from("user_settings").select("*").eq("user_id", user.id).maybeSingle(),
@@ -231,6 +252,10 @@ export async function exportUserData() {
     supabase.from("goals").select("*").eq("user_id", user.id),
     supabase.from("subscriptions").select("*").eq("user_id", user.id).maybeSingle(),
     supabase.from("discussion_threads").select("*").eq("user_id", user.id),
+    admin.from("user_consents").select("*").eq("user_id", user.id).order("consented_at", { ascending: false }),
+    admin.from("ai_usage_events").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
+    admin.from("chat_usage_events").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
+    admin.from("subscription_events").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
   ]);
 
   return {
@@ -250,6 +275,14 @@ export async function exportUserData() {
     goals: goals ?? [],
     subscription,
     discussion_posts: discussion ?? [],
+    // Art. 15 covers everything held about the person, not just what they
+    // typed in. These four were held and not exported: what they agreed to and
+    // when, what their usage was metered at, and every tier change on the
+    // account.
+    consents: consents ?? [],
+    ai_usage_events: aiUsage ?? [],
+    chat_usage_events: chatUsage ?? [],
+    subscription_events: subscriptionEvents ?? [],
   };
 }
 

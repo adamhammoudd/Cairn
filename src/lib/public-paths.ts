@@ -12,7 +12,20 @@
 // `/welcome` is the marketing landing page - the front door a logged-out
 // visitor is sent to instead of a bare password field. It has to be reachable
 // without a session for the same reason the waitlist page did.
-const PUBLIC_EXACT = new Set(["/privacy", "/terms", "/accessibility", "/welcome"]);
+// `/legal-notice` and `/refunds` are not optional additions to this list.
+// Articles 5-6 of the e-Commerce Directive require trader identity to be
+// "easily, directly and permanently accessible", and the distance-selling
+// rules require the cancellation and withdrawal terms to be available BEFORE
+// the consumer is bound. A legally-mandated disclosure sitting behind a login
+// wall is the same as not publishing it.
+const PUBLIC_EXACT = new Set([
+  "/privacy",
+  "/terms",
+  "/legal-notice",
+  "/refunds",
+  "/accessibility",
+  "/welcome",
+]);
 const PUBLIC_PREFIXES = ["/waitlist"];
 
 // Static files served from public/ that must never be bounced to the waitlist.

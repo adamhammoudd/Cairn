@@ -40,10 +40,10 @@ Gather this context (ask if not provided):
 
 ## Should You Engineer Virality First?
 
-Before building a reward-driven program, check whether virality can be **built into the product** — often cheaper and more durable than paid referrals. But **don't force virality where it doesn't naturally fit.**
+Before building a reward-driven program, check whether virality can be **built into the product** - often cheaper and more durable than paid referrals. But **don't force virality where it doesn't naturally fit.**
 
 Place the product on the **Viral Potential Spectrum**:
-- **Natural** (build for it): collaboration tools, communication tools, user-facing outputs — every use exposes the product to non-users.
+- **Natural** (build for it): collaboration tools, communication tools, user-facing outputs - every use exposes the product to non-users.
 - **Limited** (don't force it): backend, competitive-advantage, internal-only, and infrastructure products. Invest in referral programs, content, and partnerships instead.
 
 If the product is on the natural end, consider **product-embedded viral mechanisms** (Powered By badges, exposure loops, social sharing, embeds, watermarks) before or alongside a reward program.
@@ -113,7 +113,7 @@ Trigger Moment → Share Action → Convert Referred → Reward → (Loop)
 
 **Tiered rewards**: Gamifies referral process, increases engagement
 
-**Present the reward with the bigger-*feeling* number** — "lead with the larger number" (say "$10 off," not "40% off," on a low-priced product). Reward at the **aha moment or milestone**, not signup. Reduce friction: one-click share, pre-written messages.
+**Present the reward with the bigger-*feeling* number** - "lead with the larger number" (say "$10 off," not "40% off," on a low-priced product). Reward at the **aha moment or milestone**, not signup. Reduce friction: one-click share, pre-written messages.
 
 **For examples and incentive sizing**: See [references/program-examples.md](references/program-examples.md)
 
@@ -230,7 +230,7 @@ They get [their reward] too.
 - Day 7: Remind about referral program
 - Day 30: "Know anyone who'd benefit?"
 - Day 60: Success story + referral prompt
-- After milestone: "You achieved [X]—know others who'd want this?"
+- After milestone: "You achieved [X]-know others who'd want this?"
 
 ---
 

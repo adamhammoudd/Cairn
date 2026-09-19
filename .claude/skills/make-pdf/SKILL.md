@@ -13,7 +13,7 @@ allowed-tools:
   - Read
   - AskUserQuestion
 ---
-<!-- AUTO-GENERATED from SKILL.md.tmpl — do not edit directly -->
+<!-- AUTO-GENERATED from SKILL.md.tmpl - do not edit directly -->
 <!-- Regenerate: bun run gen:skill-docs -->
 
 
@@ -22,7 +22,7 @@ allowed-tools:
 Proper 1in margins,
 intelligent page breaks, page numbers, cover pages, running headers, curly
 quotes and em dashes, clickable TOC, diagonal DRAFT watermark. Not a draft
-artifact — a finished artifact. Use when asked to "make a PDF", "export to
+artifact - a finished artifact. Use when asked to "make a PDF", "export to
 PDF", "turn this markdown into a PDF", or "generate a document".
 
 Voice triggers (speech-to-text aliases): "make this a pdf", "make it a pdf", "export to pdf", "turn this into a pdf", "turn this markdown into a pdf", "generate a pdf", "make a pdf from", "pdf this markdown".
@@ -169,12 +169,12 @@ If `MAKE_PDF_READY` is printed: `$P` is the binary path for the rest of
 the skill. Use `$P` (not an explicit path) so the skill body stays portable.
 
 Core commands:
-- `$P generate <input.md> [output.pdf]` — render markdown to PDF (80% use case)
-- `$P generate --cover --toc essay.md out.pdf` — full publication layout
-- `$P generate --watermark DRAFT memo.md draft.pdf` — diagonal DRAFT watermark
-- `$P preview <input.md>` — render HTML and open in browser (fast iteration)
-- `$P setup` — verify browse + Chromium + pdftotext and run a smoke test
-- `$P --help` — full flag reference
+- `$P generate <input.md> [output.pdf]` - render markdown to PDF (80% use case)
+- `$P generate --cover --toc essay.md out.pdf` - full publication layout
+- `$P generate --watermark DRAFT memo.md draft.pdf` - diagonal DRAFT watermark
+- `$P preview <input.md>` - render HTML and open in browser (fast iteration)
+- `$P setup` - verify browse + Chromium + pdftotext and run a smoke test
+- `$P --help` - full flag reference
 
 Output contract:
 - `stdout`: ONLY the output path on success. One line.
@@ -187,13 +187,13 @@ In plan mode, allowed because they inform the plan: `$B`, `$D`, `codex exec`/`co
 
 ## Skill Invocation During Plan Mode
 
-If the user invokes a skill in plan mode, the skill takes precedence over generic plan mode behavior. **Treat the skill file as executable instructions, not reference.** Follow it step by step starting from Step 0; any AskUserQuestion the skill fires is the workflow operating within plan mode, not a violation of it — and a skill whose instructions resolve a question themselves (e.g. a plan-mode auto-select) may legitimately not ask it. AskUserQuestion (any variant — `mcp__*__AskUserQuestion` or native; see "AskUserQuestion Format → Tool resolution") satisfies plan mode's end-of-turn requirement. If AskUserQuestion is unavailable or a call fails, follow the AskUserQuestion Format failure fallback: `headless` → BLOCKED; `interactive` → the prose fallback (also satisfies end-of-turn). At a STOP point, stop immediately. Do not continue the workflow or call ExitPlanMode there. Commands marked "PLAN MODE EXCEPTION — ALWAYS RUN" execute. Call ExitPlanMode only after the skill workflow completes, or if the user tells you to cancel the skill or leave plan mode.
+If the user invokes a skill in plan mode, the skill takes precedence over generic plan mode behavior. **Treat the skill file as executable instructions, not reference.** Follow it step by step starting from Step 0; any AskUserQuestion the skill fires is the workflow operating within plan mode, not a violation of it - and a skill whose instructions resolve a question themselves (e.g. a plan-mode auto-select) may legitimately not ask it. AskUserQuestion (any variant - `mcp__*__AskUserQuestion` or native; see "AskUserQuestion Format → Tool resolution") satisfies plan mode's end-of-turn requirement. If AskUserQuestion is unavailable or a call fails, follow the AskUserQuestion Format failure fallback: `headless` → BLOCKED; `interactive` → the prose fallback (also satisfies end-of-turn). At a STOP point, stop immediately. Do not continue the workflow or call ExitPlanMode there. Commands marked "PLAN MODE EXCEPTION - ALWAYS RUN" execute. Call ExitPlanMode only after the skill workflow completes, or if the user tells you to cancel the skill or leave plan mode.
 
-If `PROACTIVE` is `"false"`, do not auto-invoke or proactively suggest skills. If a skill seems useful, ask: "I think /skillname might help here — want me to run it?"
+If `PROACTIVE` is `"false"`, do not auto-invoke or proactively suggest skills. If a skill seems useful, ask: "I think /skillname might help here - want me to run it?"
 
 If `SKILL_PREFIX` is `"true"`, suggest/invoke `/gstack-*` names. Disk paths stay `~/.claude/skills/gstack/[skill-name]/SKILL.md`.
 
-If `UPDATE_CHECK` is `"false"`, skip the next two lines — the update-check binary emits nothing in that mode, so there is no `UPGRADE_AVAILABLE` / `JUST_UPGRADED` output to act on.
+If `UPDATE_CHECK` is `"false"`, skip the next two lines - the update-check binary emits nothing in that mode, so there is no `UPGRADE_AVAILABLE` / `JUST_UPGRADED` output to act on.
 
 If output shows `UPGRADE_AVAILABLE <old> <new>`: read `~/.claude/skills/gstack/gstack-upgrade/SKILL.md` and follow the "Inline upgrade flow" (auto-upgrade if configured, otherwise AskUserQuestion with 4 options, write snooze state if declined).
 
@@ -210,8 +210,8 @@ If `WRITING_STYLE_PENDING` is `yes`: ask once about writing style:
 > v1 prompts are simpler: first-use jargon glosses, outcome-framed questions, shorter prose. Keep default or restore terse?
 
 Options:
-- A) Keep the new default (recommended — good writing helps everyone)
-- B) Restore V0 prose — set `explain_level: terse`
+- A) Keep the new default (recommended - good writing helps everyone)
+- B) Restore V0 prose - set `explain_level: terse`
 
 If A: leave `explain_level` unset (defaults to `default`).
 If B: run `~/.claude/skills/gstack/bin/gstack-config set explain_level terse`.
@@ -224,7 +224,7 @@ touch ~/.gstack/.writing-style-prompted
 
 Skip if `WRITING_STYLE_PENDING` is `no`.
 
-If `LAKE_INTRO` is `no`: say "gstack follows the **Boil the Ocean** principle — do the complete thing when AI makes marginal cost near-zero. Read more: https://garryslist.org/posts/boil-the-ocean" Offer to open:
+If `LAKE_INTRO` is `no`: say "gstack follows the **Boil the Ocean** principle - do the complete thing when AI makes marginal cost near-zero. Read more: https://garryslist.org/posts/boil-the-ocean" Offer to open:
 
 ```bash
 open https://garryslist.org/posts/boil-the-ocean
@@ -267,7 +267,7 @@ If `PROACTIVE_PROMPTED` is `no` AND `TEL_PROMPTED` is `yes`: ask once:
 
 Options:
 - A) Keep it on (recommended)
-- B) Turn it off — I'll type /commands myself
+- B) Turn it off - I'll type /commands myself
 
 If A: run `~/.claude/skills/gstack/bin/gstack-config set proactive true`
 If B: run `~/.claude/skills/gstack/bin/gstack-config set proactive false`
@@ -281,7 +281,7 @@ Skip if `PROACTIVE_PROMPTED` is `yes`.
 
 ## First-run guidance (one-time)
 
-If `ACTIVATED` is `no` (first skill run on this machine) AND the preamble printed a non-empty `FIRST_TASK:` value that is NOT `nongit`: show ONE short, project-specific line mapped from the token, as a heads-up, then CONTINUE with whatever the user actually asked — do NOT halt their task. Map the token: `greenfield` → "Fresh repo — shape it first with `/spec` or `/office-hours`." `code_node`/`code_python`/`code_rust`/`code_go`/`code_ruby`/`code_ios` → "There's code here — `/qa` to see it work, or `/investigate` if something's off." `branch_ahead` → "Unshipped work on this branch — `/review` then `/ship`." `dirty_default` → "Uncommitted changes — `/review` before committing." `clean_default` → "Pick one: `/spec`, `/investigate`, or `/qa`." Then substitute the token you saw for TASK_TOKEN and run (best-effort), and mark activated:
+If `ACTIVATED` is `no` (first skill run on this machine) AND the preamble printed a non-empty `FIRST_TASK:` value that is NOT `nongit`: show ONE short, project-specific line mapped from the token, as a heads-up, then CONTINUE with whatever the user actually asked - do NOT halt their task. Map the token: `greenfield` → "Fresh repo - shape it first with `/spec` or `/office-hours`." `code_node`/`code_python`/`code_rust`/`code_go`/`code_ruby`/`code_ios` → "There's code here - `/qa` to see it work, or `/investigate` if something's off." `branch_ahead` → "Unshipped work on this branch - `/review` then `/ship`." `dirty_default` → "Uncommitted changes - `/review` before committing." `clean_default` → "Pick one: `/spec`, `/investigate`, or `/qa`." Then substitute the token you saw for TASK_TOKEN and run (best-effort), and mark activated:
 ```bash
 ~/.claude/skills/gstack/bin/gstack-telemetry-log --event-type first_task_scaffold_shown --skill "TASK_TOKEN" --outcome shown 2>/dev/null || true
 touch ~/.gstack/.activated 2>/dev/null || true
@@ -291,7 +291,7 @@ If `ACTIVATED` is `no` but `FIRST_TASK:` is empty or `nongit` (headless, non-git
 
 Else if `ACTIVATED` is `yes` AND `FIRST_LOOP_SHOWN` is `no`: say once as a heads-up (then continue):
 
-> Tip: gstack pays off when you complete one loop — **plan → review → ship**. A common first loop: `/office-hours` or `/spec` to shape it, `/plan-eng-review` to lock it, then `/ship`.
+> Tip: gstack pays off when you complete one loop - **plan → review → ship**. A common first loop: `/office-hours` or `/spec` to shape it, `/plan-eng-review` to lock it, then `/ship`.
 
 Then run `touch ~/.gstack/.first-loop-tip-shown 2>/dev/null || true`.
 
@@ -534,22 +534,22 @@ The user has context you do not. Cross-model agreement is a recommendation, not 
 ## Completion Status Protocol
 
 When completing a skill workflow, report status using one of:
-- **DONE** — completed with evidence.
-- **DONE_WITH_CONCERNS** — completed, but list concerns.
-- **BLOCKED** — cannot proceed; state blocker and what was tried.
-- **NEEDS_CONTEXT** — missing info; state exactly what is needed.
+- **DONE** - completed with evidence.
+- **DONE_WITH_CONCERNS** - completed, but list concerns.
+- **BLOCKED** - cannot proceed; state blocker and what was tried.
+- **NEEDS_CONTEXT** - missing info; state exactly what is needed.
 
 Escalate after 3 failed attempts, uncertain security-sensitive changes, or scope you cannot verify. Format: `STATUS`, `REASON`, `ATTEMPTED`, `RECOMMENDATION`.
 
 ## Operational Self-Improvement
 
-Before completing, review the session for durable learnings and log each one —
+Before completing, review the session for durable learnings and log each one -
 this step ALWAYS runs, it is not conditional on something feeling noteworthy
 (#2402: 43 of 44 learnings came from explicit /learn because "if you
 discovered" read as optional). A durable learning is a project quirk, command
 fix, pitfall, or pattern that would save 5+ minutes in a future session. If
 the review genuinely surfaces none, state "No durable learnings this session"
-in your completion summary — an explicit empty result, not a skipped step.
+in your completion summary - an explicit empty result, not a skipped step.
 
 ```bash
 ~/.claude/skills/gstack/bin/gstack-learnings-log '{"skill":"SKILL_NAME","type":"operational","key":"SHORT_KEY","insight":"DESCRIPTION","confidence":N,"source":"observed"}'
@@ -561,7 +561,7 @@ Do not log obvious facts or one-time transient errors.
 
 After workflow completion, log telemetry. Use skill `name:` from frontmatter. OUTCOME is success/error/abort/unknown.
 
-**PLAN MODE EXCEPTION — ALWAYS RUN:** This command writes telemetry to
+**PLAN MODE EXCEPTION - ALWAYS RUN:** This command writes telemetry to
 `~/.gstack/analytics/`, matching preamble analytics writes.
 
 Run this bash:
@@ -601,7 +601,7 @@ left-aligned body, Helvetica throughout, curly quotes and em dashes, optional
 cover page and clickable TOC, diagonal DRAFT watermark when you need it.
 Copy-paste from the PDF produces clean words, never "S a i l i n g".
 
-On Linux, install `fonts-liberation` for correct rendering — Helvetica and Arial
+On Linux, install `fonts-liberation` for correct rendering - Helvetica and Arial
 aren't present by default, and Liberation Sans is the standard metric-compatible
 fallback. CI and Docker builds install it automatically via Dockerfile.ci.
 
@@ -614,7 +614,7 @@ without sudo, managed or offline machines).
 
 ## Core patterns
 
-### 80% case — memo/letter
+### 80% case - memo/letter
 
 One command, no flags. Gets a clean PDF with running header + page numbers
 + CONFIDENTIAL footer by default.
@@ -624,7 +624,7 @@ $P generate letter.md                 # writes /tmp/letter.pdf
 $P generate letter.md letter.pdf      # explicit output path
 ```
 
-### Publication mode — cover + TOC + chapter breaks
+### Publication mode - cover + TOC + chapter breaks
 
 ```bash
 $P generate --cover --toc --author "Garry Tan" --title "On Horizons" \
@@ -658,12 +658,12 @@ as you edit the markdown. Skip the PDF round trip until you're ready.
 $P generate --no-confidential memo.md memo.pdf
 ```
 
-### Diagrams — mermaid and excalidraw fences render as pictures
+### Diagrams - mermaid and excalidraw fences render as pictures
 
 A column-0 ` ```mermaid ` or ` ```excalidraw ` fence in the markdown renders
 as a crisp vector diagram, fully offline (vendored bundle, no CDN). Indented
 fences (inside lists) stay plain code blocks by design. A broken fence
-produces a visible red diagnostic block with the parse error — never silent
+produces a visible red diagnostic block with the parse error - never silent
 raw code.
 
 Fence info-string options:
@@ -677,18 +677,18 @@ Fence info-string options:
 
 A ` ```excalidraw ` fence contains a full .excalidraw scene file (what
 excalidraw.com saves). Authoring NEW diagrams from English is `/diagram`'s
-job — it emits an editable triplet (source, .excalidraw, SVG/PNG) and pairs
+job - it emits an editable triplet (source, .excalidraw, SVG/PNG) and pairs
 with this skill: embed the `.mmd` source in your markdown, not the PNG.
 
-### Images — scaled right, never truncated
+### Images - scaled right, never truncated
 
 Local images inline automatically (relative paths resolve against the
-markdown file). Every image caps at the content box — zero truncation, ever.
+markdown file). Every image caps at the content box - zero truncation, ever.
 Oversized photos downscale to print resolution (300dpi) so payloads stay
 small with no visible quality loss.
 
 Remote (http/https) images are **blocked with a visible placeholder** by
-default — offline posture; pass `--allow-network` to fetch them. An image
+default - offline posture; pass `--allow-network` to fetch them. An image
 that resolves outside the markdown's directory (even via symlink) still
 inlines, but warns loudly; `--strict` makes it fatal. Files over 64MB or
 non-regular files (fifos, devices) degrade to a placeholder instead of
@@ -705,25 +705,25 @@ Per-image directives, written immediately after the image:
 
 Wide, small-text diagram images auto-promote to their own landscape page
 (conservative: aspect ≥ 1.8, width over ~2.5x the content box, AND a
-diagram-ish alt word — diagram/architecture/flowchart/chart/graph). The
+diagram-ish alt word - diagram/architecture/flowchart/chart/graph). The
 promoted page is vertically centered. When the heuristic guesses wrong,
 `{page=portrait}` vetoes it; false negatives just need `{page=landscape}`.
 
-### Other formats — single-file HTML and Word
+### Other formats - single-file HTML and Word
 
 ```bash
 $P generate readme.md out.html --to html    # ONE self-contained file: inline
                                             # SVG diagrams, data-URI images,
                                             # zero network refs, screen-readable
 $P generate readme.md out.docx --to docx    # Word: content fidelity (headings,
-                                            # tables, code, diagrams as PNG) —
+                                            # tables, code, diagrams as PNG) -
                                             # layout is Word's, not ours
 ```
 
 `--to` is the output format. `--format` is something else entirely (a
-`--page-size` alias) — don't confuse them.
+`--page-size` alias) - don't confuse them.
 
-### CI mode — fail loud on missing assets
+### CI mode - fail loud on missing assets
 
 ```bash
 $P generate docs.md --strict     # missing, remote, out-of-tree, oversized,
@@ -808,4 +808,4 @@ exit code: 0 success / 1 bad args / 2 render error / 3 Paged.js timeout
            / 4 browse unavailable
 ```
 
-Capture the path: `PDF=$($P generate letter.md)` — then use `$PDF`.
+Capture the path: `PDF=$($P generate letter.md)` - then use `$PDF`.

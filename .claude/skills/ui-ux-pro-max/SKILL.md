@@ -166,7 +166,7 @@ UI/UX design intelligence for web, mobile, and desktop. This skill should be use
 - `viewport-units` - Prefer min-h-dvh over 100vh on mobile
 - `orientation-support` - Keep layout readable and operable in landscape mode
 - `content-priority` - Show core content first on mobile; fold or hide secondary content
-- `visual-hierarchy` - Establish hierarchy via size, spacing, contrast — not color alone
+- `visual-hierarchy` - Establish hierarchy via size, spacing, contrast - not color alone
 - `compact-label-overflow` - Choose badge, status tag, filter chip, or removable value from its semantics; keep essential labels available and disclose unavoidable truncation to pointer and keyboard users
 - `chip-collection-reflow` - Wrap the collection before shrinking labels; make a `+n` overflow summary an operable disclosure instead of hiding values
 
@@ -214,7 +214,7 @@ UI/UX design intelligence for web, mobile, and desktop. This skill should be use
 - `motion-consistency` - Unify duration/easing tokens globally; all animations share the same rhythm and feel
 - `opacity-threshold` - Fading elements should not linger below opacity 0.2; either fade fully or remain visible
 - `modal-motion` - Modals/sheets should animate from their trigger source (scale+fade or slide-in) for spatial context (HIG, MD)
-- `navigation-direction` - Forward navigation animates left/up; backward animates right/down — keep direction logically consistent (HIG)
+- `navigation-direction` - Forward navigation animates left/up; backward animates right/down - keep direction logically consistent (HIG)
 - `layout-shift-avoid` - Animations must not cause layout reflow or CLS; use transform for position changes
 - `cancellable-state-transitions` - Rapid state changes must cancel/replace prior micro-interactions safely, set the new final state explicitly, and never depend on an animation-end event for correctness
 
@@ -322,7 +322,7 @@ Search specific domains using the CLI tool below.
 
 # Prerequisites
 
-The bundled scripts require Python 3 (standard library only — no third-party packages, no network access). Check if it is available:
+The bundled scripts require Python 3 (standard library only - no third-party packages, no network access). Check if it is available:
 
 ```bash
 python3 --version || python --version
@@ -379,11 +379,11 @@ Extract key information from user request:
 - **Product type**: Entertainment (social, video, music, gaming), Tool (scanner, editor, converter), Productivity (task manager, notes, calendar), or hybrid
 - **Target audience**: C-end consumer users; consider age group, usage context (commute, leisure, work)
 - **Style keywords**: playful, vibrant, minimal, dark mode, content-first, immersive, etc.
-- **Stack**: whatever the user is actually building with — infer it from the project
+- **Stack**: whatever the user is actually building with - infer it from the project
   (package.json, existing files, explicit request) or ask. Then load its rules with
   `--stack <name>` (see "Available Stacks"). Do not assume React Native.
 - **Platform**: web or native app. Several sections below are scoped to App UI
-  (iOS/Android/React Native/Flutter) and do not apply to desktop-web work —
+  (iOS/Android/React Native/Flutter) and do not apply to desktop-web work -
   safe areas, haptics, bottom nav and Dynamic Type are mobile-only concerns.
 
 ### Step 2: Generate Design System (new projects/pages)
@@ -414,8 +414,8 @@ python3 .claude/skills/ui-ux-pro-max/scripts/search.py "<query>" --design-system
 ```
 
 This creates:
-- `design-system/<project-slug>/MASTER.md` — Global Source of Truth with all design rules
-- `design-system/<project-slug>/pages/` — Folder for page-specific overrides
+- `design-system/<project-slug>/MASTER.md` - Global Source of Truth with all design rules
+- `design-system/<project-slug>/pages/` - Folder for page-specific overrides
 
 **With page-specific override:**
 ```bash
@@ -423,7 +423,7 @@ python3 .claude/skills/ui-ux-pro-max/scripts/search.py "<query>" --design-system
 ```
 
 This also creates:
-- `design-system/<project-slug>/pages/dashboard.md` — Page-specific deviations from Master
+- `design-system/<project-slug>/pages/dashboard.md` - Page-specific deviations from Master
 
 If Master already exists, a new page file is created without changing Master. Existing Master and page files are skipped by default. Read an existing `MASTER.md` before deciding whether `--force` is justified; without explicit user authorization, keep existing files unchanged.
 
@@ -456,7 +456,7 @@ python3 .claude/skills/ui-ux-pro-max/scripts/search.py "<query>" --design-system
 | `--density` | Spacious (24-96px spacing scale) | Standard (16-64px, current default) | Dense/dashboard (8-32px spacing scale) |
 
 - `--motion` attaches a ready-to-use GSAP snippet (with framework notes, Do/Don't, and performance notes) pulled from `--domain gsap`, matched to the resolved tier (Subtle/Standard/Complex).
-- `--density` overrides the `--space-*` CSS variable table in the ASCII/markdown/MASTER.md output — use it for dashboards (high) vs. marketing pages (low) without hand-editing tokens.
+- `--density` overrides the `--space-*` CSS variable table in the ASCII/markdown/MASTER.md output - use it for dashboards (high) vs. marketing pages (low) without hand-editing tokens.
 - Leaving a dial unset keeps that part of the output exactly as it was before (no behavior change).
 
 **Example:**

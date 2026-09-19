@@ -97,7 +97,7 @@ Do not assume `npm test`. The commands in the steps and examples below use `<tes
 
    It resolves the package manager (npm / pnpm / yarn / bun) from, in order: `CLAUDE_PACKAGE_MANAGER`, `.claude/package-manager.json`, the `package.json` `packageManager` field, the lockfile, then global config.
 
-2. **Distinguish the package manager from the test runner — they are not the same.** A project can use Bun to install dependencies yet still run Jest or Vitest. Inspect `package.json` `scripts.test` and the test files:
+2. **Distinguish the package manager from the test runner - they are not the same.** A project can use Bun to install dependencies yet still run Jest or Vitest. Inspect `package.json` `scripts.test` and the test files:
    - `scripts.test` invokes `jest` / `vitest` -> run through the detected PM (`npm test`, `pnpm test`, `yarn test`, or `bun run test`).
    - `scripts.test` is `bun test`, or test files `import { test, expect } from "bun:test"`, or there is no jest/vitest config but Bun is present -> use **Bun's native runner** (`bun test`). See [Bun Native Test Pattern](#bun-native-test-pattern-buntest) below.
 
@@ -111,7 +111,7 @@ Runner command matrix:
 | Bun (script runs jest/vitest) | `bun run test` | `bun run test --watch` | `bun run test:coverage` | `bun run lint` |
 | Bun (native `bun:test`) | `bun test` | `bun test --watch` | `bun test --coverage` | `bun run lint` |
 
-> `bun test` (Bun's built-in runner) is **not** the same as `bun run test` (which runs the `package.json` `test` script). Picking the wrong one is a common failure — e.g. invoking Jest through `npx`/`bun run` in an ESM-only project breaks, while `bun test` runs the suite natively. Confirm which the project expects before the RED gate, then substitute `<test>` / `<coverage>` everywhere `npm test` appears below.
+> `bun test` (Bun's built-in runner) is **not** the same as `bun run test` (which runs the `package.json` `test` script). Picking the wrong one is a common failure - e.g. invoking Jest through `npx`/`bun run` in an ESM-only project breaks, while `bun test` runs the suite natively. Confirm which the project expects before the RED gate, then substitute `<test>` / `<coverage>` everywhere `npm test` appears below.
 
 ### Step 1: Write User Journeys
 
@@ -291,7 +291,7 @@ describe('Button Component', () => {
 
 ### Bun Native Test Pattern (`bun:test`)
 
-When the project uses Bun's built-in runner (see [Step 0](#step-0-detect-the-test-runner)), import from `bun:test` and run with `bun test` — not `bun run test`. The API is Jest-like, so `describe` / `it` / `expect` and most matchers carry over. See the `bun-runtime` skill for runtime, install, and bundler details.
+When the project uses Bun's built-in runner (see [Step 0](#step-0-detect-the-test-runner)), import from `bun:test` and run with `bun test` - not `bun run test`. The API is Jest-like, so `describe` / `it` / `expect` and most matchers carry over. See the `bun-runtime` skill for runtime, install, and bundler details.
 
 ```typescript
 import { describe, it, expect, mock } from 'bun:test'

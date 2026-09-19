@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { runAnalysisGeneration, type AnalysisWithMethodology } from "@/lib/actions/analysis";
 import { searchSymbols, type SymbolSearchResult } from "@/lib/actions/symbols";
 import { MethodologyCard } from "@/components/analysis/methodology-card";
+import { Disclosure } from "@/components/compliance/disclosure";
 import {
   EmptyPanel,
   GeneratingPanel,
@@ -307,6 +308,18 @@ export function ResearchWorkspace({
             </div>
           )}
         </div>
+      </div>
+
+      {/*
+        The library lists bare probability ranges ("NVDA 18-24%") and
+        confidence bars in the left rail, and shows them in the empty and
+        needs-pick states too - before any methodology card has rendered. The
+        disclosure used to live only inside that card, so those states carried
+        a figure about a named ticker and no disclaimer at all. Page level is
+        the only placement that covers every state of this page.
+      */}
+      <div className="mb-3.5">
+        <Disclosure variant="callout" />
       </div>
 
       {/* Scope selector */}

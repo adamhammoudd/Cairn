@@ -45,7 +45,7 @@ Derived state in `useEffect` adds a render cycle, can desync, and obscures the d
 
 ### 2. Side Effects Outside Render
 
-Effects, mutations, network calls, and subscriptions live in event handlers or `useEffect` — never in the render body.
+Effects, mutations, network calls, and subscriptions live in event handlers or `useEffect` - never in the render body.
 
 ### 3. Composition Over Inheritance
 
@@ -58,7 +58,7 @@ See [rules/react/hooks.md](../../rules/react/hooks.md) for the full ruleset. Hig
 - Top-level only, never conditional
 - Cleanup every subscription, interval, listener
 - Functional updater (`setX(prev => prev + 1)`) when new state depends on old
-- Default position: do not memoize — add `useMemo`/`useCallback` only when a profiler or a dependency chain proves it matters
+- Default position: do not memoize - add `useMemo`/`useCallback` only when a profiler or a dependency chain proves it matters
 - Extract a custom hook only when the same hook sequence appears in 2+ components
 
 ## State Location Decision Tree
@@ -111,7 +111,7 @@ Boundaries:
 
 - Server -> Client: pass serializable props or `children`
 - Client -> Server: invoke Server Actions via `<form action={...}>` or imperatively from event handlers
-- Never `import` a Server Component from a Client Component file — compose them via `children` instead
+- Never `import` a Server Component from a Client Component file - compose them via `children` instead
 
 ## Suspense + Error Boundaries
 
@@ -123,9 +123,9 @@ Boundaries:
 </ErrorBoundary>
 ```
 
-- Place Suspense boundaries close to the data, not at the route root — progressively reveal content
+- Place Suspense boundaries close to the data, not at the route root - progressively reveal content
 - Error Boundary remains a class API; use `react-error-boundary` for a hook-friendly wrapper
-- A boundary catches errors thrown during render, lifecycle, and constructors of its children — NOT in event handlers or async code
+- A boundary catches errors thrown during render, lifecycle, and constructors of its children - NOT in event handlers or async code
 
 ## Forms
 
@@ -175,7 +175,7 @@ For multi-step forms, dynamic field arrays, or cross-field validation: use a lib
 | Real-time subscriptions | Server-Sent Events, WebSockets, or the lib's subscription API |
 | One-off fire-and-forget | `fetch()` in an event handler |
 
-Avoid `useEffect` + `fetch` for application data — race conditions, no cache, no retry, no Suspense integration.
+Avoid `useEffect` + `fetch` for application data - race conditions, no cache, no retry, no Suspense integration.
 
 ## Composition Recipes
 
@@ -219,7 +219,7 @@ Useful when the parent needs to pass parameters to the rendered output:
 </DataLoader>
 ```
 
-Modern alternative: a hook (`useData(id)`) returning the same shape — usually cleaner.
+Modern alternative: a hook (`useData(id)`) returning the same shape - usually cleaner.
 
 ## Performance
 
@@ -237,7 +237,7 @@ Wrap a component in `React.memo` only when:
 
 - Lift state down rather than up where possible
 - Split context: one context per concern, so a change to `themeContext` does not re-render auth consumers
-- Use `useSyncExternalStore` for external state libraries — required for safe concurrent rendering
+- Use `useSyncExternalStore` for external state libraries - required for safe concurrent rendering
 
 ### Lists
 
@@ -248,24 +248,24 @@ Wrap a component in `React.memo` only when:
 
 - Always render semantic HTML (`<button>`, `<a>`, `<nav>`, `<main>`) before reaching for `role` attributes
 - Every interactive element must be reachable by keyboard
-- Form inputs need labels — `<label htmlFor>` or `aria-label` if visually labeled by an icon
+- Form inputs need labels - `<label htmlFor>` or `aria-label` if visually labeled by an icon
 - Manage focus on route changes and modal open/close
 - Run `axe` in component tests (see [skills/react-testing](../react-testing/SKILL.md))
 - Cross-link: [skills/accessibility/SKILL.md](../accessibility/SKILL.md) covers WCAG criteria and pattern libraries
 
 ## Routing
 
-This skill is router-agnostic. The patterns above work with React Router, TanStack Router, Next.js App Router, Remix Router. Router-specific patterns (loaders, actions, nested layouts) follow the router's documentation — those are framework concerns layered on top of React core.
+This skill is router-agnostic. The patterns above work with React Router, TanStack Router, Next.js App Router, Remix Router. Router-specific patterns (loaders, actions, nested layouts) follow the router's documentation - those are framework concerns layered on top of React core.
 
 ## Out of Scope (Pointer Sections)
 
-- **Next.js specifics**: App Router data loading, Route Handlers, Middleware, Parallel Routes — separate concern, use Next.js docs
+- **Next.js specifics**: App Router data loading, Route Handlers, Middleware, Parallel Routes - separate concern, use Next.js docs
 - **React Native**: Platform-specific patterns differ enough to warrant a separate `react-native-patterns` skill (not present yet)
 - **Remix**: Loader/action conventions overlap with RSC but follow Remix docs
 
 ## Related
 
-- Rules: [rules/react/](../../rules/react/) — coding-style, hooks, patterns, security, testing
+- Rules: [rules/react/](../../rules/react/) - coding-style, hooks, patterns, security, testing
 - Skills: [react-performance](../react-performance/SKILL.md) for the Vercel-derived performance ruleset, [frontend-patterns](../frontend-patterns/SKILL.md) for cross-framework UI concerns, [accessibility](../accessibility/SKILL.md), [angular-developer](../angular-developer/SKILL.md) for framework comparison
 - Agents: `react-reviewer` for code review, `react-build-resolver` for build/bundler errors
 - Commands: `/react-review`, `/react-build`, `/react-test`

@@ -35,6 +35,51 @@ interface TechnicalsPanelProps {
   bars: { ts: string; close: number | null }[];
   priceSource: "live" | "last_close";
   priceAsOf: string | null;
+  /** Annualised stdev of the last 30 daily returns, in percent, from loadTicker(). */
+  volatility30d?: number | null;
+}
+
+// The mock's "Indicators" list: one row per reading, with what it is in words
+// beside the number. Every value is read off the same series the charts below
+// are drawn from - this is a summary of them, not a second computation.
+//
+// The state chip is descriptive, never directional: the accent marks a price
+// above its own average, amber marks a reading outside a conventional band,
+// and nothing here is coloured with the loss red, which the brand reserves for
+// actual losses.
+function IndicatorRow({
+  label,
+  desc,
+  value,
+  state,
+  tone,
+}: {
+  label: string;
+  desc: string;
+  value: string;
+  state: string;
+  tone: "accent" | "warning" | "neutral";
+}) {
+  const colour = tone === "accent" ? "text-accent-light" : tone === "warning" ? "text-warning" : "text-primary";
+  const dot = tone === "accent" ? "bg-accent" : tone === "warning" ? "bg-warning" : "bg-line-strong";
+
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-4 border-b border-line-soft px-5 py-4 transition-colors duration-base ease-standard last:border-b-0 hover:bg-active">
+      <div className="min-w-0 flex-[1_1_260px]">
+        <div className="flex items-center gap-2">
+          <span aria-hidden className={`h-[5px] w-[5px] shrink-0 rounded-full ${dot}`} />
+          <span className="text-body font-semibold text-primary">{label}</span>
+        </div>
+        <p className="mt-1.5 ml-[13px] max-w-[520px] text-caption leading-[1.5] text-muted text-pretty">{desc}</p>
+      </div>
+      <div className="flex shrink-0 items-center gap-3">
+        <span className={`font-mono text-lead tabular-nums ${colour}`}>{value}</span>
+        <span className="rounded-control border border-line bg-active px-2.5 py-1 font-mono text-eyebrow text-muted uppercase">
+          {state}
+        </span>
+      </div>
+    </div>
+  );
 }
 
 const OVERLAYS = [
@@ -44,7 +89,7 @@ const OVERLAYS = [
 ] as const;
 type OverlayId = (typeof OVERLAYS)[number]["id"];
 
-export function TechnicalsPanel({ symbol, bars, priceSource, priceAsOf }: TechnicalsPanelProps) {
+export function TechnicalsPanel({ symbol, bars, priceSource, priceAsOf, volatility30d = null }: TechnicalsPanelProps) {
   const [windowLabel, setWindowLabel] = useState<(typeof WINDOWS)[number]["label"]>("1Y");
   const [enabled, setEnabled] = useState<Record<OverlayId, boolean>>({ sma50: true, sma200: true, ema20: false });
 
@@ -110,8 +155,80 @@ export function TechnicalsPanel({ symbol, bars, priceSource, priceAsOf }: Techni
     );
   }
 
+  // Peak close over the window on screen, so the drawdown row and the chart
+  // above it are describing the same stretch of history.
+  const windowHigh = points.reduce<number | null>((hi, p) => (hi === null || p.close > hi ? p.close : hi), null);
+  const drawdown =
+    latest && windowHigh && windowHigh > 0 ? ((latest.close - windowHigh) / windowHigh) * 100 : null;
+
+  const indicators: { label: string; desc: string; value: string; state: string; tone: "accent" | "warning" | "neutral" }[] = [];
+  for (const [key, label, desc] of [
+    ["sma50", "SMA 50", "Fifty-session simple moving average of daily closes."],
+    ["sma200", "SMA 200", "Two-hundred-session average. Crossovers can trigger an alert on the Alerts page."],
+  ] as const) {
+    const v = latest === null ? null : latest[key];
+    if (v === null || v === undefined || latest === null) continue;
+    const above = latest.close >= v;
+    indicators.push({
+      label,
+      desc,
+      value: money(v),
+      state: above ? "Price above" : "Price below",
+      tone: above ? "accent" : "neutral",
+    });
+  }
+  if (latest?.rsi !== null && latest?.rsi !== undefined) {
+    // 70/30 are the conventional overbought/oversold bands, the same ones the
+    // RSI chart below draws as reference lines. A band, not a call.
+    const band = latest.rsi >= 70 ? "Overbought" : latest.rsi <= 30 ? "Oversold" : "Neutral";
+    indicators.push({
+      label: "RSI 14",
+      desc: "Relative strength over fourteen sessions. Above 70 and below 30 are the conventional bands.",
+      value: latest.rsi.toFixed(1),
+      state: band,
+      tone: band === "Neutral" ? "neutral" : "warning",
+    });
+  }
+  if (volatility30d !== null) {
+    indicators.push({
+      label: "Volatility 30d",
+      desc: "Annualised standard deviation of the last thirty daily returns.",
+      value: `${volatility30d.toFixed(0)}%`,
+      // 30% annualised is the conventional dividing line between an ordinary
+      // and an elevated reading. It is a convention this row names, not a
+      // threshold Cairn computes or acts on.
+      state: volatility30d >= 30 ? "Elevated" : "Ordinary",
+      tone: volatility30d >= 30 ? "warning" : "neutral",
+    });
+  }
+  if (drawdown !== null) {
+    indicators.push({
+      label: `Drawdown from ${windowLabel} high`,
+      desc: "Distance from the highest close in the window the charts below are drawn over.",
+      value: `${drawdown > 0 ? "+" : drawdown < 0 ? "−" : ""}${Math.abs(drawdown).toFixed(1)}%`,
+      state: `Peak ${money(windowHigh ?? 0)}`,
+      tone: "neutral",
+    });
+  }
+
   return (
     <div className="flex flex-col gap-3.5">
+      {indicators.length > 0 && (
+        <div className="animate-rise-in overflow-hidden rounded-card border border-line bg-panel">
+          <div className="flex flex-wrap items-baseline justify-between gap-2.5 border-b border-line-soft bg-gradient-to-b from-accent/[0.06] to-transparent px-5 py-4">
+            <h2 className="font-serif text-h3 font-normal text-primary">Indicators</h2>
+            <span className="text-caption text-dim">Computed in code from daily closes - not model output</span>
+          </div>
+          {indicators.map((i) => (
+            <IndicatorRow key={i.label} {...i} />
+          ))}
+          <div className="border-t border-line-soft px-5 py-3.5 text-caption leading-[1.55] text-dim text-pretty">
+            Indicator values describe past price behaviour. They are inputs to an analysis, not signals, and Cairn does
+            not resolve them into a decision.
+          </div>
+        </div>
+      )}
+
       <div className="overflow-hidden rounded-card border border-line bg-panel">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-3">
           <div className="flex flex-wrap items-center gap-3">

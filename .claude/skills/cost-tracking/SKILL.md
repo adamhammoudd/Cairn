@@ -15,7 +15,7 @@ that ECC's `stop:cost-tracker` hook writes.
 The tracker appends one JSON object per session-stop to
 `~/.claude/metrics/costs.jsonl`. Each row is a **cumulative snapshot for that
 session**, so to total spend you take the **latest row per `session_id`** and
-sum across sessions — summing every row multiply-counts.
+sum across sessions - summing every row multiply-counts.
 
 Row schema:
 
@@ -29,7 +29,7 @@ Row schema:
 | `cache_write_tokens` / `cache_read_tokens` | Prompt-cache token counts |
 | `estimated_cost_usd` | Precomputed cumulative cost in USD for the session |
 
-Prefer `estimated_cost_usd` over hand-calculating pricing — model and cache
+Prefer `estimated_cost_usd` over hand-calculating pricing - model and cache
 prices change, and the tracker is the source of truth.
 
 ## When to Use
@@ -41,7 +41,7 @@ prices change, and the tracker is the source of truth.
 
 ## How It Works
 
-First verify the log exists (use `node`, not `sqlite3` — the tracker writes
+First verify the log exists (use `node`, not `sqlite3` - the tracker writes
 JSONL, and `node` is cross-platform):
 
 ```bash
@@ -52,7 +52,7 @@ If the log is missing, do not fabricate usage data. Tell the user that cost
 tracking populates after the first session ends with the `stop:cost-tracker`
 hook enabled.
 
-## Example — summary, by model, last 7 days
+## Example - summary, by model, last 7 days
 
 ```bash
 node -e '
@@ -82,7 +82,7 @@ with four decimals, larger amounts with two.
 
 ## Anti-Patterns
 
-- Do not sum every row — they are cumulative per session; reduce to the latest
+- Do not sum every row - they are cumulative per session; reduce to the latest
   row per `session_id` first.
 - Do not estimate costs from raw token counts when `estimated_cost_usd` is present.
 - Do not assume the log exists without checking.

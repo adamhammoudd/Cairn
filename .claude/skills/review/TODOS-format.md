@@ -45,11 +45,11 @@ Each item is an H3 under its section:
 
 ## Priority Definitions
 
-- **P0** — Blocking: must be done before next release
-- **P1** — Critical: should be done this cycle
-- **P2** — Important: do when P0/P1 are clear
-- **P3** — Nice-to-have: revisit after adoption/usage data
-- **P4** — Someday: good idea, no urgency
+- **P0** - Blocking: must be done before next release
+- **P1** - Critical: should be done this cycle
+- **P2** - Important: do when P0/P1 are clear
+- **P3** - Nice-to-have: revisit after adoption/usage data
+- **P4** - Someday: good idea, no urgency
 
 ---
 

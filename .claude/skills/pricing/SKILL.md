@@ -42,15 +42,15 @@ Gather this context (ask if not provided):
 
 ### The Three Pricing Axes
 
-**1. Packaging** — What's included at each tier?
+**1. Packaging** - What's included at each tier?
 - Features, limits, support level
 - How tiers differ from each other
 
-**2. Pricing Metric** — What do you charge for?
+**2. Pricing Metric** - What do you charge for?
 - Per user, per usage, flat fee
 - How price scales with value
 
-**3. Price Point** — How much do you charge?
+**3. Price Point** - How much do you charge?
 - The actual dollar amounts
 - Perceived value vs. cost
 
@@ -58,38 +58,38 @@ Gather this context (ask if not provided):
 
 Price should be based on value delivered, not cost to serve:
 
-- **Customer's perceived value** — The ceiling
-- **Your price** — Between alternatives and perceived value
-- **Next best alternative** — The floor for differentiation
-- **Your cost to serve** — Only a baseline, not the basis
+- **Customer's perceived value** - The ceiling
+- **Your price** - Between alternatives and perceived value
+- **Next best alternative** - The floor for differentiation
+- **Your cost to serve** - Only a baseline, not the basis
 
 **Key insight:** Price between the next best alternative and perceived value.
 
 **Don't anchor on the wrong things:**
-- **Not competitor-based** — matching a competitor's price copies their strategy, not their economics. It's a data point, not a target.
-- **Not cost-based** — cost is a floor, never the basis. Value + differentiation set the price.
+- **Not competitor-based** - matching a competitor's price copies their strategy, not their economics. It's a data point, not a target.
+- **Not cost-based** - cost is a floor, never the basis. Value + differentiation set the price.
 
 ---
 
-## Initial Pricing — "Pick a Price You Can Learn From"
+## Initial Pricing - "Pick a Price You Can Learn From"
 
-The frameworks below (value metrics, tiers, Van Westendorp) are for optimizing a price. **On day one you don't have a price to optimize — you have a bet to place.** The goal of your first price is *learning*, not precision. Pick a number, ship it, and let real buyers tell you if it's wrong.
+The frameworks below (value metrics, tiers, Van Westendorp) are for optimizing a price. **On day one you don't have a price to optimize - you have a bet to place.** The goal of your first price is *learning*, not precision. Pick a number, ship it, and let real buyers tell you if it's wrong.
 
 ### The $10 / $100 / $1,000 rule of thumb
 
 When you have nothing to go on, start with the order of magnitude that matches who you serve:
 
-- **~$10/mo** — prosumer / individual, high volume, low touch
-- **~$100/mo** — SMB / team tool, the SaaS default
-- **~$1,000/mo** — mid-market / business-critical / sales-assisted
+- **~$10/mo** - prosumer / individual, high volume, low touch
+- **~$100/mo** - SMB / team tool, the SaaS default
+- **~$1,000/mo** - mid-market / business-critical / sales-assisted
 
 Pick the bucket by **who the customer is and how much value you deliver**, then start near the round number. You can move within the bucket fast once you have signal.
 
 ### Avoid the $9 trap
 
 Resist the urge to price ultra-low (e.g. **$9/mo**) to reduce friction. Ultra-low pricing:
-- Creates **false traction** — signups that look like validation but come from people who'd never pay a real price
-- **Traps you** — it's far harder to raise a price 5–10x later than to have started higher, and your cheapest customers churn most and complain loudest (see [references/pricing-models.md](references/pricing-models.md) on low-price retention)
+- Creates **false traction** - signups that look like validation but come from people who'd never pay a real price
+- **Traps you** - it's far harder to raise a price 5–10x later than to have started higher, and your cheapest customers churn most and complain loudest (see [references/pricing-models.md](references/pricing-models.md) on low-price retention)
 
 Round-and-slightly-higher beats clever-and-cheap.
 
@@ -105,7 +105,7 @@ When early Intercom agonized over pricing, Jason Fried's advice was essentially:
 
 ### What is a Value Metric?
 
-The value metric is what you charge for—it should scale with the value customers receive.
+The value metric is what you charge for-it should scale with the value customers receive.
 
 **Good value metrics:**
 - Align price with value delivered
@@ -130,7 +130,7 @@ Ask: "As a customer uses more of [metric], do they get more value?"
 - If yes → good value metric
 - If no → price doesn't align with value
 
-**The value metric picks the pricing model.** Once you know what scales with value, choose how to charge on it — flat, usage, tier, user, feature, credit, outcome, or a hybrid. See [references/pricing-models.md](references/pricing-models.md).
+**The value metric picks the pricing model.** Once you know what scales with value, choose how to charge on it - flat, usage, tier, user, feature, credit, outcome, or a hybrid. See [references/pricing-models.md](references/pricing-models.md).
 
 ---
 
@@ -144,10 +144,10 @@ Ask: "As a customer uses more of [metric], do they get more value?"
 
 ### Tier Differentiation
 
-- **Feature gating** — Basic vs. advanced features
-- **Usage limits** — Same features, different limits
-- **Support level** — Email → Priority → Dedicated
-- **Access** — API, SSO, custom branding
+- **Feature gating** - Basic vs. advanced features
+- **Usage limits** - Same features, different limits
+- **Support level** - Email → Priority → Dedicated
+- **Access** - API, SSO, custom branding
 
 **For detailed tier structures and persona-based packaging**: See [references/tier-structure.md](references/tier-structure.md)
 
@@ -196,21 +196,21 @@ Identifies which features customers value most:
 
 ### Price Increase Strategies
 
-1. **Grandfather existing** — New price for new customers only
-2. **Delayed increase** — Announce 3-6 months out
-3. **Tied to value** — Raise price but add features
-4. **Plan restructure** — Change plans entirely
+1. **Grandfather existing** - New price for new customers only
+2. **Delayed increase** - Announce 3-6 months out
+3. **Tied to value** - Raise price but add features
+4. **Plan restructure** - Change plans entirely
 
 ### Rollout Methodology
 
 A price change is a rollout, not a switch you flip. Sequence it to de-risk:
 
-1. **Test on new customers first.** Raise the price only for *new* signups and watch conversion. New customers have no anchor and no relationship at stake, so they give you a clean read on whether the market accepts the number — before you touch a single existing account.
-2. **Don't reflexively grandfather forever.** Grandfathering feels kind, but it can leave enormous money on the table. Run the math: a customer paying **$50/mo** who *should* be at **$250/mo** is a **$2,400/yr** gap — and $200/mo you're subsidizing indefinitely across your whole base. Grandfather as a *transition* (a grace period), not a permanent exemption.
+1. **Test on new customers first.** Raise the price only for *new* signups and watch conversion. New customers have no anchor and no relationship at stake, so they give you a clean read on whether the market accepts the number - before you touch a single existing account.
+2. **Don't reflexively grandfather forever.** Grandfathering feels kind, but it can leave enormous money on the table. Run the math: a customer paying **$50/mo** who *should* be at **$250/mo** is a **$2,400/yr** gap - and $200/mo you're subsidizing indefinitely across your whole base. Grandfather as a *transition* (a grace period), not a permanent exemption.
 3. **Roll out small, then gradually.** Move **5–10%** of existing customers to the new price first. Watch churn and support volume for a cycle, then expand in staggered waves. A staggered rollout contains the blast radius and gives you an off-ramp if churn spikes.
 4. **Communicate the *why*, months ahead, with a generous offer.** Tell customers why the price is changing (usually: more value shipped) well in advance. Soften it: lock-in-the-old-price-if-you-upgrade-to-annual-now, an extended grace window, or a one-time credit. Advance notice + a generous option converts a resentment moment into a loyalty one.
 
-Expect — and accept — some churn. The customers most likely to leave over a justified increase are usually your least-profitable, highest-support, most price-sensitive accounts.
+Expect - and accept - some churn. The customers most likely to leave over a justified increase are usually your least-profitable, highest-support, most price-sensitive accounts.
 
 ---
 
@@ -240,12 +240,12 @@ Expect — and accept — some churn. The customers most likely to leave over a 
 
 ## Pricing Page Teardown
 
-When someone wants to audit an existing pricing *page* for **clarity, transparency, and AI-readability** (not the pricing strategy itself, and not conversion-rate optimization — that's `cro`), run a **teardown** that scores it across two axes and returns prioritized fixes:
+When someone wants to audit an existing pricing *page* for **clarity, transparency, and AI-readability** (not the pricing strategy itself, and not conversion-rate optimization - that's `cro`), run a **teardown** that scores it across two axes and returns prioritized fixes:
 
-- **Human buyer experience** — value-prop clarity, plan differentiation, cognitive load, trust signals, pricing psychology, and price transparency.
-- **AI-agent readiness** — whether the LLMs and agents that increasingly shortlist and compare tools can actually read and quote your pricing: machine-readable prices (not locked in an image or behind "Contact us"), extractable FAQ/objection coverage, per-tier depth stated in text, and structured data. Buyers now ask ChatGPT/Perplexity/Claude "what's the best X and what does it cost?" *before* visiting — a pricing page an agent can't parse loses deals you never see.
+- **Human buyer experience** - value-prop clarity, plan differentiation, cognitive load, trust signals, pricing psychology, and price transparency.
+- **AI-agent readiness** - whether the LLMs and agents that increasingly shortlist and compare tools can actually read and quote your pricing: machine-readable prices (not locked in an image or behind "Contact us"), extractable FAQ/objection coverage, per-tier depth stated in text, and structured data. Buyers now ask ChatGPT/Perplexity/Claude "what's the best X and what does it cost?" *before* visiting - a pricing page an agent can't parse loses deals you never see.
 
-**Fast check — the "paste test":** give the pricing URL to a browsing-capable AI (Perplexity, ChatGPT with search, Claude with web) — or paste the rendered page text — and ask "what are the plans and prices?" A clean miss means agents fetching your page will struggle too (a heuristic, not proof every agent fails).
+**Fast check - the "paste test":** give the pricing URL to a browsing-capable AI (Perplexity, ChatGPT with search, Claude with web) - or paste the rendered page text - and ask "what are the plans and prices?" A clean miss means agents fetching your page will struggle too (a heuristic, not proof every agent fails).
 
 The AI-readiness fixes are usually high-impact, low-effort (put prices in text, add `Offer` schema). Hand implementation to **schema** (Product/Offer JSON-LD) and **ai-seo** (extractability, AI-bot access, `llms.txt`).
 

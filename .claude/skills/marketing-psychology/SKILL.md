@@ -33,9 +33,9 @@ Break problems down to basic truths and build solutions from there. Instead of c
 **Marketing application**: Don't assume you need content marketing because competitors do. Ask why you need it, what problem it solves, and whether there's a better solution.
 
 ### Jobs to Be Done
-People don't buy products—they "hire" them to get a job done. Focus on the outcome customers want, not features.
+People don't buy products-they "hire" them to get a job done. Focus on the outcome customers want, not features.
 
-**Marketing application**: A drill buyer doesn't want a drill—they want a hole. Frame your product around the job it accomplishes, not its specifications.
+**Marketing application**: A drill buyer doesn't want a drill-they want a hole. Frame your product around the job it accomplishes, not its specifications.
 
 ### Circle of Competence
 Know what you're good at and stay within it. Venture outside only with proper learning or expert help.
@@ -45,7 +45,7 @@ Know what you're good at and stay within it. Venture outside only with proper le
 ### Inversion
 Instead of asking "How do I succeed?", ask "What would guarantee failure?" Then avoid those things.
 
-**Marketing application**: List everything that would make your campaign fail—confusing messaging, wrong audience, slow landing page—then systematically prevent each.
+**Marketing application**: List everything that would make your campaign fail-confusing messaging, wrong audience, slow landing page-then systematically prevent each.
 
 ### Occam's Razor
 The simplest explanation is usually correct. Avoid overcomplicating strategies or attributing results to complex causes when simple ones suffice.
@@ -68,7 +68,7 @@ Every system has one bottleneck limiting throughput. Find and fix that constrain
 **Marketing application**: If your funnel converts well but traffic is low, more conversion optimization won't help. Fix the traffic bottleneck first.
 
 ### Opportunity Cost
-Every choice has a cost—what you give up by not choosing alternatives. Consider what you're saying no to.
+Every choice has a cost-what you give up by not choosing alternatives. Consider what you're saying no to.
 
 **Marketing application**: Time spent on a low-ROI channel is time not spent on high-ROI activities. Always compare against alternatives.
 
@@ -149,7 +149,7 @@ People value things more when they've put effort into creating them.
 **Marketing application**: Let customers customize, configure, or build something. Their investment increases perceived value and commitment.
 
 ### Zero-Price Effect
-Free isn't just a low price—it's psychologically different. "Free" triggers irrational preference.
+Free isn't just a low price-it's psychologically different. "Free" triggers irrational preference.
 
 **Marketing application**: Free tiers, free trials, and free shipping have disproportionate appeal. The jump from $1 to $0 is bigger than $2 to $1.
 

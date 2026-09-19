@@ -2,7 +2,7 @@
 name: design-review
 preamble-tier: 4
 version: 2.0.0
-description: "Designer's eye QA: finds visual inconsistency, spacing issues, hierarchy problems, AI slop patterns, and slow interactions — then fixes them. (gstack)"
+description: "Designer's eye QA: finds visual inconsistency, spacing issues, hierarchy problems, AI slop patterns, and slow interactions - then fixes them. (gstack)"
 allowed-tools:
   - Bash
   - Read
@@ -17,7 +17,7 @@ triggers:
   - design qa
   - fix design issues
 ---
-<!-- AUTO-GENERATED from SKILL.md.tmpl — do not edit directly -->
+<!-- AUTO-GENERATED from SKILL.md.tmpl - do not edit directly -->
 <!-- Regenerate: bun run gen:skill-docs -->
 
 
@@ -154,13 +154,13 @@ In plan mode, allowed because they inform the plan: `$B`, `$D`, `codex exec`/`co
 
 ## Skill Invocation During Plan Mode
 
-If the user invokes a skill in plan mode, the skill takes precedence over generic plan mode behavior. **Treat the skill file as executable instructions, not reference.** Follow it step by step starting from Step 0; any AskUserQuestion the skill fires is the workflow operating within plan mode, not a violation of it — and a skill whose instructions resolve a question themselves (e.g. a plan-mode auto-select) may legitimately not ask it. AskUserQuestion (any variant — `mcp__*__AskUserQuestion` or native; see "AskUserQuestion Format → Tool resolution") satisfies plan mode's end-of-turn requirement. If AskUserQuestion is unavailable or a call fails, follow the AskUserQuestion Format failure fallback: `headless` → BLOCKED; `interactive` → the prose fallback (also satisfies end-of-turn). At a STOP point, stop immediately. Do not continue the workflow or call ExitPlanMode there. Commands marked "PLAN MODE EXCEPTION — ALWAYS RUN" execute. Call ExitPlanMode only after the skill workflow completes, or if the user tells you to cancel the skill or leave plan mode.
+If the user invokes a skill in plan mode, the skill takes precedence over generic plan mode behavior. **Treat the skill file as executable instructions, not reference.** Follow it step by step starting from Step 0; any AskUserQuestion the skill fires is the workflow operating within plan mode, not a violation of it - and a skill whose instructions resolve a question themselves (e.g. a plan-mode auto-select) may legitimately not ask it. AskUserQuestion (any variant - `mcp__*__AskUserQuestion` or native; see "AskUserQuestion Format → Tool resolution") satisfies plan mode's end-of-turn requirement. If AskUserQuestion is unavailable or a call fails, follow the AskUserQuestion Format failure fallback: `headless` → BLOCKED; `interactive` → the prose fallback (also satisfies end-of-turn). At a STOP point, stop immediately. Do not continue the workflow or call ExitPlanMode there. Commands marked "PLAN MODE EXCEPTION - ALWAYS RUN" execute. Call ExitPlanMode only after the skill workflow completes, or if the user tells you to cancel the skill or leave plan mode.
 
-If `PROACTIVE` is `"false"`, do not auto-invoke or proactively suggest skills. If a skill seems useful, ask: "I think /skillname might help here — want me to run it?"
+If `PROACTIVE` is `"false"`, do not auto-invoke or proactively suggest skills. If a skill seems useful, ask: "I think /skillname might help here - want me to run it?"
 
 If `SKILL_PREFIX` is `"true"`, suggest/invoke `/gstack-*` names. Disk paths stay `~/.claude/skills/gstack/[skill-name]/SKILL.md`.
 
-If `UPDATE_CHECK` is `"false"`, skip the next two lines — the update-check binary emits nothing in that mode, so there is no `UPGRADE_AVAILABLE` / `JUST_UPGRADED` output to act on.
+If `UPDATE_CHECK` is `"false"`, skip the next two lines - the update-check binary emits nothing in that mode, so there is no `UPGRADE_AVAILABLE` / `JUST_UPGRADED` output to act on.
 
 If output shows `UPGRADE_AVAILABLE <old> <new>`: read `~/.claude/skills/gstack/gstack-upgrade/SKILL.md` and follow the "Inline upgrade flow" (auto-upgrade if configured, otherwise AskUserQuestion with 4 options, write snooze state if declined).
 
@@ -177,8 +177,8 @@ If `WRITING_STYLE_PENDING` is `yes`: ask once about writing style:
 > v1 prompts are simpler: first-use jargon glosses, outcome-framed questions, shorter prose. Keep default or restore terse?
 
 Options:
-- A) Keep the new default (recommended — good writing helps everyone)
-- B) Restore V0 prose — set `explain_level: terse`
+- A) Keep the new default (recommended - good writing helps everyone)
+- B) Restore V0 prose - set `explain_level: terse`
 
 If A: leave `explain_level` unset (defaults to `default`).
 If B: run `~/.claude/skills/gstack/bin/gstack-config set explain_level terse`.
@@ -191,7 +191,7 @@ touch ~/.gstack/.writing-style-prompted
 
 Skip if `WRITING_STYLE_PENDING` is `no`.
 
-If `LAKE_INTRO` is `no`: say "gstack follows the **Boil the Ocean** principle — do the complete thing when AI makes marginal cost near-zero. Read more: https://garryslist.org/posts/boil-the-ocean" Offer to open:
+If `LAKE_INTRO` is `no`: say "gstack follows the **Boil the Ocean** principle - do the complete thing when AI makes marginal cost near-zero. Read more: https://garryslist.org/posts/boil-the-ocean" Offer to open:
 
 ```bash
 open https://garryslist.org/posts/boil-the-ocean
@@ -234,7 +234,7 @@ If `PROACTIVE_PROMPTED` is `no` AND `TEL_PROMPTED` is `yes`: ask once:
 
 Options:
 - A) Keep it on (recommended)
-- B) Turn it off — I'll type /commands myself
+- B) Turn it off - I'll type /commands myself
 
 If A: run `~/.claude/skills/gstack/bin/gstack-config set proactive true`
 If B: run `~/.claude/skills/gstack/bin/gstack-config set proactive false`
@@ -248,7 +248,7 @@ Skip if `PROACTIVE_PROMPTED` is `yes`.
 
 ## First-run guidance (one-time)
 
-If `ACTIVATED` is `no` (first skill run on this machine) AND the preamble printed a non-empty `FIRST_TASK:` value that is NOT `nongit`: show ONE short, project-specific line mapped from the token, as a heads-up, then CONTINUE with whatever the user actually asked — do NOT halt their task. Map the token: `greenfield` → "Fresh repo — shape it first with `/spec` or `/office-hours`." `code_node`/`code_python`/`code_rust`/`code_go`/`code_ruby`/`code_ios` → "There's code here — `/qa` to see it work, or `/investigate` if something's off." `branch_ahead` → "Unshipped work on this branch — `/review` then `/ship`." `dirty_default` → "Uncommitted changes — `/review` before committing." `clean_default` → "Pick one: `/spec`, `/investigate`, or `/qa`." Then substitute the token you saw for TASK_TOKEN and run (best-effort), and mark activated:
+If `ACTIVATED` is `no` (first skill run on this machine) AND the preamble printed a non-empty `FIRST_TASK:` value that is NOT `nongit`: show ONE short, project-specific line mapped from the token, as a heads-up, then CONTINUE with whatever the user actually asked - do NOT halt their task. Map the token: `greenfield` → "Fresh repo - shape it first with `/spec` or `/office-hours`." `code_node`/`code_python`/`code_rust`/`code_go`/`code_ruby`/`code_ios` → "There's code here - `/qa` to see it work, or `/investigate` if something's off." `branch_ahead` → "Unshipped work on this branch - `/review` then `/ship`." `dirty_default` → "Uncommitted changes - `/review` before committing." `clean_default` → "Pick one: `/spec`, `/investigate`, or `/qa`." Then substitute the token you saw for TASK_TOKEN and run (best-effort), and mark activated:
 ```bash
 ~/.claude/skills/gstack/bin/gstack-telemetry-log --event-type first_task_scaffold_shown --skill "TASK_TOKEN" --outcome shown 2>/dev/null || true
 touch ~/.gstack/.activated 2>/dev/null || true
@@ -258,7 +258,7 @@ If `ACTIVATED` is `no` but `FIRST_TASK:` is empty or `nongit` (headless, non-git
 
 Else if `ACTIVATED` is `yes` AND `FIRST_LOOP_SHOWN` is `no`: say once as a heads-up (then continue):
 
-> Tip: gstack pays off when you complete one loop — **plan → review → ship**. A common first loop: `/office-hours` or `/spec` to shape it, `/plan-eng-review` to lock it, then `/ship`.
+> Tip: gstack pays off when you complete one loop - **plan → review → ship**. A common first loop: `/office-hours` or `/spec` to shape it, `/plan-eng-review` to lock it, then `/ship`.
 
 Then run `touch ~/.gstack/.first-loop-tip-shown 2>/dev/null || true`.
 
@@ -342,9 +342,9 @@ AI orchestrator (e.g., OpenClaw). In spawned sessions:
 
 ### Tool resolution (read first)
 
-"AskUserQuestion" can resolve to two tools at runtime: the **host MCP variant** (e.g. `mcp__conductor__AskUserQuestion` — appears in your tool list when the host registers it) or the **native** Claude Code tool.
+"AskUserQuestion" can resolve to two tools at runtime: the **host MCP variant** (e.g. `mcp__conductor__AskUserQuestion` - appears in your tool list when the host registers it) or the **native** Claude Code tool.
 
-**Conductor rule (read before the MCP rule):** if `CONDUCTOR_SESSION: true` was echoed by the preamble, do NOT call AskUserQuestion at all — neither native nor any `mcp__*__AskUserQuestion` variant. Render EVERY decision brief as the **prose form** below and STOP. This is proactive, not a reaction to a failure: Conductor disables native AUQ and its MCP variant is flaky (it returns `[Tool result missing due to internal error]`), so prose is the reliable path. **Auto-decide preferences still apply first:** if a `[plan-tune auto-decide] <id> → <option>` result has already surfaced for a question, proceed with that option (no prose). Because in Conductor you go straight to prose without ever calling the tool, this auto-decide-first ordering is enforced HERE, not only by the PreToolUse hook. When you render a Conductor prose brief, also capture it with `bin/gstack-question-log` (the PostToolUse capture hook never fires on a prose path, so `/plan-tune` history/learning depends on this call).
+**Conductor rule (read before the MCP rule):** if `CONDUCTOR_SESSION: true` was echoed by the preamble, do NOT call AskUserQuestion at all - neither native nor any `mcp__*__AskUserQuestion` variant. Render EVERY decision brief as the **prose form** below and STOP. This is proactive, not a reaction to a failure: Conductor disables native AUQ and its MCP variant is flaky (it returns `[Tool result missing due to internal error]`), so prose is the reliable path. **Auto-decide preferences still apply first:** if a `[plan-tune auto-decide] <id> → <option>` result has already surfaced for a question, proceed with that option (no prose). Because in Conductor you go straight to prose without ever calling the tool, this auto-decide-first ordering is enforced HERE, not only by the PreToolUse hook. When you render a Conductor prose brief, also capture it with `bin/gstack-question-log` (the PostToolUse capture hook never fires on a prose path, so `/plan-tune` history/learning depends on this call).
 
 **Rule (non-Conductor):** if any `mcp__*__AskUserQuestion` variant is in your tool list, prefer it. Hosts may disable native AUQ via `--disallowedTools AskUserQuestion` (Conductor does, by default) and route through their MCP variant; calling native there silently fails. Same questions/options shape; same decision-brief format applies.
 
@@ -354,41 +354,41 @@ If AskUserQuestion is unavailable (no variant in your tool list) OR a call to it
 
 Tell three outcomes apart:
 
-1. **Auto-decide denial (NOT a failure).** The result contains `[plan-tune auto-decide] <id> → <option>` — the preference hook working as designed. Proceed with that option. Do NOT retry, do NOT fall back to prose.
-2. **Genuine failure** — no variant in your tool list, OR the variant is present but the call returns an error / missing result (MCP transport error, empty result, host bug — e.g. Conductor's MCP AskUserQuestion is flaky and returns `[Tool result missing due to internal error]`).
-   - If it was present and **errored** (not absent), retry the SAME call **once** — but only if no answer could have surfaced (a missing-result error can arrive after the user already saw the question; retrying would double-prompt, so if it may have reached them, treat as pending, don't retry).
+1. **Auto-decide denial (NOT a failure).** The result contains `[plan-tune auto-decide] <id> → <option>` - the preference hook working as designed. Proceed with that option. Do NOT retry, do NOT fall back to prose.
+2. **Genuine failure** - no variant in your tool list, OR the variant is present but the call returns an error / missing result (MCP transport error, empty result, host bug - e.g. Conductor's MCP AskUserQuestion is flaky and returns `[Tool result missing due to internal error]`).
+   - If it was present and **errored** (not absent), retry the SAME call **once** - but only if no answer could have surfaced (a missing-result error can arrive after the user already saw the question; retrying would double-prompt, so if it may have reached them, treat as pending, don't retry).
    - Then branch on `SESSION_KIND` (echoed by the preamble; empty/absent ⇒ `interactive`):
      - `spawned` → defer to the **Spawned session** block: auto-choose the recommended option. Never prose, never BLOCKED.
-     - `headless` → `BLOCKED — AskUserQuestion unavailable`; stop and wait (no human can answer).
+     - `headless` → `BLOCKED - AskUserQuestion unavailable`; stop and wait (no human can answer).
      - `interactive` → **prose fallback** (below).
 
-**Prose fallback — render the decision brief as a markdown message, not a tool call.** Same information as the tool format below, different structure (paragraphs, not ✅/❌ bullets). It MUST surface this triad:
+**Prose fallback - render the decision brief as a markdown message, not a tool call.** Same information as the tool format below, different structure (paragraphs, not ✅/❌ bullets). It MUST surface this triad:
 
-1. **A clear ELI10 of the issue itself** — plain English on what's being decided and why it matters (the question, not per-choice), naming the stakes. Lead with it.
-2. **Completeness scores per choice** — explicit `Completeness: X/10` on EACH choice (10 complete, 7 happy-path, 3 shortcut); use the kind-note when options differ in kind not coverage, but never silently drop the score.
-3. **The recommendation and why** — a `Recommendation: <choice> because <reason>` line plus the `(recommended)` marker on that choice.
+1. **A clear ELI10 of the issue itself** - plain English on what's being decided and why it matters (the question, not per-choice), naming the stakes. Lead with it.
+2. **Completeness scores per choice** - explicit `Completeness: X/10` on EACH choice (10 complete, 7 happy-path, 3 shortcut); use the kind-note when options differ in kind not coverage, but never silently drop the score.
+3. **The recommendation and why** - a `Recommendation: <choice> because <reason>` line plus the `(recommended)` marker on that choice.
 
-Layout: a `D<N>` title + a one-line note to reply with a letter (in Conductor this is the normal path; elsewhere it means AskUserQuestion was unavailable or errored); the issue ELI10; the Recommendation line; then ONE paragraph per choice carrying its `(recommended)` marker, its `Completeness: X/10`, and 2-4 sentences of reasoning — never a bare bullet list; a closing `Net:` line. Split chains / 5+ options: one prose block per per-option call, in sequence. Then STOP and wait — the user's typed answer is the decision. In plan mode this satisfies end-of-turn like a tool call.
+Layout: a `D<N>` title + a one-line note to reply with a letter (in Conductor this is the normal path; elsewhere it means AskUserQuestion was unavailable or errored); the issue ELI10; the Recommendation line; then ONE paragraph per choice carrying its `(recommended)` marker, its `Completeness: X/10`, and 2-4 sentences of reasoning - never a bare bullet list; a closing `Net:` line. Split chains / 5+ options: one prose block per per-option call, in sequence. Then STOP and wait - the user's typed answer is the decision. In plan mode this satisfies end-of-turn like a tool call.
 
-**Continuation — mapping a typed reply back to a brief.** Each brief carries a stable label (`D<N>`, or `D<N>.k` in a split chain). The user references it (e.g. "3.2: B"). A bare letter maps to the single most-recent UNANSWERED brief; if more than one is open (a split chain), do NOT guess — ask which `D<N>.k` it answers. Never apply a bare letter ambiguously across a chain.
+**Continuation - mapping a typed reply back to a brief.** Each brief carries a stable label (`D<N>`, or `D<N>.k` in a split chain). The user references it (e.g. "3.2: B"). A bare letter maps to the single most-recent UNANSWERED brief; if more than one is open (a split chain), do NOT guess - ask which `D<N>.k` it answers. Never apply a bare letter ambiguously across a chain.
 
-**One-way / destructive confirmations in prose.** When the decision is a one-way door (irreversible or destructive — delete, force-push, drop, overwrite), prose is a WEAKER gate than the tool, so make it stronger: require an explicit typed confirmation (the exact option letter or word), state plainly what is irreversible, and NEVER proceed on a vague, partial, or ambiguous reply — re-ask instead. Treat silence or "ok"/"sure" without the explicit choice as not-yet-confirmed.
+**One-way / destructive confirmations in prose.** When the decision is a one-way door (irreversible or destructive - delete, force-push, drop, overwrite), prose is a WEAKER gate than the tool, so make it stronger: require an explicit typed confirmation (the exact option letter or word), state plainly what is irreversible, and NEVER proceed on a vague, partial, or ambiguous reply - re-ask instead. Treat silence or "ok"/"sure" without the explicit choice as not-yet-confirmed.
 
 ### Format
 
-Every AskUserQuestion is a decision brief and must be sent as tool_use, not prose — unless the documented failure fallback above applies (interactive session + the call is unavailable/erroring), in which case the prose fallback is the correct output.
+Every AskUserQuestion is a decision brief and must be sent as tool_use, not prose - unless the documented failure fallback above applies (interactive session + the call is unavailable/erroring), in which case the prose fallback is the correct output.
 
 ```
-D<N> — <one-line question title>
+D<N> - <one-line question title>
 Project/branch/task: <1 short grounding sentence using _BRANCH>
 ELI10: <plain English a 16-year-old could follow, 2-4 sentences, name the stakes>
 Stakes if we pick wrong: <one sentence on what breaks, what user sees, what's lost>
 Recommendation: <choice> because <one-line reason>
-Completeness: A=X/10, B=Y/10   (or: Note: options differ in kind, not coverage — no completeness score)
+Completeness: A=X/10, B=Y/10   (or: Note: options differ in kind, not coverage - no completeness score)
 Pros / cons:
 A) <option label> (recommended)
-  ✅ <pro — concrete, observable, ≥40 chars>
-  ❌ <con — honest, ≥40 chars>
+  ✅ <pro - concrete, observable, ≥40 chars>
+  ❌ <con - honest, ≥40 chars>
 B) <option label>
   ✅ <pro>
   ❌ <con>
@@ -399,28 +399,28 @@ D-numbering: first question in a skill invocation is `D1`; increment yourself. T
 
 ELI10 is always present, in plain English, not function names. Recommendation is ALWAYS present. Keep the `(recommended)` label; AUTO_DECIDE depends on it.
 
-Completeness: use `Completeness: N/10` only when options differ in coverage. 10 = complete, 7 = happy path, 3 = shortcut. If options differ in kind, write: `Note: options differ in kind, not coverage — no completeness score.`
+Completeness: use `Completeness: N/10` only when options differ in coverage. 10 = complete, 7 = happy path, 3 = shortcut. If options differ in kind, write: `Note: options differ in kind, not coverage - no completeness score.`
 
-Pros / cons: use ✅ and ❌. Minimum 2 pros and 1 con per option when the choice is real; Minimum 40 characters per bullet. Hard-stop escape for one-way/destructive confirmations: `✅ No cons — this is a hard-stop choice`.
+Pros / cons: use ✅ and ❌. Minimum 2 pros and 1 con per option when the choice is real; Minimum 40 characters per bullet. Hard-stop escape for one-way/destructive confirmations: `✅ No cons - this is a hard-stop choice`.
 
-Neutral posture: `Recommendation: <default> — this is a taste call, no strong preference either way`; `(recommended)` STAYS on the default option for AUTO_DECIDE.
+Neutral posture: `Recommendation: <default> - this is a taste call, no strong preference either way`; `(recommended)` STAYS on the default option for AUTO_DECIDE.
 
 Effort both-scales: when an option involves effort, label both human-team and CC+gstack time, e.g. `(human: ~2 days / CC: ~15 min)`. Makes AI compression visible at decision time.
 
 Net line closes the tradeoff. Per-skill instructions may add stricter rules.
 
-### Handling 5+ options — split, never drop
+### Handling 5+ options - split, never drop
 
 AskUserQuestion caps every call at **4 options**. With 5+ real options, NEVER
 drop, merge, or silently defer one to fit. Pick a compliant shape:
 
-- **Batch into ≤4-groups** — for coherent alternatives (e.g. version bumps,
+- **Batch into ≤4-groups** - for coherent alternatives (e.g. version bumps,
   layout variants). One call, 5th surfaced only if first 4 don't fit.
-- **Split per-option** — for independent scope items (e.g. "ship E1..E6?").
+- **Split per-option** - for independent scope items (e.g. "ship E1..E6?").
   Fire N sequential calls, one per option. Default to this when unsure.
 
 Per-option call shape: `D<N>.k` header (e.g. D3.1..D3.5), ELI10 per option,
-Recommendation, kind-note (no completeness score — Include/Defer/Cut/Hold are
+Recommendation, kind-note (no completeness score - Include/Defer/Cut/Hold are
 decision actions), and 4 buckets:
 **A) Include**, **B) Defer**, **C) Cut**, **D) Hold** (stop chain, discuss).
 
@@ -433,12 +433,12 @@ For N>6, fire a `D<N>.0` meta-AskUserQuestion first (proceed / narrow / batch).
 question_ids for split chains: `<skill>-split-<option-slug>` (kebab-case ASCII,
 ≤64 chars, `-2`/`-3` suffix on collision). The runtime checker
 (`bin/gstack-question-preference`) refuses `never-ask` on any `*-split-*` id,
-so split chains are never AUTO_DECIDE-eligible — the user's option set is sacred.
+so split chains are never AUTO_DECIDE-eligible - the user's option set is sacred.
 
 **Full rule + worked examples + Hold/dependency semantics:** see
 `docs/askuserquestion-split.md` in the gstack repo. Read on demand when N>4.
 
-**Non-ASCII characters — write directly, never \u-escape.** When any string
+**Non-ASCII characters - write directly, never \u-escape.** When any string
 field contains Chinese (繁體/簡體), Japanese, Korean, or other non-ASCII text,
 emit the literal UTF-8 characters; never escape them as `\uXXXX` (the pipe is
 UTF-8 native, and manual escaping miscodes long CJK strings). Only `\n`,
@@ -456,9 +456,9 @@ Before calling AskUserQuestion, verify:
 - [ ] (recommended) label on one option (even for neutral-posture)
 - [ ] Dual-scale effort labels on effort-bearing options (human / CC)
 - [ ] Net line closes the decision
-- [ ] You are calling the tool, not writing prose — unless `CONDUCTOR_SESSION: true` (then prose is the DEFAULT, not the tool) OR the documented failure fallback applies (then: prose with the mandatory triad — issue ELI10, per-choice Completeness, Recommendation + `(recommended)` — and a "reply with a letter" instruction, then STOP)
+- [ ] You are calling the tool, not writing prose - unless `CONDUCTOR_SESSION: true` (then prose is the DEFAULT, not the tool) OR the documented failure fallback applies (then: prose with the mandatory triad - issue ELI10, per-choice Completeness, Recommendation + `(recommended)` - and a "reply with a letter" instruction, then STOP)
 - [ ] Non-ASCII characters (CJK / accents) written directly, NOT \u-escaped
-- [ ] If you had 5+ options, you split (or batched into ≤4-groups) — did NOT drop any
+- [ ] If you had 5+ options, you split (or batched into ≤4-groups) - did NOT drop any
 - [ ] If you split, you checked dependencies between options before firing the chain
 - [ ] If a per-option Hold fires, you stopped the chain immediately (didn't queue)
 
@@ -662,7 +662,7 @@ fi
 
 If artifacts are listed, read the newest useful one. If `LAST_SESSION` or `LATEST_CHECKPOINT` appears, give a 2-sentence welcome back summary. If `RECENT_PATTERN` clearly implies a next skill, suggest it once.
 
-**Cross-session decisions.** If `ACTIVE DECISIONS` are listed, treat them as prior settled calls with their rationale — do not silently re-litigate them; if you're about to reverse one, say so explicitly. Reach for `~/.claude/skills/gstack/bin/gstack-decision-search` whenever a question touches a past decision ("what did we decide / why / did we try"). When you or the user make a DURABLE decision (architecture, scope, tool/vendor choice, or a reversal) — NOT a turn-level or trivial choice — log it with `~/.claude/skills/gstack/bin/gstack-decision-log` (`--supersede <id>` for a reversal). Reliable and local; gbrain not required.
+**Cross-session decisions.** If `ACTIVE DECISIONS` are listed, treat them as prior settled calls with their rationale - do not silently re-litigate them; if you're about to reverse one, say so explicitly. Reach for `~/.claude/skills/gstack/bin/gstack-decision-search` whenever a question touches a past decision ("what did we decide / why / did we try"). When you or the user make a DURABLE decision (architecture, scope, tool/vendor choice, or a reversal) - NOT a turn-level or trivial choice - log it with `~/.claude/skills/gstack/bin/gstack-decision-log` (`--supersede <id>` for a reversal). Reliable and local; gbrain not required.
 
 ## Writing Style (skip entirely if `EXPLAIN_LEVEL: terse` appears in the preamble echo OR the user's current message explicitly requests terse / no-explanations output)
 
@@ -678,11 +678,11 @@ Applies to AskUserQuestion, user replies, and findings. AskUserQuestion Format i
 Curated jargon list lives at `~/.claude/skills/gstack/scripts/jargon-list.json` (80+ terms). On the first jargon term you encounter this session, Read that file once; treat the `terms` array as the canonical list. The list is repo-owned and may grow between releases.
 
 
-## Completeness Principle — Boil the Ocean
+## Completeness Principle - Boil the Ocean
 
-AI makes completeness cheap, so the complete thing is the goal. Recommend full coverage (tests, edge cases, error paths) — boil the ocean one lake at a time. The only thing out of scope is genuinely unrelated work (rewrites, multi-quarter migrations); flag that as separate scope, never as an excuse for a shortcut.
+AI makes completeness cheap, so the complete thing is the goal. Recommend full coverage (tests, edge cases, error paths) - boil the ocean one lake at a time. The only thing out of scope is genuinely unrelated work (rewrites, multi-quarter migrations); flag that as separate scope, never as an excuse for a shortcut.
 
-When options differ in coverage, include `Completeness: X/10` (10 = all edge cases, 7 = happy path, 3 = shortcut). When options differ in kind, write: `Note: options differ in kind, not coverage — no completeness score.` Do not fabricate scores.
+When options differ in coverage, include `Completeness: X/10` (10 = all edge cases, 7 = happy path, 3 = shortcut). When options differ in kind, write: `Note: options differ in kind, not coverage - no completeness score.` Do not fabricate scores.
 
 ## Confusion Protocol
 
@@ -690,7 +690,7 @@ For high-stakes ambiguity (architecture, data model, destructive scope, missing 
 
 ## Claimed Limitations Need Evidence
 
-A claimed limitation or requirement ("the API can't do this", "X requires a credential", "that's impossible on this platform") is a material claim. State one only with the verbatim error, the documented statement, or a live probe in hand — pattern-matching a failure to a familiar story is not evidence. When a cheap probe settles the question, run it BEFORE asking the user anything or declaring a step blocked.
+A claimed limitation or requirement ("the API can't do this", "X requires a credential", "that's impossible on this platform") is a material claim. State one only with the verbatim error, the documented statement, or a live probe in hand - pattern-matching a failure to a familiar story is not evidence. When a cheap probe settles the question, run it BEFORE asking the user anything or declaring a step blocked.
 
 ## Continuous Checkpoint Mode
 
@@ -727,7 +727,7 @@ If you are looping on the same diagnostic, same file, or failed fix variants, ST
 
 Before each AskUserQuestion, choose `question_id` from `~/.claude/skills/gstack/scripts/question-registry.ts` or `{skill}-{slug}`, then run `printf '%s' "<question summary>" | ~/.claude/skills/gstack/bin/gstack-question-preference --check "<id>" --summary-stdin` (piped summary feeds the one-way keyword net, #2024). `AUTO_DECIDE` means choose the recommended option and say "Auto-decided [summary] → [option] (your preference). Change with /plan-tune." `ASK_NORMALLY` means ask.
 
-**Embed the question_id as a marker in the question text** so hooks can identify it deterministically (plan-tune cathedral T14 / D18 progressive markers). Append `<gstack-qid:{question_id}>` somewhere in the rendered question (the leading line or trailing line is fine; the marker doesn't render visibly to the user when wrapped in HTML-style angle brackets, but the hook strips it). Without the marker the PreToolUse enforcement hook treats the AUQ as observed-only and never auto-decides — so always include it when the question matches a registered `question_id`.
+**Embed the question_id as a marker in the question text** so hooks can identify it deterministically (plan-tune cathedral T14 / D18 progressive markers). Append `<gstack-qid:{question_id}>` somewhere in the rendered question (the leading line or trailing line is fine; the marker doesn't render visibly to the user when wrapped in HTML-style angle brackets, but the hook strips it). Without the marker the PreToolUse enforcement hook treats the AUQ as observed-only and never auto-decides - so always include it when the question matches a registered `question_id`.
 
 **Embed the option recommendation via the `(recommended)` label suffix** on exactly one option per AUQ. The PreToolUse hook parses `(recommended)` first, falls back to "Recommendation: X" prose, and refuses to auto-decide if ambiguous. Two `(recommended)` labels = refuse.
 
@@ -747,18 +747,18 @@ Write (only after confirmation for free-form):
 
 Exit code 2 = rejected as not user-originated; do not retry. On success: "Set `<id>` → `<preference>`. Active immediately."
 
-## Repo Ownership — See Something, Say Something
+## Repo Ownership - See Something, Say Something
 
 `REPO_MODE` controls how to handle issues outside your branch:
-- **`solo`** — You own everything. Investigate and offer to fix proactively.
-- **`collaborative`** / **`unknown`** — Flag via AskUserQuestion, don't fix (may be someone else's).
+- **`solo`** - You own everything. Investigate and offer to fix proactively.
+- **`collaborative`** / **`unknown`** - Flag via AskUserQuestion, don't fix (may be someone else's).
 
-Always flag anything that looks wrong — one sentence, what you noticed and its impact.
+Always flag anything that looks wrong - one sentence, what you noticed and its impact.
 
 ## Search Before Building
 
 Before building anything unfamiliar, **search first.** See `~/.claude/skills/gstack/ETHOS.md`.
-- **Layer 1** (tried and true) — don't reinvent. **Layer 2** (new and popular) — scrutinize. **Layer 3** (first principles) — prize above all.
+- **Layer 1** (tried and true) - don't reinvent. **Layer 2** (new and popular) - scrutinize. **Layer 3** (first principles) - prize above all.
 
 **Eureka:** When first-principles reasoning contradicts conventional wisdom, name it and log:
 ```bash
@@ -768,22 +768,22 @@ jq -n --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --arg skill "SKILL_NAME" --arg b
 ## Completion Status Protocol
 
 When completing a skill workflow, report status using one of:
-- **DONE** — completed with evidence.
-- **DONE_WITH_CONCERNS** — completed, but list concerns.
-- **BLOCKED** — cannot proceed; state blocker and what was tried.
-- **NEEDS_CONTEXT** — missing info; state exactly what is needed.
+- **DONE** - completed with evidence.
+- **DONE_WITH_CONCERNS** - completed, but list concerns.
+- **BLOCKED** - cannot proceed; state blocker and what was tried.
+- **NEEDS_CONTEXT** - missing info; state exactly what is needed.
 
 Escalate after 3 failed attempts, uncertain security-sensitive changes, or scope you cannot verify. Format: `STATUS`, `REASON`, `ATTEMPTED`, `RECOMMENDATION`.
 
 ## Operational Self-Improvement
 
-Before completing, review the session for durable learnings and log each one —
+Before completing, review the session for durable learnings and log each one -
 this step ALWAYS runs, it is not conditional on something feeling noteworthy
 (#2402: 43 of 44 learnings came from explicit /learn because "if you
 discovered" read as optional). A durable learning is a project quirk, command
 fix, pitfall, or pattern that would save 5+ minutes in a future session. If
 the review genuinely surfaces none, state "No durable learnings this session"
-in your completion summary — an explicit empty result, not a skipped step.
+in your completion summary - an explicit empty result, not a skipped step.
 
 ```bash
 ~/.claude/skills/gstack/bin/gstack-learnings-log '{"skill":"SKILL_NAME","type":"operational","key":"SHORT_KEY","insight":"DESCRIPTION","confidence":N,"source":"observed"}'
@@ -795,7 +795,7 @@ Do not log obvious facts or one-time transient errors.
 
 After workflow completion, log telemetry. Use skill `name:` from frontmatter. OUTCOME is success/error/abort/unknown.
 
-**PLAN MODE EXCEPTION — ALWAYS RUN:** This command writes telemetry to
+**PLAN MODE EXCEPTION - ALWAYS RUN:** This command writes telemetry to
 `~/.gstack/analytics/`, matching preamble analytics writes.
 
 Run this bash:
@@ -832,7 +832,7 @@ Skills that run plan reviews (`/plan-*-review`, `/codex review`) include the EXI
 
 # /design-review: Design Audit → Fix → Verify
 
-You are a senior product designer AND a frontend engineer. Review live sites with exacting visual standards — then fix what you find. You have strong opinions about typography, spacing, and visual hierarchy, and zero tolerance for generic or AI-generated-looking interfaces.
+You are a senior product designer AND a frontend engineer. Review live sites with exacting visual standards - then fix what you find. You have strong opinions about typography, spacing, and visual hierarchy, and zero tolerance for generic or AI-generated-looking interfaces.
 
 ## Setup
 
@@ -853,11 +853,11 @@ You are a senior product designer AND a frontend engineer. Review live sites wit
 ```bash
 $B status 2>/dev/null | grep -q "Mode: cdp" && echo "CDP_MODE=true" || echo "CDP_MODE=false"
 ```
-If `CDP_MODE=true`: skip cookie import steps — the real browser already has cookies and auth sessions. Skip headless detection workarounds.
+If `CDP_MODE=true`: skip cookie import steps - the real browser already has cookies and auth sessions. Skip headless detection workarounds.
 
 **Check for DESIGN.md:**
 
-Look for `DESIGN.md`, `design-system.md`, or similar in the repo root. If found, read it — all design decisions must be calibrated against it. Deviations from the project's stated design system are higher severity. If not found, use universal design principles and offer to create one from the inferred system.
+Look for `DESIGN.md`, `design-system.md`, or similar in the repo root. If found, read it - all design decisions must be calibrated against it. Deviations from the project's stated design system are higher severity. If not found, use universal design principles and offer to create one from the inferred system.
 
 **Check for clean working tree:**
 
@@ -869,9 +869,9 @@ If the output is non-empty (working tree is dirty), **STOP** and use AskUserQues
 
 "Your working tree has uncommitted changes. /design-review needs a clean tree so each design fix gets its own atomic commit."
 
-- A) Commit my changes — commit all current changes with a descriptive message, then start design review
-- B) Stash my changes — stash, run design review, pop the stash after
-- C) Abort — I'll clean up manually
+- A) Commit my changes - commit all current changes with a descriptive message, then start design review
+- B) Stash my changes - stash, run design review, pop the stash after
+- C) Abort - I'll clean up manually
 
 RECOMMENDATION: Choose A because uncommitted work should be preserved as a commit before design review adds its own fix commits.
 
@@ -921,7 +921,7 @@ If `NEEDS_SETUP`:
 
 **Read the project's CLAUDE.md (and TESTING.md if present) FIRST.** If it documents a test command, the project already told you: no detection, no bootstrap. Skip the rest of bootstrap and use that command in Step 5.
 
-**Otherwise gather markers. Every marker below is EVIDENCE for the question you ask — never a command to run blind.** A marker tells you which ecosystem you're in and which command to OFFER. It does not tell you the command works. Do not execute a candidate test command to "check" it: a probe on a project that never had that runner fails loudly and teaches you nothing, and installing a second framework over a working one is worse.
+**Otherwise gather markers. Every marker below is EVIDENCE for the question you ask - never a command to run blind.** A marker tells you which ecosystem you're in and which command to OFFER. It does not tell you the command works. Do not execute a candidate test command to "check" it: a probe on a project that never had that runner fails loudly and teaches you nothing, and installing a second framework over a working one is worse.
 
 ```bash
 setopt +o nomatch 2>/dev/null || true  # zsh compat
@@ -939,7 +939,7 @@ setopt +o nomatch 2>/dev/null || true  # zsh compat
 # Detect sub-frameworks
 [ -f Gemfile ] && grep -q "rails" Gemfile 2>/dev/null && echo "FRAMEWORK:rails"
 [ -f package.json ] && grep -q '"next"' package.json 2>/dev/null && echo "FRAMEWORK:nextjs"
-# Existing test path — config files, declared scripts, AND test FILES.
+# Existing test path - config files, declared scripts, AND test FILES.
 # A project with real tests and no config file is the common miss.
 ls jest.config.* vitest.config.* playwright.config.* .rspec pytest.ini tox.ini phpunit.xml* 2>/dev/null
 [ -f package.json ] && grep -q '"test"[[:space:]]*:' package.json && echo "SCRIPT:package.json test"
@@ -952,7 +952,7 @@ git ls-files | grep -cE '(^|/)(tests?|spec|__tests__)/|(^|/)tests?\.py$|(^|/)tes
 [ -f .gstack/no-test-bootstrap ] && echo "BOOTSTRAP_DECLINED"
 ```
 
-Map the markers to the command you will OFFER — never to one you run on a guess:
+Map the markers to the command you will OFFER - never to one you run on a guess:
 
 | Marker | Ecosystem | Candidate command to offer |
 |--------|-----------|----------------------------|
@@ -968,13 +968,13 @@ Map the markers to the command you will OFFER — never to one you run on a gues
 | `package.json` with a `test` script | Node | that script, run with the package manager the lockfile names |
 | `Makefile` with a `test:` target | any | `make test` |
 
-**If ANY existing-test evidence appears** (a config file, a declared test script or make target, a nonzero `TESTFILES:` count, or `TESTS:rust in-source`): the project has tests. **Do NOT bootstrap.** Print "Existing tests detected: {the evidence}." Then get the command the same way Step 5 does — CLAUDE.md/TESTING.md if documented, otherwise AskUserQuestion offering the candidates from the table above plus "Other", and persist the answer to CLAUDE.md's `## Testing` section so it is never asked again. When the ecosystem ships a runner (Django, Go, Rust, Elixir, Maven/Gradle), that runner is the candidate — never install a second framework beside a working one.
+**If ANY existing-test evidence appears** (a config file, a declared test script or make target, a nonzero `TESTFILES:` count, or `TESTS:rust in-source`): the project has tests. **Do NOT bootstrap.** Print "Existing tests detected: {the evidence}." Then get the command the same way Step 5 does - CLAUDE.md/TESTING.md if documented, otherwise AskUserQuestion offering the candidates from the table above plus "Other", and persist the answer to CLAUDE.md's `## Testing` section so it is never asked again. When the ecosystem ships a runner (Django, Go, Rust, Elixir, Maven/Gradle), that runner is the candidate - never install a second framework beside a working one.
 Read 2-3 existing test files to learn conventions (naming, imports, assertion style, setup patterns).
 Store conventions as prose context for use in Phase 8e.5 or Step 7. **Skip the rest of bootstrap.**
 
 Absent config files and absent `tests/` directories are NOT evidence of "no tests": Django keeps tests in `<app>/tests.py`, Go in `*_test.go` beside the source, Rust in `#[test]` blocks inside `src/`. A green `python manage.py test` with no `pytest.ini` is a tested project, not a bootstrap candidate.
 
-**If BOOTSTRAP_DECLINED** appears: Print "Test bootstrap previously declined — skipping." **Skip the rest of bootstrap.**
+**If BOOTSTRAP_DECLINED** appears: Print "Test bootstrap previously declined - skipping." **Skip the rest of bootstrap.**
 
 **If NO ecosystem marker matched:** Use AskUserQuestion:
 "I couldn't detect your project's language. What runtime are you using?"
@@ -982,7 +982,7 @@ Options: A) Node.js/TypeScript B) Ruby/Rails C) Python D) Go E) Rust F) PHP G) E
 If the runtime you need isn't listed, offer "Other" and take the runtime plus the test command as free text.
 If user picks H → write `.gstack/no-test-bootstrap` and continue without tests.
 
-**If an ecosystem matched but there is no existing-test evidence at all — bootstrap:**
+**If an ecosystem matched but there is no existing-test evidence at all - bootstrap:**
 
 ### B2. Research best practices
 
@@ -1001,17 +1001,17 @@ If WebSearch is unavailable, use this built-in knowledge table:
 | Django | pytest + pytest-django | Django's built-in `manage.py test` (unittest) |
 | Go | stdlib testing + testify | stdlib only |
 | JVM (Maven/Gradle) | JUnit 5 + AssertJ | JUnit 5 only |
-| Rust | cargo test (built-in) + mockall | — |
+| Rust | cargo test (built-in) + mockall | - |
 | PHP | phpunit + mockery | pest |
-| Elixir | ExUnit (built-in) + ex_machina | — |
+| Elixir | ExUnit (built-in) + ex_machina | - |
 
 ### B3. Framework selection
 
 Use AskUserQuestion:
 "I detected this is a [Runtime/Framework] project with no test framework. I researched current best practices. Here are the options:
-A) [Primary] — [rationale]. Includes: [packages]. Supports: unit, integration, smoke, e2e
-B) [Alternative] — [rationale]. Includes: [packages]
-C) Skip — don't set up testing right now
+A) [Primary] - [rationale]. Includes: [packages]. Supports: unit, integration, smoke, e2e
+B) [Alternative] - [rationale]. Includes: [packages]
+C) Skip - don't set up testing right now
 RECOMMENDATION: Choose A because [reason based on project context]"
 
 If user picks C → write `.gstack/no-test-bootstrap`. Tell user: "If you change your mind later, delete `.gstack/no-test-bootstrap` and re-run." Continue without tests.
@@ -1033,7 +1033,7 @@ Generate 3-5 real tests for existing code:
 
 1. **Find recently changed files:** `git log --since=30.days --name-only --format="" | sort | uniq -c | sort -rn | head -10`
 2. **Prioritize by risk:** Error handlers > business logic with conditionals > API endpoints > pure functions
-3. **For each file:** Write one test that tests real behavior with meaningful assertions. Never `expect(x).toBeDefined()` — test what the code DOES.
+3. **For each file:** Write one test that tests real behavior with meaningful assertions. Never `expect(x).toBeDefined()` - test what the code DOES.
 4. Run each test. Passes → keep. Fails → fix once. Still fails → delete silently.
 5. Generate at least 1 test, cap at 5.
 
@@ -1056,21 +1056,21 @@ ls -d .github/ 2>/dev/null && echo "CI:github"
 ls .gitlab-ci.yml .circleci/ bitrise.yml 2>/dev/null
 ```
 
-If `.github/` exists (or no CI detected — default to GitHub Actions):
+If `.github/` exists (or no CI detected - default to GitHub Actions):
 Create `.github/workflows/test.yml` with:
 - `runs-on: ubuntu-latest`
 - Appropriate setup action for the runtime (setup-node, setup-ruby, setup-python, etc.)
 - The same test command verified in B5
 - Trigger: push + pull_request
 
-If non-GitHub CI detected → skip CI generation with note: "Detected {provider} — CI pipeline generation supports GitHub Actions only. Add test step to your existing pipeline manually."
+If non-GitHub CI detected → skip CI generation with note: "Detected {provider} - CI pipeline generation supports GitHub Actions only. Add test step to your existing pipeline manually."
 
 ### B6. Create TESTING.md
 
 First check: If TESTING.md already exists → read it and update/append rather than overwriting. Never destroy existing content.
 
 Write TESTING.md with:
-- Philosophy: "100% test coverage is the key to great vibe coding. Tests let you move fast, trust your instincts, and ship with confidence — without them, vibe coding is just yolo coding. With tests, it's a superpower."
+- Philosophy: "100% test coverage is the key to great vibe coding. Tests let you move fast, trust your instincts, and ship with confidence - without them, vibe coding is just yolo coding. With tests, it's a superpower."
 - Framework name and version
 - How to run tests (the verified command from B5)
 - Test layers: Unit tests (what, where, when), Integration tests, Smoke tests, E2E tests
@@ -1084,7 +1084,7 @@ Append a `## Testing` section:
 - Run command and test directory
 - Reference to TESTING.md
 - Test expectations:
-  - 100% test coverage is the goal — tests make vibe coding safe
+  - 100% test coverage is the goal - tests make vibe coding safe
   - When writing new functions, write a corresponding test
   - When fixing a bug, write a regression test
   - When adding error handling, write a test that triggers the error
@@ -1102,7 +1102,7 @@ Only commit if there are changes. Stage all bootstrap files (config, test direct
 
 ---
 
-**Find the gstack designer (optional — enables target mockup generation):**
+**Find the gstack designer (optional - enables target mockup generation):**
 
 ## DESIGN SETUP (run this check BEFORE any design mockup command)
 
@@ -1135,12 +1135,12 @@ comparison boards. The user just needs to see the HTML file in any browser.
 
 If `DESIGN_READY`: the design binary is available for visual mockup generation.
 Commands:
-- `$D generate --brief "..." --output /path.png` — generate a single mockup
-- `$D variants --brief "..." --count 3 --output-dir /path/` — generate N style variants
-- `$D compare --images "a.png,b.png,c.png" --output /path/board.html --serve` — comparison board + HTTP server
-- `$D serve --html /path/board.html` — serve comparison board and collect feedback via HTTP
-- `$D check --image /path.png --brief "..."` — vision quality gate
-- `$D iterate --session /path/session.json --feedback "..." --output /path.png` — iterate
+- `$D generate --brief "..." --output /path.png` - generate a single mockup
+- `$D variants --brief "..." --count 3 --output-dir /path/` - generate N style variants
+- `$D compare --images "a.png,b.png,c.png" --output /path/board.html --serve` - comparison board + HTTP server
+- `$D serve --html /path/board.html` - serve comparison board and collect feedback via HTTP
+- `$D check --image /path.png --brief "..."` - vision quality gate
+- `$D iterate --session /path/session.json --feedback "..." --output /path.png` - iterate
 
 **CRITICAL PATH RULE:** All design artifacts (mockups, comparison boards, approved.json)
 MUST be saved to `~/.gstack/projects/$SLUG/designs/`, NEVER to `.context/`,
@@ -1149,7 +1149,7 @@ data, not project files. They persist across branches, conversations, and worksp
 
 If `DESIGN_READY`: during the fix loop, you can generate "target mockups" showing what a finding should look like after fixing. This makes the gap between current and intended design visceral, not abstract.
 
-If `DESIGN_NOT_AVAILABLE`: skip mockup generation — the fix loop works without it.
+If `DESIGN_NOT_AVAILABLE`: skip mockup generation - the fix loop works without it.
 
 **Create output directories:**
 
@@ -1317,16 +1317,16 @@ The most uniquely designer-like output. Form a gut reaction before analyzing any
 1. Navigate to the target URL
 2. Take a full-page desktop screenshot: `$B screenshot "$REPORT_DIR/screenshots/first-impression.png"`
 3. Write the **First Impression** using this structured critique format:
-   - "The site communicates **[what]**." (what it says at a glance — competence? playfulness? confusion?)
-   - "I notice **[observation]**." (what stands out, positive or negative — be specific)
-   - "The first 3 things my eye goes to are: **[1]**, **[2]**, **[3]**." (hierarchy check — are these the 3 things the designer intended? If not, the visual hierarchy is lying.)
+   - "The site communicates **[what]**." (what it says at a glance - competence? playfulness? confusion?)
+   - "I notice **[observation]**." (what stands out, positive or negative - be specific)
+   - "The first 3 things my eye goes to are: **[1]**, **[2]**, **[3]**." (hierarchy check - are these the 3 things the designer intended? If not, the visual hierarchy is lying.)
    - "If I had to describe this in one word: **[word]**." (gut verdict)
 
 **Narration mode:** Write this section in first person, as if you are a user scanning the page for the first time. "I'm looking at this page... my eye goes to the logo, then a wall of text I skip entirely, then... wait, is that a button?" Name the specific element, its position, its visual weight. If you can't name it specifically, you're not actually scanning, you're generating platitudes.
 
 **Page Area Test:** Point at each clearly defined area of the page. Can you instantly name its purpose? ("Things I can buy," "Today's deals," "How to search.") Areas you can't name in 2 seconds are poorly defined. List them.
 
-This is the section users read first. Be opinionated. A designer doesn't hedge — they react.
+This is the section users read first. Be opinionated. A designer doesn't hedge - they react.
 
 ---
 
@@ -1401,9 +1401,9 @@ Apply these at each page. Each finding gets an impact rating (high/medium/polish
 **1. Visual Hierarchy & Composition** (8 items)
 - Clear focal point? One primary CTA per view?
 - Eye flows naturally top-left to bottom-right?
-- Visual noise — competing elements fighting for attention?
+- Visual noise - competing elements fighting for attention?
 - Information density appropriate for content type?
-- Z-index clarity — nothing unexpectedly overlapping?
+- Z-index clarity - nothing unexpectedly overlapping?
 - Above-the-fold content communicates purpose in 3 seconds?
 - Squint test: hierarchy still visible when blurred?
 - White space is intentional, not leftover?
@@ -1435,12 +1435,12 @@ Apply these at each page. Each finding gets an impact rating (high/medium/polish
 - Primary accent desaturated 10-20% in dark mode
 - `color-scheme: dark` on html element (if dark mode present)
 - No red/green only combinations (8% of men have red-green deficiency)
-- Neutral palette is warm or cool consistently — not mixed
+- Neutral palette is warm or cool consistently - not mixed
 
 **4. Spacing & Layout** (12 items)
 - Grid consistent at all breakpoints
 - Spacing uses a scale (4px or 8px base), not arbitrary values
-- Alignment is consistent — nothing floats outside the grid
+- Alignment is consistent - nothing floats outside the grid
 - Rhythm: related items closer together, distinct sections further apart
 - Border-radius hierarchy (not uniform bubbly radius on everything)
 - Inner radius = outer radius - gap (nested elements)
@@ -1479,7 +1479,7 @@ Apply these at each page. Each finding gets an impact rating (high/medium/polish
 - Duration: 50-700ms range (nothing slower unless page transition)
 - Purpose: every animation communicates something (state change, attention, spatial relationship)
 - `prefers-reduced-motion` respected (check: `$B js "matchMedia('(prefers-reduced-motion: reduce)').matches"`)
-- No `transition: all` — properties listed explicitly
+- No `transition: all` - properties listed explicitly
 - Only `transform` and `opacity` animated (not layout properties like width, height, top, left)
 
 **8. Content & Microcopy** (8 items)
@@ -1495,7 +1495,7 @@ Apply these at each page. Each finding gets an impact rating (high/medium/polish
 - Instructions detection: any visible instructions longer than one sentence. If users need to read instructions, the design has failed. Flag the instructions AND the interaction they're compensating for.
 - Happy talk word count: count total visible words on the page. Classify each text block as "useful content" vs "happy talk" (welcome paragraphs, self-congratulatory text, instructions nobody reads). Report: "This page has X words. Y (Z%) are happy talk."
 
-**9. AI Slop Detection** (10 anti-patterns — the blacklist)
+**9. AI Slop Detection** (10 anti-patterns - the blacklist)
 
 The test: would a human designer at a respected studio ever ship this?
 
@@ -1509,7 +1509,7 @@ The test: would a human designer at a respected studio ever ship this?
 - Colored left-border on cards (`border-left: 3px solid <accent>`)
 - Generic hero copy ("Welcome to [X]", "Unlock the power of...", "Your all-in-one solution for...")
 - Cookie-cutter section rhythm (hero → 3 features → testimonials → pricing → CTA, every section same height)
-- system-ui or `-apple-system` as the PRIMARY display/body font — the "I gave up on typography" signal. Pick a real typeface.
+- system-ui or `-apple-system` as the PRIMARY display/body font - the "I gave up on typography" signal. Pick a real typeface.
 
 **10. Performance as Design** (6 items)
 - LCP < 2.0s (web apps), < 1.5s (informational sites)
@@ -1517,7 +1517,7 @@ The test: would a human designer at a respected studio ever ship this?
 - Skeleton quality: shapes match real content layout, shimmer animation
 - Images: `loading="lazy"`, width/height dimensions set, WebP/AVIF format
 - Fonts: `font-display: swap`, preconnect to CDN origins
-- No visible font swap flash (FOUT) — critical fonts preloaded
+- No visible font swap flash (FOUT) - critical fonts preloaded
 
 ---
 
@@ -1614,8 +1614,8 @@ Write to: `~/.gstack/projects/{slug}/{user}-{branch}-design-audit-{datetime}.md`
 ### Scoring System
 
 **Dual headline scores:**
-- **Design Score: {A-F}** — weighted average of all 10 categories
-- **AI Slop Score: {A-F}** — standalone grade with pithy verdict
+- **Design Score: {A-F}** - weighted average of all 10 categories
+- **AI Slop Score: {A-F}** - standalone grade with pithy verdict
 
 **Per-category grades:**
 - **A:** Intentional, polished, delightful. Shows design thinking.
@@ -1654,10 +1654,10 @@ When previous `design-baseline.json` exists or `--regression` flag is used:
 ## Design Critique Format
 
 Use structured feedback, not opinions:
-- "I notice..." — observation (e.g., "I notice the primary CTA competes with the secondary action")
-- "I wonder..." — question (e.g., "I wonder if users will understand what 'Process' means here")
-- "What if..." — suggestion (e.g., "What if we moved search to a more prominent position?")
-- "I think... because..." — reasoned opinion (e.g., "I think the spacing between sections is too uniform because it doesn't create hierarchy")
+- "I notice..." - observation (e.g., "I notice the primary CTA competes with the secondary action")
+- "I wonder..." - question (e.g., "I wonder if users will understand what 'Process' means here")
+- "What if..." - suggestion (e.g., "What if we moved search to a more prominent position?")
+- "I think... because..." - reasoned opinion (e.g., "I think the spacing between sections is too uniform because it doesn't create hierarchy")
 
 Tie everything to user goals and product objectives. Always suggest specific improvements alongside problems.
 
@@ -1667,24 +1667,24 @@ Tie everything to user goals and product objectives. Always suggest specific imp
 
 1. **Think like a designer, not a QA engineer.** You care whether things feel right, look intentional, and respect the user. You do NOT just care whether things "work."
 2. **Screenshots are evidence.** Every finding needs at least one screenshot. Use annotated screenshots (`snapshot -a`) to highlight elements.
-3. **Be specific and actionable.** "Change X to Y because Z" — not "the spacing feels off."
+3. **Be specific and actionable.** "Change X to Y because Z" - not "the spacing feels off."
 4. **Never read source code.** Evaluate the rendered site, not the implementation. (Exception: offer to write DESIGN.md from extracted observations.)
 5. **AI Slop detection is your superpower.** Most developers can't evaluate whether their site looks AI-generated. You can. Be direct about it.
-6. **Quick wins matter.** Always include a "Quick Wins" section — the 3-5 highest-impact fixes that take <30 minutes each.
+6. **Quick wins matter.** Always include a "Quick Wins" section - the 3-5 highest-impact fixes that take <30 minutes each.
 7. **Use `snapshot -C` for tricky UIs.** Finds clickable divs that the accessibility tree misses.
-8. **Responsive is design, not just "not broken."** A stacked desktop layout on mobile is not responsive design — it's lazy. Evaluate whether the mobile layout makes *design* sense.
+8. **Responsive is design, not just "not broken."** A stacked desktop layout on mobile is not responsive design - it's lazy. Evaluate whether the mobile layout makes *design* sense.
 9. **Document incrementally.** Write each finding to the report as you find it. Don't batch.
 10. **Depth over breadth.** 5-10 well-documented findings with screenshots and specific suggestions > 20 vague observations.
-11. **Show screenshots to the user.** After every `$B screenshot`, `$B snapshot -a -o`, or `$B responsive` command, use the Read tool on the output file(s) so the user can see them inline. For `responsive` (3 files), Read all three. This is critical — without it, screenshots are invisible to the user.
+11. **Show screenshots to the user.** After every `$B screenshot`, `$B snapshot -a -o`, or `$B responsive` command, use the Read tool on the output file(s) so the user can see them inline. For `responsive` (3 files), Read all three. This is critical - without it, screenshots are invisible to the user.
 
 ### Design Hard Rules
 
-**Classifier — determine rule set before evaluating:**
+**Classifier - determine rule set before evaluating:**
 - **MARKETING/LANDING PAGE** (hero-driven, brand-forward, conversion-focused) → apply Landing Page Rules
 - **APP UI** (workspace-driven, data-dense, task-focused: dashboards, admin, settings) → apply App UI Rules
 - **HYBRID** (marketing shell with app-like sections) → apply Landing Page Rules to hero/marketing sections, App UI Rules to functional sections
 
-**Hard rejection criteria** (instant-fail patterns — flag if ANY apply):
+**Hard rejection criteria** (instant-fail patterns - flag if ANY apply):
 1. Generic SaaS card grid as first impression
 2. Beautiful image with weak brand
 3. Strong headline with no clear action
@@ -1693,7 +1693,7 @@ Tie everything to user goals and product objectives. Always suggest specific imp
 6. Carousel with no narrative purpose
 7. App UI made of stacked cards instead of layout
 
-**Litmus checks** (answer YES/NO for each — used for cross-model consensus scoring):
+**Litmus checks** (answer YES/NO for each - used for cross-model consensus scoring):
 1. Brand/product unmistakable in first screen?
 2. One strong visual anchor present?
 3. Page understandable by scanning headlines only?
@@ -1705,8 +1705,8 @@ Tie everything to user goals and product objectives. Always suggest specific imp
 **Landing page rules** (apply when classifier = MARKETING/LANDING):
 - First viewport reads as one composition, not a dashboard
 - Brand-first hierarchy: brand > headline > body > CTA
-- Typography: expressive, purposeful — no default stacks (Inter, Roboto, Arial, system)
-- No flat single-color backgrounds — use gradients, images, subtle patterns
+- Typography: expressive, purposeful - no default stacks (Inter, Roboto, Arial, system)
+- No flat single-color backgrounds - use gradients, images, subtle patterns
 - Hero: full-bleed, edge-to-edge, no inset/tiled/rounded variants
 - Hero budget: brand, one headline, one supporting sentence, one CTA group, one image
 - No cards in hero. Cards only when card IS the interaction
@@ -1721,7 +1721,7 @@ Tie everything to user goals and product objectives. Always suggest specific imp
 - Dense but readable, minimal chrome
 - Organize: primary workspace, navigation, secondary context, one accent
 - Avoid: dashboard-card mosaics, thick borders, decorative gradients, ornamental icons
-- Copy: utility language — orientation, status, action. Not mood/brand/aspiration
+- Copy: utility language - orientation, status, action. Not mood/brand/aspiration
 - Cards only when card IS the interaction
 - Section headings state what area is or what user can do ("Selected KPIs", "Plan status")
 
@@ -1730,9 +1730,9 @@ Tie everything to user goals and product objectives. Always suggest specific imp
 - No default font stacks (Inter, Roboto, Arial, system)
 - One job per section
 - "If deleting 30% of the copy improves it, keep deleting"
-- Cards earn their existence — no decorative card grids
+- Cards earn their existence - no decorative card grids
 - NEVER use small, low-contrast type (body text < 16px or contrast ratio < 4.5:1 on body text)
-- NEVER put labels inside form fields as the only label (placeholder-as-label pattern — labels must be visible when the field has content)
+- NEVER put labels inside form fields as the only label (placeholder-as-label pattern - labels must be visible when the field has content)
 - ALWAYS preserve visited vs unvisited link distinction (visited links must have a different color)
 - NEVER float headings between paragraphs (heading must be visually closer to the section it introduces than to the preceding section)
 
@@ -1747,7 +1747,7 @@ Tie everything to user goals and product objectives. Always suggest specific imp
 8. Colored left-border on cards (`border-left: 3px solid <accent>`)
 9. Generic hero copy ("Welcome to [X]", "Unlock the power of...", "Your all-in-one solution for...")
 10. Cookie-cutter section rhythm (hero → 3 features → testimonials → pricing → CTA, every section same height)
-11. system-ui or `-apple-system` as the PRIMARY display/body font — the "I gave up on typography" signal. Pick a real typeface.
+11. system-ui or `-apple-system` as the PRIMARY display/body font - the "I gave up on typography" signal. Pick a real typeface.
 
 Source: [OpenAI "Designing Delightful Frontends with GPT-5.4"](https://developers.openai.com/blog/designing-delightful-frontends-with-gpt-5-4) (Mar 2026) + gstack design methodology.
 
@@ -1801,7 +1801,7 @@ codex exec "Review the frontend source code in this repo. Evaluate against these
 
 First classify as MARKETING/LANDING PAGE vs APP UI vs HYBRID, then apply matching rules.
 
-LITMUS CHECKS — answer YES/NO:
+LITMUS CHECKS - answer YES/NO:
 1. Brand/product unmistakable in first screen?
 2. One strong visual anchor present?
 3. Page understandable by scanning headlines only?
@@ -1810,7 +1810,7 @@ LITMUS CHECKS — answer YES/NO:
 6. Does motion improve hierarchy or atmosphere?
 7. Would design feel premium with all decorative shadows removed?
 
-HARD REJECTION — flag if ANY apply:
+HARD REJECTION - flag if ANY apply:
 1. Generic SaaS card grid as first impression
 2. Beautiful image with weak brand
 3. Strong headline with no clear action
@@ -1841,12 +1841,12 @@ For each finding: what's wrong, severity (critical/high/medium), and the file:li
 - **Timeout:** "Codex timed out after 5 minutes."
 - **Empty response:** "Codex returned no response."
 - On any Codex error: proceed with Claude subagent output only, tagged `[single-model]`.
-- If Claude subagent also fails: "Outside voices unavailable — continuing with primary review."
+- If Claude subagent also fails: "Outside voices unavailable - continuing with primary review."
 
 Present Codex output under a `CODEX SAYS (design source audit):` header.
 Present subagent output under a `CLAUDE SUBAGENT (design consistency):` header.
 
-**Synthesis — Litmus scorecard:**
+**Synthesis - Litmus scorecard:**
 
 Use the same scorecard format as /plan-design-review (shown above). Fill in from both outputs.
 Merge findings into the triage with `[codex]` / `[subagent]` / `[cross-model]` tags.
@@ -1894,12 +1894,12 @@ $D generate --brief "<description of the page/component with the finding fixed, 
 
 Show the user: "Here's the current state (screenshot) and here's what it should look like (mockup). Now I'll fix the source to match."
 
-This step is optional — skip for trivial CSS fixes (wrong hex color, missing padding value). Use it for findings where the intended design isn't obvious from the description alone.
+This step is optional - skip for trivial CSS fixes (wrong hex color, missing padding value). Use it for findings where the intended design isn't obvious from the description alone.
 
 ### 8b. Fix
 
 - Read the source code, understand the context
-- Make the **minimal fix** — smallest change that resolves the design issue
+- Make the **minimal fix** - smallest change that resolves the design issue
 - If a target mockup was generated in 8a.5, use it as the visual reference for the fix
 - CSS-only changes are preferred (safer, more reversible)
 - Do NOT refactor surrounding code, add features, or "improve" unrelated things
@@ -1908,11 +1908,11 @@ This step is optional — skip for trivial CSS fixes (wrong hex color, missing p
 
 ```bash
 git add <only-changed-files>
-git commit -m "style(design): FINDING-NNN — short description"
+git commit -m "style(design): FINDING-NNN - short description"
 ```
 
 - One commit per fix. Never bundle multiple fixes.
-- Message format: `style(design): FINDING-NNN — short description`
+- Message format: `style(design): FINDING-NNN - short description`
 
 ### 8d. Re-test
 
@@ -1936,7 +1936,7 @@ Take **before/after screenshot pair** for every fix.
 ### 8e.5. Regression Test (design-review variant)
 
 Design fixes are typically CSS-only. Only generate regression tests for fixes involving
-JavaScript behavior changes — broken dropdowns, animation failures, conditional rendering,
+JavaScript behavior changes - broken dropdowns, animation failures, conditional rendering,
 interactive state issues.
 
 For CSS-only fixes: skip entirely. CSS regressions are caught by re-running /design-review.
@@ -1953,7 +1953,7 @@ Every 5 fixes (or after any revert), compute the design-fix risk level:
 DESIGN-FIX RISK:
   Start at 0%
   Each revert:                        +15%
-  Each CSS-only file change:          +0%   (safe — styling only)
+  Each CSS-only file change:          +0%   (safe - styling only)
   Each JSX/TSX/component file change: +5%   per file
   After fix 10:                       +1%   per additional fix
   Touching unrelated files:           +20%
@@ -1972,7 +1972,7 @@ After all fixes are applied:
 1. Re-run the design audit on all affected pages
 2. If target mockups were generated during the fix loop AND `DESIGN_READY`: run `$D verify --mockup "$REPORT_DIR/screenshots/finding-NNN-target.png" --screenshot "$REPORT_DIR/screenshots/finding-NNN-after.png"` to compare the fix result against the target. Include pass/fail in the report.
 3. Compute final design score and AI slop score
-4. **If final scores are WORSE than baseline:** WARN prominently — something regressed
+4. **If final scores are WORSE than baseline:** WARN prominently - something regressed
 
 ---
 
@@ -2046,7 +2046,7 @@ already knows. A good test: would this insight save time in a future session? If
 
 11. **Clean working tree required.** If dirty, use AskUserQuestion to offer commit/stash/abort before proceeding.
 12. **One commit per fix.** Never bundle multiple design fixes into one commit.
-13. **Only modify tests when generating regression tests in Phase 8e.5.** Never modify CI configuration. Never modify existing tests — only create new test files.
+13. **Only modify tests when generating regression tests in Phase 8e.5.** Never modify CI configuration. Never modify existing tests - only create new test files.
 14. **Revert on regression.** If a fix makes things worse, `git revert HEAD` immediately.
 15. **Self-regulate.** Follow the design-fix risk heuristic. When in doubt, stop and ask.
 16. **CSS-first.** Prefer CSS/styling changes over structural component changes. CSS-only changes are safer and more reversible.

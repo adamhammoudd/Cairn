@@ -201,7 +201,12 @@ export function MethodologyCard({
   // is unchanged. Premium has all of them but, like sources, leads with the
   // best match and expands on request instead of dumping the whole list.
   const shownAnalogs = isTopLine ? analysis.analogs.slice(0, 1) : analogsExpanded ? analysis.analogs : analysis.analogs.slice(0, 1);
-  const hasHidden = isTopLine && analysis.analogs.length > 1;
+  // sample_size, not analogs.length. attachMethodology() now truncates the
+  // analog array server-side on the Free plan, so analogs.length is 1 there and
+  // this would read "nothing hidden" - hiding the very upgrade note that
+  // explains why only one is shown. sample_size is the true count and is sent
+  // at both depths.
+  const hasHidden = isTopLine && analysis.sample_size > 1;
   const canExpandAnalogs = !isTopLine && analysis.analogs.length > 1;
 
   const pad = isDense ? "p-4" : "p-5";

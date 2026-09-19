@@ -21,6 +21,13 @@ interface TickerStripProps {
  * so the page footer says plainly that it is not one. And the track renders
  * the list twice: the animation slides by 50%, so the second copy is what the
  * eye is on when the loop restarts, and there is no visible seam.
+ *
+ * Each copy is also floored at one window's width. A four-symbol strip is
+ * about 450px of content, so on a wide window the track was narrower than the
+ * screen: the symbols bunched at the left, the rest of the band sat empty, and
+ * the loop visibly jumped rather than sliding. The floor makes a short list
+ * spread across whatever width it is given, and does nothing at all once the
+ * symbols outgrow the window - which is the usual case.
  */
 export function TickerStrip({ items }: TickerStripProps) {
   if (items.length === 0) return null;
@@ -43,7 +50,14 @@ export function TickerStrip({ items }: TickerStripProps) {
         style={{ ["--ticker-duration" as string]: `${durationSeconds}s` }}
       >
         {[0, 1].map((copy) => (
-          <div key={copy} className="flex shrink-0">
+          <div
+            key={copy}
+            // The same `100vw - --sbw` the wrapper on Base Camp breaks out
+            // with, so the floor matches the band's real width rather than
+            // overshooting by the scrollbar gutter. See
+            // layout/scrollbar-width-var.tsx.
+            className="flex shrink-0 justify-around min-w-[calc(100vw-var(--sbw,0px))]"
+          >
             {items.map((item) => (
               <Link
                 key={`${copy}-${item.symbol}`}
