@@ -40,7 +40,7 @@ export function TickerStrip({ items }: TickerStripProps) {
 
   return (
     <div
-      className="relative overflow-hidden border-b border-line bg-panel"
+      className="relative overflow-hidden border-b border-[#171717] bg-[#0c0c0c]"
       // Not a live region: it repeats on a loop and would be announced over
       // and over. The same figures are reachable as real content on /markets.
       aria-hidden="true"
@@ -62,12 +62,12 @@ export function TickerStrip({ items }: TickerStripProps) {
               <Link
                 key={`${copy}-${item.symbol}`}
                 href={`/ticker/${item.symbol}`}
-                className="flex items-center gap-2 px-4 py-2 transition-colors duration-fast ease-standard hover:bg-active"
+                className="flex items-center gap-1.5 px-[13px] py-[7px] transition-colors duration-fast ease-standard hover:bg-active"
                 tabIndex={-1}
               >
-                <span className="font-mono text-micro text-muted uppercase">{item.symbol}</span>
+                <span className="font-mono text-[11px] tracking-[0.04em] text-muted uppercase">{item.symbol}</span>
                 <span
-                  className={`font-mono text-micro tabular-nums ${
+                  className={`font-mono text-[11px] tracking-[0.04em] tabular-nums ${
                     item.changePct >= 0 ? "text-accent" : "text-negative"
                   }`}
                 >

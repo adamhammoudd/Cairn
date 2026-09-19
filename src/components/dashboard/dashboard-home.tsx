@@ -74,6 +74,14 @@ interface DashboardHomeProps {
       sourceCount: number;
       sampleSize: number;
       confidenceLevel: string;
+      scopeType: string;
+      scopeValue: string;
+      analysisType: string;
+      probabilityLow: number;
+      probabilityHigh: number;
+      createdAt: string;
+      /** Highest-weighted headline the analysis was built from, if any. */
+      topSource: { title: string; source: string; publishedAt: string } | null;
     } | null;
   };
 }
@@ -128,6 +136,12 @@ function QuoteLead({ text }: { text: string }) {
       {text.slice(lead.length)}
     </>
   );
+}
+
+function formatShortDate(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
 export function DashboardHome({
@@ -195,11 +209,15 @@ export function DashboardHome({
       case "markets":
         return (
           <DashboardSummaryCard key={key} title={card.label} href={card.href} ctaLabel={card.cta} tint={card.tint} delay={delay} {...arrangeProps}>
-            <div className="flex flex-col gap-2.5">
+            <div className="flex flex-col">
               {markets.top.map((r) => (
-                <div key={r.symbol} className="flex items-center justify-between gap-3">
+                <Link
+                  key={r.symbol}
+                  href={`/ticker/${encodeURIComponent(r.symbol)}`}
+                  className="-mx-2 flex items-center justify-between gap-3 rounded-lg px-2 py-[9px] transition-colors duration-fast ease-standard hover:bg-[#151515]"
+                >
                   <span className="text-body text-primary">{r.symbol}</span>
-                  <span className="font-mono text-body tabular-nums text-muted">
+                  <span className="ml-auto font-mono text-body tabular-nums text-muted">
                     {formatMoney(r.price, prefs)}
                   </span>
                   {/* Percent, not the absolute delta the display preference
@@ -208,11 +226,11 @@ export function DashboardHome({
                       this list the absolute change is unreadable noise
                       (+EUR 0.00000015). The full board on /markets still
                       honours the preference. */}
-                  <span className={`font-mono text-caption tabular-nums ${r.changePct >= 0 ? "text-accent" : "text-negative"}`}>
+                  <span className={`min-w-[62px] text-right font-mono text-caption tabular-nums ${r.changePct >= 0 ? "text-accent" : "text-negative"}`}>
                     {r.changePct >= 0 ? "+" : ""}
                     {r.changePct.toFixed(2)}%
                   </span>
-                </div>
+                </Link>
               ))}
             </div>
           </DashboardSummaryCard>
@@ -284,19 +302,23 @@ export function DashboardHome({
             ) : (
               <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
                 {news.items.map((item, i) => (
-                  <div key={i} className="flex gap-2.5">
+                  <Link
+                    key={i}
+                    href="/news"
+                    className="flex gap-[11px] rounded-xl border border-[#1e1e1e] bg-[#101010] p-[13px] transition-[transform,border-color] duration-fast ease-standard hover:-translate-y-0.5 hover:border-line-strong"
+                  >
                     <span
                       className={`w-[3px] shrink-0 rounded-xs ${NEWS_TINT[item.tint].className}`}
                       title={NEWS_TINT[item.tint].label}
                     />
                     <div className="min-w-0">
-                      <div className="text-body leading-normal text-primary">{decodeEntities(item.title)}</div>
-                      <div className="mt-1 text-micro text-dim">
+                      <div className="text-[13px] leading-[1.45] text-primary">{decodeEntities(item.title)}</div>
+                      <div className="mt-1.5 text-micro text-dim">
                         <span className="sr-only">{NEWS_TINT[item.tint].label} · </span>
                         {item.source} · <TimeAgo iso={item.publishedAt} />
                       </div>
                     </div>
-                  </div>
+                  </Link>
                 ))}
               </div>
             )}
@@ -493,6 +515,18 @@ export function DashboardHome({
           // reading column instead - still "what it rests on", still directly
           // beneath what it rests under.
           <div>
+            {/* What the analysis is about and what it rests on, above the
+                prose - the spec's eyebrow line. Every field is the stored
+                analysis row; nothing here is composed. */}
+            <div className="mb-3 flex flex-wrap items-center gap-x-2.5 gap-y-1 font-mono text-[9.5px] tracking-[0.14em] text-dim uppercase">
+              <span>
+                {analysis.scopeType} · {analysis.scopeValue} · {analysis.analysisType.replace(/_/g, " ")}
+              </span>
+              <span>
+                {analysis.sourceCount} {analysis.sourceCount === 1 ? "source" : "sources"} · {analysis.sampleSize}{" "}
+                {analysis.sampleSize === 1 ? "analog" : "analogs"} · {formatShortDate(analysis.createdAt)}
+              </span>
+            </div>
             <div className="max-w-[68ch]">
               {quoteParagraphs(analysis.quote).map((para, i) => (
                 <p
@@ -511,17 +545,64 @@ export function DashboardHome({
                 </p>
               ))}
             </div>
-            <div className="mt-5 flex flex-wrap gap-2">
-              <span className="rounded-full border border-line px-2.5 py-1 text-caption text-muted">
-                {analysis.sourceCount} sources
-              </span>
-              <span className="rounded-full border border-line px-2.5 py-1 text-caption text-muted">
-                {analysis.sampleSize} {analysis.sampleSize === 1 ? "analog" : "analogs"}
-              </span>
-              <span className="rounded-full border border-accent/35 px-2.5 py-1 text-caption text-accent capitalize">
+            {/* Confidence and the range it qualifies, on one rule: a bare
+                range never appears without the confidence beside it. Low
+                confidence takes the warning tone, not the gain green. */}
+            <div className="mt-5 flex flex-wrap items-center gap-4 border-y border-[#1a1a1a] py-3.5">
+              <span
+                className={`inline-flex items-center gap-[7px] rounded-lg border px-[11px] py-1.5 text-[11.5px] capitalize ${
+                  analysis.confidenceLevel === "low"
+                    ? "border-warning/35 bg-warning/10 text-warning"
+                    : "border-accent/35 bg-accent/10 text-accent-light"
+                }`}
+              >
+                <span
+                  className={`h-[5px] w-[5px] rounded-full ${live ? "animate-breathe" : ""} ${
+                    analysis.confidenceLevel === "low" ? "bg-warning" : "bg-accent"
+                  }`}
+                />
                 {analysis.confidenceLevel} confidence
               </span>
+              <div className="min-w-[150px] flex-1 basis-[180px]">
+                <div className="flex items-baseline justify-between gap-2.5">
+                  <span className="font-mono text-[9px] tracking-[0.14em] text-dim uppercase">Probability range</span>
+                  <span className="font-mono text-lead tabular-nums text-primary">
+                    {analysis.probabilityLow}–{analysis.probabilityHigh}%
+                  </span>
+                </div>
+                <div className="relative mt-[9px] h-[5px] overflow-hidden rounded-full bg-[#1c1c1c]">
+                  <div
+                    className="absolute top-0 bottom-0 origin-left rounded-full bg-gradient-to-r from-accent to-accent-light"
+                    style={{
+                      left: `${Math.min(100, Math.max(0, analysis.probabilityLow))}%`,
+                      right: `${Math.min(100, Math.max(0, 100 - analysis.probabilityHigh))}%`,
+                      animation: "cn-grow 760ms cubic-bezier(.4,0,.2,1) 320ms both",
+                    }}
+                  />
+                </div>
+              </div>
             </div>
+            {analysis.topSource && (
+              <div className="mt-4 overflow-hidden rounded-xl border border-[#1f1f1f] bg-[#0b0b0b] transition-colors duration-fast ease-standard hover:border-[#2f2f2f] sm:max-w-[420px]">
+                <div className="flex items-center justify-between gap-2.5 border-b border-[#1a1a1a] px-[13px] py-2.5">
+                  <span className="font-mono text-[9px] tracking-[0.14em] text-dim uppercase">
+                    Sources · {analysis.sourceCount}
+                  </span>
+                  <Link href="/news" className="text-[11px] text-accent-light">
+                    View all
+                  </Link>
+                </div>
+                <div className="px-[13px] py-[11px]">
+                  <div className="text-[12px] leading-[1.5] text-pretty text-primary">
+                    {decodeEntities(analysis.topSource.title)}
+                  </div>
+                  <div className="mt-2 flex items-center justify-between gap-2.5 font-mono text-[10px] text-dim">
+                    <span>{analysis.topSource.source}</span>
+                    <span>{formatShortDate(analysis.topSource.publishedAt)}</span>
+                  </div>
+                </div>
+              </div>
+            )}
             {/*
               Phase 6 requires the SAME Disclosure component on every surface
               that shows analysis output - dashboard, briefing, chat, research.

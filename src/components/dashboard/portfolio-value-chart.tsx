@@ -195,7 +195,7 @@ export function PortfolioValueChart({ series, initialTimeframe }: PortfolioValue
               something to sit against without implying gridded values - the
               axis is deliberately unlabelled, because the figure that matters
               is set at display size beside the chart. */}
-          {[1 / 3, 2 / 3].map((f) => (
+          {[0.25, 0.5, 0.75].map((f) => (
             <line
               key={f}
               x1="0"
@@ -230,6 +230,17 @@ export function PortfolioValueChart({ series, initialTimeframe }: PortfolioValue
             left: "100%",
             top: `${((last.y / VIEW_H) * 100).toFixed(2)}%`,
             background: stroke,
+          }}
+        />
+        {/* The design's breathing ring around the end marker. */}
+        <span
+          aria-hidden
+          className="animate-breathe absolute h-[18px] w-[18px] -translate-x-1/2 -translate-y-1/2 rounded-full border"
+          style={{
+            left: "100%",
+            top: `${((last.y / VIEW_H) * 100).toFixed(2)}%`,
+            borderColor: stroke,
+            opacity: 0.4,
           }}
         />
       </div>
