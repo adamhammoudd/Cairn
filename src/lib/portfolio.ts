@@ -156,6 +156,44 @@ export function computeAllocation(
     .sort((a, b) => b.value - a.value);
 }
 
+export interface ConcentrationSummary {
+  topSymbol: string;
+  topSharePct: number;
+  /** Fewest top-by-value holdings whose combined share exceeds 60% of value. */
+  namesOverThreshold: number;
+  totalPositions: number;
+}
+
+// Powers the "Concentration" callout beside the allocation breakdown - real
+// numbers only, computed from the same priced metrics as the rest of the
+// page (a holding with no current price yet falls back to cost basis, same
+// as computeAllocation, so a newly added position isn't silently excluded).
+export function computeConcentration(metrics: HoldingMetrics[]): ConcentrationSummary | null {
+  if (metrics.length === 0) return null;
+  const priced = metrics
+    .map((m) => ({ symbol: m.symbol, value: m.value ?? m.purchase_price * m.quantity }))
+    .sort((a, b) => b.value - a.value);
+  const total = priced.reduce((sum, p) => sum + p.value, 0);
+  if (total <= 0) return null;
+
+  let cumulative = 0;
+  let namesOverThreshold = priced.length;
+  for (let i = 0; i < priced.length; i++) {
+    cumulative += priced[i].value;
+    if (cumulative / total > 0.6) {
+      namesOverThreshold = i + 1;
+      break;
+    }
+  }
+
+  return {
+    topSymbol: priced[0].symbol,
+    topSharePct: (priced[0].value / total) * 100,
+    namesOverThreshold,
+    totalPositions: priced.length,
+  };
+}
+
 export interface TimelinePoint {
   date: string;
   value: number;
