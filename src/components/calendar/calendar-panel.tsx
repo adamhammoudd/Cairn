@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import { EVENT_TYPES, tintForEvent, type CalendarEvent } from "@/lib/calendar";
 
@@ -75,6 +76,29 @@ export function CalendarPanel({ events }: { events: CalendarEvent[] }) {
     () => filtered.filter((e) => e.event_date >= todayIso).sort((a, b) => a.event_date.localeCompare(b.event_date)),
     [filtered, todayIso],
   );
+
+  // Event count for each of the next five weeks (weeks start on Sunday, like
+  // the grid). Counted from the same filtered events the grid shows.
+  const weekLoad = useMemo(() => {
+    const today = new Date(`${todayIso}T00:00:00`);
+    const start = new Date(today);
+    start.setDate(today.getDate() - today.getDay());
+    const weeks = Array.from({ length: 5 }, (_, w) => {
+      const from = new Date(start);
+      from.setDate(start.getDate() + w * 7);
+      const to = new Date(from);
+      to.setDate(from.getDate() + 6);
+      const fromIso = isoDate(from);
+      const toIso = isoDate(to);
+      return {
+        label: from.toLocaleDateString(undefined, { month: "short", day: "numeric" }),
+        count: filtered.filter((e) => e.event_date >= fromIso && e.event_date <= toIso).length,
+      };
+    });
+    return { weeks, max: Math.max(...weeks.map((w) => w.count), 1) };
+  }, [filtered, todayIso]);
+
+  const nextEvent = upcoming[0];
 
   function toggle(type: string) {
     setActiveTypes((t) => (t.includes(type) ? t.filter((x) => x !== type) : [...t, type]));
@@ -163,6 +187,58 @@ export function CalendarPanel({ events }: { events: CalendarEvent[] }) {
           );
         })}
       </div>
+
+      {nextEvent && (
+        <section className="relative overflow-hidden rounded-2xl border border-[#232323] bg-gradient-to-b from-[#101012] to-[#0d0d0d] px-6 py-[22px]">
+          <span
+            aria-hidden
+            className="absolute top-0 right-0 left-0 h-px"
+            style={{ background: "linear-gradient(90deg,#5b8def,rgba(91,141,239,0))" }}
+          />
+          <div className="flex flex-wrap gap-[26px]">
+            <div className="min-w-0 flex-[2_1_380px]">
+              <div className="flex items-center gap-[9px] font-mono text-eyebrow tracking-[0.18em] text-info uppercase">
+                <span aria-hidden className="h-[7px] w-[7px] rounded-full bg-info shadow-[0_0_0_4px_rgba(91,141,239,0.14)]" />
+                Next up · {formatDayLabel(nextEvent.event_date, todayIso)}
+              </div>
+              <h2 className="mt-3 font-serif text-[28px] leading-[1.24] font-normal text-primary text-pretty">
+                {nextEvent.symbol ? `${nextEvent.symbol} - ${nextEvent.title}` : nextEvent.title}
+              </h2>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <Link
+                  href="/alerts"
+                  className="rounded-[10px] border border-accent/35 bg-accent/8 px-[13px] py-2 text-[12.5px] text-accent-light transition-colors duration-base ease-standard hover:bg-accent/15"
+                >
+                  Remind me →
+                </Link>
+                <Link
+                  href="/assistant"
+                  className="rounded-[10px] border border-line px-[13px] py-2 text-[12.5px] text-[#c9c9c9] transition-colors duration-base ease-standard hover:border-line-strong hover:bg-active"
+                >
+                  Ask Cairn what to expect
+                </Link>
+              </div>
+            </div>
+            <div className="flex min-w-0 flex-[1_1_250px] flex-col gap-[9px]">
+              <div className="font-mono text-eyebrow tracking-[0.16em] text-dim uppercase">Load by week</div>
+              {weekLoad.weeks.map((w) => (
+                <div key={w.label} className="grid grid-cols-[76px_minmax(0,1fr)_26px] items-center gap-2.5 text-[12px]">
+                  <span className="text-muted">{w.label}</span>
+                  <span className="h-1.5 overflow-hidden rounded-[3px] bg-[#1a1a1a]">
+                    <span
+                      className={`block h-full rounded-[3px] opacity-85 ${
+                        w.count > 0 && w.count >= weekLoad.max ? "bg-warning" : "bg-info"
+                      }`}
+                      style={{ width: `${(w.count / weekLoad.max) * 100}%` }}
+                    />
+                  </span>
+                  <span className="text-right font-mono text-muted">{w.count}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       <div className="grid grid-cols-1 items-start gap-3.5 min-[900px]:grid-cols-[300px_1fr]">
         <aside className="relative overflow-hidden rounded-2xl border border-[#232323] bg-panel min-[900px]:sticky min-[900px]:top-[78px]">
