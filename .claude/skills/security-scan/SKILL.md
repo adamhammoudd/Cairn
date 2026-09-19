@@ -1,6 +1,6 @@
 ---
 name: security-scan
-description: Scan your Claude Code configuration (.claude/ directory) for security vulnerabilities, misconfigurations, and injection risks using AgentShield. Checks CLAUDE.md, settings.json, MCP servers, hooks, and agent definitions. Use when auditing a .claude/ directory — CLAUDE.md, settings.json, MCP servers, hooks, or agent definitions.
+description: Scan your Claude Code configuration (.claude/ directory) for security vulnerabilities, misconfigurations, and injection risks using AgentShield. Checks CLAUDE.md, settings.json, MCP servers, hooks, and agent definitions. Use when auditing a .claude/ directory - CLAUDE.md, settings.json, MCP servers, hooks, or agent definitions.
 metadata:
   origin: ECC
 ---
@@ -62,16 +62,16 @@ npx ecc-agentshield scan --min-severity medium
 ### Output Formats
 
 ```bash
-# Terminal output (default) — colored report with grade
+# Terminal output (default) - colored report with grade
 npx ecc-agentshield scan
 
-# JSON — for CI/CD integration
+# JSON - for CI/CD integration
 npx ecc-agentshield scan --format json
 
-# Markdown — for documentation
+# Markdown - for documentation
 npx ecc-agentshield scan --format markdown
 
-# HTML — self-contained dark-theme report
+# HTML - self-contained dark-theme report
 npx ecc-agentshield scan --format html > security-report.html
 ```
 
@@ -99,9 +99,9 @@ npx ecc-agentshield scan --opus --stream
 ```
 
 This runs:
-1. **Attacker (Red Team)** — finds attack vectors
-2. **Defender (Blue Team)** — recommends hardening
-3. **Auditor (Final Verdict)** — synthesizes both perspectives
+1. **Attacker (Red Team)** - finds attack vectors
+2. **Defender (Blue Team)** - recommends hardening
+3. **Auditor (Final Verdict)** - synthesizes both perspectives
 
 ### Initialize Secure Config
 

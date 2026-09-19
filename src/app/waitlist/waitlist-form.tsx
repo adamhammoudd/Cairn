@@ -129,7 +129,7 @@ export function WaitlistForm({ centered = false }: { centered?: boolean }) {
           centered ? "mx-auto max-w-[440px]" : "max-w-[460px]"
         }`}
       >
-        No spam, no newsletter — one confirmation email now and one launch email later.
+        No spam, no newsletter - one confirmation email now and one launch email later.
         {centered ? " " : " Email address only. "}
         <Link
           href="/privacy"

@@ -54,9 +54,9 @@ Voluntary churn is typically 50-70% of total churn. Involuntary churn is 30-50% 
 
 This skill supports three modes:
 
-1. **Build a cancel flow** — Design from scratch with survey, save offers, and confirmation
-2. **Optimize an existing flow** — Analyze cancel data and improve save rates
-3. **Set up dunning** — Failed payment recovery with retries and email sequences
+1. **Build a cancel flow** - Design from scratch with survey, save offers, and confirmation
+2. **Optimize an existing flow** - Analyze cancel data and improve save rates
+3. **Set up dunning** - Failed payment recovery with retries and email sequences
 
 ---
 
@@ -121,7 +121,7 @@ The key insight: **match the offer to the reason.** A discount won't save someon
 | Switching to competitor | Competitive comparison + discount | Feedback session |
 | Technical issues | Escalate to support immediately | Credit + priority fix |
 | Temporary / seasonal | Pause subscription | Downgrade temporarily |
-| Business closed | Skip offer (respect the situation) | — |
+| Business closed | Skip offer (respect the situation) | - |
 
 ### Save Offer Types
 
@@ -252,7 +252,7 @@ Health Score = (
 | Trigger | Intervention |
 |---------|-------------|
 | Usage drop >50% for 2 weeks | "We noticed you haven't used [feature]. Need help?" email |
-| Approaching plan limit | Upgrade nudge (not a wall — paywalls handles this) |
+| Approaching plan limit | Upgrade nudge (not a wall - paywalls handles this) |
 | No login for 14 days | Re-engagement email with recent product updates |
 | NPS detractor (0-6) | Personal follow-up within 24 hours |
 | Support ticket unresolved >48h | Escalation + proactive status update |
@@ -284,7 +284,7 @@ Not all failures are the same. Retry strategy by decline type:
 | Decline Type | Examples | Retry Strategy |
 |-------------|----------|----------------|
 | Soft decline (temporary) | Insufficient funds, processor timeout | Retry 3-5 times over 7-10 days |
-| Hard decline (permanent) | Card stolen, account closed | Don't retry — ask for new card |
+| Hard decline (permanent) | Card stolen, account closed | Don't retry - ask for new card |
 | Authentication required | 3D Secure, SCA | Send customer to update payment |
 
 **Retry timing best practices:**
@@ -301,7 +301,7 @@ Not all failures are the same. Retry strategy by decline type:
 | Email | Timing | Tone | Content |
 |-------|--------|------|---------|
 | 1 | Day 0 (failure) | Friendly alert | "Your payment didn't go through. Update your card." |
-| 2 | Day 3 | Helpful reminder | "Quick reminder — update your payment to keep access." |
+| 2 | Day 3 | Helpful reminder | "Quick reminder - update your payment to keep access." |
 | 3 | Day 7 | Urgency | "Your account will be paused in 3 days. Update now." |
 | 4 | Day 10 | Final warning | "Last chance to keep your account active." |
 
@@ -342,11 +342,11 @@ For the complete dunning playbook with provider-specific setup, see [references/
 ### Cohort Analysis
 
 Segment churn by:
-- **Acquisition channel** — Which channels bring stickier customers?
-- **Plan type** — Which plans churn most?
-- **Tenure** — When do most cancellations happen? (30, 60, 90 days?)
-- **Cancel reason** — Which reasons are growing?
-- **Save offer type** — Which offers work best for which segments?
+- **Acquisition channel** - Which channels bring stickier customers?
+- **Plan type** - Which plans churn most?
+- **Tenure** - When do most cancellations happen? (30, 60, 90 days?)
+- **Cancel reason** - Which reasons are growing?
+- **Save offer type** - Which offers work best for which segments?
 
 ### Cancel Flow A/B Tests
 
@@ -360,22 +360,22 @@ Test one variable at a time:
 | Offer presentation (modal vs full page) | Full page gets more attention | Save rate |
 | Copy tone (empathetic vs direct) | Empathetic reduces friction | Save rate |
 
-**How to run cancel flow experiments:** Use the **ab-testing** skill to design statistically rigorous tests. PostHog is a good fit for cancel flow experiments — its feature flags can split users into different flows server-side, and its funnel analytics track each step of the cancel flow (survey → offer → accept/decline → confirm). See the [PostHog integration guide](../../tools/integrations/posthog.md) for setup.
+**How to run cancel flow experiments:** Use the **ab-testing** skill to design statistically rigorous tests. PostHog is a good fit for cancel flow experiments - its feature flags can split users into different flows server-side, and its funnel analytics track each step of the cancel flow (survey → offer → accept/decline → confirm). See the [PostHog integration guide](../../tools/integrations/posthog.md) for setup.
 
 ---
 
 ## Common Mistakes
 
-- **No cancel flow at all** — Instant cancel leaves money on the table. Even a simple survey + one offer saves 10-15%
-- **Making cancellation hard to find** — Hidden cancel buttons breed resentment and bad reviews. Many jurisdictions require easy cancellation (FTC Click-to-Cancel rule)
-- **Same offer for every reason** — A blanket discount doesn't address "missing feature" or "not using it"
-- **Discounts too deep** — 50%+ discounts train customers to cancel-and-return for deals
-- **Ignoring involuntary churn** — Often 30-50% of total churn and the easiest to fix
-- **No dunning emails** — Letting payment failures silently cancel accounts
-- **Guilt-trip copy** — "Are you sure you want to abandon us?" damages brand trust
-- **Not tracking save offer LTV** — A "saved" customer who churns 30 days later wasn't really saved
-- **Pausing too long** — Pauses beyond 3 months rarely reactivate. Set limits.
-- **No post-cancel path** — Make reactivation easy and trigger win-back emails, because some churned users will want to come back
+- **No cancel flow at all** - Instant cancel leaves money on the table. Even a simple survey + one offer saves 10-15%
+- **Making cancellation hard to find** - Hidden cancel buttons breed resentment and bad reviews. Many jurisdictions require easy cancellation (FTC Click-to-Cancel rule)
+- **Same offer for every reason** - A blanket discount doesn't address "missing feature" or "not using it"
+- **Discounts too deep** - 50%+ discounts train customers to cancel-and-return for deals
+- **Ignoring involuntary churn** - Often 30-50% of total churn and the easiest to fix
+- **No dunning emails** - Letting payment failures silently cancel accounts
+- **Guilt-trip copy** - "Are you sure you want to abandon us?" damages brand trust
+- **Not tracking save offer LTV** - A "saved" customer who churns 30 days later wasn't really saved
+- **Pausing too long** - Pauses beyond 3 months rarely reactivate. Set limits.
+- **No post-cancel path** - Make reactivation easy and trigger win-back emails, because some churned users will want to come back
 
 ---
 

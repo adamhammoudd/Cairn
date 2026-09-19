@@ -14,6 +14,7 @@ import { TimeAgo } from "@/components/time-ago";
 import { MODULE_KEYS, type ModuleKey } from "@/lib/dashboard-modules";
 import { DataFreshness } from "@/components/data-freshness";
 import { TickerStrip, type TickerStripItem } from "@/components/dashboard/ticker-strip";
+import { Disclosure } from "@/components/compliance/disclosure";
 import { usePageTone } from "@/components/layout/page-tone";
 import {
   PortfolioValueChart,
@@ -520,6 +521,17 @@ export function DashboardHome({
               <span className="rounded-full border border-accent/35 px-2.5 py-1 text-caption text-accent capitalize">
                 {analysis.confidenceLevel} confidence
               </span>
+            </div>
+            {/*
+              Phase 6 requires the SAME Disclosure component on every surface
+              that shows analysis output - dashboard, briefing, chat, research.
+              This one was missing here, which was the page making the AI
+              finding its most prominent element while carrying no disclosure
+              at all. The page-footer line further down is about price
+              freshness; it is not this, and does not substitute for it.
+            */}
+            <div className="mt-4 max-w-[68ch]">
+              <Disclosure variant="callout" />
             </div>
           </div>
         ) : (

@@ -86,7 +86,7 @@ The first line determines whether anyone reads the rest.
 ### Curiosity Hooks
 - "I was wrong about [common belief]."
 - "The real reason [outcome] happens isn't what you think."
-- "[Impressive result] — and it only took [surprisingly short time]."
+- "[Impressive result] - and it only took [surprisingly short time]."
 
 ### Story Hooks
 - "Last week, [unexpected thing] happened."
@@ -105,13 +105,13 @@ The first line determines whether anyone reads the rest.
 
 **For post templates and more hooks**: See [references/post-templates.md](references/post-templates.md)
 
-**For carousels** (Instagram carousels, LinkedIn document posts): See [references/carousel-frameworks.md](references/carousel-frameworks.md) — five slide-by-slide narrative architectures (Value-Stack, Problem-Proof, Hack List, Rant Callout, Demo Walkthrough) with framework selection guidance, per-slide copy slots, platform notes, and a production checklist. Pick the framework before writing slides.
+**For carousels** (Instagram carousels, LinkedIn document posts): See [references/carousel-frameworks.md](references/carousel-frameworks.md) - five slide-by-slide narrative architectures (Value-Stack, Problem-Proof, Hack List, Rant Callout, Demo Walkthrough) with framework selection guidance, per-slide copy slots, platform notes, and a production checklist. Pick the framework before writing slides.
 
 ---
 
 ## Content Repurposing System
 
-Turn one piece of content into many. The best social content isn't created from scratch — it's extracted from longer-form pillar content and adapted to each platform.
+Turn one piece of content into many. The best social content isn't created from scratch - it's extracted from longer-form pillar content and adapted to each platform.
 
 ### Blog Post → Social Content
 
@@ -125,7 +125,7 @@ Turn one piece of content into many. The best social content isn't created from 
 
 ### Podcast / Video → Social Content
 
-Extract "content atoms" — self-contained moments from any long-form content that work on their own:
+Extract "content atoms" - self-contained moments from any long-form content that work on their own:
 
 | Atom Type | What to Look For | Best Platform |
 |-----------|-----------------|---------------|
@@ -137,12 +137,12 @@ Extract "content atoms" — self-contained moments from any long-form content th
 | Behind-the-scenes | Authentic, unpolished moments | Instagram Stories, TikTok |
 
 **Podcast repurposing workflow:**
-1. **Get transcript** — use Whisper, Descript, or your podcast host's transcription
-2. **Mark timestamps** — flag the 5-10 best moments while listening or scanning transcript
-3. **Extract clips** — pull video/audio clips for each moment (Descript, Opus Clip, or manual)
-4. **Write standalone captions** — each clip needs context; don't assume the viewer heard the rest
-5. **Add subtitles** — most social video is watched without sound
-6. **Schedule across 1-2 weeks** — spread a single episode across multiple posts
+1. **Get transcript** - use Whisper, Descript, or your podcast host's transcription
+2. **Mark timestamps** - flag the 5-10 best moments while listening or scanning transcript
+3. **Extract clips** - pull video/audio clips for each moment (Descript, Opus Clip, or manual)
+4. **Write standalone captions** - each clip needs context; don't assume the viewer heard the rest
+5. **Add subtitles** - most social video is watched without sound
+6. **Schedule across 1-2 weeks** - spread a single episode across multiple posts
 
 **Per episode, aim for:**
 - 3-5 short video clips or audiograms (15-60 sec) for Reels/TikTok/Shorts
@@ -173,7 +173,7 @@ Extract "content atoms" — self-contained moments from any long-form content th
 ### Repurposing Workflow
 
 1. **Create pillar content** (blog, video, podcast, webinar, newsletter)
-2. **Extract content atoms** (5-10 per piece — quotes, stories, tips, data)
+2. **Extract content atoms** (5-10 per piece - quotes, stories, tips, data)
 3. **Adapt to each platform** (format, length, and tone)
 4. **Write standalone captions** (each post must work without context)
 5. **Schedule across the week** (spread distribution, don't dump all at once)
@@ -302,12 +302,12 @@ Extract "content atoms" — self-contained moments from any long-form content th
 
 Instead of guessing, analyze what's working for top creators in your niche:
 
-1. **Find creators** — 10-20 accounts with high engagement
-2. **Collect data** — 500+ posts for analysis
-3. **Analyze patterns** — Hooks, formats, CTAs that work
-4. **Codify playbook** — Document repeatable patterns
-5. **Layer your voice** — Apply patterns with authenticity
-6. **Convert** — Bridge attention to business results
+1. **Find creators** - 10-20 accounts with high engagement
+2. **Collect data** - 500+ posts for analysis
+3. **Analyze patterns** - Hooks, formats, CTAs that work
+4. **Codify playbook** - Document repeatable patterns
+5. **Layer your voice** - Apply patterns with authenticity
+6. **Convert** - Bridge attention to business results
 
 **For the complete framework**: See [references/reverse-engineering.md](references/reverse-engineering.md)
 
@@ -383,12 +383,12 @@ Tools: CapCut (free), Descript, Captions.ai, Premiere Pro
 
 ### Common Mistakes
 
-1. **Slow hooks** — don't build up to the point
-2. **No text overlay** — many watch without sound
-3. **Poor audio** — bad audio kills retention instantly
-4. **Too long** — if it can be shorter, make it shorter
-5. **No CTA** — tell viewers what to do
-6. **Ignoring comments** — engagement in first hour matters
+1. **Slow hooks** - don't build up to the point
+2. **No text overlay** - many watch without sound
+3. **Poor audio** - bad audio kills retention instantly
+4. **Too long** - if it can be shorter, make it shorter
+5. **No CTA** - tell viewers what to do
+6. **Ignoring comments** - engagement in first hour matters
 
 **For video hook formulas and scripting templates**: See [references/short-form-video.md](references/short-form-video.md)
 

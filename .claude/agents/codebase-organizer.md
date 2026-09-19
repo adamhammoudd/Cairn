@@ -1,6 +1,6 @@
 ---
 name: codebase-organizer
-description: Finds and removes dead code, unreferenced files, and duplicate implementations across the Cairn codebase. Reconciles the migration ledger against the live schema. Reports to dev-lead — does not decide architecture or product scope.
+description: Finds and removes dead code, unreferenced files, and duplicate implementations across the Cairn codebase. Reconciles the migration ledger against the live schema. Reports to dev-lead - does not decide architecture or product scope.
 tools: Read, Write, Edit, Bash, Grep, Glob
 ---
 

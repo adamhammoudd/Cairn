@@ -41,13 +41,13 @@ Gather this context (ask if not provided):
 
 ## Treat Content Like a Product
 
-Every piece is its own launch. Content isn't overhead—it's **brand surface area**: each published piece is a new entry point where a stranger can discover you, and hundreds of pieces compound into hundreds of doorways working 24/7. Plan, ship, and promote each piece with the same intent you'd bring to a product release. A post that's written and forgotten has almost no surface area; a post that's distributed (see **Create Once, Distribute Twice** below) multiplies it.
+Every piece is its own launch. Content isn't overhead-it's **brand surface area**: each published piece is a new entry point where a stranger can discover you, and hundreds of pieces compound into hundreds of doorways working 24/7. Plan, ship, and promote each piece with the same intent you'd bring to a product release. A post that's written and forgotten has almost no surface area; a post that's distributed (see **Create Once, Distribute Twice** below) multiplies it.
 
 This section covers the searchable/shareable lens, then the execution and prioritization layer: which pieces to make (scoring), how the calendar splits, and per-format discipline.
 
 ## Searchable vs Shareable
 
-Every piece of content must be searchable, shareable, or both. Prioritize in that order—search traffic is the foundation.
+Every piece of content must be searchable, shareable, or both. Prioritize in that order-search traffic is the foundation.
 
 **Searchable content** captures existing demand. Optimized for people actively looking for answers.
 
@@ -56,7 +56,7 @@ Every piece of content must be searchable, shareable, or both. Prioritize in tha
 ### When Writing Searchable Content
 
 - Target a specific keyword or question
-- Match search intent exactly—answer what the searcher wants
+- Match search intent exactly-answer what the searcher wants
 - Use clear titles that match search queries
 - Structure with headings that mirror search patterns
 - Place keywords in title, headings, first paragraph, URL
@@ -126,7 +126,7 @@ Behind-the-scenes transparency. "How We Got Our First $5k MRR," "Why We Chose De
 
 ### Link-Earning Formats
 
-When the goal of a piece is backlinks specifically, format choice matters more than production effort. Foundation Inc.'s B2B Backlink Intelligence Report (March 2026 — a single vendor study of B2B SaaS sites, so treat as directional) measured each format's share of backlinks relative to its share of pages:
+When the goal of a piece is backlinks specifically, format choice matters more than production effort. Foundation Inc.'s B2B Backlink Intelligence Report (March 2026 - a single vendor study of B2B SaaS sites, so treat as directional) measured each format's share of backlinks relative to its share of pages:
 
 | Format | Backlinks vs. page share |
 |---|---|
@@ -139,7 +139,7 @@ When the goal of a piece is backlinks specifically, format choice matters more t
 | Thought leadership | 0.74x |
 | Templates / frameworks | 0.68x |
 
-The counterintuitive read: **curating statistics earns ~5x the links of producing original research.** Writers link to whatever makes citation easiest — a maintained stat-roundup page is citation infrastructure, while original research often gets cited *via* the roundups that aggregate it. Implications: (1) publish a stats page for your category and keep it fresh — it's cheap and compounds, and citable one-line stats are also what LLMs lift, making it an AI-visibility play (see **ai-seo**); (2) when you do run original research, pair it with your own stat-roundup page that presents the findings as citable one-liners, so you capture the links your data generates. The formats at the bottom aren't dead — guides, templates, and thought leadership earn their keep on rankings, conversions, and brand. Judge each piece by the job it's for, and don't expect links from formats that don't earn them.
+The counterintuitive read: **curating statistics earns ~5x the links of producing original research.** Writers link to whatever makes citation easiest - a maintained stat-roundup page is citation infrastructure, while original research often gets cited *via* the roundups that aggregate it. Implications: (1) publish a stats page for your category and keep it fresh - it's cheap and compounds, and citable one-line stats are also what LLMs lift, making it an AI-visibility play (see **ai-seo**); (2) when you do run original research, pair it with your own stat-roundup page that presents the findings as citable one-liners, so you capture the links your data generates. The formats at the bottom aren't dead - guides, templates, and thought leadership earn their keep on rankings, conversions, and brand. Judge each piece by the job it's for, and don't expect links from formats that don't earn them.
 
 For programmatic content at scale, see **programmatic-seo** skill.
 
@@ -345,9 +345,9 @@ Score 1-10 per factor, multiply by the weight, sum for the total. Rank the list;
 
 Balance the editorial calendar so search compounds while shareable pieces keep you visible:
 
-- **60% searchable** — the foundation. Demand you can capture predictably (use-case content, hub/spoke, how-tos).
-- **30% shareable** — thought leadership, original data, opinion. Creates demand and earns links/mentions.
-- **10% experimental** — new formats, channels, or bets. Cheap insurance against a stale mix.
+- **60% searchable** - the foundation. Demand you can capture predictably (use-case content, hub/spoke, how-tos).
+- **30% shareable** - thought leadership, original data, opinion. Creates demand and earns links/mentions.
+- **10% experimental** - new formats, channels, or bets. Cheap insurance against a stale mix.
 
 This is a starting ratio, not a rule. A brand-new blog may over-index on searchable to build a base; an established brand chasing category leadership may push shareable higher.
 
@@ -357,34 +357,34 @@ This is a starting ratio, not a rule. A brand-new blog may over-index on searcha
 
 Treating content like a product means each format has a production standard, not just a topic:
 
-- **Blog post** — write **10 title options** before drafting (the title does most of the work; pick the strongest). Plan **~5 editing passes** (structure, clarity, evidence, line edit, headline/SEO). For the writing itself, see **copywriting**.
-- **Long-form guide** — the flagship of a pillar. Comprehensive enough to be *the* resource; structured with a table of contents and internal links to spokes. Build the hub before the spokes.
-- **Video** — script the hook first; front-load the payoff. Repurpose into short-form clips at creation time (see **social**).
-- **Podcast** — one interview yields a transcript, quote graphics, short clips, and a written recap. Design the episode knowing it will be atomized.
-- **Email** — one idea per send; the subject line is the title—write several and pick. For sequences and lifecycle, see **emails**.
+- **Blog post** - write **10 title options** before drafting (the title does most of the work; pick the strongest). Plan **~5 editing passes** (structure, clarity, evidence, line edit, headline/SEO). For the writing itself, see **copywriting**.
+- **Long-form guide** - the flagship of a pillar. Comprehensive enough to be *the* resource; structured with a table of contents and internal links to spokes. Build the hub before the spokes.
+- **Video** - script the hook first; front-load the payoff. Repurpose into short-form clips at creation time (see **social**).
+- **Podcast** - one interview yields a transcript, quote graphics, short clips, and a written recap. Design the episode knowing it will be atomized.
+- **Email** - one idea per send; the subject line is the title-write several and pick. For sequences and lifecycle, see **emails**.
 
 ---
 
 ## Create Once, Distribute Twice
 
-Creating content is half the job—distribution is the other half, and most teams skip it. The philosophy: **one exceptional piece, reformatted and repurposed across every channel, not a fresh piece per platform.** Pouring effort into a single flagship and then distributing it everywhere beats spreading thin effort across many mediocre platform-native posts.
+Creating content is half the job-distribution is the other half, and most teams skip it. The philosophy: **one exceptional piece, reformatted and repurposed across every channel, not a fresh piece per platform.** Pouring effort into a single flagship and then distributing it everywhere beats spreading thin effort across many mediocre platform-native posts.
 
 Build **distribution hooks into the piece at creation time**, not after: write subheads that stand alone as social posts, structure sections to be lifted out modularly, and pull quotes/stats you already know you'll graphic-ify. A well-designed guide is a distribution kit in disguise.
 
-**The ORB Framework as a funnel** — route attention from borrowed → rented → owned, which maps to discovery → engagement → conversion:
+**The ORB Framework as a funnel** - route attention from borrowed → rented → owned, which maps to discovery → engagement → conversion:
 
-- **Borrowed** (other people's audiences: podcasts, guest posts, partnerships) — discovery / breakthrough reach.
-- **Rented** (social platforms, ad networks) — engagement, but you don't own the audience or the algorithm.
-- **Owned** (email list, blog, community) — conversion and the only durable asset. Everything upstream should funnel here.
+- **Borrowed** (other people's audiences: podcasts, guest posts, partnerships) - discovery / breakthrough reach.
+- **Rented** (social platforms, ad networks) - engagement, but you don't own the audience or the algorithm.
+- **Owned** (email list, blog, community) - conversion and the only durable asset. Everything upstream should funnel here.
 
 ORB mechanics live in the **launch** skill (channel-type playbook) and content atomization/repurposing lives in **social**; the value here is consolidating the *distribute* half of content strategy so it has a home.
 
 **Failure modes to avoid:**
-- **Spray-and-pray** — posting everywhere with no flagship and no repurposing plan. Effort scatters, nothing compounds.
-- **Platform dependency** — building on rented land. Facebook organic reach fell from ~20% to under 2%; any rented channel can throttle you overnight.
-- **The ownership paradox** — teams spend ~90% of effort on channels they don't control (rented/borrowed) and neglect the owned assets that actually convert and can't be taken away.
+- **Spray-and-pray** - posting everywhere with no flagship and no repurposing plan. Effort scatters, nothing compounds.
+- **Platform dependency** - building on rented land. Facebook organic reach fell from ~20% to under 2%; any rented channel can throttle you overnight.
+- **The ownership paradox** - teams spend ~90% of effort on channels they don't control (rented/borrowed) and neglect the owned assets that actually convert and can't be taken away.
 
-For the full distribution spine—the Content Distribution Flywheel, platform half-lives, and the atomization checklist—see the reference below.
+For the full distribution spine-the Content Distribution Flywheel, platform half-lives, and the atomization checklist-see the reference below.
 
 ---
 

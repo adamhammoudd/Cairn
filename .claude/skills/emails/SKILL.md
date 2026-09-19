@@ -152,7 +152,7 @@ Key emails:
 ### Onboarding Sequence (Product Users)
 **Length**: 5-7 emails over 14 days
 **Goal**: Activate, drive to aha moment, upgrade
-**Note**: Coordinate with in-app onboarding—email supports, doesn't duplicate
+**Note**: Coordinate with in-app onboarding-email supports, doesn't duplicate
 
 Key emails:
 1. Welcome + first step (immediate)
@@ -230,7 +230,7 @@ Key emails:
 - Conversational, not formal
 - First-person (I/we) and second-person (you)
 - Active voice
-- Read it out loud—does it sound human?
+- Read it out loud-does it sound human?
 
 ### Length
 - 50-125 words for transactional

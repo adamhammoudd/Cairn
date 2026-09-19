@@ -1,16 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { assetTypeBadge, formatMarketCap, formatVolume } from "@/lib/screener";
 import { useDisplayPrefs } from "@/components/display-prefs-provider";
 import { formatMoney } from "@/lib/display-prefs";
 import { formatSupply } from "@/lib/crypto";
+import { formatQuantity } from "@/lib/portfolio";
 import { assetName } from "@/lib/asset-names";
-import { DataFreshness } from "@/components/data-freshness";
-import { LivePricePoll } from "@/components/live-price-poll";
 import { decodeEntities } from "@/lib/news";
 import type { TickerData } from "@/lib/actions/ticker";
 import type { AnalysisWithMethodology } from "@/lib/actions/analysis";
+import { TickerHero } from "@/components/ticker/ticker-hero";
 import { TickerChart } from "@/components/ticker/ticker-chart";
 import { TickerAnalysisRequest } from "@/components/ticker/ticker-analysis-request";
 import { MethodologyCard } from "@/components/analysis/methodology-card";
@@ -18,6 +19,7 @@ import { DiscussionPanel } from "@/components/ticker/discussion-panel";
 import { AddHoldingButton } from "@/components/ticker/add-holding-button";
 import { WatchButton } from "@/components/ticker/watch-button";
 import { ProfilePanel } from "@/components/ticker/profile-panel";
+import { PositionCard } from "@/components/ticker/position-card";
 import { TechnicalsPanel } from "@/components/ticker/technicals-panel";
 import { StatementsPanel } from "@/components/ticker/statements-panel";
 import { OptionsPanel } from "@/components/ticker/options-panel";
@@ -79,13 +81,6 @@ export function TickerWorkspace({
   // assetName() is a seven-symbol hardcoded map and is now only the fallback
   // for rows ingested before the directory existed.
   const name = data.name ?? (isCrypto && data.cryptoMetrics ? data.cryptoMetrics.name : assetName(data.symbol, data.assetType));
-  const subline = [
-    name,
-    heldQuantity === null || heldQuantity === 0 ? "not in your portfolio" : `${heldQuantity} held`,
-    heldQuantity && avgCost ? `${formatMoney(avgCost, prefs)} avg` : null,
-  ]
-    .filter(Boolean)
-    .join(" · ");
 
   // Forex quotes are rates, not dollar amounts: a EURUSD "price" of 1.0847
   // formatted as $1.08 is wrong twice over - the currency symbol is a
@@ -103,6 +98,29 @@ export function TickerWorkspace({
 
   const fromExtreme = (extreme: number | null) =>
     data.price === null || extreme === null || extreme === 0 ? "-" : `${(((data.price - extreme) / extreme) * 100).toFixed(2)}%`;
+
+  // The hero's position chips. Only what the page already loaded - the mock's
+  // third chip is the holding's share of the whole portfolio, which would cost
+  // a full holdings-and-prices valuation on every ticker page for one line of
+  // decoration, so it is not shown rather than approximated.
+  const heroChips = [
+    heldQuantity ? `${heldQuantity} held` : null,
+    heldQuantity && avgCost ? `${money(avgCost)} avg cost` : null,
+  ].filter((c): c is string => c !== null);
+
+  // Where the last price sits between the session low and high, for the hero's
+  // day-range rail. Null whenever the session has no spread to place it in.
+  const dayRange =
+    data.dayLow === null || data.dayHigh === null
+      ? null
+      : {
+          low: money(data.dayLow),
+          high: money(data.dayHigh),
+          position:
+            data.price === null || data.dayHigh === data.dayLow
+              ? null
+              : Math.min(1, Math.max(0, (data.price - data.dayLow) / (data.dayHigh - data.dayLow))),
+        };
 
   const common = [
     { label: "Open", value: money(data.open) },
@@ -179,49 +197,39 @@ export function TickerWorkspace({
 
   return (
     <div className="animate-page-in">
-      <div className="mb-5 flex flex-wrap items-start justify-between gap-4.5">
-        <div className="flex items-start gap-3.5">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-panel bg-gradient-to-br from-accent-light to-accent-dark px-1 font-mono text-micro leading-none text-canvas">
-            {data.symbol.slice(0, 5)}
-          </div>
-          <div className="min-w-0">
-            <div className="flex flex-wrap items-baseline gap-3">
-              <h1 className="font-serif text-h1 leading-[1.1] font-normal text-primary">{data.symbol}</h1>
-              <span className="rounded-full border border-line px-2 py-1 font-mono text-eyebrow text-muted uppercase">
-                {assetTypeBadge(data.assetType)}
-              </span>
-            </div>
-            <div className="mt-1 text-body text-muted">{subline}</div>
-          </div>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-5.5">
-          <div className="text-right">
-            <div className="font-serif text-h1 leading-none tabular-nums text-primary">{money(data.price)}</div>
-            <div
-              className={`mt-1.5 text-body tabular-nums ${
-                data.changePct === null ? "text-muted" : positive ? "text-accent" : "text-negative"
-              }`}
-            >
-              {data.changePct === null
-                ? "-"
-                : `${positive ? "+" : ""}${data.changePct.toFixed(2)}%${
-                    changeAbs === null ? "" : ` · ${positive ? "+" : "-"}${money(Math.abs(changeAbs))}`
-                  } ${data.priceSource === "live" ? "today" : "on the last close"}`}
-            </div>
-            <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
-              <DataFreshness source={data.priceSource} asOf={data.priceAsOf} />
-              <LivePricePoll refreshRateSeconds={refreshRateSeconds} />
-            </div>
-          </div>
-          <div className="flex gap-2">
+      <TickerHero
+        symbol={data.symbol}
+        name={name}
+        typeBadge={assetTypeBadge(data.assetType)}
+        chips={heroChips}
+        priceLabel={money(data.price)}
+        changePct={data.changePct}
+        changeLabel={
+          changeAbs === null
+            ? null
+            : `${positive ? "+" : "-"}${money(Math.abs(changeAbs))} ${
+                data.priceSource === "live" ? "today" : "on the last close"
+              }`
+        }
+        priceSource={data.priceSource}
+        priceAsOf={data.priceAsOf}
+        refreshRateSeconds={refreshRateSeconds}
+        dayRange={dayRange}
+        actions={
+          <>
             <WatchButton symbol={data.symbol} watchlists={watchlists} />
             <AddHoldingButton symbol={data.symbol} assetType={data.assetType} />
-          </div>
-        </div>
-      </div>
+          </>
+        }
+      />
 
-      <div role="tablist" aria-label={`${data.symbol} sections`} className="mb-3.5 flex flex-wrap gap-1 border-b border-line">
+      {/* The mock's segmented tab rail: one tray, the active tab lifted out of
+          it on a ring rather than underlined. */}
+      <div
+        role="tablist"
+        aria-label={`${data.symbol} sections`}
+        className="animate-rise-in my-4.5 flex flex-wrap gap-1 rounded-card border border-line bg-panel p-1"
+      >
         {tabs.map((t) => (
           <button
             key={t.id}
@@ -231,8 +239,10 @@ export function TickerWorkspace({
             aria-selected={tab === t.id}
             aria-controls={`ticker-panel-${t.id}`}
             onClick={() => setTab(t.id)}
-            className={`-mb-px border-b-2 px-3.5 py-2.5 text-body transition-colors duration-base ease-standard ${
-              tab === t.id ? "border-accent text-primary" : "border-transparent text-muted hover:text-primary"
+            className={`flex-[1_1_120px] rounded-control px-3.5 py-2.5 text-body transition-[background-color,color,box-shadow] duration-base ease-standard ${
+              tab === t.id
+                ? "bg-active text-primary shadow-[inset_0_0_0_1px_var(--color-line),0_2px_10px_rgba(0,0,0,0.4)]"
+                : "text-muted hover:text-primary"
             }`}
           >
             {t.label}
@@ -247,13 +257,39 @@ export function TickerWorkspace({
           </div>
 
           {stats.length > 0 && (
-            <div className="mb-4 grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-3">
-              {stats.map((s) => (
-                <div key={s.label} className="rounded-panel border border-line bg-panel px-4 py-3">
-                  <div className="font-mono text-eyebrow text-dim uppercase">{s.label}</div>
-                  <div className="mt-2 text-lead tabular-nums text-primary">{s.value}</div>
-                </div>
-              ))}
+            <div className="mb-4 grid grid-cols-[repeat(auto-fit,minmax(172px,1fr))] gap-3">
+              {stats.map((s, i) => {
+                // The mock's status dot. It only ever distinguishes "this
+                // figure is here" from "this figure is missing", plus the one
+                // volatility reading the design calls out in amber - it is not
+                // a gain/loss signal, so the accent pair stays out of it.
+                const missing = s.value === "-" || s.value === "n/a" || s.value === "";
+                const warn = !missing && s.label.startsWith("Volatility");
+                return (
+                  <div
+                    key={s.label}
+                    className="animate-rise-in rounded-panel border border-line bg-panel px-4 py-3.5 transition-[border-color,background-color,transform] duration-base ease-standard hover:-translate-y-[3px] hover:border-line-strong hover:bg-active"
+                    style={{ animationDelay: `${60 + i * 40}ms` }}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span
+                        aria-hidden
+                        className={`h-[5px] w-[5px] shrink-0 rounded-full ${
+                          missing ? "bg-line" : warn ? "bg-warning" : "bg-line-strong"
+                        }`}
+                      />
+                      <span className="font-mono text-eyebrow text-dim uppercase">{s.label}</span>
+                    </div>
+                    <div
+                      className={`mt-2.5 font-mono text-lead tabular-nums ${
+                        missing ? "text-dim" : warn ? "text-warning" : "text-primary"
+                      }`}
+                    >
+                      {s.value}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
 
@@ -264,39 +300,10 @@ export function TickerWorkspace({
             </p>
           )}
 
-          <div className="grid grid-cols-1 items-start gap-3.5 min-[900px]:grid-cols-[300px_1fr]">
-            <div className="overflow-hidden rounded-card border border-line bg-panel">
-              <div className="border-b border-line-soft px-4 py-3 font-mono text-eyebrow text-muted uppercase">
-                Related news
-              </div>
-              {data.news.length === 0 ? (
-                <p className="px-4 py-4 text-body text-dim">No recent news ingested for {data.symbol}.</p>
-              ) : (
-                data.news.slice(0, 8).map((n) => (
-                  <div
-                    key={n.id}
-                    className="border-b border-line-soft px-4 py-3 transition-colors duration-fast ease-standard last:border-b-0 hover:bg-active"
-                  >
-                    {n.url ? (
-                      <a
-                        href={n.url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-body leading-[1.5] text-primary hover:text-accent"
-                      >
-                        {decodeEntities(n.title)}
-                      </a>
-                    ) : (
-                      <span className="text-body leading-[1.5] text-primary">{decodeEntities(n.title)}</span>
-                    )}
-                    <div className="mt-1 text-micro text-dim">
-                      {n.source_name} · {new Date(n.published_at).toLocaleDateString()}
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-
+          {/* The mock leads with the analysis and sets the news beside it, not
+              the other way round: the probability engine is the product, and
+              the headlines are the supporting column. */}
+          <div className="grid grid-cols-1 items-start gap-3.5 min-[900px]:grid-cols-[1.35fr_1fr]">
             <div className="flex flex-col gap-3.5">
               <TickerAnalysisRequest symbol={data.symbol} />
               {analyses.length === 0 ? (
@@ -310,19 +317,96 @@ export function TickerWorkspace({
 
               <DiscussionPanel symbol={data.symbol} comments={discussion} canModerate={canModerate} />
             </div>
+
+            <div className="animate-rise-in overflow-hidden rounded-card border border-line bg-panel">
+              <div className="flex items-center justify-between gap-2.5 border-b border-line-soft px-4 py-3.5">
+                <span className="font-mono text-eyebrow text-muted uppercase">Related news</span>
+                <Link href="/news" className="text-micro text-accent hover:underline">
+                  All news →
+                </Link>
+              </div>
+              {data.news.length === 0 ? (
+                <p className="px-4 py-4 text-body text-dim">No recent news ingested for {data.symbol}.</p>
+              ) : (
+                data.news.slice(0, 8).map((n) => (
+                  <div
+                    key={n.id}
+                    className="flex items-start gap-3 border-b border-line-soft px-4 py-3.5 transition-colors duration-fast ease-standard last:border-b-0 hover:bg-active"
+                  >
+                    {/* The mock colours this rail by story sentiment. Nothing
+                        in the pipeline scores sentiment (news_items has the
+                        column; no ingest writes it), so it stays neutral
+                        rather than being coloured from a guess. */}
+                    <span aria-hidden className="w-[3px] shrink-0 self-stretch rounded-xs bg-line" />
+                    <div className="min-w-0">
+                      {n.url ? (
+                        <a
+                          href={n.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="block text-body leading-[1.5] text-primary text-pretty hover:text-accent"
+                        >
+                          {decodeEntities(n.title)}
+                        </a>
+                      ) : (
+                        <span className="block text-body leading-[1.5] text-primary text-pretty">
+                          {decodeEntities(n.title)}
+                        </span>
+                      )}
+                      <div className="mt-1.5 font-mono text-micro text-dim">
+                        {n.source_name} · {new Date(n.published_at).toLocaleDateString()}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         </div>
       )}
 
       {tab === "profile" && (
-        <div role="tabpanel" id="ticker-panel-profile" aria-labelledby="ticker-tab-profile">
+        <div
+          role="tabpanel"
+          id="ticker-panel-profile"
+          aria-labelledby="ticker-tab-profile"
+          // The mock sets the position card beside the profile. It only exists
+          // when there is a holding, so the grid collapses to one column for
+          // everyone else rather than leaving a gap where a card would be.
+          className={
+            heldQuantity ? "grid grid-cols-1 items-start gap-3.5 min-[900px]:grid-cols-[1.35fr_1fr]" : undefined
+          }
+        >
           <ProfilePanel symbol={data.symbol} esg={data.esg} assetType={data.assetType} />
+          {heldQuantity ? (
+            <PositionCard
+              symbol={data.symbol}
+              quantity={heldQuantity}
+              quantityLabel={formatQuantity(heldQuantity)}
+              avgCostLabel={avgCost === null ? null : money(avgCost)}
+              valueLabel={data.price === null ? "-" : money(data.price * heldQuantity)}
+              gain={
+                data.price === null || avgCost === null || avgCost === 0
+                  ? null
+                  : {
+                      pct: ((data.price - avgCost) / avgCost) * 100,
+                      amountLabel: money(Math.abs((data.price - avgCost) * heldQuantity)),
+                    }
+              }
+            />
+          ) : null}
         </div>
       )}
 
       {tab === "technicals" && (
         <div role="tabpanel" id="ticker-panel-technicals" aria-labelledby="ticker-tab-technicals">
-          <TechnicalsPanel symbol={data.symbol} bars={data.bars} priceSource={data.priceSource} priceAsOf={data.priceAsOf} />
+          <TechnicalsPanel
+            symbol={data.symbol}
+            bars={data.bars}
+            priceSource={data.priceSource}
+            priceAsOf={data.priceAsOf}
+            volatility30d={data.volatility30d}
+          />
         </div>
       )}
 

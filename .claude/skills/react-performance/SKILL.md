@@ -1,6 +1,6 @@
 ---
 name: react-performance
-description: React and Next.js performance optimization patterns adapted from Vercel Engineering's React Best Practices (https://github.com/vercel-labs/agent-skills). Organizes 70+ rules across 8 priority categories — waterfalls, bundle size, server-side, client fetching, re-render, rendering, JS micro-perf, advanced. Use when writing, reviewing, or refactoring React/Next.js code for performance.
+description: React and Next.js performance optimization patterns adapted from Vercel Engineering's React Best Practices (https://github.com/vercel-labs/agent-skills). Organizes 70+ rules across 8 priority categories - waterfalls, bundle size, server-side, client fetching, re-render, rendering, JS micro-perf, advanced. Use when writing, reviewing, or refactoring React/Next.js code for performance.
 metadata:
   origin: ECC
 ---
@@ -23,18 +23,18 @@ Performance optimization patterns for React 18/19 and Next.js, adapted from [Ver
 
 | Priority | Category | Prefix | When it matters |
 |---|---|---|---|
-| 1 — CRITICAL | Eliminating Waterfalls | `async-` | Anytime `await` is followed by independent `await` |
-| 2 — CRITICAL | Bundle Size Optimization | `bundle-` | First-load JS, route-level imports, third-party libs |
-| 3 — HIGH | Server-Side Performance | `server-` | RSC, Server Actions, API routes, SSR |
-| 4 — MEDIUM-HIGH | Client-Side Data Fetching | `client-` | SWR / TanStack Query / raw `fetch` in hooks |
-| 5 — MEDIUM | Re-render Optimization | `rerender-` | High-frequency state updates, parent-child fan-out |
-| 6 — MEDIUM | Rendering Performance | `rendering-` | Long lists, animations, hydration |
-| 7 — LOW-MEDIUM | JavaScript Performance | `js-` | Hot loops, frequent allocations |
-| 8 — LOW | Advanced Patterns | `advanced-` | Effect-event integration, stable refs |
+| 1 - CRITICAL | Eliminating Waterfalls | `async-` | Anytime `await` is followed by independent `await` |
+| 2 - CRITICAL | Bundle Size Optimization | `bundle-` | First-load JS, route-level imports, third-party libs |
+| 3 - HIGH | Server-Side Performance | `server-` | RSC, Server Actions, API routes, SSR |
+| 4 - MEDIUM-HIGH | Client-Side Data Fetching | `client-` | SWR / TanStack Query / raw `fetch` in hooks |
+| 5 - MEDIUM | Re-render Optimization | `rerender-` | High-frequency state updates, parent-child fan-out |
+| 6 - MEDIUM | Rendering Performance | `rendering-` | Long lists, animations, hydration |
+| 7 - LOW-MEDIUM | JavaScript Performance | `js-` | Hot loops, frequent allocations |
+| 8 - LOW | Advanced Patterns | `advanced-` | Effect-event integration, stable refs |
 
 ## 1. Eliminating Waterfalls (CRITICAL)
 
-> "Waterfalls are the #1 performance killer" — every sequential `await` adds full network latency.
+> "Waterfalls are the #1 performance killer" - every sequential `await` adds full network latency.
 
 ### Cheap conditions before await
 
@@ -49,7 +49,7 @@ async function Page({ id }: { id: string }) {
   // ...
 }
 
-// CORRECT — short-circuit on cheap sync condition first
+// CORRECT - short-circuit on cheap sync condition first
 async function Page({ id }: { id: string }) {
   if (!id) return null;
   const flag = await getFlag("show-page");
@@ -63,7 +63,7 @@ async function Page({ id }: { id: string }) {
 Move `await` into the branch that uses it.
 
 ```ts
-// INCORRECT — awaits before deciding it needs the data
+// INCORRECT - awaits before deciding it needs the data
 const user = await getUser(id);
 if (mode === "guest") return renderGuest();
 return renderUser(user);
@@ -77,12 +77,12 @@ return renderUser(user);
 ### Promise.all for independent work
 
 ```ts
-// INCORRECT — sequential
+// INCORRECT - sequential
 const user = await getUser(id);
 const posts = await getPosts(id);
 const followers = await getFollowers(id);
 
-// CORRECT — parallel
+// CORRECT - parallel
 const [user, posts, followers] = await Promise.all([
   getUser(id),
   getPosts(id),
@@ -90,10 +90,10 @@ const [user, posts, followers] = await Promise.all([
 ]);
 ```
 
-### Partial dependencies — start early, await late
+### Partial dependencies - start early, await late
 
 ```ts
-// CORRECT — kick off all promises, await only when each result is needed
+// CORRECT - kick off all promises, await only when each result is needed
 const userP = getUser(id);
 const postsP = getPosts(id);
 const profile = await getProfile(id);
@@ -103,19 +103,19 @@ const [user, posts] = await Promise.all([userP, postsP]);
 
 ### Suspense for streaming
 
-Push `<Suspense>` boundaries close to the data so the page paints what it can while slower sub-trees stream in. The trade-off: layout shift when content arrives — reserve space (skeleton or `min-height`).
+Push `<Suspense>` boundaries close to the data so the page paints what it can while slower sub-trees stream in. The trade-off: layout shift when content arrives - reserve space (skeleton or `min-height`).
 
 ### Server Components: parallel through composition
 
 ```tsx
-// INCORRECT — sibling awaits run sequentially inside one component
+// INCORRECT - sibling awaits run sequentially inside one component
 export default async function Page() {
   const user = await getUser();
   const cart = await getCart();
   return <View user={user} cart={cart} />;
 }
 
-// CORRECT — split into children, React runs them in parallel
+// CORRECT - split into children, React runs them in parallel
 export default async function Page() {
   return (
     <View>
@@ -142,15 +142,15 @@ import { Card } from "@/components/Card";
 import { Modal } from "@/components/Modal";
 ```
 
-Next.js 13.5+ has [Optimize Package Imports](https://nextjs.org/docs/app/api-reference/next-config-js/optimizePackageImports) that automates this for listed packages — use it; manual direct imports still required for non-listed libs.
+Next.js 13.5+ has [Optimize Package Imports](https://nextjs.org/docs/app/api-reference/next-config-js/optimizePackageImports) that automates this for listed packages - use it; manual direct imports still required for non-listed libs.
 
 ### Statically analyzable paths
 
 ```ts
-// INCORRECT — defeats bundler/trace analysis
+// INCORRECT - defeats bundler/trace analysis
 const mod = await import(`./pages/${name}`);
 
-// CORRECT — explicit per branch
+// CORRECT - explicit per branch
 const mod = name === "home" ? await import("./pages/home") : await import("./pages/about");
 ```
 
@@ -186,7 +186,7 @@ Trigger `<link rel="preload">` or `import()` on hover so the bundle is in cache 
 
 ### Authenticate Server Actions like API routes
 
-Every `"use server"` function is a public endpoint. Authenticate AND authorize inside the action — never rely on the calling Client Component's gating.
+Every `"use server"` function is a public endpoint. Authenticate AND authorize inside the action - never rely on the calling Client Component's gating.
 
 ```ts
 "use server";
@@ -224,7 +224,7 @@ When a Server Component renders the same data into multiple Client Components, t
 ### Hoist static I/O to module scope
 
 ```ts
-// CORRECT — runs once at module load
+// CORRECT - runs once at module load
 const fontData = readFileSync(fontPath);
 
 export async function Page() {
@@ -234,7 +234,7 @@ export async function Page() {
 
 ### No mutable module-level state in RSC/SSR
 
-Module state on the server is shared across all requests — a race condition between users. Use request-scoped storage (`headers()`, `cookies()`, async context) instead.
+Module state on the server is shared across all requests - a race condition between users. Use request-scoped storage (`headers()`, `cookies()`, async context) instead.
 
 ### Minimize data passed to Client Components
 
@@ -251,7 +251,7 @@ const enriched = await Promise.all(
 
 ### Use `after()` for non-blocking work
 
-Next.js 15 `after()` runs work after the response is sent — logging, cache warming, analytics.
+Next.js 15 `after()` runs work after the response is sent - logging, cache warming, analytics.
 
 ```ts
 import { after } from "next/server";
@@ -266,18 +266,18 @@ export async function GET() {
 
 ### SWR / TanStack Query for deduplication
 
-Multiple components calling `useUser(id)` should share one network request and one cache entry. Use SWR or TanStack Query — never roll your own `useEffect` + `fetch` for shared data.
+Multiple components calling `useUser(id)` should share one network request and one cache entry. Use SWR or TanStack Query - never roll your own `useEffect` + `fetch` for shared data.
 
 ### Deduplicate global event listeners
 
 ```tsx
-// INCORRECT — every component adds its own
+// INCORRECT - every component adds its own
 useEffect(() => {
   window.addEventListener("scroll", handler);
   return () => window.removeEventListener("scroll", handler);
 }, []);
 
-// CORRECT — single shared listener via a hook + global subject
+// CORRECT - single shared listener via a hook + global subject
 const useScroll = createScrollHook(); // singleton subject under the hood
 ```
 
@@ -292,18 +292,18 @@ Improves scrolling smoothness; the listener cannot `preventDefault()`.
 ### localStorage: version + minimize
 
 - Always store a `version` field; bump on schema change and migrate or discard old data
-- Keep payloads small — `localStorage` is synchronous and blocks main thread
+- Keep payloads small - `localStorage` is synchronous and blocks main thread
 
 ## 5. Re-render Optimization (MEDIUM)
 
 ### Don't subscribe to state used only in callbacks
 
 ```tsx
-// INCORRECT — re-renders every time count changes
+// INCORRECT - re-renders every time count changes
 const count = useStore((s) => s.count);
 const handler = () => doSomething(count);
 
-// CORRECT — read once on call
+// CORRECT - read once on call
 const handler = () => {
   const count = useStore.getState().count;
   doSomething(count);
@@ -313,7 +313,7 @@ const handler = () => {
 ### Extract expensive work into memoized components
 
 ```tsx
-// CORRECT — child re-renders only when `items` changes
+// CORRECT - child re-renders only when `items` changes
 const Heavy = memo(function Heavy({ items }: { items: Item[] }) {
   return <Chart data={transform(items)} />;
 });
@@ -322,7 +322,7 @@ const Heavy = memo(function Heavy({ items }: { items: Item[] }) {
 ### Hoist default non-primitive props
 
 ```tsx
-// INCORRECT — new array each render breaks memo
+// INCORRECT - new array each render breaks memo
 <List items={items ?? []} />
 
 // CORRECT
@@ -333,21 +333,21 @@ const EMPTY: Item[] = [];
 ### Primitive dependencies in effects
 
 ```tsx
-// INCORRECT — new object identity every render
+// INCORRECT - new object identity every render
 useEffect(() => {}, [{ id, name }]);
 
-// CORRECT — primitives
+// CORRECT - primitives
 useEffect(() => {}, [id, name]);
 ```
 
 ### Subscribe to derived booleans, not raw values
 
 ```tsx
-// INCORRECT — re-renders for any cart change
+// INCORRECT - re-renders for any cart change
 const cart = useStore((s) => s.cart);
 const hasItems = cart.length > 0;
 
-// CORRECT — re-renders only when emptiness flips
+// CORRECT - re-renders only when emptiness flips
 const hasItems = useStore((s) => s.cart.length > 0);
 ```
 
@@ -382,7 +382,7 @@ const [tree] = useState(() => parseTree(largeInput));
 ### Split hooks with independent deps
 
 ```tsx
-// INCORRECT — both selectors re-run if either source changes
+// INCORRECT - both selectors re-run if either source changes
 const { a, b } = useSomething(source1, source2);
 
 // CORRECT
@@ -392,7 +392,7 @@ const b = useB(source2);
 
 ### Move interaction logic into event handlers
 
-Event handlers run only on the user action — `useEffect` re-runs whenever deps change.
+Event handlers run only on the user action - `useEffect` re-runs whenever deps change.
 
 ### `startTransition` for non-urgent updates
 
@@ -415,7 +415,7 @@ For values that change often but should not trigger re-render (timestamps, last-
 ### Don't define components inside components
 
 ```tsx
-// INCORRECT — Inner is a new component on every Outer render
+// INCORRECT - Inner is a new component on every Outer render
 function Outer() {
   const Inner = () => <span />;
   return <Inner />;
@@ -436,7 +436,7 @@ Transforming a `<div>` wrapper around an SVG is GPU-accelerated; transforming th
 .row { content-visibility: auto; contain-intrinsic-size: auto 80px; }
 ```
 
-Browser skips offscreen rendering — major win for lists with hundreds of rows.
+Browser skips offscreen rendering - major win for lists with hundreds of rows.
 
 ### Hoist static JSX
 
@@ -461,16 +461,16 @@ For values needed before hydration (theme, locale), inline a `<script>` that set
 <time suppressHydrationWarning>{new Date().toLocaleString()}</time>
 ```
 
-Use ONLY for known-divergent leaf nodes — never on a tree containing other children.
+Use ONLY for known-divergent leaf nodes - never on a tree containing other children.
 
 ### `<Activity>` for show/hide instead of mount/unmount
 
-React 19 `<Activity mode="visible|hidden">` keeps tree state and effects mounted but hides — cheaper than unmount/remount for tabs and accordions.
+React 19 `<Activity mode="visible|hidden">` keeps tree state and effects mounted but hides - cheaper than unmount/remount for tabs and accordions.
 
 ### Ternary over `&&` for conditional render
 
 ```tsx
-// INCORRECT — `0` renders as text node
+// INCORRECT - `0` renders as text node
 {count && <Badge>{count}</Badge>}
 
 // CORRECT
@@ -495,17 +495,17 @@ preconnect("https://api.example.com");
 
 ## 7. JavaScript Performance (LOW-MEDIUM)
 
-- **Batch DOM/CSS changes** — apply via class swap or `cssText`, not property-by-property
-- **`Map` for repeated lookups** — `O(1)` vs `O(n)` linear scan
-- **Cache property access in loops** — `const len = arr.length`
-- **Memoize pure functions** — module-level `Map<key, result>`
-- **Cache `localStorage` reads** — sync API; one read per render
-- **Combine `filter().map()` into one pass** — `flatMap` or single `for`
+- **Batch DOM/CSS changes** - apply via class swap or `cssText`, not property-by-property
+- **`Map` for repeated lookups** - `O(1)` vs `O(n)` linear scan
+- **Cache property access in loops** - `const len = arr.length`
+- **Memoize pure functions** - module-level `Map<key, result>`
+- **Cache `localStorage` reads** - sync API; one read per render
+- **Combine `filter().map()` into one pass** - `flatMap` or single `for`
 - **Check array length first** before expensive comparisons
 - **Early return** from functions
-- **Hoist RegExp** out of loops — compilation is not free
-- **Loop for min/max** instead of `sort()` — `O(n)` vs `O(n log n)`
-- **`Set`/`Map` for membership** — `O(1)` vs `Array.includes` `O(n)`
+- **Hoist RegExp** out of loops - compilation is not free
+- **Loop for min/max** instead of `sort()` - `O(n)` vs `O(n log n)`
+- **`Set`/`Map` for membership** - `O(1)` vs `Array.includes` `O(n)`
 - **`toSorted()` over mutation** when immutability matters
 - **`flatMap` to map and filter in one pass**
 - **`requestIdleCallback`** for non-critical work
@@ -514,7 +514,7 @@ preconnect("https://api.example.com");
 
 ### `useEffectEvent` deps
 
-Values from `useEffectEvent` are stable — do NOT add them to effect deps.
+Values from `useEffectEvent` are stable - do NOT add them to effect deps.
 
 ### Event handler refs
 
@@ -528,7 +528,7 @@ const stable = useCallback((arg) => handlerRef.current(arg), []);
 
 ### Init once per app load
 
-For module-level singletons (telemetry, logger), guard with a module-scope flag — not `useEffect`.
+For module-level singletons (telemetry, logger), guard with a module-scope flag - not `useEffect`.
 
 ### `useLatest` for stable callback refs
 
@@ -544,12 +544,12 @@ function useLatest<T>(value: T) {
 
 Many of these rules are now automated:
 
-- **Next.js 13.5+ Optimize Package Imports** — barrel import optimization
-- **React Compiler** (RFC, in canary) — auto-memoization
-- **Turbopack** — faster builds, better tree-shaking
-- **Bundle Analyzer** (`@next/bundle-analyzer`) — visualize first-load JS
+- **Next.js 13.5+ Optimize Package Imports** - barrel import optimization
+- **React Compiler** (RFC, in canary) - auto-memoization
+- **Turbopack** - faster builds, better tree-shaking
+- **Bundle Analyzer** (`@next/bundle-analyzer`) - visualize first-load JS
 
-When the project ships React Compiler, demote `rerender-*` manual memoization rules to "review-only" — the compiler handles them. Manual `useMemo`/`useCallback` becomes unnecessary noise.
+When the project ships React Compiler, demote `rerender-*` manual memoization rules to "review-only" - the compiler handles them. Manual `useMemo`/`useCallback` becomes unnecessary noise.
 
 ## Lighthouse / Web Vitals Mapping
 

@@ -1,13 +1,13 @@
 ---
 name: ad-creative
-description: "When the user wants to generate, iterate, or scale ad creative — headlines, descriptions, primary text, or full ad variations — for any paid advertising platform. Also use when the user mentions 'ad copy variations,' 'ad creative,' 'generate headlines,' 'RSA headlines,' 'bulk ad copy,' 'ad iterations,' 'creative testing,' 'write me some ads,' 'Facebook ad copy,' 'Google ad headlines,' 'LinkedIn ad text,' 'static ads,' 'ad templates,' 'iMessage ad,' 'chat reveal ad,' 'ChatGPT ad,' 'Apple Notes ad,' 'AirDrop ad,' 'creative strategy,' 'creative roadmap,' 'creative retro,' 'hook writing,' 'creative review page,' 'present ad creative for approval,' 'motion video ad,' 'faceless video ad,' 'UGC ad,' 'greenscreen ad,' 'TikTok/Reels ad format,' 'which ad format to make,' 'Meta ad format tier list,' or 'creative format taxonomy.' Use this whenever someone needs to produce ad copy at scale or iterate on existing ads. For campaign strategy and targeting, see ads. For landing page copy, see copywriting."
+description: "When the user wants to generate, iterate, or scale ad creative - headlines, descriptions, primary text, or full ad variations - for any paid advertising platform. Also use when the user mentions 'ad copy variations,' 'ad creative,' 'generate headlines,' 'RSA headlines,' 'bulk ad copy,' 'ad iterations,' 'creative testing,' 'write me some ads,' 'Facebook ad copy,' 'Google ad headlines,' 'LinkedIn ad text,' 'static ads,' 'ad templates,' 'iMessage ad,' 'chat reveal ad,' 'ChatGPT ad,' 'Apple Notes ad,' 'AirDrop ad,' 'creative strategy,' 'creative roadmap,' 'creative retro,' 'hook writing,' 'creative review page,' 'present ad creative for approval,' 'motion video ad,' 'faceless video ad,' 'UGC ad,' 'greenscreen ad,' 'TikTok/Reels ad format,' 'which ad format to make,' 'Meta ad format tier list,' or 'creative format taxonomy.' Use this whenever someone needs to produce ad copy at scale or iterate on existing ads. For campaign strategy and targeting, see ads. For landing page copy, see copywriting."
 metadata:
   version: 2.8.2
 ---
 
 # Ad Creative
 
-You are an expert performance creative strategist. Your goal is to generate high-performing ad creative at scale — headlines, descriptions, and primary text that drive clicks and conversions — and iterate based on real performance data.
+You are an expert performance creative strategist. Your goal is to generate high-performing ad creative at scale - headlines, descriptions, and primary text that drive clicks and conversions - and iterate based on real performance data.
 
 ## Before Starting
 
@@ -61,7 +61,7 @@ Pull performance data → Identify winning patterns → Generate new variations 
 ```
 
 ### Mode 3: Scaled Static Batches (Grounded)
-For recurring static ad production at volume (e.g., 50 concepts per batch), work from a **grounded inputs corpus** and the [static ad template library](references/static-ad-templates.md). Every concept must trace to real source material — see "Grounded Inputs" below. To run this on a daily or weekly cadence, see the daily-creative-drop loop in **marketing-loops**. To present a batch for client or stakeholder approval, produce a [creative review page](references/creative-review-page.md).
+For recurring static ad production at volume (e.g., 50 concepts per batch), work from a **grounded inputs corpus** and the [static ad template library](references/static-ad-templates.md). Every concept must trace to real source material - see "Grounded Inputs" below. To run this on a daily or weekly cadence, see the daily-creative-drop loop in **marketing-loops**. To present a batch for client or stakeholder approval, produce a [creative review page](references/creative-review-page.md).
 
 ### Mode 4: Creative Strategy Loop
 For deciding **which ads are worth making before making them**: synthesize three signal sources (account performance, customer language, external organic) into evidence-ranked concepts, branch the creative mix on account state (exploration vs. scaling), maintain a capacity-checked roadmap with production tiers, and run a monthly retro that feeds the next slate. The full system lives in [references/creative-roadmap.md](references/creative-roadmap.md); for hook generation and funnel-stage diagnosis inside any mode, load [references/hook-system.md](references/hook-system.md).
@@ -76,19 +76,19 @@ Most AI ad generation fails on input grounding, not output quality: ungrounded g
 inputs/
   winning-ads/   10-20 screenshots of the highest-performing ads from the last 90 days
   reviews/       50-100 customer reviews (Trustpilot, G2, Amazon, App Store) as .md/.txt
-  comments/      Top comments from existing ad campaigns — objections, unprompted praise, customer-raised angles
+  comments/      Top comments from existing ad campaigns - objections, unprompted praise, customer-raised angles
 brand/           Brand voice doc, hex codes, logo, product/screenshot assets
 outputs/         Dated batch folders (outputs/YYYY-MM-DD/)
 ```
 
 **Why each input matters:**
 - **Winning ads** carry the hooks, structures, and angles already proven for this brand
-- **Reviews** carry the exact language buyers use for pain, transformation, and unexpected benefits — pull copy from them verbatim rather than paraphrasing
+- **Reviews** carry the exact language buyers use for pain, transformation, and unexpected benefits - pull copy from them verbatim rather than paraphrasing
 - **Ad comments** are the most-skipped and highest-value input: objections ("but does it work for X?") become FAQ Card ads, and unprompted praise surfaces angles you didn't write
 
 **Grounding rules:**
 - Every concept cites its source (which review, winning ad, or comment it traces to)
-- No invented claims, stats, or testimonials — ever
+- No invented claims, stats, or testimonials - ever
 - If `inputs/winning-ads/` or `inputs/reviews/` is empty, stop and ask the user to populate it before generating. Do not generate ungrounded concepts as a fallback.
 - Inputs decay: refresh `inputs/winning-ads/` as new ads scale; refresh `inputs/reviews/` and `inputs/comments/` monthly
 
@@ -151,30 +151,30 @@ For detailed specs and format variations, see [references/platform-specs.md](ref
 
 ## Generating Ad Visuals
 
-**To decide *which format to make next*** (before briefing any specific ad), consult the Meta creative format taxonomy in [references/meta-creative-formats.md](references/meta-creative-formats.md) — a prioritized S→F catalog of ~51 formats ranked by one question: is it a *unicorn scaler* that punctures cold net-new audiences, or a *supporting cast* member that only converts mid-funnel? Leads with the persona-based Andromeda context (why creator-fronted formats top the list), S-tier callouts (founder content, partnership ads, VSL), the A-tier bench, and explicit F-tier de-prioritization (press, podcast, notes-app fake-native). Use it to pick a format and build a portfolio; the how-to-build detail lives in the static/video references below. For the account-level kill/keep/scale math once ads are live, cross-reference the `ads` skill's [meta-decision-system.md](../../ads/references/meta-decision-system.md).
+**To decide *which format to make next*** (before briefing any specific ad), consult the Meta creative format taxonomy in [references/meta-creative-formats.md](references/meta-creative-formats.md) - a prioritized S→F catalog of ~51 formats ranked by one question: is it a *unicorn scaler* that punctures cold net-new audiences, or a *supporting cast* member that only converts mid-funnel? Leads with the persona-based Andromeda context (why creator-fronted formats top the list), S-tier callouts (founder content, partnership ads, VSL), the A-tier bench, and explicit F-tier de-prioritization (press, podcast, notes-app fake-native). Use it to pick a format and build a portfolio; the how-to-build detail lives in the static/video references below. For the account-level kill/keep/scale math once ads are live, cross-reference the `ads` skill's [meta-decision-system.md](../../ads/references/meta-decision-system.md).
 
-**For static ad structure**, use the template library in [references/static-ad-templates.md](references/static-ad-templates.md) — layout frameworks (Us vs. Them, Stat Callout, Review Card, Before/After, Founder Message, FAQ Card, Grid Static, Callout, and more) with copy slots, DTC and SaaS examples, and per-concept output format. Each template carries a **tier (S–F)** and **funnel role** (unicorn cold-scaler vs. mid-funnel supporting cast) so you reach for the right one first. Cycle through templates rather than clustering on favorites — but weight toward the S/A tiers when the goal is cold net-new reach.
+**For static ad structure**, use the template library in [references/static-ad-templates.md](references/static-ad-templates.md) - layout frameworks (Us vs. Them, Stat Callout, Review Card, Before/After, Founder Message, FAQ Card, Grid Static, Callout, and more) with copy slots, DTC and SaaS examples, and per-concept output format. Each template carries a **tier (S–F)** and **funnel role** (unicorn cold-scaler vs. mid-funnel supporting cast) so you reach for the right one first. Cycle through templates rather than clustering on favorites - but weight toward the S/A tiers when the goal is cold net-new reach.
 
-**For iOS-native reveal video ads** — iMessage chat reveals (scripted thread unfolds bubble-by-bubble: screenshot hook → friend asks "what app is that?" → brand + promo code reveal → end card), ChatGPT reveals (typed question → streaming answer), Apple Notes reveals (a confessional note typed live), and AirDrop reveals (an incoming share where the accept-tap is the reveal) — see [references/imessage-video-ads.md](references/imessage-video-ads.md) for surface selection, the six concept angles, script and pacing rules, production routes (off-the-shelf, Playwright + ffmpeg pipeline, Remotion), craft details that sell the illusion, and the grounding/compliance rules for dramatized conversations (strictest for fabricated AI answers).
+**For iOS-native reveal video ads** - iMessage chat reveals (scripted thread unfolds bubble-by-bubble: screenshot hook → friend asks "what app is that?" → brand + promo code reveal → end card), ChatGPT reveals (typed question → streaming answer), Apple Notes reveals (a confessional note typed live), and AirDrop reveals (an incoming share where the accept-tap is the reveal) - see [references/imessage-video-ads.md](references/imessage-video-ads.md) for surface selection, the six concept angles, script and pacing rules, production routes (off-the-shelf, Playwright + ffmpeg pipeline, Remotion), craft details that sell the illusion, and the grounding/compliance rules for dramatized conversations (strictest for fabricated AI answers).
 
-**For faceless motion-style video ads** — fully generated 15–45s concept/explainer videos (styled poster stills → image-to-video "living" motion → TTS narration → word-timed captions; roughly $3–6 and ~15 minutes per finished video) — see [references/motion-video-ads.md](references/motion-video-ads.md) for the provider-agnostic pipeline, a nine-style visual library with fill-in prompt formulas — five characterful looks (screen-print collage, flat vector explainer, papercraft diorama, pop-art comic, claymation) plus four brand-flexible token-driven styles (monoline editorial, Swiss typographic, wireglow, duotone screenprint) driven by a brand-slots contract (FIELD / INK / ACCENT / TYPE FEEL) — the motion prompt formula, and hard-earned QC gotchas (maker-hands intrusion, final-two-seconds drift, caption/label collision, TTS/whisper sound-alikes).
+**For faceless motion-style video ads** - fully generated 15–45s concept/explainer videos (styled poster stills → image-to-video "living" motion → TTS narration → word-timed captions; roughly $3–6 and ~15 minutes per finished video) - see [references/motion-video-ads.md](references/motion-video-ads.md) for the provider-agnostic pipeline, a nine-style visual library with fill-in prompt formulas - five characterful looks (screen-print collage, flat vector explainer, papercraft diorama, pop-art comic, claymation) plus four brand-flexible token-driven styles (monoline editorial, Swiss typographic, wireglow, duotone screenprint) driven by a brand-slots contract (FIELD / INK / ACCENT / TYPE FEEL) - the motion prompt formula, and hard-earned QC gotchas (maker-hands intrusion, final-two-seconds drift, caption/label collision, TTS/whisper sound-alikes).
 
-**For creator/UGC short-form video** — a tiered format library (reaction+demo hard cuts, "no yapping" split-screen tutorials, greenscreen reactions, plus Yapper, amateur investigation, David & Goliath, authority, VSL, green-screen commentary, conversation, duet/reaction, ASMR, and street-interview formats, each with a scale-vs-support tier and mechanics) and founder / organic-vlog structures (hero's journey, math, shiny-object, niche-guide, the three-capture shooting system, and the 0.5–1s cut formula) for TikTok/Reels/Shorts growth and paid — see [references/short-form-video-specs.md](references/short-form-video-specs.md). It also carries the **vertical video production spec** that applies to *all* 9:16 video this skill makes: the cross-platform safe-zone band (720×1200 text-safe area — the most-missed constraint), the classic TikTok caption recipe (white fill + black stroke, no pill), static-caption auto-sizing, and the organic-vs-baked-music decision that affects reach. Load it before producing any vertical video.
+**For creator/UGC short-form video** - a tiered format library (reaction+demo hard cuts, "no yapping" split-screen tutorials, greenscreen reactions, plus Yapper, amateur investigation, David & Goliath, authority, VSL, green-screen commentary, conversation, duet/reaction, ASMR, and street-interview formats, each with a scale-vs-support tier and mechanics) and founder / organic-vlog structures (hero's journey, math, shiny-object, niche-guide, the three-capture shooting system, and the 0.5–1s cut formula) for TikTok/Reels/Shorts growth and paid - see [references/short-form-video-specs.md](references/short-form-video-specs.md). It also carries the **vertical video production spec** that applies to *all* 9:16 video this skill makes: the cross-platform safe-zone band (720×1200 text-safe area - the most-missed constraint), the classic TikTok caption recipe (white fill + black stroke, no pill), static-caption auto-sizing, and the organic-vs-baked-music decision that affects reach. Load it before producing any vertical video.
 
 For image and video generation tools, see [references/generative-tools.md](references/generative-tools.md) for the complete guide covering:
 
-- **Image generation** — Nano Banana Pro (Gemini), Flux, Ideogram for static ad images
-- **Video generation** — Veo, Kling, Runway, Sora, Seedance, Higgsfield for video ads
-- **Voice & audio** — ElevenLabs, OpenAI TTS, Cartesia for voiceovers, cloning, multilingual
-- **Code-based video** — Remotion for templated, data-driven video at scale
-- **Platform image specs** — Correct dimensions for every ad placement
-- **Cost comparison** — Pricing for 100+ ad variations across tools
+- **Image generation** - Nano Banana Pro (Gemini), Flux, Ideogram for static ad images
+- **Video generation** - Veo, Kling, Runway, Sora, Seedance, Higgsfield for video ads
+- **Voice & audio** - ElevenLabs, OpenAI TTS, Cartesia for voiceovers, cloning, multilingual
+- **Code-based video** - Remotion for templated, data-driven video at scale
+- **Platform image specs** - Correct dimensions for every ad placement
+- **Cost comparison** - Pricing for 100+ ad variations across tools
 
 **Recommended workflow for scaled production:**
 1. Generate hero creative with AI tools (exploratory, high-quality)
 2. Build Remotion templates based on winning patterns
 3. Batch produce variations with Remotion using data feeds
-4. Iterate — AI for new angles, Remotion for scale
+4. Iterate - AI for new angles, Remotion for scale
 
 ---
 
@@ -182,7 +182,7 @@ For image and video generation tools, see [references/generative-tools.md](refer
 
 ### Step 1: Define Your Angles
 
-Before writing individual headlines, establish 3-5 distinct **angles** — different reasons someone would click. Each angle should tap into a different motivation.
+Before writing individual headlines, establish 3-5 distinct **angles** - different reasons someone would click. Each angle should tap into a different motivation.
 
 **Common angle categories:**
 
@@ -200,10 +200,10 @@ Before writing individual headlines, establish 3-5 distinct **angles** — diffe
 ### Step 2: Generate Variations per Angle
 
 For each angle, generate multiple variations. Vary:
-- **Word choice** — synonyms, active vs. passive
-- **Specificity** — numbers vs. general claims
-- **Tone** — direct vs. question vs. command
-- **Structure** — short punch vs. full benefit statement
+- **Word choice** - synonyms, active vs. passive
+- **Specificity** - numbers vs. general claims
+- **Tone** - direct vs. question vs. command
+- **Structure** - short punch vs. full benefit statement
 
 ### Step 3: Validate Against Specs
 
@@ -221,19 +221,19 @@ When the user provides performance data, follow this process:
 
 ### Step 1: Analyze Winners
 
-Look at the top-performing creative (by CTR, conversion rate, or ROAS — ask which metric matters most) and identify:
+Look at the top-performing creative (by CTR, conversion rate, or ROAS - ask which metric matters most) and identify:
 
-- **Winning themes** — What topics or pain points appear in top performers?
-- **Winning structures** — Questions? Statements? Commands? Numbers?
-- **Winning word patterns** — Specific words or phrases that recur?
-- **Character utilization** — Are top performers shorter or longer?
+- **Winning themes** - What topics or pain points appear in top performers?
+- **Winning structures** - Questions? Statements? Commands? Numbers?
+- **Winning word patterns** - Specific words or phrases that recur?
+- **Character utilization** - Are top performers shorter or longer?
 
 ### Step 2: Analyze Losers
 
 Look at the worst performers and identify:
 
-- **Themes that fall flat** — What angles aren't resonating?
-- **Common patterns in low performers** — Too generic? Too long? Wrong tone?
+- **Themes that fall flat** - What angles aren't resonating?
+- **Common patterns in low performers** - Too generic? Too long? Wrong tone?
 
 ### Step 3: Generate New Variations
 
@@ -293,7 +293,7 @@ Descriptions should complement headlines, not repeat them. Use descriptions to:
 Organize by angle, with character counts:
 
 ```
-## Angle: [Pain Point — Manual Reporting]
+## Angle: [Pain Point - Manual Reporting]
 
 ### Headlines (30 char max)
 1. "Stop Building Reports by Hand" (29)
@@ -326,11 +326,11 @@ outputs/YYYY-MM-DD/
   images/         # generated images, if an image tool is configured
 ```
 
-Per-concept format is defined in [references/static-ad-templates.md](references/static-ad-templates.md). The human workflow this supports: open the folder, scan INDEX.md, pick the best 5-10 for testing — picking 5 winners from 50 concepts yields better creative than picking 5 from 10.
+Per-concept format is defined in [references/static-ad-templates.md](references/static-ad-templates.md). The human workflow this supports: open the folder, scan INDEX.md, pick the best 5-10 for testing - picking 5 winners from 50 concepts yields better creative than picking 5 from 10.
 
 ### Creative Review Page (client / stakeholder approval)
 
-When a person who isn't you needs to review and pick — a client, a partner, a stakeholder — produce a **creative review page**: a self-contained HTML artifact that presents each concept as an in-feed platform mockup (Instagram/Facebook, with a whitelist-handle toggle), breaks carousels into a labeled frame-by-frame storyboard, lets them toggle headline/copy variations, and discloses what's grounded in real assets. It's the visual upgrade to INDEX.md — a decision made off one link instead of by reading markdown. The template ships at [assets/creative-review-template.html](assets/creative-review-template.html) (one file, no build, hostable anywhere); populate its `DATA` object from your generated concepts. Full data model, grounding rules (the disclosure block is required), and delivery in [references/creative-review-page.md](references/creative-review-page.md).
+When a person who isn't you needs to review and pick - a client, a partner, a stakeholder - produce a **creative review page**: a self-contained HTML artifact that presents each concept as an in-feed platform mockup (Instagram/Facebook, with a whitelist-handle toggle), breaks carousels into a labeled frame-by-frame storyboard, lets them toggle headline/copy variations, and discloses what's grounded in real assets. It's the visual upgrade to INDEX.md - a decision made off one link instead of by reading markdown. The template ships at [assets/creative-review-template.html](assets/creative-review-template.html) (one file, no build, hostable anywhere); populate its `DATA` object from your generated concepts. Full data model, grounding rules (the disclosure block is required), and delivery in [references/creative-review-page.md](references/creative-review-page.md).
 
 ### Iteration Report
 
@@ -339,8 +339,8 @@ When iterating, include a summary:
 ```
 ## Performance Summary
 - Analyzed: [X] headlines, [Y] descriptions
-- Top performer: "[headline]" — [metric]: [value]
-- Worst performer: "[headline]" — [metric]: [value]
+- Top performer: "[headline]" - [metric]: [value]
+- Worst performer: "[headline]" - [metric]: [value]
 - Pattern: [observation]
 
 ## New Creative
@@ -357,9 +357,9 @@ When iterating, include a summary:
 For large-scale creative production (Anthropic's growth team generates 100+ variations per cycle):
 
 ### 1. Break into sub-tasks
-- **Headline generation** — Focused on click-through
-- **Description generation** — Focused on conversion
-- **Primary text generation** — Focused on engagement (Meta/LinkedIn)
+- **Headline generation** - Focused on click-through
+- **Description generation** - Focused on conversion
+- **Primary text generation** - Focused on engagement (Meta/LinkedIn)
 
 ### 2. Generate in waves
 - Wave 1: Core angles (3-5 angles, 5 variations each)
@@ -376,16 +376,16 @@ For large-scale creative production (Anthropic's growth team generates 100+ vari
 
 ## Common Mistakes
 
-- **Writing headlines that only work together** — RSA headlines get combined randomly
-- **Ignoring character limits** — Platforms truncate without warning
-- **All variations sound the same** — Vary angles, not just word choice
-- **No CTA headlines** — RSAs need action-oriented headlines to drive clicks; include at least 2-3
-- **Generic descriptions** — "Learn more about our solution" wastes the slot
-- **Iterating without data** — Gut feelings are less reliable than metrics
-- **Generating without grounding** — Ungrounded concepts read like every other ad in the feed; feed the skill winning ads, reviews, and comments first
-- **Skipping the comments input** — Ad comments hold the objections and angles customers raise themselves; those usually convert best
-- **Testing too many things at once** — Change one variable per test cycle
-- **Retiring creative too early** — Allow 1,000+ impressions before judging
+- **Writing headlines that only work together** - RSA headlines get combined randomly
+- **Ignoring character limits** - Platforms truncate without warning
+- **All variations sound the same** - Vary angles, not just word choice
+- **No CTA headlines** - RSAs need action-oriented headlines to drive clicks; include at least 2-3
+- **Generic descriptions** - "Learn more about our solution" wastes the slot
+- **Iterating without data** - Gut feelings are less reliable than metrics
+- **Generating without grounding** - Ungrounded concepts read like every other ad in the feed; feed the skill winning ads, reviews, and comments first
+- **Skipping the comments input** - Ad comments hold the objections and angles customers raise themselves; those usually convert best
+- **Testing too many things at once** - Change one variable per test cycle
+- **Retiring creative too early** - Allow 1,000+ impressions before judging
 
 ---
 

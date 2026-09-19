@@ -16,7 +16,7 @@ triggers:
   - visualize this flow
   - architecture diagram
 ---
-<!-- AUTO-GENERATED from SKILL.md.tmpl — do not edit directly -->
+<!-- AUTO-GENERATED from SKILL.md.tmpl - do not edit directly -->
 <!-- Regenerate: bun run gen:skill-docs -->
 
 
@@ -151,13 +151,13 @@ In plan mode, allowed because they inform the plan: `$B`, `$D`, `codex exec`/`co
 
 ## Skill Invocation During Plan Mode
 
-If the user invokes a skill in plan mode, the skill takes precedence over generic plan mode behavior. **Treat the skill file as executable instructions, not reference.** Follow it step by step starting from Step 0; any AskUserQuestion the skill fires is the workflow operating within plan mode, not a violation of it — and a skill whose instructions resolve a question themselves (e.g. a plan-mode auto-select) may legitimately not ask it. AskUserQuestion (any variant — `mcp__*__AskUserQuestion` or native; see "AskUserQuestion Format → Tool resolution") satisfies plan mode's end-of-turn requirement. If AskUserQuestion is unavailable or a call fails, follow the AskUserQuestion Format failure fallback: `headless` → BLOCKED; `interactive` → the prose fallback (also satisfies end-of-turn). At a STOP point, stop immediately. Do not continue the workflow or call ExitPlanMode there. Commands marked "PLAN MODE EXCEPTION — ALWAYS RUN" execute. Call ExitPlanMode only after the skill workflow completes, or if the user tells you to cancel the skill or leave plan mode.
+If the user invokes a skill in plan mode, the skill takes precedence over generic plan mode behavior. **Treat the skill file as executable instructions, not reference.** Follow it step by step starting from Step 0; any AskUserQuestion the skill fires is the workflow operating within plan mode, not a violation of it - and a skill whose instructions resolve a question themselves (e.g. a plan-mode auto-select) may legitimately not ask it. AskUserQuestion (any variant - `mcp__*__AskUserQuestion` or native; see "AskUserQuestion Format → Tool resolution") satisfies plan mode's end-of-turn requirement. If AskUserQuestion is unavailable or a call fails, follow the AskUserQuestion Format failure fallback: `headless` → BLOCKED; `interactive` → the prose fallback (also satisfies end-of-turn). At a STOP point, stop immediately. Do not continue the workflow or call ExitPlanMode there. Commands marked "PLAN MODE EXCEPTION - ALWAYS RUN" execute. Call ExitPlanMode only after the skill workflow completes, or if the user tells you to cancel the skill or leave plan mode.
 
-If `PROACTIVE` is `"false"`, do not auto-invoke or proactively suggest skills. If a skill seems useful, ask: "I think /skillname might help here — want me to run it?"
+If `PROACTIVE` is `"false"`, do not auto-invoke or proactively suggest skills. If a skill seems useful, ask: "I think /skillname might help here - want me to run it?"
 
 If `SKILL_PREFIX` is `"true"`, suggest/invoke `/gstack-*` names. Disk paths stay `~/.claude/skills/gstack/[skill-name]/SKILL.md`.
 
-If `UPDATE_CHECK` is `"false"`, skip the next two lines — the update-check binary emits nothing in that mode, so there is no `UPGRADE_AVAILABLE` / `JUST_UPGRADED` output to act on.
+If `UPDATE_CHECK` is `"false"`, skip the next two lines - the update-check binary emits nothing in that mode, so there is no `UPGRADE_AVAILABLE` / `JUST_UPGRADED` output to act on.
 
 If output shows `UPGRADE_AVAILABLE <old> <new>`: read `~/.claude/skills/gstack/gstack-upgrade/SKILL.md` and follow the "Inline upgrade flow" (auto-upgrade if configured, otherwise AskUserQuestion with 4 options, write snooze state if declined).
 
@@ -174,8 +174,8 @@ If `WRITING_STYLE_PENDING` is `yes`: ask once about writing style:
 > v1 prompts are simpler: first-use jargon glosses, outcome-framed questions, shorter prose. Keep default or restore terse?
 
 Options:
-- A) Keep the new default (recommended — good writing helps everyone)
-- B) Restore V0 prose — set `explain_level: terse`
+- A) Keep the new default (recommended - good writing helps everyone)
+- B) Restore V0 prose - set `explain_level: terse`
 
 If A: leave `explain_level` unset (defaults to `default`).
 If B: run `~/.claude/skills/gstack/bin/gstack-config set explain_level terse`.
@@ -188,7 +188,7 @@ touch ~/.gstack/.writing-style-prompted
 
 Skip if `WRITING_STYLE_PENDING` is `no`.
 
-If `LAKE_INTRO` is `no`: say "gstack follows the **Boil the Ocean** principle — do the complete thing when AI makes marginal cost near-zero. Read more: https://garryslist.org/posts/boil-the-ocean" Offer to open:
+If `LAKE_INTRO` is `no`: say "gstack follows the **Boil the Ocean** principle - do the complete thing when AI makes marginal cost near-zero. Read more: https://garryslist.org/posts/boil-the-ocean" Offer to open:
 
 ```bash
 open https://garryslist.org/posts/boil-the-ocean
@@ -231,7 +231,7 @@ If `PROACTIVE_PROMPTED` is `no` AND `TEL_PROMPTED` is `yes`: ask once:
 
 Options:
 - A) Keep it on (recommended)
-- B) Turn it off — I'll type /commands myself
+- B) Turn it off - I'll type /commands myself
 
 If A: run `~/.claude/skills/gstack/bin/gstack-config set proactive true`
 If B: run `~/.claude/skills/gstack/bin/gstack-config set proactive false`
@@ -245,7 +245,7 @@ Skip if `PROACTIVE_PROMPTED` is `yes`.
 
 ## First-run guidance (one-time)
 
-If `ACTIVATED` is `no` (first skill run on this machine) AND the preamble printed a non-empty `FIRST_TASK:` value that is NOT `nongit`: show ONE short, project-specific line mapped from the token, as a heads-up, then CONTINUE with whatever the user actually asked — do NOT halt their task. Map the token: `greenfield` → "Fresh repo — shape it first with `/spec` or `/office-hours`." `code_node`/`code_python`/`code_rust`/`code_go`/`code_ruby`/`code_ios` → "There's code here — `/qa` to see it work, or `/investigate` if something's off." `branch_ahead` → "Unshipped work on this branch — `/review` then `/ship`." `dirty_default` → "Uncommitted changes — `/review` before committing." `clean_default` → "Pick one: `/spec`, `/investigate`, or `/qa`." Then substitute the token you saw for TASK_TOKEN and run (best-effort), and mark activated:
+If `ACTIVATED` is `no` (first skill run on this machine) AND the preamble printed a non-empty `FIRST_TASK:` value that is NOT `nongit`: show ONE short, project-specific line mapped from the token, as a heads-up, then CONTINUE with whatever the user actually asked - do NOT halt their task. Map the token: `greenfield` → "Fresh repo - shape it first with `/spec` or `/office-hours`." `code_node`/`code_python`/`code_rust`/`code_go`/`code_ruby`/`code_ios` → "There's code here - `/qa` to see it work, or `/investigate` if something's off." `branch_ahead` → "Unshipped work on this branch - `/review` then `/ship`." `dirty_default` → "Uncommitted changes - `/review` before committing." `clean_default` → "Pick one: `/spec`, `/investigate`, or `/qa`." Then substitute the token you saw for TASK_TOKEN and run (best-effort), and mark activated:
 ```bash
 ~/.claude/skills/gstack/bin/gstack-telemetry-log --event-type first_task_scaffold_shown --skill "TASK_TOKEN" --outcome shown 2>/dev/null || true
 touch ~/.gstack/.activated 2>/dev/null || true
@@ -255,7 +255,7 @@ If `ACTIVATED` is `no` but `FIRST_TASK:` is empty or `nongit` (headless, non-git
 
 Else if `ACTIVATED` is `yes` AND `FIRST_LOOP_SHOWN` is `no`: say once as a heads-up (then continue):
 
-> Tip: gstack pays off when you complete one loop — **plan → review → ship**. A common first loop: `/office-hours` or `/spec` to shape it, `/plan-eng-review` to lock it, then `/ship`.
+> Tip: gstack pays off when you complete one loop - **plan → review → ship**. A common first loop: `/office-hours` or `/spec` to shape it, `/plan-eng-review` to lock it, then `/ship`.
 
 Then run `touch ~/.gstack/.first-loop-tip-shown 2>/dev/null || true`.
 
@@ -498,22 +498,22 @@ The user has context you do not. Cross-model agreement is a recommendation, not 
 ## Completion Status Protocol
 
 When completing a skill workflow, report status using one of:
-- **DONE** — completed with evidence.
-- **DONE_WITH_CONCERNS** — completed, but list concerns.
-- **BLOCKED** — cannot proceed; state blocker and what was tried.
-- **NEEDS_CONTEXT** — missing info; state exactly what is needed.
+- **DONE** - completed with evidence.
+- **DONE_WITH_CONCERNS** - completed, but list concerns.
+- **BLOCKED** - cannot proceed; state blocker and what was tried.
+- **NEEDS_CONTEXT** - missing info; state exactly what is needed.
 
 Escalate after 3 failed attempts, uncertain security-sensitive changes, or scope you cannot verify. Format: `STATUS`, `REASON`, `ATTEMPTED`, `RECOMMENDATION`.
 
 ## Operational Self-Improvement
 
-Before completing, review the session for durable learnings and log each one —
+Before completing, review the session for durable learnings and log each one -
 this step ALWAYS runs, it is not conditional on something feeling noteworthy
 (#2402: 43 of 44 learnings came from explicit /learn because "if you
 discovered" read as optional). A durable learning is a project quirk, command
 fix, pitfall, or pattern that would save 5+ minutes in a future session. If
 the review genuinely surfaces none, state "No durable learnings this session"
-in your completion summary — an explicit empty result, not a skipped step.
+in your completion summary - an explicit empty result, not a skipped step.
 
 ```bash
 ~/.claude/skills/gstack/bin/gstack-learnings-log '{"skill":"SKILL_NAME","type":"operational","key":"SHORT_KEY","insight":"DESCRIPTION","confidence":N,"source":"observed"}'
@@ -525,7 +525,7 @@ Do not log obvious facts or one-time transient errors.
 
 After workflow completion, log telemetry. Use skill `name:` from frontmatter. OUTCOME is success/error/abort/unknown.
 
-**PLAN MODE EXCEPTION — ALWAYS RUN:** This command writes telemetry to
+**PLAN MODE EXCEPTION - ALWAYS RUN:** This command writes telemetry to
 `~/.gstack/analytics/`, matching preamble analytics writes.
 
 Run this bash:
@@ -558,20 +558,20 @@ the failure occurred (if outcome is error, otherwise use empty string "").
 
 Skills that run plan reviews (`/plan-*-review`, `/codex review`) include the EXIT PLAN MODE GATE blocking checklist at the end of the skill, which verifies the plan file ends with `## GSTACK REVIEW REPORT` before ExitPlanMode is called. Skills that don't run plan reviews (operational skills like `/ship`, `/qa`, `/review`) typically don't operate in plan mode and have no review report to verify; this footer is a no-op for them. Writing the plan file is the one edit allowed in plan mode.
 
-# /diagram — English in, editable diagram out
+# /diagram - English in, editable diagram out
 
 Every run emits a **triplet**, never a dead pixel dump:
 
 | Artifact | What it's for |
 |---|---|
-| `<slug>.mmd` | the mermaid source — the LLM-friendly interchange format |
-| `<slug>.excalidraw` | editable scene — open it at excalidraw.com, move a box, keep working |
+| `<slug>.mmd` | the mermaid source - the LLM-friendly interchange format |
+| `<slug>.excalidraw` | editable scene - open it at excalidraw.com, move a box, keep working |
 | `<slug>.svg` + `<slug>.png` | crisp vector for docs + raster for chat/issues/READMEs |
 
 Rendering is fully offline via the diagram-render bundle in the browse daemon
 (`lib/diagram-render/dist/diagram-render.html`). No CDN, no network.
 
-## Step 1 — Author the diagram
+## Step 1 - Author the diagram
 
 Write mermaid for the user's request. Rules:
 
@@ -579,10 +579,10 @@ Write mermaid for the user's request. Rules:
   fully editable excalidraw scene. Prefer `graph LR` for pipelines/flows,
   `graph TD` for hierarchies.
 - Sequence, state, gantt, and other mermaid types render to SVG/PNG fine, but
-  the official converter only supports flowcharts — for those types the
+  the official converter only supports flowcharts - for those types the
   `.excalidraw` artifact is skipped and you MUST tell the user:
   "sequence diagrams render but aren't excalidraw-editable yet (upstream
-  converter limitation — flowcharts are)."
+  converter limitation - flowcharts are)."
 - Keep node labels short; put detail in edge labels. 5-15 nodes is the
   readable range. If the user's ask needs more, split into multiple diagrams
   and say why.
@@ -591,7 +591,7 @@ Decide the output directory: `./diagrams/` when the cwd is a git repo
 (artifacts the user can commit), else `/tmp/gstack-diagrams/`. Derive
 `<slug>` from the diagram's subject (kebab-case, ≤40 chars).
 
-## Step 2 — Stage the render bundle (once per session)
+## Step 2 - Stage the render bundle (once per session)
 
 The staged copy is content-addressed (same convention as make-pdf's pre-pass),
 so concurrent sessions and mixed gstack versions never clobber each other:
@@ -602,28 +602,28 @@ for c in "$HOME/.claude/skills/gstack/lib/diagram-render/dist/diagram-render.htm
          "$(git rev-parse --show-toplevel 2>/dev/null)/lib/diagram-render/dist/diagram-render.html"; do
   [ -f "$c" ] && BUNDLE="$c" && break
 done
-[ -z "$BUNDLE" ] && echo "BUNDLE_MISSING — run: cd ~/.claude/skills/gstack && bun run build:diagram-render" && exit 1
+[ -z "$BUNDLE" ] && echo "BUNDLE_MISSING - run: cd ~/.claude/skills/gstack && bun run build:diagram-render" && exit 1
 SHA=$(shasum -a 256 "$BUNDLE" | cut -c1-16)
 STAGED="/tmp/gstack-diagram-render-$SHA.html"
 [ -f "$STAGED" ] && shasum -a 256 "$STAGED" | grep -q "^$SHA" || { cp "$BUNDLE" "$STAGED.$$" && mv "$STAGED.$$" "$STAGED"; }
 TAB=$($B newtab --json | sed -n 's/.*"tabId":\s*\([0-9]*\).*/\1/p')
-[ -z "$TAB" ] && echo "TAB_OPEN_FAILED — daemon busy? check browse status" && exit 1
+[ -z "$TAB" ] && echo "TAB_OPEN_FAILED - daemon busy? check browse status" && exit 1
 $B load-html "$STAGED" --tab-id "$TAB"
 $B wait '#done' --tab-id "$TAB"
 echo "RENDER_TAB_READY: tab $TAB"
 ```
 
-Remember `$TAB` — **every** `$B js` / `$B wait` / `$B closetab` below MUST pass
+Remember `$TAB` - **every** `$B js` / `$B wait` / `$B closetab` below MUST pass
 `--tab-id $TAB`. Without it, calls hit whatever tab is active, which may be a
 live /qa or /scrape session sharing the daemon.
 
 If `BUNDLE_MISSING`: stop and show the user the build command. Do not improvise
-a CDN fallback — offline is the contract.
+a CDN fallback - offline is the contract.
 
-## Step 3 — Render the triplet
+## Step 3 - Render the triplet
 
 Write the mermaid source to `<outdir>/<slug>.mmd` first (Write tool). The page
-cannot read files itself, so ship the source in via **base64** — never splice
+cannot read files itself, so ship the source in via **base64** - never splice
 file contents into a JS template literal (backticks, `${`, and backslashes in
 the source would be interpreted and corrupt it):
 
@@ -644,21 +644,21 @@ Note: `atob()` yields Latin-1; for sources with non-ASCII labels use
 `decodeURIComponent(escape(atob('…')))` to recover UTF-8 exactly.
 
 If the mermaid render returns an error, show the parse error to the user, fix
-the mermaid, and retry — do not hand the user a broken source file. If
+the mermaid, and retry - do not hand the user a broken source file. If
 `__mermaidToExcalidraw` fails on a non-flowchart type, skip the `.excalidraw`
 artifact and deliver the rest with the limitation note from Step 1.
 
-## Step 4 — Show and deliver
+## Step 4 - Show and deliver
 
 1. Read the PNG with the Read tool so the user sees the diagram inline.
 2. List the triplet paths.
 3. One-line editability note: "The `.excalidraw` file opens at excalidraw.com
-   (File → Open) — edit it there and I can re-render from the edited scene."
-4. If the user wants changes, edit the `.mmd` source and re-run Step 3 — the
+   (File → Open) - edit it there and I can re-render from the edited scene."
+4. If the user wants changes, edit the `.mmd` source and re-run Step 3 - the
    source is the single source of truth.
 
 Re-rendering an EDITED `.excalidraw` (user round-trip): load the scene file
-and export without touching the mermaid — base64 transport again, since scene
+and export without touching the mermaid - base64 transport again, since scene
 JSON is full of quotes and backslashes:
 
 ```bash
@@ -675,10 +675,10 @@ $B js --tab-id "$TAB" "window.__rasterize(window.__svg, 1950)" --out <outdir>/<s
 - **Cleanup:** close the render tab when the conversation's diagram work is
   done (`$B closetab $TAB`), not between diagrams.
 - For diagrams destined for a PDF: remind the user that `make-pdf` renders
-  ` ```mermaid ` fences natively — embedding the `.mmd` in their markdown is
+  ` ```mermaid ` fences natively - embedding the `.mmd` in their markdown is
   better than embedding the PNG.
 
 ## Completion status
 
-- DONE — triplet (or SVG/PNG pair + limitation note) delivered and shown.
-- BLOCKED — bundle or browse unavailable; build/setup command surfaced.
+- DONE - triplet (or SVG/PNG pair + limitation note) delivered and shown.
+- BLOCKED - bundle or browse unavailable; build/setup command surfaced.

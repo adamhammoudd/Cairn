@@ -89,6 +89,10 @@ export function SymbolTypeahead({
   // reorders the local list under the cursor.
   const [probing, setProbing] = useState<string | null>(null);
   const [probed, setProbed] = useState<SymbolSearchResult | null>(null);
+  // Set while a listed-but-not-ingested symbol is being fetched on selection.
+  // Separate from `probing`, which is the search-time probe: this one blocks a
+  // commit, so the row has to show it is working rather than looking inert.
+  const [ingesting, setIngesting] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -136,19 +140,53 @@ export function SymbolTypeahead({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  function pick(result: SymbolSearchResult) {
+  // Selecting a symbol that is listed-but-not-ingested fetches it first.
+  //
+  // Stage two above only fires when local search finds NO exact match. That was
+  // sufficient while symbol_directory held just the symbols already fetched -
+  // anything unknown was absent, so its absence was the trigger. Seeding the
+  // directory with reference data inverts that: nearly every ticker now has a
+  // local row, `exact` is true, stage two never runs, and without this the user
+  // would pick a symbol and land on an empty chart.
+  //
+  // Ingesting here rather than widening stage two is deliberate. Probing on
+  // every exact match would put an outbound request behind ordinary typing
+  // across a ~27,000-row directory; this spends one only when someone has
+  // actually committed to a symbol, which is what the token bucket and the
+  // demand-driven refresh in 0027 were sized for.
+  async function pick(result: SymbolSearchResult) {
+    let chosen = result;
+
+    if (result.availability === "available") {
+      setIngesting(result.symbol);
+      try {
+        const ingested = await lookupSymbol(result.symbol);
+        // A reference row the provider cannot actually serve (delisted, or
+        // covered by SEC but not by the price feed) surfaces as unavailable
+        // instead of being committed as a working symbol.
+        if (ingested?.availability === "unavailable") {
+          setIngesting(null);
+          setProbed(ingested);
+          return;
+        }
+        if (ingested) chosen = ingested;
+      } finally {
+        setIngesting(null);
+      }
+    }
+
     if (clearOnSelect) {
       setSelected(null);
       setQuery("");
       setResults([]);
     } else {
-      setSelected(result);
-      setQuery(labelFor(result));
+      setSelected(chosen);
+      setQuery(labelFor(chosen));
     }
     setProbed(null);
     setProbing(null);
     setOpen(false);
-    onSelect(result);
+    onSelect(chosen);
   }
 
   // With an empty box there is nothing to show, whatever the last search left
@@ -209,15 +247,30 @@ export function SymbolTypeahead({
             <button
               key={r.symbol}
               type="button"
+              disabled={ingesting !== null}
               onClick={() => pick(r)}
-              className="flex w-full items-center justify-between px-3.5 py-2 text-left text-body text-muted transition-colors duration-fast ease-standard hover:bg-active hover:text-primary"
+              className="flex w-full items-center justify-between px-3.5 py-2 text-left text-body text-muted transition-colors duration-fast ease-standard hover:bg-active hover:text-primary disabled:opacity-60"
             >
               <span className="flex min-w-0 flex-1 items-baseline gap-2">
                 {/* The ticker never truncates; the name gives way first. */}
                 <span className="shrink-0 text-primary">{highlightMatch(r.symbol, query)}</span>
                 {r.name && <span className="truncate text-caption text-muted">{highlightMatch(r.name, query)}</span>}
               </span>
-              <span className="ml-2 shrink-0 text-micro text-dim">{assetTypeBadge(r.assetType)}</span>
+              {/*
+                A seeded reference row is real but has no prices stored yet, and
+                picking it costs a provider round-trip. Saying so beats a row
+                that looks identical to a stored one and then pauses.
+              */}
+              {ingesting === r.symbol ? (
+                <span className="ml-2 flex shrink-0 items-center gap-1.5 text-micro text-accent">
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-accent" />
+                  Fetching…
+                </span>
+              ) : r.availability === "available" ? (
+                <span className="ml-2 shrink-0 text-micro text-dim">Not stored yet</span>
+              ) : (
+                <span className="ml-2 shrink-0 text-micro text-dim">{assetTypeBadge(r.assetType)}</span>
+              )}
             </button>
           ))}
 

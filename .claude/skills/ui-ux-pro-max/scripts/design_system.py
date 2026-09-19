@@ -685,11 +685,11 @@ def format_ascii_box(design_system: dict) -> str:
     if any(dials.get(k) is not None for k in ("variance", "motion", "density")):
         lines.append(section_header("DESIGN DIALS", BOX_WIDTH + 1))
         if dials.get("variance") is not None:
-            lines.append(f"│  Variance: {dials['variance']}/10 — {dials['variance_label']}".ljust(BOX_WIDTH) + "│")
+            lines.append(f"│  Variance: {dials['variance']}/10 - {dials['variance_label']}".ljust(BOX_WIDTH) + "│")
         if dials.get("motion") is not None:
-            lines.append(f"│  Motion:   {dials['motion']}/10 — {dials['motion_label']}".ljust(BOX_WIDTH) + "│")
+            lines.append(f"│  Motion:   {dials['motion']}/10 - {dials['motion_label']}".ljust(BOX_WIDTH) + "│")
         if dials.get("density") is not None:
-            lines.append(f"│  Density:  {dials['density']}/10 — {dials['density_label']}".ljust(BOX_WIDTH) + "│")
+            lines.append(f"│  Density:  {dials['density']}/10 - {dials['density_label']}".ljust(BOX_WIDTH) + "│")
 
     # Pattern section
     lines.append(section_header("PATTERN", BOX_WIDTH + 1))
@@ -808,11 +808,11 @@ def format_markdown(design_system: dict) -> str:
     if any(dials.get(k) is not None for k in ("variance", "motion", "density")):
         lines.append("### Design Dials")
         if dials.get("variance") is not None:
-            lines.append(f"- **Variance:** {dials['variance']}/10 — {dials['variance_label']}")
+            lines.append(f"- **Variance:** {dials['variance']}/10 - {dials['variance_label']}")
         if dials.get("motion") is not None:
-            lines.append(f"- **Motion:** {dials['motion']}/10 — {dials['motion_label']}")
+            lines.append(f"- **Motion:** {dials['motion']}/10 - {dials['motion_label']}")
         if dials.get("density") is not None:
-            lines.append(f"- **Density:** {dials['density']}/10 — {dials['density_label']}")
+            lines.append(f"- **Density:** {dials['density']}/10 - {dials['density_label']}")
         lines.append("")
 
     # Pattern section
@@ -880,7 +880,7 @@ def format_markdown(design_system: dict) -> str:
     # Motion section (GSAP skeleton, only if --motion dial was set)
     if motion_snippet:
         lines.append("### Motion")
-        lines.append(f"**{motion_snippet.get('Category', '')}** ({motion_snippet.get('Intensity Tier', '')}) — Trigger: {motion_snippet.get('Trigger', '')} | Duration: {motion_snippet.get('Duration', '')} | Easing: `{motion_snippet.get('Easing', '')}`")
+        lines.append(f"**{motion_snippet.get('Category', '')}** ({motion_snippet.get('Intensity Tier', '')}) - Trigger: {motion_snippet.get('Trigger', '')} | Duration: {motion_snippet.get('Duration', '')} | Easing: `{motion_snippet.get('Easing', '')}`")
         lines.append("```js")
         lines.append(motion_snippet.get("GSAP Snippet", ""))
         lines.append("```")
@@ -963,7 +963,7 @@ def safe_slug(name, fallback: str = "default") -> str:
 
     Only [a-z0-9_-] survives; every other character (including '/', '\\' and
     '.') collapses into '-'. This makes path traversal via project/page names
-    (e.g. "../../etc") impossible — the slug can never leave its parent dir.
+    (e.g. "../../etc") impossible - the slug can never leave its parent dir.
     """
     slug = re.sub(r'[^a-z0-9_-]+', '-', str(name).lower()).strip('-')
     return slug or fallback
@@ -1160,7 +1160,7 @@ def format_master_md(design_system: dict) -> str:
     lines.append("### Spacing Variables")
     lines.append("")
     if spacing_scale:
-        lines.append(f"*Density: {dials.get('density')}/10 — {dials.get('density_label')}*")
+        lines.append(f"*Density: {dials.get('density')}/10 - {dials.get('density_label')}*")
         lines.append("")
     lines.append("| Token | Value | Usage |")
     lines.append("|-------|-------|-------|")
@@ -1316,7 +1316,7 @@ def format_master_md(design_system: dict) -> str:
         lines.append("")
         lines.append("## Motion")
         lines.append("")
-        lines.append(f"**{motion_snippet.get('Category', '')}** ({motion_snippet.get('Intensity Tier', '')}) — Trigger: {motion_snippet.get('Trigger', '')} | Duration: {motion_snippet.get('Duration', '')} | Easing: `{motion_snippet.get('Easing', '')}`")
+        lines.append(f"**{motion_snippet.get('Category', '')}** ({motion_snippet.get('Intensity Tier', '')}) - Trigger: {motion_snippet.get('Trigger', '')} | Duration: {motion_snippet.get('Duration', '')} | Easing: `{motion_snippet.get('Easing', '')}`")
         lines.append("")
         lines.append("```js")
         lines.append(motion_snippet.get("GSAP Snippet", ""))
@@ -1348,12 +1348,12 @@ def format_master_md(design_system: dict) -> str:
     lines.append("")
     lines.append("### Additional Forbidden Patterns")
     lines.append("")
-    lines.append("- ❌ **Emojis as icons** — Use SVG icons (Heroicons, Lucide, Simple Icons)")
-    lines.append("- ❌ **Missing cursor:pointer** — All clickable elements must have cursor:pointer")
-    lines.append("- ❌ **Layout-shifting hovers** — Avoid scale transforms that shift layout")
-    lines.append("- ❌ **Low contrast text** — Maintain 4.5:1 minimum contrast ratio")
-    lines.append("- ❌ **Instant state changes** — Always use transitions (150-300ms)")
-    lines.append("- ❌ **Invisible focus states** — Focus states must be visible for a11y")
+    lines.append("- ❌ **Emojis as icons** - Use SVG icons (Heroicons, Lucide, Simple Icons)")
+    lines.append("- ❌ **Missing cursor:pointer** - All clickable elements must have cursor:pointer")
+    lines.append("- ❌ **Layout-shifting hovers** - Avoid scale transforms that shift layout")
+    lines.append("- ❌ **Low contrast text** - Maintain 4.5:1 minimum contrast ratio")
+    lines.append("- ❌ **Instant state changes** - Always use transitions (150-300ms)")
+    lines.append("- ❌ **Invisible focus states** - Focus states must be visible for a11y")
     lines.append("")
     
     # Pre-Delivery Checklist
@@ -1413,7 +1413,7 @@ def format_page_override_md(design_system: dict, page_name: str, page_query: str
         for key, value in layout.items():
             lines.append(f"- **{key}:** {value}")
     else:
-        lines.append("- No overrides — use Master layout")
+        lines.append("- No overrides - use Master layout")
     lines.append("")
     
     # Spacing Overrides
@@ -1424,7 +1424,7 @@ def format_page_override_md(design_system: dict, page_name: str, page_query: str
         for key, value in spacing.items():
             lines.append(f"- **{key}:** {value}")
     else:
-        lines.append("- No overrides — use Master spacing")
+        lines.append("- No overrides - use Master spacing")
     lines.append("")
     
     # Typography Overrides
@@ -1435,7 +1435,7 @@ def format_page_override_md(design_system: dict, page_name: str, page_query: str
         for key, value in typography.items():
             lines.append(f"- **{key}:** {value}")
     else:
-        lines.append("- No overrides — use Master typography")
+        lines.append("- No overrides - use Master typography")
     lines.append("")
     
     # Color Overrides
@@ -1446,7 +1446,7 @@ def format_page_override_md(design_system: dict, page_name: str, page_query: str
         for key, value in colors.items():
             lines.append(f"- **{key}:** {value}")
     else:
-        lines.append("- No overrides — use Master colors")
+        lines.append("- No overrides - use Master colors")
     lines.append("")
     
     # Component Overrides
@@ -1457,7 +1457,7 @@ def format_page_override_md(design_system: dict, page_name: str, page_query: str
         for comp in components:
             lines.append(f"- {comp}")
     else:
-        lines.append("- No overrides — use Master component specs")
+        lines.append("- No overrides - use Master component specs")
     lines.append("")
     
     # Page-Specific Components
@@ -1534,11 +1534,11 @@ def _generate_intelligent_overrides(page_name: str, page_query: str, design_syst
         if any(kw in keywords.lower() for kw in ["data", "dense", "dashboard", "grid"]):
             layout["Max Width"] = "1400px or full-width"
             layout["Grid"] = "12-column grid for data flexibility"
-            spacing["Content Density"] = "High — optimize for information display"
+            spacing["Content Density"] = "High - optimize for information display"
         elif any(kw in keywords.lower() for kw in ["minimal", "simple", "clean", "single"]):
             layout["Max Width"] = "800px (narrow, focused)"
             layout["Layout"] = "Single column, centered"
-            spacing["Content Density"] = "Low — focus on clarity"
+            spacing["Content Density"] = "Low - focus on clarity"
         else:
             layout["Max Width"] = "1200px (standard)"
             layout["Layout"] = "Full-width sections, centered content"

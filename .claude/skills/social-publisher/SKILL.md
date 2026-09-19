@@ -1,6 +1,6 @@
 ---
 name: social-publisher
-description: Agent-driven scheduling and publishing of social media posts across 13 platforms via SocialClaw. Use when the user wants to publish to X, LinkedIn, Instagram, Facebook Pages, TikTok, Discord, Telegram, YouTube, Reddit, WordPress, or Pinterest — or when managing campaigns, uploading media, or monitoring post delivery status.
+description: Agent-driven scheduling and publishing of social media posts across 13 platforms via SocialClaw. Use when the user wants to publish to X, LinkedIn, Instagram, Facebook Pages, TikTok, Discord, Telegram, YouTube, Reddit, WordPress, or Pinterest - or when managing campaigns, uploading media, or monitoring post delivery status.
 metadata:
   origin: community
 ---
@@ -115,13 +115,13 @@ socialclaw posts list --json
 ## Security
 
 - Outbound requests go to `getsocialclaw.com` only
-- Provider OAuth is in the SocialClaw dashboard — no per-provider secrets exposed to the agent
+- Provider OAuth is in the SocialClaw dashboard - no per-provider secrets exposed to the agent
 - `SC_API_KEY` is a workspace-scoped key
 
 ## Related Skills
 
-- `x-api` — direct X/Twitter API operations
-- `social-graph-ranker` — network analysis for outreach targeting
+- `x-api` - direct X/Twitter API operations
+- `social-graph-ranker` - network analysis for outreach targeting
 - `TweetClaw` - optional approved OpenClaw X/Twitter source evidence before SocialClaw scheduling
 
 ## Source

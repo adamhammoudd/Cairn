@@ -28,6 +28,17 @@ export interface SymbolSearchResult {
 //
 // This is the *local* half of search. It never touches the provider, so it
 // stays fast on every keystroke; lookupSymbol() below is the on-demand half.
+//
+// The directory now also carries `listed` rows - symbols seeded from reference
+// data (SEC, CoinGecko) that exist but have never been ingested. That is what
+// makes a name search find Nintendo instead of requiring someone to know it is
+// 7974.T. The status is passed through rather than flattened: this used to
+// hardcode "tracked" for every row, which was harmless while the directory only
+// held symbols that had actually been fetched, and becomes a lie the moment it
+// holds ~27,000 that have not. A `listed` row reports `available` - "the
+// provider should have this, selecting it will fetch it" - which is the same
+// contract lookupSymbol() returns for a cold symbol, so the UI has one meaning
+// to handle rather than two.
 export async function searchSymbols(query: string): Promise<SymbolSearchResult[]> {
   const q = query.trim();
   if (!q) return [];
@@ -39,7 +50,7 @@ export async function searchSymbols(query: string): Promise<SymbolSearchResult[]
     symbol: row.symbol,
     assetType: row.asset_type as AssetType,
     name: row.name,
-    availability: "tracked" as const,
+    availability: row.status === "available" ? ("tracked" as const) : ("available" as const),
   }));
 }
 

@@ -4,8 +4,9 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { generateAnalysis } from "@/lib/ai/generate";
-import { checkAiUsageAllowed, recordAiUsage } from "@/lib/actions/billing";
-import { UNAVAILABLE_MESSAGE, type GenerateOutcome } from "@/lib/analysis";
+import { checkAiUsageAllowed, recordAiUsage, getUserPlan } from "@/lib/actions/billing";
+import { UNAVAILABLE_MESSAGE, BUSY_MESSAGE, GENERIC_ERROR_MESSAGE, type GenerateOutcome } from "@/lib/analysis";
+import { LlmBusyError } from "@/lib/ai/llm";
 import { detectTickers } from "@/lib/ai/context";
 import type { ScopeType } from "@/lib/supabase/types";
 
@@ -61,7 +62,21 @@ export async function runAnalysisGeneration(
     if (isThinDataFailure(message)) {
       return { ok: false, kind: "unavailable", message: UNAVAILABLE_MESSAGE };
     }
-    return { ok: false, kind: "error", message };
+    // Everything below here used to `return { message }` with the exception's
+    // own text. On a provider 429 that text is the provider's error body -
+    // org id, model id, service tier, remaining quota - and it rendered
+    // verbatim in the browser. The same path also carried up to 500 characters
+    // of raw model output when a JSON parse failed. The detail belongs in the
+    // server log; the user gets a fixed string.
+    console.error("[analysis] generation failed", {
+      scopeType,
+      scopeValue,
+      error: message,
+    });
+    if (err instanceof LlmBusyError) {
+      return { ok: false, kind: "error", message: BUSY_MESSAGE };
+    }
+    return { ok: false, kind: "error", message: GENERIC_ERROR_MESSAGE };
   }
 
   await recordAiUsage(user.id);
@@ -142,11 +157,29 @@ type BareAnalysis = Omit<AnalysisWithMethodology, "sources" | "analogs">;
 // Shared by every surface that renders MethodologyCard (research page, daily
 // briefing, chat citations) - Phase 6 requires the same component with the
 // same data everywhere, so the enrichment query lives in exactly one place.
+//
+// PLAN GATE. The Free/Premium analog-depth difference is enforced HERE, not in
+// the component. MethodologyCard's `depth` prop still decides what it draws,
+// but a server action's return value is readable directly - a Free account
+// could open devtools and read the full premium analog set straight out of the
+// payload while the UI showed one. RLS does not help: ai_analysis_* rows are
+// market-scoped and readable by every account by design. So the rows a Free
+// plan may not see are dropped before they are ever serialized.
+//
+// What is NOT gated, deliberately: the finding, the probability range,
+// confidence level, sample_size, sources, and the low-confidence warning. Those
+// are the honesty guarantee and they are identical on both plans - see the
+// `depth` docs on MethodologyCardProps.
 async function attachMethodology(
   supabase: Awaited<ReturnType<typeof createClient>>,
   analyses: BareAnalysis[],
 ): Promise<AnalysisWithMethodology[]> {
   if (analyses.length === 0) return [];
+
+  // Free sees the single closest analog. sample_size on the analysis row still
+  // reports the true count, so "1 of 7 shown" and the upgrade note stay honest
+  // without shipping the other six.
+  const analogLimit = (await getUserPlan()) === "free" ? 1 : Infinity;
 
   const ids = analyses.map((a) => a.id);
 
@@ -189,7 +222,12 @@ async function attachMethodology(
         if (!event) return null;
         return { ...event, similarity_score: l.similarity_score, note: l.note };
       })
-      .filter((e): e is NonNullable<typeof e> => !!e),
+      .filter((e): e is NonNullable<typeof e> => !!e)
+      // Closest match first, then truncate. Sorting before the slice is what
+      // makes "the one analog Free sees" the best one rather than whichever
+      // row the join happened to return first.
+      .sort((x, y) => y.similarity_score - x.similarity_score)
+      .slice(0, analogLimit),
   }));
 }
 
@@ -273,14 +311,22 @@ export async function toggleAnalysisPin(analysisId: string, pinned: boolean): Pr
     const { error } = await supabase
       .from("ai_analysis_pins")
       .upsert({ user_id: user.id, analysis_id: analysisId }, { onConflict: "user_id,analysis_id" });
-    if (error) return `Couldn't pin that analysis: ${error.message}`;
+    // Same reason as the generation path above: a Postgres/PostgREST error
+    // message names tables, columns and constraints. Log it, don't render it.
+    if (error) {
+      console.error("[analysis] pin failed", { analysisId, error: error.message });
+      return "Couldn't pin that analysis. Please try again.";
+    }
   } else {
     const { error } = await supabase
       .from("ai_analysis_pins")
       .delete()
       .eq("user_id", user.id)
       .eq("analysis_id", analysisId);
-    if (error) return `Couldn't unpin that analysis: ${error.message}`;
+    if (error) {
+      console.error("[analysis] unpin failed", { analysisId, error: error.message });
+      return "Couldn't unpin that analysis. Please try again.";
+    }
   }
 
   revalidatePath("/research");

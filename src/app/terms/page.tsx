@@ -26,8 +26,15 @@ export default function TermsofServicePage() {
         <section>
           <h2>3. Eligibility and accounts</h2>
           <p>
-            Users must be able to form a binding contract in their jurisdiction. Account creation
-            requires an email and password.
+            You must be at least 18 years old and able to form a binding contract where you live.
+            Account creation requires an email address and a password. You are responsible for
+            keeping your password confidential and for activity that happens under your account.
+            One person, one account - do not share credentials or let anyone else use your account.
+          </p>
+          <p>
+            Cairn is offered to consumers in the European Economic Area and the United Kingdom. It
+            is not offered where doing so would breach local financial-services law, and Cairn may
+            decline or close an account on that basis.
           </p>
         </section>
         <section>
@@ -68,21 +75,25 @@ export default function TermsofServicePage() {
           </p>
         </section>
         <section>
-          <h2>7. Dispute resolution and arbitration</h2>
+          <h2>7. Complaints and dispute resolution</h2>
           <p>
-            <strong>Draft clause - specifically flagged for legal review.</strong> The intent is
-            that disputes arising out of these terms or your use of Cairn are resolved by binding
-            individual arbitration rather than in court, and that claims are brought individually
-            rather than as part of a class or representative action, with a small-claims carve-out
-            and an opt-out window for users who prefer not to be bound by it.
+            If something goes wrong, contact us first using the address in Section 14. Most problems
+            are faster to fix directly than through any formal process, and we aim to acknowledge a
+            complaint within five working days and to resolve it within thirty days.
           </p>
           <p>
-            Enforceability of arbitration and class-waiver clauses varies substantially by
-            jurisdiction, and a clause of this kind can read as sound while being unenforceable or
-            void where a user actually lives. The seat, governing rules, allocation of fees, and
-            the opt-out mechanism are deliberately left unspecified here rather than guessed at.
-            This clause must be drafted or reviewed by a qualified lawyer for each target market
-            before Cairn relies on it.
+            If we cannot resolve it between us, you can refer the dispute to the Belgian Consumer
+            Mediation Service (Service de Médiation pour le Consommateur / Consumentenombudsdienst),
+            which handles out-of-court settlement of consumer disputes with traders established in
+            Belgium. Using mediation is voluntary and does not affect your right to go to court.
+          </p>
+          <p>
+            <strong>There is no compulsory arbitration and no class-action waiver in these
+            terms.</strong> That is deliberate. Clauses of that kind are treated as unfair, and are
+            unenforceable, in consumer contracts across the EU, and including one would not give
+            Cairn any protection it could actually rely on. Your right to bring a claim in court,
+            individually or as part of a collective action brought by a qualified entity, is
+            unaffected by these terms.
           </p>
         </section>
         <section>
@@ -106,36 +117,78 @@ export default function TermsofServicePage() {
             downgraded to the free tier rather than losing access to its own data.
           </p>
           <p>
-            <strong>Draft clause - flagged for legal review.</strong> Refund policy, proration on
-            mid-period tier changes, price-change notice periods, and the treatment of taxes are
-            deliberately not stated here and must be drafted alongside the finalized Phase 12
-            billing terms before Premium is offered for sale.
+            <strong>Prices and VAT.</strong> Premium is €12.00 per month excluding VAT. VAT is
+            calculated and added at checkout at the rate of the country you are buying from, and
+            the total you will be charged is shown before you confirm. If you are a VAT-registered
+            business you can enter your VAT number at checkout.
+          </p>
+          <p>
+            <strong>Your 14-day right to cancel, and why it usually will not apply.</strong> As a
+            consumer you normally have 14 days to withdraw from a distance contract for no reason.
+            Because Premium is a digital service that starts immediately, we ask you at checkout to
+            expressly request that it begin straight away and to acknowledge that doing so means you
+            lose the 14-day withdrawal right once the service has been fully performed. If you do
+            not give that consent, your access begins after the 14 days instead. If you withdraw
+            within the 14 days having given that consent but before the period is over, you pay a
+            proportionate amount for what you used and we refund the rest.
+          </p>
+          <p>
+            <strong>Refunds after that.</strong> Outside the withdrawal right, monthly payments are
+            not refundable pro rata when you cancel mid-month - cancelling stops the next renewal
+            and you keep Premium until the end of the period you have already paid for. That is the
+            ordinary position and it does not limit your statutory rights: if the service is faulty,
+            not as described, or unavailable for a sustained period, you are entitled to a repair,
+            a price reduction or a refund under EU digital-content law, and we will apply that in
+            good faith. Ask us and we will look at it.
+          </p>
+          <p>
+            <strong>Changing plan.</strong> If you upgrade or downgrade mid-period, Stripe prorates
+            the difference automatically: you are credited for the unused part of the old plan and
+            charged the prorated cost of the new one.
+          </p>
+          <p>
+            <strong>Price changes.</strong> We will give you at least 30 days&apos; notice by email
+            before any price increase takes effect. The new price applies from your next renewal
+            after that notice, and you can cancel at any point before it takes effect and not pay
+            it. We will not change the price of a period you have already paid for.
           </p>
         </section>
         <section>
-          <h2>10. Disclaimers and limitation of liability</h2>
+          <h2>10. What Cairn does and does not promise</h2>
           <p>
-            Cairn is provided &quot;as is&quot; and &quot;as available,&quot; without warranties of
-            any kind, express or implied, including as to accuracy, completeness, timeliness, or
-            fitness for a particular purpose. Market and news data comes from third-party sources
-            and may be delayed, incomplete, or wrong. The AI analysis engine produces
-            probability-weighted, market-level context that can be mistaken or based on a small
-            historical sample; it is not a recommendation and not a substitute for advice from a
-            licensed professional. You are solely responsible for any decision you make.
+            <strong>What the service is.</strong> Market and news data comes from third-party
+            sources and may be delayed, incomplete, or wrong. Prices are generally daily closes, not
+            a live feed. The AI analysis engine produces probability-weighted, market-level context
+            computed from a historical sample that is sometimes small; it can be mistaken. It is not
+            a recommendation, not personal advice, and not a substitute for a licensed professional.
+            Every investment decision you make is yours.
           </p>
           <p>
-            <strong>Draft clause - specifically flagged for legal review.</strong> The intent is
-            that, to the maximum extent permitted by applicable law, Cairn and the people who build
-            it are not liable for indirect, incidental, special, consequential, or punitive
-            damages, or for lost profits or investment losses, arising from use of the service; and
-            that total liability for any direct damages is capped at the greater of the amount you
-            paid Cairn in the twelve months before the claim or a nominal fixed sum. The specific
-            cap, the carve-outs that cannot lawfully be excluded (such as for gross negligence,
-            fraud, death or personal injury, and non-waivable consumer rights in the EU, UK and
-            elsewhere), and the interaction with Section 7&apos;s dispute-resolution clause must be
-            drafted or reviewed by a qualified lawyer for each target market. Generic SaaS
-            boilerplate must not be relied on here given the analysis engine&apos;s regulatory
-            profile.
+            <strong>What we do promise.</strong> We will supply the service with reasonable care and
+            skill, and it should match what is described on this site and in these terms. We do not
+            exclude that. If it is faulty, not as described, or unavailable for a sustained period,
+            you have statutory remedies and Section 9 explains how we apply them. Nothing in these
+            terms removes or limits any right you have as a consumer that cannot lawfully be removed
+            or limited - and if any part of this section conflicts with such a right, that right
+            wins and the rest of this section still applies.
+          </p>
+          <p>
+            <strong>What we are not liable for.</strong> Cairn is not liable for investment losses,
+            lost profits, or trading decisions you make, whether or not Cairn&apos;s output informed
+            them, because Cairn provides market-level information and does not advise on your
+            position. Cairn is also not liable for loss caused by third-party data being delayed,
+            wrong or unavailable, beyond our duty to describe the service accurately.
+          </p>
+          <p>
+            <strong>Cap.</strong> Where Cairn is liable to you, and to the extent the law allows a
+            cap, our total liability for all claims in any twelve-month period is limited to the
+            greater of the amount you paid Cairn in that period or €100.
+          </p>
+          <p>
+            <strong>What is never capped or excluded.</strong> Nothing in these terms limits or
+            excludes liability for death or personal injury caused by negligence, for fraud or
+            fraudulent misrepresentation, for gross negligence or wilful misconduct, or for anything
+            else that cannot lawfully be limited or excluded.
           </p>
         </section>
         <section>
@@ -151,17 +204,17 @@ export default function TermsofServicePage() {
           </p>
         </section>
         <section>
-          <h2>12. Governing law and disputes</h2>
+          <h2>12. Governing law and where claims are heard</h2>
           <p>
-            <strong>Draft clause - flagged for legal review; must not be relied on as written.</strong>{" "}
-            The governing law, the courts or forum for disputes, and how this interacts with the
-            binding-arbitration and class-waiver intent in Section 7 all depend on the
-            jurisdiction(s) in which Cairn actually launches, which is not yet decided. Consumer
-            protection law in many jurisdictions (including the EU and UK) gives users the right to
-            bring claims in their country of residence under their local law regardless of what
-            this section says; any governing-law clause has to be written around that. This section
-            will be completed by counsel as part of the pre-launch legal review, together with the
-            open items in the jurisdictional checklist.
+            These terms are governed by Belgian law, and the courts of Belgium have jurisdiction.
+          </p>
+          <p>
+            <strong>That does not take anything away from you as a consumer.</strong> If you live in
+            another EEA country or the UK, you keep the protection of the mandatory consumer rules
+            of the country where you habitually live, and choosing Belgian law here cannot deprive
+            you of them. You may also bring proceedings against Cairn in the courts of your own
+            country, and Cairn may bring proceedings against you only in the courts of the country
+            where you live.
           </p>
         </section>
         <section>
@@ -178,11 +231,15 @@ export default function TermsofServicePage() {
           </p>
         </section>
         <section>
-          <h2>14. Contact</h2>
+          <h2>14. Who you are contracting with, and how to reach us</h2>
           <p>
-            Questions about these terms, and legal or takedown notices under Section 6, go to the
-            contact address published on the Privacy Policy page. A dedicated, monitored legal
-            contact address will be published here before Cairn accepts paying users.
+            These terms are between you and the operator of Cairn, whose full identity, registered
+            address and enterprise number are set out on the <a href="/legal-notice">Legal notice</a>{" "}
+            page.
+          </p>
+          <p>
+            Questions about these terms, complaints under Section 7, billing queries under Section 9,
+            and legal or takedown notices under Section 6 all go to the contact address on that page.
           </p>
         </section>
     </LegalShell>

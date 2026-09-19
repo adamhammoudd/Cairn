@@ -137,11 +137,11 @@ Load `references/banner-sizes-and-styles.md` for complete sizes and styles refer
 
 ### Banner: Workflow
 
-1. **Gather requirements** via `AskUserQuestion` — purpose, platform, content, brand, style, quantity
-2. **Research** — Activate `ui-ux-pro-max`, browse Pinterest for references
-3. **Design** — Create HTML/CSS banner with `frontend-design`, generate visuals with `ai-artist`/`ai-multimodal`
-4. **Export** — Screenshot to PNG at exact dimensions via `chrome-devtools`
-5. **Present** — Show all options side-by-side, iterate on feedback
+1. **Gather requirements** via `AskUserQuestion` - purpose, platform, content, brand, style, quantity
+2. **Research** - Activate `ui-ux-pro-max`, browse Pinterest for references
+3. **Design** - Create HTML/CSS banner with `frontend-design`, generate visuals with `ai-artist`/`ai-multimodal`
+4. **Export** - Screenshot to PNG at exact dimensions via `chrome-devtools`
+5. **Present** - Show all options side-by-side, iterate on feedback
 
 ### Banner: Quick Size Reference
 
@@ -212,7 +212,7 @@ python3 ~/.claude/skills/design/scripts/icon/generate.py --prompt "user profile"
 | flat | Material design, Google-style |
 | gradient | Modern brands, SaaS |
 
-**Model:** `gemini-3.1-pro-preview` — text-only output (SVG is XML text). No image generation API needed.
+**Model:** `gemini-3.1-pro-preview` - text-only output (SVG is XML text). No image generation API needed.
 
 ## Social Photos (Built-in)
 
@@ -222,14 +222,14 @@ Load `references/social-photos-design.md` for sizes, templates, best practices.
 
 ### Social Photos: Workflow
 
-1. **Orchestrate** — `project-management` skill for TODO tasks; parallel subagents for independent work
-2. **Analyze** — Parse prompt: subject, platforms, style, brand context, content elements
-3. **Ideate** — 3-5 concepts, present via `AskUserQuestion`
-4. **Design** — `/ckm:brand` → `/ckm:design-system` → randomly invoke `/ck:ui-ux-pro-max` OR `/ck:frontend-design`; HTML per idea × size
-5. **Export** — `chrome-devtools` or Playwright screenshot at exact px (2x deviceScaleFactor)
-6. **Verify** — Use Chrome MCP or `chrome-devtools` skill to visually inspect exported designs; fix layout/styling issues and re-export
-7. **Report** — Summary to `plans/reports/` with design decisions
-8. **Organize** — Invoke `assets-organizing` skill to sort output files and reports
+1. **Orchestrate** - `project-management` skill for TODO tasks; parallel subagents for independent work
+2. **Analyze** - Parse prompt: subject, platforms, style, brand context, content elements
+3. **Ideate** - 3-5 concepts, present via `AskUserQuestion`
+4. **Design** - `/ckm:brand` → `/ckm:design-system` → randomly invoke `/ck:ui-ux-pro-max` OR `/ck:frontend-design`; HTML per idea × size
+5. **Export** - `chrome-devtools` or Playwright screenshot at exact px (2x deviceScaleFactor)
+6. **Verify** - Use Chrome MCP or `chrome-devtools` skill to visually inspect exported designs; fix layout/styling issues and re-export
+7. **Report** - Summary to `plans/reports/` with design decisions
+8. **Organize** - Invoke `assets-organizing` skill to sort output files and reports
 
 ### Social Photos: Key Sizes
 

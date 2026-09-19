@@ -10,6 +10,7 @@
 //
 // Pure and DB-free. Run: npm run test:proxy-paths
 
+import { readFileSync } from "node:fs";
 import { isPublicPath } from "@/lib/public-paths";
 import { config as proxyConfig } from "@/proxy";
 import type { SuiteResult, TestCase } from "./report";
@@ -23,8 +24,48 @@ function check(name: string, ok: boolean, detail: string): TestCase {
   return { name, status: ok ? "pass" : "fail", detail };
 }
 
+/**
+ * Is the gate actually switched on?
+ *
+ * Everything else in this suite tests the allowlist - which paths *would* be
+ * let through. None of it notices if the redirect that enforces the allowlist
+ * is commented out, and that is exactly what happened: proxy.ts sat in the
+ * working tree with the `if (!user && !isPublicPath(...))` block wrapped in a
+ * block comment, so locally the entire app was open while production still had
+ * the gate. An allowlist with no gate behind it passes every other assertion
+ * here perfectly.
+ *
+ * Reads the source rather than invoking proxy(), because calling it needs a
+ * NextRequest and a live Supabase session and this suite is deliberately
+ * DB-free.
+ */
+function gateIsEnabled(): { ok: boolean; detail: string } {
+  let source: string;
+  try {
+    source = readFileSync(new URL("../../src/proxy.ts", import.meta.url), "utf8");
+  } catch {
+    return { ok: false, detail: "could not read src/proxy.ts" };
+  }
+
+  // Strip block and line comments, then look for the redirect. If it only
+  // survives in the raw source it is commented out.
+  const uncommented = source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/[^\n]*/g, "");
+  const hasRedirect = /NextResponse\s*\.\s*redirect/.test(uncommented);
+  const hasGuard = /isPublicPath\s*\(/.test(uncommented);
+
+  if (hasRedirect && hasGuard) return { ok: true, detail: "" };
+  return {
+    ok: false,
+    detail: "the waitlist gate in src/proxy.ts is commented out - the app is open to anonymous visitors",
+  };
+}
+
 export function runProxyPublicPathsSuite(): SuiteResult {
   const cases: TestCase[] = [];
+
+  // --- the gate itself ---
+  const gate = gateIsEnabled();
+  cases.push(check("the waitlist gate redirect is live (not commented out)", gate.ok, gate.detail));
 
   // --- must be reachable without a session ---
   cases.push(
@@ -37,8 +78,19 @@ export function runProxyPublicPathsSuite(): SuiteResult {
   cases.push(check("/waitlist itself is public", isPublicPath("/waitlist") === true, ""));
   cases.push(
     check(
-      "the three legal pages are public",
+      "the legal pages are public",
       ["/privacy", "/terms", "/accessibility"].every((p) => isPublicPath(p)),
+      "",
+    ),
+  );
+  // Legally mandated disclosures. /legal-notice carries the trader identity the
+  // e-Commerce Directive requires to be permanently accessible, and /refunds
+  // carries the withdrawal and cancellation terms that have to be available
+  // before a consumer is bound. Behind the gate they may as well not exist.
+  cases.push(
+    check(
+      "/legal-notice and /refunds are public (they are legally required to be)",
+      isPublicPath("/legal-notice") === true && isPublicPath("/refunds") === true,
       "",
     ),
   );

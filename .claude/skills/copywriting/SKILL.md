@@ -1,6 +1,6 @@
 ---
 name: copywriting
-description: When the user wants to write, rewrite, or improve marketing copy for any page — including homepage, landing pages, pricing pages, feature pages, about pages, or product pages. Also use when the user says "write copy for," "improve this copy," "rewrite this page," "marketing copy," "headline help," "CTA copy," "value proposition," "tagline," "subheadline," "hero section copy," "above the fold," "this copy is weak," "make this more compelling," or "help me describe my product." Use this whenever someone is working on website text that needs to persuade or convert. For email copy, see emails. For popup copy, see popups. For editing existing copy, see copy-editing. For the offer underneath the copy (bonuses, guarantees, value framing), see offers.
+description: When the user wants to write, rewrite, or improve marketing copy for any page - including homepage, landing pages, pricing pages, feature pages, about pages, or product pages. Also use when the user says "write copy for," "improve this copy," "rewrite this page," "marketing copy," "headline help," "CTA copy," "value proposition," "tagline," "subheadline," "hero section copy," "above the fold," "this copy is weak," "make this more compelling," or "help me describe my product." Use this whenever someone is working on website text that needs to persuade or convert. For email copy, see emails. For popup copy, see popups. For editing existing copy, see copy-editing. For the offer underneath the copy (bonuses, guarantees, value framing), see offers.
 metadata:
   version: 2.0.2
 ---
@@ -41,9 +41,9 @@ Gather this context (ask if not provided):
 ## Copywriting Principles
 
 ### Clarity Over Cleverness
-If you have to choose between clear and creative, choose clear. Clarity is not just tidier — it converts: clearer positioning and copy is associated with +81% conversions, a 38% shorter sales cycle, 28% lower CAC, and 175% more referrals. When a reader has to decode your line, you've lost them.
+If you have to choose between clear and creative, choose clear. Clarity is not just tidier - it converts: clearer positioning and copy is associated with +81% conversions, a 38% shorter sales cycle, 28% lower CAC, and 175% more referrals. When a reader has to decode your line, you've lost them.
 
-**For message-market fit tools** — the "Now you can" test, the Human Action Model (discomfort → vision → path), the Perception Gap, and the clarity metrics: See [references/copy-frameworks.md](references/copy-frameworks.md#clarity--message-market-fit)
+**For message-market fit tools** - the "Now you can" test, the Human Action Model (discomfort → vision → path), the Perception Gap, and the clarity metrics: See [references/copy-frameworks.md](references/copy-frameworks.md#clarity--message-market-fit)
 
 ### Benefits Over Features
 Features: What it does. Benefits: What that means for the customer.
@@ -64,12 +64,12 @@ Each section should advance one argument. Build a logical flow down the page.
 
 ### Core Principles
 
-1. **Simple over complex** — "Use" not "utilize," "help" not "facilitate"
-2. **Specific over vague** — Avoid "streamline," "optimize," "innovative"
-3. **Active over passive** — "We generate reports" not "Reports are generated"
-4. **Confident over qualified** — Remove "almost," "very," "really"
-5. **Show over tell** — Describe the outcome instead of using adverbs
-6. **Honest over sensational** — Fabricated statistics or testimonials erode trust and create legal liability
+1. **Simple over complex** - "Use" not "utilize," "help" not "facilitate"
+2. **Specific over vague** - Avoid "streamline," "optimize," "innovative"
+3. **Active over passive** - "We generate reports" not "Reports are generated"
+4. **Confident over qualified** - Remove "almost," "very," "really"
+5. **Show over tell** - Describe the outcome instead of using adverbs
+6. **Honest over sensational** - Fabricated statistics or testimonials erode trust and create legal liability
 
 ### Quick Quality Check
 
@@ -101,7 +101,7 @@ Questions engage readers and make them think about their own situation.
 Analogies make abstract concepts concrete and memorable.
 
 ### Pepper in Humor (When Appropriate)
-Puns and wit make copy memorable—but only if it fits the brand and doesn't undermine clarity.
+Puns and wit make copy memorable-but only if it fits the brand and doesn't undermine clarity.
 
 ---
 
@@ -122,7 +122,7 @@ Puns and wit make copy memorable—but only if it fits the brand and doesn't und
 
 **For comprehensive headline formulas**: See [references/copy-frameworks.md](references/copy-frameworks.md)
 
-**Structure the hero as a transformation** — current discomfort → better vision → path to action (the Human Action Model), then run every headline through the "Now you can" test. See [references/copy-frameworks.md](references/copy-frameworks.md#clarity--message-market-fit)
+**Structure the hero as a transformation** - current discomfort → better vision → path to action (the Human Action Model), then run every headline through the "Now you can" test. See [references/copy-frameworks.md](references/copy-frameworks.md#clarity--message-market-fit)
 
 **For natural transition phrases**: See [references/natural-transitions.md](references/natural-transitions.md)
 
@@ -238,8 +238,8 @@ For key elements, explain:
 
 ### Alternatives
 For headlines and CTAs, provide 2-3 options:
-- Option A: [copy] — [rationale]
-- Option B: [copy] — [rationale]
+- Option A: [copy] - [rationale]
+- Option B: [copy] - [rationale]
 
 ### Meta Content (if relevant)
 - Page title (for SEO)

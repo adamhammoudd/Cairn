@@ -38,10 +38,24 @@ export function LegalShell({
       </header>
 
       <main className="mx-auto max-w-[760px] px-6 py-12">
+        {/*
+          The banner used to read "first-pass draft ... not launch-ready",
+          which was accurate while four sections were explicitly blank. Those
+          sections are now written against Belgian and EU consumer law. What
+          still has not happened is review by a qualified lawyer, so the notice
+          narrows to exactly that rather than disappearing.
+
+          TO REMOVE IT: once a Belgian lawyer has reviewed these documents, set
+          `draft = false` as the default in the props above. That one flip is
+          the counsel sign-off gate for every page using this shell. Do not flip
+          it because the pages look finished - looking finished with no review
+          behind it is what makes a consumer contract dangerous rather than safe.
+        */}
         {draft ? (
           <div className="mb-6 rounded-panel border border-warning/40 bg-warning/8 px-3.5 py-3 text-body leading-[1.55] text-warning">
-            <strong className="font-semibold">Draft - not legal advice.</strong> This is a first-pass, non-lawyer
-            draft. It has not been reviewed by a licensed attorney and is not launch-ready.
+            <strong className="font-semibold">Pending legal review.</strong> These documents are
+            complete and written to apply Belgian and EU consumer law, but they have not yet been
+            reviewed by a qualified lawyer. Nothing here is legal advice.
           </div>
         ) : null}
 
@@ -59,6 +73,12 @@ export function LegalShell({
           </Link>
           <Link href="/privacy" className="transition-colors duration-base ease-standard hover:text-accent">
             Privacy
+          </Link>
+          <Link href="/refunds" className="transition-colors duration-base ease-standard hover:text-accent">
+            Cancellation &amp; refunds
+          </Link>
+          <Link href="/legal-notice" className="transition-colors duration-base ease-standard hover:text-accent">
+            Legal notice
           </Link>
           <Link href="/accessibility" className="transition-colors duration-base ease-standard hover:text-accent">
             Accessibility

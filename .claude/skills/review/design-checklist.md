@@ -1,10 +1,10 @@
 # Design Review Checklist (Lite)
 
-> **Subset of DESIGN_METHODOLOGY** — when adding items here, also update `generateDesignMethodology()` in `scripts/gen-skill-docs.ts`, and vice versa.
+> **Subset of DESIGN_METHODOLOGY** - when adding items here, also update `generateDesignMethodology()` in `scripts/gen-skill-docs.ts`, and vice versa.
 
 ## Instructions
 
-This checklist applies to **source code in the diff** — not rendered output. Read each changed frontend file (full file, not just diff hunks) and flag anti-patterns.
+This checklist applies to **source code in the diff** - not rendered output. Read each changed frontend file (full file, not just diff hunks) and flag anti-patterns.
 
 **Trigger:** Only run this checklist if the diff touches frontend files. Use `gstack-diff-scope` to detect:
 
@@ -22,20 +22,20 @@ If `SCOPE_FRONTEND=false`, skip the entire design review silently.
 
 Each item is tagged with a detection confidence level:
 
-- **[HIGH]** — Reliably detectable via grep/pattern match. Definitive findings.
-- **[MEDIUM]** — Detectable via pattern aggregation or heuristic. Flag as findings but expect some noise.
-- **[LOW]** — Requires understanding visual intent. Present as: "Possible issue — verify visually or run /design-review."
+- **[HIGH]** - Reliably detectable via grep/pattern match. Definitive findings.
+- **[MEDIUM]** - Detectable via pattern aggregation or heuristic. Flag as findings but expect some noise.
+- **[LOW]** - Requires understanding visual intent. Present as: "Possible issue - verify visually or run /design-review."
 
 ---
 
 ## Classification
 
-**AUTO-FIX** (mechanical CSS fixes only — HIGH confidence, no design judgment needed):
+**AUTO-FIX** (mechanical CSS fixes only - HIGH confidence, no design judgment needed):
 - `outline: none` without replacement → add `outline: revert` or `&:focus-visible { outline: 2px solid currentColor; }`
 - `!important` in new CSS → remove and fix specificity
 - `font-size` < 16px on body text → bump to 16px
 
-**ASK** (everything else — requires design judgment):
+**ASK** (everything else - requires design judgment):
 - All AI slop findings, typography structure, spacing choices, interaction state gaps, DESIGN.md violations
 
 **LOW confidence items** → present as "Possible: [description]. Verify visually or run /design-review." Never AUTO-FIX.
@@ -55,10 +55,10 @@ Design Review: N issues (X auto-fixable, Y need input, Z possible)
   Recommended fix: suggested fix
 
 **POSSIBLE (verify visually):**
-- [file:line] Possible issue — verify with /design-review
+- [file:line] Possible issue - verify with /design-review
 ```
 
-Optional: `test_stub` — skeleton test code for this finding using the project's test framework.
+Optional: `test_stub` - skeleton test code for this finding using the project's test framework.
 
 If no issues found: `Design Review: No issues found.`
 
@@ -68,7 +68,7 @@ If no frontend files changed: skip silently, no output.
 
 ## Categories
 
-### 1. AI Slop Detection (6 items) — highest priority
+### 1. AI Slop Detection (6 items) - highest priority
 
 These are the telltale signs of AI-generated UI that no designer at a respected studio would ship.
 
@@ -78,9 +78,9 @@ These are the telltale signs of AI-generated UI that no designer at a respected 
 
 - **[LOW]** Icons in colored circles as section decoration. Look for elements with `border-radius: 50%` + a background color used as decorative containers for icons.
 
-- **[HIGH]** Centered everything: `text-align: center` on all headings, descriptions, and cards. Grep for `text-align: center` density — if >60% of text containers use center alignment, flag it.
+- **[HIGH]** Centered everything: `text-align: center` on all headings, descriptions, and cards. Grep for `text-align: center` density - if >60% of text containers use center alignment, flag it.
 
-- **[MEDIUM]** Uniform bubbly border-radius on every element: same large radius (16px+) applied to cards, buttons, inputs, containers uniformly. Aggregate `border-radius` values — if >80% use the same value ≥16px, flag it.
+- **[MEDIUM]** Uniform bubbly border-radius on every element: same large radius (16px+) applied to cards, buttons, inputs, containers uniformly. Aggregate `border-radius` values - if >80% use the same value ≥16px, flag it.
 
 - **[MEDIUM]** Generic hero copy: "Welcome to [X]", "Unlock the power of...", "Your all-in-one solution for...", "Revolutionize your...", "Streamline your workflow". Grep HTML/JSX content for these patterns.
 
@@ -110,7 +110,7 @@ These are the telltale signs of AI-generated UI that no designer at a respected 
 
 - **[HIGH]** `outline: none` or `outline: 0` without a replacement focus indicator. Grep for `outline:\s*none` or `outline:\s*0`. This removes keyboard accessibility.
 
-- **[LOW]** Touch targets < 44px on interactive elements. Check `min-height`/`min-width`/`padding` on buttons and links. Requires computing effective size from multiple properties — low confidence from code alone.
+- **[LOW]** Touch targets < 44px on interactive elements. Check `min-height`/`min-width`/`padding` on buttons and links. Requires computing effective size from multiple properties - low confidence from code alone.
 
 ### 5. DESIGN.md Violations (3 items, conditional)
 

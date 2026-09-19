@@ -34,6 +34,13 @@ export async function proxy(request: NextRequest) {
   // (kept there so the allowlist is unit-testable). `/waitlist` matches as a
   // prefix, so `/waitlist/confirm` - the link in the confirmation email -
   // reaches its page instead of being bounced back to `/waitlist`.
+  //
+  // THIS IS THE WAITLIST GATE. It was commented out in the working tree while
+  // production still ran with it enabled, so the local build had the entire
+  // application open to anonymous visitors - every dashboard, portfolio and
+  // settings route. Committing it in that state would have shipped that to
+  // production on the next deploy. Re-enabled deliberately; if you need the
+  // app open locally, set a session rather than commenting this out again.
   if (!user && !isPublicPath(request.nextUrl.pathname)) {
     return NextResponse.redirect(new URL("/waitlist", request.url));
   }
