@@ -341,7 +341,14 @@ export function splitClauses(text: string): string[] {
     // Semicolons and em-dashes terminate a clause as surely as a full stop.
     // Without them, everything after a `;` inherited the first half's
     // suppression and was never checked on its own terms.
-    .split(/(?<=[.!?;])\s+|\s*[;-]\s*|\n+/)
+    //
+    // A dash only ends a clause when it is acting as one: spaced, or a real
+    // en/em dash. A bare `-` in this class also split intra-word compounds, so
+    // "Sell-side consensus moved higher" was cut down to the clause "Sell" and
+    // flagged as an imperative. The `(?!-)` guard on IMPERATIVE_LEAD was
+    // written for exactly that compound but never saw the hyphen, because the
+    // split had already removed it.
+    .split(/(?<=[.!?;])\s+|\s*;\s*|\s+[-–—]\s+|[–—]|\n+/)
     .flatMap((sentence) => sentence.split(CONTRASTIVE))
     .map((c) => c.trim())
     .filter((c) => c.length > 0);
