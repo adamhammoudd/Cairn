@@ -1,7 +1,12 @@
 import { LegalShell } from "@/components/legal-shell";
 import { PRIVACY_VERSION, legalDateDisplay } from "@/lib/legal-versions";
 
-export const metadata = { title: "Privacy Policy - Cairn" };
+export const metadata = {
+  title: "Privacy Policy - Cairn",
+  description:
+    "What personal data Cairn collects, why and on what legal basis, how long it is kept, who it is shared with, and how to exercise your GDPR and CCPA rights.",
+  alternates: { canonical: "/privacy" },
+};
 
 export default function PrivacyPolicyPage() {
   return (

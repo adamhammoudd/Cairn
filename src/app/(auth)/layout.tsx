@@ -1,4 +1,5 @@
-﻿import type { ReactNode } from "react";
+﻿import type { Metadata } from "next";
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { Logo } from "@/components/logo";
 
@@ -6,6 +7,9 @@ import { Logo } from "@/components/logo";
 // canvas ground, a panel card with the onboarding hero gradient and accent
 // glow, serif heading, mono eyebrow, and the same field and button treatment
 // used everywhere inside the app.
+// Sign-in / sign-up / password reset: not something to index or preview.
+export const metadata: Metadata = { robots: { index: false, follow: false } };
+
 export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-canvas px-5 py-12">

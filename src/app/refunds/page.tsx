@@ -1,6 +1,11 @@
 import { LegalShell } from "@/components/legal-shell";
 
-export const metadata = { title: "Cancellation and refunds - Cairn" };
+export const metadata = {
+  title: "Cancellation and refunds - Cairn",
+  description:
+    "How to cancel a Cairn subscription, your 14-day right of withdrawal, when refunds apply, and what happens with failed payments and price changes.",
+  alternates: { canonical: "/refunds" },
+};
 
 // Standalone cancellation and refund page.
 //

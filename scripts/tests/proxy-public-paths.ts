@@ -133,6 +133,20 @@ export function runProxyPublicPathsSuite(): SuiteResult {
   );
   cases.push(
     check(
+      "/llms.txt, /site.webmanifest and the generated /opengraph-image are excluded from the matcher",
+      ["/llms.txt", "/site.webmanifest", "/opengraph-image", "/opengraph-image-abc123"].every((p) => matcher.test(p) === false),
+      "the gate would 307 them to /waitlist",
+    ),
+  );
+  cases.push(
+    check(
+      "/llms.txt, /site.webmanifest and /opengraph-image are also public at the gate (second layer)",
+      ["/llms.txt", "/site.webmanifest", "/opengraph-image", "/opengraph-image-abc123"].every((p) => isPublicPath(p)),
+      "",
+    ),
+  );
+  cases.push(
+    check(
       "favicon.ico and static images are still matcher-excluded",
       matcher.test("/favicon.ico") === false && matcher.test("/logo.png") === false,
       "",

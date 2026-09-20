@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -5,6 +6,10 @@ import { getAuthUser } from "@/lib/supabase/auth";
 import { getUserPlan } from "@/lib/actions/billing";
 import { getDisplayPrefs } from "@/lib/actions/display-prefs";
 import { AppShell } from "@/components/layout/app-shell";
+
+// Logged-in product screens: never indexed, never followed, whatever robots.txt
+// says. Child pages that set their own `robots` would override this - none do.
+export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 export default async function AppLayout({ children }: { children: ReactNode }) {
   // getAuthUser() is request-memoised, so the getUserPlan() and
