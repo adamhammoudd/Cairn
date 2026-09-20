@@ -180,12 +180,17 @@
   }
 }
 
+/* A left-to-right wipe, not a stroke-dashoffset draw. The dash version needs
+   pathLength + strokeDasharray, and combined with vector-effect:
+   non-scaling-stroke the dash is measured in screen pixels while pathLength
+   normalises in viewBox units - so on a stretched chart the dash ran out
+   before the end and the line stopped short. A clip cannot leave a gap. */
 @keyframes cn-draw {
   from {
-    stroke-dashoffset: 1;
+    clip-path: inset(-4px 100% -4px -4px);
   }
   to {
-    stroke-dashoffset: 0;
+    clip-path: inset(-4px);
   }
 }
 

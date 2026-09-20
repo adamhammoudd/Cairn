@@ -1,17 +1,14 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { getMarketStatus } from "@/lib/market-hours";
 import { useLiveRefresh } from "@/components/use-live-refresh";
 import { useDisplayPrefs } from "@/components/display-prefs-provider";
 import { formatMoney } from "@/lib/display-prefs";
-import { useActionState } from "react";
-import { updateDashboardLayout } from "@/lib/actions/dashboard";
-import { ArrangeControls, DashboardSummaryCard, type ModuleTint } from "@/components/dashboard/dashboard-summary-card";
+import { DashboardSummaryCard, type ModuleTint } from "@/components/dashboard/dashboard-summary-card";
 import { decodeEntities } from "@/lib/news";
 import { TimeAgo } from "@/components/time-ago";
-import { MODULE_KEYS, type ModuleKey } from "@/lib/dashboard-modules";
+import type { ModuleKey } from "@/lib/dashboard-modules";
 import { DataFreshness } from "@/components/data-freshness";
 import { TickerStrip, type TickerStripItem } from "@/components/dashboard/ticker-strip";
 import { Disclosure } from "@/components/compliance/disclosure";
@@ -22,13 +19,7 @@ import {
   type ValueTimeframe,
 } from "@/components/dashboard/portfolio-value-chart";
 
-// MODULE_KEYS / ModuleKey now live in lib/dashboard-modules.ts. The dashboard
-// page is a Server Component and imported them from this "use client" module,
-// which hands back a client reference rather than the array itself - so
-// `MODULE_KEYS.includes(...)` threw and the dashboard 500'd.
-
 interface DashboardHomeProps {
-  initialLayout: ModuleKey[];
   today: string;
   /** From user_settings.refresh_rate_seconds - written by the settings form and, until now, read by nothing. */
   refreshRateSeconds?: number;
@@ -112,7 +103,7 @@ const MODULES: { key: ModuleKey; label: string; href: string; cta: string; tint?
  */
 const RAIL_MODULES: ModuleKey[] = ["markets", "watchlist"];
 
-const DEFAULT_LAYOUT: ModuleKey[] = ["portfolio", "markets", "watchlist", "news", "assistant"];
+const LAYOUT: ModuleKey[] = ["portfolio", "markets", "watchlist", "news", "assistant"];
 
 /** Splits stored reasoning_text into its real paragraphs (it already comes
  * this way from the model, \n\n-separated - see lib/ai/generate.ts's
@@ -145,7 +136,6 @@ function formatShortDate(iso: string): string {
 }
 
 export function DashboardHome({
-  initialLayout,
   today,
   tickerItems,
   portfolio,
@@ -156,8 +146,6 @@ export function DashboardHome({
   refreshRateSeconds = 30,
   dataAsOf = null,
 }: DashboardHomeProps) {
-  const [layout, setLayout] = useState<ModuleKey[]>(initialLayout.length ? initialLayout : DEFAULT_LAYOUT);
-  const [arranging, setArranging] = useState(false);
   // Was `useState(true)` wired to nothing, next to prices that never changed.
   // Now reflects a timer that actually runs - and only runs when refreshing
   // would tell the user something new.
@@ -168,29 +156,8 @@ export function DashboardHome({
   const prefs = useDisplayPrefs();
   // Reported by the value chart below; see layout/page-tone.tsx.
   const chartTone = usePageTone();
-  const [result, formAction] = useActionState(updateDashboardLayout, null);
 
   const moduleMap = new Map(MODULES.map((m) => [m.key, m]));
-  const hidden = MODULE_KEYS.filter((key) => !layout.includes(key));
-
-  function moveModule(key: ModuleKey, direction: -1 | 1) {
-    setLayout((current) => {
-      const next = [...current];
-      const index = next.indexOf(key);
-      const target = index + direction;
-      if (target < 0 || target >= next.length) return current;
-      [next[index], next[target]] = [next[target], next[index]];
-      return next;
-    });
-  }
-
-  function hideModule(key: ModuleKey) {
-    setLayout((current) => current.filter((k) => k !== key));
-  }
-
-  function showModule(key: ModuleKey) {
-    setLayout((current) => [...current, key]);
-  }
 
   function renderCard(key: ModuleKey, index: number) {
     // Named `module` previously, which shadows the CommonJS binding and is a
@@ -198,17 +165,11 @@ export function DashboardHome({
     const card = moduleMap.get(key);
     if (!card) return null;
     const delay = index * 40;
-    const arrangeProps = {
-      arranging,
-      onMoveUp: () => moveModule(key, -1),
-      onMoveDown: () => moveModule(key, 1),
-      onHide: () => hideModule(key),
-    };
 
     switch (key) {
       case "markets":
         return (
-          <DashboardSummaryCard key={key} title={card.label} href={card.href} ctaLabel={card.cta} tint={card.tint} delay={delay} {...arrangeProps}>
+          <DashboardSummaryCard key={key} title={card.label} href={card.href} ctaLabel={card.cta} tint={card.tint} delay={delay}>
             <div className="flex flex-col">
               {markets.top.map((r) => (
                 <Link
@@ -237,7 +198,7 @@ export function DashboardHome({
         );
       case "watchlist":
         return (
-          <DashboardSummaryCard key={key} title={card.label} href={card.href} ctaLabel={card.cta} tint={card.tint} delay={delay} {...arrangeProps}>
+          <DashboardSummaryCard key={key} title={card.label} href={card.href} ctaLabel={card.cta} tint={card.tint} delay={delay}>
             {/* With no lists, this card read "0 lists · 0 symbols · none past
                 an alert threshold" over a band of empty space - a count of
                 nothing, three times, and no way to act on it. It is also the
@@ -295,7 +256,6 @@ export function DashboardHome({
             tint={card.tint}
             delay={delay}
             className="w-full"
-            {...arrangeProps}
           >
             {news.items.length === 0 ? (
               <div className="text-body text-muted">No headlines yet</div>
@@ -369,17 +329,6 @@ export function DashboardHome({
             animation: "cn-glow 7s ease-in-out infinite",
           }}
         />
-        {arranging && (
-          <div className="mb-4 flex items-center justify-between gap-3">
-            <span className="font-mono text-eyebrow text-muted uppercase">Portfolio</span>
-            <ArrangeControls
-              onMoveUp={() => moveModule("portfolio", -1)}
-              onMoveDown={() => moveModule("portfolio", 1)}
-              onHide={() => hideModule("portfolio")}
-            />
-          </div>
-        )}
-
         {/* Figure left, chart right, stacking under lg. The chart is given a
             fixed minimum height rather than matching the column beside it, so
             it cannot collapse to a sliver when the figure wraps short. */}
@@ -491,20 +440,12 @@ export function DashboardHome({
             <span className={`h-1.5 w-1.5 rounded-full bg-accent ${live ? "animate-breathe" : ""}`} />
             What Cairn flagged
           </span>
-          {arranging ? (
-            <ArrangeControls
-              onMoveUp={() => moveModule("assistant", -1)}
-              onMoveDown={() => moveModule("assistant", 1)}
-              onHide={() => hideModule("assistant")}
-            />
-          ) : (
-            <Link
-              href="/assistant"
-              className="text-caption text-dim transition-colors duration-fast ease-standard hover:text-accent"
-            >
-              Open assistant →
-            </Link>
-          )}
+          <Link
+            href="/assistant"
+            className="text-caption text-dim transition-colors duration-fast ease-standard hover:text-accent"
+          >
+            Open assistant →
+          </Link>
         </div>
 
         {analysis ? (
@@ -634,19 +575,11 @@ export function DashboardHome({
     );
   }
 
-  // Which modules are live, and which tier each belongs to. `layout` still
-  // owns visibility and order; the tier decides how much of the page a module
-  // is entitled to, which is a property of what it is rather than a per-card
-  // preference the reader has to set.
-  const showStanding = layout.includes("portfolio");
-  const showFlagged = layout.includes("assistant");
-  // The rail keeps the reader's own order, but only among the modules that
-  // belong in it; anything else the layout carries falls through to the band
-  // row below, so a hidden-then-shown module always lands somewhere.
-  const rail = layout.filter((k) => RAIL_MODULES.includes(k));
-  const bands = layout.filter(
-    (k) => k !== "portfolio" && k !== "assistant" && !RAIL_MODULES.includes(k),
-  );
+  // Which tier each module belongs to. The tier decides how much of the page a
+  // module is entitled to, which is a property of what it is rather than a
+  // per-card preference the reader has to set.
+  const rail = RAIL_MODULES;
+  const bands = LAYOUT.filter((k) => k !== "portfolio" && k !== "assistant" && !RAIL_MODULES.includes(k));
 
   return (
     <div className="animate-page-in">
@@ -706,32 +639,8 @@ export function DashboardHome({
                 controls: whether this page is re-fetching on a timer. */}
             {live ? `Auto-refresh · ${Math.max(15, refreshRateSeconds)}s` : paused ? "Auto-refresh paused" : marketStatus.isOpen ? "Idle" : "Market closed"}
           </button>
-          <form action={formAction} className="flex items-center gap-2">
-            {layout.map((key) => (
-              <input key={key} type="hidden" name="layout" value={key} />
-            ))}
-            <button
-              type="button"
-              onClick={() => setArranging((prev) => !prev)}
-              className={`rounded-control border border-line px-3 py-2 text-body text-primary transition-colors duration-base ease-standard hover:border-line-strong ${
-                arranging ? "bg-active" : "bg-transparent"
-              }`}
-            >
-              {arranging ? "Done" : "Arrange"}
-            </button>
-            {arranging && (
-              <button
-                type="submit"
-                className="rounded-control bg-accent px-3 py-2 text-body font-semibold text-canvas transition-colors duration-base ease-standard hover:bg-accent-dark"
-              >
-                Save layout
-              </button>
-            )}
-          </form>
         </div>
       </div>
-
-      {result && result !== "saved" && <div className="mb-3.5 text-lead text-negative">{result}</div>}
 
       {/* Three tiers, in the order the questions actually get asked: where do
           I stand, what should I know, what else moved. The old layout was a
@@ -739,47 +648,27 @@ export function DashboardHome({
           widget the same visual claim as the total value of the account and
           left the page with nothing to look at first. */}
       <div className="flex flex-col gap-3.5">
-        {showStanding && renderStanding()}
+        {renderStanding()}
 
         {/* The assistant's finding beside the market rail, rather than a
             full-width band above it. At full width its prose ran to a measure
             no one reads comfortably, and it pushed the three supporting cards
             entirely below the fold; sharing the row puts the page's one piece
             of real reading next to the numbers it is about. */}
-        {(showFlagged || rail.length > 0) && (
-          <div className="grid grid-cols-1 items-start gap-3.5 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
-            {showFlagged ? renderFlagged() : <div />}
-            {rail.length > 0 && (
-              // A grid, not a flex column. The cards carry `self-start` so a
-              // short module does not stretch to a tall neighbour's height -
-              // and in a flex column `self-start` is the *horizontal* axis,
-              // which shrank each card to the width of its own text. In a
-              // single-column grid it means what it was written to mean.
-              <div className="grid gap-3.5">
-                {rail.map((key, index) => renderCard(key, index))}
-              </div>
-            )}
+        <div className="grid grid-cols-1 items-start gap-3.5 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
+          {renderFlagged()}
+          {/* A grid, not a flex column. The cards carry `self-start` so a
+              short module does not stretch to a tall neighbour's height -
+              and in a flex column `self-start` is the *horizontal* axis,
+              which shrank each card to the width of its own text. In a
+              single-column grid it means what it was written to mean. */}
+          <div className="grid gap-3.5">
+            {rail.map((key, index) => renderCard(key, index))}
           </div>
-        )}
+        </div>
 
         {bands.map((key, index) => renderCard(key, rail.length + index))}
       </div>
-
-      {hidden.length > 0 && (
-        <div className="mt-4 flex flex-wrap items-center gap-2.5 rounded-panel border border-dashed border-line px-4 py-3">
-          <span className="font-mono text-eyebrow text-dim uppercase">Hidden</span>
-          {hidden.map((key) => (
-            <button
-              key={key}
-              type="button"
-              onClick={() => showModule(key)}
-              className="rounded-full border border-line px-3 py-1 text-caption text-muted transition-colors duration-base ease-standard hover:border-accent hover:text-primary"
-            >
-              + {moduleMap.get(key)?.label}
-            </button>
-          ))}
-        </div>
-      )}
 
       {/* The strip above scrolls and the chart animates, which together imply
           a live tape. One line, once, says what the page is actually made of -
