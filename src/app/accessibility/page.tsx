@@ -1,6 +1,11 @@
 import { LegalShell } from "@/components/legal-shell";
 
-export const metadata = { title: "Accessibility - Cairn" };
+export const metadata = {
+  title: "Accessibility - Cairn",
+  description:
+    "What accessibility checks Cairn runs automatically and by hand, what has not been verified yet, and how to report a problem.",
+  alternates: { canonical: "/accessibility" },
+};
 
 // Wave 12.5. The brief's own instruction is the hard part here: "Don't let the
 // statement overstate what's actually been verified." Most accessibility

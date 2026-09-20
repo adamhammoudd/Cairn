@@ -1,7 +1,12 @@
 import { LegalShell } from "@/components/legal-shell";
 import { TOS_VERSION, legalDateDisplay } from "@/lib/legal-versions";
 
-export const metadata = { title: "Terms of Service - Cairn" };
+export const metadata = {
+  title: "Terms of Service - Cairn",
+  description:
+    "The terms for using Cairn: what the service is and is not, accounts, how the AI analysis works, subscriptions and billing, liability, and governing law.",
+  alternates: { canonical: "/terms" },
+};
 
 export default function TermsofServicePage() {
   return (

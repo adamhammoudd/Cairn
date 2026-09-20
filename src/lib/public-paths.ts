@@ -33,12 +33,17 @@ const PUBLIC_PREFIXES = ["/waitlist"];
 // middleware never runs on them; this is the second layer, in case the matcher
 // is ever loosened. robots.txt in particular has to stay reachable for the
 // pre-launch `Disallow: /` to mean anything.
-const PUBLIC_FILES = new Set(["/robots.txt", "/sitemap.xml"]);
+const PUBLIC_FILES = new Set(["/robots.txt", "/sitemap.xml", "/llms.txt", "/site.webmanifest"]);
+
+// The generated share image (src/app/opengraph-image.tsx). Link-preview bots
+// fetch it with no session; the path may carry a hash suffix, so it is a prefix.
+const PUBLIC_IMAGE_PREFIX = "/opengraph-image";
 
 export function isPublicPath(pathname: string): boolean {
   // API routes carry their own auth (session cookie / webhook signature).
   if (pathname === "/api" || pathname.startsWith("/api/")) return true;
   if (PUBLIC_FILES.has(pathname)) return true;
+  if (pathname.startsWith(PUBLIC_IMAGE_PREFIX)) return true;
   if (PUBLIC_EXACT.has(pathname)) return true;
   return PUBLIC_PREFIXES.some(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),

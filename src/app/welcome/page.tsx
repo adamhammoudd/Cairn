@@ -3,11 +3,13 @@ import Link from "next/link";
 import { Logo } from "@/components/logo";
 import { MarketingMotion } from "@/components/marketing-motion";
 import { ProofCard } from "@/app/waitlist/proof-card";
+import { JsonLd } from "@/components/json-ld";
+import { WELCOME_DESCRIPTION, softwareApplicationJsonLd } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Cairn · Finance, clearly marked",
-  description:
-    "Cairn is a portfolio-aware research assistant that answers questions about tickers, sectors and markets with its sources, historical analogs and confidence. Informational only - no brokerage, no trade execution, and never a buy/hold/sell call.",
+  description: WELCOME_DESCRIPTION,
+  alternates: { canonical: "/welcome" },
 };
 
 /**
@@ -156,6 +158,7 @@ export default function WelcomePage() {
           "radial-gradient(1000px 500px at 14% -10%, rgba(47,198,133,.12), transparent 70%), radial-gradient(820px 440px at 92% 2%, rgba(91,141,239,.07), transparent 72%)",
       }}
     >
+      <JsonLd data={softwareApplicationJsonLd()} />
       <MarketingMotion />
 
       <header

@@ -51,13 +51,16 @@ export async function proxy(request: NextRequest) {
 export default proxy;
 
 export const config = {
-  // `robots.txt` and `sitemap.xml` are excluded here as well as `favicon.ico`:
+  // `robots.txt`, `sitemap.xml`, `llms.txt`, `site.webmanifest` and the generated
+  // `opengraph-image` route are excluded here as well as `favicon.ico`:
   // without it the middleware runs on `/robots.txt`, sees no session, and 307s
   // it to `/waitlist` - so there was effectively no robots.txt in production.
+  // The same fault would 307 the share image a link-preview bot fetches, and
+  // the manifest every browser fetches, to an HTML page.
   // Next only static-analyses a string literal here, so this cannot be lifted
   // into a shared constant; the same list is mirrored in lib/public-paths.ts
   // (isPublicPath) as a second layer, and both are pinned by test:proxy-paths.
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|llms\\.txt|site\\.webmanifest|opengraph-image|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

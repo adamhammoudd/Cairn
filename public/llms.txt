@@ -1,0 +1,18 @@
+# Cairn
+
+> Cairn is a pre-launch market-research assistant. You ask it about a ticker, a sector or the market, and each answer comes back with the articles it read, the historical cases it compared and how confident it is. It is informational only: not a broker, no trade execution, and it never says buy, hold or sell.
+
+Cairn has not launched yet. The only open action is joining the waitlist for early access.
+
+## Pages
+
+- [Join the waitlist](/waitlist): what Cairn is and how to get early access
+- [Overview](/welcome): what an answer contains and the Free and Premium plans
+
+## Legal
+
+- [Terms of Service](/terms)
+- [Privacy Policy](/privacy)
+- [Cancellation and refunds](/refunds)
+- [Legal notice](/legal-notice)
+- [Accessibility](/accessibility)

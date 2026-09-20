@@ -1,6 +1,11 @@
 import { LegalShell } from "@/components/legal-shell";
 
-export const metadata = { title: "Legal notice - Cairn" };
+export const metadata = {
+  title: "Legal notice - Cairn",
+  description:
+    "Who operates Cairn, the supervisory authorities, how to raise a consumer dispute, and where the service is hosted.",
+  alternates: { canonical: "/legal-notice" },
+};
 
 // Trader identification page (imprint / mentions légales).
 //

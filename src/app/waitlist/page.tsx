@@ -10,6 +10,7 @@ export const metadata: Metadata = {
   title: "Join the waitlist · Cairn",
   description:
     "Cairn is a pre-launch AI research assistant that ranks market analysis around the tickers you hold and shows its sources. No brokerage, no trade execution. Join the waitlist for early access.",
+  alternates: { canonical: "/waitlist" },
 };
 
 // Reads the live founding-slot state, so it renders per request.
