@@ -259,6 +259,7 @@ export function WatchlistPanel({ watchlists }: { watchlists: WatchlistWithItems[
                     <input
                       value={query}
                       onChange={(e) => setQuery(e.target.value)}
+                      aria-label="Filter list"
                       placeholder="Filter list"
                       className="w-[130px] bg-transparent text-body text-primary outline-none placeholder:text-dim"
                     />

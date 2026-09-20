@@ -62,17 +62,12 @@ export function AlertPanel({ alerts, deliveries, defaultChannels }: AlertPanelPr
   // live price/threshold distance this component isn't given (alerts +
   // deliveries only). Adding it means passing current prices in as a prop,
   // which is a data-plumbing decision, not a styling one.
-  const now = new Date();
-  const deliveriesThisMonth = deliveries.filter((d) => {
-    const sent = new Date(d.sent_at);
-    return sent.getFullYear() === now.getFullYear() && sent.getMonth() === now.getMonth();
-  });
   const STATS: { label: string; value: string; note: string; textClass: string; accent: string }[] = [
     { label: "Armed", value: String(armed.length), note: "watching at every close", textClass: "text-accent", accent: "#2fc685" },
     {
-      label: "Fired this month",
-      value: String(deliveriesThisMonth.length),
-      note: `across ${new Set(deliveriesThisMonth.map((d) => d.alert_id)).size} alerts`,
+      label: "Recent deliveries",
+      value: String(deliveries.length),
+      note: "latest in-app notifications",
       textClass: "text-warning",
       accent: "#d9a441",
     },

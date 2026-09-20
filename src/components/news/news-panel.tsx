@@ -197,6 +197,7 @@ export function NewsPanel({ items }: { items: NewsFeedItem[] }) {
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
+            aria-label="Filter headlines"
             placeholder="Filter headlines"
             className="min-w-0 flex-1 bg-transparent text-[12.5px] text-primary outline-none placeholder:text-dim"
           />
