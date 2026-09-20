@@ -3,12 +3,11 @@
 //
 // lib/supabase/read.ts exists so a failed database read throws a named
 // DataReadError instead of resolving to `[]` / `$0` - a wrong reading, not a
-// degraded one, on a financial surface. runScreen adopted it; Watchlists,
-// Comparison and Planning (which feeds the Position Sizing and Goal Tracker
-// calculators' default account value) did not - they kept `data ?? []`.
+// degraded one, on a financial surface. runScreen adopted it; Watchlists and
+// Comparison did not - they kept `data ?? []`.
 //
 // This is a structural regression lock, in the style of settings-wiring.ts:
-// for each of the three server-action modules, every price/holdings/list read
+// for each of the server-action modules, every price/holdings/list read
 // must go through unwrap/unwrapRows, and none of the specific swallows that
 // were removed may come back.
 //
@@ -49,11 +48,6 @@ const TARGETS: Target[] = [
     minUnwraps: 5,
     bannedSwallows: ["(data ?? [])", "barRows ?? []", "fundamentals ?? []", "directory ?? []", "coins ?? []"],
   },
-  {
-    file: "src/lib/actions/planning.ts",
-    minUnwraps: 3,
-    bannedSwallows: ["holdings ?? []", "prices ?? []", "goals ?? []", "(goals ?? [])"],
-  },
 ];
 
 for (const t of TARGETS) {
@@ -81,13 +75,6 @@ for (const t of TARGETS) {
     const gone = !code.includes(swallow);
     check(`${name}: swallow "${swallow}" stays removed`, gone, gone ? "" : "REINTRODUCED");
   }
-}
-
-// The calculators page must catch a DataReadError like the other data pages,
-// now that planning.ts can throw one.
-{
-  const page = readFileSync(join(ROOT, "src/app/(app)/calculators/page.tsx"), "utf8");
-  check("calculators/page.tsx wraps its body in guardReads", /guardReads\(/.test(page), "");
 }
 
 console.log(`\n${pass}/${pass + fail} fail-loud-read cases passed`);

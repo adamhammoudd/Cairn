@@ -611,19 +611,6 @@ export interface Database {
         Update: never;
         Relationships: [];
       };
-      goals: {
-        Row: {
-          id: string;
-          user_id: string;
-          name: string;
-          target_value: number;
-          target_date: string;
-          created_at: string;
-        };
-        Insert: { user_id: string; name: string; target_value: number; target_date: string };
-        Update: never;
-        Relationships: [];
-      };
       subscriptions: {
         Row: {
           user_id: string;

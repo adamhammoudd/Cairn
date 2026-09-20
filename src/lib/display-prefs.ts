@@ -147,32 +147,6 @@ export function formatSignedMoney(usd: number | null | undefined, prefs: Display
   return `${usd >= 0 ? "+" : ""}${formatMoney(usd, prefs)}`;
 }
 
-/**
- * Label a figure the user typed in, in their display currency, WITHOUT
- * converting it.
- *
- * The calculators are the case this exists for: someone entering a 10,000
- * starting balance means 10,000 of whatever they think in, so running it
- * through the USD->display rate would silently rewrite their own input. They
- * still need the right symbol on the output, though - projecting a euro
- * balance and printing "$" is its own small lie.
- *
- * Anything sourced from market data must use formatMoney() instead, which
- * converts. The distinction is the whole point of having two functions.
- */
-export function formatAmount(
-  value: number | null | undefined,
-  prefs: DisplayPrefs,
-  options: Intl.NumberFormatOptions = {},
-): string {
-  if (value === null || value === undefined || !Number.isFinite(value)) return "-";
-  return value.toLocaleString(undefined, {
-    style: "currency",
-    currency: prefs.effectiveCurrency,
-    ...options,
-  });
-}
-
 export function formatPercent(pct: number | null | undefined, digits = 2): string {
   if (pct === null || pct === undefined || !Number.isFinite(pct)) return "-";
   return `${pct >= 0 ? "+" : ""}${pct.toFixed(digits)}%`;

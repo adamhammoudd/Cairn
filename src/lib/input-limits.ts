@@ -1,5 +1,5 @@
-// Bounds for user-entered numeric amounts (holding quantity/price, calculator
-// balances, alert thresholds).
+// Bounds for user-entered numeric amounts (holding quantity/price, alert
+// thresholds).
 //
 // Two problems this closes: an unbounded field lets someone push an absurd
 // value straight into the DB, and once it's stored every downstream product
@@ -14,26 +14,6 @@ export const MAX_AMOUNT_INPUT = 10_000_000_000;
 export function clampAmount(n: number): number {
   if (!Number.isFinite(n) || n < 0) return 0;
   return Math.min(n, MAX_AMOUNT_INPUT);
-}
-
-/**
- * Bounds for the percentage-rate fields in the calculators (annual return,
- * inflation, fee drag, withdrawal rate). Without them, a fat-fingered "700"
- * instead of "7" compounds a projection into a meaningless number - and there
- * is no rate outside this range worth modelling.
- */
-export const MIN_RATE_INPUT = -100;
-export const MAX_RATE_INPUT = 100;
-
-/**
- * Clamp a percentage rate into [MIN_RATE_INPUT, MAX_RATE_INPUT]; non-finite ->
- * 0. `allowNegative` defaults to false (fee, inflation and withdrawal rates
- * cannot be negative); pass true for a return rate.
- */
-export function clampRate(n: number, { allowNegative = false } = {}): number {
-  if (!Number.isFinite(n)) return 0;
-  const lo = allowNegative ? MIN_RATE_INPUT : 0;
-  return Math.min(Math.max(n, lo), MAX_RATE_INPUT);
 }
 
 /**

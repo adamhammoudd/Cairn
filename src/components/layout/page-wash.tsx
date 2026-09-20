@@ -51,10 +51,6 @@ const WASHES: [prefix: string, gradient: string][] = [
     "radial-gradient(880px 420px at 10% -8%, rgba(217,164,65,.09), transparent 70%), radial-gradient(700px 380px at 94% 0%, rgba(47,198,133,.07), transparent 72%)",
   ],
   [
-    "/calendar",
-    "radial-gradient(880px 420px at 10% -8%, rgba(91,141,239,.10), transparent 70%), radial-gradient(700px 380px at 94% 0%, rgba(217,164,65,.07), transparent 72%)",
-  ],
-  [
     "/research",
     "radial-gradient(880px 420px at 8% -8%, rgba(155,140,224,.10), transparent 70%), radial-gradient(720px 380px at 95% 0%, rgba(47,198,133,.07), transparent 72%)",
   ],
@@ -65,10 +61,6 @@ const WASHES: [prefix: string, gradient: string][] = [
   [
     "/crypto",
     "radial-gradient(880px 420px at 8% -8%, rgba(155,140,224,.10), transparent 70%), radial-gradient(720px 380px at 95% 0%, rgba(47,198,133,.07), transparent 72%)",
-  ],
-  [
-    "/calculators",
-    "radial-gradient(880px 420px at 10% -8%, rgba(91,141,239,.09), transparent 70%), radial-gradient(700px 380px at 94% 0%, rgba(217,164,65,.07), transparent 72%)",
   ],
   [
     "/onboarding",

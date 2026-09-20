@@ -18,9 +18,9 @@ const PUBLIC_PAGES = ["/login", "/signup", "/forgot-password", "/reset-password"
 
 // Reachable only with a session; named so the report is explicit about scope.
 const UNCOVERED = [
-  "/ (dashboard)", "/markets", "/portfolio", "/watchlists", "/news", "/calendar",
+  "/ (dashboard)", "/markets", "/portfolio", "/watchlists", "/news",
   "/screener", "/comparison", "/alerts", "/assistant", "/research", "/settings",
-  "/billing", "/ticker/[symbol]", "/crypto", "/sector-map", "/calculators", "/onboarding",
+  "/billing", "/ticker/[symbol]", "/crypto", "/sector-map", "/onboarding",
 ];
 
 interface Finding {

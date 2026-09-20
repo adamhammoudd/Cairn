@@ -45,8 +45,6 @@ insert into subscriptions (user_id, tier)
   on conflict (user_id) do update set tier = 'premium';
 insert into discussion_threads (symbol, user_id, body)
   values ('AAPL', 'eeeeeeee-0000-4000-8000-00000000000e', 'a public comment');
-insert into goals (user_id, name, target_value, target_date)
-  values ('eeeeeeee-0000-4000-8000-00000000000e', 'goal', 1000, '2027-01-01');
 insert into ai_usage_events (user_id) values ('eeeeeeee-0000-4000-8000-00000000000e');
 insert into chat_usage_events (user_id) values ('eeeeeeee-0000-4000-8000-00000000000e');
 
@@ -72,8 +70,6 @@ insert into results select 'profiles removed', '0', count(*)::text, count(*) = 0
   from profiles where user_id = 'eeeeeeee-0000-4000-8000-00000000000e';
 insert into results select 'user_settings removed', '0', count(*)::text, count(*) = 0
   from user_settings where user_id = 'eeeeeeee-0000-4000-8000-00000000000e';
-insert into results select 'goals removed', '0', count(*)::text, count(*) = 0
-  from goals where user_id = 'eeeeeeee-0000-4000-8000-00000000000e';
 insert into results select 'ai_usage_events removed', '0', count(*)::text, count(*) = 0
   from ai_usage_events where user_id = 'eeeeeeee-0000-4000-8000-00000000000e';
 insert into results select 'chat_usage_events removed', '0', count(*)::text, count(*) = 0
