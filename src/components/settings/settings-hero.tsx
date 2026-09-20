@@ -33,7 +33,7 @@ export function SettingsHero({ chips }: { chips: StatusChip[] }) {
       <div className="relative flex flex-wrap items-end justify-between gap-4 px-5 py-5">
         <div className="min-w-0">
           <div className="font-mono text-eyebrow text-muted uppercase">Your account</div>
-          <h1 className="mt-2.5 font-serif text-display leading-[1.02] font-normal tracking-[-0.02em] text-primary">
+          <h1 className="mt-2.5 font-serif text-[42px] leading-[1.02] font-normal tracking-[-0.02em] text-primary">
             Settings
           </h1>
           <p className="mt-2.5 max-w-[520px] text-lead leading-[1.6] text-muted text-pretty">

@@ -10,7 +10,7 @@ import {
   reorderWatchlistItems,
   type WatchlistWithItems,
 } from "@/lib/actions/watchlists";
-import { tintForWatchlist } from "@/lib/watchlists";
+import { tintClassesForWatchlist } from "@/lib/watchlists";
 import { Sparkline } from "@/components/sparkline";
 import { DataFreshness } from "@/components/data-freshness";
 import { useDisplayPrefs } from "@/components/display-prefs-provider";
@@ -80,47 +80,24 @@ export function WatchlistPanel({ watchlists }: { watchlists: WatchlistWithItems[
   const mostlyUp = listSize > 0 && greens >= listSize / 2;
 
   return (
-    <div className="animate-page-in flex flex-col gap-3.5">
+    <div className="animate-page-in mx-auto flex max-w-[1240px] flex-col gap-3.5">
       <div className="flex flex-wrap items-end justify-between gap-[18px]">
         <div className="min-w-0">
-          <div className="mb-2 font-mono text-[10.5px] tracking-[0.18em] text-muted uppercase">
-            Portfolio · Watchlists
-          </div>
-          <h1 className="font-serif text-[40px] leading-[1.05] font-normal tracking-[-0.015em] text-primary">
-            {active?.name ?? "Watchlists"}
+          <div className="font-mono text-[10.5px] tracking-[0.18em] text-muted uppercase">Portfolio · Watchlists</div>
+          <h1 className="mt-2 font-serif text-[40px] leading-[1.05] font-normal tracking-[-0.015em] text-primary">
+            Watchlists
           </h1>
-          {active?.description ? (
-            <p className="mt-2 max-w-[520px] text-[13.5px] leading-[1.55] text-muted text-pretty">
-              {active.description}
-            </p>
-          ) : (
-            <p className="mt-2 max-w-[520px] text-[13.5px] leading-[1.55] text-muted text-pretty">
-              Names you don&apos;t own yet. Group them however you think, and Cairn tells you when one crosses a level
-              you care about.
-            </p>
-          )}
+          <p className="mt-2 max-w-[520px] text-[13.5px] leading-[1.55] text-muted text-pretty">
+            Names you don&apos;t own yet. Group them however you think, and Cairn tells you when one crosses a level you
+            care about.
+          </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-        {active && (
-          <span
-            className={`rounded-full border px-3 py-[7px] font-mono text-micro ${
-              listSize === 0
-                ? "border-line text-dim"
-                : mostlyUp
-                  ? "border-accent/35 bg-accent/10 text-accent-light"
-                  : "border-negative/35 bg-negative/10 text-negative-light"
-            }`}
-          >
-            {listSize === 0 ? "No symbols yet" : `${greens} up · ${listSize - greens} down`}
-          </span>
-        )}
         <Link
           href="/watchlists/new"
           className="rounded-[9px] bg-accent px-4 py-[9px] text-[12.5px] font-bold text-canvas transition-[background,transform] duration-base ease-standard hover:-translate-y-px hover:bg-accent-light"
         >
           + New list
         </Link>
-        </div>
       </div>
 
       <div
@@ -146,12 +123,12 @@ export function WatchlistPanel({ watchlists }: { watchlists: WatchlistWithItems[
                 }`}
               >
                 <span
-                  className={`h-2 w-2 shrink-0 rounded-xs ${tintForWatchlist(w.id)} ${isActive ? "" : "opacity-55"}`}
+                  className={`h-2 w-2 shrink-0 rounded-xs ${tintClassesForWatchlist(w.id).dot} ${isActive ? "" : "opacity-55"}`}
                 />
                 <span className={`min-w-0 flex-1 truncate text-[12.5px] ${isActive ? "text-primary" : "text-muted"}`}>{w.name}</span>
                 <span
                   className={`rounded-[5px] px-1.5 py-px font-mono text-eyebrow ${
-                    isActive ? "bg-active text-primary" : "bg-[#161616] text-dim"
+                    isActive ? tintClassesForWatchlist(w.id).count : "bg-[#161616] text-dim"
                   }`}
                 >
                   {w.items.length}
@@ -190,6 +167,47 @@ export function WatchlistPanel({ watchlists }: { watchlists: WatchlistWithItems[
         </div>
       ) : (
         <>
+          <div
+            className="animate-rise-in flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#232323] bg-panel px-5.5 py-[18px]"
+            style={{ animationDelay: "110ms" }}
+          >
+            <div className="min-w-0">
+              <div className="flex items-center gap-2.5">
+                <span aria-hidden className={`h-[9px] w-[9px] rounded-xs ${tintClassesForWatchlist(active.id).dot}`} />
+                <h2 className="font-serif text-[26px] leading-tight font-normal text-primary">{active.name}</h2>
+              </div>
+              <p className="mt-1.5 text-[12.5px] text-muted">
+                {listSize > 0 ? `${listSize} ${listSize === 1 ? "symbol" : "symbols"} · ` : ""}
+                {active.description || "Prices and 30-day trend from the last daily close."}
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <span
+                className={`rounded-full border px-3 py-[7px] font-mono text-micro ${
+                  listSize === 0
+                    ? "border-line text-dim"
+                    : mostlyUp
+                      ? "border-accent/35 bg-accent/10 text-accent-light"
+                      : "border-negative/35 bg-negative/10 text-negative-light"
+                }`}
+              >
+                {listSize === 0 ? "No symbols yet" : `${greens} up · ${listSize - greens} down`}
+              </span>
+              <label className="flex items-center gap-[7px] rounded-[10px] border border-line bg-[#0c0c0c] px-3 py-2">
+                <span aria-hidden className="text-caption text-dim">
+                  ⌕
+                </span>
+                <input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  aria-label="Filter list"
+                  placeholder="Filter list"
+                  className="w-[130px] bg-transparent text-body text-primary outline-none placeholder:text-dim"
+                />
+              </label>
+            </div>
+          </div>
+
           <form action={addAction} className="flex flex-wrap items-center gap-2">
             <input type="hidden" name="watchlist_id" value={active.id} />
             {/* Was a plain text input that accepted any string: a beta tester
@@ -247,26 +265,7 @@ export function WatchlistPanel({ watchlists }: { watchlists: WatchlistWithItems[
             <div className="flex flex-col gap-3.5">
               {/* The same stored closes Markets and the ticker page show, so
                   the same freshness statement rather than none at all. */}
-              <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#232323] bg-panel px-[22px] py-4">
-                <span className="font-mono text-eyebrow tracking-[0.16em] text-primary uppercase">
-                  {sortedItems.length} {sortedItems.length === 1 ? "symbol" : "symbols"}
-                </span>
-                <div className="flex items-center gap-3">
-                  <label className="flex items-center gap-2 rounded-control border border-line bg-canvas px-3 py-2">
-                    <span aria-hidden className="text-caption text-dim">
-                      ⌕
-                    </span>
-                    <input
-                      value={query}
-                      onChange={(e) => setQuery(e.target.value)}
-                      aria-label="Filter list"
-                      placeholder="Filter list"
-                      className="w-[130px] bg-transparent text-body text-primary outline-none placeholder:text-dim"
-                    />
-                  </label>
-                  <DataFreshness source="last_close" asOf={listAsOf} />
-                </div>
-              </div>
+              <DataFreshness source="last_close" asOf={listAsOf} className="self-end" />
               {visibleItems.length === 0 ? (
                 <div className="rounded-card border border-dashed border-line px-6 py-16 text-center">
                   <div className="font-serif text-h3 text-primary">No match for &quot;{query}&quot;</div>
@@ -303,9 +302,9 @@ export function WatchlistPanel({ watchlists }: { watchlists: WatchlistWithItems[
                           </span>
                           <Link href={`/ticker/${item.symbol}`} className="flex min-w-0 items-center gap-2.5">
                             <span
-                              className={`flex h-7.5 w-7.5 shrink-0 items-center justify-center rounded-[9px] border bg-panel font-mono text-[10.5px] ${tintForWatchlist(
+                              className={`flex h-7.5 w-7.5 shrink-0 items-center justify-center rounded-[9px] border font-mono text-[10.5px] ${tintClassesForWatchlist(
                                 active.id,
-                              ).replace("bg-", "text-")} border-line`}
+                              ).avatar}`}
                             >
                               {item.symbol.slice(0, 2)}
                             </span>

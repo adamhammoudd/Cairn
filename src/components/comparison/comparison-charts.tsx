@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { CHART_TOOLTIP, CHART_AXIS_TICK, CHART_GRID } from "@/lib/chart-theme";
 import { xAxisConfig } from "@/lib/portfolio";
 import { formatTooltipLabel } from "@/lib/chart-dates";
@@ -20,9 +20,9 @@ import type { ChartView } from "@/lib/supabase/types";
 // as a long-history one. Merging every symbol onto a single date-keyed row set
 // removes the whole class of bug -- the x-axis is now literally shared.
 //
-// Values are indexed to 100 at each symbol's first bar inside the window, the
-// only way $4 and $400 instruments c-n share one y-axis and still be
-// comparable. Absolute prices stay on the summary cards and the table.
+// Values are rebased to 0% at each symbol's first bar inside the window, the
+// only way $4 and $400 instruments can share one y-axis and still be
+// comparable. Absolute prices stay in the table.
 interface MergedPoint {
   date: string;
   [symbol: string]: string | number | null;
@@ -41,7 +41,7 @@ function buildMergedSeries(rows: ComparisonRow[], timeframe: ChartView) {
       // A zero or non-finite base would make every indexed value Infinity;
       // skip the symbol rather than poisoning the shared y-domain.
       if (!Number.isFinite(base) || base === 0) continue;
-      indexed.set(p.date, (p.value / base) * 100);
+      indexed.set(p.date, (p.value / base - 1) * 100);
       dates.add(p.date);
     }
     if (indexed.size > 0) seriesBySymbol.set(row.symbol, indexed);
@@ -81,28 +81,21 @@ export function ComparisonCharts({ rows, timeframe }: { rows: ComparisonRow[]; t
 
   if (merged.length === 0) {
     return (
-      <div className="rounded-card border border-line bg-panel p-4">
-        <div className="flex h-[300px] items-center justify-center text-caption text-muted">
-          No overlapping price history for this timeframe.
-        </div>
+      <div className="mt-4.5 flex h-[290px] items-center justify-center rounded-card border border-dashed border-line text-caption text-muted">
+        No overlapping price history for this timeframe.
       </div>
     );
   }
 
-  return (
-    <div className="rounded-card border border-line bg-panel p-4">
-      <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
-        <div className="font-mono text-eyebrow text-muted uppercase">
-          Indexed to 100 · shared timeline · {timeframe}
-        </div>
-        <div className="text-caption text-dim">
-          Relative move from the start of the window - absolute prices are on the cards above.
-        </div>
-      </div>
+  const first = merged[0].date;
+  const last = merged[merged.length - 1].date;
 
-      <ResponsiveContainer width="100%" height={320}>
-        <LineChart data={merged} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
+  return (
+    <div className="relative mt-4.5">
+      <ResponsiveContainer width="100%" height={290}>
+        <LineChart data={merged} margin={{ top: 10, right: 8, left: 0, bottom: 0 }}>
           <CartesianGrid {...CHART_GRID} />
+          <ReferenceLine y={0} stroke="var(--color-line-strong)" strokeDasharray="4 5" />
           <XAxis
             dataKey="date"
             interval={interval}
@@ -118,19 +111,13 @@ export function ComparisonCharts({ rows, timeframe }: { rows: ComparisonRow[]; t
             tick={CHART_AXIS_TICK}
             axisLine={false}
             tickLine={false}
-            tickFormatter={(v) => Number(v).toFixed(0)}
+            tickFormatter={(v) => `${Number(v).toFixed(0)}%`}
           />
           <Tooltip
-            formatter={(value, name) => [`${Number(value).toFixed(1)} (${(Number(value) - 100).toFixed(1)}%)`, name]}
+            formatter={(value, name) => [`${Number(value) >= 0 ? "+" : "−"}${Math.abs(Number(value)).toFixed(1)}%`, name]}
             labelFormatter={(label) => formatTooltipLabel(String(label))}
             {...CHART_TOOLTIP}
             itemSorter={(item) => -Number(item.value ?? 0)}
-          />
-          <Legend
-            verticalAlign="top"
-            height={26}
-            iconType="plainline"
-            wrapperStyle={{ fontSize: 12, color: "var(--color-muted)" }}
           />
           {plotted.map((symbol) => (
             <Line
@@ -155,6 +142,12 @@ export function ComparisonCharts({ rows, timeframe }: { rows: ComparisonRow[]; t
           ))}
         </LineChart>
       </ResponsiveContainer>
+
+      <div className="mt-2 flex justify-between font-mono text-eyebrow text-dim uppercase">
+        <span>{formatTooltipLabel(first)}</span>
+        <span>rebased to 0%</span>
+        <span>{formatTooltipLabel(last)}</span>
+      </div>
 
       {missing.length > 0 && (
         <p className="mt-2.5 text-caption text-dim">

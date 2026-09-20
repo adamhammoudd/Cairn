@@ -5,13 +5,9 @@ import { useState } from "react";
 import Link from "next/link";
 import { ComparisonCharts } from "@/components/comparison/comparison-charts";
 import { ComparisonTable } from "@/components/comparison/comparison-table";
-import { COMPARISON_COLORS, MAX_COMPARE, seriesFor, type ComparisonRow } from "@/lib/comparison";
-import { Sparkline } from "@/components/sparkline";
+import { COMPARISON_COLORS, MAX_COMPARE, type ComparisonRow } from "@/lib/comparison";
 import { SymbolTypeahead } from "@/components/symbol-typeahead";
 import { DataFreshness } from "@/components/data-freshness";
-import { useDisplayPrefs } from "@/components/display-prefs-provider";
-import { absoluteChangeFrom, formatChange, formatMoney } from "@/lib/display-prefs";
-import { assetTypeBadge } from "@/lib/screener";
 import type { ChartView } from "@/lib/supabase/types";
 
 const TIMEFRAMES: ChartView[] = ["1D", "1W", "1M", "3M", "1Y", "ALL"];
@@ -30,7 +26,6 @@ export function ComparisonPanel({
   defaultTimeframe?: ChartView;
 }) {
   const router = useRouter();
-  const prefs = useDisplayPrefs();
   const [timeframe, setTimeframe] = useState<ChartView>(defaultTimeframe);
   // Adding a symbol re-navigates (`selected` is driven by the URL), and the
   // quick-add chips reorder the instant `available` recomputes - a second
@@ -61,7 +56,7 @@ export function ComparisonPanel({
   const canAdd = selected.length < MAX_COMPARE;
 
   return (
-    <div className="animate-page-in flex flex-col gap-3.5">
+    <div className="animate-page-in mx-auto flex max-w-[1240px] flex-col gap-3.5">
       <div className="mb-1.5 flex flex-wrap items-end justify-between gap-[18px]">
         <div>
           <div className="mb-2 font-mono text-[10.5px] tracking-[0.18em] text-muted uppercase">Compare</div>
@@ -78,20 +73,6 @@ export function ComparisonPanel({
             <span className="text-[12.5px] text-dim">
               {selected.length} of {MAX_COMPARE} slots used
             </span>
-            {/* Was a fixed dropdown of the tracked universe, so a symbol Cairn
-                had not ingested could not be compared at all. The shared
-                type-ahead searches the directory and falls through to the
-                provider, ingesting on selection. */}
-            <SymbolTypeahead
-              name={null}
-              clearOnSelect
-              required={false}
-              exclude={selected}
-              placeholder="Add a ticker to compare…"
-              onSelect={(r) => addSymbol(r.symbol)}
-              className="min-w-[220px]"
-              inputClassName="w-full rounded-full border border-dashed border-line bg-transparent px-3 py-2 font-mono text-micro text-muted uppercase outline-none transition-colors duration-base ease-standard placeholder:normal-case hover:border-accent focus:border-accent focus:text-primary"
-            />
             {available.slice(0, 3).map((symbol) => (
               <button
                 key={symbol}
@@ -109,81 +90,65 @@ export function ComparisonPanel({
         )}
       </div>
 
-      {rows.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-line px-6 py-16 text-center">
-          <div className="font-serif text-h3 text-primary">Nothing to line up yet</div>
-          <p className="mx-auto mt-2 max-w-[400px] text-body text-muted text-pretty">
-            Add up to {MAX_COMPARE} tickers and Cairn aligns their price action and fundamentals on the same axes.
-          </p>
-        </div>
-      ) : (
-        <>
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-3">
+      <section
+        className="animate-rise-in relative overflow-hidden rounded-card border border-[#232323] bg-gradient-to-b from-[#101110] to-[#0d0d0d] px-6 py-5.5"
+        style={{ animationDelay: "60ms" }}
+      >
+        <div
+          aria-hidden
+          className="pointer-events-none absolute"
+          style={{
+            inset: "-60% 55% 45% -12%",
+            background: "radial-gradient(closest-side, rgba(91,141,239,.16), transparent)",
+            animation: "cn-glow 7s ease-in-out infinite",
+          }}
+        />
+        <div className="relative flex flex-wrap items-center justify-between gap-3">
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
             {rows.map((row, i) => {
               const color = COMPARISON_COLORS[i % COMPARISON_COLORS.length];
-              const positive = (row.changePct ?? 0) >= 0;
               return (
-                <div
+                <span
                   key={row.symbol}
-                  className="animate-rise-in rounded-[14px] border border-[#232323] bg-panel p-4"
-                  style={{ animationDelay: `${i * 60}ms` }}
+                  className="inline-flex items-center gap-2 rounded-full border px-[11px] py-[7px] font-mono text-[11.5px] text-primary"
+                  style={{ borderColor: `${color}55`, background: `${color}14` }}
                 >
-                  <div className="flex items-start justify-between gap-2.5">
-                    <div className="min-w-0">
-                      <Link
-                        href={`/ticker/${row.symbol}`}
-                        className="flex items-center gap-2 text-[13.5px] font-semibold text-primary transition-colors duration-fast ease-standard hover:text-accent"
-                      >
-                        <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: color }} />
-                        {row.symbol}
-                      </Link>
-                      <div className="mt-1 truncate text-micro text-muted">
-                        {row.name ?? <span className="font-mono tracking-[0.08em] uppercase">{assetTypeBadge(row.assetType)}</span>}
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => removeSymbol(row.symbol)}
-                      aria-label={`Remove ${row.symbol}`}
-                      className="flex h-6 w-6 shrink-0 items-center justify-center rounded-control text-lead text-dim transition-colors duration-fast ease-standard hover:bg-negative/12 hover:text-negative"
-                    >
-                      ×
-                    </button>
-                  </div>
-
-                  <div className="mt-3 flex items-baseline gap-2.5">
-                    <span className="font-serif text-h2 tabular-nums text-primary">
-                      {formatMoney(row.price, prefs)}
-                    </span>
-                    <span className={`text-caption tabular-nums ${row.changePct === null ? "text-muted" : positive ? "text-accent" : "text-negative"}`}>
-                      {formatChange(absoluteChangeFrom(row.price, row.changePct), row.changePct, prefs)}
-                    </span>
-                  </div>
-
-                  {/* Coloured by series identity, matching the large chart
-                      directly below - these summary sparklines previously
-                      coloured by gain/loss, so the same series rendered red
-                      here and green or blue there. In this product red means
-                      loss and nothing else, so a series cannot borrow it as an
-                      identity colour. Direction is still carried by the
-                      change figure above, which stays green/red. */}
-                  <Sparkline
-                    values={seriesFor(row, timeframe).map((p) => p.value)}
-                    positive={positive}
-                    color={color}
-                    className="mt-2.5 h-[70px] w-full"
-                    delayMs={i * 60}
-                  />
-                  <div className="mt-1.5 flex items-center justify-between gap-2">
-                    <span className="font-mono text-eyebrow text-dim uppercase">{timeframe} · same window as the chart</span>
-                    <DataFreshness source="last_close" asOf={row.asOf} className="text-eyebrow" />
-                  </div>
-                </div>
+                  <span className="h-[7px] w-[7px] rounded-full" style={{ background: color }} />
+                  <Link
+                    href={`/ticker/${row.symbol}`}
+                    title={row.name ?? undefined}
+                    className="transition-colors duration-fast ease-standard hover:text-accent-light"
+                  >
+                    {row.symbol}
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => removeSymbol(row.symbol)}
+                    aria-label={`Remove ${row.symbol}`}
+                    className="ml-0.5 px-0.5 text-[13px] text-dim transition-colors duration-fast ease-standard hover:text-negative-light"
+                  >
+                    ×
+                  </button>
+                </span>
               );
             })}
+            {canAdd && (
+              <SymbolTypeahead
+                // The shared type-ahead searches the directory and falls
+                // through to the provider, ingesting on selection - so a
+                // symbol Cairn has not seen yet can still be compared.
+                name={null}
+                clearOnSelect
+                required={false}
+                exclude={selected}
+                placeholder="Add a ticker…"
+                onSelect={(r) => addSymbol(r.symbol)}
+                className="min-w-[180px]"
+                inputClassName="w-full rounded-full border border-line bg-panel px-3.5 py-[7px] font-mono text-[11.5px] text-primary uppercase outline-none transition-colors duration-base ease-standard placeholder:normal-case placeholder:text-dim hover:border-line-strong focus:border-accent"
+              />
+            )}
           </div>
-
-          <div className="flex w-fit flex-wrap gap-[3px] rounded-[10px] border border-[#232323] bg-[#0c0c0c] p-[3px]">
+          <div className="flex gap-[3px] rounded-[10px] border border-[#232323] bg-[#0c0c0c] p-[3px]">
             {TIMEFRAMES.map((tf) => (
               <button
                 key={tf}
@@ -197,11 +162,51 @@ export function ComparisonPanel({
               </button>
             ))}
           </div>
+        </div>
 
-          <ComparisonCharts rows={rows} timeframe={timeframe} />
-          <ComparisonTable rows={rows} />
-        </>
-      )}
+        {rows.length > 0 ? (
+          <div className="relative">
+            <ComparisonCharts rows={rows} timeframe={timeframe} />
+            <div className="mt-2 flex justify-end">
+              <DataFreshness source="last_close" asOf={rows.reduce<string | null>((n, r) => (r.asOf && (!n || r.asOf > n) ? r.asOf : n), null)} />
+            </div>
+          </div>
+        ) : (
+          <div className="relative mt-4.5 flex flex-col items-center gap-2.5 rounded-card border border-dashed border-line px-5 py-16">
+            <svg width="54" height="34" viewBox="0 0 54 34" aria-hidden="true">
+              <path
+                d="M2 26 C 12 26, 14 8, 24 8 S 40 24, 52 6"
+                fill="none"
+                stroke="var(--color-accent)"
+                strokeWidth="2"
+                strokeLinecap="round"
+                pathLength="1"
+                strokeDasharray="1"
+                className="animate-draw"
+              />
+              <path
+                d="M2 30 C 14 30, 18 18, 28 20 S 42 30, 52 22"
+                fill="none"
+                stroke="var(--color-info)"
+                strokeWidth="2"
+                strokeLinecap="round"
+                pathLength="1"
+                strokeDasharray="1"
+                className="animate-draw"
+                style={{ animationDelay: "180ms" }}
+              />
+            </svg>
+            <div className="font-serif text-h2 text-primary">Nothing to line up yet</div>
+            <p className="max-w-[400px] text-center text-body leading-[1.6] text-muted text-pretty">
+              Add a ticker above - or start from one of the suggestions - and Cairn rebases everything to the same zero.
+            </p>
+          </div>
+        )}
+      </section>
+
+      {rows.length > 0 && <ComparisonTable rows={rows} timeframe={timeframe} />}
+
+      <p className="mt-2.5 text-center text-caption text-dim">Prices are daily closes, not a live feed. Nothing here is a recommendation.</p>
     </div>
   );
 }
