@@ -35,13 +35,6 @@ export const NAV_ITEMS: NavEntry[] = [
     ],
   },
   {
-    label: "Planning",
-    items: [
-      { label: "Calculators", route: "/calculators" },
-      { label: "Calendar", route: "/calendar" },
-    ],
-  },
-  {
     label: "Assistant",
     items: [
       { label: "Chat", route: "/assistant" },

@@ -60,8 +60,7 @@ Elevated to its own phase because Phase 4's output type (probability/pattern ana
 - **Discussion Threads (Supabase Synced):** Per-ticker comments, upvote/downvote, spam filtering.
 - **ESG Score Panel:** On the Company Profile tab.
 
-### PHASE 11: Planning Tools & Developer Layer
-- **Retirement/Growth Calculators:** Standalone, no persistence unless saved.
+### PHASE 11: Developer Layer
 - **Data Export & API Layer:** CSV/JSON export, documented `/api/v1/...` routes.
 - **Admin/Dev Utilities:** Role-gated route for data refresh status, rate-limit usage, error logs - extend to include Phase 4 engine health (analog-match rates, confidence distribution over time) since that's now the core product to monitor.
 

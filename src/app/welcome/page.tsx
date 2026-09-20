@@ -82,12 +82,6 @@ const SURFACES = [
     color: "#d9a441",
   },
   {
-    label: "Calendar",
-    body: "Earnings, dividends and splits for the symbols you follow.",
-    href: "/calendar",
-    color: "#e07b7b",
-  },
-  {
     label: "Assistant",
     body: "Ask about a ticker, sector or market trend - answered from stored research.",
     href: "/assistant",

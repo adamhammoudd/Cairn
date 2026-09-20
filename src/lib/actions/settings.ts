@@ -228,7 +228,6 @@ export async function exportUserData() {
     { data: alertDeliveries },
     { data: savedScreens },
     { data: briefings },
-    { data: goals },
     { data: subscription },
     { data: discussion },
     { data: consents },
@@ -249,7 +248,6 @@ export async function exportUserData() {
     supabase.from("alert_deliveries").select("*"),
     supabase.from("saved_screens").select("*").eq("user_id", user.id),
     supabase.from("daily_briefings").select("*").eq("user_id", user.id),
-    supabase.from("goals").select("*").eq("user_id", user.id),
     supabase.from("subscriptions").select("*").eq("user_id", user.id).maybeSingle(),
     supabase.from("discussion_threads").select("*").eq("user_id", user.id),
     admin.from("user_consents").select("*").eq("user_id", user.id).order("consented_at", { ascending: false }),
@@ -272,7 +270,6 @@ export async function exportUserData() {
     alert_deliveries: alertDeliveries ?? [],
     saved_screens: savedScreens ?? [],
     daily_briefings: briefings ?? [],
-    goals: goals ?? [],
     subscription,
     discussion_posts: discussion ?? [],
     // Art. 15 covers everything held about the person, not just what they

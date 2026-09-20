@@ -229,7 +229,7 @@ export default function PrivacyPolicyPage() {
             You can export your data as JSON and delete your account at any time from Settings.
             The export includes your profile, settings, holdings, watchlists and their items, chat
             sessions and messages, alerts and their delivery history, saved screens, daily
-            briefings, goals, subscription record, any discussion posts, your consent history
+            briefings, subscription record, any discussion posts, your consent history
             (which revision of these documents you agreed to, and when), your AI analysis and chat
             usage records, and every tier change on your account.
           </p>
@@ -243,7 +243,7 @@ export default function PrivacyPolicyPage() {
           <p>
             Deleting your account removes the account itself; every table holding your data is
             linked to it with a cascading foreign key, so holdings, watchlists, chat history,
-            alerts, briefings, goals and discussion posts are removed with it. An automated test in
+            alerts, briefings and discussion posts are removed with it. An automated test in
             our build pipeline exercises this: it creates a user across every one of those tables,
             deletes the user, and asserts nothing is left behind, and it also checks that every
             table with a user identifier carries the cascade. That test proves the deletion logic
