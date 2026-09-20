@@ -27,6 +27,10 @@ export function WatchlistPanel({ watchlists }: { watchlists: WatchlistWithItems[
   const [, startMutate] = useTransition();
   const [dragId, setDragId] = useState<string | null>(null);
   const [confirmingDeleteList, setConfirmingDeleteList] = useState(false);
+  // Client-side filter on the active list only - the design's "Filter list"
+  // input. Symbols are already loaded for the active list, so this narrows
+  // what's rendered rather than issuing a new fetch.
+  const [query, setQuery] = useState("");
 
   const active = watchlists.find((w) => w.id === activeId) ?? watchlists[0] ?? null;
 
@@ -44,6 +48,12 @@ export function WatchlistPanel({ watchlists }: { watchlists: WatchlistWithItems[
         return items; // manual -- already sort_order from the query
     }
   }, [active]);
+
+  const visibleItems = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return sortedItems;
+    return sortedItems.filter((item) => item.symbol.toLowerCase().includes(q));
+  }, [sortedItems, query]);
 
   // Newest bar behind any row in this list.
   const listAsOf = sortedItems.reduce<string | null>((newest, i) => (i.asOf && (!newest || i.asOf > newest) ? i.asOf : newest), null);
@@ -90,6 +100,7 @@ export function WatchlistPanel({ watchlists }: { watchlists: WatchlistWithItems[
             </p>
           )}
         </div>
+        <div className="flex flex-wrap items-center gap-2">
         {active && (
           <span
             className={`rounded-full border px-3 py-[7px] font-mono text-micro ${
@@ -103,25 +114,41 @@ export function WatchlistPanel({ watchlists }: { watchlists: WatchlistWithItems[
             {listSize === 0 ? "No symbols yet" : `${greens} up · ${listSize - greens} down`}
           </span>
         )}
+        <Link
+          href="/watchlists/new"
+          className="rounded-[9px] bg-accent px-4 py-[9px] text-[12.5px] font-bold text-canvas transition-[background,transform] duration-base ease-standard hover:-translate-y-px hover:bg-accent-light"
+        >
+          + New list
+        </Link>
+        </div>
       </div>
 
+      <div
+        className={`grid grid-cols-1 items-start gap-3.5 ${
+          watchlists.length > 0 ? "min-[900px]:grid-cols-[220px_minmax(0,1fr)]" : ""
+        }`}
+      >
       {watchlists.length > 0 && (
-        <div className="flex flex-wrap gap-2">
+        <aside className="flex flex-col gap-[7px] rounded-2xl border border-[#232323] bg-panel p-3.5 min-[900px]:sticky min-[900px]:top-[78px]">
+          <div className="px-1 pt-0.5 pb-1.5 font-mono text-eyebrow tracking-[0.16em] text-dim uppercase">Your lists</div>
           {watchlists.map((w) => {
             const isActive = active?.id === w.id;
             return (
               <button
                 key={w.id}
                 type="button"
-                onClick={() => setActiveId(w.id)}
-                className={`flex items-center gap-2.5 rounded-[10px] border px-3.5 py-2.5 transition-colors duration-base ease-standard hover:border-line-strong ${
-                  isActive ? "border-line-strong bg-[#181818]" : "border-[#232323] bg-transparent"
+                onClick={() => {
+                  setActiveId(w.id);
+                  setQuery("");
+                }}
+                className={`flex items-center gap-2.5 rounded-[10px] px-[11px] py-2.5 text-left transition-colors duration-base ease-standard hover:bg-[#161616] ${
+                  isActive ? "bg-[#181818]" : "bg-transparent"
                 }`}
               >
                 <span
                   className={`h-2 w-2 shrink-0 rounded-xs ${tintForWatchlist(w.id)} ${isActive ? "" : "opacity-55"}`}
                 />
-                <span className={`text-[12.5px] ${isActive ? "text-primary" : "text-muted"}`}>{w.name}</span>
+                <span className={`min-w-0 flex-1 truncate text-[12.5px] ${isActive ? "text-primary" : "text-muted"}`}>{w.name}</span>
                 <span
                   className={`rounded-[5px] px-1.5 py-px font-mono text-eyebrow ${
                     isActive ? "bg-active text-primary" : "bg-[#161616] text-dim"
@@ -132,9 +159,16 @@ export function WatchlistPanel({ watchlists }: { watchlists: WatchlistWithItems[
               </button>
             );
           })}
-        </div>
+          <Link
+            href="/watchlists/new"
+            className="mt-1.5 flex items-center justify-center gap-1.5 rounded-[10px] border border-dashed border-[#2f2f2f] p-2.5 text-[12.5px] text-muted transition-colors duration-base ease-standard hover:border-accent/50 hover:text-accent-light"
+          >
+            + Add list
+          </Link>
+        </aside>
       )}
 
+      <div className="flex min-w-0 flex-col gap-3.5">
       {!active ? (
         // The action belongs inside the empty state. It was rendered
         // unconditionally at the foot of the panel, so an empty account got a
@@ -195,9 +229,18 @@ export function WatchlistPanel({ watchlists }: { watchlists: WatchlistWithItems[
 
           {sortedItems.length === 0 ? (
             <div className="rounded-card border border-dashed border-line px-6 py-16 text-center">
-              <div className="font-serif text-h3 text-primary">Nothing on this list yet</div>
+              <svg width="46" height="30" viewBox="0 0 46 30" aria-hidden className="mx-auto mb-3">
+                <path
+                  d="M2 24 C 12 24, 15 6, 24 8 S 38 22, 44 4"
+                  fill="none"
+                  stroke="#9b8ce0"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                />
+              </svg>
+              <div className="font-serif text-h3 text-primary">This list is empty</div>
               <p className="mx-auto mt-2 max-w-[380px] text-body text-muted text-pretty">
-                Add a symbol above to start tracking its price and 30-day trend.
+                Search a ticker above and pin it here to track its price and 30-day trend. Set an alert on it to be told when it crosses a level.
               </p>
             </div>
           ) : (
@@ -208,12 +251,33 @@ export function WatchlistPanel({ watchlists }: { watchlists: WatchlistWithItems[
                 <span className="font-mono text-eyebrow tracking-[0.16em] text-primary uppercase">
                   {sortedItems.length} {sortedItems.length === 1 ? "symbol" : "symbols"}
                 </span>
-                <DataFreshness source="last_close" asOf={listAsOf} />
+                <div className="flex items-center gap-3">
+                  <label className="flex items-center gap-2 rounded-control border border-line bg-canvas px-3 py-2">
+                    <span aria-hidden className="text-caption text-dim">
+                      ⌕
+                    </span>
+                    <input
+                      value={query}
+                      onChange={(e) => setQuery(e.target.value)}
+                      placeholder="Filter list"
+                      className="w-[130px] bg-transparent text-body text-primary outline-none placeholder:text-dim"
+                    />
+                  </label>
+                  <DataFreshness source="last_close" asOf={listAsOf} />
+                </div>
               </div>
+              {visibleItems.length === 0 ? (
+                <div className="rounded-card border border-dashed border-line px-6 py-16 text-center">
+                  <div className="font-serif text-h3 text-primary">No match for &quot;{query}&quot;</div>
+                  <p className="mx-auto mt-2 max-w-[380px] text-body text-muted text-pretty">
+                    Nothing on this list matches that filter.
+                  </p>
+                </div>
+              ) : (
               <div>
                 <div className="grid grid-cols-[repeat(auto-fit,minmax(252px,1fr))] gap-3">
 
-                  {sortedItems.map((item, index) => {
+                  {visibleItems.map((item, index) => {
                     const positive = (item.changePct ?? 0) >= 0;
                     return (
                       <div
@@ -291,21 +355,14 @@ export function WatchlistPanel({ watchlists }: { watchlists: WatchlistWithItems[
                   })}
                 </div>
               </div>
+              )}
             </div>
           )}
         </>
       )}
 
-      {active && (
-        <div className="mt-1 flex justify-center">
-          <Link
-            href="/watchlists/new"
-            className="flex items-center gap-2 rounded-panel bg-gradient-to-br from-accent-light to-accent-dark px-5.5 py-3 text-body font-semibold text-canvas transition-[box-shadow,transform] duration-base ease-standard hover:-translate-y-px hover:shadow-[0_0_30px_rgba(47,198,133,0.35)]"
-          >
-            <span className="text-title leading-none">+</span> New watchlist
-          </Link>
-        </div>
-      )}
+      </div>
+      </div>
 
       <ConfirmDialog
         open={confirmingDeleteList}
