@@ -110,7 +110,16 @@ async function fetchSecEdgarFulltext(provider: ProviderRow): Promise<NormalizedI
     url.searchParams.set("enddt", isoDay(now));
   }
 
-  const res = await fetch(url.toString(), { headers: { "User-Agent": "cairn-ingest contact@example.com" } });
+  // SEC's fair-access policy blocks clients that don't identify a real,
+  // monitored contact in the User-Agent - this used to be hardcoded to
+  // "contact@example.com", which is not a real mailbox and could get Cairn
+  // rate-limited or blocked outright. Failing loudly on a missing contact is
+  // safer than silently sending a fake one - same choice
+  // scripts/seed-symbol-directory.mjs already makes for this exact var.
+  const secContact = Deno.env.get("SEC_CONTACT_EMAIL");
+  if (!secContact) throw new Error(`${provider.name}: SEC_CONTACT_EMAIL is not set (required by SEC's fair-access policy)`);
+
+  const res = await fetch(url.toString(), { headers: { "User-Agent": `Cairn/1.0 ${secContact}` } });
   if (!res.ok) throw new Error(`${provider.name}: HTTP ${res.status}`);
   const json = await res.json();
 
