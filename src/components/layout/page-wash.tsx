@@ -62,10 +62,6 @@ const WASHES: [prefix: string, gradient: string][] = [
     "/crypto",
     "radial-gradient(880px 420px at 8% -8%, rgba(155,140,224,.10), transparent 70%), radial-gradient(720px 380px at 95% 0%, rgba(47,198,133,.07), transparent 72%)",
   ],
-  [
-    "/onboarding",
-    "radial-gradient(900px 440px at 12% -8%, rgba(47,198,133,.11), transparent 70%), radial-gradient(740px 400px at 94% 0%, rgba(91,141,239,.07), transparent 72%)",
-  ],
   // Account surfaces stay quieter than the data ones: a single faint wash, no
   // second corner. Settings and Billing are somewhere you go to change a
   // thing, not somewhere to be impressed.
