@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { SettingsTabs } from "@/components/settings/settings-tabs";
+import { SettingsHero } from "@/components/settings/settings-hero";
+import { TIER_LIMITS } from "@/lib/billing";
 import { getBillingDetail } from "@/lib/actions/billing";
 import { getDisplayPrefs } from "@/lib/actions/display-prefs";
 import { listSectorMapSectors } from "@/lib/actions/sector-map";
@@ -34,15 +36,22 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
   }
 
   return (
-    <div className="animate-page-in mx-auto max-w-[1156px] px-5.5 pt-6.5 pb-15">
-      {/* The mockup's intro block. The app header/top-nav above it is left
-          as-is per the task - this pass excludes it. */}
-      <div className="mb-5">
-        <div className="mb-2 font-mono text-eyebrow text-muted uppercase">Account</div>
-        <h1 className="font-serif text-display leading-[1.1] font-normal text-primary">Settings</h1>
-        <p className="mt-2 max-w-[560px] text-lead text-muted text-pretty">
-          Grouped by what they affect. Changes save as you make them.
-        </p>
+    // Bottom padding leaves room for the sticky unsaved-changes bar.
+    <div className="animate-page-in mx-auto max-w-[1180px] px-6 pt-5 pb-26">
+      <div className="mb-3.5">
+        {/* Every chip states something already resolved on the server: the plan
+            from the billing read, two-factor from the stored preference (no
+            second factor exists to be "on"), and the one channel alerts can
+            actually be delivered on today. */}
+        <SettingsHero
+          chips={[
+            { label: "Plan", value: TIER_LIMITS[billing.usage.tier].label, tone: "accent" },
+            settings.two_factor_status === "requested"
+              ? { label: "Two-factor", value: "On the list", tone: "info" }
+              : { label: "Two-factor", value: "Not available yet", tone: "warning" },
+            { label: "Alerts", value: "In-app", tone: "info" },
+          ]}
+        />
       </div>
 
       <SettingsTabs

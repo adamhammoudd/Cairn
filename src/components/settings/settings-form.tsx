@@ -1,11 +1,20 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
+import { useFormStatus } from "react-dom";
 import Link from "next/link";
 import { updateSettings } from "@/lib/actions/settings";
 import { Toggle } from "@/components/settings/toggle";
-import { Card, CardHeader, CardRow, CardFooter, Segmented, SelectControl } from "@/components/settings/settings-card";
-import { SubmitButton } from "@/components/auth/submit-button";
+import {
+  Card,
+  CardHeader,
+  CardRow,
+  CardFooter,
+  CheckCard,
+  CheckChip,
+  Segmented,
+  SelectControl,
+} from "@/components/settings/settings-card";
 import { SECTORS } from "@/lib/sectors";
 import { SUPPORTED_CURRENCIES } from "@/lib/market-data/fx";
 import type { SettingsTabId } from "@/lib/settings-categories";
@@ -35,10 +44,12 @@ const ASSET_FILTERS: { value: AssetFilter; label: string }[] = [
   { value: "index", label: "Indices" },
 ];
 
-const ALERT_CHANNELS: { value: AlertChannelName; label: string; desc: string; deliverable: boolean }[] = [
-  { value: "in_app", label: "In-app", desc: "Badge and inbox inside Cairn.", deliverable: true },
-  { value: "push", label: "Push", desc: "Browser and mobile notifications. Recorded now, delivered once a provider is wired.", deliverable: false },
-  { value: "email", label: "Email", desc: "Sent to your account address. Recorded now, delivered once a provider is wired.", deliverable: false },
+// `note` is the card's status line: only in-app actually delivers today, and
+// the other two are stored preferences (see the row's description).
+const ALERT_CHANNELS: { value: AlertChannelName; label: string; note: string }[] = [
+  { value: "in_app", label: "In-app", note: "live now" },
+  { value: "push", label: "Push", note: "coming soon" },
+  { value: "email", label: "Email", note: "coming soon" },
 ];
 
 // Every hour, labelled in the reader's own locale so 13 reads as "1 PM" where
@@ -47,6 +58,38 @@ const BRIEFING_HOURS = Array.from({ length: 24 }, (_, hour) => ({
   value: hour,
   label: new Date(Date.UTC(2026, 0, 1, hour)).toLocaleTimeString(undefined, { hour: "numeric", timeZone: "UTC" }),
 }));
+
+// A comparable picture of the form: field name -> its submitted value(s). An
+// unchecked checkbox simply has no entry, which is what lets a group of
+// checkboxes read as one changed field when any of them flips.
+function snapshot(form: HTMLFormElement): Record<string, string> {
+  const grouped: Record<string, string[]> = {};
+  for (const [key, value] of new FormData(form).entries()) (grouped[key] ??= []).push(String(value));
+  return Object.fromEntries(
+    Object.entries(grouped).map(([key, values]) => [key, values.slice().sort().join("\u0000")]),
+  );
+}
+
+function changedFieldCount(before: Record<string, string>, after: Record<string, string>): number {
+  let count = 0;
+  for (const key of new Set([...Object.keys(before), ...Object.keys(after)])) {
+    if (before[key] !== after[key]) count++;
+  }
+  return count;
+}
+
+function SaveButton() {
+  const { pending } = useFormStatus();
+  return (
+    <button
+      type="submit"
+      disabled={pending}
+      className="rounded-panel bg-gradient-to-br from-accent-light to-accent-dark px-5.5 py-2.5 text-body font-semibold text-canvas shadow-[0_6px_20px_rgba(47,198,133,0.22)] transition-[filter,transform] duration-base ease-standard hover:-translate-y-px hover:brightness-105 disabled:opacity-60"
+    >
+      {pending ? "Saving…" : "Save changes"}
+    </button>
+  );
+}
 
 export interface WatchlistOption {
   id: string;
@@ -63,9 +106,44 @@ interface SettingsFormProps {
 }
 
 export function SettingsForm({ settings, activeTab, sectorOptions, watchlists, fx, intradayAvailable }: SettingsFormProps) {
-  const [result, formAction] = useActionState(updateSettings, null);
+  const formRef = useRef<HTMLFormElement>(null);
+  const baseline = useRef<Record<string, string>>({});
+  const toastTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const [unsaved, setUnsaved] = useState(0);
+  const [toast, setToast] = useState(false);
+
+  // The wrapper only adds the confirmation toast. Re-baselining after a save is
+  // handled by onReset below, since React resets an uncontrolled form once its
+  // action settles.
+  const [result, formAction] = useActionState(async (prev: string | null, formData: FormData) => {
+    const outcome = await updateSettings(prev, formData);
+    if (outcome === "saved") {
+      setToast(true);
+      clearTimeout(toastTimer.current);
+      toastTimer.current = setTimeout(() => setToast(false), 2400);
+    }
+    return outcome;
+  }, null);
+
+  useEffect(() => {
+    if (formRef.current) baseline.current = snapshot(formRef.current);
+    return () => clearTimeout(toastTimer.current);
+  }, []);
+
+  function recount() {
+    if (formRef.current) setUnsaved(changedFieldCount(baseline.current, snapshot(formRef.current)));
+  }
+
+  function handleReset() {
+    // The reset event fires before the fields revert, so read them a tick later.
+    setTimeout(() => {
+      if (!formRef.current) return;
+      baseline.current = snapshot(formRef.current);
+      setUnsaved(0);
+    }, 0);
+  }
+
   const notificationThreshold = (settings.notification_thresholds?.price_move_percent as number | undefined) ?? 5;
-  const showSave = activeTab === "display" || activeTab === "notifications" || activeTab === "assistant";
   const channels = settings.default_alert_channels ?? ["in_app"];
   const briefingWatchlists = settings.briefing_watchlist_ids ?? [];
   const briefingCategories = settings.briefing_news_categories ?? [];
@@ -78,11 +156,17 @@ export function SettingsForm({ settings, activeTab, sectorOptions, watchlists, f
       : `Applied to every figure, converted from USD at the provider's live rate${fx.asOf ? ` (quoted ${new Date(fx.asOf).toLocaleString()})` : ""}.`;
 
   return (
-    <form action={formAction} className="flex flex-col gap-3.5">
+    <form
+      ref={formRef}
+      action={formAction}
+      onChange={recount}
+      onReset={handleReset}
+      className="flex flex-col gap-3.5"
+    >
       {/* DISPLAY -------------------------------------------------------------- */}
       <div className={activeTab === "display" ? "contents" : "hidden"}>
         <Card>
-          <CardHeader title="Charts &amp; data" note="Applies to every chart and table in the app" />
+          <CardHeader title="Charts &amp; data" note="Applies to every chart and table in the app" tint="accent" />
 
           <CardRow label="Default chart timeframe" desc="What Ticker Detail and Portfolio open with.">
             <Segmented
@@ -202,24 +286,22 @@ export function SettingsForm({ settings, activeTab, sectorOptions, watchlists, f
       {/* NOTIFICATIONS ------------------------------------------------------- */}
       <div className={activeTab === "notifications" ? "contents" : "hidden"}>
         <Card>
-          <CardHeader title="Alerts" note="Defaults for every new alert you create" />
+          <CardHeader title="Alerts" note="Defaults for every new alert you create" tint="warning" />
 
           <CardRow
             label="Default delivery"
             desc="Pre-checked on the New alert form. Only in-app is delivered today; push and email are recorded as a preference and marked 'unconfigured' by the evaluator until a provider is wired."
           >
-            <div className="flex max-w-[420px] shrink-0 flex-col gap-2">
+            <div className="flex min-w-[150px] shrink-0 flex-col gap-2">
               {ALERT_CHANNELS.map((c) => (
-                <label key={c.value} className="flex items-center justify-end gap-2.5 text-body text-muted">
-                  <span className={c.deliverable ? "text-primary" : "text-muted"}>{c.label}</span>
-                  <input
-                    type="checkbox"
-                    name="default_alert_channels"
-                    value={c.value}
-                    defaultChecked={channels.includes(c.value)}
-                    className="accent-accent"
-                  />
-                </label>
+                <CheckCard
+                  key={c.value}
+                  name="default_alert_channels"
+                  value={c.value}
+                  label={c.label}
+                  note={c.note}
+                  defaultChecked={channels.includes(c.value)}
+                />
               ))}
             </div>
           </CardRow>
@@ -255,7 +337,7 @@ export function SettingsForm({ settings, activeTab, sectorOptions, watchlists, f
       {/* AI ASSISTANT ------------------------------------------------------- */}
       <div className={activeTab === "assistant" ? "contents" : "hidden"}>
         <Card>
-          <CardHeader title="Daily briefing" note="When it runs and what feeds it" />
+          <CardHeader title="Daily briefing" note="When it runs and what feeds it" tint="violet" />
 
           <CardRow label="Delivery time" desc="The scheduler runs hourly and generates your briefing in the hour you pick, in your timezone. Changing this changes when the job actually fires for you.">
             <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
@@ -302,36 +384,30 @@ export function SettingsForm({ settings, activeTab, sectorOptions, watchlists, f
                 New watchlist →
               </Link>
             ) : (
-              <div className="flex max-w-[420px] shrink-0 flex-wrap justify-end gap-x-3.5 gap-y-2">
+              <div className="flex max-w-[420px] shrink-0 flex-wrap justify-end gap-2">
                 {watchlists.map((w) => (
-                  <label key={w.id} className="flex items-center gap-2 text-body text-muted">
-                    <input
-                      type="checkbox"
-                      name="briefing_watchlist_ids"
-                      value={w.id}
-                      defaultChecked={briefingWatchlists.includes(w.id)}
-                      className="accent-accent"
-                    />
-                    {w.name}
-                  </label>
+                  <CheckChip
+                    key={w.id}
+                    name="briefing_watchlist_ids"
+                    value={w.id}
+                    label={w.name}
+                    defaultChecked={briefingWatchlists.includes(w.id)}
+                  />
                 ))}
               </div>
             )}
           </CardRow>
 
           <CardRow label="Preferred news categories" desc="Stories tagged with these appear in the briefing's news section. News about a symbol you hold or watch is always included regardless.">
-            <div className="flex max-w-[460px] shrink-0 flex-wrap justify-end gap-x-3.5 gap-y-2">
+            <div className="flex max-w-[460px] shrink-0 flex-wrap justify-end gap-2">
               {SECTORS.map((s) => (
-                <label key={s.slug} className="flex items-center gap-2 text-body text-muted">
-                  <input
-                    type="checkbox"
-                    name="briefing_news_categories"
-                    value={s.slug}
-                    defaultChecked={briefingCategories.includes(s.slug)}
-                    className="accent-accent"
-                  />
-                  {s.label}
-                </label>
+                <CheckChip
+                  key={s.slug}
+                  name="briefing_news_categories"
+                  value={s.slug}
+                  label={s.label}
+                  defaultChecked={briefingCategories.includes(s.slug)}
+                />
               ))}
             </div>
           </CardRow>
@@ -367,11 +443,43 @@ export function SettingsForm({ settings, activeTab, sectorOptions, watchlists, f
         </Card>
       </div>
 
-      {showSave && (
-        <div className="flex items-center gap-3 px-1 pt-1">
-          <SubmitButton>Save changes</SubmitButton>
-          {result === "saved" && <span className="text-body text-accent">Saved.</span>}
-          {result && result !== "saved" && <span className="text-body text-negative">{result}</span>}
+      {/* The sticky bar appears only once something differs from what is saved,
+          and says how many fields do. Discard resets the whole form. */}
+      {unsaved > 0 && (
+        <div className="animate-slide-up fixed inset-x-0 bottom-0 z-50 flex flex-wrap items-center justify-center gap-3.5 border-t border-line-soft bg-canvas/90 px-5.5 py-3.5 backdrop-blur-md">
+          <span className="flex items-center gap-2.5 text-caption text-muted">
+            <span aria-hidden className="animate-breathe h-1.5 w-1.5 rounded-full bg-warning" />
+            {unsaved === 1 ? "1 unsaved change" : `${unsaved} unsaved changes`}
+          </span>
+          <div className="flex gap-2.5">
+            <button
+              type="button"
+              onClick={() => formRef.current?.reset()}
+              className="rounded-panel border border-line px-4 py-2.5 text-body text-primary transition-colors duration-fast ease-standard hover:border-line-strong"
+            >
+              Discard
+            </button>
+            <SaveButton />
+          </div>
+        </div>
+      )}
+
+      {/* Outside the bar: React resets the form after a failed save too, which dismisses the bar, and the reason must outlive it. */}
+      {result && result !== "saved" && (
+        <p role="alert" className="px-1 text-body text-negative">
+          {result}
+        </p>
+      )}
+
+      {toast && (
+        <div
+          role="status"
+          className="animate-slide-up-centred fixed bottom-6.5 left-1/2 z-[60] flex items-center gap-2.5 rounded-panel border border-accent/40 bg-panel px-4.5 py-3 shadow-[0_14px_40px_rgba(0,0,0,0.6)]"
+        >
+          <span aria-hidden className="grid h-5 w-5 place-items-center rounded-full bg-accent text-eyebrow text-canvas">
+            ✓
+          </span>
+          <span className="text-caption text-primary">Saved.</span>
         </div>
       )}
     </form>
