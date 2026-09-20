@@ -145,21 +145,84 @@ export async function fetchQuote(
   const apiKey = process.env.TIINGO_API_KEY;
   if (!apiKey) return null;
 
-  // Forex pairs (`USD/EUR`, as lib/market-data/fx.ts asks for them) are not
-  // carried here: Tiingo's FX endpoint uses `basequote` tickers and its docs do
-  // not say which pairs exist or which way round they are quoted. An inverted
-  // rate would be a silently wrong converted balance, so this answers "no
-  // quote" and fx.ts falls back to USD and says so.
-  if (assetType !== "crypto" && symbol.includes("/")) return null;
-
   try {
-    return assetType === "crypto"
-      ? await fetchCryptoQuote(symbol, apiKey)
-      : await fetchEquityQuote(symbol, apiKey);
+    if (assetType === "crypto") return await fetchCryptoQuote(symbol, apiKey);
+
+    // A `BASE/QUOTE` pair that is not a coin is forex, as lib/market-data/fx.ts
+    // asks for it (`USD/EUR`). Anything else with a slash is not something
+    // Tiingo's equity endpoint can resolve, so it is "no quote", not a request.
+    if (symbol.includes("/")) {
+      const pair = /^([A-Za-z]{3})\/([A-Za-z]{3})$/.exec(symbol);
+      return pair ? await fetchForexQuote(pair[1], pair[2], apiKey) : null;
+    }
+    return await fetchEquityQuote(symbol, apiKey);
   } catch {
     // Network error or a body that is not JSON: no quote, same as a non-2xx.
     return null;
   }
+}
+
+/**
+ * Whether a US equity quote stamped `quoteAt` is an in-session quote as of
+ * `now`. Tiingo has no market-open flag, and callers use one to pick the
+ * previous-close row for the day change (current-price.ts), so guessing "closed"
+ * during the session gives a change measured against the wrong day. Live only
+ * when all hold: the stamp is today on the exchange clock (a weekend or holiday
+ * leaves it on the last session - observed: a Sunday quote stamped Friday
+ * 20:00Z), now is inside 09:30-16:00 New York, and the stamp is recent (which
+ * also catches early-close days and halts). A thinly-printed ticker whose stamp
+ * lags more than 30 minutes reads as closed - the safe direction for a label.
+ */
+export function isEquityQuoteLive(quoteAt: Date, now: Date = new Date()): boolean {
+  if (newYorkParts(quoteAt).date !== newYorkParts(now).date) return false;
+  const { minutes } = newYorkParts(now);
+  if (minutes < 9 * 60 + 30 || minutes >= 16 * 60) return false;
+  return now.getTime() - quoteAt.getTime() <= 30 * 60_000;
+}
+
+/**
+ * Forex: GET /tiingo/fx/top?tickers=<base><quote>,<quote><base>. Tiingo lists
+ * each pair one way round only, in market convention - `eurusd` is USD per EUR
+ * (1.1486), `usdjpy` is JPY per USD (156.88) - and returns nothing for the
+ * other direction (`usdeur`, `usdgbp`, `usdaud` all came back empty). So both
+ * orders are requested at once: a direct hit is used as is, an inverse hit is
+ * inverted, and neither is "no quote". The rate is the mid of bid and ask.
+ */
+async function fetchForexQuote(base: string, quote: string, apiKey: string): Promise<QuoteResult | null> {
+  const direct = `${base}${quote}`.toLowerCase();
+  const inverse = `${quote}${base}`.toLowerCase();
+  const res = await fetch(`${TIINGO_BASE}/tiingo/fx/top?tickers=${direct},${inverse}`, {
+    headers: tiingoHeaders(apiKey),
+    next: { revalidate: 60 },
+  });
+  if (!res.ok) return null;
+
+  // Observed, not documented: when the request names a pair Tiingo does not
+  // list, the row that does exist comes back keyed `index` rather than `ticker`
+  // (`[{"index":"eurusd",...}]` for `tickers=usdeur,eurusd`). Either is read.
+  const rows = asRecords(await res.json());
+  const tickerOf = (r: Record<string, unknown>) =>
+    typeof r.ticker === "string" ? r.ticker.toLowerCase() : typeof r.index === "string" ? r.index.toLowerCase() : null;
+  const directRow = rows.find((r) => tickerOf(r) === direct);
+  const inverseRow = rows.find((r) => tickerOf(r) === inverse);
+  const row = directRow ?? inverseRow;
+  const mid = toNum(row?.midPrice);
+  if (!row || mid === null || mid <= 0) return null;
+
+  const stamp = toDate(row.quoteTimestamp);
+  return {
+    symbol: `${base}/${quote}`.toUpperCase(),
+    price: directRow ? mid : 1 / mid,
+    changePercent: null,
+    volume: null,
+    fetchedAt: new Date().toISOString(),
+    quoteDate: stamp ? stamp.toISOString().slice(0, 10) : null,
+    // Forex has no exchange session to report and Tiingo sends no flag.
+    marketOpen: false,
+    open: null,
+    dayHigh: null,
+    dayLow: null,
+  };
 }
 
 /** IEX top-of-book / last price: GET /iex/<ticker>. */
@@ -192,9 +255,9 @@ async function fetchEquityQuote(symbol: string, apiKey: string): Promise<QuoteRe
     // `timestamp` is Tiingo's data-refresh time. Read on the exchange clock so
     // the date is the session's, whatever offset the string carries.
     quoteDate: stamp ? newYorkParts(stamp).date : null,
-    // Tiingo's IEX response has no market-open flag. Absent => assume closed,
-    // the safe direction for a freshness label.
-    marketOpen: false,
+    // Tiingo's IEX response has no market-open flag, so it is derived from the
+    // quote's own stamp; no stamp => assume closed, the safe direction.
+    marketOpen: stamp ? isEquityQuoteLive(stamp) : false,
     open: toNum(row.open),
     dayHigh: toNum(row.high),
     dayLow: toNum(row.low),

@@ -72,7 +72,8 @@
     "test:asset-type-labels": "tsx --conditions=react-server scripts/tests/asset-type-labels.ts",
     "test:crypto-asset-type-mismatches": "tsx --conditions=react-server scripts/tests/crypto-asset-type-mismatches.ts",
     "test:holding-metadata-gaps": "tsx --conditions=react-server scripts/tests/holding-metadata-gaps.ts",
-    "test:btc-value-reconciliation": "tsx --conditions=react-server scripts/tests/btc-value-reconciliation.ts"
+    "test:btc-value-reconciliation": "tsx --conditions=react-server scripts/tests/btc-value-reconciliation.ts",
+    "test:tiingo-provider": "tsx --conditions=react-server scripts/tests/tiingo-provider.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.4",

@@ -44,9 +44,9 @@ export async function fetchUsdRate(target: string): Promise<FxRate | null> {
   if (target === "USD") return { rate: 1, asOf: new Date().toISOString() };
   if (!isSupportedCurrency(target)) return null;
 
-  // A `BASE/QUOTE` forex pair; `price` on a forex quote is the rate. fetchQuote
-  // does not carry forex under Tiingo (its FX pair direction is undocumented),
-  // so this currently returns null and the caller falls back to USD.
+  // A `BASE/QUOTE` forex pair; `price` on a forex quote is the rate (units of
+  // the target per 1 USD). Tiingo lists each pair one way round, and fetchQuote
+  // inverts where only the opposite pair exists.
   const quote = await fetchQuote(`USD/${target}`);
   if (!quote || quote.price === null || !Number.isFinite(quote.price) || quote.price <= 0) return null;
 
