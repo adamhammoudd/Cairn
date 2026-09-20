@@ -180,8 +180,6 @@ export function ComparisonPanel({
                 stroke="var(--color-accent)"
                 strokeWidth="2"
                 strokeLinecap="round"
-                pathLength="1"
-                strokeDasharray="1"
                 className="animate-draw"
               />
               <path
@@ -190,8 +188,6 @@ export function ComparisonPanel({
                 stroke="var(--color-info)"
                 strokeWidth="2"
                 strokeLinecap="round"
-                pathLength="1"
-                strokeDasharray="1"
                 className="animate-draw"
                 style={{ animationDelay: "180ms" }}
               />

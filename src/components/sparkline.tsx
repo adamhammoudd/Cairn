@@ -113,8 +113,6 @@ export function Sparkline({
         strokeWidth={1.8}
         strokeLinejoin="round"
         vectorEffect="non-scaling-stroke"
-        pathLength="1"
-        strokeDasharray="1"
         className="animate-draw"
         style={{ animationDelay: `${delayMs}ms` }}
       />

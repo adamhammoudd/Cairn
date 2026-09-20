@@ -217,8 +217,6 @@ export function PortfolioValueChart({ series, initialTimeframe }: PortfolioValue
             strokeLinejoin="round"
             strokeLinecap="round"
             vectorEffect="non-scaling-stroke"
-            pathLength="1"
-            strokeDasharray="1"
             className="animate-draw"
           />
         </svg>

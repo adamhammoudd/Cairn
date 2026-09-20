@@ -3,7 +3,6 @@ import { createClient } from "@/lib/supabase/server";
 import { runScreen } from "@/lib/actions/screener";
 import { EMPTY_FILTERS } from "@/lib/screener";
 import { DashboardHome } from "@/components/dashboard/dashboard-home";
-import { MODULE_KEYS, type ModuleKey } from "@/lib/dashboard-modules";
 import { computeHoldingMetrics, computeTimelineSeries, computeTotals, type PriceBar } from "@/lib/portfolio";
 import { getLatestCloses, latestDataDate } from "@/lib/market-data/current-price";
 
@@ -37,7 +36,7 @@ async function DashboardBody() {
   if (!user) redirect("/login");
 
   const [settingsRes, holdingsRes, watchlistsRes, newsRes, sessionsRes, alertsRes, analysesRes] = await Promise.all([
-    supabase.from("user_settings").select("dashboard_layout, refresh_rate_seconds").eq("user_id", user.id).maybeSingle(),
+    supabase.from("user_settings").select("refresh_rate_seconds").eq("user_id", user.id).maybeSingle(),
     supabase.from("holdings").select("*").eq("user_id", user.id).order("created_at", { ascending: true }),
     supabase.from("watchlists").select("id, name").eq("user_id", user.id).order("sort_order", { ascending: true }),
     supabase
@@ -203,9 +202,6 @@ async function DashboardBody() {
       }
     : null;
 
-  const rawLayout = (settingsRes.data?.dashboard_layout as string[] | null) ?? [];
-  const initialLayout = rawLayout.filter((key): key is ModuleKey => (MODULE_KEYS as string[]).includes(key));
-
   const today = new Date().toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
   // One freshness statement for the whole dashboard, from the same store every
   // card reads.
@@ -215,7 +211,6 @@ async function DashboardBody() {
     <DashboardHome
       refreshRateSeconds={settingsRes.data?.refresh_rate_seconds ?? 30}
       dataAsOf={dataAsOf}
-      initialLayout={initialLayout}
       today={today}
       tickerItems={tickerItems}
       portfolio={{
