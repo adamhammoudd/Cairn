@@ -7,7 +7,7 @@
 // it as current.
 //
 // Falls back to that same latest-row read when no live feed is configured
-// (TWELVE_DATA_API_KEY unset) or the live call fails, but every result is
+// (TIINGO_API_KEY unset) or the live call fails, but every result is
 // tagged with its actual source AND the date it is as of, so a fallback read
 // is never presented to a user as live and every surface can say how old it
 // is in the same words.
@@ -233,8 +233,8 @@ export async function getLatestCloses(
 
   const bySymbol = prefetchedBars ?? (await lastBars(symbols));
 
-  // Twelve Data's free tier is 8 req/min - only worth attempting live
-  // fetches for a small symbol set (a user's own holdings), never a
+  // The live-quote provider is quota-limited (Tiingo Starter: 50 req/hour) -
+  // only worth attempting live fetches for a small symbol set (a user's own holdings), never a
   // screener-sized batch, which keeps reading the trend store's daily
   // change directly (that's what a screener conventionally shows anyway).
   const tryLive = isMarketDataProviderConfigured() && symbols.length <= 8;
