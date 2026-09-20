@@ -55,15 +55,17 @@ export function SettingsTabs({
   const twoFactorOff = true;
 
   return (
-    <div>
+    // The rail sits left of the panels from lg up (the design's 248px column
+    // beside a flexible panel), and stacks above them below that.
+    <div className="flex flex-col gap-3.5 lg:flex-row lg:items-start">
       <SettingsTabBar active={activeTab} onSelect={setActiveTab} twoFactorOff={twoFactorOff} />
 
-      {/* One <Card> per group, 14px gap, matching Cairn Settings.dc.html. */}
-      <div className="flex flex-col gap-3.5">
+      {/* One <Card> per group, 14px gap, matching the design. */}
+      <div className="flex min-w-0 flex-1 flex-col gap-3.5">
         {activeTab === "account" && (
           <>
             <Card>
-              <CardHeader title="Profile" />
+              <CardHeader title="Profile" tint="accent" />
               <div className="px-4.5 py-4.5">
                 <ProfileForm displayName={displayName} email={email} emailVerified={emailVerified} />
               </div>
@@ -92,7 +94,7 @@ export function SettingsTabs({
         {activeTab === "privacy" && (
           <>
             <Card>
-              <CardHeader title="AI &amp; your data" note="What Cairn uses AI for, and what leaves your account" />
+              <CardHeader title="AI &amp; your data" note="What Cairn uses AI for, and what leaves your account" tint="violet" />
               <CardRow label="Cairn uses AI to generate analysis and chat content">
                 <div className="w-full">
                   <p className="mt-1 max-w-[62ch] text-caption leading-relaxed text-muted text-pretty">
