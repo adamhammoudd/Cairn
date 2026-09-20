@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { MIGRATIONS, unwrap, unwrapRows } from "@/lib/supabase/read";
 import {
   computeAllocation,
+  computeConcentration,
   computeHoldingMetrics,
   computeTimelineSeries,
   computeTotals,
@@ -14,6 +15,7 @@ import type { ChartView } from "@/lib/supabase/types";
 import { PortfolioStats } from "@/components/portfolio/portfolio-stats";
 import { PortfolioChart } from "@/components/portfolio/portfolio-chart";
 import { AllocationPanel } from "@/components/portfolio/allocation-panel";
+import { ConcentrationPanel } from "@/components/portfolio/concentration-panel";
 import { HoldingsTable } from "@/components/portfolio/holdings-table";
 
 import { guardReads } from "@/components/data-unavailable";
@@ -133,8 +135,9 @@ async function PortfolioBody() {
 
       {/* Not in the mock, which stops at the holdings table - kept below it so the
           allocation breakdown stays available without displacing the chart. */}
-      <div className="mt-3.5">
+      <div className="mt-3.5 grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] items-start gap-3.5">
         <AllocationPanel byDimension={allocationByDimension} />
+        <ConcentrationPanel summary={computeConcentration(metrics)} />
       </div>
     </div>
   );

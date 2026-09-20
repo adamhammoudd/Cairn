@@ -46,8 +46,15 @@ function relativeTime(iso: string) {
 
 export function NewsPanel({ items }: { items: NewsFeedItem[] }) {
   const [filter, setFilter] = useState<"all" | NewsRelevance>("all");
+  const [query, setQuery] = useState("");
 
-  const visible = filter === "all" ? items : items.filter((item) => item.relevance === filter);
+  const tierVisible = filter === "all" ? items : items.filter((item) => item.relevance === filter);
+  const q = query.trim().toLowerCase();
+  const visible = q
+    ? tierVisible.filter((item) =>
+        (decodeEntities(item.title) + " " + item.tickers.join(" ")).toLowerCase().includes(q),
+      )
+    : tierVisible;
   const filterLabel = filter === "all" ? "your feed" : (FILTERS.find((f) => f.id === filter)?.label ?? "").toLowerCase();
 
   // Counts per tier, for the filter chips and the coverage mix. Derived from
@@ -157,30 +164,44 @@ export function NewsPanel({ items }: { items: NewsFeedItem[] }) {
         </section>
       )}
 
-      <div className="mt-3.5 mb-3 flex w-fit flex-wrap gap-[3px] rounded-[11px] border border-[#232323] bg-[#0c0c0c] p-[3px]">
-        {FILTERS.map((f) => {
-          const active = f.id === filter;
-          const tierCount = f.id === "all" ? items.length : counts[f.id];
-          return (
-            <button
-              key={f.id}
-              type="button"
-              onClick={() => setFilter(f.id)}
-              className={`inline-flex items-center gap-[7px] rounded-[9px] px-[13px] py-[7px] text-[12.5px] whitespace-nowrap transition-colors duration-base ease-standard ${
-                active ? "bg-[#1e1e1e] text-primary" : "text-muted hover:text-primary"
-              }`}
-            >
-              {f.label}
-              <span
-                className={`rounded-[5px] px-[5px] py-px font-mono text-eyebrow ${
-                  active ? "bg-accent/15 text-accent-light" : "bg-[#161616] text-dim"
+      <div className="mt-3.5 mb-3 flex flex-wrap items-center gap-2.5">
+        <div className="flex w-fit flex-wrap gap-[3px] rounded-[11px] border border-[#232323] bg-[#0c0c0c] p-[3px]">
+          {FILTERS.map((f) => {
+            const active = f.id === filter;
+            const tierCount = f.id === "all" ? items.length : counts[f.id];
+            return (
+              <button
+                key={f.id}
+                type="button"
+                onClick={() => setFilter(f.id)}
+                className={`inline-flex items-center gap-[7px] rounded-[9px] px-[13px] py-[7px] text-[12.5px] whitespace-nowrap transition-colors duration-base ease-standard ${
+                  active ? "bg-[#1e1e1e] text-primary" : "text-muted hover:text-primary"
                 }`}
               >
-                {tierCount}
-              </span>
-            </button>
-          );
-        })}
+                {f.label}
+                <span
+                  className={`rounded-[5px] px-[5px] py-px font-mono text-eyebrow ${
+                    active ? "bg-accent/15 text-accent-light" : "bg-[#161616] text-dim"
+                  }`}
+                >
+                  {tierCount}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+        <label className="flex min-w-0 flex-1 basis-[220px] items-center gap-2 rounded-[11px] border border-line bg-panel px-[13px] py-[9px] transition-colors duration-base ease-standard hover:border-line-strong">
+          <span aria-hidden className="text-[13px] text-dim">
+            ⌕
+          </span>
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            aria-label="Filter headlines"
+            placeholder="Filter headlines"
+            className="min-w-0 flex-1 bg-transparent text-[12.5px] text-primary outline-none placeholder:text-dim"
+          />
+        </label>
       </div>
 
       <div className="flex flex-col gap-2.5">
@@ -244,14 +265,19 @@ export function NewsPanel({ items }: { items: NewsFeedItem[] }) {
               <span className="h-2 w-6.5 rounded-full bg-active" />
               <span className="h-2 w-4.5 rounded-full bg-line" />
             </div>
-            <div className="font-serif text-h3 text-primary">Nothing filed under {filterLabel} yet</div>
+            <div className="font-serif text-h3 text-primary">
+              {q ? `Nothing in this view matches "${query}"` : `Nothing filed under ${filterLabel} yet`}
+            </div>
             <p className="mx-auto mt-2 mb-4.5 max-w-[400px] text-body text-muted text-pretty">
               We only surface items we can attribute to a source. Check back, or widen the feed.
             </p>
-            {filter !== "all" && (
+            {(filter !== "all" || q) && (
               <button
                 type="button"
-                onClick={() => setFilter("all")}
+                onClick={() => {
+                  setFilter("all");
+                  setQuery("");
+                }}
                 className="rounded-control bg-gradient-to-br from-accent-light to-accent-dark px-4 py-2 text-body font-semibold text-canvas transition-[box-shadow,transform] duration-base ease-standard hover:-translate-y-px hover:shadow-[0_0_22px_rgba(47,198,133,0.35)]"
               >
                 Show everything

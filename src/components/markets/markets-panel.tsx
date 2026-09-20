@@ -9,6 +9,7 @@ import { TrendingDeck } from "@/components/markets/trending-deck";
 import { DataFreshness } from "@/components/data-freshness";
 import type { AssetFilter } from "@/lib/supabase/types";
 import { DECKS, deckComparator, type DeckId } from "@/lib/market-decks";
+import { TickerStrip, type TickerStripItem } from "@/components/dashboard/ticker-strip";
 
 interface MarketsPanelProps {
   rows: ScreenerRow[];
@@ -17,11 +18,19 @@ interface MarketsPanelProps {
   defaultFilter?: AssetFilter;
   /** symbol -> request_count from symbol_directory, for the Most searched deck. */
   requestCounts?: Record<string, number>;
+  /** Top absolute movers across the full board, for the strip under the header. */
+  tickerItems?: TickerStripItem[];
 }
 
 const TABS = ["all", ...ASSET_TYPES] as const;
 
-export function MarketsPanel({ rows, cryptoRows, defaultFilter = "all", requestCounts = {} }: MarketsPanelProps) {
+export function MarketsPanel({
+  rows,
+  cryptoRows,
+  defaultFilter = "all",
+  requestCounts = {},
+  tickerItems = [],
+}: MarketsPanelProps) {
   const [tab, setTab] = useState<AssetFilter>(defaultFilter);
   const [query, setQuery] = useState("");
   // Owned here, not inside TrendingDeck - the ranked table below needs the
@@ -68,6 +77,14 @@ export function MarketsPanel({ rows, cryptoRows, defaultFilter = "all", requestC
 
   return (
     <div className="animate-page-in">
+      {tickerItems.length > 0 && (
+        // Same edge-to-edge breakout Base Camp uses for its strip (see
+        // dashboard/ticker-strip.tsx) - the design shows this band under the
+        // header on every top-level board, not just Base Camp.
+        <div className="relative left-1/2 -mt-6.5 mb-5 w-[calc(100vw-var(--sbw,0px))] -translate-x-1/2">
+          <TickerStrip items={tickerItems} />
+        </div>
+      )}
       <div className="mb-5">
         <div className="mb-2 font-mono text-[10.5px] tracking-[0.18em] text-muted uppercase">Markets</div>
         <h1 className="font-serif text-[40px] leading-[1.05] font-normal tracking-[-0.015em] text-primary">The whole board</h1>

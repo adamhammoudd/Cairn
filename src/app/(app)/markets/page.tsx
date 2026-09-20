@@ -35,12 +35,24 @@ async function MarketsBody() {
     requestCounts[row.symbol] = row.request_count;
   }
 
+  // The design's moving strip under the header is on every top-level board,
+  // not just Base Camp - it answers "did anything move" before a single row
+  // is read. Same stored closes the table below shows: whatever is moving
+  // hardest right now, across every asset class, capped at a dozen so the
+  // loop stays short.
+  const tickerItems = [...rows]
+    .filter((r) => r.changePct !== null)
+    .sort((a, b) => Math.abs(b.changePct ?? 0) - Math.abs(a.changePct ?? 0))
+    .slice(0, 12)
+    .map((r) => ({ symbol: r.symbol, changePct: r.changePct as number }));
+
   return (
     <MarketsPanel
       rows={rows}
       cryptoRows={cryptoRows}
       defaultFilter={settings?.default_asset_filter ?? "all"}
       requestCounts={requestCounts}
+      tickerItems={tickerItems}
     />
   );
 }

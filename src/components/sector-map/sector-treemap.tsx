@@ -115,8 +115,10 @@ export function SectorTreemap({
           <div
             className="h-2.5 w-[150px] rounded-[5px]"
             style={{
-              background:
-                "linear-gradient(90deg, rgba(217,108,108,1), rgba(217,108,108,0.15), rgba(47,198,133,0.15), rgba(47,198,133,1))",
+              // The spec's stops. The flat mid-tones are what a near-zero
+              // tile actually looks like once its low-alpha fill sits on the
+              // panel, so the key matches the ground it explains.
+              background: "linear-gradient(90deg, #d96c6c, #3a2a2a, #1f3a30, #2fc685)",
             }}
           />
           <span className="font-mono text-eyebrow text-dim">+5%</span>
@@ -201,7 +203,7 @@ export function SectorTreemap({
                         minWidth: "34px",
                         background: colorForChange(tile.changePct),
                       }}
-                      className="@container flex min-w-0 flex-col justify-end gap-1 overflow-hidden rounded-control p-2 transition-[transform,box-shadow] duration-base ease-standard hover:-translate-y-0.5 hover:shadow-[0_10px_22px_rgba(0,0,0,0.45)]"
+                      className="@container flex min-w-0 flex-col justify-end gap-1 overflow-hidden rounded-control p-2 transition-[filter,box-shadow] duration-base ease-standard hover:brightness-[1.22] hover:outline hover:outline-1 hover:outline-white/20"
                     >
                       {/* A 34px tile minus p-2 leaves ~18px of text - two
                           characters. The earlier pass added the title tooltip

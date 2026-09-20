@@ -54,7 +54,9 @@ async function DashboardBody() {
     supabase.from("alerts").select("id, last_triggered_at").eq("user_id", user.id).eq("enabled", true),
     supabase
       .from("ai_analyses")
-      .select("id, reasoning_text, confidence_level, sample_size")
+      .select(
+        "id, reasoning_text, confidence_level, sample_size, scope_type, scope_value, analysis_type, probability_low, probability_high, created_at",
+      )
       .eq("status", "validated")
       .order("created_at", { ascending: false })
       .limit(1),
@@ -165,12 +167,39 @@ async function DashboardBody() {
         .select("*", { count: "exact", head: true })
         .eq("analysis_id", latestAnalysisRow.id)
     : { count: 0 };
+  // The headline the analysis weighted most - shown on the card as a real
+  // source, not a placeholder. Two small reads, only when an analysis exists.
+  let topSource: { title: string; source: string; publishedAt: string } | null = null;
+  if (latestAnalysisRow) {
+    const { data: topLink } = await supabase
+      .from("ai_analysis_sources")
+      .select("news_item_id")
+      .eq("analysis_id", latestAnalysisRow.id)
+      .order("weight", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (topLink) {
+      const { data: item } = await supabase
+        .from("news_items")
+        .select("title, source_name, published_at")
+        .eq("id", topLink.news_item_id)
+        .maybeSingle();
+      if (item) topSource = { title: item.title, source: item.source_name, publishedAt: item.published_at };
+    }
+  }
   const latestAnalysis = latestAnalysisRow
     ? {
         quote: latestAnalysisRow.reasoning_text,
         sourceCount: latestSourceCount ?? 0,
         sampleSize: latestAnalysisRow.sample_size,
         confidenceLevel: latestAnalysisRow.confidence_level,
+        scopeType: latestAnalysisRow.scope_type,
+        scopeValue: latestAnalysisRow.scope_value,
+        analysisType: latestAnalysisRow.analysis_type,
+        probabilityLow: latestAnalysisRow.probability_low,
+        probabilityHigh: latestAnalysisRow.probability_high,
+        createdAt: latestAnalysisRow.created_at,
+        topSource,
       }
     : null;
 
