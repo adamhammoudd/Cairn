@@ -88,3 +88,20 @@ export function softwareApplicationJsonLd(site = getSiteUrl()) {
     },
   };
 }
+
+/**
+ * Is /legal-notice allowed to be served?
+ *
+ * The page still carries "TO BE COMPLETED" placeholders for the operator's
+ * legal name, address, KBO/BCE and VAT numbers. Published, it would be a false
+ * statement about who the consumer is contracting with, so it is a 404 on the
+ * Vercel production deployment (VERCEL_ENV is unset locally, so it stays
+ * viewable in dev and `next start`; previews show it too).
+ *
+ * TO GO LIVE: fill in every placeholder in src/app/legal-notice/page.tsx, then
+ * delete this constant and each place that reads it (the page's notFound(), the
+ * sitemap entry, the LegalShell footer link) and re-add the line in
+ * public/llms.txt. Note the withdrawal instructions on /refunds and Terms
+ * section 14 both point at this page.
+ */
+export const LEGAL_NOTICE_LIVE = process.env.VERCEL_ENV !== "production";

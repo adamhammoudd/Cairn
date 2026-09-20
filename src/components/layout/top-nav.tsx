@@ -32,8 +32,8 @@ function initialsOf(name: string) {
 
 const ACCOUNT_MENU = [
   { label: "Settings", href: "/settings" },
-  { label: "Billing", href: "/billing" },
-  { label: "First-run walkthrough", href: "/onboarding" },
+  // The Billing category inside Settings (?tab=billing), not the standalone /billing page.
+  { label: "Billing", href: "/settings?tab=billing" },
 ];
 
 // Internal route, offered only to accounts carrying the admin role and kept out

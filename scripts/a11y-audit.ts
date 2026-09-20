@@ -20,7 +20,7 @@ const PUBLIC_PAGES = ["/login", "/signup", "/forgot-password", "/reset-password"
 const UNCOVERED = [
   "/ (dashboard)", "/markets", "/portfolio", "/watchlists", "/news",
   "/screener", "/comparison", "/alerts", "/assistant", "/research", "/settings",
-  "/billing", "/ticker/[symbol]", "/crypto", "/sector-map", "/onboarding",
+  "/billing", "/ticker/[symbol]", "/crypto", "/sector-map",
 ];
 
 interface Finding {

@@ -1,4 +1,6 @@
+import { notFound } from "next/navigation";
 import { LegalShell } from "@/components/legal-shell";
+import { LEGAL_NOTICE_LIVE } from "@/lib/site";
 
 export const metadata = {
   title: "Legal notice - Cairn",
@@ -23,6 +25,9 @@ export const metadata = {
 // invented identity details is worse than no page at all: it is a false
 // statement about who the consumer is contracting with.
 export default function LegalNoticePage() {
+  // Placeholders below are unfilled - see LEGAL_NOTICE_LIVE in src/lib/site.ts.
+  if (!LEGAL_NOTICE_LIVE) notFound();
+
   return (
     <LegalShell eyebrow="Legal" title="Legal notice" updated="19 September 2026">
       <section>
