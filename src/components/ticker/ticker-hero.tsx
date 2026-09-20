@@ -71,7 +71,7 @@ export function TickerHero({
           </span>
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2.5">
-              <h1 className="font-serif text-display leading-none font-normal tracking-[-0.015em] text-primary">
+              <h1 className="font-serif text-[38px] leading-none font-normal tracking-[-0.015em] text-primary">
                 {name}
               </h1>
               <span className="font-mono text-caption text-muted">{symbol}</span>
@@ -96,7 +96,7 @@ export function TickerHero({
 
         <div className="flex flex-wrap items-end gap-5.5">
           <div className="text-right">
-            <div className="font-mono text-h1 leading-none tracking-[-0.015em] tabular-nums text-primary">
+            <div className="font-mono text-[36px] leading-none tracking-[-0.015em] tabular-nums text-primary">
               {priceLabel}
             </div>
             <div className="mt-2.5 flex flex-wrap items-center justify-end gap-2.5">

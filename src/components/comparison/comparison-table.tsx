@@ -3,7 +3,8 @@
 import { ASSET_TYPE_TAG_CLASS, assetTypeBadge, formatMarketCap } from "@/lib/screener";
 import { useDisplayPrefs } from "@/components/display-prefs-provider";
 import { absoluteChangeFrom, formatChange, formatMoney, type DisplayPrefs } from "@/lib/display-prefs";
-import { COMPARISON_COLORS, type ComparisonRow } from "@/lib/comparison";
+import { COMPARISON_COLORS, seriesFor, type ComparisonRow } from "@/lib/comparison";
+import type { ChartView } from "@/lib/supabase/types";
 
 interface Cell {
   text: string;
@@ -21,16 +22,29 @@ const TONE_CLASS: Record<Cell["tone"], string> = {
 // formatter, so the Price row and the Change row both follow Settings >
 // Display. A module-scope fmtCurrency() is exactly how this table came to be
 // the one surface still printing dollars after a currency change.
-const METRICS: { label: string; cell: (row: ComparisonRow, prefs: DisplayPrefs) => Cell }[] = [
+const METRICS: { label: string; cell: (row: ComparisonRow, prefs: DisplayPrefs, timeframe: ChartView) => Cell }[] = [
   {
-    label: "Price",
+    label: "Last price",
     cell: (r, prefs) => ({ text: formatMoney(r.price, prefs), tone: r.price === null ? "muted" : "primary" }),
+  },
+  {
+    // The move across the window the chart above is drawing, so the table and
+    // the lines say the same thing. Computed from the same series.
+    label: "Range change",
+    cell: (r, _prefs, timeframe) => {
+      const pts = seriesFor(r, timeframe);
+      const base = pts[0]?.value;
+      const end = pts[pts.length - 1]?.value;
+      if (pts.length < 2 || !base || end === undefined || !Number.isFinite(base)) return { text: "-", tone: "muted" };
+      const pct = (end / base - 1) * 100;
+      return { text: `${pct >= 0 ? "+" : "−"}${Math.abs(pct).toFixed(1)}%`, tone: pct >= 0 ? "positive" : "negative" };
+    },
   },
   {
     // Crypto carries CoinGecko's rolling 24h figure and session-based markets
     // the last two closes - the same rule every other surface follows. The
     // footnote below the table says so rather than one label implying both.
-    label: "Change",
+    label: "24h change",
     cell: (r, prefs) =>
       r.changePct === null
         ? { text: "-", tone: "muted" }
@@ -60,18 +74,14 @@ const METRICS: { label: string; cell: (row: ComparisonRow, prefs: DisplayPrefs) 
   { label: "Asset type", cell: (r) => ({ text: r.assetType, tone: "muted" }) },
 ];
 
-export function ComparisonTable({ rows }: { rows: ComparisonRow[] }) {
+export function ComparisonTable({ rows, timeframe }: { rows: ComparisonRow[]; timeframe: ChartView }) {
   const prefs = useDisplayPrefs();
   // Metric-per-row, symbol-per-column so the same measure lines up horizontally
   // across every ticker.
   const gridTemplate = `minmax(120px, 170px) repeat(${rows.length}, minmax(0, 1fr))`;
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-[#232323] bg-panel">
-      <div className="border-b border-[#1c1c1c] bg-[#0c0c0c] px-5 py-3.5 font-mono text-eyebrow tracking-[0.16em] text-primary uppercase">
-        Aligned metrics
-      </div>
-
+    <div className="animate-rise-in overflow-hidden rounded-card border border-[#232323] bg-panel" style={{ animationDelay: "140ms" }}>
       <div className="overflow-x-auto">
         <div className="min-w-fit">
           <div
@@ -119,7 +129,7 @@ export function ComparisonTable({ rows }: { rows: ComparisonRow[] }) {
                     </div>
                   );
                 }
-                const cell = metric.cell(row, prefs);
+                const cell = metric.cell(row, prefs, timeframe);
                 return (
                   <div key={row.symbol} className={`text-body tabular-nums ${TONE_CLASS[cell.tone]}`}>
                     {cell.text}

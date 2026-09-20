@@ -84,22 +84,33 @@ export function AlertForm({ alert, defaultChannels, onDone, onCancel }: AlertFor
   }, [error, onDone]);
 
   return (
-    <form action={formAction} className="animate-menu-in rounded-card border border-line bg-panel p-4.5">
+    <form
+      action={formAction}
+      className="animate-rise-in relative overflow-hidden rounded-2xl border border-[#232323] bg-panel px-5.5 py-5"
+      style={{ animationDelay: "140ms" }}
+    >
+      <span
+        aria-hidden
+        className="absolute top-0 right-0 left-0 h-px"
+        style={{ background: "linear-gradient(90deg,#2fc685,rgba(47,198,133,0))" }}
+      />
       {alert && <input type="hidden" name="id" value={alert.id} />}
       <div className="mb-3.5 flex items-center justify-between gap-3">
-        <div className="font-mono text-eyebrow text-muted uppercase">
+        <div className="font-mono text-eyebrow tracking-[0.18em] text-accent uppercase">
           {editing ? `Edit alert · ${alert!.scope_value}` : "New alert"}
         </div>
-        <button
-          type="button"
-          onClick={onCancel}
-          className="rounded-control px-2 py-1 text-caption text-muted transition-colors duration-fast ease-standard hover:bg-active hover:text-primary"
-        >
-          Cancel
-        </button>
+        {editing && (
+          <button
+            type="button"
+            onClick={onCancel}
+            className="rounded-control px-2 py-1 text-caption text-muted transition-colors duration-fast ease-standard hover:bg-active hover:text-primary"
+          >
+            Cancel
+          </button>
+        )}
       </div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3">
         <label className="block">
           <span className={LABEL}>Type</span>
           <select
@@ -130,7 +141,7 @@ export function AlertForm({ alert, defaultChannels, onDone, onCancel }: AlertFor
         </div>
       </div>
 
-      <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div className="mt-3 grid grid-cols-1 gap-3">
         {(alertType === "price" || alertType === "pct_change") && (
           <>
             <label className="block">
@@ -310,9 +321,9 @@ export function AlertForm({ alert, defaultChannels, onDone, onCancel }: AlertFor
 
       <button
         type="submit"
-        className="mt-4 rounded-control bg-gradient-to-br from-accent-light to-accent-dark px-4 py-2.5 text-body font-semibold text-canvas transition-[box-shadow,transform] duration-base ease-standard hover:-translate-y-px hover:shadow-[0_0_26px_rgba(47,198,133,0.35)]"
+        className="mt-4 w-full rounded-[10px] bg-accent px-4 py-[11px] text-[12.5px] font-bold text-canvas transition-[background-color,transform] duration-base ease-standard hover:-translate-y-px hover:bg-accent-light"
       >
-        {editing ? "Save changes" : "Create alert"}
+        {editing ? "Save changes" : "Arm this alert"}
       </button>
     </form>
   );

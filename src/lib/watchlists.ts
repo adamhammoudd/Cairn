@@ -33,6 +33,19 @@ export function tintForWatchlist(id: string): string {
   return WATCHLIST_TINTS[Math.abs(hash) % WATCHLIST_TINTS.length];
 }
 
+// Literal class names per tint, so Tailwind sees every one. The avatar, the
+// list dot and the count badge all draw from the same hue.
+export const WATCHLIST_TINT_CLASSES: Record<string, { dot: string; avatar: string; count: string }> = {
+  "bg-accent": { dot: "bg-accent", avatar: "border-accent/35 bg-accent/12 text-accent", count: "bg-accent/15 text-accent" },
+  "bg-info": { dot: "bg-info", avatar: "border-info/35 bg-info/12 text-info", count: "bg-info/15 text-info" },
+  "bg-violet": { dot: "bg-violet", avatar: "border-violet/35 bg-violet/12 text-violet", count: "bg-violet/15 text-violet" },
+  "bg-warning": { dot: "bg-warning", avatar: "border-warning/35 bg-warning/12 text-warning", count: "bg-warning/15 text-warning" },
+};
+
+export function tintClassesForWatchlist(id: string) {
+  return WATCHLIST_TINT_CLASSES[tintForWatchlist(id)];
+}
+
 export function readDisplayPrefs(raw: unknown): DisplayPrefs {
   const r = (raw ?? {}) as Partial<DisplayPrefs>;
   return {

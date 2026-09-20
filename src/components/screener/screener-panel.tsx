@@ -5,7 +5,6 @@ import { useMemo, useState, useTransition } from "react";
 import { deleteSavedScreen, saveScreen } from "@/lib/actions/screener";
 import {
   ASSET_TYPE_LABEL,
-  ASSET_TYPE_TAG_CLASS,
   ASSET_TYPES,
   EMPTY_FILTERS,
   PRESET_SCREENS,
@@ -21,6 +20,7 @@ import {
   type ScreenerRow,
 } from "@/lib/screener";
 import { DataFreshness } from "@/components/data-freshness";
+import { Sparkline } from "@/components/sparkline";
 import { useDisplayPrefs } from "@/components/display-prefs-provider";
 import { PromptDialog } from "@/components/dialog";
 import { absoluteChangeFrom, formatChange, formatMoney, currencySymbol } from "@/lib/display-prefs";
@@ -33,6 +33,62 @@ function numOrNull(v: string): number | null {
   if (!trimmed) return null;
   const n = Number(trimmed);
   return Number.isFinite(n) ? n : null;
+}
+
+type ColKey = "symbol" | "type" | "price" | "changePct" | "volume" | "marketCap" | "pe" | "dividendYield";
+
+// One grid for the header and every row, so the columns cannot drift apart.
+const GRID =
+  "grid grid-cols-[minmax(0,1.4fr)_90px_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_72px_72px_86px] items-center gap-3";
+
+const COLUMNS: { key: ColKey | "trend"; label: string }[] = [
+  { key: "symbol", label: "Symbol" },
+  { key: "type", label: "Type" },
+  { key: "price", label: "Price" },
+  { key: "changePct", label: "24h" },
+  { key: "volume", label: "Volume" },
+  { key: "marketCap", label: "Mkt cap" },
+  { key: "pe", label: "P/E" },
+  { key: "dividendYield", label: "Yield" },
+  { key: "trend", label: "Trend" },
+];
+
+// Type tints from the design: each asset type owns a hue, so a column of mixed
+// symbols reads at a glance. Index stays neutral - red is reserved for loss.
+const TYPE_TINT: Record<string, string> = {
+  equity: "border-info/30 bg-info/10 text-info",
+  etf: "border-accent/30 bg-accent/10 text-accent",
+  crypto: "border-violet/30 bg-violet/10 text-violet",
+  forex: "border-warning/30 bg-warning/10 text-warning",
+  index: "border-line bg-raised text-muted",
+  future: "border-line bg-raised text-muted",
+};
+const tint = (t: string) => TYPE_TINT[t] ?? "border-line bg-raised text-muted";
+
+/** Order rows by one column. Rows missing the figure sort last either way. */
+function sortByColumn(rows: ScreenerRow[], key: ColKey, dir: "asc" | "desc"): ScreenerRow[] {
+  const val = (r: ScreenerRow): number | string | null => {
+    switch (key) {
+      case "symbol": return r.symbol;
+      case "type": return r.assetType;
+      case "price": return r.price;
+      case "changePct": return r.changePct;
+      case "volume": return r.volume;
+      case "marketCap": return r.marketCap;
+      case "pe": return r.pe;
+      case "dividendYield": return r.dividendYield;
+    }
+  };
+  const sign = dir === "asc" ? 1 : -1;
+  return [...rows].sort((a, b) => {
+    const av = val(a);
+    const bv = val(b);
+    if (av === null && bv === null) return 0;
+    if (av === null) return 1;
+    if (bv === null) return -1;
+    if (typeof av === "string" || typeof bv === "string") return String(av).localeCompare(String(bv)) * sign;
+    return (av - bv) * sign;
+  });
 }
 
 /** The text each filter box should show for a given filter set. */
@@ -90,13 +146,20 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
   // keystroke re-filters instantly with no database round trip.
   const [preset, setPreset] = useState<string | null>(null);
   const [sort, setSort] = useState<ScreenSort | null>(null);
+  // A header click orders by that column; it wins over a preset's ordering.
+  const [colSort, setColSort] = useState<{ key: ColKey; dir: "asc" | "desc" } | null>(null);
   const [savedScreens, setSavedScreens] = useState<SavedScreen[]>(initialSavedScreens);
   const [namingScreen, setNamingScreen] = useState(false);
   const [, startMutate] = useTransition();
 
   const matched = useMemo(() => applyScreenerFilters(initialRows, filters), [initialRows, filters]);
   // Newest bar behind any row currently on screen.
-  const visibleRows = sort ? applyScreenSort(matched, sort) : matched;
+  const presetRows = sort ? applyScreenSort(matched, sort) : matched;
+  const visibleRows = colSort ? sortByColumn(presetRows, colSort.key, colSort.dir) : presetRows;
+
+  function clickColumn(key: ColKey) {
+    setColSort((c) => (c?.key === key ? { key, dir: c.dir === "desc" ? "asc" : "desc" } : { key, dir: key === "symbol" || key === "type" ? "asc" : "desc" }));
+  }
 
   /** Set the whole filter set at once (preset, reset, saved screen) and sync the boxes. */
   function setFilterSet(next: ScreenerFilters) {
@@ -110,6 +173,7 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
     const found = PRESET_SCREENS.find((p) => p.id === id);
     if (!found) return;
     setPreset(id);
+    setColSort(null);
     setSort(found.sort);
     setFilterSet(found.filters);
   }
@@ -131,6 +195,7 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
   function clearPreset() {
     setPreset(null);
     setSort(null);
+    setColSort(null);
     setFilterSet(EMPTY_FILTERS);
   }
 
@@ -161,10 +226,28 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
   }
 
   return (
-    <div className="animate-page-in">
-      <div className="mb-4.5">
-        <div className="mb-2 font-mono text-[10.5px] tracking-[0.18em] text-muted uppercase">Markets · Screener</div>
-        <h1 className="font-serif text-[40px] leading-[1.05] font-normal tracking-[-0.015em] text-primary">Screener</h1>
+    <div className="animate-page-in mx-auto max-w-[1320px]">
+      <div className="mb-5.5 flex flex-wrap items-end justify-between gap-4.5">
+        <div>
+          <div className="font-mono text-[10.5px] tracking-[0.18em] text-muted uppercase">Markets · Screener</div>
+          <h1 className="mt-2 font-serif text-[40px] leading-[1.05] font-normal tracking-[-0.015em] text-primary">Screener</h1>
+          <p className="mt-2 max-w-[520px] text-lead text-muted text-pretty">
+            Stack filters on the left; the board narrows as you go. Save a screen to pin it to your Base Camp.
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="flex items-center gap-2 rounded-[9px] border border-line px-3 py-2">
+            <span aria-hidden className="animate-breathe h-1.5 w-1.5 rounded-full bg-accent" />
+            <DataFreshness source="last_close" asOf={asOf} />
+          </span>
+          <button
+            type="button"
+            onClick={handleSave}
+            className="rounded-[9px] bg-accent px-3.5 py-2 text-[12.5px] font-bold text-canvas transition-[background-color,transform] duration-base ease-standard hover:-translate-y-px hover:bg-accent-light"
+          >
+            Save screen
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 items-start gap-3.5 min-[900px]:grid-cols-[232px_1fr]">
@@ -227,18 +310,19 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
           </button>
 
           <div className="mt-4.5 mb-2 font-mono text-eyebrow tracking-[0.16em] text-violet uppercase">Pre-built screens</div>
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1.5">
             {PRESET_SCREENS.map((p) => (
               <button
                 key={p.id}
                 type="button"
                 aria-pressed={preset === p.id}
                 onClick={() => applyPreset(p.id)}
-                className={`truncate rounded-control px-2.5 py-2 text-left text-body transition-colors duration-fast ease-standard hover:bg-active hover:text-primary ${
-                  preset === p.id ? "bg-active text-primary" : "text-muted"
+                className={`flex flex-col gap-0.5 rounded-panel border px-3 py-2.5 text-left text-primary transition-colors duration-base ease-standard hover:border-violet hover:bg-violet/10 ${
+                  preset === p.id ? "border-violet bg-violet/10" : "border-violet/20 bg-violet/5"
                 }`}
               >
-                {p.name}
+                <span className="text-[12.5px]">{p.name}</span>
+                <span className="font-mono text-[10.5px] text-dim">{p.hint}</span>
               </button>
             ))}
           </div>
@@ -288,21 +372,9 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
         <div className="overflow-hidden rounded-2xl border border-[#232323] bg-panel">
           <div className="flex flex-wrap items-center justify-between gap-2.5 border-b border-[#1c1c1c] bg-[#0c0c0c] px-5 py-3.5">
             <span className="font-mono text-micro tracking-[0.14em] text-primary uppercase">
-              {`${visibleRows.length} match${visibleRows.length === 1 ? "" : "es"}`}
+              <span className="text-accent">{visibleRows.length}</span> {visibleRows.length === 1 ? "match" : "matches"}
             </span>
-            <div className="flex items-center gap-3">
-              {/* Same numbers as Markets and the ticker page, so the same
-                  freshness statement. */}
-              <DataFreshness source="last_close" asOf={asOf} className="hidden sm:inline" />
-              <span className="hidden text-caption text-dim sm:inline">Market cap derived at query time</span>
-              <button
-                type="button"
-                onClick={handleSave}
-                className="rounded-control border border-line px-3 py-2 text-body text-primary transition-colors duration-fast ease-standard hover:border-line-strong"
-              >
-                Save screen
-              </button>
-            </div>
+            <span className="hidden text-caption text-dim sm:inline">Market cap derived at query time</span>
           </div>
 
           {activePreset && (
@@ -329,38 +401,55 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
               </button>
             </div>
           ) : (
-            <>
-              <div className="grid grid-cols-[minmax(0,1.4fr)_90px_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_76px_86px] gap-3 border-b border-[#1c1c1c] bg-[#0c0c0c] px-5 py-3 font-mono text-eyebrow tracking-[0.14em] text-dim uppercase">
-                <div>Symbol</div>
-                <div>Type</div>
-                <div>Price</div>
-                <div>24h</div>
-                <div>Volume</div>
-                <div>Mkt cap</div>
-                <div>P/E</div>
-                <div>Yield</div>
+            <div className="overflow-x-auto">
+              <div className="min-w-[940px]">
+              <div className={`${GRID} border-b border-[#1c1c1c] bg-[#0c0c0c] px-5 py-3 font-mono text-eyebrow tracking-[0.14em] uppercase`}>
+                {COLUMNS.map((c) => {
+                  if (c.key === "trend") {
+                    return (
+                      <div key={c.key} className="text-dim">
+                        {c.label}
+                      </div>
+                    );
+                  }
+                  const key = c.key;
+                  const on = colSort?.key === key;
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => clickColumn(key)}
+                      aria-label={`Sort by ${c.label}${on ? (colSort.dir === "asc" ? ", ascending" : ", descending") : ""}`}
+                      className={`flex items-center p-0 text-left uppercase transition-colors duration-fast ease-standard hover:text-primary ${on ? "text-primary" : "text-dim"}`}
+                    >
+                      {c.label}
+                      <span aria-hidden className={`ml-1.5 ${on ? "text-accent" : "text-transparent"}`}>
+                        {on && colSort.dir === "asc" ? "↑" : "↓"}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
               {visibleRows.map((r, index) => (
                 <Link
                   key={r.symbol}
                   href={`/ticker/${r.symbol}`}
-                  className="cn-row animate-rise-in grid grid-cols-[minmax(0,1.4fr)_90px_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_76px_86px] items-center gap-3 border-b border-[#171717] px-5 py-[11px] transition-colors duration-fast ease-standard last:border-b-0 hover:bg-raised"
+                  className={`cn-row animate-rise-in ${GRID} border-b border-[#171717] px-5 py-[11px] transition-colors duration-fast ease-standard last:border-b-0 hover:bg-raised`}
                   style={{ animationDelay: `${index * 25}ms` }}
                 >
                   <div className="flex min-w-0 items-center gap-2.5">
                     <span
-                      className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-control border bg-panel font-mono text-eyebrow ${
-                        ASSET_TYPE_TAG_CLASS[r.assetType] ?? "text-muted border-line"
-                      }`}
+                      className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-control border font-mono text-eyebrow ${tint(r.assetType)}`}
                     >
                       {r.symbol.slice(0, 2)}
                     </span>
-                    <span className="truncate text-body font-semibold text-primary">{r.symbol}</span>
+                    <span className="flex min-w-0 flex-col gap-px">
+                      <span className="truncate text-body font-semibold text-primary">{r.symbol}</span>
+                      {r.name && <span className="truncate text-micro text-dim">{r.name}</span>}
+                    </span>
                   </div>
                   <div
-                    className={`justify-self-start rounded-full border px-2 py-[3px] font-mono text-[9px] tracking-[0.1em] uppercase ${
-                      ASSET_TYPE_TAG_CLASS[r.assetType] ?? "text-muted border-line"
-                    }`}
+                    className={`justify-self-start rounded-full border px-2 py-[3px] font-mono text-[9px] tracking-[0.1em] uppercase ${tint(r.assetType)}`}
                   >
                     {assetTypeBadge(r.assetType)}
                   </div>
@@ -368,7 +457,7 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
                     {formatMoney(r.price, prefs)}
                   </div>
                   <div
-                    className={`text-body tabular-nums ${
+                    className={`font-mono text-[12.5px] tabular-nums ${
                       r.changePct === null ? "text-muted" : r.changePct >= 0 ? "text-accent" : "text-negative"
                     }`}
                   >
@@ -381,7 +470,7 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
                     {formatVolume(r.volume)}
                   </div>
                   <div
-                    className={`text-body tabular-nums ${r.marketCap === null ? "text-muted" : "text-primary"}`}
+                    className="font-mono text-[12.5px] tabular-nums text-muted"
                     title={r.marketCap === null ? "Market cap not reported - funds and ETFs don't file it" : undefined}
                   >
                     {formatMarketCap(r.marketCap, prefs)}
@@ -390,9 +479,16 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
                   <div className="font-mono text-[12.5px] tabular-nums text-muted">
                     {r.dividendYield === null ? "n/a" : `${r.dividendYield.toFixed(2)}%`}
                   </div>
+                  <Sparkline
+                    values={r.trend}
+                    positive={r.trend.length > 1 ? r.trend[r.trend.length - 1] >= r.trend[0] : (r.changePct ?? 0) >= 0}
+                    className="h-7 w-[86px]"
+                    delayMs={150 + index * 35}
+                  />
                 </Link>
               ))}
-            </>
+              </div>
+            </div>
           )}
         </div>
       </div>

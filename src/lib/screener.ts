@@ -171,6 +171,8 @@ export type ScreenSort =
 export interface PresetScreen {
   id: string;
   name: string;
+  /** The one-line rule shown under the name on the preset card. */
+  hint: string;
   /** What it selects and how it orders, in words. Rendered beside the results. */
   method: string;
   filters: ScreenerFilters;
@@ -180,6 +182,7 @@ export interface PresetScreen {
 export const PRESET_SCREENS: PresetScreen[] = [
   {
     id: "gainers",
+    hint: "change > 0 · best first",
     name: "Day gainers",
     method: "Symbols up on the last session, ordered by percent change.",
     filters: { ...EMPTY_FILTERS, minChangePct: 0 },
@@ -187,6 +190,7 @@ export const PRESET_SCREENS: PresetScreen[] = [
   },
   {
     id: "losers",
+    hint: "change < 0 · worst first",
     name: "Day losers",
     method: "Symbols down on the last session, ordered by percent change.",
     filters: { ...EMPTY_FILTERS, maxChangePct: 0 },
@@ -194,6 +198,7 @@ export const PRESET_SCREENS: PresetScreen[] = [
   },
   {
     id: "active",
+    hint: "by traded volume",
     name: "Most active",
     method: "Ordered by the last session's traded volume, all asset types.",
     filters: { ...EMPTY_FILTERS },
@@ -201,6 +206,7 @@ export const PRESET_SCREENS: PresetScreen[] = [
   },
   {
     id: "high52",
+    hint: "within 5% of 52w high",
     name: "Near 52-week highs",
     method: "Within 5% of the one-year high, closest first. The range is over intraday highs and lows.",
     filters: { ...EMPTY_FILTERS },
@@ -208,6 +214,7 @@ export const PRESET_SCREENS: PresetScreen[] = [
   },
   {
     id: "low52",
+    hint: "within 5% of 52w low",
     name: "Near 52-week lows",
     method: "Within 5% of the one-year low, closest first. The range is over intraday highs and lows.",
     filters: { ...EMPTY_FILTERS },
