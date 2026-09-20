@@ -10,7 +10,7 @@
 // currency, sourced the same way every other price is: the market-data
 // provider, which already covers forex pairs (lib/market-data/provider.ts).
 //
-// When no rate can be sourced - no TWELVE_DATA_API_KEY, provider down, pair
+// When no rate can be sourced - no TIINGO_API_KEY, provider down, pair
 // not carried - this returns null and every caller falls back to USD *and
 // says it did*. It never invents a rate and never applies a stale one without
 // dating it.
@@ -44,7 +44,9 @@ export async function fetchUsdRate(target: string): Promise<FxRate | null> {
   if (target === "USD") return { rate: 1, asOf: new Date().toISOString() };
   if (!isSupportedCurrency(target)) return null;
 
-  // Twelve Data's forex pair form. `close` on a forex quote is the rate.
+  // A `BASE/QUOTE` forex pair; `price` on a forex quote is the rate. fetchQuote
+  // does not carry forex under Tiingo (its FX pair direction is undocumented),
+  // so this currently returns null and the caller falls back to USD.
   const quote = await fetchQuote(`USD/${target}`);
   if (!quote || quote.price === null || !Number.isFinite(quote.price) || quote.price <= 0) return null;
 

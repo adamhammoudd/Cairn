@@ -3,11 +3,11 @@
 // wrapper component (src/components/live-price-poll.tsx) so it can be unit
 // tested without a renderer.
 
-// The live-quote provider (Twelve Data, "basic" tier) allows 8 requests per
-// minute on ONE shared key. A portfolio with 8 holdings already spends that
-// whole budget in a single refresh, so quote-bearing pages never poll faster
-// than this - however low the user drops "Refresh rate" in Settings. Slower
-// than 60s (the 5-minute option) is still honoured.
+// The live-quote provider (Tiingo) is quota-limited on ONE shared key - 50
+// requests per hour on Starter, 10,000 on Power - and every quote is cached for
+// 60s in provider.ts. So quote-bearing pages never poll faster than this,
+// however low the user drops "Refresh rate" in Settings. Slower than 60s (the
+// 5-minute option) is still honoured.
 export const MIN_QUOTE_POLL_SECONDS = 60;
 
 /** The interval a quote-bearing page actually polls at, given the user's setting. */
