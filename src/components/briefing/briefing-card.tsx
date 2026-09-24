@@ -4,6 +4,7 @@ import { useTransition } from "react";
 import Link from "next/link";
 import { requestBriefing } from "@/lib/actions/briefing";
 import type { BriefingContent } from "@/lib/ai/briefing";
+import { eventTypeLabel } from "@/lib/analysis";
 import { Disclosure } from "@/components/compliance/disclosure";
 import { decodeEntities } from "@/lib/news";
 
@@ -144,7 +145,7 @@ export function BriefingCard({ briefing }: BriefingCardProps) {
                 {briefing.upcoming_events.slice(0, 3).map((e, i) => (
                   <div key={i} className="rounded-panel border border-line bg-canvas/55 px-3 py-3">
                     <div className="font-mono text-eyebrow text-warning uppercase">
-                      {e.event_type}
+                      {eventTypeLabel(e.event_type)}
                     </div>
                     <div className="mt-2 text-body leading-snug text-primary">{e.symbol}</div>
                     <div className="mt-1.5 text-micro text-dim">{e.event_date}</div>

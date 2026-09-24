@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { toggleAnalysisPin } from "@/lib/actions/analysis";
 import { useRouter } from "next/navigation";
 import { runAnalysisGeneration, type AnalysisWithMethodology } from "@/lib/actions/analysis";
+import { eventTypeLabel } from "@/lib/analysis";
 import { searchSymbols, type SymbolSearchResult } from "@/lib/actions/symbols";
 import { MethodologyCard, splitFinding } from "@/components/analysis/methodology-card";
 import { decodeEntities } from "@/lib/news";
@@ -828,7 +829,7 @@ function FeaturedAnalysis({
                 <div className="flex items-baseline justify-between gap-2.5">
                   <span className="text-[12px]">
                     <strong className="font-mono font-medium">{topAnalog.symbol ?? topAnalog.sector ?? "Market"}</strong> ·{" "}
-                    {topAnalog.event_type.replace(/_/g, " ")}
+                    {eventTypeLabel(topAnalog.event_type)}
                   </span>
                   <span className="font-mono text-[10.5px] text-muted">{Math.round(topAnalog.similarity_score * 100)}%</span>
                 </div>

@@ -9,6 +9,39 @@
  * the not-enough-history panel. A raw internal error is never surfaced as the
  * analysis result.
  */
+/**
+ * Human labels for `historical_events.event_type`.
+ *
+ * Every surface that shows an analog used to print the raw column value, which
+ * was tolerable while the vocabulary was all single words ("earnings",
+ * "dividend"). It stopped being tolerable when the analysis engine started
+ * deriving its own analogs: `factor_signal` rendered as "factor_signal",
+ * "Factor_signal" or "FACTOR_SIGNAL" depending on the surface, and for most
+ * tickers it is now the MAJORITY of the analogs shown (RKLB: 41 of 46).
+ *
+ * "Price-history signal" rather than "factor signal" because it says what the
+ * analog actually is - a past day in this symbol's own price history that
+ * looked like today - instead of naming the internal machinery.
+ *
+ * Unknown types fall back to the underscored value spaced out, so a type added
+ * to the database before it is added here degrades quietly instead of showing
+ * a blank.
+ */
+export const EVENT_TYPE_LABELS: Record<string, string> = {
+  earnings: "Earnings",
+  split: "Split",
+  dividend: "Dividend",
+  macro: "Macro",
+  ipo: "IPO",
+  guidance: "Guidance",
+  volatility_regime: "Volatility regime",
+  factor_signal: "Price-history signal",
+};
+
+export function eventTypeLabel(eventType: string): string {
+  return EVENT_TYPE_LABELS[eventType] ?? eventType.replace(/_/g, " ");
+}
+
 export type GenerateOutcome =
   | { ok: true; analysisId: string }
   | { ok: false; kind: "quota" | "unavailable" | "error"; message: string };

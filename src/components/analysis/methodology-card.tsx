@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { AnalysisWithMethodology } from "@/lib/actions/analysis";
+import { eventTypeLabel } from "@/lib/analysis";
 import type { CalendarEvent } from "@/lib/calendar";
 import { Disclosure } from "@/components/compliance/disclosure";
 // RSS titles arrive HTML-escaped, so a cited source rendered raw shows
@@ -338,7 +339,7 @@ export function MethodologyCard({
                         <span className="min-w-0 truncate text-body text-primary">
                           {e.symbol ?? e.sector}{" "}
                           <span className="text-muted">
-                            · {e.event_type} ·{" "}
+                            · {eventTypeLabel(e.event_type)} ·{" "}
                             {new Date(e.event_date).toLocaleDateString(undefined, { month: "short", year: "numeric" })}
                           </span>
                         </span>
@@ -400,7 +401,7 @@ export function MethodologyCard({
               <div className="flex flex-col gap-1">
                 {upcomingEvents.slice(0, 3).map((e) => (
                   <div key={e.id} className="text-caption text-muted">
-                    <span className="capitalize">{e.event_type}</span> ·{" "}
+                    <span>{eventTypeLabel(e.event_type)}</span> ·{" "}
                     {new Date(`${e.event_date}T00:00:00`).toLocaleDateString()}
                   </div>
                 ))}

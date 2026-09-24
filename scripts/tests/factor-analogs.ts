@@ -18,6 +18,8 @@ import {
   type FactorBar,
 } from "@/lib/ai/factors";
 import { computeProbabilityBand, dedupeFactorAnalogs, computeSimilarityScore, ANALOG_OVERLAP_DAYS } from "@/lib/ai/analytics";
+import { eventTypeLabel, EVENT_TYPE_LABELS } from "@/lib/analysis";
+import { FACTOR_EVENT_TYPE } from "@/lib/ai/factor-analysis";
 import { checkCompleteness } from "@/lib/ai/scope-guard";
 import { deriveVolatilityRegimes, EQUITY_PERIODS_PER_YEAR } from "../../supabase/functions/_shared/volatility";
 
@@ -295,6 +297,47 @@ export function runFactorAnalogsSuite(): SuiteResult {
       "floor constants: the named sample-size floor is 5, matching the low-confidence line",
       MIN_FACTOR_ANALOG_SAMPLE === 5,
       `MIN_FACTOR_ANALOG_SAMPLE = ${MIN_FACTOR_ANALOG_SAMPLE}`,
+    ),
+  );
+
+  // --- How the new analog type SURFACES -------------------------------------
+  // Every screen that shows an analog printed the raw event_type column. That
+  // was survivable while the vocabulary was all single words; `factor_signal`
+  // rendered as "factor_signal" / "Factor_signal" / "FACTOR_SIGNAL" depending
+  // on the surface, and it is now the majority of the analogs shown for most
+  // tickers. These lock the label in so a new event type cannot reach the UI
+  // as raw snake_case again.
+  cases.push(
+    check(
+      "label: factor_signal reads as prose, not as the column value",
+      eventTypeLabel(FACTOR_EVENT_TYPE) === "Price-history signal",
+      `${FACTOR_EVENT_TYPE} -> "${eventTypeLabel(FACTOR_EVENT_TYPE)}"`,
+    ),
+  );
+  // The vocabulary the database itself allows (migration 0046's check
+  // constraint). If a type is added there without a label, this fails.
+  const DB_EVENT_TYPES = ["earnings", "split", "dividend", "macro", "ipo", "guidance", "volatility_regime", "factor_signal"];
+  const unlabelled = DB_EVENT_TYPES.filter((t) => !(t in EVENT_TYPE_LABELS));
+  cases.push(
+    check(
+      "label: every event type the schema permits has one",
+      unlabelled.length === 0,
+      unlabelled.length === 0 ? `all ${DB_EVENT_TYPES.length} covered` : `missing: ${unlabelled.join(", ")}`,
+    ),
+  );
+  const rawLooking = DB_EVENT_TYPES.filter((t) => eventTypeLabel(t).includes("_"));
+  cases.push(
+    check(
+      "label: no label leaks an underscore to the UI",
+      rawLooking.length === 0,
+      rawLooking.length === 0 ? "none" : `raw: ${rawLooking.join(", ")}`,
+    ),
+  );
+  cases.push(
+    check(
+      "label: an unknown type degrades to spaced words, never blank",
+      eventTypeLabel("some_future_type") === "some future type" && eventTypeLabel("x") === "x",
+      "an event type added to the database before it is added here still reads",
     ),
   );
 
