@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { ensureSymbolIngested } from "@/lib/market-data/ingest";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/types";
 import {
@@ -19,15 +20,71 @@ const TRACKED: { symbol: string; aliases: string[] }[] = [
   { symbol: "SPY", aliases: [] },
 ];
 
+// Words that are routinely typed in capitals without meaning a ticker. Only a
+// cashtag ($AI) overrides this; a bare "AI" or "ALL" in a sentence does not.
+const COMMON_CAPS = new Set([
+  "AI", "ALL", "AN", "AND", "ARE", "AS", "AT", "BE", "BUT", "BY", "CAN", "CEO", "CFO", "CPI", "DO", "ETF", "EPS", "EU",
+  "FED", "FOMC", "FOR", "FROM", "GDP", "HAS", "HOW", "IF", "IN", "IPO", "IS", "IT", "ITS", "MY", "NO", "NOT", "NOW",
+  "OF", "ON", "OR", "OUT", "PE", "QE", "SEC", "SO", "THE", "TO", "UK", "UP", "US", "USA", "USD", "VS", "WAS", "WHAT",
+  "WHEN", "WHO", "WHY", "WILL", "WITH", "YOU", "YTD",
+]);
+
+/**
+ * Most unrecognised tokens a single message may send to the market-data
+ * provider. A message is untrusted input; without a cap, a paragraph of
+ * capitalised words is a paragraph of outbound requests. Negative results are
+ * cached for a day in symbol_directory, so a repeated token costs nothing.
+ */
+const MAX_ON_DEMAND_LOOKUPS = 2;
+
 // Exported so the chat-triggered generation path decides "which scope did they
 // actually ask about" with the very same detection that decides which stored
 // analyses are relevant. Two notions of "mentioned" would drift apart.
-export function detectTickers(text: string): string[] {
+//
+// Recognition is no longer a closed list. In order:
+//   1. company names / symbols in TRACKED (needs no lookup - "apple" -> AAPL);
+//   2. candidate tokens - $cashtags, and 2-5 letter ALL-CAPS words - checked
+//      against symbol_directory in one query; only status "available" counts,
+//      so a delisted ticker or a typo the provider already refused is ignored;
+//   3. tokens the directory has never seen get one on-demand ingestion attempt
+//      (ensureSymbolIngested), capped at MAX_ON_DEMAND_LOOKUPS per message, and
+//      only when the message is not entirely capitals (where every word looks
+//      like a ticker). Single letters are only accepted as a $cashtag.
+export async function detectTickers(text: string, client?: SupabaseClient<Database>): Promise<string[]> {
   const found = new Set<string>();
   for (const t of TRACKED) {
     const terms = [t.symbol, ...t.aliases];
     if (terms.some((term) => new RegExp(`\\b${term}\\b`, "i").test(text))) found.add(t.symbol);
   }
+
+  const cashtags = Array.from(text.matchAll(/\$([A-Za-z]{1,5})\b/g), (m) => m[1].toUpperCase());
+  const caps = Array.from(text.matchAll(/\b[A-Z]{2,5}\b/g), (m) => m[0]).filter((t) => !COMMON_CAPS.has(t));
+  const candidates = Array.from(new Set([...cashtags, ...caps])).filter((c) => !found.has(c));
+  if (candidates.length === 0) return Array.from(found);
+
+  const supabase = client ?? (await createClient());
+  const { data: known } = await supabase.from("symbol_directory").select("symbol, status").in("symbol", candidates);
+  const statusBySymbol = new Map((known ?? []).map((r) => [r.symbol as string, r.status as string]));
+
+  const toLookup: string[] = [];
+  for (const c of candidates) {
+    const status = statusBySymbol.get(c);
+    if (status === "available") found.add(c);
+    else if (status === undefined) toLookup.push(c);
+    // any other status: the provider already said no (or is cooling down) - skip.
+  }
+
+  const hasLowercase = /[a-z]/.test(text);
+  if (hasLowercase || cashtags.length > 0) {
+    // Cashtags first: an explicit $XYZ is the strongest signal a token is a ticker.
+    const ordered = [...toLookup].sort((x, y) => Number(cashtags.includes(y)) - Number(cashtags.includes(x)));
+    for (const symbol of ordered.slice(0, MAX_ON_DEMAND_LOOKUPS)) {
+      if (!hasLowercase && !cashtags.includes(symbol)) continue;
+      const result = await ensureSymbolIngested(symbol);
+      if (result.status === "available") found.add(result.symbol);
+    }
+  }
+
   return Array.from(found);
 }
 
@@ -95,7 +152,7 @@ export async function buildChatContext(
 ): Promise<ChatContext> {
   const supabase = client ?? (await createClient());
 
-  const mentioned = detectTickers(userMessage);
+  const mentioned = await detectTickers(userMessage, client);
   const portfolioSymbols = usePortfolioContext ? await getUserSymbols(userId, client) : [];
 
   // explicit mention in the message wins; otherwise fall back to portfolio symbols for relevance

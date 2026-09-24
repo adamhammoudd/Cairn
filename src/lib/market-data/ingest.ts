@@ -368,6 +368,26 @@ function fromDirectory(row: NonNullable<Awaited<ReturnType<typeof readDirectory>
   };
 }
 
+/**
+ * Whether a directory entry we already hold has LESS history than this caller
+ * needs, and so must be re-fetched even though it is otherwise fresh.
+ *
+ * Pure and exported so the two rules that depend on it are testable without a
+ * database: it both bypasses the freshness window on the way in, and (on the
+ * way out) stops a failed depth top-up from downgrading a symbol that is
+ * perfectly serviceable at the history already stored.
+ *
+ * Only ever true for a symbol already known good. A miss or a provider refusal
+ * keeps its own cooldown - asking for more history must not reopen those.
+ */
+export function needsDeeperHistory(
+  known: { status: string; bars: number | null } | null,
+  minBars: number | undefined,
+): boolean {
+  if (minBars === undefined || known === null) return false;
+  return known.status === "available" && (known.bars ?? 0) < minBars;
+}
+
 function isFresh(row: { status: string; last_checked_at: string }): boolean {
   const age = Date.now() - new Date(row.last_checked_at).getTime();
   if (row.status === "available") return age < FRESH_MS;
@@ -380,6 +400,23 @@ export interface EnsureOptions {
   range?: string;
   /** Ignore the freshness window (the daily refresh job). */
   force?: boolean;
+  /**
+   * Re-fetch (at `range`) when the stored history is SHORTER than this, even
+   * though the directory entry is otherwise fresh.
+   *
+   * The analysis engine needs far more history than a price chart does: its
+   * factor states are percentiles of a symbol's own past, and over ~2 years
+   * those cluster into one or two episodes, which the non-overlap rule then
+   * collapses into too few analogs to measure (RKLB: n=4 against a floor of
+   * 5). Callers that need depth ask for it here instead of every caller
+   * paying for it - a chart, a typeahead hit and a watchlist add still pull
+   * the default range.
+   *
+   * Self-limiting without any extra bookkeeping: FRESH_MS is 15 minutes, so a
+   * symbol whose provider genuinely has less history than this re-fetches at
+   * most once per freshness window, and only from a caller that asked.
+   */
+  minBars?: number;
 }
 
 /**
@@ -398,7 +435,12 @@ export async function ensureSymbolIngested(symbolRaw: string, options: EnsureOpt
 
   const run = (async (): Promise<IngestResult> => {
     const known = await readDirectory(symbol);
-    if (known && !options.force && isFresh(known)) {
+    // A fresh entry whose stored history is shorter than the caller needs is
+    // still a miss for that caller: reuse it and the deeper range would never
+    // be fetched. Only applies to symbols we already hold - a miss or a
+    // provider refusal keeps its existing cooldown.
+    const tooShallow = needsDeeperHistory(known, options.minBars);
+    if (known && !options.force && !tooShallow && isFresh(known)) {
       // Still record the demand, so the refresh job knows this symbol is live.
       void createAdminClient()
         .from("symbol_directory")
@@ -432,6 +474,17 @@ export async function ensureSymbolIngested(symbolRaw: string, options: EnsureOpt
 
       await writeDirectory(stored, { asset_type: res.assetType, name, status: "available", bars: res.bars.length, detail: null });
       return { symbol: stored, status: "available", assetType: res.assetType, name, bars: res.bars.length, detail: null, cached: false };
+    }
+
+    // A failed DEPTH top-up is not a fact about the symbol either. The caller
+    // asked for a longer range than the provider carries for this ticker (HYPE
+    // has ~400 bars and no 5y series); the symbol itself is still perfectly
+    // serviceable at the history we already hold. Recording "unavailable" here
+    // would take a working ticker out of service - off charts, watchlists and
+    // typeahead - because an analysis wanted more history than exists. Keep
+    // what we have and let the caller decide whether it is enough.
+    if (tooShallow && known) {
+      return fromDirectory(known, true);
     }
 
     const status = failure?.status ?? "unavailable";

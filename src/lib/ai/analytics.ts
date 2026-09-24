@@ -50,10 +50,37 @@ export function computeHistoricalStats(events: HistoricalEventLike[]): Historica
 // half-life; not a claim of statistical rigor, just a real, deterministic
 // number instead of the previous "similarity_score: 1" placeholder for every
 // analog regardless of age.
-export function computeSimilarityScore(eventDate: string, asOf: Date = new Date()): number {
+//
+// `matchFraction` (default 1) scales the score for factor-derived analogs that
+// matched only some of today's active conditions - the same decay, times how
+// much of the current state the analog actually shared. Curated analogs keep 1.
+export function computeSimilarityScore(eventDate: string, asOf: Date = new Date(), matchFraction: number = 1): number {
   const daysSince = Math.max(0, (asOf.getTime() - new Date(eventDate).getTime()) / 86_400_000);
   const halfLifeDays = 365;
-  return Math.round(Math.pow(0.5, daysSince / halfLifeDays) * 1000) / 1000;
+  const fraction = Math.min(1, Math.max(0, matchFraction));
+  return Math.round(Math.pow(0.5, daysSince / halfLifeDays) * fraction * 1000) / 1000;
+}
+
+/**
+ * Calendar days within which a factor-derived analog and a curated event are
+ * treated as the same move. A factor instance measures ~10 sessions forward
+ * (~14 calendar days), so an earnings date, dividend or volatility regime that
+ * starts inside that window is already the move the instance would measure.
+ */
+export const ANALOG_OVERLAP_DAYS = 14;
+
+/**
+ * Layer factor-derived analogs on top of curated ones without counting one
+ * price move twice. Curated events win: they carry richer provenance
+ * (earnings, dividends, splits, curated regimes), so a factor instance that
+ * overlaps one is dropped, not the other way round.
+ */
+export function dedupeFactorAnalogs<F extends { event_date: string }>(curated: { event_date: string }[], factor: F[]): F[] {
+  const curatedMs = curated.map((c) => new Date(c.event_date).getTime());
+  return factor.filter((f) => {
+    const t = new Date(f.event_date).getTime();
+    return !curatedMs.some((c) => Math.abs(c - t) < ANALOG_OVERLAP_DAYS * 86_400_000);
+  });
 }
 
 // ---------------------------------------------------------------------------

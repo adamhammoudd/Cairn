@@ -5,7 +5,16 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { generateAnalysis } from "@/lib/ai/generate";
 import { checkAiUsageAllowed, recordAiUsage, getUserPlan } from "@/lib/actions/billing";
-import { UNAVAILABLE_MESSAGE, BUSY_MESSAGE, GENERIC_ERROR_MESSAGE, type GenerateOutcome } from "@/lib/analysis";
+import {
+  UNAVAILABLE_MESSAGE,
+  BUSY_MESSAGE,
+  GENERIC_ERROR_MESSAGE,
+  SYMBOL_UNAVAILABLE_MESSAGE,
+  DATA_BUSY_MESSAGE,
+  type GenerateOutcome,
+} from "@/lib/analysis";
+import { ensureSymbolIngested } from "@/lib/market-data/ingest";
+import { FACTOR_HISTORY_RANGE, TARGET_FACTOR_HISTORY_BARS } from "@/lib/ai/factors";
 import { LlmBusyError } from "@/lib/ai/llm";
 import { detectTickers } from "@/lib/ai/context";
 import type { ScopeType } from "@/lib/supabase/types";
@@ -28,6 +37,8 @@ function isThinDataFailure(message: string): boolean {
     message.includes("No historical analogs with usable before/after prices") ||
     message.includes("an analysis must cite at least one source")
   );
+  // "Not enough price history to derive factor-based analogs" is a sub-case of
+  // the second phrase above (same thrown message), so it needs no line of its own.
 }
 
 export async function runAnalysisGeneration(
@@ -40,7 +51,7 @@ export async function runAnalysisGeneration(
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const scopeValue = scopeType === "ticker" ? rawScopeValue.trim().toUpperCase() : rawScopeValue.trim();
+  let scopeValue = scopeType === "ticker" ? rawScopeValue.trim().toUpperCase() : rawScopeValue.trim();
   if (!scopeValue) {
     return { ok: false, kind: "error", message: "Enter a market, sector, or ticker to analyze." };
   }
@@ -48,6 +59,42 @@ export async function runAnalysisGeneration(
   const gate = await checkAiUsageAllowed(user.id);
   if (!gate.allowed) {
     return { ok: false, kind: "quota", message: gate.message ?? "AI analysis limit reached for this plan." };
+  }
+
+  // Precondition, not a second pipeline: make sure the symbol's price history
+  // is on disk before any analysis is attempted. A symbol nobody has asked
+  // about is fetched here on first use; one already present costs a single
+  // indexed read (ensureSymbolIngested is cached, rate-limited and dedups
+  // in-flight calls). Only ticker scopes have a price history to ingest.
+  //
+  // Runs after the quota gate but before recordAiUsage, so a symbol that
+  // turns out not to exist is never charged for.
+  if (scopeType === "ticker") {
+    try {
+      // Deeper history than a chart needs: the factor analog scan measures
+      // percentiles of the symbol's own past, and ~2 years is too few episodes
+      // to produce an adequate sample. minBars re-fetches a symbol we already
+      // hold only at the shallower default.
+      const ingest = await ensureSymbolIngested(scopeValue, {
+        range: FACTOR_HISTORY_RANGE,
+        minBars: TARGET_FACTOR_HISTORY_BARS,
+      });
+      if (ingest.status === "unavailable") {
+        return { ok: false, kind: "error", message: SYMBOL_UNAVAILABLE_MESSAGE };
+      }
+      if (ingest.status !== "available") {
+        return { ok: false, kind: "error", message: DATA_BUSY_MESSAGE };
+      }
+      // The provider's canonical form (BTC-USD is stored as BTC), which is what
+      // the price history is keyed by.
+      scopeValue = ingest.symbol;
+    } catch (err) {
+      console.error("[analysis] ingestion precondition failed", {
+        scopeValue,
+        error: err instanceof Error ? err.message : String(err),
+      });
+      return { ok: false, kind: "error", message: GENERIC_ERROR_MESSAGE };
+    }
   }
 
   let analysisId: string;
@@ -94,7 +141,11 @@ export async function runAnalysisGeneration(
  * getAnalysesForScope returning nothing - rather than a second, chat-specific
  * notion of missing. Scope detection is chat's own detectTickers, so what
  * counts as "the scope they asked about" matches what the assistant already
- * uses to pick relevant context.
+ * uses to pick relevant context. detectTickers only ever returns symbols the
+ * market-data directory resolved as available - a delisted ticker or a typo the
+ * provider refused never reaches this function - and runAnalysisGeneration
+ * re-checks that before doing any work, so neither can be tricked into a
+ * generation that would fail expensively.
  *
  * Returns null when the message names no single scope, or when something is
  * already on file. Only ever offers ticker scopes: sector and market-wide
@@ -107,7 +158,7 @@ export async function runAnalysisGeneration(
 export async function findMissingAnalysisScope(
   message: string,
 ): Promise<{ scopeType: ScopeType; scopeValue: string } | null> {
-  const mentioned = detectTickers(message);
+  const mentioned = await detectTickers(message);
   // More than one ticker in the question is ambiguous - generating for a guess
   // would be the silent auto-generation this is explicitly not meant to do.
   if (mentioned.length !== 1) return null;
