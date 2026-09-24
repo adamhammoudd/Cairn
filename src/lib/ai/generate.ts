@@ -26,7 +26,14 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { checkScopeGuard, checkCompleteness } from "@/lib/ai/scope-guard";
 import { classifyScope, classifierMode, resolveUnavailable } from "@/lib/ai/scope-classifier";
-import { computeHistoricalStats, computeSimilarityScore, computeProbabilityBand, ELEVATED_MOVE_THRESHOLD_PCT } from "@/lib/ai/analytics";
+import {
+  computeHistoricalStats,
+  computeSimilarityScore,
+  computeProbabilityBand,
+  dedupeFactorAnalogs,
+  ELEVATED_MOVE_THRESHOLD_PCT,
+} from "@/lib/ai/analytics";
+import { analyzeFactors, formatFactorBlock, FACTOR_EVENT_TYPE, type FactorAnalysis, type FactorEventRow } from "@/lib/ai/factor-analysis";
 import { llmCompleteJsonWithProvider } from "@/lib/ai/llm";
 import type { ScopeType, Database } from "@/lib/supabase/types";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -58,6 +65,40 @@ This scope is a crypto asset. Its data profile is materially different from an e
   relative to THIS asset's own history, not relative to a stock.
 - This asset trades 24/7. There is no overnight gap, market open/close, or pre/post-market session.
 - Crypto price history is shorter and regime-shifting, which is why the computed confidence is often low.`;
+
+// Appended only when factor readings are in the prompt, so sector and market
+// prompts are unchanged. It adds a requirement (engage with the factor
+// evidence); it loosens nothing above.
+const FACTOR_PROMPT_ADDENDUM = `
+
+FACTOR READINGS are also provided. They were computed in code from this symbol's own daily price history,
+and the analog set behind the probability range was found by scanning that history for past occasions in
+the same state as today. In your explanation, name at least one of the active conditions the analogs were
+matched on and say what the record shows for it. They describe a statistical state, not a forecast and
+never a reason to act. Do not restate a reading more precisely than given and do not add any figure of your own.`;
+
+// --- Prompt budget -----------------------------------------------------------
+// Factor-derived analogs made the evidence payload much larger: a cold ticker
+// can contribute dozens of instances on top of the curated events, and with
+// pretty-printed JSON and full article bodies the request went over the
+// model's per-request token limit outright (RKLB: 11,549 tokens against an
+// 8,000 limit), so EVERY ticker analysis failed.
+//
+// These caps shrink only what the MODEL IS SHOWN. They deliberately do not
+// touch:
+//   * computeProbabilityBand / computeHistoricalStats, which still run over
+//     every analog, so the probability, confidence and sample size are
+//     unchanged; and
+//   * analogIds / sourceIds, so the stored provenance still lists every analog
+//     that contributed to the computation and every source that informed it.
+// The model only ever writes prose about numbers it is handed, so showing it a
+// representative sample of the evidence changes no figure a user sees.
+
+/** Analogs written into the prompt, most recent first (recency is what computeSimilarityScore weights anyway). */
+const MAX_PROMPT_ANALOGS = 12;
+
+/** Characters of each news body. Enough for the gist; full articles are what blew the budget. */
+const MAX_NEWS_BODY_CHARS = 600;
 
 interface GenerateAnalysisInput {
   scopeType: ScopeType;
@@ -128,12 +169,28 @@ export async function generateAnalysis({ scopeType, scopeValue, supabaseClient }
     .select("id, symbol, sector, event_type, event_date, description, price_before, price_after, volume_at_event")
     .order("event_date", { ascending: false })
     .limit(50);
-  if (scopeType === "ticker") eventsQuery = eventsQuery.eq("symbol", scopeValue);
+  // Factor-derived rows are re-derived below from the symbol's own prices, so
+  // any left over from an earlier run (a different state, a different day) must
+  // not be read back in as if they were curated analogs of today's state.
+  if (scopeType === "ticker") eventsQuery = eventsQuery.eq("symbol", scopeValue).neq("event_type", FACTOR_EVENT_TYPE);
   else if (scopeType === "sector") eventsQuery = eventsQuery.eq("sector", scopeValue);
   const { data: events } = await eventsQuery;
 
+  // Factor-derived analogs (any ticker with enough price history), layered on
+  // top of the curated ones when the symbol happens to have both. Curated wins
+  // where they describe the same move.
+  let factorAnalysis: FactorAnalysis | null = null;
+  let factorEvents: FactorEventRow[] = [];
+  if (scopeType === "ticker") {
+    factorAnalysis = await analyzeFactors(supabase, scopeValue, assetRow?.asset_type ?? null);
+    if (factorAnalysis) factorEvents = dedupeFactorAnalogs(events ?? [], factorAnalysis.events);
+  }
+
   const newsList = news ?? [];
-  const eventsList = events ?? [];
+  const eventsList: (NonNullable<typeof events>[number] & { note?: string; matchFraction?: number })[] = [
+    ...(events ?? []),
+    ...factorEvents,
+  ];
 
   if (newsList.length === 0 && eventsList.length === 0) {
     throw new Error(
@@ -155,7 +212,9 @@ export async function generateAnalysis({ scopeType, scopeValue, supabaseClient }
   if (analogIds.length === 0) {
     throw new Error(
       `No historical analogs with usable before/after prices for "${scopeValue}" - cannot compute a probability band. ` +
-        `Ingestion may not have populated price_before/price_after for this scope yet.`,
+        (factorAnalysis
+          ? `The factor scan found too few comparable past occasions in its own price history. `
+          : `Not enough price history to derive factor-based analogs, and no curated events on file. `),
     );
   }
   if (sourceIds.length === 0) {
@@ -177,9 +236,26 @@ Probability of an elevated move (>=${ELEVATED_MOVE_THRESHOLD_PCT}% in absolute t
 Confidence level: ${band.confidence}
 Sample size: ${band.sampleCount} historical analogs`;
 
+  const factorBlock = factorAnalysis ? formatFactorBlock(factorAnalysis, band.sampleCount, band.hitCount) : null;
+
+  // What the model is shown (see "Prompt budget" above). Every figure it will
+  // explain is already fixed in computedBlock/statsBlock/factorBlock; these two
+  // payloads are illustrative context, so they are sampled and truncated to fit
+  // the request budget. Compact JSON: the indentation alone was a large share
+  // of the payload.
+  const promptNews = newsList.map((n) => ({
+    ...n,
+    body: typeof n.body === "string" && n.body.length > MAX_NEWS_BODY_CHARS ? `${n.body.slice(0, MAX_NEWS_BODY_CHARS)}...` : n.body,
+  }));
+  const promptAnalogs = [...usableAnalogs]
+    .sort((a, b) => (a.event_date < b.event_date ? 1 : a.event_date > b.event_date ? -1 : 0))
+    .slice(0, MAX_PROMPT_ANALOGS)
+    .map(({ note, matchFraction: _match, ...e }) => (note ? { ...e, description: note } : e));
+
   const { parsed: prose, modelVersion } = await llmCompleteJsonWithProvider<ModelProse>(
     {
-      system: isCrypto ? SYSTEM_PROMPT + CRYPTO_PROMPT_ADDENDUM : SYSTEM_PROMPT,
+      system:
+        (isCrypto ? SYSTEM_PROMPT + CRYPTO_PROMPT_ADDENDUM : SYSTEM_PROMPT) + (factorBlock ? FACTOR_PROMPT_ADDENDUM : ""),
       maxTokens: 900,
       jsonSchema: PROSE_SCHEMA as unknown as Record<string, unknown>,
       schemaName: "analysis_prose",
@@ -188,16 +264,19 @@ Sample size: ${band.sampleCount} historical analogs`;
           role: "user",
           content: `Scope: ${scopeType} - ${scopeValue}
 
-${computedBlock}
+${computedBlock}${factorBlock ? `
+
+${factorBlock}` : ""}
 
 Supporting historical statistics:
 ${statsBlock}
 
-Recent news for this scope (id, title, source, published_at, body):
-${JSON.stringify(newsList, null, 2)}
+Recent news for this scope (id, title, source, published_at, body; bodies truncated to ${MAX_NEWS_BODY_CHARS} characters):
+${JSON.stringify(promptNews)}
 
-Historical events used as analogs (id, symbol/sector, event_type, event_date, description, price_before, price_after):
-${JSON.stringify(usableAnalogs, null, 2)}
+Historical events used as analogs (id, symbol/sector, event_type, event_date, description, price_before, price_after).
+The ${promptAnalogs.length} most recent of ${usableAnalogs.length} are shown; all ${usableAnalogs.length} were used to compute the figures above:
+${JSON.stringify(promptAnalogs)}
 
 Write the analysis_type label and the reasoning_text explanation for the computed figures above.
 Respond with only a JSON object matching the required schema.`,
@@ -219,6 +298,9 @@ Respond with only a JSON object matching the required schema.`,
     source_count: sourceIds.length,
     historical_analog_count: analogIds.length,
     sample_size: band.sampleCount,
+    // Only demanded when factor evidence actually reached the model, so a
+    // sector or market analysis (no factors) is judged exactly as before.
+    factor_evidence_required: factorEvents.length > 0,
   });
 
   let failure = !contentCheck.passed ? contentCheck : !completenessCheck.passed ? completenessCheck : null;
@@ -298,22 +380,47 @@ Respond with only a JSON object matching the required schema.`,
     .from("ai_analysis_sources")
     .insert(sourceIds.map((news_item_id) => ({ analysis_id: analysis.id, news_item_id })));
 
-  const eventDateById = new Map(usableAnalogs.map((e) => [e.id, e.event_date]));
+  const analogById = new Map(usableAnalogs.map((e) => [e.id, e]));
   const { error: analogsError } = await admin.from("ai_analysis_historical_analogs").insert(
-    analogIds.map((historical_event_id) => ({
-      analysis_id: analysis.id,
-      historical_event_id,
-      similarity_score: computeSimilarityScore(eventDateById.get(historical_event_id)!),
-    })),
+    analogIds.map((historical_event_id) => {
+      const e = analogById.get(historical_event_id)!;
+      return {
+        analysis_id: analysis.id,
+        historical_event_id,
+        similarity_score: computeSimilarityScore(e.event_date, new Date(), e.matchFraction ?? 1),
+        // Which conditions a factor-derived analog matched. Null for curated
+        // analogs, exactly as before.
+        note: e.note ?? null,
+      };
+    }),
   );
 
-  if (sourcesError || analogsError) {
+  // The factor readings behind this analysis, one row each - written whenever
+  // they were computed, including when the analog scan itself fell short, so
+  // the record shows what the engine looked at.
+  const usedKeys = new Set(
+    factorAnalysis?.result.ok && factorEvents.length > 0 ? factorAnalysis.result.analogs.conditions.map((c) => c.key) : [],
+  );
+  const { error: factorsError } = factorAnalysis
+    ? await admin.from("ai_analysis_factors").insert(
+        factorAnalysis.set.readings.map((r) => ({
+          analysis_id: analysis.id,
+          factor_key: r.key,
+          value: r.value,
+          percentile: r.percentile,
+          state: r.state,
+          detail: { ...r.detail, label: r.label, state_label: r.stateLabel, used_in_analog_set: usedKeys.has(r.key) },
+        })),
+      )
+    : { error: null };
+
+  if (sourcesError || analogsError || factorsError) {
     // Leave the parent `pending` and take the row back out. Failing loudly is
     // the point: a missing analysis is a retry, a sourceless one is a bare
     // score the product promises never to show.
     await admin.from("ai_analyses").delete().eq("id", analysis.id);
     throw new Error(
-      `Failed to store analysis evidence: ${sourcesError?.message ?? analogsError?.message}`,
+      `Failed to store analysis evidence: ${sourcesError?.message ?? analogsError?.message ?? factorsError?.message}`,
     );
   }
 

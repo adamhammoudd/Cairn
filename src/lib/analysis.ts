@@ -42,3 +42,20 @@ export const BUSY_MESSAGE =
  */
 export const GENERIC_ERROR_MESSAGE =
   "Something went wrong generating that analysis. It has been logged - please try again.";
+
+/**
+ * The market-data provider has no such symbol (a typo, a delisted ticker, an
+ * instrument type Cairn does not carry). Deliberately NOT the thin-data
+ * wording: "too few comparable situations" would tell the reader their ticker
+ * is real but young, when the truth is we could not find it at all.
+ */
+export const SYMBOL_UNAVAILABLE_MESSAGE =
+  "We couldn't find market data for that ticker. Check the symbol for a typo - it may also be delisted or a type of instrument Cairn doesn't cover yet.";
+
+/**
+ * The provider (or Cairn's own request budget for it) refused the fetch while
+ * pulling a symbol's price history for the first time. Nothing was analysed
+ * and nothing is charged; the symbol is not marked as missing.
+ */
+export const DATA_BUSY_MESSAGE =
+  "We couldn't fetch this ticker's price history just now - the market-data provider is busy. Nothing was charged against your quota - try again in a minute.";

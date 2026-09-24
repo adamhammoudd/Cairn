@@ -417,7 +417,20 @@ export interface AnalysisCompleteness {
   source_count: number;
   historical_analog_count: number;
   sample_size: number;
+  /**
+   * True when factor readings and a factor-derived analog set were put in front
+   * of the model. Then the reasoning must engage with that evidence at all -
+   * an explanation that never mentions any of it has ignored the analogs the
+   * range was computed from. Absent/false leaves every check exactly as before.
+   */
+  factor_evidence_required?: boolean;
 }
+
+// Words that show the prose engaged with the factor evidence. Deliberately
+// broad: this asks "did it mention what the analogs were matched on", not
+// "did it phrase it a particular way".
+const FACTOR_EVIDENCE_TERMS =
+  /\b(rsi|relative strength index|overbought|oversold|moving average|sma|trend|uptrend|downtrend|momentum|rate of change|volatil\w*|drawdown|draw-down|volume|z-score|standard deviation|mean|bollinger|relative strength|benchmark|factor|price history|own history|technical|signal)\b/i;
 
 export function checkCompleteness(a: AnalysisCompleteness): ScopeGuardResult {
   if (!a.reasoning_text || a.reasoning_text.trim().length < 20) {
@@ -431,6 +444,9 @@ export function checkCompleteness(a: AnalysisCompleteness): ScopeGuardResult {
   }
   if (a.sample_size < 1) {
     return { passed: false, reason: "zero_sample_size" };
+  }
+  if (a.factor_evidence_required && !FACTOR_EVIDENCE_TERMS.test(a.reasoning_text)) {
+    return { passed: false, reason: "ignores_factor_evidence" };
   }
   return { passed: true, reason: null };
 }

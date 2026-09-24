@@ -62,7 +62,7 @@ async function main() {
   }
 
   for (const prompt of PROMPTS) {
-    const mentioned = detectTickers(prompt);
+    const mentioned = await detectTickers(prompt, admin);
     if (mentioned.length !== 1) {
       cases.push({
         name: `scope detection: ${prompt}`,

@@ -16,6 +16,8 @@ import { runAdversarialScopeGuardSuites } from "./adversarial-scope-guard";
 import { runMethodologySubstanceSuite } from "./methodology-substance";
 import { runCitationFreshnessSuite } from "./citation-freshness";
 import { runProbabilityMathSuite } from "./probability-math";
+import { runFactorAnalogsSuite } from "./factor-analogs";
+import { runDeepHistorySuite } from "./deep-history";
 import { runTaggingSuite } from "./tagging";
 import { runScopeGuardProbeSuite } from "./scope-guard-probe";
 import { runPortfolioFigureDriftSuite } from "./portfolio-figure-drift";
@@ -120,6 +122,8 @@ async function main() {
 
   const allSuites = [
     runProbabilityMathSuite(),
+    runFactorAnalogsSuite(),
+    runDeepHistorySuite(),
     ...adversarialSuites,
     ...methodologySuites,
     ...citationSuites,

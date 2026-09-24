@@ -268,7 +268,20 @@ export interface Database {
           volume_at_event: number | null;
           metadata: Record<string, unknown>;
         };
-        Insert: never;
+        // Insert exists only for lib/ai/factor-analysis.ts, which upserts
+        // factor_signal rows (migration 0046). Every other event type is written
+        // by the Edge Functions, which are untyped.
+        Insert: {
+          symbol: string | null;
+          sector?: string | null;
+          event_type: string;
+          event_date: string;
+          description?: string | null;
+          price_before?: number | null;
+          price_after?: number | null;
+          volume_at_event?: number | null;
+          metadata?: Record<string, unknown>;
+        };
         Update: never;
         Relationships: [];
       };
@@ -334,6 +347,28 @@ export interface Database {
           historical_event_id: string;
           similarity_score: number;
           note?: string | null;
+        };
+        Update: never;
+        Relationships: [];
+      };
+      // Factor readings behind an analysis (migration 0046), one row per factor.
+      ai_analysis_factors: {
+        Row: {
+          id: string;
+          analysis_id: string;
+          factor_key: string;
+          value: number | null;
+          percentile: number | null;
+          state: string | null;
+          detail: Record<string, unknown>;
+        };
+        Insert: {
+          analysis_id: string;
+          factor_key: string;
+          value?: number | null;
+          percentile?: number | null;
+          state?: string | null;
+          detail?: Record<string, unknown>;
         };
         Update: never;
         Relationships: [];
