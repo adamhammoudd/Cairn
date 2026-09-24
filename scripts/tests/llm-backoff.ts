@@ -128,6 +128,53 @@ export function runLlmBackoffSuite(): SuiteResult {
     ),
   );
 
+  // --- A failed fallback must not hide why we fell back ----------------------
+  // Real incident (2026-09-24): the primary hit its tokens-per-day limit and
+  // the configured fallback answered HTTP 402 (unfunded account). The thrown
+  // error was the fallback's alone, so every symptom read "payment required"
+  // while the actual cause was a rate limit on the primary - and because a 402
+  // is not an LlmBusyError, the UI showed the generic failure message instead
+  // of "busy, try again". LlmBusyError now carries `detail` separately so the
+  // two can be combined without nesting the prefix inside itself.
+  {
+    const primary = new LlmBusyError(429, 1, "tokens per day (TPD): Limit 200000, Used 199139");
+    cases.push(
+      check(
+        "busy error exposes the provider's own text, unprefixed",
+        primary.detail === "tokens per day (TPD): Limit 200000, Used 199139" &&
+          primary.message.startsWith("Model provider unavailable after 1 attempt(s) (HTTP 429): "),
+        `detail = "${primary.detail}"`,
+      ),
+    );
+    // How completeWithEndpoints re-throws: built from `detail`, never `message`.
+    const combined = new LlmBusyError(
+      primary.status,
+      primary.attempts,
+      `${primary.detail} | Fell back to https://fallback.example/v1, which failed too: HTTP 402 payment required`,
+    );
+    cases.push(
+      check(
+        "the combined error keeps the busy classification",
+        combined instanceof LlmBusyError && combined.status === 429,
+        "so callers still render the 'busy, try again' message rather than a generic error",
+      ),
+    );
+    cases.push(
+      check(
+        "the combined error names BOTH causes",
+        combined.message.includes("tokens per day") && combined.message.includes("402 payment required"),
+        "the rate limit that caused the fallback, and the fallback's own failure",
+      ),
+    );
+    cases.push(
+      check(
+        "the prefix appears exactly once",
+        combined.message.split("Model provider unavailable").length - 1 === 1,
+        "building from `message` instead of `detail` nested the prefix inside itself",
+      ),
+    );
+  }
+
   return { suiteName: "LLM rate-limit retry policy", gating: true, cases };
 }
 

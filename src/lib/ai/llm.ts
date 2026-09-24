@@ -68,11 +68,18 @@ export const BUSY_MESSAGE =
 export class LlmBusyError extends Error {
   readonly status: number;
   readonly attempts: number;
+  /**
+   * The provider's own text, without this class's prefix. Kept separate so an
+   * error can be re-thrown with more context (see completeWithEndpoints, which
+   * appends a failed fallback) without the prefix being nested inside itself.
+   */
+  readonly detail: string;
   constructor(status: number, attempts: number, detail: string) {
     super(`Model provider unavailable after ${attempts} attempt(s) (HTTP ${status}): ${detail}`);
     this.name = "LlmBusyError";
     this.status = status;
     this.attempts = attempts;
+    this.detail = detail;
   }
 }
 
@@ -437,7 +444,24 @@ async function completeWithEndpoints(req: LlmRequest): Promise<CompletionResult>
       const text = await completeAgainstEndpoint(endpoint, { ...baseWithoutModel, model: endpoint.model }, req);
       return { text, endpoint };
     } catch (err) {
-      if (!(err instanceof LlmBusyError)) throw err; // real fault - surface immediately, never fall through
+      if (!(err instanceof LlmBusyError)) {
+        // A later endpoint's hard failure must not erase WHY we fell through to
+        // it. When the primary was rate-limited and a misconfigured fallback
+        // then returns something like HTTP 402, throwing only the fallback's
+        // error reports "payment required" for what is really "the primary is
+        // rate-limited" - and, because that error is not an LlmBusyError,
+        // callers show the generic failure message instead of "busy, try
+        // again". Both causes travel together, and the busy classification (the
+        // accurate one for the user) wins.
+        if (firstError instanceof LlmBusyError) {
+          throw new LlmBusyError(
+            firstError.status,
+            firstError.attempts,
+            `${firstError.detail} | Fell back to ${endpoint.baseUrl}, which failed too: ${err instanceof Error ? err.message : String(err)}`,
+          );
+        }
+        throw err; // real fault on the only/first endpoint - surface immediately
+      }
       firstError ??= err;
       if (i < endpoints.length - 1) continue; // try the next configured endpoint
     }
