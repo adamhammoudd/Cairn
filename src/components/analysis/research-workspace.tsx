@@ -335,8 +335,17 @@ export function ResearchWorkspace({
         </div>
       </div>
 
+      {/* The composer takes `relative z-10` so the scope typeahead can overhang
+          what follows it. The section below is `animate-rise-in relative`, and
+          that animation leaves a transform on it, which makes it a stacking
+          context; being positioned and later in the DOM, it painted OVER this
+          panel and sliced the suggestion list off at its own top edge. The
+          dropdown's z-20 could not win that, because it only ranks inside this
+          panel's context (animate-menu-in gives this one a transform too), so
+          it is the panel that has to be ranked. z-10 and no higher: the sticky
+          top nav is z-30 and must keep covering the list as the page scrolls. */}
       {composerOpen && (
-        <div className="animate-menu-in mt-5 rounded-2xl border border-[#232323] bg-panel px-[22px] py-5">
+        <div className="animate-menu-in relative z-10 mt-5 rounded-2xl border border-[#232323] bg-panel px-[22px] py-5">
           <div className="mb-2.5 flex flex-wrap items-baseline justify-between gap-3">
             <div className={MONO_LABEL}>What should Cairn research?</div>
             <div className="text-caption tabular-nums text-dim">
