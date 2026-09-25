@@ -85,9 +85,10 @@ export default function LoginPage() {
       </form>
 
       <p className="mt-5 text-center text-body text-muted">
-        Don&apos;t have an account?{" "}
-        <Link href="/signup" className="text-accent transition-colors duration-base ease-standard hover:text-accent-light">
-          Sign up
+        Don&apos;t have an account yet?{" "}
+        {/* Sign-up is closed until launch; new people come in through the waitlist. */}
+        <Link href="/waitlist" className="text-accent transition-colors duration-base ease-standard hover:text-accent-light">
+          Join the waitlist
         </Link>
       </p>
 

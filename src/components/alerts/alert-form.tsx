@@ -310,7 +310,7 @@ export function AlertForm({ alert, defaultChannels, onDone, onCancel }: AlertFor
         </p>
       </div>
 
-      {error && error !== "saved" && <p className="mt-3 text-body text-negative">{error}</p>}
+      {error && error !== "saved" && <p className="mt-3 text-body text-warning">{error}</p>}
 
       {editing && (
         <p className="mt-3 text-caption text-dim">

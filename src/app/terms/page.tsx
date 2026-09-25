@@ -1,3 +1,4 @@
+import { CONTACT_EMAIL } from "@/lib/site";
 import { LegalShell } from "@/components/legal-shell";
 import { TOS_VERSION, legalDateDisplay } from "@/lib/legal-versions";
 
@@ -25,7 +26,8 @@ export default function TermsofServicePage() {
             Cairn is not a broker-dealer - it does not execute trades, hold custody of assets, or
             connect to brokerage accounts. Cairn is not investment advice: every AI output is
             scoped to a market, sector, or ticker, never to a specific user&apos;s position. Cairn
-            is not a registered investment adviser.
+            is not an investment firm or investment adviser authorised by the Belgian FSMA or any
+            other regulator.
           </p>
         </section>
         <section>
@@ -116,10 +118,11 @@ export default function TermsofServicePage() {
           <p>
             Cairn offers a free tier and a paid Premium tier. Premium is billed through Stripe on a
             recurring basis at the price shown at checkout, and renews automatically until
-            cancelled. You can cancel at any time from the billing settings or the Stripe customer
-            portal; cancellation stops the next renewal and Premium features remain available until
-            the end of the period already paid for. If a renewal payment fails, the account is
-            downgraded to the free tier rather than losing access to its own data.
+            cancelled. You can cancel at any time through &quot;Manage billing&quot; in Settings →
+            Billing, which opens the Stripe customer portal; cancellation stops the next renewal and Premium features remain available until
+            the end of the period already paid for. If a renewal payment fails and is not resolved
+            within a 14-day grace period, the account moves to the free tier rather than losing
+            access to its own data.
           </p>
           <p>
             <strong>Prices and VAT.</strong> Premium is €12.00 per month excluding VAT. VAT is
@@ -128,13 +131,13 @@ export default function TermsofServicePage() {
             business you can enter your VAT number at checkout.
           </p>
           <p>
-            <strong>Your 14-day right to cancel, and why it usually will not apply.</strong> As a
+            <strong>Your 14-day right to withdraw.</strong> As a
             consumer you normally have 14 days to withdraw from a distance contract for no reason.
             Because Premium is a digital service that starts immediately, we ask you at checkout to
             expressly request that it begin straight away and to acknowledge that doing so means you
-            lose the 14-day withdrawal right once the service has been fully performed. If you do
-            not give that consent, your access begins after the 14 days instead. If you withdraw
-            within the 14 days having given that consent but before the period is over, you pay a
+            lose the 14-day withdrawal right once the service has been fully performed. Checkout
+            cannot be completed without that request, so if you would rather keep the full
+            withdrawal right, do not subscribe yet. If you withdraw within the 14 days, you pay a
             proportionate amount for what you used and we refund the rest.
           </p>
           <p>
@@ -147,9 +150,9 @@ export default function TermsofServicePage() {
             good faith. Ask us and we will look at it.
           </p>
           <p>
-            <strong>Changing plan.</strong> If you upgrade or downgrade mid-period, Stripe prorates
-            the difference automatically: you are credited for the unused part of the old plan and
-            charged the prorated cost of the new one.
+            <strong>Changing plan.</strong> There is currently one paid plan. Moving back to the
+            free tier works as described above: cancel, and Premium stays active until the end of
+            the period you have already paid for.
           </p>
           <p>
             <strong>Price changes.</strong> We will give you at least 30 days&apos; notice by email
@@ -199,8 +202,7 @@ export default function TermsofServicePage() {
         <section>
           <h2>11. Termination</h2>
           <p>
-            You may delete your account and its data at any time from Settings → Export &amp;
-            delete. Cairn may suspend or terminate an account that violates these terms - in
+            You may delete your account and its data at any time from Settings → Account. Cairn may suspend or terminate an account that violates these terms - in
             particular Section 6 (unlawful, infringing, or market-manipulative content) - or where
             required by law. Where practical and not legally prohibited, Cairn will give notice
             before terminating an account that is not in serious breach, and you will be able to
@@ -238,13 +240,14 @@ export default function TermsofServicePage() {
         <section>
           <h2>14. Who you are contracting with, and how to reach us</h2>
           <p>
-            These terms are between you and the operator of Cairn, whose full identity, registered
-            address and enterprise number are set out on the <a href="/legal-notice">Legal notice</a>{" "}
-            page.
+            These terms are between you and the operator of Cairn. The operator&apos;s full
+            identity, registered address and enterprise number will be published on a Legal notice
+            page before paid subscriptions open.
           </p>
           <p>
-            Questions about these terms, complaints under Section 7, billing queries under Section 9,
-            and legal or takedown notices under Section 6 all go to the contact address on that page.
+            Questions about these terms, complaints under Section 7, billing queries and withdrawals
+            under Section 9, and legal or takedown notices under Section 6 all go to{" "}
+            <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.
           </p>
         </section>
     </LegalShell>

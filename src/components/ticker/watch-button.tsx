@@ -69,7 +69,7 @@ export function WatchButton({ symbol, watchlists }: WatchButtonProps) {
               </form>
             ))
           )}
-          {result && result !== "saved" && <div className="px-2.5 py-1.5 text-caption text-negative">{result}</div>}
+          {result && result !== "saved" && <div className="px-2.5 py-1.5 text-caption text-warning">{result}</div>}
         </div>
       )}
     </div>

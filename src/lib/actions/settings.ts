@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { stripe, stripeConfigured } from "@/lib/stripe";
 import type {
   AlertChannelName,
   AssetFilter,
@@ -234,6 +235,9 @@ export async function exportUserData() {
     { data: aiUsage },
     { data: chatUsage },
     { data: subscriptionEvents },
+    { data: analysisPins },
+    { data: discussionVotes },
+    { data: discussionReports },
   ] = await Promise.all([
     supabase.from("profiles").select("*").eq("user_id", user.id).maybeSingle(),
     supabase.from("user_settings").select("*").eq("user_id", user.id).maybeSingle(),
@@ -254,6 +258,11 @@ export async function exportUserData() {
     admin.from("ai_usage_events").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
     admin.from("chat_usage_events").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
     admin.from("subscription_events").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
+    // Saved (pinned) analyses, discussion votes and reports the user filed -
+    // all held against their id, so all part of "everything we hold".
+    admin.from("ai_analysis_pins").select("*").eq("user_id", user.id),
+    admin.from("discussion_votes").select("*").eq("user_id", user.id),
+    admin.from("discussion_reports").select("*").eq("reporter_id", user.id),
   ]);
 
   return {
@@ -280,6 +289,9 @@ export async function exportUserData() {
     ai_usage_events: aiUsage ?? [],
     chat_usage_events: chatUsage ?? [],
     subscription_events: subscriptionEvents ?? [],
+    saved_analyses: analysisPins ?? [],
+    discussion_votes: discussionVotes ?? [],
+    discussion_reports: discussionReports ?? [],
   };
 }
 
@@ -318,6 +330,30 @@ export async function deleteAccount(confirmation?: string): Promise<string | voi
   if (!user) redirect("/login");
 
   const admin = createAdminClient();
+
+  // Cancel any live Stripe subscription BEFORE the account (and with it the
+  // subscriptions row holding the Stripe id) is deleted. Otherwise Stripe keeps
+  // billing a customer who no longer has an account to use or to cancel from.
+  // Fail closed: if the cancellation errors, the account is not deleted and the
+  // user is told why, rather than being left paying for a deleted account.
+  const { data: sub } = await admin
+    .from("subscriptions")
+    .select("stripe_subscription_id, status")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (sub?.stripe_subscription_id && sub.status !== "canceled" && stripeConfigured()) {
+    try {
+      await stripe.subscriptions.cancel(sub.stripe_subscription_id);
+    } catch (err) {
+      const code = (err as { code?: string }).code;
+      // Already gone on Stripe's side: nothing left to charge, safe to proceed.
+      if (code !== "resource_missing") {
+        console.error("[deleteAccount] Stripe cancellation failed", err instanceof Error ? err.message : err);
+        return "We couldn't cancel your subscription with our payment provider, so your account was not deleted. Please try again, or cancel from Settings → Billing first.";
+      }
+    }
+  }
+
   const { error } = await admin.auth.admin.deleteUser(user.id);
   if (error) return error.message;
 

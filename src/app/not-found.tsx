@@ -24,22 +24,26 @@ export default function RootNotFound() {
         <div className="font-mono text-eyebrow text-muted uppercase">Not found</div>
         <h1 className="mt-2 font-serif text-h1 leading-[1.15] font-normal text-primary">Nothing at this address</h1>
         <p className="mt-2.5 text-lead leading-[1.6] text-muted text-pretty">
-          That page doesn&apos;t exist. If you were looking for a symbol, search for it from the header - Cairn fetches
-          any ticker its data provider carries the first time it&apos;s asked for.
+          That page doesn&apos;t exist. If you were looking for a ticker, use the search in the app&apos;s header
+          once you&apos;re signed in - Cairn fetches any ticker its data provider carries the first time it&apos;s
+          asked for.
         </p>
 
+        {/* This page is shown to logged-out visitors too, so the links must work
+            for them: "/" sends a signed-in user to the dashboard and anyone else
+            to the waitlist, and /welcome is public. */}
         <div className="mt-7 flex flex-wrap items-center justify-center gap-2.5">
           <Link
-            href="/markets"
+            href="/"
             className="rounded-control bg-gradient-to-br from-accent-light to-accent-dark px-4 py-2.5 text-body font-semibold text-canvas transition-[box-shadow,transform] duration-base ease-standard hover:-translate-y-px hover:shadow-[0_0_22px_rgba(47,198,133,0.35)]"
           >
-            Browse markets
+            Back to dashboard
           </Link>
           <Link
-            href="/"
+            href="/welcome"
             className="rounded-control border border-line px-4 py-2.5 text-body text-primary transition-colors duration-base ease-standard hover:border-line-strong hover:bg-active"
           >
-            Back to Base Camp
+            About Cairn
           </Link>
         </div>
       </div>

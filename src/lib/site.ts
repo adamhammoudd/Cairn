@@ -6,6 +6,12 @@
 
 export const SITE_NAME = "Cairn";
 
+// The one published contact address for privacy, legal, billing, complaint and
+// accessibility requests. Legal pages must read it from here rather than
+// pointing at /legal-notice, which is not public until the operator's identity
+// details are filled in (see LEGAL_NOTICE_LIVE below).
+export const CONTACT_EMAIL = "cairnai.business@gmail.com";
+
 // Root <meta name="description"> - what every page without its own inherits.
 export const SITE_DESCRIPTION =
   "Portfolio dashboard, market data, and AI research context. Not investment advice.";

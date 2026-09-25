@@ -95,7 +95,7 @@ export function ProofCard() {
               {SOURCES.map((s) => (
                 <li key={s.name} className="flex flex-wrap items-baseline gap-1.5 text-caption">
                   <span className="text-[#5ee6a6]">{s.name}</span>
-                  <span className="text-[#6b6b6b]">· {s.when}</span>
+                  <span className="text-dim">· {s.when}</span>
                 </li>
               ))}
             </ul>
@@ -136,7 +136,7 @@ export function ProofCard() {
           </p>
         </div>
       </div>
-      <p className="mt-[13px] text-right text-[11.5px] text-[#5f5f5f]">
+      <p className="mt-[13px] text-right text-[11.5px] text-dim">
         An example of the shape of a Cairn answer. The ticker, figures and dates are illustrative.
       </p>
     </div>

@@ -23,7 +23,12 @@
 // mandatory local protections). §3 gained an explicit 18+ requirement and §14
 // now points at the new Legal notice page. Material by any measure, so the
 // date moves and existing consent rows correctly point at the older text.
-export const TOS_VERSION = "2026-09-19";
+// 2026-09-25: §2 regulator wording, §9 withdrawal text made accurate (checkout
+// requires the express-start request - there is no deferred-start path), the
+// proration paragraph replaced (there is one paid plan), the 14-day past_due
+// grace stated, cancellation path corrected, §14 now gives the contact email
+// directly instead of pointing at the unpublished Legal notice.
+export const TOS_VERSION = "2026-09-25";
 
 /** ISO date of the current Privacy Policy revision. */
 // 2026-09-18: subprocessor list made complete (Vercel, Stripe, the email
@@ -33,7 +38,12 @@ export const TOS_VERSION = "2026-09-19";
 // that vercel.json pins it. All three were material, so the date moves with
 // them rather than leaving consent rows pointing at a document that no longer
 // exists.
-export const PRIVACY_VERSION = "2026-09-18";
+// 2026-09-25: contact address published; Cerebras (fallback model provider)
+// disclosed; signup consent record (IP, user-agent) disclosed; transfers
+// section covers Stripe/Resend/Google; portfolio-ticker context to the model
+// stated accurately; auth-log retention stated as 24 hours; deletion now
+// cancels Stripe; 18+ made firm; Belgian DPA named.
+export const PRIVACY_VERSION = "2026-09-25";
 
 /**
  * "30 August 2026" - the format LegalShell's "Last updated" line expects.

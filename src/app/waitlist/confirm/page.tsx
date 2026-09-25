@@ -46,7 +46,7 @@ export default async function ConfirmPage({
     <div className="min-h-screen bg-canvas">
       <div className="mx-auto w-full max-w-[1120px] px-6">
         <header className="flex items-center justify-between border-b border-line py-5">
-          <Link href="/" aria-label="Cairn">
+          <Link href="/welcome" aria-label="Cairn">
             <Logo size={26} />
           </Link>
           <span className="font-mono text-eyebrow text-dim uppercase">
@@ -65,7 +65,7 @@ export default async function ConfirmPage({
                   This link isn&apos;t valid
                 </h1>
                 <p className="mt-3 text-lead leading-[1.65] text-muted text-pretty">
-                  The confirmation link is incomplete or has expired. Join again from the waitlist -
+                  The confirmation link is incomplete or no longer valid. Join again from the waitlist -
                   if your address is already on the list, we&apos;ll just re-send the link.
                 </p>
                 <Link

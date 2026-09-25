@@ -213,10 +213,6 @@ export function BillingSettingsPanel({ detail }: { detail: BillingDetail }) {
                     : "Unlimited on Premium. Shown for your own tracking."
               }
             />
-            <div className="border-t border-line-soft pt-3.5 text-micro leading-[1.55] text-dim text-pretty">
-              The same meter component the Research page&rsquo;s quota indicator shows and the same count the
-              generation gate enforces - one source of truth.
-            </div>
           </div>
         </div>
       </div>
@@ -250,9 +246,11 @@ export function BillingSettingsPanel({ detail }: { detail: BillingDetail }) {
             </div>
             <div className="font-serif text-h3 text-primary">Nothing billed yet</div>
             <p className="mx-auto mt-2 max-w-[380px] text-body leading-[1.6] text-muted text-pretty">
-              {billingEnabled
-                ? "You're on the Free plan, so there's nothing to invoice. Upgrade and receipts appear in the Stripe portal and go to your email."
-                : "You're on the Free plan. Plan changes will appear here; Stripe billing isn't live on this build yet."}
+              {premium
+                ? "You're on Premium without a paid subscription (for example a founding-member offer), so there's nothing to invoice yet."
+                : billingEnabled
+                  ? "You're on the Free plan, so there's nothing to invoice. Upgrade and receipts appear in the Stripe portal and go to your email."
+                  : "You're on the Free plan. Plan changes will appear here once payments open at launch."}
             </p>
           </div>
         ) : (

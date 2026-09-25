@@ -1,3 +1,4 @@
+import { CONTACT_EMAIL } from "@/lib/site";
 import { LegalShell } from "@/components/legal-shell";
 import { PRIVACY_VERSION, legalDateDisplay } from "@/lib/legal-versions";
 
@@ -15,8 +16,10 @@ export default function PrivacyPolicyPage() {
           <h2>What we collect</h2>
           <p>
             Account data (email, hashed password, display name), portfolio data (holdings,
-            watchlists), settings, and chat history. We do not collect brokerage credentials or
-            bank details - Cairn has no trade-execution feature.
+            watchlists), settings, and chat history. When you create an account we also record
+            which versions of the Terms and this policy you accepted, when, and the IP address and
+            browser user-agent of that signup, as a record of the agreement. We do not collect
+            brokerage credentials or bank details - Cairn has no trade-execution feature.
           </p>
         </section>
         {/*
@@ -85,6 +88,11 @@ export default function PrivacyPolicyPage() {
               <strong>Groq</strong> - hosted AI model provider. See below.
             </li>
             <li>
+              <strong>Cerebras</strong> - backup AI model provider, used only when Groq is
+              unavailable. When it is used it receives the same text Groq would, under the same
+              rules described below.
+            </li>
+            <li>
               <strong>Stripe</strong> - payments, if you subscribe to Premium. Stripe receives your
               email address, billing address and country, any tax ID you enter, and your card
               details. Card numbers go directly to Stripe and are never seen or stored by Cairn.
@@ -100,8 +108,8 @@ export default function PrivacyPolicyPage() {
             </li>
           </ul>
           <p>
-            On Groq specifically: the analysis engine and the assistant are not self-hosted. They
-            call Groq over its API, which means the text of your chat messages, prior turns in the
+            On Groq (and Cerebras, when it stands in): the analysis engine and the assistant are
+            not self-hosted. They call Groq over its API, which means the text of your chat messages, prior turns in the
             same session, and the ticker/sector scope used to generate an analysis are transmitted
             to Groq for processing. Groq acts as a processor on Cairn&apos;s instructions; Cairn
             does not send Groq a user identifier, account, email, or position size, and does not use
@@ -121,7 +129,9 @@ export default function PrivacyPolicyPage() {
             contract</em> you enter into when you create an account (UK GDPR / GDPR Article 6(1)(b)).
             Anti-abuse handling of waitlist signups (IP, user-agent, timezone) relies on Cairn&apos;s{" "}
             <em>legitimate interest</em> in preventing abuse of the founding-member offer (Article
-            6(1)(f)). Cairn does not rely on consent for any core feature and sets no
+            6(1)(f)). The signup record (document versions, IP address and user-agent) is kept on
+            the same legitimate-interest basis, to be able to show what you agreed to and when.
+            Cairn does not rely on consent for any core feature and sets no
             consent-requiring cookies, so there is no consent to withdraw for those.
           </p>
         </section>
@@ -131,8 +141,8 @@ export default function PrivacyPolicyPage() {
             Account, portfolio, settings and chat data are kept for as long as your account exists.
             When you delete your account, that data is removed immediately by a cascading delete -
             it is not retained on a timer afterwards. The cascade is designed so that removing the
-            account removes everything linked to it; that design is checked by an automated test in
-            our build pipeline (see the deletion section below), not re-verified on each individual
+            account removes everything linked to it; that design is checked by an automated test we
+            run before releases (see the deletion section below), not re-verified on each individual
             deletion.
           </p>
           <ul>
@@ -145,8 +155,8 @@ export default function PrivacyPolicyPage() {
               account identifier, so it is not tied to you specifically; the time limit is what
               bounds how long that text is kept. The 90-day figure is still subject to legal
               review.</li>
-            <li>Authentication-attempt logs: kept only as long as needed for rate-limiting and
-              abuse detection.</li>
+            <li>Authentication-attempt logs (used for rate-limiting): deleted automatically after
+              24 hours.</li>
             <li>Backups: Supabase&apos;s managed backups may retain a copy for a short rolling
               window after deletion before they roll off. <strong>The exact window needs to be
               confirmed and stated here.</strong></li>
@@ -160,14 +170,16 @@ export default function PrivacyPolicyPage() {
             <strong>erase</strong> your data (&quot;right to be forgotten&quot;);{" "}
             <strong>restrict</strong> processing; <strong>object</strong> to processing carried out
             on a legitimate-interest basis; and receive your data in a portable, machine-readable
-            format (<strong>data portability</strong>). Settings → Export &amp; delete covers
+            format (<strong>data portability</strong>). Settings → Account covers
             access, portability and erasure directly; for rectification, restriction or objection,
             or for any request you would rather make in writing, use the contact address below.
           </p>
           <p>
             You also have the right to <strong>lodge a complaint with a data protection
             supervisory authority</strong> - in the UK, the Information Commissioner&apos;s Office
-            (ico.org.uk); in the EU, the authority in your country of residence. We would ask that
+            (ico.org.uk); in the EU, the authority in your country of residence. Cairn is run from
+            Belgium, so its lead authority is the Belgian Data Protection Authority
+            (dataprotectionauthority.be). We would ask that
             you contact us first so we can try to resolve it, but that is your right regardless.
           </p>
           <p>
@@ -181,7 +193,7 @@ export default function PrivacyPolicyPage() {
           <p>
             If you are a California resident you have the right to know what personal information
             Cairn has collected about you, to request its deletion, and to request correction of
-            inaccurate information. Settings → Export &amp; delete covers these; you can also use
+            inaccurate information. Settings → Account covers these; you can also use
             the contact address below.
           </p>
           <p>
@@ -217,7 +229,16 @@ export default function PrivacyPolicyPage() {
             Contractual Clauses, the EU-US Data Privacy Framework, or a UK Addendum), Groq&apos;s
             actual processing locations, and whether a transfer impact assessment is required have
             not been confirmed. Until they are, no assurance about Groq&apos;s handling of that
-            text is made here beyond what is stated above.
+            text is made here beyond what is stated above. The same applies to{" "}
+            <strong>Cerebras (a US company)</strong> on the occasions it stands in for Groq.
+          </p>
+          <p>
+            <strong>Stripe</strong> (payments), <strong>Resend</strong> and{" "}
+            <strong>Google</strong> (email delivery) are also US companies and may process the
+            limited data they receive (see &quot;Third parties&quot;) outside the EEA. Each offers
+            Standard Contractual Clauses and/or certification under the EU-US Data Privacy
+            Framework for such transfers; confirming which mechanism applies to each is part of
+            the same open item for counsel.
           </p>
           <p>
             Per Groq&apos;s published terms, Groq does not retain inference inputs or outputs by
@@ -242,17 +263,20 @@ export default function PrivacyPolicyPage() {
             One store is deliberately not in the export: the rate-limit ledger behind the sign-in
             and sign-up forms. It records only a one-way hash of an email address or IP, never the
             address itself, carries no account identifier, and is deleted automatically after 24
-            hours - so there is no way to identify which of its rows relate to you, and nothing
-            there outlives a day.
+            hours. That hash is pseudonymised rather than anonymous - it cannot be read back into
+            an address - and nothing there outlives a day.
           </p>
           <p>
             Deleting your account removes the account itself; every table holding your data is
             linked to it with a cascading foreign key, so holdings, watchlists, chat history,
-            alerts, briefings and discussion posts are removed with it. An automated test in
-            our build pipeline exercises this: it creates a user across every one of those tables,
+            alerts, briefings and discussion posts are removed with it. If you have a Premium
+            subscription, deleting the account also cancels it in Stripe so you are not charged
+            again; Stripe itself keeps payment and invoice records for as long as tax and
+            accounting law requires. An automated test we run before releases exercises this: it creates a user across every one of those tables,
             deletes the user, and asserts nothing is left behind, and it also checks that every
             table with a user identifier carries the cascade. That test proves the deletion logic
-            is correct; it runs in CI, not against your specific account when you delete it.
+            is correct; it runs against a test database, not against your specific account when
+            you delete it.
           </p>
         </section>
         <section id="ai-disclosure">
@@ -264,7 +288,8 @@ export default function PrivacyPolicyPage() {
             see them, and they can be wrong.
           </p>
           <p>
-            Chat messages are transmitted to a third-party hosted model provider (Groq) for
+            Chat messages are transmitted to a third-party hosted model provider (Groq, or
+            Cerebras as a backup) for
             processing - they are not processed on Cairn&apos;s own infrastructure. Cairn does not
             use them to train any model. What Groq retains or logs is governed by Groq&apos;s own
             terms, which counsel has not yet reviewed.
@@ -277,9 +302,10 @@ export default function PrivacyPolicyPage() {
           </p>
           <p>
             Your portfolio and watchlist symbols are read server-side to decide which stored
-            analyses are relevant to you. They are not included in the text sent to the model
-            beyond the ticker or sector being discussed, and the assistant never advises on your
-            personal positions.
+            analyses are relevant to you. If your question names no ticker, stored analyses for
+            tickers you hold or watch may be included as context, so those ticker symbols can
+            reach the model. Position sizes, quantities and values are never sent, and the
+            assistant never advises on your personal positions.
           </p>
         </section>
         <section id="cookies">
@@ -293,8 +319,9 @@ export default function PrivacyPolicyPage() {
         <section>
           <h2>Children&apos;s privacy</h2>
           <p>
-            Cairn is not intended for anyone under 18. The specific age restriction is pending
-            confirmation by counsel given the financial-data handling involved.
+            You must be 18 or older to create a Cairn account, and Cairn is not intended for
+            anyone under 18. If you believe someone under 18 has given us their data, contact us
+            and we will delete it.
           </p>
         </section>
         <section>
@@ -313,12 +340,9 @@ export default function PrivacyPolicyPage() {
             of Service. The Terms page and the Accessibility statement both point here.
           </p>
           <p>
-            <strong>A monitored contact address has not been published yet.</strong> It is blocked
-            on the domain decision (the intended address is <code>privacy@</code> and{" "}
-            <code>support@</code> on Cairn&apos;s own domain, once that is registered) and is a
-            hard requirement before Cairn accepts real users - several of the rights described on
-            this page have no route to us without it. Until it is published, this remains a
-            pre-launch build with no real users.
+            Email: <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>. This inbox is
+            monitored. We answer data-rights requests within one month, as GDPR requires, and
+            usually much sooner.
           </p>
         </section>
     </LegalShell>
