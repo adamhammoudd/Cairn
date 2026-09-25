@@ -1,6 +1,6 @@
 # Decision: move model inference from Groq to DeepInfra
 
-**Owner:** founder · **Date:** 2026-09-25 · **Status:** decided, code shipped; live once `LLM_API_KEY` is set in Vercel
+**Owner:** founder · **Date:** 2026-09-25 · **Status:** reverted 2026-09-26 before going live - see the update at the end
 
 Supersedes the provider part of `2026-08-20-model-provider.md` and the
 fallback plan in `2026-08-30-groq-fallback-endpoint.md`.
@@ -69,3 +69,23 @@ Run `npm run test:live` once the key is set.
 The prepaid balance is the cap. Keep auto top-up off, or set a top-up limit.
 When the balance runs out, the assistant shows its "temporarily busy" message
 until it is topped up.
+
+## Update 2026-09-26: reverted - Cairn stays on Groq
+
+DeepInfra's sign-up asked for a VAT number. Cairn has none until the business
+is registered (planned before paid plans open in February 2027), so the switch
+never went live. Cairn stays on Groq, same model, on the paid Developer tier:
+a card is enough to upgrade, the console has a built-in spending limit, and
+Groq was already the disclosed processor.
+
+The provider-neutral changes from the switch are kept, because they are
+improvements whichever host is used:
+
+- only `LLM_API_KEY` is read, so a key can never reach the wrong host;
+- `model_version` names the host that actually answered;
+- HTTP 402 is reported as "busy" instead of as a crash;
+- a rejected `reasoning_effort` is retried once without it.
+
+The default host in `llm.ts`, the privacy page and the docs point at Groq
+again. DeepInfra stays a one-line configuration change for later, once the
+business can give a VAT number: revisit it then for the lower price.

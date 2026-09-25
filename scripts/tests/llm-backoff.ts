@@ -192,7 +192,7 @@ export function runLlmBackoffSuite(): SuiteResult {
     if (saved.llm === undefined) delete process.env.LLM_API_KEY; else process.env.LLM_API_KEY = saved.llm;
     if (saved.groq === undefined) delete process.env.GROQ_API_KEY; else process.env.GROQ_API_KEY = saved.groq;
     cases.push(check("LLM_API_KEY is the key used", both === "key-for-llm-base-url", String(both)));
-    cases.push(check("the old GROQ_API_KEY is never read (it would be sent to DeepInfra)", groqOnly === undefined, String(groqOnly)));
+    cases.push(check("the old GROQ_API_KEY name is never read (a key only goes to the host it was set for)", groqOnly === undefined, String(groqOnly)));
   }
 
   return { suiteName: "LLM rate-limit retry policy", gating: true, cases };

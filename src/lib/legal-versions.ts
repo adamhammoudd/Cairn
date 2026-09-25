@@ -45,10 +45,10 @@ export const TOS_VERSION = "2026-09-25";
 // the Cerebras backup provider was removed from the app, so it is no longer
 // listed. Dropping a processor only narrows what the accepted text allowed,
 // so the version date stays.
-// 2026-09-26: the AI model provider changed from Groq to DeepInfra (same
-// model, different host). A different processor receives chat text, which is
-// material, so the date moves. Same day: hCaptcha (security check on the
-// sign-in and account forms) added as a processor.
+// 2026-09-26: hCaptcha (security check on the sign-in and account forms)
+// added as a processor. The same day the AI provider was briefly listed as
+// DeepInfra; that switch never went live (sign-up needed a VAT number), so
+// the page names Groq again, as it did before.
 export const PRIVACY_VERSION = "2026-09-26";
 
 /**

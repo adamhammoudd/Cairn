@@ -1,7 +1,7 @@
-// The DeepInfra switch (2026-09-25), proven without a network: the request
-// goes to the right host with the right key, a host that rejects
-// `reasoning_effort` is retried once without it, and the old GROQ_API_KEY is
-// never read (it would otherwise be sent to DeepInfra).
+// The model-provider client, proven without a network: the request goes to
+// the right host (Groq by default) with the right key, a host that rejects
+// `reasoning_effort` is retried once without it, an empty balance / spending
+// limit (402) reads as "busy", and the old GROQ_API_KEY name is never read.
 //
 // Replaces global fetch with a fake for the duration of the run, so it is
 // deliberately NOT part of test:ai-suite, whose live suites run in parallel
@@ -52,21 +52,21 @@ async function main() {
   try {
     // 1. The old Groq key alone does not configure anything.
     withEnv({ LLM_API_KEY: undefined, GROQ_API_KEY: "gsk_old", LLM_BASE_URL: undefined, LLM_MODEL: undefined, FALLBACK_LLM_BASE_URL: undefined, FALLBACK_LLM_API_KEY: undefined });
-    expect(!isLlmConfigured(), "GROQ_API_KEY alone is ignored - it can never be sent to DeepInfra");
+    expect(!isLlmConfigured(), "the old GROQ_API_KEY name alone configures nothing - only LLM_API_KEY is read");
 
-    // 2. Defaults: DeepInfra, the same model id as before, LLM_API_KEY as the bearer.
-    withEnv({ LLM_API_KEY: "di_test_key" });
+    // 2. Defaults: Groq, the gpt-oss-120b model id, LLM_API_KEY as the bearer.
+    withEnv({ LLM_API_KEY: "gsk_test_key" });
     {
       const f = fakeFetch(() => ok("fine"));
       const text = await llmComplete({ system: "s", messages: [{ role: "user", content: "hi" }] });
       f.restore();
       const c = f.calls[0];
       expect(text === "fine", "a completion comes back");
-      expect(c?.url === "https://api.deepinfra.com/v1/openai/chat/completions", `default host is DeepInfra (${c?.url})`);
-      expect(c?.auth === "Bearer di_test_key", "the DeepInfra key is the bearer token, not the Groq one");
+      expect(c?.url === "https://api.groq.com/openai/v1/chat/completions", `default host is Groq (${c?.url})`);
+      expect(c?.auth === "Bearer gsk_test_key", "LLM_API_KEY is the bearer token");
       expect(c?.body.model === "openai/gpt-oss-120b", `model id unchanged (${String(c?.body.model)})`);
       expect(c?.body.reasoning_effort === "low", "reasoning_effort is sent by default");
-      expect(providerNameFor("https://api.deepinfra.com/v1/openai") === "deepinfra", "stored analyses are labelled deepinfra:...");
+      expect(providerNameFor("https://api.groq.com/openai/v1") === "groq", "stored analyses are labelled groq:...");
     }
 
     // 3. A host that rejects reasoning_effort gets one retry without it.
@@ -110,12 +110,12 @@ async function main() {
       expect(f.calls.length === 1, `and is not retried (${f.calls.length} call)`);
     }
 
-    // 6. Health check reports the DeepInfra host.
+    // 6. Health check reports the configured host.
     {
       const f = fakeFetch(() => ok("pong"));
       const h = await llmHealthCheck();
       f.restore();
-      expect(h.ok && h.detail.includes("api.deepinfra.com"), `health check hits DeepInfra (${h.detail})`);
+      expect(h.ok && h.detail.includes("api.groq.com"), `health check hits Groq (${h.detail})`);
     }
   } finally {
     withEnv(saved);

@@ -1,6 +1,6 @@
 // Hosted inference client, OpenAI-compatible.
 //
-// Provider: DeepInfra by default (any hosted OpenAI-compatible endpoint works). Cairn
+// Provider: Groq by default (any hosted OpenAI-compatible endpoint works). Cairn
 // previously pointed at a self-hosted server on localhost, which cannot work
 // from Vercel by construction - a deployed function has no route to the
 // developer's laptop. The provider is reached over its OpenAI-compatible
@@ -8,31 +8,32 @@
 // dependency, and switching host is a configuration change, not a code one.
 //
 // Configuration (see .env.local.example):
-//   LLM_BASE_URL    default https://api.deepinfra.com/v1/openai
+//   LLM_BASE_URL    default https://api.groq.com/openai/v1
 //   LLM_MODEL       default openai/gpt-oss-120b
 //   LLM_API_KEY     required - the key for LLM_BASE_URL. Set in .env.local AND
 //                   in Vercel. Never committed, never hardcoded, never
 //                   NEXT_PUBLIC_*.
 //   LLM_TIMEOUT_MS  optional; default below.
 //
-// History: Groq (free tier) served this until 2026-09-25. Its 200,000
-// tokens/day cap is per organisation, not per user, and the app ran into it;
-// DeepInfra serves the same open-weight model pay-per-use at roughly a quarter
-// of Groq's paid price. See docs/decisions/2026-09-25-deepinfra.md.
+// History: Groq's free tier served this until 2026-09-25 and ran into its
+// 200,000 tokens/day cap (per organisation, not per user). A switch to
+// DeepInfra was coded but never went live - its sign-up needed a VAT number
+// Cairn does not have before the business is registered - so Cairn stays on
+// Groq, on the paid Developer tier with a spending limit. See
+// docs/decisions/2026-09-25-deepinfra.md.
 //
 // Optional second endpoint, tried only when the primary is exhausted:
 //   FALLBACK_LLM_BASE_URL / FALLBACK_LLM_API_KEY / FALLBACK_LLM_MODEL
 // See the "fallback endpoint" section below for why this exists and what it
 // does and does not cover.
 //
-// Model: `openai/gpt-oss-120b`, the same id on DeepInfra as it was on Groq,
-// so the switch changed no prompt and no test.
+// Model: `openai/gpt-oss-120b` (Groq's id for the open-weight 120B model).
 //
 // Design note: everything downstream is written assuming the model writes
 // PROSE ONLY. Probabilities are computed in lib/ai/analytics.ts from real
 // historical analogs; the model never produces a number that reaches a user.
 
-const DEFAULT_BASE_URL = "https://api.deepinfra.com/v1/openai";
+const DEFAULT_BASE_URL = "https://api.groq.com/openai/v1";
 const DEFAULT_MODEL = "openai/gpt-oss-120b";
 const DEFAULT_TIMEOUT_MS = 60_000;
 
@@ -101,9 +102,9 @@ export function llmModel(): string {
 }
 
 export function llmApiKey(): string | undefined {
-  // LLM_API_KEY only. GROQ_API_KEY was the old name and is deliberately NOT
-  // read any more: the default host is now DeepInfra, and falling back to it
-  // would send a Groq key to DeepInfra whenever LLM_API_KEY was missing.
+  // LLM_API_KEY only - the key for whatever LLM_BASE_URL points at. The old
+  // GROQ_API_KEY name is deliberately not read, so one provider's key can
+  // never be sent to another provider's host after LLM_BASE_URL changes.
   return process.env.LLM_API_KEY || undefined;
 }
 
@@ -120,9 +121,9 @@ export function isLlmConfigured(): boolean {
 // Fallback endpoint.
 //
 // Written when the primary was Groq's free tier, which caps the whole
-// organisation at 200,000 tokens/day. DeepInfra is pay-per-use with no daily
-// token cap, so the practical failure modes now are a rate limit, an outage,
-// or an empty prepaid balance.
+// organisation at 200,000 tokens/day. On Groq's paid Developer tier the
+// practical failure modes are a rate limit, an outage, or the spending limit
+// being reached.
 //
 // A second OpenAI-compatible endpoint can be configured and is tried
 // automatically once the primary is exhausted (rate-limited or down after the
@@ -319,7 +320,7 @@ async function postWithRetry(endpoint: LlmEndpoint, body: Record<string, unknown
       continue;
     }
 
-    // 402 = the prepaid balance is empty (DeepInfra) or the account is
+    // 402 = the spending limit or prepaid balance is used up, or the account is
     // unfunded. Not a config fault and not worth retrying: report it as
     // "busy" so the user sees the honest temporary-unavailable message and a
     // configured fallback, if any, gets its turn.
@@ -368,8 +369,8 @@ async function completeAgainstEndpoint(endpoint: LlmEndpoint, base: Record<strin
 
   let res = await postWithRetry(endpoint, body);
 
-  // Not every host accepts `reasoning_effort` (it is an OpenAI-style field
-  // that DeepInfra documents only as "configurable reasoning depth"). If the
+  // Not every host accepts `reasoning_effort` (an OpenAI-style field; Groq
+  // does, others document it differently or not at all). If the
   // host rejects the request and says why, drop the field once and resend
   // rather than failing every request over an optional hint.
   if (!res.ok && (res.status === 400 || res.status === 422) && "reasoning_effort" in body) {
@@ -446,7 +447,7 @@ async function completeWithEndpoints(req: LlmRequest): Promise<CompletionResult>
   const endpoints = configuredEndpoints();
   if (endpoints.length === 0) {
     throw new Error(
-      "No model provider configured: set LLM_API_KEY (and LLM_BASE_URL/LLM_MODEL if not using the DeepInfra defaults) in .env.local and in Vercel.",
+      "No model provider configured: set LLM_API_KEY (and LLM_BASE_URL/LLM_MODEL if not using the Groq defaults) in .env.local and in Vercel.",
     );
   }
 
@@ -563,7 +564,7 @@ export async function llmCompleteJson<T>(req: LlmRequest, validate: (parsed: unk
 /**
  * Same as llmCompleteJson, plus which endpoint actually served the request as
  * "<provider>:<model>" (e.g. "groq:openai/gpt-oss-120b" or
- * "deepinfra:openai/gpt-oss-120b") - for the one caller (generate.ts) that
+ * "fallback-host:openai/gpt-oss-120b") - for the one caller (generate.ts) that
  * records this in ai_analyses.model_version and must name the host that
  * actually answered, primary or fallback.
  */
