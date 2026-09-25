@@ -20,7 +20,19 @@ export async function getTodayBriefing(): Promise<BriefingContent | null> {
     .eq("briefing_date", today)
     .maybeSingle();
 
-  return (data?.content as unknown as BriefingContent) ?? null;
+  if (data?.content) return data.content as unknown as BriefingContent;
+
+  // Nothing for today yet: build it now, so opening the page is all it takes.
+  // The hourly scheduled job can miss a day (on 2026-09-24 and 09-25 its first
+  // query was rejected by Supabase with a transient 401), and without this the
+  // reader saw an empty card until they pressed Generate. Generation is plain
+  // database reads - no model call - so doing it on page load is cheap.
+  try {
+    return await generateBriefing(user.id);
+  } catch (err) {
+    console.error("[briefing] on-open generation failed", err);
+    return null;
+  }
 }
 
 export async function requestBriefing() {
