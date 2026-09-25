@@ -32,7 +32,7 @@ export function BillingPanel({ detail }: { detail: BillingDetail }) {
         <p className="mt-1 text-body text-muted">
           {billingEnabled
             ? "Premium is billed monthly through Stripe. Manage your card, invoices, or cancellation from the Stripe portal; your plan updates here automatically once Stripe confirms it."
-            : "No payment processor is live on this build yet. Switching plans below is free and instant - it exists so AI-tier gating can be tested before real billing goes live."}
+            : "Premium isn't available yet - payments open at launch. Everything on the Free plan works in the meantime."}
         </p>
       </div>
 
@@ -129,7 +129,7 @@ export function BillingPanel({ detail }: { detail: BillingDetail }) {
           );
         })}
       </div>
-      {actionError && <p className="text-body text-negative">{actionError}</p>}
+      {actionError && <p className="text-body text-warning">{actionError}</p>}
     </div>
   );
 }

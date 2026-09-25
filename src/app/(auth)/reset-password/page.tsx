@@ -52,7 +52,9 @@ export default function ResetPasswordPage() {
     setPending(false);
 
     if (err) setError(err.message);
-    else router.push("/login");
+    // updateUser succeeds only inside the recovery session, so the user is
+    // already signed in here - send them into the app, not to a login form.
+    else router.push("/");
   }
 
   if (status === "invalid") {

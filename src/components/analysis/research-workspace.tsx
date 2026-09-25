@@ -624,7 +624,7 @@ export function ResearchWorkspace({
       </div>
 
       {pinError && (
-        <p role="alert" className="mt-2.5 text-caption text-negative">
+        <p role="alert" className="mt-2.5 text-caption text-warning">
           {pinError}
         </p>
       )}
@@ -769,7 +769,7 @@ function FeaturedAnalysis({
         <span className="font-mono text-[9.5px] tracking-[0.16em] text-accent-light uppercase">Cairn analysis</span>
       </div>
       <div
-        className="mt-[11px] flex flex-wrap items-center gap-2.5 font-mono text-[9.5px] tracking-[0.14em] text-[#6f6f6f] uppercase"
+        className="mt-[11px] flex flex-wrap items-center gap-2.5 font-mono text-[9.5px] tracking-[0.14em] text-dim uppercase"
         suppressHydrationWarning
       >
         <span>
@@ -789,7 +789,7 @@ function FeaturedAnalysis({
         </span>
         <div className="min-w-[150px] flex-[1_1_180px]">
           <div className="flex items-baseline justify-between gap-2.5">
-            <span className="font-mono text-[9px] tracking-[0.14em] text-[#6f6f6f] uppercase">Probability range</span>
+            <span className="font-mono text-[9px] tracking-[0.14em] text-dim uppercase">Probability range</span>
             <span className="font-mono text-[18px] tabular-nums text-primary">
               {a.probability_low}–{a.probability_high}%
             </span>
@@ -806,7 +806,7 @@ function FeaturedAnalysis({
       <div className="mt-4 grid grid-cols-[repeat(auto-fit,minmax(228px,1fr))] gap-3">
         <div className="overflow-hidden rounded-xl border border-[#1f1f1f] bg-[#0b0b0b] transition-colors duration-base ease-standard hover:border-[#2f2f2f]">
           <div className="flex items-center justify-between gap-2.5 border-b border-[#1a1a1a] px-[13px] py-2.5">
-            <span className="font-mono text-[9px] tracking-[0.14em] text-[#6f6f6f] uppercase">Sources · {a.sources.length}</span>
+            <span className="font-mono text-[9px] tracking-[0.14em] text-dim uppercase">Sources · {a.sources.length}</span>
             <button type="button" onClick={onToggleMethod} className="text-[11px] text-accent-light hover:underline">
               {methodOpen ? "Hide" : "View all"}
             </button>
@@ -815,7 +815,7 @@ function FeaturedAnalysis({
             {topSource ? (
               <>
                 <div className="text-[12px] leading-[1.5] text-pretty">{decodeEntities(topSource.title)}</div>
-                <div className="mt-2 flex items-center justify-between gap-2.5 font-mono text-[10px] text-[#6f6f6f]">
+                <div className="mt-2 flex items-center justify-between gap-2.5 font-mono text-[10px] text-dim">
                   <span>{topSource.source_name}</span>
                   <span suppressHydrationWarning>{whenLabel(topSource.published_at)}</span>
                 </div>
@@ -827,8 +827,8 @@ function FeaturedAnalysis({
         </div>
         <div className="overflow-hidden rounded-xl border border-[#1f1f1f] bg-[#0b0b0b] transition-colors duration-base ease-standard hover:border-[#2f2f2f]">
           <div className="flex items-center justify-between gap-2.5 border-b border-[#1a1a1a] px-[13px] py-2.5">
-            <span className="font-mono text-[9px] tracking-[0.14em] text-[#6f6f6f] uppercase">Historical analogs</span>
-            <span className="font-mono text-[9px] tracking-[0.1em] text-[#6f6f6f]">
+            <span className="font-mono text-[9px] tracking-[0.14em] text-dim uppercase">Historical analogs</span>
+            <span className="font-mono text-[9px] tracking-[0.1em] text-dim">
               {a.analogs.length} of {a.sample_size}
             </span>
           </div>

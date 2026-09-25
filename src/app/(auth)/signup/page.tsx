@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useActionState, useState } from "react";
 import Link from "next/link";
@@ -66,7 +66,7 @@ export default function SignupPage() {
             className="mt-0.5 size-4 shrink-0 accent-accent"
           />
           <label htmlFor="consent" className="text-body leading-[1.5] text-muted">
-            I agree to the{" "}
+            I am 18 or older and agree to the{" "}
             <Link
               href="/terms"
               target="_blank"

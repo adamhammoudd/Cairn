@@ -215,7 +215,7 @@ export function HoldingModal({ holding, initialSymbol, onClose }: HoldingModalPr
             />
           </Field>
 
-          {result && result !== "saved" && <p className="text-body text-negative">{result}</p>}
+          {result && result !== "saved" && <p className="text-body text-warning">{result}</p>}
 
           <div className="mt-1 flex items-center gap-3">
             <SubmitButton>{holding ? "Save changes" : "Add holding"}</SubmitButton>

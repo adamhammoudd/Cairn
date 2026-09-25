@@ -1,4 +1,4 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 
 // Shared chrome for the auth screens. The mock has no login page, so these
 // mirror its in-app vocabulary: mono eyebrow, serif heading, muted blurb, and
@@ -15,7 +15,7 @@ export function AuthHeader({ eyebrow, title, blurb }: { eyebrow: string; title: 
 
 export function AuthError({ children }: { children: React.ReactNode }) {
   return (
-    <p className="mb-4 rounded-panel border border-negative/40 bg-negative/8 px-3 py-2.5 text-body text-negative">
+    <p className="mb-4 rounded-panel border border-warning/40 bg-warning/8 px-3 py-2.5 text-body text-warning">
       {children}
     </p>
   );

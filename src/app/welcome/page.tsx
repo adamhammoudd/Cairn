@@ -17,8 +17,9 @@ export const metadata: Metadata = {
  *
  * A logged-out visitor previously met a bare password field: the app layout
  * redirected everything to /login, and the only marketing surface was the
- * pre-launch waitlist page, which nothing routed to once the waitlist gate in
- * proxy.ts was disabled.
+ * pre-launch waitlist page. While the waitlist gate in proxy.ts is on, sign-up
+ * is closed, so every "get started" CTA here points at /waitlist; only "Sign in"
+ * (for existing beta users) goes to /login.
  *
  * Persuade surface, so it leads with the one thing that separates Cairn from
  * every other chat-with-your-portfolio product - that an answer arrives with
@@ -116,8 +117,8 @@ const PLANS = [
     note: "No card required",
     color: "#2fc685",
     primary: true,
-    cta: "Create your account",
-    href: "/signup",
+    cta: "Join the waitlist",
+    href: "/waitlist",
     features: [
       "A daily allowance of assistant messages",
       "A handful of full analyses each month",
@@ -128,13 +129,13 @@ const PLANS = [
   {
     name: "Premium",
     price: "Billed monthly",
-    note: "Upgrade any time from Settings",
+    note: "Available from launch, upgrade in Settings",
     color: "#9b8ce0",
     primary: false,
     // Premium is bought from inside the app, so this cannot promise a pricing
     // page it would not reach. It says what actually happens next.
-    cta: "Start free, then upgrade",
-    href: "/signup",
+    cta: "Join the waitlist",
+    href: "/waitlist",
     features: [
       "No daily cap on assistant messages",
       "A much larger monthly analysis quota",
@@ -175,11 +176,11 @@ export default function WelcomePage() {
             Sign in
           </Link>
           <Link
-            href="/signup"
+            href="/waitlist"
             className="rounded-[10px] bg-[#2fc685] px-4 py-2.5 text-body font-bold text-[#07120d] transition-[background,transform] duration-200 hover:-translate-y-0.5 hover:bg-[#5ee6a6]"
             style={{ boxShadow: "0 8px 24px rgba(47,198,133,.2)" }}
           >
-            Create account
+            Join the waitlist
           </Link>
         </nav>
       </header>
@@ -214,11 +215,11 @@ export default function WelcomePage() {
 
             <div className="mt-[26px] flex flex-wrap gap-2.5">
               <Link
-                href="/signup"
+                href="/waitlist"
                 className="rounded-xl bg-[#2fc685] px-[22px] py-3.5 text-lead font-bold text-[#07120d] transition-[background,transform] duration-200 hover:-translate-y-0.5 hover:bg-[#5ee6a6]"
                 style={{ boxShadow: "0 8px 26px rgba(47,198,133,.22)" }}
               >
-                Create your free account
+                Join the waitlist
               </Link>
               <Link
                 href="/login"
@@ -314,10 +315,9 @@ export default function WelcomePage() {
           </h2>
           <div className="mt-[26px] grid grid-cols-[repeat(auto-fit,minmax(248px,1fr))] gap-3">
             {SURFACES.map((s, i) => (
-              <Link
+              <div
                 key={s.label}
-                href={s.href}
-                className="relative flex flex-col gap-[9px] overflow-hidden rounded-[14px] border border-[#232323] bg-panel px-[19px] py-[17px] transition-[transform,border-color,background] duration-[220ms] ease-standard hover:-translate-y-[3px] hover:border-[#3a3a3a] hover:bg-[#121212]"
+                className="relative flex flex-col gap-[9px] overflow-hidden rounded-[14px] border border-[#232323] bg-panel px-[19px] py-[17px]"
                 style={{ animation: `wl-rise 340ms cubic-bezier(.4,0,.2,1) ${140 + i * 55}ms both` }}
               >
                 <span
@@ -332,14 +332,11 @@ export default function WelcomePage() {
                   >
                     {s.label}
                   </span>
-                  <span aria-hidden className="text-body text-[#5f5f5f]">
-                    →
-                  </span>
                 </span>
                 <span className="text-[12.5px] leading-[1.65] text-[#9a9a9a] text-pretty">
                   {s.body}
                 </span>
-              </Link>
+              </div>
             ))}
           </div>
         </section>
@@ -459,18 +456,18 @@ export default function WelcomePage() {
             See the reasoning before you trust the number.
           </h2>
           <Link
-            href="/signup"
+            href="/waitlist"
             className="mt-6 inline-block rounded-xl bg-[#2fc685] px-[26px] py-3.5 text-lead font-bold text-[#07120d] transition-[background,transform] duration-200 hover:-translate-y-0.5 hover:bg-[#5ee6a6]"
             style={{ boxShadow: "0 8px 26px rgba(47,198,133,.22)" }}
           >
-            Create your free account
+            Join the waitlist
           </Link>
-          <p className="mt-[13px] text-caption text-[#6b6b6b]">Free to start · no card required</p>
+          <p className="mt-[13px] text-caption text-dim">Free to start · no card required</p>
         </section>
 
         {/* ---------- Footer ---------- */}
         <footer className="flex flex-wrap items-start justify-between gap-5 border-t border-[#1a1a1a] pt-7">
-          <p className="max-w-[560px] text-[11.5px] leading-[1.7] text-[#5f5f5f] text-pretty">
+          <p className="max-w-[560px] text-[11.5px] leading-[1.7] text-dim text-pretty">
             Cairn is informational software, not a broker, and not investment advice. Analysis and
             chat content is generated by AI and can be wrong. Probability figures are statistical
             estimates over small historical samples and are not predictions. Always verify sources
@@ -482,6 +479,9 @@ export default function WelcomePage() {
             </Link>
             <Link href="/privacy" className="hover:text-[#5ee6a6]">
               Privacy
+            </Link>
+            <Link href="/refunds" className="hover:text-[#5ee6a6]">
+              Cancellation &amp; refunds
             </Link>
             <Link href="/accessibility" className="hover:text-[#5ee6a6]">
               Accessibility

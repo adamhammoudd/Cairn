@@ -162,7 +162,12 @@ export function runProxyPublicPathsSuite(): SuiteResult {
 
   // --- must still be gated ---
   cases.push(check("/ (dashboard) stays gated", isPublicPath("/") === false, ""));
-  cases.push(check("/login stays gated", isPublicPath("/login") === false, ""));
+  cases.push(check("/signup stays gated (new accounts come via the waitlist)", isPublicPath("/signup") === false, ""));
+  // Beta users must be able to sign back in and reset a password while logged
+  // out - gating these locked people out of their own accounts.
+  cases.push(check("/login is public", isPublicPath("/login") === true, ""));
+  cases.push(check("/forgot-password is public", isPublicPath("/forgot-password") === true, ""));
+  cases.push(check("/reset-password is public", isPublicPath("/reset-password") === true, ""));
   cases.push(check("/portfolio stays gated", isPublicPath("/portfolio") === false, ""));
   cases.push(
     check(

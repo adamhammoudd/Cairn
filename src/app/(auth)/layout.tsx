@@ -1,4 +1,4 @@
-﻿import type { Metadata } from "next";
+import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { Logo } from "@/components/logo";
@@ -15,7 +15,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
     <div className="flex min-h-screen flex-col items-center justify-center bg-canvas px-5 py-12">
       <div className="w-full max-w-[420px]">
         <div className="mb-6 flex justify-center">
-          <Link href="/login" aria-label="Cairn">
+          <Link href="/welcome" aria-label="Cairn">
             <Logo size={30} />
           </Link>
         </div>

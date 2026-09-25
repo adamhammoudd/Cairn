@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
+import { CONTACT_EMAIL } from "@/lib/site";
 
 // The backstop, not the main path. Failed market-data reads are caught on the
 // server and rendered by components/data-unavailable.tsx, because a server
@@ -38,9 +39,11 @@ export default function AppError({ error, reset }: { error: Error & { digest?: s
 
         {messageWithheld ? (
           <p className="mt-3 text-caption leading-relaxed text-dim">
-            React withholds server-render messages in production builds. The full cause is logged against this digest -
-            Vercel &gt; the deployment &gt; Logs, or <code className="font-mono text-muted">npm run check-db</code> if
-            prices and holdings are empty across several pages at once.
+            Please try again in a moment. If it keeps happening, email{" "}
+            <a href={`mailto:${CONTACT_EMAIL}`} className="text-muted underline underline-offset-2">
+              {CONTACT_EMAIL}
+            </a>{" "}
+            and quote the code above so we can find exactly what went wrong.
           </p>
         ) : null}
 

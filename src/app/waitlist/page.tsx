@@ -135,7 +135,7 @@ export default async function WaitlistPage() {
             </div>
 
             <div className="mt-7">
-              <WaitlistForm />
+              <WaitlistForm foundingLimit={FOUNDING_LIMIT} />
             </div>
           </div>
 
@@ -227,7 +227,7 @@ export default async function WaitlistPage() {
                   </li>
                 ))}
               </ul>
-              <p className="mt-[18px] border-t border-[#1c1c1c] pt-[15px] text-[11.5px] leading-[1.6] text-[#6b6b6b] text-pretty">
+              <p className="mt-[18px] border-t border-[#1c1c1c] pt-[15px] text-[11.5px] leading-[1.6] text-dim text-pretty">
                 Premium never changes an analysis or softens a caveat - it shows more of the
                 methodology behind it.
               </p>
@@ -278,16 +278,16 @@ export default async function WaitlistPage() {
             Be there when it opens
           </div>
           <h2 className="mx-auto mt-3.5 max-w-[620px] font-serif text-[clamp(28px,3.4vw,40px)] leading-[1.16] font-normal tracking-[-0.015em] text-primary">
-            One email address. <span className="text-[#5ee6a6]">One launch email.</span>
+            One confirmation now. <span className="text-[#5ee6a6]">One launch email later.</span>
           </h2>
           <div className="mt-[26px]">
-            <WaitlistForm centered />
+            <WaitlistForm centered foundingLimit={FOUNDING_LIMIT} />
           </div>
         </section>
 
         {/* ---------- Footer ---------- */}
         <footer className="flex flex-wrap items-start justify-between gap-5 border-t border-[#1a1a1a] pt-7">
-          <p className="max-w-[560px] text-[11.5px] leading-[1.7] text-[#5f5f5f] text-pretty">
+          <p className="max-w-[560px] text-[11.5px] leading-[1.7] text-dim text-pretty">
             Cairn uses AI to generate market, sector, and ticker analysis. Every output is
             informational market-level context - not investment advice, not a recommendation about
             your personal positions, and it can be wrong. Cairn is not a broker and has no trade
@@ -299,6 +299,9 @@ export default async function WaitlistPage() {
             </Link>
             <Link href="/terms" className="hover:text-[#5ee6a6]">
               Terms
+            </Link>
+            <Link href="/refunds" className="hover:text-[#5ee6a6]">
+              Cancellation &amp; refunds
             </Link>
             <Link href="/accessibility" className="hover:text-[#5ee6a6]">
               Accessibility

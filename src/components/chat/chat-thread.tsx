@@ -501,7 +501,7 @@ export function ChatThread({
             onKeyDown={(e) => e.key === "Enter" && send()}
             placeholder="Ask about your holdings, a ticker, or today's move…"
             disabled={streaming}
-            className="min-w-0 flex-1 rounded-[12px] border border-line bg-panel px-3.5 py-3.5 text-lead text-primary outline-none transition-[border-color,box-shadow] duration-fast ease-standard placeholder:text-[#5f5f5f] focus:border-accent focus:shadow-[0_0_0_3px_rgba(47,198,133,0.14)] disabled:opacity-60"
+            className="min-w-0 flex-1 rounded-[12px] border border-line bg-panel px-3.5 py-3.5 text-lead text-primary outline-none transition-[border-color,box-shadow] duration-fast ease-standard placeholder:text-dim focus:border-accent focus:shadow-[0_0_0_3px_rgba(47,198,133,0.14)] disabled:opacity-60"
           />
           <button
             type="button"

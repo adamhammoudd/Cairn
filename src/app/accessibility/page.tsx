@@ -31,7 +31,7 @@ export default function AccessibilityPage() {
           Colour contrast is enforced by an automated test that runs with the rest of the suite.
           Every foreground/background pairing in the palette - including the green gain accent and
           the red loss accent against the near-black canvas - is asserted against the WCAG 2.1 AA
-          contrast thresholds, and the build fails if any pairing regresses. Dark themes are not
+          contrast thresholds, and the suite fails if any pairing regresses. Dark themes are not
           automatically accessible, which is why this is measured rather than assumed.
         </p>
       </section>

@@ -18,7 +18,15 @@
 // rules require the cancellation and withdrawal terms to be available BEFORE
 // the consumer is bound. A legally-mandated disclosure sitting behind a login
 // wall is the same as not publishing it.
+// `/login`, `/forgot-password` and `/reset-password` are public so existing
+// beta users can sign back in after signing out or a session expiry, and can
+// reset a forgotten password (the emailed reset link lands on /reset-password
+// before any session exists). `/signup` stays gated: new accounts come through
+// the waitlist until launch.
 const PUBLIC_EXACT = new Set([
+  "/login",
+  "/forgot-password",
+  "/reset-password",
   "/privacy",
   "/terms",
   "/legal-notice",

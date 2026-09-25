@@ -54,7 +54,11 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
         />
       </div>
 
+      {/* Keyed on the tab so /settings?tab=X from the account menu switches tab
+          even when you're already on /settings (useState ignores new initial
+          values after mount). */}
       <SettingsTabs
+        key={initialTab}
         settings={settings}
         displayName={profile?.display_name || "Account"}
         email={user.email ?? ""}
