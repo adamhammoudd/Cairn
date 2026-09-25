@@ -1,11 +1,20 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { Suspense, useActionState, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { signUp } from "@/lib/actions/auth";
 import { Field } from "@/components/auth/field";
 import { SubmitButton } from "@/components/auth/submit-button";
 import { AuthError, AuthFooter, AuthHeader } from "@/components/auth/auth-chrome";
+import { CAPTCHA_ENABLED, Captcha } from "@/components/auth/captcha";
+
+// Beta sign-up is invite-only: the invite code from the link (/signup?invite=)
+// travels with the form so the server action can check it again.
+function InviteField() {
+  const invite = useSearchParams().get("invite") ?? "";
+  return <input type="hidden" name="invite" value={invite} />;
+}
 
 export default function SignupPage() {
   const [error, formAction] = useActionState(signUp, null);
@@ -18,6 +27,7 @@ export default function SignupPage() {
   // gated before the request, not validated after it. signUp() re-checks it
   // server-side and records the consent (src/lib/actions/auth.ts).
   const [agreed, setAgreed] = useState(false);
+  const [captchaDone, setCaptchaDone] = useState(!CAPTCHA_ENABLED);
 
   return (
     <>
@@ -26,6 +36,9 @@ export default function SignupPage() {
       {error && <AuthError>{error}</AuthError>}
 
       <form action={formAction}>
+        <Suspense fallback={null}>
+          <InviteField />
+        </Suspense>
         <Field
           id="name"
           name="name"
@@ -88,8 +101,10 @@ export default function SignupPage() {
           </label>
         </div>
 
+        <Captcha onTokenChange={(token) => setCaptchaDone(!CAPTCHA_ENABLED || token !== "")} />
+
         <div className="mt-5">
-          <SubmitButton disabled={!agreed}>Create account</SubmitButton>
+          <SubmitButton disabled={!agreed || !captchaDone}>Create account</SubmitButton>
         </div>
       </form>
 

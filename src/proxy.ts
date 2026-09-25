@@ -1,6 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { isPublicPath } from "@/lib/public-paths";
+import { isInvitedSignup, isPublicPath } from "@/lib/public-paths";
 
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
@@ -41,7 +41,14 @@ export async function proxy(request: NextRequest) {
   // settings route. Committing it in that state would have shipped that to
   // production on the next deploy. Re-enabled deliberately; if you need the
   // app open locally, set a session rather than commenting this out again.
-  if (!user && !isPublicPath(request.nextUrl.pathname)) {
+  // Beta invites: /signup?invite=<code> opens sign-up for that link only
+  // (codes in BETA_INVITE_CODES; see lib/public-paths.ts).
+  const invited = isInvitedSignup(
+    request.nextUrl.pathname,
+    request.nextUrl.searchParams.get("invite"),
+    process.env.BETA_INVITE_CODES,
+  );
+  if (!user && !isPublicPath(request.nextUrl.pathname) && !invited) {
     return NextResponse.redirect(new URL("/waitlist", request.url));
   }
 

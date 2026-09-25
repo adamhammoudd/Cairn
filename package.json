@@ -80,6 +80,7 @@
     "test:tiingo-provider": "tsx --conditions=react-server scripts/tests/tiingo-provider.ts",
     "test:time-ago": "tsx --conditions=react-server scripts/tests/time-ago.ts",
     "test:llm-provider": "tsx --conditions=react-server scripts/tests/llm-provider.ts",
+    "test:captcha": "tsx --conditions=react-server scripts/tests/captcha.ts",
     "generate:analysis": "tsx --conditions=react-server scripts/generate-analysis.ts",
     "preview:reply": "tsx --conditions=react-server scripts/reply-preview.ts",
     "replay:guard-log": "tsx --conditions=react-server scripts/replay-guard-log.ts"

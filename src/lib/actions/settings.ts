@@ -16,6 +16,7 @@ import type {
 import { isSupportedCurrency } from "@/lib/market-data/fx";
 import { SECTOR_SLUGS } from "@/lib/sectors";
 import { passwordChangeError, deleteConfirmationError } from "@/lib/settings-guards";
+import { CAPTCHA_FAILED_MESSAGE, captchaTokenFrom, isCaptchaError, missingCaptchaMessage } from "@/lib/captcha";
 
 type UserSettings = Database["public"]["Tables"]["user_settings"]["Row"];
 
@@ -172,11 +173,18 @@ export async function changePassword(_prevState: string | null, formData: FormDa
   // of their own account. signInWithPassword is the only "verify this
   // password" primitive the SDK exposes; on success it simply rotates this
   // same user's tokens.
+  // With hCaptcha on in Supabase Auth, this re-check needs a captcha token like
+  // any other sign-in; the change-password form carries one.
+  const noCaptcha = missingCaptchaMessage(formData);
+  if (noCaptcha) return noCaptcha;
   const { error: reauthError } = await supabase.auth.signInWithPassword({
     email: user.email,
     password: currentPassword,
+    options: { captchaToken: captchaTokenFrom(formData) },
   });
-  if (reauthError) return "Current password is incorrect.";
+  if (reauthError) {
+    return isCaptchaError(reauthError.message) ? CAPTCHA_FAILED_MESSAGE : "Current password is incorrect.";
+  }
 
   const { error } = await supabase.auth.updateUser({ password });
   if (error) return error.message;

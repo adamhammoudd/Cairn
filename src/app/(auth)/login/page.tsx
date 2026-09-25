@@ -7,6 +7,7 @@ import { signIn } from "@/lib/actions/auth";
 import { Field } from "@/components/auth/field";
 import { SubmitButton } from "@/components/auth/submit-button";
 import { AuthError, AuthFooter, AuthHeader } from "@/components/auth/auth-chrome";
+import { CAPTCHA_ENABLED, Captcha } from "@/components/auth/captcha";
 
 function LoginMessage() {
   const message = useSearchParams().get("message");
@@ -35,6 +36,7 @@ export default function LoginPage() {
   // avoids. Password is deliberately left uncontrolled: never hold it in React
   // state, and re-entering it after a failure is expected anyway.
   const [email, setEmail] = useState("");
+  const [captchaDone, setCaptchaDone] = useState(!CAPTCHA_ENABLED);
 
   return (
     <>
@@ -79,8 +81,10 @@ export default function LoginPage() {
           />
         </div>
 
+        <Captcha onTokenChange={(token) => setCaptchaDone(!CAPTCHA_ENABLED || token !== "")} />
+
         <div className="mt-5">
-          <SubmitButton>Sign in</SubmitButton>
+          <SubmitButton disabled={!captchaDone}>Sign in</SubmitButton>
         </div>
       </form>
 

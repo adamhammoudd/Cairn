@@ -47,7 +47,8 @@ export const TOS_VERSION = "2026-09-25";
 // so the version date stays.
 // 2026-09-26: the AI model provider changed from Groq to DeepInfra (same
 // model, different host). A different processor receives chat text, which is
-// material, so the date moves.
+// material, so the date moves. Same day: hCaptcha (security check on the
+// sign-in and account forms) added as a processor.
 export const PRIVACY_VERSION = "2026-09-26";
 
 /**

@@ -57,3 +57,38 @@ export function isPublicPath(pathname: string): boolean {
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
   );
 }
+
+// --------------------------------------------------------------------------
+// Beta invites.
+//
+// During the closed beta, /signup opens only with a valid invite code in the
+// link: /signup?invite=<code>. Codes live in the BETA_INVITE_CODES env var
+// (comma-separated, set in Vercel), so a code is added or revoked by editing
+// that variable and redeploying - no code change. Unset or empty means no
+// invite is valid and sign-up stays closed, which is the safe default.
+//
+// Codes shorter than 8 characters are ignored: a short code is guessable, and
+// this is the only thing between the public and account creation.
+const MIN_INVITE_CODE_LENGTH = 8;
+
+export function inviteCodes(raw: string | undefined): string[] {
+  return (raw ?? "")
+    .split(",")
+    .map((code) => code.trim())
+    .filter((code) => code.length >= MIN_INVITE_CODE_LENGTH);
+}
+
+export function inviteAllowed(invite: string | null | undefined, rawCodes: string | undefined): boolean {
+  const code = (invite ?? "").trim();
+  if (code === "") return false;
+  return inviteCodes(rawCodes).includes(code);
+}
+
+/** Whether an anonymous request may reach /signup: only with a valid invite. */
+export function isInvitedSignup(
+  pathname: string,
+  invite: string | null,
+  rawCodes: string | undefined,
+): boolean {
+  return pathname === "/signup" && inviteAllowed(invite, rawCodes);
+}
