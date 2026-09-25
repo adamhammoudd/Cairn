@@ -12,7 +12,7 @@ February 2027, once the business is registered.
 
 | # | Item | Who |
 |---|---|---|
-| B1 | **The AI runs out of capacity.** It runs on Groq's free tier: 200,000 tokens a day for the whole app, not per user - roughly 60-100 chat turns. On 2026-09-24 it ran out: analysis generation failed and no daily briefing has been written since. It works again after the daily reset (3 analyses generated on 2026-09-25), but the first busy day will hit the same wall, and the Cerebras fallback answers HTTP 402 (unfunded account), so it catches nothing. Fix: Groq Dev Tier with a monthly spend cap, or fund Cerebras. If Cerebras is dropped, remove its `FALLBACK_LLM_*` variables from Vercel and take it off the privacy page. | Founder |
+| B1 | **Switch the AI to DeepInfra.** The code is done: it uses DeepInfra (same model, `openai/gpt-oss-120b`) and the privacy page names it. It goes live once `LLM_API_KEY` is set in Vercel. Groq's free tier (200,000 tokens/day for the whole app) ran out on 2026-09-24. See `docs/decisions/2026-09-25-deepinfra.md`. | Founder |
 | B2 | Supabase leaked-password protection is off (Authentication → Settings). | Founder |
 
 ## Open - before public launch
@@ -22,7 +22,7 @@ February 2027, once the business is registered.
 | O1 | `public/robots.txt` says `Disallow: /` for search engines. Right while the app is closed; change at launch. Consider allowing `/welcome` and `/waitlist` sooner if they should be findable while promoting. | Decision: founder |
 | O2 | CSP is still `Report-Only` (`next.config.ts`). One pass against the live site with the console open, then switch to enforcing. | Engineering |
 | O3 | Migration `0046_factor_analogs` is applied live but has no row in the migration ledger (`supabase_migrations.schema_migrations`). Backfill the row. | Engineering |
-| O4 | `test:scope-guard` Tier B (22 chat turns back-to-back) cannot pass on Groq's free tier. Clears with B1. | Engineering |
+| O4 | Re-run `test:scope-guard` Tier B (22 chat turns back-to-back) on DeepInfra; it could never pass on Groq's free tier. | Engineering |
 | O5 | 3 of 42 replayed production scope-guard flags still over-fire on genuine refusals. Measure with `npm run replay:guard-log`. | Engineering |
 | O6 | Two separate billing screens (`/billing` and Settings → Billing) - keep one. | Design |
 | O7 | Small UI polish: remaining hard-coded hex colours to move onto tokens; the mobile menu's Upgrade item while payments are off; dashboard headline links; ticker symbols not URL-encoded in links; the proof card shows a drawdown in green (green is for gains only). | Design |

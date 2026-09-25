@@ -22,7 +22,7 @@ only and never produces a number or picks a citation.
 | Framework | Next.js 16 (App Router, Turbopack) |
 | Styling | Tailwind CSS v4 |
 | Data / auth / storage | Supabase (Postgres, Auth, Edge Functions, pg_cron) |
-| AI inference | Groq, OpenAI-compatible API (`openai/gpt-oss-120b`) |
+| AI inference | DeepInfra, OpenAI-compatible API (`openai/gpt-oss-120b`) |
 | Charts | Recharts |
 | Billing | Stripe - planned for Phase 12, not yet integrated |
 
@@ -38,7 +38,7 @@ npm run dev                        # http://localhost:3000
 
 `.env.local.example` documents every variable and what happens when one is
 missing. The ones you cannot run without are the three Supabase keys and
-`GROQ_API_KEY`; without the latter the assistant reports a clear configuration
+`LLM_API_KEY` (a DeepInfra key); without the latter the assistant reports a clear configuration
 error rather than failing generically.
 
 Database schema lives in `supabase/migrations/`, applied in filename order.

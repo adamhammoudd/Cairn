@@ -49,16 +49,17 @@ hold up, not because we believe they don't.
 - [ ] **UK FCA - financial promotion rules.** Confirm whether any output could be construed as a
       "financial promotion" requiring FCA-authorized approval, given the UK's broader definition
       relative to the US.
-- [ ] **Data residency / cross-border transfer.** Supabase infrastructure and Groq's inference
+- [ ] **Data residency / cross-border transfer.** Supabase infrastructure and DeepInfra's inference
       infrastructure - confirm where data is processed/stored and whether Standard Contractual
-      Clauses or an adequacy decision covers the transfer for EU/UK users. Groq's processing
+      Clauses or an adequacy decision covers the transfer for EU/UK users. DeepInfra's processing
       location is a vendor-controlled fact to obtain in writing, not one we choose.
 
 ## Cross-cutting
 
-- [ ] **Third-party AI subprocessor (Groq).** Cairn calls Groq's hosted API (see
-      `docs/model-provider-setup.md`); an earlier revision of these drafts wrongly recorded the
-      model as self-hosted with no AI subprocessor. Confirm the consequences: obtain Groq's DPA,
+- [ ] **Third-party AI subprocessor (DeepInfra; Groq until 2026-09-25).** Cairn calls
+      DeepInfra's hosted API (see `docs/model-provider-setup.md`); an earlier revision of these
+      drafts wrongly recorded the model as self-hosted with no AI subprocessor. Confirm the
+      consequences: obtain DeepInfra's DPA,
       confirm its data-retention and training-use terms for API traffic, list it as a subprocessor
       where required, and confirm the terms under which `openai/gpt-oss-120b` is served permit our
       commercial use. Cairn remains responsible for the outputs it surfaces to users.

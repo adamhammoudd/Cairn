@@ -38,12 +38,17 @@ export const TOS_VERSION = "2026-09-25";
 // that vercel.json pins it. All three were material, so the date moves with
 // them rather than leaving consent rows pointing at a document that no longer
 // exists.
-// 2026-09-25: contact address published; Cerebras (fallback model provider)
-// disclosed; signup consent record (IP, user-agent) disclosed; transfers
+// 2026-09-25: contact address published; signup consent record (IP, user-agent) disclosed; transfers
 // section covers Stripe/Resend/Google; portfolio-ticker context to the model
 // stated accurately; auth-log retention stated as 24 hours; deletion now
-// cancels Stripe; 18+ made firm; Belgian DPA named.
-export const PRIVACY_VERSION = "2026-09-25";
+// cancels Stripe; 18+ made firm; Belgian DPA named. Revised the same day:
+// the Cerebras backup provider was removed from the app, so it is no longer
+// listed. Dropping a processor only narrows what the accepted text allowed,
+// so the version date stays.
+// 2026-09-26: the AI model provider changed from Groq to DeepInfra (same
+// model, different host). A different processor receives chat text, which is
+// material, so the date moves.
+export const PRIVACY_VERSION = "2026-09-26";
 
 /**
  * "30 August 2026" - the format LegalShell's "Last updated" line expects.

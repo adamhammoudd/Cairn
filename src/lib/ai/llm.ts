@@ -1,49 +1,43 @@
 // Hosted inference client, OpenAI-compatible.
 //
-// Provider: Groq, primary. Cairn previously pointed at a self-hosted
-// OpenAI-compatible server on localhost, which cannot work from Vercel by
-// construction - a deployed function has no route to the developer's laptop.
-// That is settled: Groq is the provider, reached over its OpenAI-compatible
+// Provider: DeepInfra by default (any hosted OpenAI-compatible endpoint works). Cairn
+// previously pointed at a self-hosted server on localhost, which cannot work
+// from Vercel by construction - a deployed function has no route to the
+// developer's laptop. The provider is reached over its OpenAI-compatible
 // surface, so this file stays a thin fetch wrapper rather than an SDK
-// dependency.
+// dependency, and switching host is a configuration change, not a code one.
 //
 // Configuration (see .env.local.example):
-//   LLM_BASE_URL    https://api.groq.com/openai/v1
-//   LLM_MODEL       openai/gpt-oss-120b
-//   GROQ_API_KEY    required - set in .env.local AND in Vercel env vars.
-//                   Never committed, never hardcoded, never NEXT_PUBLIC_*.
+//   LLM_BASE_URL    default https://api.deepinfra.com/v1/openai
+//   LLM_MODEL       default openai/gpt-oss-120b
+//   LLM_API_KEY     required - the key for LLM_BASE_URL. Set in .env.local AND
+//                   in Vercel. Never committed, never hardcoded, never
+//                   NEXT_PUBLIC_*.
 //   LLM_TIMEOUT_MS  optional; default below.
+//
+// History: Groq (free tier) served this until 2026-09-25. Its 200,000
+// tokens/day cap is per organisation, not per user, and the app ran into it;
+// DeepInfra serves the same open-weight model pay-per-use at roughly a quarter
+// of Groq's paid price. See docs/decisions/2026-09-25-deepinfra.md.
 //
 // Optional second endpoint, tried only when the primary is exhausted:
 //   FALLBACK_LLM_BASE_URL / FALLBACK_LLM_API_KEY / FALLBACK_LLM_MODEL
 // See the "fallback endpoint" section below for why this exists and what it
 // does and does not cover.
 //
-// Model choice, checked rather than assumed (2026-08-20): Groq deprecated
-// `llama-3.3-70b-versatile` and `llama-3.1-8b-instant` on 2026-08-16 and names
-// `openai/gpt-oss-120b` as the replacement for the 70B tier. Defaulting to a
-// Llama model here would have shipped a dead model id.
+// Model: `openai/gpt-oss-120b`, the same id on DeepInfra as it was on Groq,
+// so the switch changed no prompt and no test.
 //
 // Design note: everything downstream is written assuming the model writes
 // PROSE ONLY. Probabilities are computed in lib/ai/analytics.ts from real
 // historical analogs; the model never produces a number that reaches a user.
 
-const DEFAULT_BASE_URL = "https://api.groq.com/openai/v1";
+const DEFAULT_BASE_URL = "https://api.deepinfra.com/v1/openai";
 const DEFAULT_MODEL = "openai/gpt-oss-120b";
 const DEFAULT_TIMEOUT_MS = 60_000;
 
-// The fallback endpoint's model id is NOT the primary's. Groq names the
-// open-weight 120B model `openai/gpt-oss-120b`; Cerebras - the endpoint this
-// fallback was designed against (docs/decisions/2026-08-30-groq-fallback-endpoint.md)
-// - serves the same weights under the bare id `gpt-oss-120b`, no `openai/`
-// prefix (checked against inference-docs.cerebras.ai, 2026-08-30). Defaulting
-// the fallback to the primary's id shipped a model id that 404s on Cerebras,
-// and a `/models` health check never caught it because /models does not take a
-// model id. Overridable with FALLBACK_LLM_MODEL for any other host.
-const DEFAULT_FALLBACK_MODEL = "gpt-oss-120b";
-
-// Groq's free tier enforces real per-minute request and token limits. These
-// are transient by definition, so they are retried rather than surfaced.
+// Providers enforce per-minute request and token limits. These are transient
+// by definition, so they are retried rather than surfaced.
 const MAX_ATTEMPTS = 4;
 const BASE_BACKOFF_MS = 600;
 const MAX_BACKOFF_MS = 8_000;
@@ -107,9 +101,10 @@ export function llmModel(): string {
 }
 
 export function llmApiKey(): string | undefined {
-  // GROQ_API_KEY is the documented name; LLM_API_KEY stays accepted so a
-  // different OpenAI-compatible host can be swapped in without a code change.
-  return process.env.GROQ_API_KEY || process.env.LLM_API_KEY || undefined;
+  // LLM_API_KEY only. GROQ_API_KEY was the old name and is deliberately NOT
+  // read any more: the default host is now DeepInfra, and falling back to it
+  // would send a Groq key to DeepInfra whenever LLM_API_KEY was missing.
+  return process.env.LLM_API_KEY || undefined;
 }
 
 /**
@@ -124,23 +119,20 @@ export function isLlmConfigured(): boolean {
 // --------------------------------------------------------------------------
 // Fallback endpoint.
 //
-// Groq's free tier caps the whole organisation at 200,000 tokens/day - not
-// per user. One real chat turn's context (recent news + stored analyses)
-// costs roughly 2,000-4,000 tokens, so that ceiling supports on the order of
-// 60-100 real turns/day across every user combined, and this project hit it
-// during its own verification pass with a handful of test generations.
+// Written when the primary was Groq's free tier, which caps the whole
+// organisation at 200,000 tokens/day. DeepInfra is pay-per-use with no daily
+// token cap, so the practical failure modes now are a rate limit, an outage,
+// or an empty prepaid balance.
 //
-// Rather than pay for a higher Groq tier, a second free OpenAI-compatible
-// endpoint can be configured and is tried automatically once the primary is
-// exhausted. Cerebras' free trial is the one this was designed against (not
-// yet tested live - no Cerebras account exists for this repo): it serves the
-// same open-weight GPT-OSS 120B weights Groq does, at roughly 5x the daily
-// token budget (published docs, 2026-08-30), so output quality does not change
-// - only which datacenter answered. Note the model id differs by provider:
-// Groq's `openai/gpt-oss-120b` vs Cerebras' bare `gpt-oss-120b` (see
-// DEFAULT_FALLBACK_MODEL).
+// A second OpenAI-compatible endpoint can be configured and is tried
+// automatically once the primary is exhausted (rate-limited or down after the
+// retry budget). It should serve the same open-weight model, so output quality
+// does not change - only which datacenter answered. Cerebras was configured
+// here until 2026-09-25 and was removed (unfunded account, HTTP 402).
 //
 // Optional and additive: unset, behaviour is identical to before this existed.
+// A configured fallback is a second AI subprocessor - it must be named on the
+// privacy page before it is switched on.
 export interface LlmEndpoint {
   baseUrl: string;
   apiKey: string;
@@ -162,11 +154,11 @@ export function fallbackEndpoint(): LlmEndpoint | null {
   return {
     baseUrl: baseUrl.replace(/\/+$/, ""),
     apiKey,
-    // Same open-weight model, different provider, different id string. See
-    // DEFAULT_FALLBACK_MODEL - the primary's `openai/`-prefixed id is a Groq
-    // convention and is not what Cerebras (or most OpenAI-compatible hosts)
-    // serve it under.
-    model: process.env.FALLBACK_LLM_MODEL || DEFAULT_FALLBACK_MODEL,
+    // Defaults to the primary's model id. Hosts do not all name the same
+    // weights the same way (Cerebras served gpt-oss-120b without the
+    // `openai/` prefix), so set FALLBACK_LLM_MODEL when they differ - the
+    // health check below issues a real completion, so a wrong id shows up there.
+    model: process.env.FALLBACK_LLM_MODEL || llmModel(),
     label: "fallback",
   };
 }
@@ -175,15 +167,28 @@ function configuredEndpoints(): LlmEndpoint[] {
   return [primaryEndpoint(), fallbackEndpoint()].filter((e): e is LlmEndpoint => e !== null);
 }
 
-/** "groq" for the primary (matching the provider name used before a fallback existed) or "fallback". */
-function providerName(label: LlmEndpoint["label"]): string {
-  return label === "fallback" ? "fallback" : "groq";
+/**
+ * Short provider name for ai_analyses.model_version, read from the host that
+ * actually served the request - "groq", "deepinfra", otherwise the hostname.
+ * It used to be hard-coded to "groq" for the primary, which would have
+ * mislabelled every analysis the day the primary moved to another host.
+ */
+export function providerNameFor(baseUrl: string): string {
+  let host: string;
+  try {
+    host = new URL(baseUrl).hostname.toLowerCase();
+  } catch {
+    return "unknown";
+  }
+  if (host === "api.groq.com") return "groq";
+  if (host === "api.deepinfra.com") return "deepinfra";
+  return host.replace(/^api\./, "");
 }
 
 export async function llmHealthCheck(): Promise<{ ok: boolean; detail: string }> {
   const endpoints = configuredEndpoints();
   if (endpoints.length === 0) {
-    return { ok: false, detail: "GROQ_API_KEY is not set - no model provider is configured." };
+    return { ok: false, detail: "LLM_API_KEY is not set - no model provider is configured." };
   }
   const results = await Promise.all(
     endpoints.map(async (ep) => {
@@ -314,6 +319,16 @@ async function postWithRetry(endpoint: LlmEndpoint, body: Record<string, unknown
       continue;
     }
 
+    // 402 = the prepaid balance is empty (DeepInfra) or the account is
+    // unfunded. Not a config fault and not worth retrying: report it as
+    // "busy" so the user sees the honest temporary-unavailable message and a
+    // configured fallback, if any, gets its turn.
+    if (res.status === 402) {
+      lastStatus = 402;
+      lastDetail = (await res.text().catch(() => "")).slice(0, 300) || "payment required";
+      break;
+    }
+
     if (res.ok || !isRetryableStatus(res.status)) return res;
 
     lastStatus = res.status;
@@ -332,6 +347,12 @@ async function postWithRetry(endpoint: LlmEndpoint, body: Record<string, unknown
   throw new LlmBusyError(lastStatus, attemptsMade, lastDetail || "no response body");
 }
 
+function omitReasoning(body: Record<string, unknown>): Record<string, unknown> {
+  const copy = { ...body };
+  delete copy.reasoning_effort;
+  return copy;
+}
+
 /** The json_schema -> json_object degrade-and-retry dance, against one endpoint. */
 async function completeAgainstEndpoint(endpoint: LlmEndpoint, base: Record<string, unknown>, req: LlmRequest): Promise<string> {
   let body = base;
@@ -346,6 +367,20 @@ async function completeAgainstEndpoint(endpoint: LlmEndpoint, base: Record<strin
   }
 
   let res = await postWithRetry(endpoint, body);
+
+  // Not every host accepts `reasoning_effort` (it is an OpenAI-style field
+  // that DeepInfra documents only as "configurable reasoning depth"). If the
+  // host rejects the request and says why, drop the field once and resend
+  // rather than failing every request over an optional hint.
+  if (!res.ok && (res.status === 400 || res.status === 422) && "reasoning_effort" in body) {
+    const detail = await res.clone().text().catch(() => "");
+    if (/reasoning/i.test(detail)) {
+      console.warn(`[llm] ${endpoint.baseUrl} rejected reasoning_effort; retrying without it.`);
+      body = omitReasoning(body);
+      base = omitReasoning(base); // the json_object retry below must not re-add it
+      res = await postWithRetry(endpoint, body);
+    }
+  }
 
   // Structured-output support varies by model/provider. If json_schema is
   // rejected, fall back to plain JSON mode - the caller validates the parsed
@@ -411,7 +446,7 @@ async function completeWithEndpoints(req: LlmRequest): Promise<CompletionResult>
   const endpoints = configuredEndpoints();
   if (endpoints.length === 0) {
     throw new Error(
-      "No model provider configured: set GROQ_API_KEY (and LLM_BASE_URL/LLM_MODEL) in .env.local and in Vercel.",
+      "No model provider configured: set LLM_API_KEY (and LLM_BASE_URL/LLM_MODEL if not using the DeepInfra defaults) in .env.local and in Vercel.",
     );
   }
 
@@ -528,16 +563,16 @@ export async function llmCompleteJson<T>(req: LlmRequest, validate: (parsed: unk
 /**
  * Same as llmCompleteJson, plus which endpoint actually served the request as
  * "<provider>:<model>" (e.g. "groq:openai/gpt-oss-120b" or
- * "fallback:openai/gpt-oss-120b") - for the one caller (generate.ts) that
- * records this in ai_analyses.model_version and must not assume Groq now that
- * a fallback endpoint can serve a request.
+ * "deepinfra:openai/gpt-oss-120b") - for the one caller (generate.ts) that
+ * records this in ai_analyses.model_version and must name the host that
+ * actually answered, primary or fallback.
  */
 export async function llmCompleteJsonWithProvider<T>(
   req: LlmRequest,
   validate: (parsed: unknown) => parsed is T,
 ): Promise<{ parsed: T; modelVersion: string }> {
   const { parsed, endpoint } = await completeJsonWithEndpoint(req, validate);
-  return { parsed, modelVersion: `${providerName(endpoint.label)}:${endpoint.model}` };
+  return { parsed, modelVersion: `${providerNameFor(endpoint.baseUrl)}:${endpoint.model}` };
 }
 
 function tryParseJson(raw: string): unknown {
