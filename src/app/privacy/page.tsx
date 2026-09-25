@@ -88,6 +88,13 @@ export default function PrivacyPolicyPage() {
               <strong>DeepInfra</strong> - hosted AI model provider. See below.
             </li>
             <li>
+              <strong>hCaptcha</strong> (Intuition Machines, Inc.) - the security check on the
+              sign-in, account creation, password reset and password change forms. When you use one
+              of those forms, hCaptcha receives your IP address and technical information about your
+              browser and device, to tell people apart from automated abuse. It runs in its own frame
+              on hCaptcha&apos;s domain; Cairn receives only a pass/fail token.
+            </li>
+            <li>
               <strong>Stripe</strong> - payments, if you subscribe to Premium. Stripe receives your
               email address, billing address and country, any tax ID you enter, and your card
               details. Card numbers go directly to Stripe and are never seen or stored by Cairn.
@@ -126,6 +133,8 @@ export default function PrivacyPolicyPage() {
             <em>legitimate interest</em> in preventing abuse of the founding-member offer (Article
             6(1)(f)). The signup record (document versions, IP address and user-agent) is kept on
             the same legitimate-interest basis, to be able to show what you agreed to and when.
+            The hCaptcha security check on the sign-in and account forms also relies on legitimate
+            interest: protecting accounts from automated attacks.
             Cairn does not rely on consent for any core feature and sets no
             consent-requiring cookies, so there is no consent to withdraw for those.
           </p>
@@ -228,7 +237,8 @@ export default function PrivacyPolicyPage() {
           </p>
           <p>
             <strong>Stripe</strong> (payments), <strong>Resend</strong> and{" "}
-            <strong>Google</strong> (email delivery) are also US companies and may process the
+            <strong>Google</strong> (email delivery), and <strong>hCaptcha</strong> (security
+            check) are also US companies and may process the
             limited data they receive (see &quot;Third parties&quot;) outside the EEA. Each offers
             Standard Contractual Clauses and/or certification under the EU-US Data Privacy
             Framework for such transfers; confirming which mechanism applies to each is part of
@@ -305,7 +315,9 @@ export default function PrivacyPolicyPage() {
           <p>
             Authentication session cookies only. Cairn runs no analytics, advertising, or tracking
             cookies of any kind, and loads no third-party tracking scripts - so there is nothing to
-            consent to beyond the cookies strictly necessary to keep you signed in.
+            consent to beyond the cookies strictly necessary to keep you signed in. The one
+            third-party script is the hCaptcha security check on the sign-in and account forms; it
+            runs in its own frame and may set its own cookie there, used only for that check.
           </p>
         </section>
         <section>

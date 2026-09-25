@@ -3,10 +3,12 @@
 import { useActionState, useState } from "react";
 import { changePassword } from "@/lib/actions/settings";
 import { SubmitButton } from "@/components/auth/submit-button";
+import { CAPTCHA_ENABLED, Captcha } from "@/components/auth/captcha";
 
 export function ChangePasswordForm() {
   const [open, setOpen] = useState(false);
   const [result, formAction] = useActionState(changePassword, null);
+  const [captchaDone, setCaptchaDone] = useState(!CAPTCHA_ENABLED);
 
   if (!open) {
     return (
@@ -39,8 +41,10 @@ export function ChangePasswordForm() {
         minLength={8}
         className="w-full rounded-control border border-line bg-active px-3.5 py-2.5 text-lead text-primary outline-none"
       />
+      {/* Confirming the current password is a sign-in check, so Supabase wants a captcha for it too. */}
+      <Captcha onTokenChange={(token) => setCaptchaDone(!CAPTCHA_ENABLED || token !== "")} />
       <div className="flex items-center gap-3">
-        <SubmitButton>Update password</SubmitButton>
+        <SubmitButton disabled={!captchaDone}>Update password</SubmitButton>
         <button type="button" onClick={() => setOpen(false)} className="text-body text-muted">
           Cancel
         </button>

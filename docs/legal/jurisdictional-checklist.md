@@ -63,6 +63,9 @@ hold up, not because we believe they don't.
       confirm its data-retention and training-use terms for API traffic, list it as a subprocessor
       where required, and confirm the terms under which `openai/gpt-oss-120b` is served permit our
       commercial use. Cairn remains responsible for the outputs it surfaces to users.
+- [ ] **hCaptcha (Intuition Machines, Inc., US).** Security check on the sign-in, sign-up and
+      password forms since 2026-09-26; receives IP and browser/device signals. Confirm its DPA,
+      the legitimate-interest basis, and whether its frame cookie needs anything beyond disclosure.
 - [ ] **Deterministic probability computation.** Probability ranges/confidence are now computed in
       code (Wilson score interval), not model-generated. Confirm whether describing outputs as
       statistically derived and reproducible changes how they should be characterized - it may

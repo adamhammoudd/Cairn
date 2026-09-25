@@ -6,6 +6,8 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { checkAuthRateLimit, recordAuthAttempt } from "@/lib/auth-rate-limit";
 import { TOS_VERSION, PRIVACY_VERSION, consentGiven } from "@/lib/legal-versions";
+import { captchaTokenFrom, friendlyAuthError, missingCaptchaMessage } from "@/lib/captcha";
+import { inviteAllowed } from "@/lib/public-paths";
 
 // Behind a proxy the socket address is the proxy's, so the forwarded chain is
 // the only thing that identifies the caller. First entry is the client;
@@ -22,15 +24,22 @@ export async function signIn(_prevState: string | null, formData: FormData) {
   const password = String(formData.get("password") ?? "");
   const ip = await clientIp();
 
+  const noCaptcha = missingCaptchaMessage(formData);
+  if (noCaptcha) return noCaptcha;
+
   const limit = await checkAuthRateLimit(email, "sign_in", ip);
   if (!limit.allowed) return limit.message ?? "Too many attempts. Try again later.";
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const { error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+    options: { captchaToken: captchaTokenFrom(formData) },
+  });
 
   await recordAuthAttempt(email, "sign_in", !error, ip);
 
-  if (error) return error.message;
+  if (error) return friendlyAuthError(error.message);
   redirect("/");
 }
 
@@ -45,6 +54,16 @@ export async function signUp(_prevState: string | null, formData: FormData) {
     return "You must agree to the Terms of Service and Privacy Policy to create an account.";
   }
 
+  // Beta: accounts are invite-only. The proxy already keeps /signup closed
+  // without a valid ?invite=, but a server action is a plain POST endpoint, so
+  // the same check runs here too.
+  if (!inviteAllowed(String(formData.get("invite") ?? ""), process.env.BETA_INVITE_CODES)) {
+    return "Sign-up is invite-only during the beta. Join the waitlist and we will let you know.";
+  }
+
+  const noCaptcha = missingCaptchaMessage(formData);
+  if (noCaptcha) return noCaptcha;
+
   const h = await headers();
   const ip = await clientIp();
   const userAgent = h.get("user-agent");
@@ -58,6 +77,7 @@ export async function signUp(_prevState: string | null, formData: FormData) {
     email,
     password,
     options: {
+      captchaToken: captchaTokenFrom(formData),
       data: {
         display_name: name,
         // Backstop copy of the consent, on the auth user itself, in case the
@@ -71,7 +91,7 @@ export async function signUp(_prevState: string | null, formData: FormData) {
 
   await recordAuthAttempt(email, "sign_up", !error, ip);
 
-  if (error) return error.message;
+  if (error) return friendlyAuthError(error.message);
 
   // The compliance record. Service-role client: a user must not be able to
   // forge or delete their own consent row. A failure here is logged with the
@@ -102,6 +122,9 @@ export async function forgotPassword(_prevState: string | null, formData: FormDa
   const origin = (await headers()).get("origin");
   const ip = await clientIp();
 
+  const noCaptcha = missingCaptchaMessage(formData);
+  if (noCaptcha) return noCaptcha;
+
   const limit = await checkAuthRateLimit(email, "password_reset", ip);
   // Rate-limited resets return the same confirmation as a successful one.
   // Saying "too many attempts" here would confirm the address is real, which
@@ -111,11 +134,12 @@ export async function forgotPassword(_prevState: string | null, formData: FormDa
   const supabase = await createClient();
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: `${origin}/reset-password`,
+    captchaToken: captchaTokenFrom(formData),
   });
 
   await recordAuthAttempt(email, "password_reset", !error, ip);
 
-  if (error) return error.message;
+  if (error) return friendlyAuthError(error.message);
   redirect("/login?message=check-your-email-for-reset-link");
 }
 
