@@ -16,7 +16,7 @@ import { llmHealthCheck, llmComplete, isLlmConfigured } from "@/lib/ai/llm";
 
 async function main() {
   if (!isLlmConfigured()) {
-    console.error("No provider configured: GROQ_API_KEY is unset in .env.local.");
+    console.error("No provider configured: LLM_API_KEY is not set in .env.local.");
     process.exit(1);
   }
 

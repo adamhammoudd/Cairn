@@ -1,4 +1,4 @@
-// Unit test for the Groq rate-limit retry policy (src/lib/ai/llm.ts).
+// Unit test for the model provider's rate-limit retry policy (src/lib/ai/llm.ts).
 //
 // This is the half of Section 1 that can be proven without a live key: the
 // retry classification and the backoff arithmetic are pure functions, and they
@@ -6,13 +6,13 @@
 // set turns a 401 into four 401s and a timeout; a too-narrow one turns a 429
 // into a user-visible error on the first hiccup.
 //
-// What still needs a live key: that a real 429 from Groq is actually recovered
+// What still needs a live key: that a real 429 from the provider is actually recovered
 // from. That is Section 8's job, not this suite's, and it is reported as
 // unverified rather than implied by these passes.
 //
 // Run: npm run test:backoff
 
-import { backoffDelayMs, isRetryableStatus, BUSY_MESSAGE, LlmBusyError } from "@/lib/ai/llm";
+import { backoffDelayMs, isRetryableStatus, BUSY_MESSAGE, LlmBusyError, llmApiKey, providerNameFor } from "@/lib/ai/llm";
 import type { SuiteResult, TestCase } from "./report";
 
 const MAX_BACKOFF_MS = 8_000;
@@ -173,6 +173,26 @@ export function runLlmBackoffSuite(): SuiteResult {
         "building from `message` instead of `detail` nested the prefix inside itself",
       ),
     );
+  }
+
+  // --- Provider label and key, so switching host is config-only -------------
+  // model_version must name the host that actually answered; it was once
+  // hard-coded to "groq" for whatever the primary was.
+  cases.push(check("provider label: Groq", providerNameFor("https://api.groq.com/openai/v1") === "groq", providerNameFor("https://api.groq.com/openai/v1")));
+  cases.push(check("provider label: DeepInfra", providerNameFor("https://api.deepinfra.com/v1/openai") === "deepinfra", providerNameFor("https://api.deepinfra.com/v1/openai")));
+  cases.push(check("provider label: any other host is named by its hostname", providerNameFor("https://api.example.ai/v1") === "example.ai", providerNameFor("https://api.example.ai/v1")));
+  cases.push(check("provider label: a malformed URL does not throw", providerNameFor("not a url") === "unknown", providerNameFor("not a url")));
+  {
+    const saved = { llm: process.env.LLM_API_KEY, groq: process.env.GROQ_API_KEY };
+    process.env.LLM_API_KEY = "key-for-llm-base-url";
+    process.env.GROQ_API_KEY = "groq-key";
+    const both = llmApiKey();
+    delete process.env.LLM_API_KEY;
+    const groqOnly = llmApiKey();
+    if (saved.llm === undefined) delete process.env.LLM_API_KEY; else process.env.LLM_API_KEY = saved.llm;
+    if (saved.groq === undefined) delete process.env.GROQ_API_KEY; else process.env.GROQ_API_KEY = saved.groq;
+    cases.push(check("LLM_API_KEY is the key used", both === "key-for-llm-base-url", String(both)));
+    cases.push(check("the old GROQ_API_KEY is never read (it would be sent to DeepInfra)", groqOnly === undefined, String(groqOnly)));
   }
 
   return { suiteName: "LLM rate-limit retry policy", gating: true, cases };

@@ -1,8 +1,10 @@
 # Model provider setup
 
-Cairn's analysis engine and chat assistant call **Groq**, hosted, over its
-OpenAI-compatible `/chat/completions` API. The decision and its reasoning are in
-`docs/decisions/2026-08-20-model-provider.md`.
+Cairn's analysis engine and chat assistant call **DeepInfra**, hosted, over its
+OpenAI-compatible `/chat/completions` API, running `openai/gpt-oss-120b`. Until
+2026-09-25 the same model ran on Groq's free tier; why it moved is in
+`docs/decisions/2026-09-25-deepinfra.md` (the original hosted-vs-self-hosted
+reasoning is in `docs/decisions/2026-08-20-model-provider.md`).
 
 > **Superseded:** this file previously documented a self-hosted Ollama/vLLM
 > setup. That was never the shipped configuration after 2026-08-21 and the doc
@@ -14,19 +16,24 @@ OpenAI-compatible `/chat/completions` API. The decision and its reasoning are in
 ## Configuration
 
 ```
-LLM_BASE_URL=https://api.groq.com/openai/v1
+LLM_BASE_URL=https://api.deepinfra.com/v1/openai
 LLM_MODEL=openai/gpt-oss-120b
-GROQ_API_KEY=<server-side only; never NEXT_PUBLIC_*, never committed>
+LLM_API_KEY=<DeepInfra key; server-side only; never NEXT_PUBLIC_*, never committed>
 LLM_TIMEOUT_MS=60000
 ```
 
-Set these in `.env.local` **and** in Vercel → Settings → Environment Variables
-for Production, Preview and Development. A missing key is reported as an
-explicit configuration error, not a generic failure (`isLlmConfigured()`).
+`LLM_BASE_URL` and `LLM_MODEL` are the code's defaults, so only `LLM_API_KEY`
+is strictly required. Set it in `.env.local` **and** in Vercel → Settings →
+Environment Variables for Production and Preview. A missing key is reported as
+an explicit configuration error, not a generic failure (`isLlmConfigured()`).
+The old `GROQ_API_KEY` is no longer read.
 
-Re-check <https://console.groq.com/docs/deprecations> before changing
-`LLM_MODEL`. Groq retired `llama-3.3-70b-versatile` on 2026-08-16;
-`openai/gpt-oss-120b` is its named replacement.
+Spending: DeepInfra is prepaid. Keep auto top-up off (or capped) so the
+balance is the monthly spend cap. When it runs out, DeepInfra answers HTTP 402
+and users see the "assistant is temporarily busy" message until it is topped up.
+
+Check it works end to end with `npm run test:live` (real call, writes nothing)
+and `npm run test:llm-provider` (no network).
 
 ## What the model is and isn't asked to do
 
@@ -64,6 +71,6 @@ A high rewrite rate is a model/prompt problem, not a reason to loosen the guard.
 ## Privacy consequence
 
 Prompts, chat messages, and portfolio-derived relevance context **are
-transmitted to Groq**, a third-party subprocessor. The live privacy page
+transmitted to DeepInfra**, a third-party subprocessor. The live privacy page
 (`src/app/privacy/page.tsx`) and `docs/legal/jurisdictional-checklist.md` must
 reflect that. Both remain non-lawyer drafts requiring professional review.

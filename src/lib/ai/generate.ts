@@ -1,5 +1,5 @@
 // The probability engine. Runs against a hosted model over an
-// OpenAI-compatible API (Groq, primary; see lib/ai/llm.ts).
+// OpenAI-compatible API (DeepInfra; see lib/ai/llm.ts).
 //
 // Division of labour, which is the important design decision in this file:
 //
@@ -345,11 +345,10 @@ Respond with only a JSON object matching the required schema.`,
       sample_size: band.sampleCount,
       reasoning_text: prose.reasoning_text,
       // Provider-qualified so a row is traceable to what actually served it.
-      // This said "self-hosted:" long after Groq shipped, which mislabeled every
-      // stored analysis and matched a privacy claim that was no longer true.
-      // Now reads the ACTUAL serving endpoint - "groq:..." or "fallback:..." -
-      // rather than assuming Groq, now that a fallback endpoint can serve a
-      // request when Groq's daily quota is exhausted (see lib/ai/llm.ts).
+      // This once said "self-hosted:" long after a hosted provider shipped,
+      // which mislabeled every stored analysis. It now reads the ACTUAL
+      // serving endpoint - "deepinfra:...", or the fallback's host if one
+      // served the request (see lib/ai/llm.ts). Older rows say "groq:...".
       model_version: modelVersion,
       // Written as `pending`, promoted to `validated` only once the sources and
       // analogs are actually on disk.

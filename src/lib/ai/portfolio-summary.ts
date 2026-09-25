@@ -11,7 +11,7 @@
 // docs/decisions/2026-09-04-ai-portfolio-figures.md this is option (c): the
 // sensitive figures are computed on Cairn infrastructure and the model only
 // restates them. The flag must stay off in every deployed environment until
-// the founder confirms Groq's data-retention / DPA terms cover sending real
+// the founder confirms DeepInfra's data-retention / DPA terms cover sending real
 // dollar figures to inference - a vendor-account decision, not an engineering
 // one. With the flag off, buildChatContext never calls into here and behaviour
 // is exactly what PR #58 shipped (ticker symbols only).
