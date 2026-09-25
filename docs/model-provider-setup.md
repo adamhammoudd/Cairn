@@ -1,10 +1,10 @@
 # Model provider setup
 
-Cairn's analysis engine and chat assistant call **DeepInfra**, hosted, over its
-OpenAI-compatible `/chat/completions` API, running `openai/gpt-oss-120b`. Until
-2026-09-25 the same model ran on Groq's free tier; why it moved is in
-`docs/decisions/2026-09-25-deepinfra.md` (the original hosted-vs-self-hosted
-reasoning is in `docs/decisions/2026-08-20-model-provider.md`).
+Cairn's analysis engine and chat assistant call **Groq**, hosted, over its
+OpenAI-compatible `/chat/completions` API, running `openai/gpt-oss-120b`, on the
+paid Developer tier. A move to DeepInfra was coded on 2026-09-25 and reverted
+before it went live - see `docs/decisions/2026-09-25-deepinfra.md`. The original
+hosted-vs-self-hosted reasoning is in `docs/decisions/2026-08-20-model-provider.md`.
 
 > **Superseded:** this file previously documented a self-hosted Ollama/vLLM
 > setup. That was never the shipped configuration after 2026-08-21 and the doc
@@ -16,9 +16,9 @@ reasoning is in `docs/decisions/2026-08-20-model-provider.md`).
 ## Configuration
 
 ```
-LLM_BASE_URL=https://api.deepinfra.com/v1/openai
+LLM_BASE_URL=https://api.groq.com/openai/v1
 LLM_MODEL=openai/gpt-oss-120b
-LLM_API_KEY=<DeepInfra key; server-side only; never NEXT_PUBLIC_*, never committed>
+LLM_API_KEY=<Groq key; server-side only; never NEXT_PUBLIC_*, never committed>
 LLM_TIMEOUT_MS=60000
 ```
 
@@ -28,9 +28,9 @@ Environment Variables for Production and Preview. A missing key is reported as
 an explicit configuration error, not a generic failure (`isLlmConfigured()`).
 The old `GROQ_API_KEY` is no longer read.
 
-Spending: DeepInfra is prepaid. Keep auto top-up off (or capped) so the
-balance is the monthly spend cap. When it runs out, DeepInfra answers HTTP 402
-and users see the "assistant is temporarily busy" message until it is topped up.
+Spending: the free tier caps the whole app at 200,000 tokens a day. Use the
+paid Developer tier and set a monthly spending limit in the Groq console. When
+a limit is hit, users see the "assistant is temporarily busy" message.
 
 Check it works end to end with `npm run test:live` (real call, writes nothing)
 and `npm run test:llm-provider` (no network).
@@ -71,6 +71,6 @@ A high rewrite rate is a model/prompt problem, not a reason to loosen the guard.
 ## Privacy consequence
 
 Prompts, chat messages, and portfolio-derived relevance context **are
-transmitted to DeepInfra**, a third-party subprocessor. The live privacy page
+transmitted to Groq**, a third-party subprocessor. The live privacy page
 (`src/app/privacy/page.tsx`) and `docs/legal/jurisdictional-checklist.md` must
 reflect that. Both remain non-lawyer drafts requiring professional review.

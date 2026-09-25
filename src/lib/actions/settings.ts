@@ -314,14 +314,13 @@ export async function exportUserData() {
 //     from. Adding a user_id purely to enable a scrub here would make the log
 //     MORE identifying, not less.
 //
-//  2. DeepInfra (and any configured fallback) - the model provider that chat
-//     text was sent to for inference. Per DeepInfra's data-privacy docs
-//     (checked 2026-09-25), inference inputs and outputs are held in memory
-//     only, never written to disk, deleted once the response is returned, and
-//     not used for training. There is therefore nothing to delete upstream and
-//     no deletion API to call. Documented here and on the privacy page
-//     (src/app/privacy) rather than left as an unstated gap. (Until 2026-09-25
-//     the provider was Groq, whose own terms state no retention by default.)
+//  2. Groq (and any configured fallback) - the model provider that chat text
+//     was sent to for inference. Per Groq's published terms (checked
+//     2026-08-30) there is no per-account or per-record deletion API; Groq
+//     does not retain inference inputs/outputs by default and short-lived
+//     troubleshooting logs age out within 30 days. An organisation admin can
+//     also turn on Zero Data Retention in the Groq console. Documented here and
+//     on the privacy page (src/app/privacy) rather than left as an unstated gap.
 export async function deleteAccount(confirmation?: string): Promise<string | void> {
   // The "type DELETE to confirm" friction is enforced here, not only in the
   // client component - deleteAccount is a server action and therefore a plain
@@ -368,7 +367,7 @@ export async function deleteAccount(confirmation?: string): Promise<string | voi
   console.info(
     `[deleteAccount] account deleted. Supabase data cascaded. ` +
       `ai_scope_guard_log: covered by 90-day retention purge. ` +
-      `Model provider (DeepInfra): nothing retained upstream, nothing to delete.`,
+      `Model provider (Groq): no per-record deletion API - relies on its default non-retention.`,
   );
 
   await supabase.auth.signOut();

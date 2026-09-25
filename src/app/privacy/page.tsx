@@ -85,7 +85,7 @@ export default function PrivacyPolicyPage() {
               transit and appears in short-lived operational logs.
             </li>
             <li>
-              <strong>DeepInfra</strong> - hosted AI model provider. See below.
+              <strong>Groq</strong> - hosted AI model provider. See below.
             </li>
             <li>
               <strong>hCaptcha</strong> (Intuition Machines, Inc.) - the security check on the
@@ -110,12 +110,12 @@ export default function PrivacyPolicyPage() {
             </li>
           </ul>
           <p>
-            On DeepInfra: the analysis engine and the assistant are not self-hosted. They call
-            DeepInfra over its API, which means the text of your chat messages, prior turns in the
-            same session, and the ticker/sector scope used to generate an analysis are transmitted
-            to DeepInfra for processing. DeepInfra acts as a processor on Cairn&apos;s instructions;
-            Cairn does not send DeepInfra a user identifier, account, email, or position size, and
-            does not use your data to train any model.
+            On Groq: the analysis engine and the assistant are not self-hosted. They call Groq
+            over its API, which means the text of your chat messages, prior turns in the same
+            session, and the ticker/sector scope used to generate an analysis are transmitted to
+            Groq for processing. Groq acts as a processor on Cairn&apos;s instructions; Cairn does
+            not send Groq a user identifier, account, email, or position size, and does not use
+            your data to train any model.
           </p>
         </section>
         <section>
@@ -227,13 +227,13 @@ export default function PrivacyPolicyPage() {
           </p>
           <p>
             Chat message text and the ticker/sector scope of an analysis request are sent to{" "}
-            <strong>DeepInfra (a US company)</strong> for model inference (see &quot;Third
+            <strong>Groq (a US company)</strong> for model inference (see &quot;Third
             parties&quot; above). For UK/EU users this is a transfer outside the UK/EEA.{" "}
             <strong>Non-lawyer draft - open for counsel:</strong> the transfer mechanism (Standard
             Contractual Clauses, the EU-US Data Privacy Framework, or a UK Addendum),
-            DeepInfra&apos;s actual processing locations, and whether a transfer impact assessment
-            is required have not been confirmed. Until they are, no assurance about
-            DeepInfra&apos;s handling of that text is made here beyond what is stated above.
+            Groq&apos;s actual processing locations, and whether a transfer impact assessment is
+            required have not been confirmed. Until they are, no assurance about Groq&apos;s
+            handling of that text is made here beyond what is stated above.
           </p>
           <p>
             <strong>Stripe</strong> (payments), <strong>Resend</strong> and{" "}
@@ -245,11 +245,11 @@ export default function PrivacyPolicyPage() {
             the same open item for counsel.
           </p>
           <p>
-            Per DeepInfra&apos;s published data-privacy terms, the text sent for inference is
-            held in memory only while it is being processed, is not written to disk, is deleted
-            once the answer is returned, and is not used to train models. Because nothing is
-            kept, deleting your Cairn account has nothing to delete at DeepInfra - it relies on
-            that non-retention rather than on a deletion request.
+            Per Groq&apos;s published terms, Groq does not retain inference inputs or outputs by
+            default and does not use them to train models; short-lived operational logs age out
+            within about 30 days. Because there is no per-record deletion interface, deleting your
+            Cairn account does not send a deletion request to Groq - it relies on that
+            non-retention.
           </p>
         </section>
         <section id="deletion">
@@ -291,10 +291,10 @@ export default function PrivacyPolicyPage() {
             see them, and they can be wrong.
           </p>
           <p>
-            Chat messages are transmitted to a third-party hosted model provider (DeepInfra) for
+            Chat messages are transmitted to a third-party hosted model provider (Groq) for
             processing - they are not processed on Cairn&apos;s own infrastructure. Cairn does not
-            use them to train any model. What DeepInfra retains or logs is governed by
-            DeepInfra&apos;s own terms, which counsel has not yet reviewed.
+            use them to train any model. What Groq retains or logs is governed by Groq&apos;s own
+            terms, which counsel has not yet reviewed.
           </p>
           <p>
             Probability ranges, confidence levels, and sample sizes are computed statistically in
