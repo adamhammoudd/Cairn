@@ -77,20 +77,22 @@
     "test:crypto-asset-type-mismatches": "tsx --conditions=react-server scripts/tests/crypto-asset-type-mismatches.ts",
     "test:holding-metadata-gaps": "tsx --conditions=react-server scripts/tests/holding-metadata-gaps.ts",
     "test:btc-value-reconciliation": "tsx --conditions=react-server scripts/tests/btc-value-reconciliation.ts",
-    "test:tiingo-provider": "tsx --conditions=react-server scripts/tests/tiingo-provider.ts"
+    "test:tiingo-provider": "tsx --conditions=react-server scripts/tests/tiingo-provider.ts",
+    "test:time-ago": "tsx --conditions=react-server scripts/tests/time-ago.ts",
+    "generate:analysis": "tsx --conditions=react-server scripts/generate-analysis.ts",
+    "preview:reply": "tsx --conditions=react-server scripts/reply-preview.ts",
+    "replay:guard-log": "tsx --conditions=react-server scripts/replay-guard-log.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.4",
     "@supabase/supabase-js": "^2.112.2",
-    "clsx": "^2.1.1",
     "next": "16.3.0",
     "nodemailer": "^9.1.1",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "recharts": "^3.10.1",
     "server-only": "^0.0.1",
-    "stripe": "^22.6.0",
-    "tailwind-merge": "^3.6.0"
+    "stripe": "^22.6.0"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",

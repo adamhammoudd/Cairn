@@ -47,10 +47,6 @@ export function suiteVerdict(suite: SuiteResult): SuiteVerdict {
   return "pass";
 }
 
-export function suitePassed(suite: SuiteResult): boolean {
-  return suiteVerdict(suite) === "pass";
-}
-
 function renderCase(c: TestCase): string {
   const icon = { pass: "PASS", fail: "FAIL", flag: "FLAG", skip: "SKIP" }[c.status];
   let out = `- **[${icon}]** ${c.name} - ${c.detail}`;

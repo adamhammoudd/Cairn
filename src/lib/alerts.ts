@@ -130,11 +130,6 @@ function sma(values: number[], days: number, offset = 0): number | null {
   return slice.reduce((a, b) => a + b, 0) / days;
 }
 
-export function isCoolingDown(lastTriggeredAt: string | null, cooldownSeconds: number, now = Date.now()): boolean {
-  if (!lastTriggeredAt) return false;
-  return now - new Date(lastTriggeredAt).getTime() < cooldownSeconds * 1000;
-}
-
 /**
  * Close-to-close move in percent, or null when it cannot be computed. Shared
  * by evaluateAlert and the notification-threshold gate so both read the move

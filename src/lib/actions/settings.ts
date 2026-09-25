@@ -314,7 +314,7 @@ export async function exportUserData() {
 //     can turn on Zero Data Retention self-serve in the Groq console. The real
 //     control is therefore the founder enabling ZDR at the org level (tracked
 //     as a founder action item), not anything this function can do at request
-//     time. Documented here and in docs/legal/privacy-policy.md rather than
+//     time. Documented here and on the privacy page (src/app/privacy) rather than
 //     left as an unstated gap.
 export async function deleteAccount(confirmation?: string): Promise<string | void> {
   // The "type DELETE to confirm" friction is enforced here, not only in the

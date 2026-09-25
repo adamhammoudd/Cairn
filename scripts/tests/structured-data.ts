@@ -7,7 +7,7 @@
 //
 // Pure and DB-free. Run: npm run test:structured-data
 
-import { organizationJsonLd, softwareApplicationJsonLd } from "@/lib/site";
+import { getSiteUrl, organizationJsonLd, softwareApplicationJsonLd } from "@/lib/site";
 
 const SITE = "https://example.test";
 const FORBIDDEN_TYPES = [
@@ -53,6 +53,33 @@ for (const [label, doc] of [["Organization", org], ["SoftwareApplication", app]]
   const bad = typesIn(doc).filter((t) => FORBIDDEN_TYPES.includes(t));
   expect(bad.length === 0, `${label} uses no forbidden schema.org types${bad.length ? ` (found ${bad.join(", ")})` : ""}`);
 }
+
+// getSiteUrl(): which origin each kind of build gets. process.env is swapped
+// per case and restored, so the order of cases does not matter.
+function siteUrlWith(env: Record<string, string | undefined>): string {
+  const keys = ["NEXT_PUBLIC_SITE_URL", "VERCEL_ENV", "VERCEL_URL", "NODE_ENV"] as const;
+  const saved = Object.fromEntries(keys.map((k) => [k, process.env[k]]));
+  const vars = process.env as Record<string, string | undefined>;
+  for (const k of keys) {
+    if (env[k] === undefined) delete vars[k];
+    else vars[k] = env[k];
+  }
+  try {
+    return getSiteUrl();
+  } catch {
+    return "THROWS";
+  } finally {
+    for (const k of keys) {
+      if (saved[k] === undefined) delete vars[k];
+      else vars[k] = saved[k];
+    }
+  }
+}
+expect(siteUrlWith({ NEXT_PUBLIC_SITE_URL: "https://cairn.example/", NODE_ENV: "production" }) === "https://cairn.example", "site URL: the configured origin wins, trailing slash dropped");
+expect(siteUrlWith({ NODE_ENV: "production" }) === "THROWS", "site URL: a production build with no origin set refuses to build");
+expect(siteUrlWith({ NODE_ENV: "production", VERCEL_ENV: "preview", VERCEL_URL: "cairn-abc.vercel.app" }) === "https://cairn-abc.vercel.app", "site URL: a Vercel preview build uses its own deployment URL");
+expect(siteUrlWith({ NODE_ENV: "production", VERCEL_ENV: "production", VERCEL_URL: "cairn-abc.vercel.app" }) === "THROWS", "site URL: a Vercel production build never falls back to the deployment URL");
+expect(siteUrlWith({ NODE_ENV: "development" }) === "http://localhost:3000", "site URL: dev falls back to localhost");
 
 console.log(`\n${failures.length === 0 ? "all" : "NOT all"} structured-data cases passed`);
 process.exit(failures.length === 0 ? 0 : 1);

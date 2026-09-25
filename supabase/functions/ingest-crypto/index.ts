@@ -157,8 +157,7 @@ Deno.serve(async (req) => {
   // regimes for every coin, not just the colliding pair.
   //
   // The more prominent coin (lower market_cap_rank) wins; unranked coins keep
-  // first-seen order, matching how the app resolves other symbol collisions
-  // (see the equity/ETF ambiguity note in docs/backlog.md).
+  // first-seen order, matching how the app resolves other symbol collisions.
   const bySymbol = new Map<string, MarketCoin>();
   for (const c of coins) {
     const sym = c.symbol.toUpperCase();

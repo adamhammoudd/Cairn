@@ -30,6 +30,12 @@ export const WELCOME_DESCRIPTION =
  * ship `localhost` into every canonical tag, the sitemap and the JSON-LD that
  * real users and crawlers see. Set the variable (Vercel project settings +
  * .env.local) to the production origin before building.
+ *
+ * Vercel preview deployments (one per pull request) are the exception: the
+ * variable is set for Production only, and without a fallback every preview
+ * build failed. A preview uses its own deployment URL, which Vercel provides
+ * as VERCEL_URL. Vercel serves previews with a noindex header, so this never
+ * reaches anything a crawler keeps.
  */
 export function getSiteUrl(): string {
   const raw = process.env.NEXT_PUBLIC_SITE_URL?.trim();
@@ -41,6 +47,9 @@ export function getSiteUrl(): string {
         `NEXT_PUBLIC_SITE_URL is not a valid absolute URL: "${raw}". Expected e.g. https://example.com`,
       );
     }
+  }
+  if (process.env.VERCEL_ENV === "preview" && process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
   }
   if (process.env.NODE_ENV === "production") {
     throw new Error(
