@@ -11,8 +11,8 @@ Standing rules, always in force, no exceptions:
   business decision - Stripe live keys, Supabase security-advisor toggles, ToS/jurisdiction
   wording, a domain-dependent contact address, Groq zero-data-retention setup. Flag these
   in your report instead of touching them.
-- Read CLAUDE.md and the most recent file under docs/audits/ first, so you know what's
-  already been found and already fixed. Don't re-report something already resolved, and
+- Read CLAUDE.md, docs/backlog.md and the most recent file under docs/audits/ (if any)
+  first, so you know what's already been found and already fixed. Don't re-report something already resolved, and
   don't re-open something a later commit already closed.
 
 Do the sweep:

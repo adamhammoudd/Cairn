@@ -309,11 +309,6 @@ const DISCLAIMER = new RegExp(
   "i",
 );
 
-/** Retained for callers and tests that want "is this clause non-asserting at all". */
-export function isNonAssertion(clause: string): boolean {
-  return REFUSAL.test(clause) || DISCLAIMER.test(clause);
-}
-
 // --------------------------------------------------------------------------
 // Clause splitting. Sentence terminators first, then contrastive conjunctions,
 // so a refusal cannot be used as cover for a directive appended after "but".

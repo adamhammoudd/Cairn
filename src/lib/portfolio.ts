@@ -30,27 +30,6 @@ export interface HoldingMetrics extends Holding {
   priceAsOf: string | null;
 }
 
-// Latest close (and prior close, for day-change) per symbol, from a bag of
-// historical_prices rows already filtered to the symbols we care about.
-export function latestCloseBySymbol(prices: PriceBar[]) {
-  const bySymbol = new Map<string, PriceBar[]>();
-  for (const p of prices) {
-    const arr = bySymbol.get(p.symbol) ?? [];
-    arr.push(p);
-    bySymbol.set(p.symbol, arr);
-  }
-
-  const result = new Map<string, { latest: number | null; prev: number | null }>();
-  for (const [symbol, rows] of bySymbol) {
-    rows.sort((a, b) => (a.ts < b.ts ? 1 : -1)); // descending
-    result.set(symbol, {
-      latest: rows[0]?.close == null ? null : Number(rows[0].close),
-      prev: rows[1]?.close == null ? null : Number(rows[1].close),
-    });
-  }
-  return result;
-}
-
 export function computeHoldingMetrics(
   holdings: Holding[],
   closes: Map<string, { latest: number | null; prev: number | null; stale?: boolean; asOf?: string | null }>,

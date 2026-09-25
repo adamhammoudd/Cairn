@@ -74,27 +74,6 @@ export function CardFooter({ children }: { children: ReactNode }) {
   );
 }
 
-const OUTLINE_BUTTON =
-  "shrink-0 rounded-control border border-line bg-transparent px-3.5 py-2 text-body text-primary transition-colors duration-fast ease-standard hover:border-line-strong";
-
-export function OutlineButton({
-  children,
-  onClick,
-  disabled,
-  type = "button",
-}: {
-  children: ReactNode;
-  onClick?: () => void;
-  disabled?: boolean;
-  type?: "button" | "submit";
-}) {
-  return (
-    <button type={type} onClick={onClick} disabled={disabled} className={`${OUTLINE_BUTTON} disabled:opacity-50`}>
-      {children}
-    </button>
-  );
-}
-
 /**
  * The mockup's segmented control: 3px padding on a #232323 border, 7px 13px
  * buttons, #1C1C1C behind the active one. Used for radio-group settings.

@@ -79,19 +79,3 @@ export function paddedDomain(values: number[], pad = 0.12): [number, number] {
 
 /** Grid lines are non-text furniture and must never compete with the series. */
 export const CHART_GRID = { stroke: "var(--color-grid)", vertical: false } as const;
-
-/**
- * Categorical series colours, for charts plotting more than one line.
- *
- * Deliberately excludes the accent green and the negative red: those two carry
- * the gain/loss semantic everywhere else in the product, and reusing them for
- * "series 3" is exactly how that meaning erodes. Ordered for distinguishability
- * against the dark canvas, and paired with distinct dash patterns by consumers
- * so the series remain separable without colour.
- */
-export const CHART_SERIES = [
-  "var(--color-info)",
-  "var(--color-violet)",
-  "var(--color-warning)",
-  "var(--color-muted)",
-] as const;

@@ -64,6 +64,6 @@ A high rewrite rate is a model/prompt problem, not a reason to loosen the guard.
 ## Privacy consequence
 
 Prompts, chat messages, and portfolio-derived relevance context **are
-transmitted to Groq**, a third-party subprocessor. `docs/legal/privacy-policy.md`
-and `docs/legal/jurisdictional-checklist.md` must reflect that. Both remain
-non-lawyer drafts requiring professional review.
+transmitted to Groq**, a third-party subprocessor. The live privacy page
+(`src/app/privacy/page.tsx`) and `docs/legal/jurisdictional-checklist.md` must
+reflect that. Both remain non-lawyer drafts requiring professional review.

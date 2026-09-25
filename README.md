@@ -78,9 +78,15 @@ behaviour.
   for loss and destructive indicators.
 - **`docs/decisions/`** - architecture decision records, including why the model
   provider is hosted rather than self-hosted.
-- **`docs/audits/`** - verification and audit passes, with their evidence.
-- **`docs/legal/`** - privacy policy, terms, jurisdictional checklist. All are
-  non-lawyer drafts requiring professional review before use.
+- **`docs/backlog.md`** - what is open right now, and who has to act on it.
+- **`docs/legal/jurisdictional-checklist.md`** - the compliance checklist for
+  the lawyer review. The privacy policy, terms and refund policy themselves
+  live only as pages (`src/app/privacy`, `terms`, `refunds`), so there is one
+  copy to keep correct. All are non-lawyer drafts requiring professional
+  review before use.
+
+Old audit and verification reports were removed on 2026-09-25; they are in the
+git history (`git log --all -- docs/audits`).
 
 ## Contributing
 
