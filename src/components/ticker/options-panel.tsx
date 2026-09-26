@@ -4,6 +4,7 @@ import { useState } from "react";
 import { getOptionsChain } from "@/lib/actions/reference";
 import { useLazyPanel } from "@/components/ticker/use-lazy-panel";
 import type { OptionRow } from "@/lib/actions/reference";
+import { ScrollX } from "@/components/scroll-x";
 
 // Quoted contract data as the provider returns it. Cairn computes no Greeks:
 // delta/gamma/theta need a pricing model plus a risk-free rate and a dividend
@@ -23,7 +24,7 @@ function ChainTable({ rows, title, spot }: { rows: OptionRow[]; title: string; s
       {rows.length === 0 ? (
         <p className="px-4 py-8 text-center text-body text-muted">No {title.toLowerCase()} quoted for this expiry.</p>
       ) : (
-        <div className="max-h-[460px] overflow-auto">
+        <ScrollX label={`${title} options chain`} hintClassName="sm:hidden" className="max-h-[460px] overflow-y-auto">
           <table className="w-full min-w-[520px] border-collapse text-caption">
             <thead className="sticky top-0 bg-panel">
               <tr className="border-b border-line">
@@ -56,7 +57,7 @@ function ChainTable({ rows, title, spot }: { rows: OptionRow[]; title: string; s
               ))}
             </tbody>
           </table>
-        </div>
+        </ScrollX>
       )}
     </div>
   );

@@ -57,7 +57,7 @@ export default function AppError({ error, reset }: { error: Error & { digest?: s
           </button>
           <Link
             href="/"
-            className="rounded-control border border-line px-4 py-2 text-lead text-muted transition-colors duration-base ease-standard hover:text-primary"
+            className="tap rounded-control border border-line px-4 py-2 text-lead text-muted transition-colors duration-base ease-standard hover:text-primary"
           >
             Back to dashboard
           </Link>

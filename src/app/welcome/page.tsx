@@ -171,13 +171,13 @@ export default function WelcomePage() {
         <nav className="flex items-center gap-3">
           <Link
             href="/login"
-            className="px-1 py-2.5 text-body text-[#9a9a9a] transition-colors duration-200 hover:text-primary"
+            className="tap px-1 py-2.5 text-body text-[#9a9a9a] transition-colors duration-200 hover:text-primary"
           >
             Sign in
           </Link>
           <Link
             href="/waitlist"
-            className="rounded-[10px] bg-[#2fc685] px-4 py-2.5 text-body font-bold text-[#07120d] transition-[background,transform] duration-200 hover:-translate-y-0.5 hover:bg-[#5ee6a6]"
+            className="tap rounded-[10px] bg-[#2fc685] px-4 py-2.5 text-body font-bold text-[#07120d] transition-[background,transform] duration-200 hover:-translate-y-0.5 hover:bg-[#5ee6a6]"
             style={{ boxShadow: "0 8px 24px rgba(47,198,133,.2)" }}
           >
             Join the waitlist
@@ -429,7 +429,7 @@ export default function WelcomePage() {
                 </ul>
                 <Link
                   href={p.href}
-                  className="mt-auto rounded-[11px] px-3 py-3 text-center text-body font-bold transition-[background,transform,border-color] duration-200 hover:-translate-y-0.5"
+                  className="tap mt-auto rounded-[11px] px-3 py-3 text-center text-body font-bold transition-[background,transform,border-color] duration-200 hover:-translate-y-0.5"
                   style={
                     p.primary
                       ? { background: "#2fc685", color: "#07120d" }
@@ -474,16 +474,16 @@ export default function WelcomePage() {
             and consult a licensed advisor before making financial decisions.
           </p>
           <nav className="flex flex-wrap gap-[18px] text-caption text-[#8a8a8a]">
-            <Link href="/terms" className="hover:text-[#5ee6a6]">
+            <Link href="/terms" className="tap hover:text-[#5ee6a6]">
               Terms
             </Link>
-            <Link href="/privacy" className="hover:text-[#5ee6a6]">
+            <Link href="/privacy" className="tap hover:text-[#5ee6a6]">
               Privacy
             </Link>
-            <Link href="/refunds" className="hover:text-[#5ee6a6]">
+            <Link href="/refunds" className="tap hover:text-[#5ee6a6]">
               Cancellation &amp; refunds
             </Link>
-            <Link href="/accessibility" className="hover:text-[#5ee6a6]">
+            <Link href="/accessibility" className="tap hover:text-[#5ee6a6]">
               Accessibility
             </Link>
           </nav>

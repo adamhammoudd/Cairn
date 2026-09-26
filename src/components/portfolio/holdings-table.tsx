@@ -108,8 +108,10 @@ export function HoldingsTable({
             <span className="text-caption text-dim">Sorted by value</span>
           </div>
 
-          {/* Phone (<640px): the mock swaps the table for stacked cards. */}
-          <div className="sm:hidden">
+          {/* Phones and tablets: stacked cards. The table needs 860px, so below
+              1024px it only ever scrolled sideways (measured at 768: 860 in a
+              724px column); the mock's phone cards now cover that range too. */}
+          <div className="lg:hidden">
             {rows.map((m, index) => {
               const positive = (m.gain ?? 0) >= 0;
               const series = sparklines[m.symbol] ?? [];
@@ -130,7 +132,7 @@ export function HoldingsTable({
                       <div className="min-w-0">
                         <Link
                           href={`/ticker/${encodeURIComponent(m.symbol)}`}
-                          className="text-lead text-primary hover:text-accent"
+                          className="tap text-lead text-primary hover:text-accent"
                         >
                           {m.symbol}
                         </Link>
@@ -199,7 +201,7 @@ export function HoldingsTable({
             })}
           </div>
 
-          <div className="hidden overflow-x-auto sm:block">
+          <div className="hidden overflow-x-auto lg:block">
             <div className="min-w-[860px]">
               <div
                 className={`grid ${COLS} gap-3 border-b border-[#1c1c1c] bg-[#0c0c0c] px-5 py-2.5 font-mono text-eyebrow tracking-[0.14em] text-dim uppercase`}

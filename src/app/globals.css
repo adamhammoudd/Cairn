@@ -412,6 +412,36 @@ select,
   }
 }
 
+/* Touch targets: at least 44x44 under a finger, without changing how anything
+   looks. The mobile sweep (scripts/mobile-sweep.ts) found range pills at 37x26,
+   row actions at 30x30 and chips at 21px tall on every page. Rather than grow
+   each control, an invisible ::after extends the tappable area around it to
+   44px; a control already that big is untouched. Links opt in with `.tap`, so
+   links inside running text keep their text-sized box. Standalone fields get a
+   44px minimum height, the one visible change.
+
+   In the base layer on purpose: any utility on the element (`absolute`,
+   `h-9`, ...) wins over the `position` and `min-height` set here. */
+@layer base {
+  @media (pointer: coarse) {
+    :where(button, [role="button"], [role="tab"], summary, a.tap) {
+      position: relative;
+    }
+    :where(button, [role="button"], [role="tab"], summary, a.tap)::after {
+      content: "";
+      position: absolute;
+      top: min(0px, calc((100% - 44px) / 2));
+      bottom: min(0px, calc((100% - 44px) / 2));
+      left: min(0px, calc((100% - 44px) / 2));
+      right: min(0px, calc((100% - 44px) / 2));
+    }
+    /* Transparent fields sit inside a padded, bordered box that is sized on its own. */
+    :where(input:not([type="checkbox"], [type="radio"], [type="range"], [type="hidden"], .bg-transparent), select, textarea:not(.bg-transparent)) {
+      min-height: 44px;
+    }
+  }
+}
+
 /* Purposeful motion only: hover/focus states, view transitions, loading states.
    Respect reduced-motion preference - never force animation on users who opt out. */
 @media (prefers-reduced-motion: reduce) {

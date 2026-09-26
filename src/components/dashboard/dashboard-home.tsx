@@ -183,7 +183,7 @@ export function DashboardHome({
                 <Link
                   key={r.symbol}
                   href={`/ticker/${encodeURIComponent(r.symbol)}`}
-                  className="-mx-2 flex items-center justify-between gap-3 rounded-lg px-2 py-[9px] transition-colors duration-fast ease-standard hover:bg-[#151515]"
+                  className="tap -mx-2 flex items-center justify-between gap-3 rounded-lg px-2 py-[9px] transition-colors duration-fast ease-standard hover:bg-[#151515]"
                 >
                   <span className="text-body text-primary">{r.symbol}</span>
                   <span className="ml-auto font-mono text-body tabular-nums text-muted">
@@ -384,7 +384,7 @@ export function DashboardHome({
                   <Link
                     key={h.symbol}
                     href={`/ticker/${h.symbol}`}
-                    className="flex items-center gap-2 rounded-full border border-line bg-[#101010] px-[11px] py-[7px] transition-[border-color,transform,background] duration-fast ease-standard hover:-translate-y-0.5 hover:border-line-strong hover:bg-active"
+                    className="tap flex items-center gap-2 rounded-full border border-line bg-[#101010] px-[11px] py-[7px] transition-[border-color,transform,background] duration-fast ease-standard hover:-translate-y-0.5 hover:border-line-strong hover:bg-active"
                   >
                     <span className="text-[12.5px] text-primary">{h.symbol}</span>
                     <span className={`font-mono text-[11.5px] tabular-nums ${h.gainPct >= 0 ? "text-accent" : "text-negative"}`}>
@@ -399,7 +399,7 @@ export function DashboardHome({
                     out of the summary and into the table. */}
                 <Link
                   href="/portfolio"
-                  className="rounded-full border border-dashed border-line px-[11px] py-[7px] text-[12.5px] text-muted transition-[border-color,color] duration-fast ease-standard hover:border-line-strong hover:text-primary"
+                  className="tap rounded-full border border-dashed border-line px-[11px] py-[7px] text-[12.5px] text-muted transition-[border-color,color] duration-fast ease-standard hover:border-line-strong hover:text-primary"
                 >
                   All holdings →
                 </Link>
@@ -450,7 +450,7 @@ export function DashboardHome({
           </span>
           <Link
             href="/assistant"
-            className="text-caption text-dim transition-colors duration-fast ease-standard hover:text-accent"
+            className="tap text-caption text-dim transition-colors duration-fast ease-standard hover:text-accent"
           >
             Open assistant →
           </Link>
@@ -572,7 +572,7 @@ export function DashboardHome({
             </p>
             <Link
               href="/assistant"
-              className="mt-4 inline-flex items-center gap-1.5 rounded-control border border-line px-3.5 py-2 text-body text-primary transition-colors duration-fast ease-standard hover:border-accent hover:text-accent"
+              className="tap mt-4 inline-flex items-center gap-1.5 rounded-control border border-line px-3.5 py-2 text-body text-primary transition-colors duration-fast ease-standard hover:border-accent hover:text-accent"
             >
               Ask a question
               <span aria-hidden>→</span>

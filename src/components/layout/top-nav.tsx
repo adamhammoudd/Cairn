@@ -166,7 +166,7 @@ export function TopNav({ displayName, plan, isAdmin = false }: TopNavProps) {
     <>
       <header ref={navRef} className="sticky top-0 z-30 shrink-0 border-b border-line bg-canvas/95 backdrop-blur">
       <div className="mx-auto flex h-15 max-w-[1560px] items-center gap-6.5 px-5.5">
-        <Link href="/" className="shrink-0 pr-1">
+        <Link href="/" className="flex h-11 shrink-0 items-center pr-1">
           <Logo size={24} />
         </Link>
 
@@ -389,7 +389,7 @@ export function TopNav({ displayName, plan, isAdmin = false }: TopNavProps) {
                   <Link
                     key={item.href}
                     href={item.href}
-                    className="rounded-control px-2 py-2 text-body text-muted transition-colors duration-fast ease-standard hover:bg-raised hover:text-primary"
+                    className="flex min-h-11 items-center rounded-control px-2 py-2 text-body text-muted transition-colors duration-fast ease-standard hover:bg-raised hover:text-primary"
                   >
                     {item.label}
                   </Link>
@@ -398,7 +398,7 @@ export function TopNav({ displayName, plan, isAdmin = false }: TopNavProps) {
                 <form action={signOut}>
                   <button
                     type="submit"
-                    className="w-full rounded-control px-2 py-2 text-left text-body text-muted transition-colors duration-fast ease-standard hover:bg-raised hover:text-primary"
+                    className="min-h-11 w-full rounded-control px-2 py-2 text-left text-body text-muted transition-colors duration-fast ease-standard hover:bg-raised hover:text-primary"
                   >
                     Sign out
                   </button>
@@ -416,7 +416,7 @@ export function TopNav({ displayName, plan, isAdmin = false }: TopNavProps) {
                 <Link
                   key={entry.route}
                   href={entry.route}
-                  className={`block rounded-control px-2 py-2.5 text-lead transition-colors duration-fast ease-standard ${
+                  className={`flex min-h-11 items-center rounded-control px-2 py-2.5 text-lead transition-colors duration-fast ease-standard ${
                     isActive ? "text-primary" : "text-muted"
                   }`}
                 >
@@ -435,7 +435,7 @@ export function TopNav({ displayName, plan, isAdmin = false }: TopNavProps) {
                     <Link
                       key={item.route}
                       href={item.route}
-                      className={`block rounded-control px-2 py-2.5 text-lead transition-colors duration-fast ease-standard ${
+                      className={`flex min-h-11 items-center rounded-control px-2 py-2.5 text-lead transition-colors duration-fast ease-standard ${
                         isActive ? "text-primary" : "text-muted"
                       }`}
                     >

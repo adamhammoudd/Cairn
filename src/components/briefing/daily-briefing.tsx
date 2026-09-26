@@ -111,7 +111,7 @@ export function DailyBriefing({ briefing, dateLabel }: { briefing: Briefing; dat
                       {line}
                     </p>
                   ))}
-                  <Link href={c.href} className="mt-auto pt-1 text-[14px] text-accent-light hover:text-accent">
+                  <Link href={c.href} className="tap mt-auto pt-1 text-[14px] text-accent-light hover:text-accent">
                     Open the full picture →
                   </Link>
                 </article>

@@ -27,6 +27,8 @@ interface SymbolTypeaheadProps {
   initial?: SymbolSearchResult | null;
   className?: string;
   inputClassName?: string;
+  /** Which edge of the field the result menu lines up with. "right" for a field near the right of the screen. */
+  menuAlign?: "left" | "right";
   autoFocus?: boolean;
 }
 
@@ -83,6 +85,7 @@ export function SymbolTypeahead({
   initial = null,
   className = "",
   inputClassName = DEFAULT_INPUT_CLASS,
+  menuAlign = "left",
   autoFocus = false,
 }: SymbolTypeaheadProps) {
   const [query, setQuery] = useState(initial ? labelFor(initial) : "");
@@ -253,7 +256,7 @@ export function SymbolTypeahead({
         // min-w: the header search input is deliberately narrow, and a result
         // row inside a 160px menu had its symbol clipped to nothing by the
         // badge beside it. The menu may be wider than the input it hangs off.
-        <div className="animate-menu-in absolute top-full left-0 z-30 mt-1 w-full min-w-[260px] overflow-hidden rounded-control border border-line bg-panel py-1 shadow-lg">
+        <div className={`animate-menu-in absolute top-full ${menuAlign === "right" ? "right-0" : "left-0"} z-30 mt-1 w-full min-w-[260px] overflow-hidden rounded-control border border-line bg-panel py-1 shadow-lg`}>
           {visible.map((r) => (
             <button
               key={r.symbol}

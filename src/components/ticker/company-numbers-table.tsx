@@ -7,6 +7,7 @@
 
 import type { CompanyNumbersRow } from "@/lib/analysis-summary";
 import { perShare } from "@/lib/fundamentals";
+import { ScrollX } from "@/components/scroll-x";
 
 const usdCompact = (v: number | null) =>
   v === null ? "-" : v.toLocaleString("en-US", { style: "currency", currency: "USD", notation: "compact", maximumFractionDigits: 1 });
@@ -25,7 +26,7 @@ export function CompanyNumbersTable({ rows, status }: { rows: CompanyNumbersRow[
   ];
   return (
     <div className="flex flex-col gap-3">
-      <div className="overflow-x-auto">
+      <ScrollX label="Quarterly company figures" hintClassName="lg:hidden">
         <table className="w-full min-w-[720px] border-collapse text-left text-[13px] tabular-nums">
           <caption className="sr-only">Quarterly company figures from SEC filings, in US dollars</caption>
           <thead>
@@ -69,7 +70,7 @@ export function CompanyNumbersTable({ rows, status }: { rows: CompanyNumbersRow[
             ))}
           </tbody>
         </table>
-      </div>
+      </ScrollX>
       <p className="m-0 text-caption leading-[1.55] text-dim">
         Reported in US dollars, as filed with the SEC. EBITDA (profit before interest, tax and write-downs) = operating profit + depreciation
         and amortization. Free cash flow = cash from operations − capital spending. * Some figures in this quarter are derived from the

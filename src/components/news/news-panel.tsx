@@ -131,7 +131,7 @@ export function NewsPanel({ items }: { items: NewsFeedItem[] }) {
                   <Link
                     key={t}
                     href={`/ticker/${t}`}
-                    className="rounded-full border border-violet/30 bg-violet/10 px-2.5 py-[5px] font-mono text-eyebrow tracking-[0.1em] text-violet transition-colors duration-fast ease-standard hover:border-violet"
+                    className="tap rounded-full border border-violet/30 bg-violet/10 px-2.5 py-[5px] font-mono text-eyebrow tracking-[0.1em] text-violet transition-colors duration-fast ease-standard hover:border-violet"
                   >
                     {t}
                   </Link>
@@ -247,7 +247,7 @@ export function NewsPanel({ items }: { items: NewsFeedItem[] }) {
                     <Link
                       key={ticker}
                       href={`/ticker/${ticker}`}
-                      className="rounded-full border border-line bg-[#121212] px-2.5 py-[3px] font-mono text-eyebrow tracking-[0.1em] text-muted transition-colors duration-base ease-standard hover:border-accent hover:text-primary"
+                      className="tap rounded-full border border-line bg-[#121212] px-2.5 py-[3px] font-mono text-eyebrow tracking-[0.1em] text-muted transition-colors duration-base ease-standard hover:border-accent hover:text-primary"
                     >
                       {ticker}
                     </Link>

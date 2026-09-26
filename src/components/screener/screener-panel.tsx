@@ -24,6 +24,7 @@ import { Sparkline } from "@/components/sparkline";
 import { useDisplayPrefs } from "@/components/display-prefs-provider";
 import { PromptDialog } from "@/components/dialog";
 import { absoluteChangeFrom, formatChange, formatMoney, currencySymbol } from "@/lib/display-prefs";
+import { ScrollX } from "@/components/scroll-x";
 
 type NumericField = (typeof SCREENER_NUMERIC_FIELDS)[number];
 type FilterText = Record<NumericField, string>;
@@ -401,7 +402,7 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
               </button>
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <ScrollX label="Screener results" hintClassName="lg:hidden">
               <div className="min-w-[940px]">
               <div className={`${GRID} border-b border-[#1c1c1c] bg-[#0c0c0c] px-5 py-3 font-mono text-eyebrow tracking-[0.14em] uppercase`}>
                 {COLUMNS.map((c) => {
@@ -488,7 +489,7 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
                 </Link>
               ))}
               </div>
-            </div>
+            </ScrollX>
           )}
         </div>
       </div>
