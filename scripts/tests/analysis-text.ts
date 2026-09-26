@@ -216,6 +216,21 @@ export async function runAnalysisTextSuite(): Promise<SuiteResult> {
   const err = await generateAnalysisText(inputs, { complete: async () => { throw new Error("HTTP 402"); }, classify: async () => ({ status: "clear" }), mode: "strict" });
   check("model unavailable (402) -> template, error recorded", err.source === "template" && err.attempts.every((a) => a.reason === "model_error"), JSON.stringify(err.attempts));
 
+  // --------------------------------- nothing unusual today: the base rate
+  const bw = historyWords(history, "NVIDIA", "equity", null, "baseline")!;
+  check(
+    "base rate is worded as the base rate, never as similar moments",
+    bw.line === "Nothing is unusual about NVIDIA's price today. Over any 2 weeks in its stored prices, it ended higher in 9 of 14." && !/similar/.test(bw.line),
+    bw.line,
+  );
+  const baseInputs: TextInputs = { ...inputs, historyBasis: "baseline" };
+  check("computed figures say plainly these are not similar moments", /NOT similar moments/.test(buildComputedFigures(baseInputs)), "header");
+  const calledSimilar = checkAnalysisText(good, baseInputs);
+  check("must flag: base-rate history described as 'similar moments'", !calledSimilar.passed && calledSimilar.reason === "baseline_called_similar", `${calledSimilar.reason}`);
+  const bt = templateAnalysisText(baseInputs);
+  const btc = checkAnalysisText(bt, baseInputs);
+  check("base-rate template passes every guard and leads with 'Nothing is unusual'", btc.passed && bt.bullets.some((b) => b.startsWith("Nothing is unusual about NVIDIA")), `${btc.reason ?? "passed"} ${btc.evidence ?? ""}`);
+
   // ------------------------------------------------ inputs and stored columns
   const band = { pointEstimate: 21, low: 9, high: 40, confidence: "medium" as const, sampleCount: 14, hitCount: 3 };
   const ti = textInputsFor({
@@ -250,6 +265,7 @@ export async function runAnalysisTextSuite(): Promise<SuiteResult> {
   );
   check("no similar moments -> direction columns null, text still stored", cols.direction_n === null && cols.direction_p25 === null && cols.text_source === "template" && typeof cols.headline === "string", JSON.stringify({ n: cols.direction_n, src: cols.text_source }));
   const sm = {
+    kind: "similar" as const,
     history,
     factorConditions: [{ key: "trend", state: "uptrend", label: "x" }],
     baseCount: 20,

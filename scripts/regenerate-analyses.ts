@@ -90,7 +90,7 @@ async function main() {
         console.log(`**After:** not generated - ${r.skipped}\n`);
         continue;
       }
-      const hw = historyWords(r.inputs.history, r.inputs.name, r.inputs.assetType, r.inputs.noHistoryReason)!;
+      const hw = historyWords(r.inputs.history, r.inputs.name, r.inputs.assetType, r.inputs.noHistoryReason, r.inputs.historyBasis)!;
       const g = r.generated;
       console.log(`**After** (${g.source}${g.attempts.length ? `; rejected drafts: ${g.attempts.map((a) => a.reason).join(", ")}` : ""}):\n`);
       console.log(`> ${g.text.headline}\n>\n${g.text.bullets.map((b) => `> - ${b}`).join("\n")}\n`);

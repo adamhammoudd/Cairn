@@ -42,7 +42,7 @@ export const MAX_TEXT_HEADLINES = 6;
 
 /** Plain words for what the similar moments were matched on, deduplicated. */
 export function matchedOnWords(sm: SimilarMoments | null): string[] {
-  if (!sm) return [];
+  if (!sm || sm.kind === "baseline") return [];
   const words = sm.factorConditions.map((c) => plainConditions([{ key: c.key, state: c.state }])).filter(Boolean);
   for (const c of sm.conditions) {
     if (!c.kept || !c.today) continue;
@@ -103,6 +103,7 @@ export function textInputsFor(a: {
     symbol: a.symbol,
     assetType: a.assetType,
     history: a.sm?.history ?? null,
+    historyBasis: a.sm?.kind === "baseline" ? "baseline" : "similar",
     noHistoryReason: a.sm ? null : !fa ? "no_price_history" : fa.result.ok ? null : fa.result.reason,
     matchedOn: matchedOnWords(a.sm),
     scorecard: a.scorecard,
@@ -137,7 +138,7 @@ export function directionColumns(sm: SimilarMoments | null, g: GeneratedText): P
     direction_worst: h?.worst ?? null,
     direction_best: h?.best ?? null,
     direction_conditions: sm
-      ? ({ factor: sm.factorConditions, extra: sm.conditions, base_count: sm.baseCount } as unknown as Record<string, unknown>)
+      ? ({ basis: sm.kind, factor: sm.factorConditions, extra: sm.conditions, base_count: sm.baseCount } as unknown as Record<string, unknown>)
       : null,
     headline: g.text.headline,
     bullets: g.text.bullets,

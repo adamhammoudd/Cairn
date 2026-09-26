@@ -91,7 +91,8 @@ export async function writeTickerText(a: {
 
   // The ticker page still reads plain_summary until feat/analysis-display-v2;
   // it gets the same text and a history counted from the same cases.
-  const history = sm
+  // The plain summary's history counts similar moments; a base rate has none.
+  const history = sm && sm.kind === "similar"
     ? historyInPlainWords({
         name: a.name,
         assetType: a.assetType,

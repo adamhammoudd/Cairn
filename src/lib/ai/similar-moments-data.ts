@@ -6,7 +6,7 @@ import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/types";
-import type { FactorAnalogResult, FactorInstance, FactorSet } from "@/lib/ai/factors";
+import { FACTOR_FORWARD_SESSIONS, scanWindows, type FactorAnalogResult, type FactorInstance, type FactorSet } from "@/lib/ai/factors";
 import { directionalHistory, type DirectionalHistory } from "@/lib/ai/direction";
 import {
   applyConditions,
@@ -40,6 +40,12 @@ import type { Scorecard } from "@/lib/scorecard";
 export const ENGINE_CONDITIONS: ExtraConditionKey[] = ["earnings_window", "trend_level"];
 
 export interface SimilarMoments {
+  /**
+   * "similar": past moments in the same state as today. "baseline": nothing
+   * about today is unusual, so every stretch of its history (the base rate) -
+   * never to be described as similar moments.
+   */
+  kind: "similar" | "baseline";
   history: DirectionalHistory;
   /** The factor states the base cases were matched on (today's price state). */
   factorConditions: { key: string; state: string; label: string }[];
@@ -143,7 +149,22 @@ export function similarMoments(args: {
   today: string;
   keys?: ExtraConditionKey[];
 }): SimilarMoments | null {
-  if (!args.result.ok) return null;
+  if (!args.result.ok) {
+    // A rare state stays "too rarely to say"; only an ordinary day gets the base rate.
+    if (args.result.reason !== "no_active_conditions") return null;
+    const windows = scanWindows(args.set, FACTOR_FORWARD_SESSIONS);
+    return {
+      kind: "baseline",
+      history: directionalHistory(
+        windows.map((c) => ({ date: c.date, dateAfter: c.dateAfter, priceBefore: c.priceBefore, priceAfter: c.priceAfter })),
+        FACTOR_FORWARD_SESSIONS,
+      ),
+      factorConditions: [],
+      baseCount: windows.length,
+      cases: windows,
+      conditions: [],
+    };
+  }
   const { analogs } = args.result;
   const specs = conditionSpecs({ ...args, keys: args.keys ?? ENGINE_CONDITIONS });
   const { cases, report } = applyConditions(analogs.instances, specs);
@@ -152,6 +173,7 @@ export function similarMoments(args: {
       cases.map((c) => ({ date: c.date, dateAfter: c.dateAfter, priceBefore: c.priceBefore, priceAfter: c.priceAfter })),
       analogs.horizonSessions,
     ),
+    kind: "similar",
     factorConditions: analogs.conditions.map((c) => ({ key: c.key, state: c.state, label: c.label })),
     baseCount: analogs.instances.length,
     cases,

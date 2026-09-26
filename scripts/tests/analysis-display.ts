@@ -104,6 +104,11 @@ export function runAnalysisDisplaySuite(): SuiteResult {
   const etf = render("etf");
   check("render (fund): fund headline, 'no similar moments' said plainly, no invented count", etf.includes("SPY is a fund") && etf.includes("isn't in an unusual price state") && !/in \d+ of \d+ similar/.test(etf), "fund");
 
+  const bl = fixture("baseline");
+  check("baseline payload: kind 'baseline', worded as the base rate, no matched-on conditions", bl.history.kind === "baseline" && bl.history.line.startsWith("Nothing is unusual about NVIDIA") && bl.history.matchedOn.length === 0 && bl.caseCount === 14, bl.history.line);
+  const blr = render("baseline");
+  check("render (nothing unusual today): the base rate with its dots, and never 'similar moments'", blr.includes("Over any 2 weeks in its stored prices, it ended higher in 9 of 14") && blr.includes("Filled: higher 2 weeks later (9)") && !/similar moments/i.test(blr.slice(0, blr.indexOf("Full breakdown"))), "baseline");
+
   check("render (no holding): no 'What this means for you'", !fr.includes("What this means for you"), "absent");
   const held = render("free-model", "holding");
   check("render (holding): 'What this means for you' after 'What to watch', before the breakdown", order(held, ["What to watch", "What this means for you", "Full breakdown"]), "present");

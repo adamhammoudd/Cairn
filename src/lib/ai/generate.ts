@@ -43,7 +43,7 @@ import {
   dedupeFactorAnalogs,
   ELEVATED_MOVE_THRESHOLD_PCT,
 } from "@/lib/ai/analytics";
-import { analyzeFactors, formatFactorBlock, FACTOR_EVENT_TYPE, type FactorAnalysis, type FactorEventRow } from "@/lib/ai/factor-analysis";
+import { analyzeFactors, formatFactorBlock, FACTOR_EVENT_TYPE, BASELINE_EVENT_TYPE, type FactorAnalysis, type FactorEventRow } from "@/lib/ai/factor-analysis";
 import { llmCompleteJsonWithProvider } from "@/lib/ai/llm";
 import { writeTickerText, type Written } from "@/lib/ai/generate-ticker";
 import type { ScopeType, Database } from "@/lib/supabase/types";
@@ -183,7 +183,8 @@ export async function generateAnalysis({ scopeType, scopeValue, supabaseClient }
   // Factor-derived rows are re-derived below from the symbol's own prices, so
   // any left over from an earlier run (a different state, a different day) must
   // not be read back in as if they were curated analogs of today's state.
-  if (scopeType === "ticker") eventsQuery = eventsQuery.eq("symbol", scopeValue).neq("event_type", FACTOR_EVENT_TYPE);
+  // Base-rate windows (price_window) are not analogs either and never enter the band.
+  if (scopeType === "ticker") eventsQuery = eventsQuery.eq("symbol", scopeValue).not("event_type", "in", `(${FACTOR_EVENT_TYPE},${BASELINE_EVENT_TYPE})`);
   else if (scopeType === "sector") eventsQuery = eventsQuery.eq("sector", scopeValue);
   const { data: events } = await eventsQuery;
 
@@ -381,7 +382,7 @@ Respond with only a JSON object matching the required schema.`,
   // The direction's own cases are always stored as analog rows, even where
   // the >=5% band's set dropped one as overlapping a curated event: every
   // case behind "higher in X of N" must be traceable to a stored row.
-  const directionEvents = (factorAnalysis?.events ?? []).filter((e) => written.directionDates.has(e.event_date));
+  const directionEvents = [...(factorAnalysis?.events ?? []), ...(factorAnalysis?.baselineEvents ?? [])].filter((e) => written.directionDates.has(e.event_date));
   const linkedIds = new Set(analogIds);
   const linkedAnalogs = [...usableAnalogs, ...directionEvents.filter((e) => !linkedIds.has(e.id))];
 
@@ -441,7 +442,7 @@ Respond with only a JSON object matching the required schema.`,
       // Which conditions a factor-derived analog matched. Null for curated
       // analogs, exactly as before.
       note: e.note ?? null,
-      in_direction_set: e.event_type === FACTOR_EVENT_TYPE && written.directionDates.has(e.event_date),
+      in_direction_set: (e.event_type === FACTOR_EVENT_TYPE || e.event_type === BASELINE_EVENT_TYPE) && written.directionDates.has(e.event_date),
     })),
   );
 
