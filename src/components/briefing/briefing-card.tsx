@@ -157,20 +157,24 @@ export function BriefingCard({ briefing }: BriefingCardProps) {
             {briefing.analyses.length > 0 && (
               <div className="relative mt-4 flex flex-col gap-2">
                 <div className="font-mono text-eyebrow text-dim uppercase">Recent analyses</div>
-                <div className="flex flex-wrap gap-2">
+                {/* The headline and the history line, as on every other surface;
+                    never a probability. */}
+                <ul className="m-0 flex list-none flex-col gap-2 p-0">
                   {briefing.analyses.slice(0, 6).map((a) => (
-                    <Link
-                      key={a.id}
-                      href={`/ticker/${encodeURIComponent(a.scope_value)}`}
-                      className="tap rounded-control border border-line bg-canvas/55 px-2.5 py-1.5 text-caption hover:border-line-strong"
-                    >
-                      <span className="text-primary">{a.scope_value}</span>{" "}
-                      <span className="tabular-nums text-muted">
-                        {a.probability_low}–{a.probability_high}%
-                      </span>
-                    </Link>
+                    <li key={a.id}>
+                      <Link
+                        href={`/ticker/${encodeURIComponent(a.scope_value)}`}
+                        className="tap flex min-h-11 flex-col justify-center gap-0.5 rounded-control border border-line bg-canvas/55 px-3 py-2 hover:border-line-strong"
+                      >
+                        <span className="text-caption text-primary text-pretty">
+                          <span className="font-mono text-muted">{a.scope_value}</span>
+                          {a.headline ? ` · ${a.headline}` : ""}
+                        </span>
+                        {a.history_line && <span className="text-caption text-muted text-pretty">{a.history_line}</span>}
+                      </Link>
+                    </li>
                   ))}
-                </div>
+                </ul>
               </div>
             )}
           </>

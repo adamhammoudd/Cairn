@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { runAnalysisGeneration, type AnalysisWithMethodology } from "@/lib/actions/analysis";
 import { eventTypeLabel } from "@/lib/analysis";
 import { searchSymbols, type SymbolSearchResult } from "@/lib/actions/symbols";
-import { MethodologyCard, splitFinding } from "@/components/analysis/methodology-card";
+import { MethodologyCard } from "@/components/analysis/methodology-card";
 import { decodeEntities } from "@/lib/news";
 import { Disclosure } from "@/components/compliance/disclosure";
 import {
@@ -17,7 +17,6 @@ import {
   UnavailablePanel,
 } from "@/components/analysis/research-states";
 import { TIER_LIMITS } from "@/lib/billing";
-import type { CalendarEvent } from "@/lib/calendar";
 import type { ScopeType } from "@/lib/supabase/types";
 
 // The Research library, from "Research Library.dc.html" in the Base Camp Page
@@ -81,12 +80,10 @@ function topicFor(a: AnalysisWithMethodology, held: Set<string>): { label: strin
 
 interface ResearchWorkspaceProps {
   analyses: AnalysisWithMethodology[];
-  eventsByScope: Record<string, CalendarEvent[]>;
   /** Symbols the user actually holds - drives the "Relevant to your portfolio" row. */
   heldSymbols: string[];
   /** Distinct sectors present in the fundamentals table, for scope suggestions. */
   sectors: string[];
-  depth: "top_line" | "full";
   planLabel: string;
   usage: { used: number; limit: number; unlimited: boolean };
   /** e.g. "1 September" - when the monthly allowance rolls over. */
@@ -97,10 +94,8 @@ interface ResearchWorkspaceProps {
 
 export function ResearchWorkspace({
   analyses,
-  eventsByScope,
   heldSymbols,
   sectors,
-  depth,
   planLabel,
   usage,
   resetLabel,
@@ -560,7 +555,7 @@ export function ResearchWorkspace({
 
       {showMethod && open && phase === "idle" && (
         <div className="mt-3.5">
-          <MethodologyCard analysis={open} depth={depth} upcomingEvents={eventsByScope[open.scope_value] ?? []} />
+          <MethodologyCard analysis={open} />
         </div>
       )}
 
@@ -641,7 +636,9 @@ export function ResearchWorkspace({
           const t = topicFor(a, held);
           const pinned = pins.has(a.id);
           const isOpen = a.id === openId;
-          const { finding, body } = splitFinding(a.reasoning_text);
+          // The headline and the history line, never a probability (docs/decisions/2026-09-27-analysis-rebuild.md).
+          const finding = a.display.headline;
+          const body = a.display.history.line;
           return (
             <div
               key={a.id}
@@ -686,10 +683,6 @@ export function ResearchWorkspace({
                   <span className="text-[#3a3a3a]">·</span>
                   <span>
                     {a.sources.length} {a.sources.length === 1 ? "source" : "sources"}
-                  </span>
-                  <span className="text-[#3a3a3a]">·</span>
-                  <span>
-                    {a.probability_low}–{a.probability_high}% range
                   </span>
                 </span>
                 <span className="flex flex-wrap gap-[7px]">
@@ -759,7 +752,8 @@ function FeaturedAnalysis({
   onToggleMethod: () => void;
 }) {
   const c = CONF_STYLE[a.confidence_level] ?? CONF_STYLE.low;
-  const { finding } = splitFinding(a.reasoning_text);
+  const finding = a.display.headline;
+  const h = a.display.history;
   const topSource = a.sources[0];
   const topAnalog = a.analogs[0];
   return (
@@ -787,19 +781,10 @@ function FeaturedAnalysis({
           <span aria-hidden className="animate-breathe h-[5px] w-[5px] rounded-full" style={{ background: c.tint }} />
           {c.label}
         </span>
-        <div className="min-w-[150px] flex-[1_1_180px]">
-          <div className="flex items-baseline justify-between gap-2.5">
-            <span className="font-mono text-[9px] tracking-[0.14em] text-dim uppercase">Probability range</span>
-            <span className="font-mono text-[18px] tabular-nums text-primary">
-              {a.probability_low}–{a.probability_high}%
-            </span>
-          </div>
-          <div className="relative mt-[9px] h-[5px] overflow-hidden rounded-full bg-[#1c1c1c]">
-            <div
-              className="animate-grow-x absolute top-0 bottom-0 origin-left rounded-full bg-gradient-to-r from-accent to-accent-light"
-              style={{ left: `${a.probability_low}%`, width: `${Math.max(a.probability_high - a.probability_low, 1)}%` }}
-            />
-          </div>
+        <div className="min-w-[150px] flex-[1_1_220px]">
+          <div className="font-mono text-[9px] tracking-[0.14em] text-dim uppercase">What history says</div>
+          <p className="mt-1.5 text-[14px] leading-[1.5] text-primary text-pretty">{h.line}</p>
+          {h.range && <p className="mt-1 text-[12.5px] leading-[1.5] text-muted text-pretty">{h.range}</p>}
         </div>
       </div>
 
@@ -827,10 +812,8 @@ function FeaturedAnalysis({
         </div>
         <div className="overflow-hidden rounded-xl border border-[#1f1f1f] bg-[#0b0b0b] transition-colors duration-base ease-standard hover:border-[#2f2f2f]">
           <div className="flex items-center justify-between gap-2.5 border-b border-[#1a1a1a] px-[13px] py-2.5">
-            <span className="font-mono text-[9px] tracking-[0.14em] text-dim uppercase">Historical analogs</span>
-            <span className="font-mono text-[9px] tracking-[0.1em] text-dim">
-              {a.analogs.length} of {a.sample_size}
-            </span>
+            <span className="font-mono text-[9px] tracking-[0.14em] text-dim uppercase">Similar moments</span>
+            <span className="font-mono text-[9px] tracking-[0.1em] text-dim">{a.display.caseCount} counted</span>
           </div>
           <div className="px-[13px] py-[11px]">
             {topAnalog ? (
@@ -861,7 +844,7 @@ function FeaturedAnalysis({
         onClick={onToggleMethod}
         className="mt-3.5 text-caption text-muted transition-colors duration-fast ease-standard hover:text-primary"
       >
-        {methodOpen ? "Hide full methodology ↑" : "Full methodology ↓"}
+        {methodOpen ? "Hide the full analysis ↑" : "Read the full analysis ↓"}
       </button>
     </div>
   );

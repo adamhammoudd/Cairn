@@ -54,7 +54,12 @@ export function runPremiumAnalogsPrivateSuite(): SuiteResult {
 
   const action = read("src/lib/actions/analysis.ts");
   const gate = action.indexOf("await getUserPlan()");
-  const adminRead = action.indexOf('createAdminClient()\n      .from("ai_analysis_historical_analogs")');
+  // The service-role client, either inline or as the `admin` created after the
+  // plan is known (feat/analysis-display-v2 reads several tables with it).
+  const adminDecl = action.indexOf("const admin = createAdminClient();");
+  const inline = action.indexOf('createAdminClient()\n      .from("ai_analysis_historical_analogs")');
+  const viaAdmin = action.search(/\badmin\s*\n\s*\.from\("ai_analysis_historical_analogs"\)/);
+  const adminRead = inline > 0 ? inline : adminDecl > gate && viaAdmin > adminDecl ? viaAdmin : -1;
   check("attachMethodology reads analogs with the service role only after the plan is known", gate > 0 && adminRead > gate, `plan at ${gate}, admin read at ${adminRead}`);
 
   return { suiteName: "Premium analogs are not publicly readable", gating: true, cases };

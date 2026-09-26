@@ -4,6 +4,7 @@
 // and ./scorecard.ts where it is tested.
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/types";
 import { readNewestFirstPaged } from "@/lib/market-data/paged-read";
@@ -119,15 +120,19 @@ export async function loadScorecard(symbolRaw: string, opts: LoadOptions = {}): 
   const today = opts.today ?? todayIso();
   const supabase = opts.supabase ?? (await createClient());
 
+  // The quarterly and annual SEC tables are service-role only since migration
+  // 0053 (the quarterly company table is Premium). The scorecard is free: it
+  // reads them here, on the server, and only its computed sentences leave.
+  const secure = createAdminClient();
   const [dirRes, qRes, aRes, fRes, relRes, calRes, bars, current] = await Promise.all([
     supabase.from("symbol_directory").select("asset_type").eq("symbol", symbol).maybeSingle(),
-    supabase
+    secure
       .from("company_financials_quarterly")
       .select("*")
       .eq("symbol", symbol)
       .order("period_end", { ascending: false })
       .limit(QUARTERS),
-    supabase.from("company_financials_annual").select("fiscal_year, eps_diluted").eq("symbol", symbol),
+    secure.from("company_financials_annual").select("fiscal_year, eps_diluted").eq("symbol", symbol),
     supabase.from("fundamentals").select("shares_outstanding, sector").eq("symbol", symbol).maybeSingle(),
     supabase.from("earnings_releases").select("release_date, timing").eq("symbol", symbol).order("release_date", { ascending: false }).limit(16),
     supabase.from("calendar_events").select("event_type, event_date, title, metadata").eq("symbol", symbol).gte("event_date", today).order("event_date").limit(10),

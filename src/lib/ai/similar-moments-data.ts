@@ -3,6 +3,7 @@
 // narrow the factor-derived cases, and compute the directional history.
 // Reads only - it never writes, so a script can measure with it safely.
 import "server-only";
+import { createAdminClient } from "@/lib/supabase/admin";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/types";
 import type { FactorAnalogResult, FactorInstance, FactorSet } from "@/lib/ai/factors";
@@ -60,8 +61,9 @@ export interface ConditionData {
 export async function loadConditionData(supabase: SupabaseClient<Database>, symbol: string, today: string, pricesAsc: PricePoint[]): Promise<ConditionData> {
   const [rel, q, a, cal] = await Promise.all([
     supabase.from("earnings_releases").select("release_date").eq("symbol", symbol).order("release_date", { ascending: false }).limit(200),
-    supabase.from("company_financials_quarterly").select("*").eq("symbol", symbol).order("period_end", { ascending: false }).limit(60),
-    supabase.from("company_financials_annual").select("fiscal_year, eps_diluted").eq("symbol", symbol),
+    // Service-role only since migration 0053; read here, never passed on.
+    createAdminClient().from("company_financials_quarterly").select("*").eq("symbol", symbol).order("period_end", { ascending: false }).limit(60),
+    createAdminClient().from("company_financials_annual").select("fiscal_year, eps_diluted").eq("symbol", symbol),
     supabase.from("calendar_events").select("event_date").eq("symbol", symbol).eq("event_type", "earnings").gte("event_date", today).order("event_date").limit(3),
   ]);
   for (const r of [rel, q, a, cal]) if (r.error) throw new Error(`Failed to read condition data for ${symbol}: ${r.error.message}`);

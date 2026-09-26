@@ -91,11 +91,13 @@ export async function runAiMethodologyGapsSuite(): Promise<SuiteResult> {
     } catch (err) {
       console.error(err);
     }
-    const m = html.match(/Premium shows all (\d+) analogs/);
+    // feat/analysis-display-v2: the card is AnalysisView; its cases row names
+    // the true count (14 in the fixture) while Free carries one analog.
+    const m = html.match(/All (\d+) historical cases/);
     check(
-      "Free upgrade note counts every analog (sample_size), not the one shown",
-      m?.[1] === "12",
-      m ? `renders "Premium shows all ${m[1]} analogs" for sample_size 12` : "upgrade note not rendered",
+      "Free cases row counts every case, not the one shown",
+      m?.[1] === "14",
+      m ? `renders "All ${m[1]} historical cases" with 1 analog in the payload` : "cases row not rendered",
     );
   }
 

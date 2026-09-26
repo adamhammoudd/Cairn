@@ -6,7 +6,7 @@
 // reader flagged from the ticker page. splitFinding() must always leave a real
 // description behind once the source text is longer than a title should be.
 
-import { splitFinding } from "../../src/components/analysis/methodology-card";
+import { splitFinding } from "../../src/components/analysis/split-finding";
 import type { SuiteResult, TestCase } from "./report";
 
 const cases: TestCase[] = [];

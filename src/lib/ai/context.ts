@@ -1,4 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
+import { summaryLine, type AnalysisRowLike } from "@/lib/analysis-display";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { ensureSymbolIngested } from "@/lib/market-data/ingest";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/types";
@@ -89,7 +91,13 @@ export async function detectTickers(text: string, client?: SupabaseClient<Databa
 }
 
 export interface ChatContext {
-  analyses: { id: string; scope_type: string; scope_value: string; analysis_type: string; probability_low: number; probability_high: number; confidence_level: string; reasoning_text: string; sample_size: number }[];
+  /**
+   * reasoning_text is the analysis HEADLINE and history_line its "higher in X
+   * of N" line (lib/analysis-display.ts summaryLine), for old and new rows
+   * alike. probability_low/high stay server-side for the existing guard code;
+   * the model and the reader never see them (the >=5% band is Premium).
+   */
+  analyses: { id: string; scope_type: string; scope_value: string; analysis_type: string; probability_low: number; probability_high: number; confidence_level: string; reasoning_text: string; sample_size: number; history_line: string }[];
   // `url` is what lets the model follow the system prompt's own instruction
   // to cite with a real `[label](url)` link instead of falling back to some
   // other notation for a source it has no href for (see lib/ai/citations.ts).
@@ -174,9 +182,12 @@ export async function buildChatContext(
   // generated last.
   let analyses: ChatContext["analyses"] = [];
   if (relevantSymbols.length > 0) {
-    const { data } = await supabase
+    // Service role: migration 0053 closed ai_analyses to signed-in reads.
+    const { data } = await createAdminClient()
       .from("ai_analyses")
-      .select("id, scope_type, scope_value, analysis_type, probability_low, probability_high, confidence_level, reasoning_text, sample_size")
+      .select(
+        "id, scope_type, scope_value, analysis_type, probability_low, probability_high, confidence_level, reasoning_text, sample_size, created_at, plain_summary, headline, text_source, direction_n, direction_higher, direction_horizon_sessions, direction_confidence, direction_p25, direction_median, direction_p75, direction_worst, direction_best",
+      )
       .eq("status", "validated")
       .in("scope_value", relevantSymbols)
       .order("created_at", { ascending: false })
@@ -194,7 +205,22 @@ export async function buildChatContext(
         seen.add(key);
         return true;
       })
-      .slice(0, MAX_CONTEXT_ANALYSES);
+      .slice(0, MAX_CONTEXT_ANALYSES)
+      .map((a) => {
+        const line = summaryLine(a as unknown as AnalysisRowLike, a.scope_value, null);
+        return {
+          id: a.id,
+          scope_type: a.scope_type,
+          scope_value: a.scope_value,
+          analysis_type: a.analysis_type,
+          probability_low: a.probability_low,
+          probability_high: a.probability_high,
+          confidence_level: a.confidence_level,
+          reasoning_text: line.headline,
+          sample_size: a.sample_size,
+          history_line: line.historyLine,
+        };
+      });
   }
 
   let newsQuery = supabase

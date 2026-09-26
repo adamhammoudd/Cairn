@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { listAnalyses, listPinnedAnalysisIds } from "@/lib/actions/analysis";
-import { getEventsForScopes } from "@/lib/actions/calendar";
 import { getBillingSummary } from "@/lib/actions/billing";
 import { TIER_LIMITS } from "@/lib/billing";
 import { ResearchWorkspace } from "@/components/analysis/research-workspace";
@@ -27,12 +26,6 @@ export default async function ResearchPage() {
     supabase.from("fundamentals").select("sector"),
   ]);
 
-  const depth = TIER_LIMITS[usage.tier].analysisDepth;
-
-  const eventsByScope = await getEventsForScopes(
-    Array.from(new Set(analyses.filter((a) => a.scope_type === "ticker").map((a) => a.scope_value))),
-  );
-
   const heldSymbols = Array.from(new Set((holdings ?? []).map((h) => h.symbol)));
   const sectors = Array.from(
     new Set((fundamentals ?? []).map((f) => f.sector).filter((s): s is string => !!s)),
@@ -41,10 +34,8 @@ export default async function ResearchPage() {
   return (
     <ResearchWorkspace
       analyses={analyses}
-      eventsByScope={eventsByScope}
       heldSymbols={heldSymbols}
       sectors={sectors}
-      depth={depth}
       planLabel={TIER_LIMITS[usage.tier].label}
       usage={{ used: usage.used, limit: usage.limit, unlimited: usage.unlimited }}
       resetLabel={nextResetLabel()}

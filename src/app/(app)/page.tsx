@@ -1,4 +1,6 @@
 import { redirect } from "next/navigation";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { summaryLine, type AnalysisRowLike } from "@/lib/analysis-display";
 import { createClient } from "@/lib/supabase/server";
 import { runScreen } from "@/lib/actions/screener";
 import { EMPTY_FILTERS } from "@/lib/screener";
@@ -53,10 +55,13 @@ async function DashboardBody() {
       .order("created_at", { ascending: false })
       .limit(50),
     supabase.from("alerts").select("id, last_triggered_at").eq("user_id", user.id).eq("enabled", true),
-    supabase
+    // Service role: migration 0053 closed ai_analyses to signed-in reads (the
+    // row carries the Premium >=5% band). Only the headline and history line
+    // are passed on.
+    createAdminClient()
       .from("ai_analyses")
       .select(
-        "id, reasoning_text, confidence_level, sample_size, scope_type, scope_value, analysis_type, probability_low, probability_high, created_at",
+        "id, reasoning_text, plain_summary, headline, text_source, confidence_level, sample_size, scope_type, scope_value, analysis_type, created_at, direction_n, direction_higher, direction_horizon_sessions, direction_confidence, direction_p25, direction_median, direction_p75, direction_worst, direction_best",
       )
       .eq("status", "validated")
       .order("created_at", { ascending: false })
@@ -161,7 +166,7 @@ async function DashboardBody() {
 
   const latestAnalysisRow = analysesRes.data?.[0] ?? null;
   const { count: latestSourceCount } = latestAnalysisRow
-    ? await supabase
+    ? await createAdminClient()
         .from("ai_analysis_sources")
         .select("*", { count: "exact", head: true })
         .eq("analysis_id", latestAnalysisRow.id)
@@ -170,7 +175,9 @@ async function DashboardBody() {
   // source, not a placeholder. Two small reads, only when an analysis exists.
   let topSource: { title: string; source: string; publishedAt: string } | null = null;
   if (latestAnalysisRow) {
-    const { data: topLink } = await supabase
+    // Service role, as above: the sources policy checks the parent through
+    // ai_analyses (closed to signed-in reads by migration 0053).
+    const { data: topLink } = await createAdminClient()
       .from("ai_analysis_sources")
       .select("news_item_id")
       .eq("analysis_id", latestAnalysisRow.id)
@@ -188,15 +195,14 @@ async function DashboardBody() {
   }
   const latestAnalysis = latestAnalysisRow
     ? {
-        quote: latestAnalysisRow.reasoning_text,
+        quote: summaryLine(latestAnalysisRow as unknown as AnalysisRowLike, latestAnalysisRow.scope_value, null).headline,
         sourceCount: latestSourceCount ?? 0,
         sampleSize: latestAnalysisRow.sample_size,
         confidenceLevel: latestAnalysisRow.confidence_level,
         scopeType: latestAnalysisRow.scope_type,
         scopeValue: latestAnalysisRow.scope_value,
         analysisType: latestAnalysisRow.analysis_type,
-        probabilityLow: latestAnalysisRow.probability_low,
-        probabilityHigh: latestAnalysisRow.probability_high,
+        historyLine: summaryLine(latestAnalysisRow as unknown as AnalysisRowLike, latestAnalysisRow.scope_value, null).historyLine,
         createdAt: latestAnalysisRow.created_at,
         topSource,
       }

@@ -14,7 +14,8 @@ import type { AnalysisWithMethodology } from "@/lib/actions/analysis";
 import { TickerHero } from "@/components/ticker/ticker-hero";
 import { TickerChart } from "@/components/ticker/ticker-chart";
 import { TickerAnalysisRequest } from "@/components/ticker/ticker-analysis-request";
-import { MethodologyCard } from "@/components/analysis/methodology-card";
+import { AnalysisView, PremiumNote } from "@/components/analysis/analysis-view";
+import type { AnalysisDisplay } from "@/lib/analysis-display";
 import { DiscussionPanel } from "@/components/ticker/discussion-panel";
 import { AddHoldingButton } from "@/components/ticker/add-holding-button";
 import { WatchButton } from "@/components/ticker/watch-button";
@@ -26,15 +27,6 @@ import { OptionsPanel } from "@/components/ticker/options-panel";
 import type { DiscussionComment } from "@/lib/discussion";
 import type { AnalysisSummaryView } from "@/lib/analysis-summary";
 import { exposureLines, roughMoney } from "@/lib/exposure";
-import {
-  AnalysisFooter,
-  FullBreakdown,
-  HistoryPanel,
-  PlainWordsPanel,
-  ScorecardGrid,
-  useBreakdownState,
-  type BreakdownRow,
-} from "@/components/analysis/summary-sections";
 import { CompanyNumbersTable } from "@/components/ticker/company-numbers-table";
 import { isEstimatedEvent } from "@/lib/calendar";
 
@@ -42,7 +34,6 @@ interface TickerWorkspaceProps {
   data: TickerData;
   analyses: AnalysisWithMethodology[];
   discussion: DiscussionComment[];
-  analysisDepth: "top_line" | "full";
   /** Quantity held and weighted average cost, for the mock subline. */
   heldQuantity: number | null;
   avgCost: number | null;
@@ -61,7 +52,6 @@ export function TickerWorkspace({
   data,
   analyses,
   discussion,
-  analysisDepth,
   heldQuantity,
   avgCost,
   watchlists,
@@ -70,7 +60,6 @@ export function TickerWorkspace({
   summary,
 }: TickerWorkspaceProps) {
   const [tab, setTab] = useState<TabId>("overview");
-  const breakdown = useBreakdownState();
   const prefs = useDisplayPrefs();
   const isCrypto = data.assetType === "crypto";
   const isForex = data.assetType === "forex";
@@ -267,143 +256,76 @@ export function TickerWorkspace({
               )}
             </div>
   );
-  const breakdownRows: BreakdownRow[] = [
-    {
-      id: "sources",
-      title: "Sources",
-      detail: `${data.news.length} articles, ${filingSources.filter((x) => x.kind === "sec_filing").length} company filings`,
-      content: (
-        <div className="flex flex-col gap-4">
-          {filingSources.length > 0 && (
-            <ul className="m-0 flex list-none flex-col gap-2 p-0 text-body">
-              {filingSources.map((src) => (
-                <li key={`${src.label}|${src.ref ?? ""}`} className="text-primary/85">
-                  {src.url ? (
-                    <a href={src.url} target="_blank" rel="noreferrer" className="text-accent hover:underline">
-                      {src.label}
-                    </a>
-                  ) : (
-                    src.label
-                  )}
-                  {src.ref && !src.url && <span className="text-dim"> · {src.ref}</span>}
-                </li>
-              ))}
-            </ul>
-          )}
-          {newsPanel}
-        </div>
-      ),
-    },
-    {
-      id: "cases",
-      title: summary.history && summary.history.status === "ok" ? `All ${summary.history.n} historical cases` : "Historical cases",
-      detail: "dates, setup, what happened",
-      content: (
-        <div className="flex flex-col gap-3.5">
-          <TickerAnalysisRequest symbol={data.symbol} />
-          {analyses.length === 0 ? (
-            <div className="rounded-card border border-dashed border-line p-10 text-center text-lead text-muted">
-              No Cairn analysis for {data.symbol} yet. Request one above - every answer shows its sources, historical analogs, and
-              confidence.
+  // The analysis this page shows: the latest one, drawn by the same component
+  // as every other surface. With none yet, the same view is built from
+  // today's scorecard in Cairn's own words, and the history section offers to
+  // make one.
+  const display: AnalysisDisplay = latest
+    ? latest.display
+    : {
+        id: `none-${data.symbol}`,
+        scopeType: "ticker",
+        scopeValue: data.symbol,
+        name: summary.name,
+        createdAt: new Date().toISOString(),
+        textSource: "template",
+        headline: summary.summary.headline,
+        bullets: summary.summary.bullets,
+        history: {
+          kind: "none",
+          line: `No analysis of ${summary.name} yet. An analysis looks for past moments like today in its own prices and counts what followed.`,
+          range: null,
+          extremes: null,
+          confidence: "low",
+          confidenceText: "",
+          caveat: "",
+          n: 0,
+          higher: 0,
+          lower: 0,
+          horizon: isCrypto ? "10 days" : "2 weeks",
+          dots: [],
+          matchedOn: [],
+        },
+        scorecard: summary.scorecard,
+        watch: [],
+        sourcesUsed: [],
+        cases: null,
+        caseCount: 0,
+        trader: null,
+        plan: summary.plan,
+      };
+  const closestAnalog = latest && latest.display.cases === null ? (latest.analogs[0] ?? null) : null;
+  const statsGrid =
+    stats.length > 0 ? (
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(min(172px,100%),1fr))] gap-3">
+        {stats.map((s) => {
+          const missing = s.value === "-" || s.value === "n/a" || s.value === "";
+          return (
+            <div key={s.label} className="rounded-panel border border-line bg-canvas px-4 py-3.5">
+              <span className="font-mono text-eyebrow text-dim uppercase">{s.label}</span>
+              <div className={`mt-2.5 font-mono text-lead tabular-nums ${missing ? "text-dim" : "text-primary"}`}>{s.value}</div>
             </div>
-          ) : (
-            analyses.map((a) => <MethodologyCard key={a.id} analysis={a} depth={analysisDepth} />)
-          )}
-        </div>
-      ),
-    },
-    {
-      id: "company",
-      title: "Company numbers",
-      detail: "sales, EBITDA, cash flow, debt, dividend history",
-      content: <CompanyNumbersTable rows={summary.companyNumbers} status={summary.companyStatus} />,
-    },
-    {
-      id: "trader",
-      title: "Trader indicators",
-      detail: "RSI, volatility, drawdown, 10-day move probabilities",
-      content: (
-        <div className="flex flex-col gap-3.5">
-          {latest && (
-            <p className="m-0 text-body text-primary/85">
-              Chance of a move of 5% or more (either way) within 10 sessions:{" "}
-              <span className="font-mono tabular-nums">
-                {latest.probability_low}–{latest.probability_high}%
-              </span>{" "}
-              ({latest.confidence_level} confidence, {latest.sample_size} past cases). RSI, drawdown and the other readings are on the
-              Technicals tab and in the case list above.
-            </p>
-          )}
-          {stats.length > 0 && (
-            <div className="mb-4 grid grid-cols-[repeat(auto-fit,minmax(172px,1fr))] gap-3">
-              {stats.map((s, i) => {
-                // The mock's status dot. It only ever distinguishes "this
-                // figure is here" from "this figure is missing", plus the one
-                // volatility reading the design calls out in amber - it is not
-                // a gain/loss signal, so the accent pair stays out of it.
-                const missing = s.value === "-" || s.value === "n/a" || s.value === "";
-                const warn = !missing && s.label.startsWith("Volatility");
-                return (
-                  <div
-                    key={s.label}
-                    className="animate-rise-in rounded-panel border border-line bg-panel px-4 py-3.5 transition-[border-color,background-color,transform] duration-base ease-standard hover:-translate-y-[3px] hover:border-line-strong hover:bg-active"
-                    style={{ animationDelay: `${60 + i * 40}ms` }}
-                  >
-                    <div className="flex items-center gap-2">
-                      <span
-                        aria-hidden
-                        className={`h-[5px] w-[5px] shrink-0 rounded-full ${
-                          missing ? "bg-line" : warn ? "bg-warning" : "bg-line-strong"
-                        }`}
-                      />
-                      <span className="font-mono text-eyebrow text-dim uppercase">{s.label}</span>
-                    </div>
-                    <div
-                      className={`mt-2.5 font-mono text-lead tabular-nums ${
-                        missing ? "text-dim" : warn ? "text-warning" : "text-primary"
-                      }`}
-                    >
-                      {s.value}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-          {!isCrypto && !isForex && !isIndex && !data.fundamentals && (
-            <p className="mb-4 text-caption text-dim">
-              No SEC fundamentals filed for this symbol (common for ETFs and funds) - cap, P/E, and yield stay blank
-              rather than being estimated.
-            </p>
-          )}
-        </div>
-      ),
-    },
-    {
-      id: "how",
-      title: "How this was calculated",
-      content: (
-        <div className="flex max-w-[76ch] flex-col gap-3 text-body leading-[1.65] text-primary/80">
-          <p className="m-0">
-            <strong className="font-medium text-primary">Scorecard.</strong> Each tile is computed in code from the company&apos;s SEC filings
-            and stored daily prices, using fixed, published thresholds. No AI model sets a level or writes a number. Crypto and funds have
-            no company filings, so their company tiles say &quot;not applicable&quot; rather than zero.
-          </p>
-          <p className="m-0">
-            <strong className="font-medium text-primary">What history says.</strong> Cairn scans this symbol&apos;s own price history for
-            past days in the same state as today, and counts how often the price was higher 10 trading days later. The range is a 95%
-            Wilson interval, which widens when there are few cases. It describes the past; it is not a forecast.
-          </p>
-          <p className="m-0">
-            <strong className="font-medium text-primary">In plain words.</strong> An AI model rewrites the scorecard and history in plain
-            English. Before it is shown, code checks that every number in it appears in the figures above, that it gives no advice, and
-            that any finance term is explained. If any check fails, the summary is built from the scorecard&apos;s own sentences instead.
-          </p>
-        </div>
-      ),
-    },
-  ];
+          );
+        })}
+      </div>
+    ) : null;
+  const filingList =
+    filingSources.length > 0 ? (
+      <ul className="m-0 flex list-none flex-col gap-2 p-0 text-body">
+        {filingSources.map((src) => (
+          <li key={`${src.label}|${src.ref ?? ""}`} className="text-primary/85">
+            {src.url ? (
+              <a href={src.url} target="_blank" rel="noreferrer" className="text-accent hover:underline">
+                {src.label}
+              </a>
+            ) : (
+              src.label
+            )}
+            {src.ref && !src.url && <span className="text-dim"> · {src.ref}</span>}
+          </li>
+        ))}
+      </ul>
+    ) : null;
 
   return (
     <div className="animate-page-in">
@@ -465,19 +387,23 @@ export function TickerWorkspace({
 
       {tab === "overview" && (
         <div role="tabpanel" id="ticker-panel-overview" aria-labelledby="ticker-tab-overview" className="flex flex-col gap-9">
-          {/* feat/analysis-summary-layout: the plain summary, scorecard and
-              history lead; everything that used to be on this tab is in the
-              Full breakdown below, collapsed, nothing removed. */}
-          <PlainWordsPanel
-            headline={summary.summary.headline}
-            bullets={summary.summary.bullets}
-            meta={
-              summary.summary.fromAnalysis && summary.summary.writtenAt
-                ? `Written ${new Date(summary.summary.writtenAt).toLocaleDateString(undefined, { day: "numeric", month: "short" })} from that day's scorecard${
-                    summary.summary.source === "template" ? ", in Cairn's own words" : ""
-                  }. Every number comes from the figures below.`
-                : "Built from today's scorecard below, in Cairn's own words. Every number comes from the figures below."
+          {/* feat/analysis-display-v2: the same AnalysisView as Research, the
+              Assistant and the briefing. Today's scorecard, the price chart
+              after the summary, and this page's news, filings and key stats
+              in the breakdown; nothing that used to be here is removed. */}
+          <AnalysisView
+            display={display}
+            sources={latest?.sources ?? []}
+            closestCase={
+              closestAnalog
+                ? {
+                    date: closestAnalog.event_date,
+                    label: new Date(closestAnalog.event_date).toLocaleDateString(undefined, { month: "short", year: "numeric" }),
+                    note: closestAnalog.note,
+                  }
+                : null
             }
+            scorecard={summary.scorecard}
             forYou={
               summary.exposure
                 ? exposureLines(name, summary.exposure, (usd) =>
@@ -486,31 +412,37 @@ export function TickerWorkspace({
                   )
                 : null
             }
-          />
-
-          {/* The price chart stays on the page, not in the collapsed breakdown. */}
-          <TickerChart symbol={data.symbol} bars={data.bars} priceSource={data.priceSource} priceAsOf={data.priceAsOf} />
-
-          <ScorecardGrid scorecard={summary.scorecard} />
-
-          <HistoryPanel
-            history={summary.history}
-            onShowCases={analyses.length > 0 ? () => breakdown.openAndScroll("cases") : undefined}
-            empty={
-              <div className="flex flex-col gap-3.5">
-                <p className="m-0 text-body text-muted">
-                  No analysis of {data.symbol} yet. An analysis looks for the past moments it looked like this and counts what followed.
-                </p>
-                <TickerAnalysisRequest symbol={data.symbol} />
-              </div>
+            companyNumbers={
+              summary.companyLocked ? (
+                <PremiumNote what="Premium shows the quarterly company table: sales, EBITDA (profit before interest, tax and write-downs), cash flow and debt, each linked to its SEC filing." />
+              ) : (
+                <CompanyNumbersTable rows={summary.companyNumbers} status={summary.companyStatus} />
+              )
             }
+            historyAction={<TickerAnalysisRequest symbol={data.symbol} />}
+            extras={{
+              sources: (
+                <>
+                  {filingList}
+                  {newsPanel}
+                </>
+              ),
+              trader:
+                summary.plan === "premium" ? (
+                  <>
+                    {statsGrid}
+                    {!isCrypto && !isForex && !isIndex && !data.fundamentals && (
+                      <p className="m-0 text-caption text-dim">
+                        No SEC fundamentals filed for this symbol (common for ETFs and funds) - cap, P/E, and yield stay blank rather than being estimated.
+                      </p>
+                    )}
+                  </>
+                ) : null,
+            }}
+            afterSummary={<TickerChart symbol={data.symbol} bars={data.bars} priceSource={data.priceSource} priceAsOf={data.priceAsOf} />}
           />
-
-          <FullBreakdown openId={breakdown.openId} onToggle={breakdown.toggle} rows={breakdownRows} />
 
           <DiscussionPanel symbol={data.symbol} comments={discussion} canModerate={canModerate} />
-
-          <AnalysisFooter />
         </div>
       )}
 

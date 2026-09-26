@@ -6,7 +6,6 @@ import { getAnalysesForScope } from "@/lib/actions/analysis";
 import { listThreadsForSymbol } from "@/lib/actions/discussion";
 import { listWatchlists } from "@/lib/actions/watchlists";
 import { getUserPlan } from "@/lib/actions/billing";
-import { TIER_LIMITS } from "@/lib/billing";
 import { TickerWorkspace } from "@/components/ticker/ticker-workspace";
 import { guardReads } from "@/components/data-unavailable";
 import { loadAnalysisSummary } from "@/lib/analysis-summary";
@@ -107,7 +106,7 @@ async function TickerBody({ params }: { params: Promise<{ symbol: string }> }) {
   // the Overview tab (feat/analysis-summary-layout).
   const displayName =
     data.name ?? (data.assetType === "crypto" && data.cryptoMetrics ? data.cryptoMetrics.name : assetName(data.symbol, data.assetType));
-  const summary = await loadAnalysisSummary({ symbol: data.symbol, name: displayName, latest: analyses[0] ?? null, userId: user.id });
+  const summary = await loadAnalysisSummary({ symbol: data.symbol, name: displayName, latest: analyses[0] ?? null, userId: user.id, plan: plan === "free" ? "free" : "premium" });
 
   const held = holdingRows.data ?? [];
   const heldQuantity = held.reduce((sum, h) => sum + Number(h.quantity ?? 0), 0);
@@ -128,7 +127,6 @@ async function TickerBody({ params }: { params: Promise<{ symbol: string }> }) {
       data={data}
       analyses={analyses}
       discussion={discussion}
-      analysisDepth={TIER_LIMITS[plan].analysisDepth}
       heldQuantity={heldQuantity}
       avgCost={avgCost}
       watchlists={watchlists}

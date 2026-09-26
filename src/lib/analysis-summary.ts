@@ -52,6 +52,10 @@ export interface AnalysisSummaryView {
   companyNumbers: CompanyNumbersRow[];
   medianEarningsMove: number | null;
   exposure: ExposureFacts | null;
+  /** The reader's plan, decided on the server (getUserPlan). */
+  plan: "free" | "premium";
+  /** True on Free: the quarterly company table is Premium and is not in this payload. */
+  companyLocked: boolean;
 }
 
 interface StoredSummary {
@@ -122,6 +126,7 @@ export async function loadAnalysisSummary(args: {
   name: string;
   latest: AnalysisWithMethodology | null;
   userId: string;
+  plan: "free" | "premium";
 }): Promise<AnalysisSummaryView> {
   const bundle = await loadScorecard(args.symbol);
   const stored = storedSummary(args.latest);
@@ -175,7 +180,10 @@ export async function loadAnalysisSummary(args: {
     history,
     historyAsOf: args.latest?.created_at ?? null,
     companyStatus: status,
-    companyNumbers: status === "available" ? companyRows(bundle.quarters) : [],
+    // Premium only, and left out of the payload on Free - not hidden.
+    companyNumbers: status === "available" && args.plan === "premium" ? companyRows(bundle.quarters) : [],
+    plan: args.plan,
+    companyLocked: status === "available" && args.plan !== "premium",
     medianEarningsMove,
     exposure,
   };
