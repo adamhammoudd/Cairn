@@ -380,7 +380,8 @@ export function MethodologyCard({
             {hasHidden && (
               <div className="mt-3.5 flex flex-wrap items-center justify-between gap-3 rounded-panel border border-line bg-panel px-3 py-3">
                 <div className="min-w-0">
-                  <div className="text-caption text-primary">Premium shows all {analysis.analogs.length} analogs</div>
+                  {/* sample_size, not analogs.length: on Free the list is already cut to one. */}
+                  <div className="text-caption text-primary">Premium shows all {analysis.sample_size} analogs</div>
                   <div className="mt-1 text-caption leading-[1.5] text-muted text-pretty">
                     Same analysis, same confidence range, same caveats - more of the underlying comparisons visible.
                   </div>
