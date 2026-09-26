@@ -18,6 +18,7 @@
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 import { requireCronSecret } from "../_shared/auth.ts";
+import { priceMovesFromBars, type MoveBar } from "../_shared/price-moves.ts";
 
 interface BriefingSettings {
   user_id: string;
@@ -262,34 +263,15 @@ Deno.serve(async (req) => {
           }));
       }
 
-      // Last-session price move per tracked symbol (>= 2%). Mirrors
+      // Last-session price move per tracked symbol (>= 2%). Same helper as
       // priceMovesFor in src/lib/ai/briefing.ts.
       const priceMoves: { symbol: string; change_pct: number; close: number; as_of: string }[] = [];
       if (symbols.length > 0) {
-        const { data: bars } = await supabase
-          .from("historical_prices")
-          .select("symbol, ts, close")
-          .in("symbol", symbols)
-          .order("ts", { ascending: false })
-          .limit(symbols.length * 3);
-        const bySymbol = new Map<string, { ts: string; close: number }[]>();
-        for (const b of (bars ?? []) as { symbol: string; ts: string; close: number | null }[]) {
-          if (b.close === null) continue;
-          const arr = bySymbol.get(b.symbol) ?? [];
-          if (arr.length < 2) arr.push({ ts: b.ts, close: Number(b.close) });
-          bySymbol.set(b.symbol, arr);
-        }
-        for (const [symbol, rows] of bySymbol) {
-          if (rows.length < 2 || rows[1].close === 0) continue;
-          const changePct = ((rows[0].close - rows[1].close) / rows[1].close) * 100;
-          if (Math.abs(changePct) < 2) continue;
-          priceMoves.push({
-            symbol,
-            change_pct: Math.round(changePct * 100) / 100,
-            close: rows[0].close,
-            as_of: rows[0].ts,
-          });
-        }
+        // recent_prices gives every symbol its own newest bars; the shared
+        // `.in(symbols).order(ts desc).limit(n * 3)` window this replaces
+        // dropped any symbol whose newest bar was older than the others'.
+        const { data: bars } = await supabase.rpc("recent_prices", { symbols, per_symbol: 3 });
+        priceMoves.push(...priceMovesFromBars((bars ?? []) as MoveBar[], 2));
         priceMoves.sort((a, b) => Math.abs(b.change_pct) - Math.abs(a.change_pct));
       }
 

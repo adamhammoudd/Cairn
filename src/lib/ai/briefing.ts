@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { normalizeSectorsForMatching } from "@/lib/sectors";
+import { priceMovesFromBars } from "../../../supabase/functions/_shared/price-moves";
 
 export interface BriefingContent {
   generated_at: string;
@@ -168,33 +169,12 @@ async function priceMovesFor(
 ): Promise<BriefingContent["price_moves"]> {
   if (symbols.length === 0) return [];
 
-  const { data: bars } = await supabase
-    .from("historical_prices")
-    .select("symbol, ts, close")
-    .in("symbol", symbols)
-    .order("ts", { ascending: false })
-    .limit(symbols.length * 3);
-
-  const bySymbol = new Map<string, { ts: string; close: number }[]>();
-  for (const b of bars ?? []) {
-    if (b.close === null) continue;
-    const arr = bySymbol.get(b.symbol) ?? [];
-    if (arr.length < 2) arr.push({ ts: b.ts, close: Number(b.close) });
-    bySymbol.set(b.symbol, arr);
-  }
-
-  const moves: BriefingContent["price_moves"] = [];
-  for (const [symbol, rows] of bySymbol) {
-    if (rows.length < 2 || rows[1].close === 0) continue;
-    const changePct = ((rows[0].close - rows[1].close) / rows[1].close) * 100;
-    if (Math.abs(changePct) < PRICE_MOVE_THRESHOLD_PCT) continue;
-    moves.push({
-      symbol,
-      change_pct: Math.round(changePct * 100) / 100,
-      close: rows[0].close,
-      as_of: rows[0].ts,
-    });
-  }
+  // recent_prices gives every symbol its own newest bars. The shared-window
+  // read this replaces (`.in(symbols).order(ts desc).limit(n * 3)`) dropped
+  // any symbol whose newest bar was older than the others', so a stale coin
+  // silently got no move. Three per symbol so one null close still leaves two.
+  const { data: bars } = await supabase.rpc("recent_prices", { symbols, per_symbol: 3 });
+  const moves: BriefingContent["price_moves"] = priceMovesFromBars(bars ?? [], PRICE_MOVE_THRESHOLD_PCT);
   return moves.sort((a, b) => Math.abs(b.change_pct) - Math.abs(a.change_pct));
 }
 
