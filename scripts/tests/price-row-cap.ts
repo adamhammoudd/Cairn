@@ -15,9 +15,18 @@
 //    and silently gets no move. recent_prices() gives each symbol its own
 //    limit; supabase/tests/price_ordering.sql proves the SQL side.
 //
+// 3. Compare (src/lib/actions/comparison.ts) and alert evaluation
+//    (supabase/functions/evaluate-alerts) called recent_prices() for several
+//    symbols in ONE request: Compare at 400 bars each, alerts at 250. Past the
+//    1000-row cap the symbols at the end got no bars - a fourth Compare symbol
+//    dropped out of the table, and a fifth watched symbol's alerts stopped
+//    evaluating. Both now page the call, ordered by symbol then newest-first.
+//
 // Run: npx tsx --conditions=react-server scripts/tests/price-row-cap.ts
 
-import { pathToFileURL } from "node:url";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { readNewestFirstPaged, API_MAX_ROWS } from "@/lib/market-data/paged-read";
 import { priceMovesFromBars } from "../../supabase/functions/_shared/price-moves";
 import { writeReport, type SuiteResult, type TestCase } from "./report";
@@ -153,6 +162,65 @@ export async function runPriceRowCapSuite(): Promise<SuiteResult> {
       0,
     ).length === 0,
     "no moves",
+  );
+
+  // --- 3. multi-symbol recent_prices(): Compare and alert evaluation ----------
+  // recent_prices() over several symbols, as PostgREST serves it with
+  // .order(symbol).order(ts desc).range(): capped at 1000 rows per response.
+  const recentPrices = (syms: string[], perSymbol: number) => {
+    const rows = syms
+      .slice()
+      .sort()
+      .flatMap((s) => Array.from({ length: perSymbol }, (_, i) => ({ symbol: s, ts: isoDay(i), close: 100 + i })));
+    return (from: number, to: number) => Promise.resolve({ data: rows.slice(from, to + 1).slice(0, API_MAX_ROWS), error: null });
+  };
+  const perSymbolCounts = (rows: Bar[]) =>
+    rows.reduce((m, r) => m.set(r.symbol, (m.get(r.symbol) ?? 0) + 1), new Map<string, number>());
+
+  for (const [label, syms, perSymbol] of [
+    ["Compare (4 symbols x 400 bars)", ["AMZN", "ISRG", "NVDA", "TSLA"], 400],
+    ["alerts (5 symbols x 250 bars)", ["AAPL", "AMZN", "ISRG", "NVDA", "TSLA"], 250],
+  ] as const) {
+    const page = recentPrices([...syms], perSymbol);
+    const one = perSymbolCounts((await page(0, syms.length * perSymbol - 1)).data);
+    const last = syms[syms.length - 1];
+    check(
+      `${label}: one request loses the last symbol (the defect)`,
+      !one.has(last),
+      `one request: ${syms.map((s) => `${s} ${one.get(s) ?? 0}`).join(", ")}`,
+    );
+    const pagedRows = await readNewestFirstPaged(page, syms.length * perSymbol);
+    const counts = perSymbolCounts(pagedRows);
+    check(
+      `${label}: the paged read gives every symbol all its bars, once`,
+      syms.every((s) => counts.get(s) === perSymbol) && new Set(pagedRows.map((r) => `${r.symbol}|${r.ts}`)).size === pagedRows.length,
+      `paged: ${syms.map((s) => `${s} ${counts.get(s) ?? 0}`).join(", ")}`,
+    );
+    const lastRows = pagedRows.filter((r) => r.symbol === last);
+    check(
+      `${label}: each symbol's bars stay newest-first (the callers read the first row as latest)`,
+      lastRows[0]?.ts === isoDay(0) && lastRows.every((r, i) => i === 0 || r.ts < lastRows[i - 1].ts),
+      `${last}: ${lastRows[0]?.ts} .. ${lastRows[lastRows.length - 1]?.ts}`,
+    );
+  }
+
+  // The wiring: every recent_prices() call in the two callers goes through the
+  // paged helper with a total order, never as one capped request.
+  const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
+  const compare = fs.readFileSync(path.join(root, "src/lib/actions/comparison.ts"), "utf8");
+  check(
+    "src/lib/actions/comparison.ts: bars come from the paged readRecentPrices, never one recent_prices call",
+    /readRecentPrices\(supabase, symbols, /.test(compare) && !/\.rpc\(\s*"recent_prices"/.test(compare),
+    "readRecentPrices (#150)",
+  );
+  const alerts = fs.readFileSync(path.join(root, "supabase/functions/evaluate-alerts/index.ts"), "utf8");
+  const rpcCalls = [...alerts.matchAll(/\.rpc\(\s*"recent_prices"/g)].map((m) => alerts.slice(m.index, m.index + 400));
+  check(
+    "supabase/functions/evaluate-alerts: recent_prices() is paged over symbol, asset type, newest-first",
+    alerts.includes("readNewestFirstPaged(") &&
+      rpcCalls.length > 0 &&
+      rpcCalls.every((c) => /\.order\("symbol", \{ ascending: true \}\)\s*\.order\("asset_type", \{ ascending: true \}\)\s*\.order\("ts", \{ ascending: false \}\)\s*\.range\(from, to\)/.test(c)),
+    `${rpcCalls.length} recent_prices call(s)`,
   );
 
   return { suiteName: "Price reads past the 1000-row API cap", gating: true, cases };

@@ -18,15 +18,15 @@ import {
   type ParsedCompany,
   type Submissions,
 } from "../_shared/sec-companyfacts.ts";
+import { SEC_USER_AGENT } from "../_shared/sec-user-agent.ts";
 
-const UA = "cairn-ingest contact@example.com";
 // SEC's fair-access limit is 10 requests/second. Each symbol makes three
 // (share count, submissions, companyfacts), so pace between symbols.
 const SYMBOL_DELAY_MS = 600;
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 async function secJson(url: string): Promise<unknown | null> {
-  const res = await fetch(url, { headers: { "User-Agent": UA } });
+  const res = await fetch(url, { headers: { "User-Agent": SEC_USER_AGENT } });
   if (!res.ok) return null;
   return await res.json();
 }

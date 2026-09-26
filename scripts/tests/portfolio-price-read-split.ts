@@ -90,7 +90,16 @@ async function main() {
   const oldTotals = computeTotals(computeHoldingMetrics(holdings, oldCloses), oldCloses);
   const oldNulls = symbols.filter((s) => oldCloses.get(s)?.latest == null);
   check("old read: AMZN, ISRG, BTC price as null (the '-' rows)", oldNulls.join(",") === "AMZN,ISRG,BTC", oldNulls.join(","));
-  check("old read: Total Value is NVDA alone (the bug)", near(oldTotals.totalValue, 18), `${oldTotals.totalValue}`);
+  // Since #133 computeTotals counts an unpriced holding at its cost basis, so
+  // the old read no longer shows NVDA alone ($18): it shows NVDA's live value
+  // plus what AMZN, ISRG and BTC cost ($20 + $45 + $9) - still not the $101
+  // they are worth, which is the bug this split fixes.
+  const oldExpected = 180 * 0.1 + 200 * 0.1 + 450 * 0.1 + 90000 * 0.0001;
+  check(
+    "old read: Total Value is NVDA live + the rest at cost (the bug, after #133)",
+    near(oldTotals.totalValue, oldExpected) && !near(oldTotals.totalValue, expectedTotal),
+    `${oldTotals.totalValue} (expected ${oldExpected}; live total ${expectedTotal})`,
+  );
 
   // --- 3. NEW /portfolio == Base Camp: getLatestCloses' own per_symbol=2 read
   // Both pages now call getLatestCloses(symbols, undefined, ...), whose
