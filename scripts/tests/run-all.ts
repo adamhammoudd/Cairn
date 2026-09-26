@@ -19,6 +19,7 @@ import { runProbabilityMathSuite } from "./probability-math";
 import { runFactorAnalogsSuite } from "./factor-analogs";
 import { runDeepHistorySuite } from "./deep-history";
 import { runFundamentalsSuite } from "./fundamentals";
+import { runScorecardSuite } from "./scorecard";
 import { runPriceRowCapSuite } from "./price-row-cap";
 import { runAssetClassIdentitySuite } from "./asset-class-identity";
 import { runResearchDropdownStackingSuite } from "./research-dropdown-stacking";
@@ -131,6 +132,7 @@ async function main() {
     runFactorAnalogsSuite(),
     runDeepHistorySuite(),
     runFundamentalsSuite(),
+    runScorecardSuite(),
     runAssetClassIdentitySuite(),
     runResearchDropdownStackingSuite(),
     ...adversarialSuites,

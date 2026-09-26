@@ -1,0 +1,529 @@
+{
+  "GROW": {
+    "symbol": "GROW",
+    "asOf": "2025-09-26",
+    "dimensions": [
+      {
+        "key": "valuation",
+        "label": "Price vs profit",
+        "level": "weak",
+        "rated": true,
+        "verdict": "Expensive",
+        "sentence": "The share costs 45 times the company's yearly profit. For comparison, its 5-year average is 38; similar companies average 24.",
+        "inputs": [
+          {
+            "label": "Price ÷ yearly profit per share",
+            "value": 45,
+            "display": "45"
+          },
+          {
+            "label": "Its 5-year average",
+            "value": 38,
+            "display": "38"
+          },
+          {
+            "label": "Similar companies (median)",
+            "value": 24,
+            "display": "24"
+          },
+          {
+            "label": "Similar companies counted",
+            "value": 8,
+            "display": "8"
+          }
+        ],
+        "sources": [
+          {
+            "kind": "sec_filing",
+            "label": "10-Q filed 2025-11-19 (profit per share)",
+            "ref": "0001045810-25-000230",
+            "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581025000230/"
+          },
+          {
+            "kind": "price_history",
+            "label": "Closing price 2025-09-25",
+            "ref": "2025-09-25"
+          }
+        ]
+      },
+      {
+        "key": "growth",
+        "label": "Growth",
+        "level": "strong",
+        "rated": true,
+        "verdict": "Strong",
+        "sentence": "Sales are up 56% on last year, and profit is up 61%. Growth is slowing.",
+        "inputs": [
+          {
+            "label": "Sales growth, last 12 months vs the 12 before",
+            "value": 0.56,
+            "display": "56%"
+          },
+          {
+            "label": "Profit growth, last 12 months vs the 12 before",
+            "value": 0.61,
+            "display": "61%"
+          },
+          {
+            "label": "Latest quarter's sales growth vs a year earlier",
+            "value": 0.56,
+            "display": "+56%"
+          },
+          {
+            "label": "Previous quarter's sales growth vs a year earlier",
+            "value": 1.2,
+            "display": "+120%"
+          }
+        ],
+        "sources": [
+          {
+            "kind": "sec_filing",
+            "label": "10-Q filed 2025-11-19 (sales and profit)",
+            "ref": "0001045810-25-000230",
+            "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581025000230/"
+          }
+        ]
+      },
+      {
+        "key": "health",
+        "label": "Financial health",
+        "level": "strong",
+        "rated": true,
+        "verdict": "Strong",
+        "sentence": "Keeps 52 cents of every dollar of sales as EBITDA (profit before interest, tax and write-downs). It brings in more cash than it spends. It has more cash than debt.",
+        "inputs": [
+          {
+            "label": "EBITDA margin",
+            "value": 0.52,
+            "display": "52"
+          },
+          {
+            "label": "Free cash flow, last 12 months (USD)",
+            "value": 360,
+            "display": null
+          },
+          {
+            "label": "Net debt (USD)",
+            "value": -300,
+            "display": null
+          },
+          {
+            "label": "Net debt ÷ EBITDA",
+            "value": -0.6666666666666666,
+            "display": null
+          }
+        ],
+        "sources": [
+          {
+            "kind": "sec_filing",
+            "label": "10-Q filed 2025-11-19 (EBITDA, cash flow and debt)",
+            "ref": "0001045810-25-000230",
+            "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581025000230/"
+          }
+        ]
+      },
+      {
+        "key": "dividend",
+        "label": "Dividend",
+        "level": "not_applicable",
+        "rated": true,
+        "verdict": "Tiny",
+        "sentence": "Pays 0.02% a year. It is a growth share, not an income share.",
+        "inputs": [
+          {
+            "label": "Dividend yield (last 12 months ÷ price)",
+            "value": 0.00022675736961451246,
+            "display": "0.02%"
+          },
+          {
+            "label": "Share of free cash flow paid out",
+            "value": 0.01,
+            "display": "1%"
+          },
+          {
+            "label": "Years in a row the dividend rose",
+            "value": 0,
+            "display": "0"
+          }
+        ],
+        "sources": [
+          {
+            "kind": "sec_filing",
+            "label": "10-Q filed 2025-11-19 (dividends and cash flow)",
+            "ref": "0001045810-25-000230",
+            "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581025000230/"
+          }
+        ]
+      },
+      {
+        "key": "trend",
+        "label": "Price trend",
+        "level": "strong",
+        "rated": true,
+        "verdict": "Rising",
+        "sentence": "Up 34% over 6 months, and 12% above its average price of the last 200 trading days.",
+        "inputs": [
+          {
+            "label": "6-month price change",
+            "value": 0.34,
+            "display": "34%"
+          },
+          {
+            "label": "Price vs 200-day average",
+            "value": 0.12,
+            "display": "12%"
+          }
+        ],
+        "sources": [
+          {
+            "kind": "price_history",
+            "label": "Daily closing prices to 2025-09-26",
+            "ref": "2025-09-26"
+          }
+        ]
+      },
+      {
+        "key": "next_event",
+        "label": "Next event",
+        "level": "not_applicable",
+        "rated": false,
+        "verdict": "Earnings in 5 days",
+        "sentence": "Earnings, Wed 1 Oct. On its last 8 results days the share moved 5% or more 5 times; the typical move was 6.8%.",
+        "inputs": [
+          {
+            "label": "Days until the event",
+            "value": 5,
+            "display": "5"
+          },
+          {
+            "label": "Event date",
+            "value": null,
+            "display": "Wed 1 Oct"
+          },
+          {
+            "label": "Past results days counted",
+            "value": 8,
+            "display": "8"
+          },
+          {
+            "label": "Results days with a move of 5% or more",
+            "value": 5,
+            "display": "5"
+          },
+          {
+            "label": "Typical results-day move",
+            "value": 0.0675,
+            "display": "6.8%"
+          }
+        ],
+        "sources": [
+          {
+            "kind": "calendar",
+            "label": "Nasdaq earnings calendar",
+            "ref": "2025-10-01"
+          },
+          {
+            "kind": "earnings_release",
+            "label": "8 earnings releases (SEC 8-K item 2.02) and closing prices",
+            "ref": "2025-08-10..2025-01-10"
+          }
+        ]
+      }
+    ]
+  },
+  "PAYR": {
+    "symbol": "PAYR",
+    "asOf": "2025-09-26",
+    "dimensions": [
+      {
+        "key": "valuation",
+        "label": "Price vs profit",
+        "level": "mixed",
+        "rated": true,
+        "verdict": "Fair",
+        "sentence": "The share costs 24 times the company's yearly profit. For comparison, its 5-year average is 23; similar companies average 21.",
+        "inputs": [
+          {
+            "label": "Price ÷ yearly profit per share",
+            "value": 24,
+            "display": "24"
+          },
+          {
+            "label": "Its 5-year average",
+            "value": 23,
+            "display": "23"
+          },
+          {
+            "label": "Similar companies (median)",
+            "value": 21,
+            "display": "21"
+          },
+          {
+            "label": "Similar companies counted",
+            "value": 8,
+            "display": "8"
+          }
+        ],
+        "sources": [
+          {
+            "kind": "sec_filing",
+            "label": "10-Q filed 2025-11-19 (profit per share)",
+            "ref": "0001045810-25-000230",
+            "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581025000230/"
+          },
+          {
+            "kind": "price_history",
+            "label": "Closing price 2025-09-25",
+            "ref": "2025-09-25"
+          }
+        ]
+      },
+      {
+        "key": "growth",
+        "label": "Growth",
+        "level": "mixed",
+        "rated": true,
+        "verdict": "Steady",
+        "sentence": "Sales are up 3% on last year, and profit is up 5%. The pace is steady.",
+        "inputs": [
+          {
+            "label": "Sales growth, last 12 months vs the 12 before",
+            "value": 0.03,
+            "display": "3%"
+          },
+          {
+            "label": "Profit growth, last 12 months vs the 12 before",
+            "value": 0.05,
+            "display": "5%"
+          },
+          {
+            "label": "Latest quarter's sales growth vs a year earlier",
+            "value": 0.02,
+            "display": "+2%"
+          },
+          {
+            "label": "Previous quarter's sales growth vs a year earlier",
+            "value": 0.03,
+            "display": "+3%"
+          }
+        ],
+        "sources": [
+          {
+            "kind": "sec_filing",
+            "label": "10-Q filed 2025-11-19 (sales and profit)",
+            "ref": "0001045810-25-000230",
+            "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581025000230/"
+          }
+        ]
+      },
+      {
+        "key": "health",
+        "label": "Financial health",
+        "level": "mixed",
+        "rated": true,
+        "verdict": "OK",
+        "sentence": "Keeps 33 cents of every dollar of sales as EBITDA (profit before interest, tax and write-downs). It brings in more cash than it spends. Its debt minus its cash equals 2.6 years of EBITDA.",
+        "inputs": [
+          {
+            "label": "EBITDA margin",
+            "value": 0.33,
+            "display": "33"
+          },
+          {
+            "label": "Free cash flow, last 12 months (USD)",
+            "value": 360,
+            "display": null
+          },
+          {
+            "label": "Net debt (USD)",
+            "value": 1170,
+            "display": null
+          },
+          {
+            "label": "Net debt ÷ EBITDA",
+            "value": 2.6,
+            "display": "2.6"
+          }
+        ],
+        "sources": [
+          {
+            "kind": "sec_filing",
+            "label": "10-Q filed 2025-11-19 (EBITDA, cash flow and debt)",
+            "ref": "0001045810-25-000230",
+            "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581025000230/"
+          }
+        ]
+      },
+      {
+        "key": "dividend",
+        "label": "Dividend",
+        "level": "mixed",
+        "rated": true,
+        "verdict": "Tight",
+        "sentence": "Pays 2.9% a year. The payments use 75% of its free cash flow (cash left after running and investing in the business). It has raised it 12 years in a row.",
+        "inputs": [
+          {
+            "label": "Dividend yield (last 12 months ÷ price)",
+            "value": 0.028529411764705883,
+            "display": "2.9%"
+          },
+          {
+            "label": "Share of free cash flow paid out",
+            "value": 0.75,
+            "display": "75%"
+          },
+          {
+            "label": "Years in a row the dividend rose",
+            "value": 12,
+            "display": "12"
+          }
+        ],
+        "sources": [
+          {
+            "kind": "sec_filing",
+            "label": "10-Q filed 2025-11-19 (dividends and cash flow)",
+            "ref": "0001045810-25-000230",
+            "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581025000230/"
+          }
+        ]
+      },
+      {
+        "key": "trend",
+        "label": "Price trend",
+        "level": "mixed",
+        "rated": true,
+        "verdict": "Sideways",
+        "sentence": "Up 2% over 6 months, and 1% above its average price of the last 200 trading days.",
+        "inputs": [
+          {
+            "label": "6-month price change",
+            "value": 0.02,
+            "display": "2%"
+          },
+          {
+            "label": "Price vs 200-day average",
+            "value": 0.01,
+            "display": "1%"
+          }
+        ],
+        "sources": [
+          {
+            "kind": "price_history",
+            "label": "Daily closing prices to 2025-09-26",
+            "ref": "2025-09-26"
+          }
+        ]
+      },
+      {
+        "key": "next_event",
+        "label": "Next event",
+        "level": "not_applicable",
+        "rated": false,
+        "verdict": "Dividend cut-off date in 14 days",
+        "sentence": "Dividend cut-off date, Fri 10 Oct. Only shares owned before this day get the next dividend.",
+        "inputs": [
+          {
+            "label": "Days until the event",
+            "value": 14,
+            "display": "14"
+          },
+          {
+            "label": "Event date",
+            "value": null,
+            "display": "Fri 10 Oct"
+          }
+        ],
+        "sources": [
+          {
+            "kind": "calendar",
+            "label": "Nasdaq dividend calendar",
+            "ref": "2025-10-10"
+          }
+        ]
+      }
+    ]
+  },
+  "BTC": {
+    "symbol": "BTC",
+    "asOf": "2025-09-26",
+    "dimensions": [
+      {
+        "key": "valuation",
+        "label": "Price vs profit",
+        "level": "not_applicable",
+        "rated": true,
+        "verdict": "Not applicable",
+        "sentence": "There is no company behind it, so company figures don't apply.",
+        "inputs": [],
+        "sources": []
+      },
+      {
+        "key": "growth",
+        "label": "Growth",
+        "level": "not_applicable",
+        "rated": true,
+        "verdict": "Not applicable",
+        "sentence": "There is no company behind it, so company figures don't apply.",
+        "inputs": [],
+        "sources": []
+      },
+      {
+        "key": "health",
+        "label": "Financial health",
+        "level": "not_applicable",
+        "rated": true,
+        "verdict": "Not applicable",
+        "sentence": "There is no company behind it, so company figures don't apply.",
+        "inputs": [],
+        "sources": []
+      },
+      {
+        "key": "dividend",
+        "label": "Dividend",
+        "level": "not_applicable",
+        "rated": true,
+        "verdict": "Not applicable",
+        "sentence": "There is no company behind it, so company figures don't apply.",
+        "inputs": [],
+        "sources": []
+      },
+      {
+        "key": "trend",
+        "label": "Price trend",
+        "level": "weak",
+        "rated": true,
+        "verdict": "Falling",
+        "sentence": "Down 9% over 6 months, and 4% below its average price of the last 200 trading days.",
+        "inputs": [
+          {
+            "label": "6-month price change",
+            "value": -0.09,
+            "display": "9%"
+          },
+          {
+            "label": "Price vs 200-day average",
+            "value": -0.04,
+            "display": "4%"
+          }
+        ],
+        "sources": [
+          {
+            "kind": "price_history",
+            "label": "Daily closing prices to 2025-09-26",
+            "ref": "2025-09-26"
+          }
+        ]
+      },
+      {
+        "key": "next_event",
+        "label": "Next event",
+        "level": "not_applicable",
+        "rated": false,
+        "verdict": "Nothing scheduled",
+        "sentence": "No earnings or dividend dates in the next 60 days.",
+        "inputs": [],
+        "sources": []
+      }
+    ]
+  }
+}
