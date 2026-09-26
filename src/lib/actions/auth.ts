@@ -8,6 +8,7 @@ import { checkAuthRateLimit, recordAuthAttempt } from "@/lib/auth-rate-limit";
 import { TOS_VERSION, PRIVACY_VERSION, consentGiven } from "@/lib/legal-versions";
 import { captchaTokenFrom, friendlyAuthError, missingCaptchaMessage } from "@/lib/captcha";
 import { inviteAllowed } from "@/lib/public-paths";
+import { getSiteUrl } from "@/lib/site";
 
 // Behind a proxy the socket address is the proxy's, so the forwarded chain is
 // the only thing that identifies the caller. First entry is the client;
@@ -119,7 +120,6 @@ export async function signUp(_prevState: string | null, formData: FormData) {
 
 export async function forgotPassword(_prevState: string | null, formData: FormData) {
   const email = String(formData.get("email") ?? "");
-  const origin = (await headers()).get("origin");
   const ip = await clientIp();
 
   const noCaptcha = missingCaptchaMessage(formData);
@@ -133,7 +133,12 @@ export async function forgotPassword(_prevState: string | null, formData: FormDa
 
   const supabase = await createClient();
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${origin}/reset-password`,
+    // The configured public origin, not the request's Origin header: that
+    // header can be missing ("null/reset-password") or be whichever alias the
+    // form was posted from. Either way Supabase rejects a redirect that is not
+    // on its allowlist and silently falls back to its dashboard Site URL, so
+    // the emailed link landed on a different deployment.
+    redirectTo: `${getSiteUrl()}/reset-password`,
     captchaToken: captchaTokenFrom(formData),
   });
 
