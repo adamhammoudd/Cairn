@@ -121,6 +121,12 @@ export async function runPlainSummarySuite(): Promise<SuiteResult> {
     `${coin.headline} | ${coin.bullets.join(" | ")} | ${coinCheck.reason ?? "passes guards"}`,
   );
 
+  check(
+    "an empty calendar is not turned into a summary bullet",
+    coin.bullets.every((b) => !/calendar/i.test(b)) && !/calendar/i.test(coin.headline),
+    coin.bullets.join(" | "),
+  );
+
   // ---- generation fails closed ----------------------------------------------
   const ok = await generatePlainSummary(inputs, async () => good);
   check("a clean model answer is shown", ok.source === "model" && ok.failure === null && ok.headline === good.headline, `${ok.source} ${ok.failure ?? ""}`);
