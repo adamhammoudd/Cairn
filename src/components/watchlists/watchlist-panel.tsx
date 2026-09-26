@@ -23,7 +23,18 @@ export function WatchlistPanel({ watchlists }: { watchlists: WatchlistWithItems[
   const prefs = useDisplayPrefs();
   const fmtCurrency = (n: number | null) => formatMoney(n, prefs);
   const [activeId, setActiveId] = useState(watchlists[0]?.id ?? null);
-  const [addError, addAction] = useActionState(addWatchlistItem, null);
+  // `added` counts server-confirmed adds; it keys the picker below so it
+  // resets only once the item is really in the list. The action returns the
+  // same "saved" every time, so keying on that string would reset after the
+  // first add and never again.
+  const [addState, addAction] = useActionState<{ error: string | null; added: number }, FormData>(
+    async (prev, formData) => {
+      const result = await addWatchlistItem(prev.error, formData);
+      return { error: result, added: prev.added + (result === "saved" ? 1 : 0) };
+    },
+    { error: null, added: 0 },
+  );
+  const addError = addState.error;
   const [, startMutate] = useTransition();
   const [dragId, setDragId] = useState<string | null>(null);
   const [confirmingDeleteList, setConfirmingDeleteList] = useState(false);
@@ -218,9 +229,12 @@ export function WatchlistPanel({ watchlists }: { watchlists: WatchlistWithItems[
                 Alerts and Compare use, so this is no longer a second search
                 experience for the same task. */}
             <SymbolTypeahead
+              // New key = fresh, empty picker: after a confirmed add, or on
+              // switching lists. Not clearOnSelect - that would empty the
+              // box before the form has submitted the pick.
+              key={`${active.id}:${addState.added}`}
               name="symbol"
               required
-              clearOnSelect
               // The hidden `symbol` field carries the pick into the form
               // action; nothing extra is needed on selection here.
               onSelect={() => {}}

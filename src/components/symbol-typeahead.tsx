@@ -14,7 +14,12 @@ interface SymbolTypeaheadProps {
   name?: string | null;
   required?: boolean;
   placeholder?: string;
-  /** Reset the field after a pick - for pickers that add to a list. */
+  /**
+   * Empty the visible box after a pick - for name={null} pickers that act in
+   * onSelect (comparison, global search). Ignored when `name` is set: a form
+   * still has to submit the pick, so its parent resets the picker (e.g. by
+   * remounting it with a new key) after the server confirms.
+   */
   clearOnSelect?: boolean;
   /** Symbols already chosen elsewhere; filtered out of the result list. */
   exclude?: string[];
@@ -175,12 +180,18 @@ export function SymbolTypeahead({
       }
     }
 
-    if (clearOnSelect) {
-      setSelected(null);
+    // Always keep the pick: the hidden field reads `selected`, and a form
+    // around this picker submits after pick() returns. Clearing it here is
+    // what made Watchlists' Add submit "" and fail "Enter a symbol." every
+    // time. clearOnSelect only empties the visible box, and only for a picker
+    // with no hidden field (name={null}), which acts in onSelect instead. A
+    // form-backed picker is reset by its parent once the server confirms (see
+    // watchlist-panel.tsx), never before.
+    setSelected(chosen);
+    if (clearOnSelect && !name) {
       setQuery("");
       setResults([]);
     } else {
-      setSelected(chosen);
       setQuery(labelFor(chosen));
     }
     setProbed(null);
