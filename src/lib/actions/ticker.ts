@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { MIGRATIONS, unwrap } from "@/lib/supabase/read";
 import { getCurrentPrice } from "@/lib/market-data/current-price";
 import { ensureSymbolIngested } from "@/lib/market-data/ingest";
+import { readNewestFirstPaged } from "@/lib/market-data/paged-read";
 import type { AssetType } from "@/lib/supabase/types";
 
 export interface TickerData {
@@ -78,14 +79,24 @@ export async function loadTicker(symbolRaw: string): Promise<TickerData | Ticker
   // Technicals tab's 200-day average could not start until a third of the way
   // into a 1-year view. CHART_BAR_LIMIT is deliberately well clear of the 2y
   // range the ingest pulls, so ALL means all of what is stored.
-  let { data: recentBarsDesc } = await supabase
-    .from("historical_prices")
-    .select("ts, open, high, low, close, volume, asset_type")
-    .eq("symbol", symbol)
-    .order("ts", { ascending: false })
-    .limit(CHART_BAR_LIMIT);
+  //
+  // Paged: the API returns at most 1000 rows per request, so one
+  // `.limit(2000)` read came back with 1000 and "ALL" showed about 4 of the 5
+  // stored years for the 17 symbols past that (NVDA, MSFT, AMZN, ...).
+  const readChartBars = (sym: string) =>
+    readNewestFirstPaged(
+      (from, to) =>
+        supabase
+          .from("historical_prices")
+          .select("ts, open, high, low, close, volume, asset_type")
+          .eq("symbol", sym)
+          .order("ts", { ascending: false })
+          .range(from, to),
+      CHART_BAR_LIMIT,
+    );
+  let recentBarsDesc = await readChartBars(symbol);
 
-  if (!recentBarsDesc || recentBarsDesc.length === 0) {
+  if (recentBarsDesc.length === 0) {
     // First time anyone has asked for this symbol: fetch it now.
     const ingested = await ensureSymbolIngested(symbol);
     if (ingested.status !== "available") {
@@ -95,13 +106,8 @@ export async function loadTicker(symbolRaw: string): Promise<TickerData | Ticker
         detail: ingested.detail ?? `No market data available for ${symbol}.`,
       };
     }
-    ({ data: recentBarsDesc } = await supabase
-      .from("historical_prices")
-      .select("ts, open, high, low, close, volume, asset_type")
-      .eq("symbol", ingested.symbol)
-      .order("ts", { ascending: false })
-      .limit(CHART_BAR_LIMIT));
-    if (!recentBarsDesc || recentBarsDesc.length === 0) {
+    recentBarsDesc = await readChartBars(ingested.symbol);
+    if (recentBarsDesc.length === 0) {
       return { symbol, reason: "unavailable", detail: `No market data available for ${symbol}.` };
     }
   }
