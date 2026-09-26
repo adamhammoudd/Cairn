@@ -7,7 +7,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { loadScorecard } from "@/lib/scorecard-data";
 import { isEstimatedEvent } from "@/lib/calendar";
 import { isExposureEnabled } from "@/lib/exposure";
-import { buildBriefing, snapshotLevels, type Briefing, type BriefingEvent, type BriefingHolding, type WeekAgoLevels } from "@/lib/daily-briefing";
+import { BRIEFING_RULES, buildBriefing, snapshotLevels, type Briefing, type BriefingEvent, type BriefingHolding, type WeekAgoLevels } from "@/lib/daily-briefing";
 import type { Scorecard } from "@/lib/scorecard";
 
 function isoDaysAgo(today: string, n: number): string {
@@ -66,7 +66,8 @@ export async function loadDailyBriefing(userId: string, today: string = new Date
       .select("symbol, event_type, event_date, metadata")
       .in("symbol", symbols)
       .gte("event_date", today)
-      .lte("event_date", isoDaysAgo(today, -21)),
+      // Fetch the whole "Coming up" window, or its tail is empty whatever the rule says.
+      .lte("event_date", isoDaysAgo(today, -BRIEFING_RULES.comingUpDays)),
   ]);
   const names = new Map((dir ?? []).map((d) => [d.symbol, (d.name as string | null) ?? d.symbol]));
 
