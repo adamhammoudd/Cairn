@@ -24,6 +24,18 @@ import { TechnicalsPanel } from "@/components/ticker/technicals-panel";
 import { StatementsPanel } from "@/components/ticker/statements-panel";
 import { OptionsPanel } from "@/components/ticker/options-panel";
 import type { DiscussionComment } from "@/lib/discussion";
+import type { AnalysisSummaryView } from "@/lib/analysis-summary";
+import { exposureLines, roughMoney } from "@/lib/exposure";
+import {
+  AnalysisFooter,
+  FullBreakdown,
+  HistoryPanel,
+  PlainWordsPanel,
+  ScorecardGrid,
+  useBreakdownState,
+  type BreakdownRow,
+} from "@/components/analysis/summary-sections";
+import { CompanyNumbersTable } from "@/components/ticker/company-numbers-table";
 
 interface TickerWorkspaceProps {
   data: TickerData;
@@ -38,6 +50,8 @@ interface TickerWorkspaceProps {
   canModerate?: boolean;
   /** user_settings.refresh_rate_seconds - poll cadence for the live-quote refresh. */
   refreshRateSeconds?: number | null;
+  /** Plain summary, scorecard, history and company numbers (feat/analysis-summary-layout). */
+  summary: AnalysisSummaryView;
 }
 
 type TabId = "overview" | "profile" | "technicals" | "financials" | "options";
@@ -52,8 +66,10 @@ export function TickerWorkspace({
   watchlists,
   canModerate = false,
   refreshRateSeconds = null,
+  summary,
 }: TickerWorkspaceProps) {
   const [tab, setTab] = useState<TabId>("overview");
+  const breakdown = useBreakdownState();
   const prefs = useDisplayPrefs();
   const isCrypto = data.assetType === "crypto";
   const isForex = data.assetType === "forex";
@@ -99,14 +115,18 @@ export function TickerWorkspace({
   const fromExtreme = (extreme: number | null) =>
     data.price === null || extreme === null || extreme === 0 ? "-" : `${(((data.price - extreme) / extreme) * 100).toFixed(2)}%`;
 
-  // The hero's position chips. Only what the page already loaded - the mock's
-  // third chip is the holding's share of the whole portfolio, which would cost
-  // a full holdings-and-prices valuation on every ticker page for one line of
-  // decoration, so it is not shown rather than approximated.
-  const heroChips = [
-    heldQuantity ? `${heldQuantity} held` : null,
-    heldQuantity && avgCost ? `${money(avgCost)} avg cost` : null,
-  ].filter((c): c is string => c !== null);
+  // The hero's position line: "You own 20 shares · €3,050" (feat/analysis-
+  // summary-layout). The average cost stays on the Profile tab's position card.
+  const unit = isCrypto ? data.symbol : heldQuantity === 1 ? "share" : "shares";
+  const heroChips = heldQuantity
+    ? [`You own ${formatQuantity(heldQuantity)} ${unit}${data.price === null ? "" : ` · ${money(data.price * heldQuantity)}`}`]
+    : [];
+
+  // This week's change from the stored daily closes: 5 sessions back for a
+  // listed security, 7 days for a coin (it trades every day).
+  const weekBack = isCrypto ? 7 : 5;
+  const weekBase = data.bars.length > weekBack ? data.bars[data.bars.length - 1 - weekBack]?.close ?? null : null;
+  const weekChangePct = data.price !== null && weekBase ? ((data.price - weekBase) / weekBase) * 100 : null;
 
   // Where the last price sits between the session low and high, for the hero's
   // day-range rail. Null whenever the session has no spread to place it in.
@@ -195,129 +215,13 @@ export function TickerWorkspace({
     ...(hasFilings ? ([{ id: "financials", label: "Financials" }, { id: "options", label: "Options" }] as const) : []),
   ];
 
-  return (
-    <div className="animate-page-in">
-      <TickerHero
-        symbol={data.symbol}
-        name={name}
-        typeBadge={assetTypeBadge(data.assetType)}
-        chips={heroChips}
-        priceLabel={money(data.price)}
-        changePct={data.changePct}
-        changeLabel={
-          changeAbs === null
-            ? null
-            : `${positive ? "+" : "-"}${money(Math.abs(changeAbs))} ${
-                data.priceSource === "live" ? "today" : "on the last close"
-              }`
-        }
-        priceSource={data.priceSource}
-        priceAsOf={data.priceAsOf}
-        refreshRateSeconds={refreshRateSeconds}
-        dayRange={dayRange}
-        actions={
-          <>
-            <WatchButton symbol={data.symbol} watchlists={watchlists} />
-            <AddHoldingButton symbol={data.symbol} assetType={data.assetType} />
-          </>
-        }
-      />
-
-      {/* The mock's segmented tab rail: one tray, the active tab lifted out of
-          it on a ring rather than underlined. */}
-      <div
-        role="tablist"
-        aria-label={`${data.symbol} sections`}
-        className="animate-rise-in my-4.5 flex flex-wrap gap-1 rounded-card border border-line bg-panel p-1"
-      >
-        {tabs.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            role="tab"
-            id={`ticker-tab-${t.id}`}
-            aria-selected={tab === t.id}
-            aria-controls={`ticker-panel-${t.id}`}
-            onClick={() => setTab(t.id)}
-            className={`flex-[1_1_120px] rounded-control px-3.5 py-2.5 text-body transition-[background-color,color,box-shadow] duration-base ease-standard ${
-              tab === t.id
-                ? "bg-active text-primary shadow-[inset_0_0_0_1px_var(--color-line),0_2px_10px_rgba(0,0,0,0.4)]"
-                : "text-muted hover:text-primary"
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
-
-      {tab === "overview" && (
-        <div role="tabpanel" id="ticker-panel-overview" aria-labelledby="ticker-tab-overview">
-          <div className="mb-3.5">
-            <TickerChart symbol={data.symbol} bars={data.bars} priceSource={data.priceSource} priceAsOf={data.priceAsOf} />
-          </div>
-
-          {stats.length > 0 && (
-            <div className="mb-4 grid grid-cols-[repeat(auto-fit,minmax(172px,1fr))] gap-3">
-              {stats.map((s, i) => {
-                // The mock's status dot. It only ever distinguishes "this
-                // figure is here" from "this figure is missing", plus the one
-                // volatility reading the design calls out in amber - it is not
-                // a gain/loss signal, so the accent pair stays out of it.
-                const missing = s.value === "-" || s.value === "n/a" || s.value === "";
-                const warn = !missing && s.label.startsWith("Volatility");
-                return (
-                  <div
-                    key={s.label}
-                    className="animate-rise-in rounded-panel border border-line bg-panel px-4 py-3.5 transition-[border-color,background-color,transform] duration-base ease-standard hover:-translate-y-[3px] hover:border-line-strong hover:bg-active"
-                    style={{ animationDelay: `${60 + i * 40}ms` }}
-                  >
-                    <div className="flex items-center gap-2">
-                      <span
-                        aria-hidden
-                        className={`h-[5px] w-[5px] shrink-0 rounded-full ${
-                          missing ? "bg-line" : warn ? "bg-warning" : "bg-line-strong"
-                        }`}
-                      />
-                      <span className="font-mono text-eyebrow text-dim uppercase">{s.label}</span>
-                    </div>
-                    <div
-                      className={`mt-2.5 font-mono text-lead tabular-nums ${
-                        missing ? "text-dim" : warn ? "text-warning" : "text-primary"
-                      }`}
-                    >
-                      {s.value}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-          {!isCrypto && !isForex && !isIndex && !data.fundamentals && (
-            <p className="mb-4 text-caption text-dim">
-              No SEC fundamentals filed for this symbol (common for ETFs and funds) - cap, P/E, and yield stay blank
-              rather than being estimated.
-            </p>
-          )}
-
-          {/* The mock leads with the analysis and sets the news beside it, not
-              the other way round: the probability engine is the product, and
-              the headlines are the supporting column. */}
-          <div className="grid grid-cols-1 items-start gap-3.5 min-[900px]:grid-cols-[1.35fr_1fr]">
-            <div className="flex flex-col gap-3.5">
-              <TickerAnalysisRequest symbol={data.symbol} />
-              {analyses.length === 0 ? (
-                <div className="rounded-card border border-dashed border-line p-10 text-center text-lead text-muted">
-                  No Cairn analysis for {data.symbol} yet. Request one above - every answer shows its sources, historical
-                  analogs, and confidence.
-                </div>
-              ) : (
-                analyses.map((a) => <MethodologyCard key={a.id} analysis={a} depth={analysisDepth} />)
-              )}
-
-              <DiscussionPanel symbol={data.symbol} comments={discussion} canModerate={canModerate} />
-            </div>
-
+  // ---- Full breakdown rows. Everything the Overview tab showed before this
+  // layout lives here, collapsed; nothing is removed.
+  const latest = analyses[0] ?? null;
+  const filingSources = Array.from(
+    new Map(summary.scorecard.dimensions.flatMap((d) => d.sources).map((src) => [`${src.label}|${src.ref ?? ""}`, src])).values(),
+  );
+  const newsPanel = (
             <div className="animate-rise-in overflow-hidden rounded-card border border-line bg-panel">
               <div className="flex items-center justify-between gap-2.5 border-b border-line-soft px-4 py-3.5">
                 <span className="font-mono text-eyebrow text-muted uppercase">Related news</span>
@@ -361,7 +265,249 @@ export function TickerWorkspace({
                 ))
               )}
             </div>
-          </div>
+  );
+  const breakdownRows: BreakdownRow[] = [
+    {
+      id: "sources",
+      title: "Sources",
+      detail: `${data.news.length} articles, ${filingSources.filter((x) => x.kind === "sec_filing").length} company filings`,
+      content: (
+        <div className="flex flex-col gap-4">
+          {filingSources.length > 0 && (
+            <ul className="m-0 flex list-none flex-col gap-2 p-0 text-body">
+              {filingSources.map((src) => (
+                <li key={`${src.label}|${src.ref ?? ""}`} className="text-primary/85">
+                  {src.url ? (
+                    <a href={src.url} target="_blank" rel="noreferrer" className="text-accent hover:underline">
+                      {src.label}
+                    </a>
+                  ) : (
+                    src.label
+                  )}
+                  {src.ref && !src.url && <span className="text-dim"> · {src.ref}</span>}
+                </li>
+              ))}
+            </ul>
+          )}
+          {newsPanel}
+        </div>
+      ),
+    },
+    {
+      id: "cases",
+      title: summary.history && summary.history.status === "ok" ? `All ${summary.history.n} historical cases` : "Historical cases",
+      detail: "dates, setup, what happened",
+      content: (
+        <div className="flex flex-col gap-3.5">
+          <TickerAnalysisRequest symbol={data.symbol} />
+          {analyses.length === 0 ? (
+            <div className="rounded-card border border-dashed border-line p-10 text-center text-lead text-muted">
+              No Cairn analysis for {data.symbol} yet. Request one above - every answer shows its sources, historical analogs, and
+              confidence.
+            </div>
+          ) : (
+            analyses.map((a) => <MethodologyCard key={a.id} analysis={a} depth={analysisDepth} />)
+          )}
+        </div>
+      ),
+    },
+    {
+      id: "company",
+      title: "Company numbers",
+      detail: "sales, EBITDA, cash flow, debt, dividend history",
+      content: <CompanyNumbersTable rows={summary.companyNumbers} status={summary.companyStatus} />,
+    },
+    {
+      id: "trader",
+      title: "Trader indicators",
+      detail: "RSI, volatility, drawdown, 10-day move probabilities",
+      content: (
+        <div className="flex flex-col gap-3.5">
+          {latest && (
+            <p className="m-0 text-body text-primary/85">
+              Chance of a move of 5% or more (either way) within 10 sessions:{" "}
+              <span className="font-mono tabular-nums">
+                {latest.probability_low}–{latest.probability_high}%
+              </span>{" "}
+              ({latest.confidence_level} confidence, {latest.sample_size} past cases). RSI, drawdown and the other readings are on the
+              Technicals tab and in the case list above.
+            </p>
+          )}
+          <TickerChart symbol={data.symbol} bars={data.bars} priceSource={data.priceSource} priceAsOf={data.priceAsOf} />
+          {stats.length > 0 && (
+            <div className="mb-4 grid grid-cols-[repeat(auto-fit,minmax(172px,1fr))] gap-3">
+              {stats.map((s, i) => {
+                // The mock's status dot. It only ever distinguishes "this
+                // figure is here" from "this figure is missing", plus the one
+                // volatility reading the design calls out in amber - it is not
+                // a gain/loss signal, so the accent pair stays out of it.
+                const missing = s.value === "-" || s.value === "n/a" || s.value === "";
+                const warn = !missing && s.label.startsWith("Volatility");
+                return (
+                  <div
+                    key={s.label}
+                    className="animate-rise-in rounded-panel border border-line bg-panel px-4 py-3.5 transition-[border-color,background-color,transform] duration-base ease-standard hover:-translate-y-[3px] hover:border-line-strong hover:bg-active"
+                    style={{ animationDelay: `${60 + i * 40}ms` }}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span
+                        aria-hidden
+                        className={`h-[5px] w-[5px] shrink-0 rounded-full ${
+                          missing ? "bg-line" : warn ? "bg-warning" : "bg-line-strong"
+                        }`}
+                      />
+                      <span className="font-mono text-eyebrow text-dim uppercase">{s.label}</span>
+                    </div>
+                    <div
+                      className={`mt-2.5 font-mono text-lead tabular-nums ${
+                        missing ? "text-dim" : warn ? "text-warning" : "text-primary"
+                      }`}
+                    >
+                      {s.value}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {!isCrypto && !isForex && !isIndex && !data.fundamentals && (
+            <p className="mb-4 text-caption text-dim">
+              No SEC fundamentals filed for this symbol (common for ETFs and funds) - cap, P/E, and yield stay blank
+              rather than being estimated.
+            </p>
+          )}
+        </div>
+      ),
+    },
+    {
+      id: "how",
+      title: "How this was calculated",
+      content: (
+        <div className="flex max-w-[76ch] flex-col gap-3 text-body leading-[1.65] text-primary/80">
+          <p className="m-0">
+            <strong className="font-medium text-primary">Scorecard.</strong> Each tile is computed in code from the company&apos;s SEC filings
+            and stored daily prices, using fixed, published thresholds. No AI model sets a level or writes a number. Crypto and funds have
+            no company filings, so their company tiles say &quot;not applicable&quot; rather than zero.
+          </p>
+          <p className="m-0">
+            <strong className="font-medium text-primary">What history says.</strong> Cairn scans this symbol&apos;s own price history for
+            past days in the same state as today, and counts how often the price was higher 10 trading days later. The range is a 95%
+            Wilson interval, which widens when there are few cases. It describes the past; it is not a forecast.
+          </p>
+          <p className="m-0">
+            <strong className="font-medium text-primary">In plain words.</strong> An AI model rewrites the scorecard and history in plain
+            English. Before it is shown, code checks that every number in it appears in the figures above, that it gives no advice, and
+            that any finance term is explained. If any check fails, the summary is built from the scorecard&apos;s own sentences instead.
+          </p>
+        </div>
+      ),
+    },
+  ];
+
+  return (
+    <div className="animate-page-in">
+      <TickerHero
+        symbol={data.symbol}
+        name={name}
+        typeBadge={assetTypeBadge(data.assetType)}
+        chips={heroChips}
+        priceLabel={money(data.price)}
+        changePct={data.changePct}
+        changeLabel={
+          [
+            changeAbs === null
+              ? null
+              : `${positive ? "+" : "-"}${money(Math.abs(changeAbs))} ${data.priceSource === "live" ? "today" : "on the last close"}`,
+            weekChangePct === null ? null : `${weekChangePct >= 0 ? "+" : ""}${weekChangePct.toFixed(1)}% this week`,
+          ]
+            .filter(Boolean)
+            .join(" · ") || null
+        }
+        priceSource={data.priceSource}
+        priceAsOf={data.priceAsOf}
+        refreshRateSeconds={refreshRateSeconds}
+        dayRange={dayRange}
+        actions={
+          <>
+            <WatchButton symbol={data.symbol} watchlists={watchlists} />
+            <AddHoldingButton symbol={data.symbol} assetType={data.assetType} />
+          </>
+        }
+      />
+
+      {/* The mock's segmented tab rail: one tray, the active tab lifted out of
+          it on a ring rather than underlined. */}
+      <div
+        role="tablist"
+        aria-label={`${data.symbol} sections`}
+        className="animate-rise-in my-4.5 flex flex-wrap gap-1 rounded-card border border-line bg-panel p-1"
+      >
+        {tabs.map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            role="tab"
+            id={`ticker-tab-${t.id}`}
+            aria-selected={tab === t.id}
+            aria-controls={`ticker-panel-${t.id}`}
+            onClick={() => setTab(t.id)}
+            className={`flex-[1_1_120px] rounded-control px-3.5 py-2.5 text-body transition-[background-color,color,box-shadow] duration-base ease-standard ${
+              tab === t.id
+                ? "bg-active text-primary shadow-[inset_0_0_0_1px_var(--color-line),0_2px_10px_rgba(0,0,0,0.4)]"
+                : "text-muted hover:text-primary"
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {tab === "overview" && (
+        <div role="tabpanel" id="ticker-panel-overview" aria-labelledby="ticker-tab-overview" className="flex flex-col gap-9">
+          {/* feat/analysis-summary-layout: the plain summary, scorecard and
+              history lead; everything that used to be on this tab is in the
+              Full breakdown below, collapsed, nothing removed. */}
+          <PlainWordsPanel
+            headline={summary.summary.headline}
+            bullets={summary.summary.bullets}
+            meta={
+              summary.summary.fromAnalysis && summary.summary.writtenAt
+                ? `Written ${new Date(summary.summary.writtenAt).toLocaleDateString(undefined, { day: "numeric", month: "short" })} from that day's scorecard${
+                    summary.summary.source === "template" ? ", in Cairn's own words" : ""
+                  }. Every number comes from the figures below.`
+                : "Built from today's scorecard below, in Cairn's own words. Every number comes from the figures below."
+            }
+            forYou={
+              summary.exposure
+                ? exposureLines(name, summary.exposure, (usd) =>
+                    // Rounded in the reader's currency, and shown without cents: "roughly €250".
+                    roughMoney(usd * prefs.fxRate).toLocaleString(undefined, { style: "currency", currency: prefs.effectiveCurrency, maximumFractionDigits: 0 }),
+                  )
+                : null
+            }
+          />
+
+          <ScorecardGrid scorecard={summary.scorecard} />
+
+          <HistoryPanel
+            history={summary.history}
+            onShowCases={analyses.length > 0 ? () => breakdown.openAndScroll("cases") : undefined}
+            empty={
+              <div className="flex flex-col gap-3.5">
+                <p className="m-0 text-body text-muted">
+                  No analysis of {data.symbol} yet. An analysis looks for the past moments it looked like this and counts what followed.
+                </p>
+                <TickerAnalysisRequest symbol={data.symbol} />
+              </div>
+            }
+          />
+
+          <FullBreakdown openId={breakdown.openId} onToggle={breakdown.toggle} rows={breakdownRows} />
+
+          <DiscussionPanel symbol={data.symbol} comments={discussion} canModerate={canModerate} />
+
+          <AnalysisFooter />
         </div>
       )}
 

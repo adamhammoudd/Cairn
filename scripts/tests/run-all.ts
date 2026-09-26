@@ -21,6 +21,7 @@ import { runDeepHistorySuite } from "./deep-history";
 import { runFundamentalsSuite } from "./fundamentals";
 import { runScorecardSuite } from "./scorecard";
 import { runHistoryPlainSuite } from "./history-plain";
+import { runExposureSuite } from "./exposure";
 import { runPlainSummarySuite } from "./plain-summary";
 import { runPriceRowCapSuite } from "./price-row-cap";
 import { runAssetClassIdentitySuite } from "./asset-class-identity";
@@ -138,6 +139,7 @@ async function main() {
     runFundamentalsSuite(),
     runScorecardSuite(),
     runHistoryPlainSuite(),
+    runExposureSuite(),
     runAssetClassIdentitySuite(),
     runResearchDropdownStackingSuite(),
     ...adversarialSuites,

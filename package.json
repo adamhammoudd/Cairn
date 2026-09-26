@@ -18,6 +18,7 @@
     "test:scorecard": "tsx --conditions=react-server scripts/tests/scorecard.ts",
     "test:history-plain": "tsx --conditions=react-server scripts/tests/history-plain.ts",
     "test:plain-summary": "tsx --conditions=react-server scripts/tests/plain-summary.ts",
+    "test:exposure": "tsx --conditions=react-server scripts/tests/exposure.ts",
     "test:price-row-cap": "tsx --conditions=react-server scripts/tests/price-row-cap.ts",
     "test:asset-class": "tsx --conditions=react-server scripts/tests/asset-class-identity.ts",
     "test:methodology": "tsx --conditions=react-server scripts/tests/methodology-substance.ts",

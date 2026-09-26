@@ -37,6 +37,8 @@ export interface HistoryInput {
 
 export interface HistoryPlain {
   status: "ok" | "too_few";
+  /** "two weeks" / "10 days": how far ahead each case was measured, in words. */
+  horizon: string;
   n: number;
   higher: number;
   notHigher: number;
@@ -116,6 +118,7 @@ export function historyInPlainWords(input: HistoryInput): HistoryPlain {
         : `${input.name} has looked like this only ${n} time${n === 1 ? "" : "s"} before, too few to say what usually follows.`;
     return {
       status: "too_few",
+      horizon: when,
       n,
       higher,
       notHigher: n - higher,
@@ -141,6 +144,7 @@ export function historyInPlainWords(input: HistoryInput): HistoryPlain {
 
   return {
     status: "ok",
+    horizon: when,
     n,
     higher,
     notHigher: n - higher,
