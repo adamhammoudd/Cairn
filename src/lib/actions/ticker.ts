@@ -36,7 +36,7 @@ export interface TickerData {
   week52Low: number | null;
   /** Annualised stdev of the last 30 daily returns, in percent. */
   volatility30d: number | null;
-  nextEvent: { event_type: string; event_date: string } | null;
+  nextEvent: { event_type: string; event_date: string; metadata?: unknown } | null;
   esg: { environmental: number | null; social: number | null; governance: number | null; total: number | null; source: string } | null;
 }
 
@@ -152,7 +152,7 @@ export async function loadTicker(symbolRaw: string): Promise<TickerData | Ticker
         .limit(15),
       supabase
         .from("calendar_events")
-        .select("event_type, event_date")
+        .select("event_type, event_date, metadata")
         .eq("symbol", symbol)
         .gte("event_date", new Date().toISOString().slice(0, 10))
         .order("event_date", { ascending: true })
