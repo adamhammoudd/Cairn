@@ -49,6 +49,7 @@ import { runWaitlistEmailSuite } from "./waitlist-email";
 import { runProxyPublicPathsSuite } from "./proxy-public-paths";
 import { runSignupConsentSuite } from "./signup-consent";
 import { runLiveRefreshSuite } from "./live-refresh";
+import { runPremiumAnalogsPrivateSuite } from "./premium-analogs-private";
 import { runAiMethodologyGapsSuite } from "./ai-methodology-gaps";
 
 // A suite that throws (missing credentials, unreachable service) must surface
@@ -141,6 +142,7 @@ async function main() {
     runFactorAnalogsSuite(),
     runDeepHistorySuite(),
     runFundamentalsSuite(),
+    runPremiumAnalogsPrivateSuite(),
     runScorecardSuite(),
     runHistoryPlainSuite(),
     runExposureSuite(),

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { generateAnalysis } from "@/lib/ai/generate";
 import { getUserPlan } from "@/lib/actions/billing";
 import { reserveAiUsage, releaseAiUsage } from "@/lib/ai-usage";
@@ -231,9 +232,11 @@ type BareAnalysis = Omit<AnalysisWithMethodology, "sources" | "analogs">;
 // the component. MethodologyCard's `depth` prop still decides what it draws,
 // but a server action's return value is readable directly - a Free account
 // could open devtools and read the full premium analog set straight out of the
-// payload while the UI showed one. RLS does not help: ai_analysis_* rows are
-// market-scoped and readable by every account by design. So the rows a Free
-// plan may not see are dropped before they are ever serialized.
+// payload while the UI showed one. So the rows a Free plan may not see are
+// dropped before they are ever serialized. The analog table itself is closed
+// to anon and authenticated reads (migration 0051: its public policy let
+// anyone read the whole Premium set over the REST API), so it is read here
+// with the service role, AFTER the plan is known.
 //
 // What is NOT gated, deliberately: the finding, the probability range,
 // confidence level, sample_size, sources, and the low-confidence warning. Those
@@ -254,7 +257,7 @@ async function attachMethodology(
 
   const [{ data: sourceLinks }, { data: analogLinks }] = await Promise.all([
     supabase.from("ai_analysis_sources").select("analysis_id, news_item_id").in("analysis_id", ids),
-    supabase
+    createAdminClient()
       .from("ai_analysis_historical_analogs")
       .select("analysis_id, historical_event_id, similarity_score, note")
       .in("analysis_id", ids),

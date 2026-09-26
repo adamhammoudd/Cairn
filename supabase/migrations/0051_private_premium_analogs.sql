@@ -1,0 +1,13 @@
+-- ai_analysis_historical_analogs is the Premium analog set: Free sees one
+-- analog per analysis, Premium sees all of them (the plan gate in
+-- attachMethodology, src/lib/actions/analysis.ts). Its "public read validated"
+-- policy (0034) let ANY caller with the public anon key read every row
+-- straight from the REST API, no login needed: on 2026-09-26 the anon role
+-- could read all 300 rows behind the 11 validated analyses, which is the whole
+-- Premium set.
+--
+-- With the policy gone, RLS denies every read to anon and authenticated. The
+-- app reads the table only through the service role, after the plan gate:
+-- attachMethodology (trims to one analog on Free), analysis-summary.ts (counts
+-- only) and the admin page. Inserts were already service-role only.
+drop policy if exists "public read validated" on public.ai_analysis_historical_analogs;
