@@ -58,7 +58,7 @@ export interface FactorAnalysis {
   events: FactorEventRow[];
 }
 
-async function loadBars(supabase: SupabaseClient<Database>, symbol: string): Promise<FactorBar[]> {
+export async function loadBars(supabase: SupabaseClient<Database>, symbol: string): Promise<FactorBar[]> {
   // Newest-first in pages of PAGE, then reversed once at the end, so the
   // caller always gets oldest-first regardless of how many pages it took.
   const rows: { ts: unknown; close: unknown; volume: unknown }[] = [];

@@ -110,7 +110,7 @@ export interface ProbabilityBand {
   pointEstimate: number;
   low: number;
   high: number;
-  confidence: "low" | "medium" | "high";
+  confidence: Confidence;
   sampleCount: number;
   /** How many analogs in the sample cleared the threshold. */
   hitCount: number;
@@ -123,6 +123,22 @@ export function wilsonInterval(hits: number, n: number, z: number = Z_95): { low
   const center = (p + (z * z) / (2 * n)) / denominator;
   const margin = (z / denominator) * Math.sqrt((p * (1 - p)) / n + (z * z) / (4 * n * n));
   return { low: Math.max(0, center - margin), high: Math.min(1, center + margin) };
+}
+
+export type Confidence = "low" | "medium" | "high";
+
+/**
+ * The one confidence rule, shared by the >=5% band and the direction engine
+ * (lib/ai/direction.ts). Both conditions must hold -- a large sample that
+ * still yields a wide interval stays "medium", and any sample under 5 analogs
+ * is always "low" regardless of how tight the interval looks. `low`/`high`
+ * are the interval's bounds as fractions.
+ */
+export function gradeConfidence(n: number, low: number, high: number): Confidence {
+  const widthPct = (high - low) * 100;
+  if (n < 5 || widthPct > 50) return "low";
+  if (n < 15 || widthPct > 30) return "medium";
+  return "high";
 }
 
 /**
@@ -149,21 +165,12 @@ export function computeProbabilityBand(
   }
 
   const { low, high } = wilsonInterval(hits, n);
-  const widthPct = (high - low) * 100;
-
-  // Both conditions must hold -- a large sample that still yields a wide
-  // interval stays "medium", and any sample under 5 analogs is always "low"
-  // regardless of how tight the interval looks.
-  let confidence: "low" | "medium" | "high";
-  if (n < 5 || widthPct > 50) confidence = "low";
-  else if (n < 15 || widthPct > 30) confidence = "medium";
-  else confidence = "high";
 
   return {
     pointEstimate: Math.round((hits / n) * 100),
     low: Math.round(low * 100),
     high: Math.round(high * 100),
-    confidence,
+    confidence: gradeConfidence(n, low, high),
     sampleCount: n,
     hitCount: hits,
   };
