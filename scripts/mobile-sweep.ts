@@ -90,7 +90,7 @@ function measure(minTap: number): Measurement {
     const cls = typeof el.className === "string" && el.className ? `.${el.className.trim().split(/\s+/).slice(0, 3).join(".")}` : "";
     return `${el.tagName.toLowerCase()}${id}${cls}`;
   };
-  const text = (el: Element) => ((el as HTMLElement).innerText || el.getAttribute("aria-label") || "").trim().replace(/\s+/g, " ").slice(0, 60);
+  const text = (el: Element) => ((el as HTMLElement).innerText || el.getAttribute("aria-label") || el.textContent || "").trim().replace(/\s+/g, " ").slice(0, 60);
   const visible = (el: Element) => {
     const s = getComputedStyle(el);
     const r = el.getBoundingClientRect();
@@ -182,6 +182,8 @@ function measure(minTap: number): Measurement {
       if (st.animationName !== "none" && st.animationIterationCount === "infinite") { animated = true; break; }
     }
     if (animated) continue;
+    // Text that ends in an ellipsis on purpose (Tailwind `truncate`) is not cut off.
+    if (getComputedStyle(el).textOverflow === "ellipsis") continue;
     const range = document.createRange();
     range.selectNodeContents(el);
     const tr = range.getBoundingClientRect();
