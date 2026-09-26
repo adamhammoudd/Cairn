@@ -28,11 +28,15 @@
 //     the invisible touch area globals.css adds (inline links inside running
 //     text are exempt, as in WCAG 2.5.8). The browser emulates a touch phone.
 //   - clipped text: text cut off by overflow without an ellipsis
+//   - zoom-on-focus: fields with text under 16px, which iOS zooms into when tapped
 //   - the analysis "Full breakdown": each row is opened and measured in turn
 //   - nav: below 900px, the menu button opens the drawer, every drawer link
 //     fits the screen and is 44px tall, and the header search's result menu
 //     opens inside the screen
 // Overlapping text and chart readability are judged from the screenshots.
+// The measurements run under touch emulation; the full-page screenshots do
+// not (Chromium drops it while capturing), so touch-only styles such as the
+// 44px touch areas and 16px field text do not show in the images.
 
 import fs from "node:fs";
 import path from "node:path";
@@ -80,6 +84,8 @@ export interface Measurement {
   scrollContainers: { sel: string; scrollWidth: number; clientWidth: number; labelled: boolean }[];
   smallTargets: { sel: string; w: number; h: number; text: string }[];
   clipped: { sel: string; text: string }[];
+  /** Fields whose text is under 16px: iOS zooms the page in when one gets focus. */
+  zoomFields: { sel: string; fontSize: number }[];
 }
 
 /** Runs in the page. Self-contained: no closures over Node values. */
@@ -197,8 +203,13 @@ function measure(minTap: number): Measurement {
     }
   }
 
+  const zoomFields = Array.from(document.querySelectorAll("input, select, textarea"))
+    .filter((el) => visible(el) && !["checkbox", "radio", "range", "hidden", "button", "submit", "reset"].includes((el as HTMLInputElement).type))
+    .map((el) => ({ sel: describe(el), fontSize: parseFloat(getComputedStyle(el).fontSize) }))
+    .filter((f) => f.fontSize < 16);
+
   const scrollWidth = document.documentElement.scrollWidth;
-  return { scrollWidth, innerWidth: vw, pageScrolls: scrollWidth > vw, overflow, scrollContainers, smallTargets, clipped };
+  return { scrollWidth, innerWidth: vw, pageScrolls: scrollWidth > vw, overflow, scrollContainers, smallTargets, clipped, zoomFields };
 }
 
 interface NavCheck {
@@ -349,6 +360,7 @@ export function verdict(r: RouteResult): string {
   if (m.overflow.length) problems.push(`${m.overflow.length} past the edge`);
   if (m.clipped.length) problems.push(`${m.clipped.length} clipped`);
   if (m.smallTargets.length) problems.push(`${m.smallTargets.length} targets <${MIN_TAP}px`);
+  if (m.zoomFields?.length) problems.push(`${m.zoomFields.length} fields <16px (iOS zooms on focus)`);
   const unlabelled = m.scrollContainers.filter((c) => !c.labelled).length;
   if (unlabelled) problems.push(`${unlabelled} unlabelled scroll area(s)`);
   if (r.nav && (!r.nav.opened || r.nav.offscreen || r.nav.smallLinks)) problems.push(`nav: ${r.nav.opened ? `${r.nav.offscreen} offscreen, ${r.nav.smallLinks} short links` : "drawer did not open"}`);
@@ -402,7 +414,7 @@ async function sweep(base: string, statePath: string | null, outDir: string, rou
       .map((r) => {
         const m = r.measurement!;
         const list = (label: string, xs: object[]) => (xs.length ? `  - ${label}: ${xs.slice(0, 8).map((x) => JSON.stringify(x)).join(", ")}` : null);
-        return [`- **${r.route} @ ${r.width}**`, list("past the edge", m.overflow), list("clipped", m.clipped), list("small targets", m.smallTargets), list("scroll areas", m.scrollContainers)].filter(Boolean).join("\n");
+        return [`- **${r.route} @ ${r.width}**`, list("past the edge", m.overflow), list("clipped", m.clipped), list("small targets", m.smallTargets), list("fields under 16px", m.zoomFields ?? []), list("scroll areas", m.scrollContainers)].filter(Boolean).join("\n");
       }),
   ];
   fs.writeFileSync(path.join(outDir, "report.md"), lines.join("\n") + "\n");
