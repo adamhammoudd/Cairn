@@ -23,6 +23,7 @@ import { requireCronSecret } from "../_shared/auth.ts";
 import { deriveVolatilityRegimes, CRYPTO_PERIODS_PER_YEAR } from "../_shared/volatility.ts";
 import { buildDirectoryPatch } from "../_shared/symbol-directory.ts";
 import { compareForHistoryRefresh } from "../_shared/history-refresh-priority.ts";
+import { partitionCoinsByDirectory } from "../_shared/asset-class.ts";
 
 // Was a hardcoded 25 - a self-imposed cap on a keyless API, not a provider
 // limit. It is now the provider row's `config.top_n` (default 250, CoinGecko's
@@ -198,11 +199,35 @@ Deno.serve(async (req) => {
   // at all - reads at the top of this file aside - so every crypto row's
   // last_checked_at was stuck at whatever migration 0027's backfill or its
   // first on-demand search left it, BTC included.)
+  //
+  // Only for coins the directory files as crypto. CoinGecko's top 250 share
+  // tickers with 58 listed securities (CVX is Convex Finance and Chevron, META
+  // is MetaDAO and Meta Platforms), and this job used to write the coin's
+  // prices, volatility events and "fresh" status onto the equity's rows. A
+  // symbol means one instrument, and symbol_directory says which (see
+  // _shared/asset-class.ts; migration 0047 enforces it in the database).
+  const { data: dirRows, error: dirError } = await supabase
+    .from("symbol_directory")
+    .select("symbol, asset_type")
+    .in("symbol", metricsRows.map((m) => m.symbol));
+  if (dirError) {
+    // Fail closed: without the directory this run cannot tell a coin's ticker
+    // from an equity's, so it writes no price history at all.
+    return Response.json(
+      { error: `symbol_directory read failed, no history written: ${dirError.message}` },
+      { status: 500, headers: corsHeaders },
+    );
+  }
+  const directoryTypes = new Map<string, string>(
+    (dirRows ?? []).map((r: { symbol: string; asset_type: string }) => [r.symbol.toUpperCase(), r.asset_type]),
+  );
+  const { keep: coinsForHistory, skipped: collidingTickers } = partitionCoinsByDirectory(coins, directoryTypes);
+
   const nowIso = new Date().toISOString();
   await supabase
     .from("symbol_directory")
     .update(buildDirectoryPatch({ kind: "success" }, nowIso))
-    .in("symbol", metricsRows.map((m) => m.symbol));
+    .in("symbol", coinsForHistory.map((c) => c.symbol.toUpperCase()));
 
   // Pick the stalest coins for the history pass. Without this, a rate-limited
   // run always burns its budget on the same top-ranked coins and the rest
@@ -232,7 +257,7 @@ Deno.serve(async (req) => {
     [...(heldRows ?? []), ...(watchedRows ?? [])].map((r: { symbol: string }) => r.symbol.toUpperCase()),
   );
 
-  const historyFor = [...coins]
+  const historyFor = [...coinsForHistory]
     .sort((a, b) =>
       compareForHistoryRefresh(
         { symbol: a.symbol.toUpperCase(), freshestBarTs: freshestBySymbol.get(a.symbol.toUpperCase()) ?? "", marketCapRank: a.market_cap_rank },
@@ -283,6 +308,15 @@ Deno.serve(async (req) => {
       .from("historical_prices")
       .upsert(bars, { onConflict: "symbol,ts", ignoreDuplicates: false });
 
+    // Derived events describe the prices that were just stored. If the store
+    // was refused (migration 0047 refuses a coin's bars under a listed
+    // symbol's ticker), writing the events anyway would attach this coin's
+    // volatility history to the other instrument.
+    if (priceError) {
+      results.push({ symbol, bars: 0, regimes: 0, error: priceError.message });
+      continue;
+    }
+
     const regimes = deriveVolatilityRegimes(dates, closes, CRYPTO_PERIODS_PER_YEAR);
     // Replace this symbol's derived regimes rather than accumulating duplicates
     // across runs - they're recomputed from the full window each time.
@@ -303,11 +337,13 @@ Deno.serve(async (req) => {
       );
     }
 
-    results.push({ symbol, bars: bars.length, regimes: regimes.length, error: priceError?.message });
+    results.push({ symbol, bars: bars.length, regimes: regimes.length });
   }
 
   return Response.json(
-    { metrics_upserted: metricsRows.length, history: results },
+    // colliding_tickers: coins whose ticker belongs to a listed security in
+    // symbol_directory, so no history was written for them this run.
+    { metrics_upserted: metricsRows.length, history: results, colliding_tickers: collidingTickers },
     { headers: corsHeaders },
   );
 });

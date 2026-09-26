@@ -314,7 +314,11 @@ export async function getAnalysesByIds(ids: string[]): Promise<AnalysisWithMetho
   if (ids.length === 0) return [];
   const supabase = await createClient();
 
-  const { data: analyses } = await supabase.from("ai_analyses").select("*").in("id", ids);
+  // Validated only, like every other analysis read. Cited-by-id was the one
+  // path without it, so an analysis withdrawn for being built on bad data
+  // (migration 0047 withdrew a BTC one computed from ETF prices) still
+  // rendered wherever a chat message had cited it.
+  const { data: analyses } = await supabase.from("ai_analyses").select("*").in("id", ids).eq("status", "validated");
   return attachMethodology(supabase, analyses ?? []);
 }
 
