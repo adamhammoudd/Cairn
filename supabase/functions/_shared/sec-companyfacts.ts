@@ -132,6 +132,12 @@ export interface Provenance {
   filed: string;
   /** Set when a derivation is not exact (Q4 EPS). */
   approximate?: boolean;
+  /**
+   * Set when a derived per-share value was impossible and not stored: EPS
+   * below zero in a quarter with positive net income, or a negative dividend.
+   * The value is null and this says what it came out as.
+   */
+  rejected?: string;
 }
 
 export interface QuarterRow {
@@ -156,6 +162,8 @@ export interface ParsedCompany {
   entityName: string | null;
   quarters: QuarterRow[];
   annual: AnnualRow[];
+  /** Share splits found in the filings; every per-share figure above is on the latest filing's basis. */
+  splits: SplitEvent[];
 }
 
 // ------------------------------------------------------------------ dates
@@ -270,6 +278,228 @@ function latestFiled(facts: XbrlFact[]): XbrlFact[] {
   return [...best.values()];
 }
 
+// ----------------------------------------------------------- share splits
+//
+// A filing reports every per-share figure on the share count at the time it
+// was issued: after a split, companies restate earlier periods on the new
+// count. Keeping the latest-filed copy of each period therefore mixes bases:
+// NVIDIA's FY2024 Q1 EPS was last filed in May 2024 (0.82, before its
+// 10-for-1 split) while FY2024 itself was restated in 2025 (1.19), so
+// Q4 = FY - Q1 - Q2 - Q3 came out at -0.25.
+//
+// The split history comes from the filings themselves. When two filings
+// report the same period's per-share figure and one is a clean split ratio of
+// the other (2, 3, 4, 10, 20, 1.5, ... or the reverse, within the rounding of
+// the reported digits), the two filings are on bases that differ by that
+// ratio; an equal figure says the same basis. Solving those links (a weighted
+// union-find, most precise figures first) gives every filing a scale to the
+// latest filing's basis. A ratio has to be seen on at least two periods to
+// count as a split: one period restated by a clean-looking ratio is more
+// likely a restatement for another reason (discontinued operations). A filing
+// that cannot be linked to the latest one is not guessed at: its per-share
+// facts are dropped when the filings either side of it disagree on the basis.
+//
+// Cover-page share counts (dei:EntityCommonStockSharesOutstanding) were
+// considered and not used: dual-class companies (Alphabet) report none, and
+// share issuance for acquisitions produces jumps that look like splits.
+
+export interface SplitEvent {
+  /** New shares per old share: 10 for NVIDIA's 2024 split, 0.1 for a 1-for-10 reverse split. */
+  ratio: number;
+  /** Filed date of the last filing on the old basis. */
+  lastOldBasis: string;
+  /** Filed date of the first filing on the new basis. */
+  firstNewBasis: string;
+}
+
+const SPLIT_RATIOS = [1.5, 2, 2.5, 3, 4, 5, 6, 7, 8, 10, 12, 15, 20, 25, 30, 40, 50, 100];
+const BASIS_RATIOS = [1, ...SPLIT_RATIOS, ...SPLIT_RATIOS.map((r) => 1 / r)];
+
+/** Half a unit of the last digit SEC reported: 0.82 is 0.815-0.825. */
+function halfUnit(v: number): number {
+  const s = String(Math.abs(v));
+  if (s.includes("e")) return Math.abs(v) * 1e-6;
+  const dot = s.indexOf(".");
+  return 0.5 * 10 ** -(dot < 0 ? 0 : s.length - dot - 1);
+}
+
+/**
+ * The one ratio r with earlier ~= r * later given each figure's rounding, or
+ * null when none fits or several do (0.01 vs 0.01 fits 1 and 2 alike).
+ */
+function basisRatio(earlier: number, later: number): number | null {
+  if (earlier === 0 || later === 0 || Math.sign(earlier) !== Math.sign(later)) return null;
+  const a = Math.abs(earlier);
+  const b = Math.abs(later);
+  const ha = halfUnit(earlier);
+  const hb = halfUnit(later);
+  const fits = BASIS_RATIOS.filter((r) => Math.abs(a / r - b) <= ha / r + hb + 1e-12);
+  return fits.length === 1 ? fits[0] : null;
+}
+
+const round6 = (v: number) => Math.round(v * 1e6) / 1e6;
+
+interface ShareBasis {
+  /** Multiplier from a filing's per-share figures to the latest basis; absent = unknown. */
+  scale: Map<string, number>;
+  splits: SplitEvent[];
+}
+
+export function shareBasis(doc: CompanyFacts): ShareBasis {
+  const filedOf = new Map<string, string>();
+  interface Link {
+    a: string;
+    b: string;
+    period: string;
+    ratio: number;
+    filedA: string;
+    filedB: string;
+    weight: number;
+  }
+  const links: Link[] = [];
+  for (const [concept, entry] of Object.entries(doc.facts?.["us-gaap"] ?? {})) {
+    for (const f of entry?.units?.["USD/shares"] ?? []) {
+      if (f && PERIODIC_FORMS.has(f.form) && typeof f.val === "number") filedOf.set(f.accn, f.filed);
+    }
+    const byPeriod = new Map<string, XbrlFact[]>();
+    for (const f of conceptFacts(doc, concept, "USD/shares")) {
+      const key = `${f.start ?? ""}|${f.end}`;
+      const list = byPeriod.get(key) ?? [];
+      if (!list.some((g) => g.accn === f.accn)) list.push(f);
+      byPeriod.set(key, list);
+    }
+    for (const [period, list] of byPeriod) {
+      list.sort((x, y) => (x.filed < y.filed ? -1 : x.filed > y.filed ? 1 : 0));
+      for (let i = 0; i < list.length; i++) {
+        for (let j = i + 1; j < list.length; j++) {
+          const x = list[i];
+          const y = list[j];
+          const ratio = basisRatio(x.val, y.val);
+          if (ratio === null) continue;
+          // Precision of the link: how many rounding units the smaller figure spans.
+          const weight = Math.min(Math.abs(x.val) / halfUnit(x.val), Math.abs(y.val) / halfUnit(y.val));
+          links.push({ a: x.accn, b: y.accn, period: `${concept}|${period}`, ratio, filedA: x.filed, filedB: y.filed, weight });
+        }
+      }
+    }
+  }
+
+  // A split ratio seen on only one period, with no other link of that ratio
+  // overlapping it in time, is not trusted.
+  const splitLinks = links.filter((l) => l.ratio !== 1);
+  const trusted = links.filter((l) => {
+    if (l.ratio === 1) return true;
+    const periods = new Set(
+      splitLinks.filter((m) => m.ratio === l.ratio && m.filedA < l.filedB && l.filedA < m.filedB).map((m) => m.period),
+    );
+    return periods.size >= 2;
+  });
+
+  // Weighted union-find in log space: pot(x) = log(scale(x) / scale(root)).
+  const parent = new Map<string, string>();
+  const pot = new Map<string, number>();
+  const find = (x: string): string => {
+    if (!parent.has(x)) {
+      parent.set(x, x);
+      pot.set(x, 0);
+    }
+    const p = parent.get(x)!;
+    if (p === x) return x;
+    const root = find(p);
+    pot.set(x, pot.get(x)! + pot.get(p)!);
+    parent.set(x, root);
+    return root;
+  };
+  for (const l of trusted.sort((x, y) => y.weight - x.weight)) {
+    // valA * scaleA = valB * scaleB and valA = ratio * valB, so
+    // log scaleA - log scaleB = -log ratio.
+    const d = -Math.log(l.ratio);
+    const ra = find(l.a);
+    const rb = find(l.b);
+    if (ra === rb) continue; // already fixed by more precise links
+    parent.set(ra, rb);
+    pot.set(ra, pot.get(l.b)! + d - pot.get(l.a)!);
+  }
+
+  const accns = [...filedOf.keys()].sort((x, y) => (filedOf.get(x)! < filedOf.get(y)! ? -1 : filedOf.get(x)! > filedOf.get(y)! ? 1 : 0));
+  const scale = new Map<string, number>();
+  const splits: SplitEvent[] = [];
+  const anchor = accns[accns.length - 1];
+  if (!anchor) return { scale, splits };
+  const anchorRoot = find(anchor);
+  // Products of the ratios above; toPrecision drops the float noise of exp/log.
+  const snap = (v: number) => Number(v.toPrecision(10));
+  const linked: string[] = [];
+  for (const x of accns) {
+    if (find(x) !== anchorRoot) continue;
+    scale.set(x, snap(Math.exp(pot.get(x)! - pot.get(anchor)!)));
+    linked.push(x);
+  }
+  for (let i = 1; i < linked.length; i++) {
+    const s0 = scale.get(linked[i - 1])!;
+    const s1 = scale.get(linked[i])!;
+    if (s0 !== s1) {
+      const r = s1 / s0;
+      splits.push({ ratio: r >= 1 ? Math.round(r * 100) / 100 : Math.round(r * 10000) / 10000, lastOldBasis: filedOf.get(linked[i - 1])!, firstNewBasis: filedOf.get(linked[i])! });
+    }
+  }
+  // A filing that shares no period with the others takes the basis of the
+  // linked filings of its era. Filed inside a split's window (after the last
+  // old-basis filing, before the first new-basis one) it stays unknown.
+  for (const x of accns) {
+    if (scale.has(x)) continue;
+    const filed = filedOf.get(x)!;
+    if (splits.some((s) => filed > s.lastOldBasis && filed < s.firstNewBasis)) continue;
+    const era = [...linked].reverse().find((y) => filedOf.get(y)! <= filed) ?? linked[0];
+    scale.set(x, scale.get(era)!);
+  }
+  return { scale, splits };
+}
+
+/**
+ * The same document with every per-share fact on the latest filing's basis.
+ * Facts from a filing whose basis is unknown are left out, so a quarter can
+ * never be built from two bases.
+ */
+export function splitAdjusted(doc: CompanyFacts): { doc: CompanyFacts; splits: SplitEvent[] } {
+  const usGaap = doc.facts?.["us-gaap"];
+  if (!usGaap) return { doc, splits: [] };
+  const { scale, splits } = shareBasis(doc);
+  const out: NonNullable<CompanyFacts["facts"]>["us-gaap"] = {};
+  for (const [concept, entry] of Object.entries(usGaap)) {
+    const perShare = entry?.units?.["USD/shares"];
+    if (!perShare) {
+      out[concept] = entry;
+      continue;
+    }
+    const adjusted = perShare.flatMap((f) => {
+      const s = scale.get(f.accn);
+      if (s === undefined) return [];
+      return [s === 1 ? f : { ...f, val: round6(f.val * s) }];
+    });
+    out[concept] = { ...entry, units: { ...entry.units, "USD/shares": adjusted } };
+  }
+  return { doc: { ...doc, facts: { ...doc.facts, "us-gaap": out } }, splits };
+}
+
+/**
+ * Last-12-months per-share figure from parsed quarters: the screener's
+ * `fundamentals.eps_ttm` and `dividends_ttm`. The four newest quarters must
+ * be consecutive and all known; Q4 comes from the year (10-Ks report no
+ * 3-month Q4), and a missing quarter gives null rather than a 3-quarter sum.
+ */
+export function trailingPerShare(parsed: ParsedCompany, field: "eps_diluted" | "dividends_per_share"): number | null {
+  const newest = [...parsed.quarters].sort((a, b) => (a.period_end < b.period_end ? 1 : -1)).slice(0, 4);
+  if (newest.length < 4) return null;
+  for (let i = 1; i < 4; i++) {
+    const gap = days(newest[i].period_end, newest[i - 1].period_end);
+    if (gap < 80 || gap > 100) return null;
+  }
+  const vals = newest.map((q) => q.values[field]);
+  if (vals.some((v) => v === null)) return null;
+  return round6((vals as number[]).reduce((a, b) => a + b, 0));
+}
+
 // ------------------------------------------------------------- one concept
 
 interface ConceptQuarters {
@@ -335,7 +565,7 @@ function durationQuarters(doc: CompanyFacts, concept: string, unit: string, year
     if (a && !m.has(4) && m.has(1) && m.has(2) && m.has(3)) {
       const sum = m.get(1)!.val + m.get(2)!.val + m.get(3)!.val;
       m.set(4, {
-        val: a.val - sum,
+        val: isEps ? round6(a.val - sum) : a.val - sum,
         prov: prov(concept, "fy_minus_q1_q3", a.fact, isEps),
         start: addDays(m.get(3)!.end, 1),
         end: a.fact.end,
@@ -352,8 +582,11 @@ function emptyValues(): Record<Field, number | null> {
   return Object.fromEntries(FIELDS.map((f) => [f, null])) as Record<Field, number | null>;
 }
 
-export function parseCompanyFacts(doc: CompanyFacts): ParsedCompany {
-  const cik = String(doc.cik).padStart(10, "0");
+export function parseCompanyFacts(raw: CompanyFacts): ParsedCompany {
+  const cik = String(raw.cik).padStart(10, "0");
+  // Every per-share figure onto the latest filing's share basis first, so no
+  // quarter or year below is ever built from two bases (see shareBasis).
+  const { doc, splits } = splitAdjusted(raw);
   const years = fiscalYears(doc);
 
   // Duration fields, per concept, then the chain chooses per quarter.
@@ -426,6 +659,20 @@ export function parseCompanyFacts(doc: CompanyFacts): ParsedCompany {
         }
       }
     }
+    // A derived per-share figure that cannot be true is not stored: a loss per
+    // share in a quarter that made money, or a negative dividend. Both are
+    // what inconsistent inputs look like (a basis or restatement mismatch),
+    // and one bad quarter poisons every trailing-12-month figure it is in.
+    const reject = (field: "eps_diluted" | "dividends_per_share", why: string) => {
+      const p = provenance[field];
+      if (!p || p.method === "reported") return;
+      provenance[field] = { ...p, rejected: `${why}: derived ${values[field]}` };
+      values[field] = null;
+    };
+    if (values.eps_diluted !== null && values.eps_diluted < 0 && values.net_income !== null && values.net_income > 0) {
+      reject("eps_diluted", "negative EPS with positive net income");
+    }
+    if (values.dividends_per_share !== null && values.dividends_per_share < 0) reject("dividends_per_share", "negative dividend per share");
     quarters.push({ fiscal_year: fy, fiscal_quarter: q as 1 | 2 | 3 | 4, period_start: start, period_end: end, values, provenance });
   }
 
@@ -447,7 +694,7 @@ export function parseCompanyFacts(doc: CompanyFacts): ParsedCompany {
       return { fiscal_year: y.fy, period_start: y.start, period_end: y.end, values };
     });
 
-  return { cik, entityName: doc.entityName ?? null, quarters, annual };
+  return { cik, entityName: doc.entityName ?? null, quarters, annual, splits };
 }
 
 // ------------------------------------------------------- earnings releases
