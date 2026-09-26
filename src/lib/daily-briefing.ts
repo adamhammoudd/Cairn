@@ -14,7 +14,7 @@
 // Money stays in USD here; the page formats it in the reader's currency.
 
 import type { DimensionKey, Level, Scorecard } from "@/lib/scorecard";
-import { plainDate } from "@/lib/scorecard";
+import { VALUATION_VERDICTS, plainDate } from "@/lib/scorecard";
 import type { EarningsReaction, PricePoint } from "@/lib/fundamentals";
 import { median } from "@/lib/fundamentals";
 import { qualityPhrase } from "@/lib/ai/plain-summary";
@@ -245,12 +245,12 @@ export function holdingLine(card: Scorecard, assetType: string | null): string {
   const quality = qualityPhrase(dim("growth")?.verdict, dim("health")?.verdict);
   const v = dim("valuation")?.verdict;
   const price =
-    v === "Expensive"
-      ? "The share is priced high for its profit."
-      : v === "Cheap"
-        ? "The share is priced low for its profit."
-        : v === "Fair"
-          ? "The share is fairly priced for its profit."
+    v === VALUATION_VERDICTS.pricier
+      ? "The share costs more than usual for its profit."
+      : v === VALUATION_VERDICTS.cheaper
+        ? "The share costs less than usual for its profit."
+        : v === VALUATION_VERDICTS.usual
+          ? "The share is priced about as usual for its profit."
           : `Its price trend is ${trend}.`;
   return `${quality}. ${price}`;
 }

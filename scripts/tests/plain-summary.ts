@@ -45,7 +45,7 @@ export async function runPlainSummarySuite(): Promise<SuiteResult> {
   const check = (name: string, ok: boolean, detail: string) => cases.push({ name, status: ok ? "pass" : "fail", detail });
   const inputs = nvdaLike();
   const good = {
-    headline: "A strong, fast-growing company whose share is priced high for its profit.",
+    headline: "A strong, fast-growing company whose share costs more than usual for its profit.",
     bullets: [
       "Sales are up 56% on last year, and profit is up 61%.",
       "The share costs 45 times the company's yearly profit; its 5-year average is 38.",
@@ -93,7 +93,7 @@ export async function runPlainSummarySuite(): Promise<SuiteResult> {
   const t = templateSummary(inputs);
   check(
     "template headline is built from the verdicts",
-    t.headline === "A strong, growing company whose share is priced high for its profit. Earnings are due in 5 days.",
+    t.headline === "A strong, growing company whose share costs more than usual for its profit. Earnings are due in 5 days.",
     t.headline,
   );
   check("template bullets are the scorecard's own sentences", t.bullets.length >= 3 && t.bullets.length <= 4 && t.bullets[0].startsWith("Sales are up 56% on last year"), t.bullets.join(" | "));

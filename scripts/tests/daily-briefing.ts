@@ -158,7 +158,7 @@ export function runDailyBriefingSuite(): SuiteResult {
   check("no holdings -> an invitation, not a briefing", buildBriefing({ today: TODAY, holdings: [], exposureEnabled: true }).headline === "Add what you own to get a briefing about it.", "empty");
 
   // ---- holdings at a glance ----------------------------------------------------
-  check("holdings line for a company", holdingLine(cards.GROW, "equity") === "A strong, growing company. The share is priced high for its profit.", holdingLine(cards.GROW, "equity"));
+  check("holdings line for a company", holdingLine(cards.GROW, "equity") === "A strong, growing company. The share costs more than usual for its profit.", holdingLine(cards.GROW, "equity"));
   check("holdings line for a coin", holdingLine(cards.BTC, "crypto") === "No company behind it, so only the price trend applies, and it is falling.", holdingLine(cards.BTC, "crypto"));
   const nvRow = b.holdings.find((h) => h.symbol === "NVDA")!;
   check("glance row carries four mini bars (price vs profit, growth, health, trend)", nvRow.bars.map((x) => `${x.key}:${x.level}`).join() === "valuation:weak,growth:strong,health:strong,trend:strong", nvRow.bars.map((x) => `${x.key}:${x.level}`).join());

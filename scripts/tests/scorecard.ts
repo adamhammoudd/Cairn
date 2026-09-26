@@ -18,12 +18,14 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import {
   NO_EVENT_VERDICT,
   THRESHOLDS,
+  VALUATION_VERDICTS,
   hasUpcomingEvent,
   barSegments,
   buildScorecard,
   dividendDimension,
   growthDimension,
   healthDimension,
+  marketMedianPe,
   nextEventDimension,
   sectorMedianPe,
   trendDimension,
@@ -85,6 +87,7 @@ function pe(current: number, avg: number | null): PeHistory {
 
 const val = (over: Partial<ValuationInput>): ValuationInput => ({ pe: null, sector: null, fcfYield: null, priceDate: "2025-09-25", filing: FILING, ...over });
 const sector = (median: number, peers = 8) => ({ median, peers, name: "Semiconductors" });
+const market = (median: number, companies: number) => ({ median, companies });
 
 export function runScorecardSuite(opts: { update?: boolean } = {}): SuiteResult {
   const cases: TestCase[] = [];
@@ -94,30 +97,65 @@ export function runScorecardSuite(opts: { update?: boolean } = {}): SuiteResult 
 
   // ---- price vs profit ------------------------------------------------------
   const V = THRESHOLDS.valuation;
+  const VV = VALUATION_VERDICTS;
   const valuationTable: [string, ValuationInput, string, string][] = [
-    ["P/E 45 vs own 38 and sector 24 -> Expensive", val({ pe: pe(45, 38), sector: sector(24) }), "weak", "Expensive"],
-    ["P/E 20 vs own 30 and sector 30 -> Cheap", val({ pe: pe(20, 30), sector: sector(30) }), "strong", "Cheap"],
-    ["cheap vs own history, expensive vs sector -> Fair", val({ pe: pe(20, 30), sector: sector(15) }), "mixed", "Fair"],
-    [`exactly ${V.cheapRatio} x its average counts as cheap (boundary)`, val({ pe: pe(V.cheapRatio * 40, 40) }), "strong", "Cheap"],
-    [`exactly ${V.expensiveRatio} x its average counts as expensive (boundary)`, val({ pe: pe(V.expensiveRatio * 40, 40) }), "weak", "Expensive"],
-    ["just inside the band is Fair", val({ pe: pe(0.86 * 40, 40) }), "mixed", "Fair"],
-    ["too few sector peers are ignored, own history decides", val({ pe: pe(30, 30), sector: sector(10, V.minSectorPeers - 1) }), "mixed", "Fair"],
+    ["P/E 45 vs own 38 -> Pricier than usual (sector 24 is context only)", val({ pe: pe(45, 38), sector: sector(24) }), "weak", VV.pricier],
+    ["P/E 20 vs own 30 -> Cheaper than usual", val({ pe: pe(20, 30), sector: sector(30) }), "strong", VV.cheaper],
+    ["cheaper than its own history but above the sector -> still Cheaper than usual (the verdict is about its own history)", val({ pe: pe(20, 30), sector: sector(15) }), "strong", VV.cheaper],
+    ["NVDA: 28x vs its own 61 -> Cheaper than usual, not 'Cheap'", val({ pe: pe(28, 61), market: market(39, 15) }), "strong", VV.cheaper],
+    [`exactly ${V.cheapRatio} x its average counts as cheaper than usual (boundary)`, val({ pe: pe(V.cheapRatio * 40, 40) }), "strong", VV.cheaper],
+    [`exactly ${V.expensiveRatio} x its average counts as pricier than usual (boundary)`, val({ pe: pe(V.expensiveRatio * 40, 40) }), "weak", VV.pricier],
+    ["just inside the band is About usual", val({ pe: pe(0.86 * 40, 40) }), "mixed", VV.usual],
+    ["too few sector peers are ignored", val({ pe: pe(30, 30), sector: sector(10, V.minSectorPeers - 1) }), "mixed", VV.usual],
+    ["no own history -> not enough history, even with peers and the market (no 'usual' invented)", val({ pe: pe(30, null), sector: sector(20), market: market(39, 15) }), "not_applicable", "Not enough history"],
     ["no history and no peers -> not enough history (no verdict invented)", val({ pe: pe(30, null) }), "not_applicable", "Not enough history"],
-    ["no profit: free-cash-flow yield 6% -> Cheap", val({ fcfYield: 0.06 }), "strong", "Cheap"],
-    ["no profit: yield exactly 5% -> Cheap (boundary)", val({ fcfYield: V.fcfYieldCheap }), "strong", "Cheap"],
-    ["no profit: yield 3% -> Fair", val({ fcfYield: 0.03 }), "mixed", "Fair"],
-    ["no profit, burning cash -> Expensive", val({ fcfYield: -0.02 }), "weak", "Expensive"],
+    ["no profit: free-cash-flow yield 6% -> High cash yield", val({ fcfYield: 0.06 }), "strong", VV.highCash],
+    ["no profit: yield exactly 5% -> High cash yield (boundary)", val({ fcfYield: V.fcfYieldCheap }), "strong", VV.highCash],
+    ["no profit: yield 3% -> Modest cash yield", val({ fcfYield: 0.03 }), "mixed", VV.modestCash],
+    ["no profit, burning cash -> Low cash yield", val({ fcfYield: -0.02 }), "weak", VV.lowCash],
     ["no profit and no cash-flow figure -> not available", val({}), "not_applicable", "Not available"],
   ];
   for (const [name, input, level, verdict] of valuationTable) {
     const d = valuationDimension(input);
     check(`price vs profit: ${name}`, is(d, level, verdict), show(d));
   }
+  const bargainWords = /\b(cheap|bargain|undervalued|expensive|overvalued)\b/i;
+  const allValuation = valuationTable.map(([, input]) => valuationDimension(input));
+  check(
+    "price vs profit never says 'cheap', 'expensive' or 'bargain' (verdicts and sentences)",
+    allValuation.every((d) => !bargainWords.test(d.verdict) && !bargainWords.test(d.sentence)),
+    allValuation.filter((d) => bargainWords.test(`${d.verdict} ${d.sentence}`)).map(show).join(" | ") || "none",
+  );
   const nv = valuationDimension(val({ pe: pe(45, 38), sector: sector(24) }));
   check(
     "price vs profit sentence uses real numbers and no jargon ('P/E' is not used)",
-    nv.sentence === "The share costs 45 times the company's yearly profit. For comparison, its 5-year average is 38; similar companies average 24." && !/P\/E/.test(nv.sentence),
+    nv.sentence === "The share costs 45 times the company's yearly profit, higher than its own 5-year average of 38. For comparison, similar companies average 24." && !/P\/E/.test(nv.sentence),
     nv.sentence,
+  );
+  const nvda = valuationDimension(val({ pe: pe(28, 61), market: market(39, 15) }));
+  check(
+    "NVDA sentence: relative to its own history, plus the tracked market",
+    nvda.sentence === "The share costs 28 times the company's yearly profit, lower than its own 5-year average of 61. For comparison, the middle figure across the 15 companies Cairn tracks is 39.",
+    nvda.sentence,
+  );
+  const both = valuationDimension(val({ pe: pe(24, 23), sector: sector(21), market: market(39, 15) }));
+  check(
+    "sector and tracked market both quoted when both qualify",
+    both.verdict === VV.usual && /about the same as its own 5-year average of 23\. For comparison, similar companies average 21; the middle figure across the 15 companies Cairn tracks is 39\.$/.test(both.sentence),
+    both.sentence,
+  );
+  const fewMarket = valuationDimension(val({ pe: pe(28, 61), market: market(39, V.minMarketCompanies - 1) }));
+  check(
+    `a tracked market under ${V.minMarketCompanies} companies is not quoted`,
+    !/Cairn tracks/.test(fewMarket.sentence) && fewMarket.inputs.find((i) => i.label === "Companies Cairn tracks (median)")?.value === null,
+    fewMarket.sentence,
+  );
+  check(
+    "market median: positive P/Es only, null under the minimum",
+    marketMedianPe([10, 20, 30, 40, 50, 60, 70, 80, 90, 100, null, -5, 0])?.median === 55 &&
+      marketMedianPe([10, 20, 30, 40, 50, 60, 70, 80, 90, 100, null, -5, 0])?.companies === 10 &&
+      marketMedianPe([10, 20, 30]) === null,
+    JSON.stringify(marketMedianPe([10, 20, 30, 40, 50, 60, 70, 80, 90, 100, null, -5, 0])),
   );
 
   // ---- growth -------------------------------------------------------------
@@ -367,7 +405,7 @@ export function snapshotCards() {
     today,
     companyData: "available",
     metrics: metrics({ revenueGrowth: 0.56, netIncomeGrowth: 0.61, revenueGrowthLatestQuarter: 0.56, revenueGrowthPriorQuarter: 1.2, ebitdaMargin: 0.52 }),
-    valuation: val({ pe: pe(45, 38), sector: sector(24) }),
+    valuation: val({ pe: pe(45, 38), sector: sector(24), market: market(39, 15) }),
     dividend: { perShareTtm: 0.04, price: 176.4, payoutOfFcf: 0.01, freeCashFlow: 360, growthYears: 0, filing: FILING },
     trend: { return6m: 0.34, vs200d: 0.12, asOf: today },
     events: [earnings],
