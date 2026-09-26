@@ -1,17 +1,17 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { MIGRATIONS, unwrap, unwrapRows } from "@/lib/supabase/read";
+import { unwrapRows } from "@/lib/supabase/read";
 import {
   computeAllocation,
   computeConcentration,
   computeHoldingMetrics,
   computeTimelineSeries,
   computeTotals,
-  isHistoryTruncated,
   timelineCoverage,
   type PriceBar,
 } from "@/lib/portfolio";
 import { getLatestCloses, latestDataDate, groupBarsBySymbol } from "@/lib/market-data/current-price";
+import { readRecentPrices } from "@/lib/market-data/paged-read";
 import type { ChartView } from "@/lib/supabase/types";
 import { PortfolioStats } from "@/components/portfolio/portfolio-stats";
 import { PortfolioChart } from "@/components/portfolio/portfolio-chart";
@@ -56,21 +56,16 @@ async function PortfolioBody() {
   // five-month-old price. recent_prices() takes the newest N per symbol;
   // computeTimelineSeries sorts them itself.
   //
-  // This read can still be cut short: 1500 bars x several symbols is past the
-  // 1000-row cap, and PostgREST returns the first 1000 without an error (four
-  // holdings = 4,435 rows, all of the first 1000 NVDA). `count: "exact"` is how
-  // the page finds out, so the chart can say so instead of drawing a subset.
-  const pricesRes =
-    symbols.length > 0
-      ? await supabase.rpc("recent_prices", { symbols, per_symbol: 1500 }, { count: "exact" })
-      : { data: [], error: null, count: 0 };
-  const prices = unwrap("Portfolio price history (recent_prices)", pricesRes, MIGRATIONS.onDemandIngestion);
+  // 1500 bars x several symbols is past the API's 1000-row cap per response
+  // (the founder's four holdings: 5,267 rows), and one call silently returned
+  // NVDA alone, so the chart plotted 1 of 4 positions. readRecentPrices pages
+  // until it has every row, or throws.
+  const prices = await readRecentPrices(supabase, symbols, 1500);
 
   // recent_prices() returns newest-first within a symbol; everything below
   // wants oldest-first, so sort once here rather than relying on the order the
   // rows happen to arrive in.
-  const priceRows = ((prices ?? []) as PriceBar[]).slice().sort((a, b) => (a.ts < b.ts ? -1 : a.ts > b.ts ? 1 : 0));
-  const historyTruncated = isHistoryTruncated(pricesRes.count, priceRows.length);
+  const priceRows = (prices as PriceBar[]).slice().sort((a, b) => (a.ts < b.ts ? -1 : a.ts > b.ts ? 1 : 0));
 
   // History bars, grouped - for the chart's as-of date and the sparklines.
   // NOT handed to getLatestCloses: pricing the holdings off this read is what
@@ -139,7 +134,6 @@ async function PortfolioBody() {
             hasHoldings={rows.length > 0}
             asOf={asOf}
             missingHistory={coverage.missing}
-            historyTruncated={historyTruncated}
             positionCount={symbols.length}
           />
         </div>

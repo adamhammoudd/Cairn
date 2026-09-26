@@ -1,7 +1,37 @@
 # Decision: an optional fallback inference endpoint
 
 **Owner:** dev-lead · **Raised by:** founder, during the 2026-08-29/30 verification pass
-**Status:** implemented (code), pending the founder creating a Cerebras account to activate it
+**Status:** implemented (code); **no fallback configured** - Cerebras was configured and then
+removed on 2026-09-25 (unfunded account, HTTP 402)
+
+---
+
+## Current state (checked against `src/lib/ai/llm.ts`, 2026-09-26)
+
+Three statements further down no longer match the code. The code is right:
+
+1. **What triggers the fallback.** Not only a daily-quota 429. The fallback is
+   tried on **any `LlmBusyError`** from the primary - i.e. the primary was
+   reachable but would not serve the request:
+   - 429 / 408 / 409 / 425 / 5xx / 529 still failing after the four-attempt retry budget;
+   - a daily-quota 429 ("tokens per day" / "TPD"), which skips the remaining retries;
+   - HTTP 402 (spending limit reached or account unfunded), not retried;
+   - a network error or client timeout on every attempt.
+
+   What is unchanged: a configuration fault (400/401/403/404/422 - bad key,
+   bad model id, malformed request) throws a plain error and is **never**
+   retried against the fallback.
+2. **`FALLBACK_LLM_MODEL` default.** It defaults to the primary's model
+   (`LLM_MODEL`, itself defaulting to `openai/gpt-oss-120b`). There is no
+   `DEFAULT_FALLBACK_MODEL = "gpt-oss-120b"` any more. Set `FALLBACK_LLM_MODEL`
+   explicitly whenever the fallback host names the weights differently (Cerebras
+   used the bare `gpt-oss-120b`). The live health check issues a real 1-token
+   completion, so a wrong id shows up there.
+3. **`model_version` label.** It is `<provider>:<model>`, where the provider
+   is derived from the host that actually answered (`groq`, `deepinfra`, or
+   the hostname minus `api.`) - not a literal `fallback:` prefix.
+
+The key for the primary is `LLM_API_KEY` (see `2026-08-20-model-provider.md`).
 
 ---
 

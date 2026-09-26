@@ -7,13 +7,15 @@
 // computeHoldingMetrics so the figures are exactly the ones the Portfolio page
 // shows (no second implementation of the math).
 //
-// Gated OFF by default in every environment (ENABLE_PORTFOLIO_CONTEXT). Per
-// docs/decisions/2026-09-04-ai-portfolio-figures.md this is option (c): the
-// sensitive figures are computed on Cairn infrastructure and the model only
-// restates them. The flag must stay off in every deployed environment until
-// the founder confirms Groq's data-retention / DPA terms cover sending real
-// dollar figures to inference - a vendor-account decision, not an engineering
-// one. With the flag off, buildChatContext never calls into here and behaviour
+// Gated OFF by default in every environment (ENABLE_PORTFOLIO_CONTEXT). This
+// is NOT option (c) of docs/decisions/2026-09-04-ai-portfolio-figures.md as
+// that memo defines it - under (c) the model never receives the figures. It
+// is a hybrid: the figures are computed on Cairn infrastructure, as in (c),
+// but they ARE sent to the model in the PORTFOLIO_SUMMARY block, which is (b)'s
+// data flow, and checkPortfolioFigureDrift() stops it changing them. Because
+// real dollar figures reach the inference provider, the flag must stay off in
+// every deployed environment until the founder confirms Groq's data-retention /
+// DPA terms cover that - a vendor-account decision, not an engineering one. With the flag off, buildChatContext never calls into here and behaviour
 // is exactly what PR #58 shipped (ticker symbols only).
 
 import type { SupabaseClient } from "@supabase/supabase-js";

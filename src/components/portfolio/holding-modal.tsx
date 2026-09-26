@@ -145,7 +145,9 @@ export function HoldingModal({ holding, initialSymbol, onClose }: HoldingModalPr
                 className="w-full rounded-control border border-line bg-active px-3 py-2 text-lead text-primary outline-none"
               />
             </Field>
-            <Field label="Purchase price">
+            {/* Stored and priced as USD whatever the display currency - see the
+                open decision on per-holding currency (2026-09-26). */}
+            <Field label="Purchase price (USD)">
               <input
                 name="purchase_price"
                 type="number"

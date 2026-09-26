@@ -24,7 +24,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { checkScopeGuard, checkCompleteness } from "@/lib/ai/scope-guard";
+import { checkScopeGuard, checkCompleteness, checkAnalysisProbabilityClaims } from "@/lib/ai/scope-guard";
 import { classifyScope, classifierMode, resolveUnavailable } from "@/lib/ai/scope-classifier";
 import {
   computeHistoricalStats,
@@ -304,7 +304,18 @@ Respond with only a JSON object matching the required schema.`,
     factor_evidence_required: factorEvents.length > 0,
   });
 
-  let failure = !contentCheck.passed ? contentCheck : !completenessCheck.passed ? completenessCheck : null;
+  // The prose may restate the computed band and base rate, and no other
+  // probability - the chat path has always had this gate; stored analyses,
+  // the more durable artifact, did not.
+  const probabilityCheck = checkAnalysisProbabilityClaims(prose.reasoning_text, band);
+
+  let failure = !contentCheck.passed
+    ? contentCheck
+    : !completenessCheck.passed
+      ? completenessCheck
+      : !probabilityCheck.passed
+        ? probabilityCheck
+        : null;
 
   // Layer 3: semantic second pass over the model's prose, same as the chat
   // path. A stored analysis is the more durable artifact of the two, so a

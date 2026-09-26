@@ -5,6 +5,7 @@ import { PageToneProvider } from "@/components/layout/page-tone";
 import { ScrollbarWidthVar } from "@/components/layout/scrollbar-width-var";
 import { ChatPanel } from "@/components/chat/chat-panel";
 import { DisplayPrefsProvider } from "@/components/display-prefs-provider";
+import { CurrencyNote } from "@/components/layout/currency-note";
 import { DEFAULT_DISPLAY_PREFS, type DisplayPrefs } from "@/lib/display-prefs";
 
 interface AppShellProps {
@@ -61,6 +62,7 @@ export function AppShell({
             rails (screener, alerts, calendar) stick to the viewport, which is
             what their `top-[78px]` was always written for. */}
         <main className="mx-auto w-full max-w-[1560px] flex-1 px-5.5 pt-6.5 pb-15 min-[900px]:pb-28">
+          <CurrencyNote prefs={displayPrefs} />
           {children}
         </main>
         <ChatPanel />

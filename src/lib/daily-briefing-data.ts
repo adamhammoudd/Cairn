@@ -5,6 +5,7 @@ import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { loadScorecard } from "@/lib/scorecard-data";
+import { isEstimatedEvent } from "@/lib/calendar";
 import { isExposureEnabled } from "@/lib/exposure";
 import { buildBriefing, snapshotLevels, type Briefing, type BriefingEvent, type BriefingHolding, type WeekAgoLevels } from "@/lib/daily-briefing";
 import type { Scorecard } from "@/lib/scorecard";
@@ -90,7 +91,7 @@ export async function loadDailyBriefing(userId: string, today: string = new Date
       const events: BriefingEvent[] = [];
       for (const e of (cal ?? []).filter((c) => c.symbol === symbol)) {
         const meta = (e.metadata ?? {}) as Record<string, unknown>;
-        if (e.event_type === "earnings") events.push({ type: "earnings", date: String(e.event_date) });
+        if (e.event_type === "earnings") events.push({ type: "earnings", date: String(e.event_date), estimated: isEstimatedEvent(meta) });
         if (e.event_type === "dividend") {
           // Nasdaq's `rate` read as the amount per share for this payment.
           const amount = perShare(meta.rate);
