@@ -35,6 +35,7 @@ import {
 } from "@/lib/ai/analytics";
 import { analyzeFactors, formatFactorBlock, FACTOR_EVENT_TYPE, type FactorAnalysis, type FactorEventRow } from "@/lib/ai/factor-analysis";
 import { llmCompleteJsonWithProvider } from "@/lib/ai/llm";
+import { attachPlainSummary } from "@/lib/ai/plain-summary-store";
 import type { ScopeType, Database } from "@/lib/supabase/types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
@@ -433,6 +434,21 @@ Respond with only a JSON object matching the required schema.`,
   if (promoteError || !promoted) {
     await admin.from("ai_analyses").delete().eq("id", analysis.id);
     throw new Error(promoteError?.message ?? "Failed to publish analysis.");
+  }
+
+  // The "In plain words" summary (feat/plain-summary). Built only after the
+  // analysis is validated, from the scorecard and this analysis's own analog
+  // result; a failure here never takes the analysis down (it is logged, and
+  // the page builds the template instead).
+  if (scopeType === "ticker") {
+    const stored = await attachPlainSummary({
+      analysisId: analysis.id,
+      symbol: scopeValue,
+      assetType: assetRow?.asset_type ?? null,
+      factorAnalysis,
+      supabase,
+    });
+    if (stored) return { ...promoted, plain_summary: stored as unknown as Record<string, unknown> };
   }
 
   return promoted;

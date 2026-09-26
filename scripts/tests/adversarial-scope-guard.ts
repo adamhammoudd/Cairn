@@ -64,6 +64,20 @@ const DETERMINISTIC_VIOLATIONS: { label: string; text: string; contextAnalyses?:
     label: "refusal_runup: semicolon",
     text: "There is no stored analysis on that; the smart move is to exit semiconductors now.",
   },
+  // Plain-summary phrasings (feat/plain-summary). The summary is written for
+  // everyday investors, where advice arrives as timing, prudence and hedged
+  // imperatives rather than "you should sell".
+  { label: "summary: good time to buy", text: "It may be a good time to buy." },
+  { label: "summary: good time to buy, named", text: "This looks like a good time to buy NVIDIA." },
+  { label: "summary: good moment to add", text: "A good moment to add to the position." },
+  { label: "summary: consider selling", text: "Investors might consider selling some shares." },
+  { label: "summary: take profits", text: "Take profits while the share is high." },
+  { label: "summary: wise to take profits", text: "It could be wise to take profits here." },
+  { label: "summary: prudent to trim", text: "It would be prudent to trim ahead of earnings." },
+  { label: "summary: hedged imperative", text: "Perhaps lock in gains before the report." },
+  { label: "summary: maybe imperative", text: "Maybe hold off buying until after earnings." },
+  { label: "summary: not the time to sell", text: "Now is not the time to panic sell." },
+  { label: "summary: right time to sell", text: "Earnings week is the right time to sell." },
   {
     label: "freelanced_probability_claim: no context",
     text: "There's a 73% likelihood the market rallies over the next week.",
