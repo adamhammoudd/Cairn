@@ -333,7 +333,6 @@ export function TickerWorkspace({
               Technicals tab and in the case list above.
             </p>
           )}
-          <TickerChart symbol={data.symbol} bars={data.bars} priceSource={data.priceSource} priceAsOf={data.priceAsOf} />
           {stats.length > 0 && (
             <div className="mb-4 grid grid-cols-[repeat(auto-fit,minmax(172px,1fr))] gap-3">
               {stats.map((s, i) => {
@@ -487,6 +486,9 @@ export function TickerWorkspace({
                 : null
             }
           />
+
+          {/* The price chart stays on the page, not in the collapsed breakdown. */}
+          <TickerChart symbol={data.symbol} bars={data.bars} priceSource={data.priceSource} priceAsOf={data.priceAsOf} />
 
           <ScorecardGrid scorecard={summary.scorecard} />
 
