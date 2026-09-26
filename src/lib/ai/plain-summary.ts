@@ -62,7 +62,7 @@ export interface PlainSummary extends SummaryText {
 
 // ------------------------------------------------------------------ numbers
 
-const NUMBER_WORDS: Record<string, string> = {
+export const NUMBER_WORDS: Record<string, string> = {
   zero: "0", one: "1", two: "2", three: "3", four: "4", five: "5", six: "6", seven: "7", eight: "8", nine: "9", ten: "10",
   eleven: "11", twelve: "12", thirteen: "13", fourteen: "14", fifteen: "15", sixteen: "16", seventeen: "17", eighteen: "18",
   nineteen: "19", twenty: "20", thirty: "30", forty: "40", fifty: "50", sixty: "60", seventy: "70", eighty: "80", ninety: "90",
@@ -123,7 +123,7 @@ const JARGON_RE = new RegExp(`\\b(?:${JARGON.join("|")})\\b`, "gi");
  * 2.6 years of EBITDA." Each bullet must explain its own terms, because a
  * reader may read only that one.
  */
-function unexplainedJargon(part: string): string | null {
+export function unexplainedJargon(part: string): string | null {
   const explained = new Set<string>();
   for (const m of part.matchAll(JARGON_RE)) {
     const term = m[0].toLowerCase();
@@ -141,14 +141,14 @@ function unexplainedJargon(part: string): string | null {
   return null;
 }
 
-function sentences(text: string): string[] {
+export function sentences(text: string): string[] {
   return text
     .split(/(?<=[.!?])\s+/)
     .map((s) => s.trim())
     .filter((s) => s.length > 0);
 }
 
-function wordCount(sentence: string): number {
+export function wordCount(sentence: string): number {
   return sentence.split(/\s+/).filter((w) => /[\p{L}\p{N}]/u.test(w)).length;
 }
 
@@ -228,7 +228,7 @@ export function qualityPhrase(growth: string | undefined, health: string | undef
 }
 
 /** Relative to the share's own history, never "cheap": that reads as "a bargain". */
-function pricePhrase(valuation: string | undefined): string {
+export function pricePhrase(valuation: string | undefined): string {
   if (valuation === VALUATION_VERDICTS.pricier) return " whose share costs more than usual for its profit";
   if (valuation === VALUATION_VERDICTS.cheaper) return " whose share costs less than usual for its profit";
   if (valuation === VALUATION_VERDICTS.usual) return " whose share is priced about as usual for its profit";

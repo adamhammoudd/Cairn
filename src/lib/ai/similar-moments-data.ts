@@ -44,6 +44,8 @@ export interface SimilarMoments {
   factorConditions: { key: string; state: string; label: string }[];
   /** Base cases before any extra condition. */
   baseCount: number;
+  /** The cases the history was counted from (after the extra conditions). */
+  cases: FactorInstance[];
   conditions: ConditionReport[];
 }
 
@@ -150,6 +152,7 @@ export function similarMoments(args: {
     ),
     factorConditions: analogs.conditions.map((c) => ({ key: c.key, state: c.state, label: c.label })),
     baseCount: analogs.instances.length,
+    cases,
     conditions: report,
   };
 }
