@@ -50,7 +50,7 @@ export default async function ConfirmPage({
             <Logo size={26} />
           </Link>
           <span className="font-mono text-eyebrow text-dim uppercase">
-            In development · Waitlist open
+            Beta open · Waitlist open
           </span>
         </header>
 
