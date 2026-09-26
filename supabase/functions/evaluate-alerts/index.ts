@@ -218,6 +218,7 @@ Deno.serve(async (req) => {
     .from("ai_analyses")
     .select("scope_value, confidence_level, analysis_type, headline, created_at")
     .eq("status", "validated")
+    .is("superseded_by", null)
     .in("scope_value", symbols)
     .order("created_at", { ascending: false });
 

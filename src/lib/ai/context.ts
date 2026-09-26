@@ -189,6 +189,8 @@ export async function buildChatContext(
         "id, scope_type, scope_value, analysis_type, probability_low, probability_high, confidence_level, reasoning_text, sample_size, created_at, plain_summary, headline, text_source, direction_n, direction_higher, direction_horizon_sessions, direction_confidence, direction_p25, direction_median, direction_p75, direction_worst, direction_best",
       )
       .eq("status", "validated")
+      // Current analyses only: a regenerated one supersedes the old (migration 0054).
+      .is("superseded_by", null)
       .in("scope_value", relevantSymbols)
       .order("created_at", { ascending: false })
       .limit(12);

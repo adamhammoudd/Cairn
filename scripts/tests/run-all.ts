@@ -62,6 +62,7 @@ import { runRunAllRegistrationSuite } from "./run-all-registration";
 import { runDirectionEngineSuite } from "./direction-engine";
 import { runAnalysisTextSuite } from "./analysis-text";
 import { runAnalysisDisplaySuite } from "./analysis-display";
+import { runRegenerateAnalysesSuite } from "./regenerate-analyses";
 
 // A suite that throws (missing credentials, unreachable service) must surface
 // as a hard failure of that suite, not take the whole run down with a stack
@@ -171,6 +172,7 @@ async function main() {
     runHistoryPlainSuite(),
     runDirectionEngineSuite(),
     runAnalysisDisplaySuite(),
+    runRegenerateAnalysesSuite(),
     runExposureSuite(),
     runDailyBriefingSuite(),
     runAssetClassIdentitySuite(),
