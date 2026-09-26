@@ -9,6 +9,8 @@ import { getUserPlan } from "@/lib/actions/billing";
 import { TIER_LIMITS } from "@/lib/billing";
 import { TickerWorkspace } from "@/components/ticker/ticker-workspace";
 import { guardReads } from "@/components/data-unavailable";
+import { loadAnalysisSummary } from "@/lib/analysis-summary";
+import { assetName } from "@/lib/asset-names";
 
 // A failed market-data read renders the panel instead of throwing into a
 // minified React error; anything else propagates as before.
@@ -101,6 +103,12 @@ async function TickerBody({ params }: { params: Promise<{ symbol: string }> }) {
     supabase.from("holdings").select("quantity, purchase_price").eq("symbol", data.symbol).eq("user_id", user.id),
   ]);
 
+  // The plain summary, scorecard, history and company numbers at the top of
+  // the Overview tab (feat/analysis-summary-layout).
+  const displayName =
+    data.name ?? (data.assetType === "crypto" && data.cryptoMetrics ? data.cryptoMetrics.name : assetName(data.symbol, data.assetType));
+  const summary = await loadAnalysisSummary({ symbol: data.symbol, name: displayName, latest: analyses[0] ?? null, userId: user.id });
+
   const held = holdingRows.data ?? [];
   const heldQuantity = held.reduce((sum, h) => sum + Number(h.quantity ?? 0), 0);
   // Weighted average entry across every lot of this symbol, matching the
@@ -126,6 +134,7 @@ async function TickerBody({ params }: { params: Promise<{ symbol: string }> }) {
       watchlists={watchlists}
       canModerate={profileRow.data?.role === "admin"}
       refreshRateSeconds={settingsRow.data?.refresh_rate_seconds ?? null}
+      summary={summary}
     />
   );
 }
