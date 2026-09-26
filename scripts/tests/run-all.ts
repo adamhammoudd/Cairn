@@ -109,6 +109,7 @@ async function main() {
     liveRefreshSuites,
     priceRowCapSuites,
     plainSummarySuites,
+    portfolioHistorySuites,
     briefingOnOpenSuites,
   ] = await Promise.all([
     guarded("Adversarial scope guard", runAdversarialScopeGuardSuites),
@@ -138,6 +139,7 @@ async function main() {
     guarded("Live-quote polling", () => [runLiveRefreshSuite()]),
     guarded("Price reads past the 1000-row API cap", async () => [await runPriceRowCapSuite()]),
     guarded("Plain summary", async () => [await runPlainSummarySuite()]),
+    guarded("Portfolio chart history read", async () => [await runPortfolioHistoryReadSuite()]),
     guarded("Daily briefing built on open", async () => [await runBriefingOnOpenSuite()]),
   ]);
 
@@ -183,6 +185,7 @@ async function main() {
     ...liveRefreshSuites,
     ...priceRowCapSuites,
     ...plainSummarySuites,
+    ...portfolioHistorySuites,
     ...briefingOnOpenSuites,
   ];
   const reportPath = writeReport(allSuites);
