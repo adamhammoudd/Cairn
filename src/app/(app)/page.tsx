@@ -3,8 +3,9 @@ import { createClient } from "@/lib/supabase/server";
 import { runScreen } from "@/lib/actions/screener";
 import { EMPTY_FILTERS } from "@/lib/screener";
 import { DashboardHome } from "@/components/dashboard/dashboard-home";
-import { computeHoldingMetrics, computeTimelineSeries, computeTotals, type PriceBar } from "@/lib/portfolio";
+import { computeHoldingMetrics, computeTimelineSeries, computeTotals } from "@/lib/portfolio";
 import { getLatestCloses, latestDataDate } from "@/lib/market-data/current-price";
+import { readRecentPrices } from "@/lib/market-data/paged-read";
 
 import { guardReads } from "@/components/data-unavailable";
 import { loadDailyBriefing } from "@/lib/daily-briefing-data";
@@ -83,16 +84,14 @@ async function DashboardBody() {
   // the dashboard's summary sparkline and the full chart cannot disagree about
   // the same portfolio. (Ordered ascending with no limit, this returned the
   // OLDEST rows under PostgREST's cap.)
-  const { data: priceRows } =
-    symbols.length > 0
-      ? await supabase.rpc("recent_prices", { symbols, per_symbol: 1500 })
-      : { data: [] };
+  // Paged: one call is capped at 1000 rows, which covered NVDA alone for four holdings.
+  const priceRows = await readRecentPrices(supabase, symbols, 1500);
   // One series per offered range, off the single `priceRows` read above -
   // computeTimelineSeries only slices and sums what it is given, so four
   // ranges cost four passes over rows already in memory, not four queries.
   const portfolioSeries: Partial<Record<(typeof DASHBOARD_TIMEFRAMES)[number], { values: number[]; dates: string[] }>> = {};
   for (const timeframe of DASHBOARD_TIMEFRAMES) {
-    const points = computeTimelineSeries(holdings, (priceRows ?? []) as PriceBar[], timeframe);
+    const points = computeTimelineSeries(holdings, priceRows, timeframe);
     if (points.length > 1) {
       portfolioSeries[timeframe] = {
         values: points.map((p) => p.value),

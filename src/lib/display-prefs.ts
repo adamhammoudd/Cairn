@@ -26,8 +26,10 @@ export interface DisplayPrefs {
   effectiveCurrency: string;
   /** USD -> effectiveCurrency. Exactly 1 when effectiveCurrency is USD. */
   fxRate: number;
-  /** When the rate was quoted, so a converted figure can be dated. */
+  /** ECB publication date (YYYY-MM-DD) of the rate, so a converted figure can be dated. */
   fxAsOf: string | null;
+  /** Publisher of the rate ("ECB"), null when nothing was converted. */
+  fxSource: "ECB" | null;
   /**
    * True when the user asked for a non-USD currency and no rate could be
    * sourced. Surfaces that show converted money use this to say so instead of
@@ -45,6 +47,7 @@ export const DEFAULT_DISPLAY_PREFS: DisplayPrefs = {
   effectiveCurrency: "USD",
   fxRate: 1,
   fxAsOf: null,
+  fxSource: null,
   fxUnavailable: false,
   metricStyle: "percent",
   compactMode: false,
@@ -219,6 +222,23 @@ export function absoluteChangeFrom(price: number | null, changePct: number | nul
  * hardcode "$" in a label a non-USD account will see (the alert form's
  * "Price ($)" was exactly that).
  */
+/**
+ * A money amount a user typed in their display currency, as the USD figure it
+ * is stored and compared as. Alert thresholds are checked against USD prices
+ * (supabase/functions/evaluate-alerts), so a EUR 200 threshold stored as 200
+ * would fire at $200. Rounded to 6 decimal places - sub-cent prices exist.
+ */
+export function displayAmountToUsd(amount: number, prefs: Pick<DisplayPrefs, "fxRate">): number {
+  if (!Number.isFinite(amount) || !(prefs.fxRate > 0)) return amount;
+  return Math.round((amount / prefs.fxRate) * 1e6) / 1e6;
+}
+
+/** The inverse, for showing a stored USD amount back in an editable field. */
+export function usdToDisplayAmount(usd: number, prefs: Pick<DisplayPrefs, "fxRate">): number {
+  if (!Number.isFinite(usd)) return usd;
+  return Math.round(usd * prefs.fxRate * 1e4) / 1e4;
+}
+
 export function currencySymbol(prefs: DisplayPrefs): string {
   return (0)
     .toLocaleString(undefined, { style: "currency", currency: prefs.effectiveCurrency, minimumFractionDigits: 0, maximumFractionDigits: 0 })

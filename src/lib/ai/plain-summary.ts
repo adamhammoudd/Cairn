@@ -241,7 +241,7 @@ function eventPhrase(next: Dimension | undefined): string {
   const days = next.inputs.find((i) => i.label === "Days until the event")?.value;
   if (typeof days !== "number" || days > 14) return "";
   const when = days === 0 ? "today" : days === 1 ? "tomorrow" : `in ${days} days`;
-  if (next.verdict.startsWith("Earnings")) return ` Earnings are due ${when}.`;
+  if (next.verdict.startsWith("Earnings")) return next.verdict.includes("estimated") ? ` Earnings are expected ${when} (an estimate).` : ` Earnings are due ${when}.`;
   if (next.verdict.startsWith("Dividend cut-off")) return ` Its dividend cut-off date is ${when}.`;
   if (next.verdict.startsWith("Dividend payment")) return ` Its next dividend is paid ${when}.`;
   return "";
