@@ -54,6 +54,21 @@ export interface PortfolioTotals {
   todayChangePct: number;
 }
 
+/**
+ * Summary figures for the Total Value / gain / Today cards.
+ *
+ * A holding with no current price (m.value === null - just added, or a symbol
+ * Cairn genuinely cannot price) counts at its COST BASIS, in BOTH totalValue
+ * and prevTotalValue. That is the same fallback computeAllocation() and
+ * computeConcentration() use, so the Total Value card and the panels built
+ * from the same metrics always agree - excluding it here while they counted
+ * it is what made one /portfolio load contradict itself. Keep all three on
+ * this one convention.
+ *
+ * Counting it in both sums is also what keeps it out of the day change: in
+ * only the prior-value sum it shows a phantom same-day loss of its whole cost
+ * basis (audit 2026-09-04, PR #60); in only totalValue, a phantom gain.
+ */
 export function computeTotals(
   metrics: HoldingMetrics[],
   closes: Map<string, { latest: number | null; prev: number | null }>,
@@ -63,15 +78,17 @@ export function computeTotals(
   let prevTotalValue = 0;
 
   for (const m of metrics) {
-    totalCostBasis += m.purchase_price * m.quantity;
+    const costBasis = m.purchase_price * m.quantity;
+    totalCostBasis += costBasis;
 
-    // A holding with no current price yet (just added, quote not fetched) is
-    // excluded from BOTH the current-value and the prior-value sums. Counting
-    // it in only one - as the old code did, adding its cost basis to
-    // prevTotalValue while contributing nothing to totalValue - silently
-    // deflates todayChange by that holding's whole cost basis and shows a
-    // phantom same-day loss right after a holding is added.
-    if (m.value === null) continue;
+    // No price: cost basis on both sides, so it adds 0 to gain and to the day
+    // change. Not `prev` - a stranded prior close against a cost-basis value
+    // would invent a move.
+    if (m.value === null) {
+      totalValue += costBasis;
+      prevTotalValue += costBasis;
+      continue;
+    }
     totalValue += m.value;
 
     const prev = closes.get(m.symbol)?.prev;
