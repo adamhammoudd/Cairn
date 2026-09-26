@@ -21,6 +21,7 @@
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { AssetType } from "@/lib/supabase/types";
+import { isSameInstrumentClass } from "../../../supabase/functions/_shared/asset-class";
 
 // Base URLs are configurable so a test harness can point them at a local
 // stand-in; unset, they are the endpoints the Edge Functions already use.
@@ -130,10 +131,19 @@ export function normalizeSymbol(raw: string): string | null {
 }
 
 // A coin is stored under its bare ticker (BTC), but the chart endpoint wants
-// Yahoo's pair form (BTC-USD); forex likewise (EURUSD=X). Candidates are tried
-// in order, so a real equity ticker still resolves as an equity first.
-function providerCandidates(symbol: string): string[] {
+// Yahoo's pair form (BTC-USD); forex likewise (EURUSD=X).
+//
+// For a symbol nobody has resolved yet, candidates are tried in order, so a
+// real equity ticker still resolves as an equity first. Once symbol_directory
+// knows what a symbol is, only that instrument's form is tried: the bare
+// ticker is often a different, real listing (`BTC` is the Grayscale Bitcoin
+// Mini Trust ETF), and trying it first is how a routine refresh re-filed
+// Bitcoin as an ETF and replaced its prices with $37 closes.
+export function providerCandidates(symbol: string, knownAssetType?: string | null): string[] {
   if (symbol.includes("-") || symbol.includes("=") || symbol.startsWith("^")) return [symbol];
+  if (knownAssetType === "crypto") return [`${symbol}-USD`];
+  if (knownAssetType === "forex") return [`${symbol}=X`];
+  if (knownAssetType) return [symbol];
   const candidates = [symbol];
   if (/^[A-Z]{2,6}$/.test(symbol)) candidates.push(`${symbol}-USD`);
   if (/^[A-Z]{6}$/.test(symbol)) candidates.push(`${symbol}=X`);
@@ -450,13 +460,28 @@ export async function ensureSymbolIngested(symbolRaw: string, options: EnsureOpt
     }
 
     let failure: ProviderFailure | null = null;
-    for (const candidate of providerCandidates(symbol)) {
+    for (const candidate of providerCandidates(symbol, known?.asset_type)) {
       const res = await fetchChart(candidate, options.range ?? "2y");
       if (!res.ok) {
         failure = res;
         // A rate limit or transport error is about the provider, not the
         // symbol: stop trying variants and report it as such.
         if (res.status !== "unavailable") break;
+        continue;
+      }
+
+      // The provider answered with a different instrument than the one this
+      // symbol already means (a coin's ticker resolving to a listed fund, or
+      // the reverse). Storing it would overwrite the real history, and the
+      // database now refuses the write anyway (migration 0047), so treat it
+      // as "no data for this instrument" rather than switching what the
+      // symbol means.
+      if (known && !isSameInstrumentClass(known.asset_type, res.assetType)) {
+        failure = {
+          ok: false,
+          status: "unavailable",
+          detail: `Provider returned a ${res.assetType} for ${candidate}, but ${symbol} is filed as ${known.asset_type}`,
+        };
         continue;
       }
 

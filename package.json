@@ -15,6 +15,7 @@
     "test:factors": "tsx --conditions=react-server scripts/tests/factor-analogs.ts",
     "test:deep-history": "tsx --conditions=react-server scripts/tests/deep-history.ts",
     "test:price-row-cap": "tsx --conditions=react-server scripts/tests/price-row-cap.ts",
+    "test:asset-class": "tsx --conditions=react-server scripts/tests/asset-class-identity.ts",
     "test:methodology": "tsx --conditions=react-server scripts/tests/methodology-substance.ts",
     "test:citations": "tsx --conditions=react-server scripts/tests/citation-freshness.ts",
     "test:ai-suite": "tsx --conditions=react-server scripts/tests/run-all.ts",

@@ -8,6 +8,7 @@ against it. A failing case aborts with a non-zero exit.
 |---|---|
 | `rls_idor.sql` | Cross-user access is denied on every user-scoped table, for reads, writes, forged-owner inserts, and anonymous callers. |
 | `price_ordering.sql` | `ORDER BY ... DESC` + `LIMIT` returns the newest rows, in the three places a `LIMIT` sits on top of a time series. |
+| `asset_class_guard.sql` | A price bar or directory change that mixes a coin with a listed security under one ticker is refused, and migration 0047's repair cleans the live shapes (BTC filed as an ETF, coin prices under CVX) without touching clean rows. |
 
 ## Why these exist
 
