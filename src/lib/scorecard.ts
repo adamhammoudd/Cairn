@@ -479,6 +479,11 @@ export function plainDate(iso: string): string {
 /** The next-event verdict when Cairn's calendar has nothing for the symbol. */
 export const NO_EVENT_VERDICT = "None in calendar";
 
+/** True for a next-event tile that names a dated event (the page highlights it). */
+export function hasUpcomingEvent(d: Dimension): boolean {
+  return d.key === "next_event" && d.verdict !== NO_EVENT_VERDICT;
+}
+
 export function nextEventDimension(today: string, events: UpcomingEvent[], reactions: EarningsReaction[]): Dimension {
   const label = "Next event";
   const T = THRESHOLDS.nextEvent;
