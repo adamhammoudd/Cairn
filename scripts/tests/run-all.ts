@@ -49,6 +49,7 @@ import { runWaitlistEmailSuite } from "./waitlist-email";
 import { runProxyPublicPathsSuite } from "./proxy-public-paths";
 import { runSignupConsentSuite } from "./signup-consent";
 import { runLiveRefreshSuite } from "./live-refresh";
+import { runSplitAdjustmentSuite } from "./split-adjustment";
 
 // A suite that throws (missing credentials, unreachable service) must surface
 // as a hard failure of that suite, not take the whole run down with a stack
@@ -138,6 +139,7 @@ async function main() {
     runFactorAnalogsSuite(),
     runDeepHistorySuite(),
     runFundamentalsSuite(),
+    runSplitAdjustmentSuite(),
     runScorecardSuite(),
     runHistoryPlainSuite(),
     runExposureSuite(),
