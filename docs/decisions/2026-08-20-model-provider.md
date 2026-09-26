@@ -1,7 +1,30 @@
 # Decision needed: which model serves the assistant
 
 **Owner:** chief-of-staff + founder · **Raised by:** dev-lead · **Date:** 2026-08-20
-**Status:** RESOLVED 2026-08-21 in part - one sub-decision still open
+**Status:** RESOLVED - Groq. The fallback sub-decision below was answered by
+`2026-08-30-groq-fallback-endpoint.md` (optional fallback endpoint, currently unconfigured).
+
+---
+
+## Current state (checked against `src/lib/ai/llm.ts`, 2026-09-26)
+
+Where this memo and the code disagree, the code is right and this block says so:
+
+- **Provider / model:** Groq, `LLM_BASE_URL=https://api.groq.com/openai/v1`,
+  `LLM_MODEL=openai/gpt-oss-120b` (both are the code defaults). Paid Developer
+  tier with a spending limit since 2026-09-25, after the free tier's 200k
+  tokens/day cap ran out; a move to DeepInfra was coded and reverted before
+  going live (`2026-09-25-deepinfra.md`).
+- **Key:** `LLM_API_KEY`. `GROQ_API_KEY`, named in the resolution below, is
+  **no longer read** - deliberately, so one provider's key cannot be sent to
+  another host after `LLM_BASE_URL` changes (`.env.local.example`).
+- **Retry:** unchanged - four attempts on 408/409/425/429/5xx/529, jittered
+  backoff capped at 8s, `Retry-After` honoured. A 402 (spending limit / unfunded)
+  and a daily-quota 429 stop retrying at once. `npm run test:backoff` is now 32
+  gating cases, not 22.
+- **Fallback:** implemented as an optional second endpoint - see
+  `2026-08-30-groq-fallback-endpoint.md`. None is configured today (Cerebras was
+  removed 2026-09-25: unfunded account, HTTP 402).
 
 ---
 

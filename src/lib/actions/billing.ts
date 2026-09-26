@@ -14,19 +14,8 @@ import {
   type UsageSummary,
   type ChatUsageSummary,
 } from "@/lib/billing";
-import type { Database, SubscriptionTier } from "@/lib/supabase/types";
-import type { SupabaseClient } from "@supabase/supabase-js";
-
-/**
- * True when the user carries the admin role. Admins have no AI usage cap -
- * analyses and chat run without a quota check (they still record usage, so the
- * admin dashboard's own figures stay real). The role is only settable via
- * service-role SQL, never through the app.
- */
-async function isAdminUser(supabase: SupabaseClient<Database>, userId: string): Promise<boolean> {
-  const { data } = await supabase.from("profiles").select("role").eq("user_id", userId).maybeSingle();
-  return data?.role === "admin";
-}
+import type { SubscriptionTier } from "@/lib/supabase/types";
+import { isAdminUser } from "@/lib/admin-role";
 
 // The one shared gate every premium/billing-gated feature routes through
 // (CLAUDE.md: "Every premium/billing feature must route through the shared
@@ -47,8 +36,8 @@ export async function getBillingSummary(): Promise<UsageSummary> {
 
   const supabase = await createClient();
 
-  const [{ data: subscription }, { count }, admin] = await Promise.all([
-    supabase.from("subscriptions").select("tier").eq("user_id", user.id).maybeSingle(),
+  const [tier, { count }, admin] = await Promise.all([
+    getUserPlan(),
     supabase
       .from("ai_usage_events")
       .select("*", { count: "exact", head: true })
@@ -57,7 +46,7 @@ export async function getBillingSummary(): Promise<UsageSummary> {
     isAdminUser(supabase, user.id),
   ]);
 
-  return computeUsageSummary(subscription?.tier ?? "free", count ?? 0, admin);
+  return computeUsageSummary(tier, count ?? 0, admin);
 }
 
 export async function getChatUsageSummary(): Promise<ChatUsageSummary> {
@@ -66,8 +55,8 @@ export async function getChatUsageSummary(): Promise<ChatUsageSummary> {
 
   const supabase = await createClient();
 
-  const [{ data: subscription }, { count }, admin] = await Promise.all([
-    supabase.from("subscriptions").select("tier").eq("user_id", user.id).maybeSingle(),
+  const [tier, { count }, admin] = await Promise.all([
+    getUserPlan(),
     supabase
       .from("chat_usage_events")
       .select("*", { count: "exact", head: true })
@@ -76,7 +65,7 @@ export async function getChatUsageSummary(): Promise<ChatUsageSummary> {
     isAdminUser(supabase, user.id),
   ]);
 
-  return computeChatUsageSummary(subscription?.tier ?? "free", count ?? 0, admin);
+  return computeChatUsageSummary(tier, count ?? 0, admin);
 }
 
 // There is no billing processor in this build. Until there is, upgrading is
@@ -149,7 +138,7 @@ export async function setTier(_prevState: string | null, formData: FormData) {
   if (fromTier !== tier) {
     // Through the service-role client: this is the user's billing record, and
     // a user must not be able to forge or delete their own. Same posture as
-    // recordAiUsage. A failure here must not fail the plan change itself - the
+    // the AI usage log. A failure here must not fail the plan change itself - the
     // tier is already committed and the history line is secondary - so it is
     // logged rather than returned.
     const admin = createAdminClient();
@@ -270,51 +259,18 @@ export interface UsageGate {
   message?: string;
 }
 
-// Checked by requestAnalysis before calling the AI - never after, so a
-// failed/rejected generation never costs the user a slot. See recordAiUsage
-// for the write side of this on success.
-export async function checkAiUsageAllowed(userId: string): Promise<UsageGate> {
-  const supabase = await createClient();
-
-  const [{ data: subscription }, { count }, admin] = await Promise.all([
-    supabase.from("subscriptions").select("tier").eq("user_id", userId).maybeSingle(),
-    supabase
-      .from("ai_usage_events")
-      .select("*", { count: "exact", head: true })
-      .eq("user_id", userId)
-      .gte("created_at", startOfCurrentMonthIso()),
-    isAdminUser(supabase, userId),
-  ]);
-
-  if (admin) return { allowed: true };
-
-  const summary = computeUsageSummary(subscription?.tier ?? "free", count ?? 0);
-  if (summary.remaining <= 0) {
-    return {
-      allowed: false,
-      message: `You've used all ${summary.limit} AI analyses included in your ${summary.tier} plan this month. Switch plans on the Billing page or wait until next month.`,
-    };
-  }
-  return { allowed: true };
-}
-
-// Runs through the service-role client because it's a system-recorded usage
-// log the calling user shouldn't be able to write or delete themselves -
-// same admin-client-for-derived-data pattern as discussion vote counters.
-export async function recordAiUsage(userId: string): Promise<void> {
-  const admin = createAdminClient();
-  await admin.from("ai_usage_events").insert({ user_id: userId });
-}
+// The AI-analysis quota (reserve before generating, refund on failure) lives in
+// lib/ai-usage.ts - not here, where every export is a callable server action.
 
 // Checked by app/api/chat/route.ts before calling the model - same
-// before-not-after discipline as checkAiUsageAllowed above. Daily rather
+// before-not-after discipline as reserveAiUsage (lib/ai-usage.ts). Daily rather
 // than monthly (chat is a much higher-frequency surface than requesting a
 // full analysis), and Premium's null limit means "never denied."
 export async function checkChatUsageAllowed(userId: string): Promise<UsageGate> {
   const supabase = await createClient();
 
-  const [{ data: subscription }, { count }, admin] = await Promise.all([
-    supabase.from("subscriptions").select("tier").eq("user_id", userId).maybeSingle(),
+  const [tier, { count }, admin] = await Promise.all([
+    getUserPlan(),
     supabase
       .from("chat_usage_events")
       .select("*", { count: "exact", head: true })
@@ -325,7 +281,7 @@ export async function checkChatUsageAllowed(userId: string): Promise<UsageGate> 
 
   if (admin) return { allowed: true };
 
-  const summary = computeChatUsageSummary(subscription?.tier ?? "free", count ?? 0);
+  const summary = computeChatUsageSummary(tier, count ?? 0);
   if (summary.limit !== null && (summary.remaining ?? 0) <= 0) {
     return {
       allowed: false,
@@ -338,7 +294,7 @@ export async function checkChatUsageAllowed(userId: string): Promise<UsageGate> 
 // A response is recorded as usage whenever the user actually received one -
 // including a scope-guard rewrite, since a model call was made and an answer
 // was shown either way. Only a genuine failure upstream (no response at all)
-// should skip this, matching checkAiUsageAllowed's "never costs a slot on
+// should skip this, matching reserveAiUsage's "never costs a slot on
 // failure" philosophy adapted to chat's every-turn cadence.
 export async function recordChatUsage(userId: string): Promise<void> {
   const admin = createAdminClient();

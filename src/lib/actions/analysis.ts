@@ -3,8 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { generateAnalysis } from "@/lib/ai/generate";
-import { checkAiUsageAllowed, recordAiUsage, getUserPlan } from "@/lib/actions/billing";
+import { getUserPlan } from "@/lib/actions/billing";
+import { reserveAiUsage, releaseAiUsage } from "@/lib/ai-usage";
 import {
   UNAVAILABLE_MESSAGE,
   BUSY_MESSAGE,
@@ -51,15 +53,34 @@ export async function runAnalysisGeneration(
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  let scopeValue = scopeType === "ticker" ? rawScopeValue.trim().toUpperCase() : rawScopeValue.trim();
+  const scopeValue = scopeType === "ticker" ? rawScopeValue.trim().toUpperCase() : rawScopeValue.trim();
   if (!scopeValue) {
     return { ok: false, kind: "error", message: "Enter a market, sector, or ticker to analyze." };
   }
 
-  const gate = await checkAiUsageAllowed(user.id);
+  // The slot is taken here, before the seconds of ingestion and generation,
+  // and handed back below if no analysis comes out. Counting here and recording
+  // at the end let every request in flight while one slot was left through.
+  const gate = await reserveAiUsage(user.id);
   if (!gate.allowed) {
-    return { ok: false, kind: "quota", message: gate.message ?? "AI analysis limit reached for this plan." };
+    return { ok: false, kind: "quota", message: gate.message };
   }
+  let outcome: GenerateOutcome;
+  try {
+    outcome = await generateWithinReservation(scopeType, scopeValue);
+  } catch (err) {
+    await releaseAiUsage(gate.reservationId);
+    throw err;
+  }
+  if (!outcome.ok) await releaseAiUsage(gate.reservationId);
+  return outcome;
+}
+
+// Everything after the quota gate. Every non-ok return here refunds the slot
+// (see runAnalysisGeneration), so a symbol that turns out not to exist, thin
+// data or a provider failure never costs the user one.
+async function generateWithinReservation(scopeType: ScopeType, initialScopeValue: string): Promise<GenerateOutcome> {
+  let scopeValue = initialScopeValue;
 
   // Precondition, not a second pipeline: make sure the symbol's price history
   // is on disk before any analysis is attempted. A symbol nobody has asked
@@ -67,8 +88,8 @@ export async function runAnalysisGeneration(
   // indexed read (ensureSymbolIngested is cached, rate-limited and dedups
   // in-flight calls). Only ticker scopes have a price history to ingest.
   //
-  // Runs after the quota gate but before recordAiUsage, so a symbol that
-  // turns out not to exist is never charged for.
+  // Runs after the quota gate; a symbol that turns out not to exist is
+  // refunded like any other failure.
   if (scopeType === "ticker") {
     try {
       // Deeper history than a chart needs: the factor analog scan measures
@@ -125,8 +146,6 @@ export async function runAnalysisGeneration(
     }
     return { ok: false, kind: "error", message: GENERIC_ERROR_MESSAGE };
   }
-
-  await recordAiUsage(user.id);
 
   revalidatePath("/research");
   if (scopeType === "ticker") revalidatePath(`/ticker/${scopeValue}`);
@@ -213,9 +232,11 @@ type BareAnalysis = Omit<AnalysisWithMethodology, "sources" | "analogs">;
 // the component. MethodologyCard's `depth` prop still decides what it draws,
 // but a server action's return value is readable directly - a Free account
 // could open devtools and read the full premium analog set straight out of the
-// payload while the UI showed one. RLS does not help: ai_analysis_* rows are
-// market-scoped and readable by every account by design. So the rows a Free
-// plan may not see are dropped before they are ever serialized.
+// payload while the UI showed one. So the rows a Free plan may not see are
+// dropped before they are ever serialized. The analog table itself is closed
+// to anon and authenticated reads (migration 0051: its public policy let
+// anyone read the whole Premium set over the REST API), so it is read here
+// with the service role, AFTER the plan is known.
 //
 // What is NOT gated, deliberately: the finding, the probability range,
 // confidence level, sample_size, sources, and the low-confidence warning. Those
@@ -236,7 +257,7 @@ async function attachMethodology(
 
   const [{ data: sourceLinks }, { data: analogLinks }] = await Promise.all([
     supabase.from("ai_analysis_sources").select("analysis_id, news_item_id").in("analysis_id", ids),
-    supabase
+    createAdminClient()
       .from("ai_analysis_historical_analogs")
       .select("analysis_id, historical_event_id, similarity_score, note")
       .in("analysis_id", ids),

@@ -49,6 +49,8 @@ import { runWaitlistEmailSuite } from "./waitlist-email";
 import { runProxyPublicPathsSuite } from "./proxy-public-paths";
 import { runSignupConsentSuite } from "./signup-consent";
 import { runLiveRefreshSuite } from "./live-refresh";
+import { runPremiumAnalogsPrivateSuite } from "./premium-analogs-private";
+import { runAiMethodologyGapsSuite } from "./ai-methodology-gaps";
 import { runFxRatesSuite } from "./fx-rates";
 import { runBriefingOnOpenSuite } from "./briefing-on-open";
 import { runCalendarIngestSuite } from "./calendar-ingest";
@@ -110,6 +112,7 @@ async function main() {
     liveRefreshSuites,
     priceRowCapSuites,
     plainSummarySuites,
+    aiMethodologyGapsSuites,
     fxRatesSuites,
     portfolioHistorySuites,
     briefingOnOpenSuites,
@@ -141,6 +144,7 @@ async function main() {
     guarded("Live-quote polling", () => [runLiveRefreshSuite()]),
     guarded("Price reads past the 1000-row API cap", async () => [await runPriceRowCapSuite()]),
     guarded("Plain summary", async () => [await runPlainSummarySuite()]),
+    guarded("AI methodology gaps", async () => [await runAiMethodologyGapsSuite()]),
     guarded("Display currency", async () => [await runFxRatesSuite()]),
     guarded("Portfolio chart history read", async () => [await runPortfolioHistoryReadSuite()]),
     guarded("Daily briefing built on open", async () => [await runBriefingOnOpenSuite()]),
@@ -151,6 +155,7 @@ async function main() {
     runFactorAnalogsSuite(),
     runDeepHistorySuite(),
     runFundamentalsSuite(),
+    runPremiumAnalogsPrivateSuite(),
     runCalendarIngestSuite(),
     runSplitAdjustmentSuite(),
     runHealthInputsSuite(),
@@ -188,6 +193,7 @@ async function main() {
     ...liveRefreshSuites,
     ...priceRowCapSuites,
     ...plainSummarySuites,
+    ...aiMethodologyGapsSuites,
     ...fxRatesSuites,
     ...portfolioHistorySuites,
     ...briefingOnOpenSuites,

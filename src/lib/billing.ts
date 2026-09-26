@@ -65,6 +65,36 @@ export function computeChatUsageSummary(tier: SubscriptionTier, used: number, un
   };
 }
 
+/** The usage table as reserveWithinLimit sees it - see reserveAiUsage in lib/actions/billing.ts. */
+export interface UsageLedger {
+  /** Record one use now; returns its id so it can be refunded. */
+  insert(): Promise<string>;
+  /** Uses in the current period, including any just inserted. */
+  count(): Promise<number>;
+  remove(id: string): Promise<void>;
+}
+
+export type Reservation = { allowed: true; reservationId: string } | { allowed: false; used: number };
+
+/**
+ * Take a slot, then check it. The previous order - count, generate for several
+ * seconds, then record - let every request that arrived while one slot was
+ * left pass the count, so five parallel requests on a Free account with one
+ * analysis remaining produced five analyses. Inserting first and counting
+ * after means the last request to land always sees every earlier one, so the
+ * limit cannot be overrun; at worst two requests racing for the final slot are
+ * both refused and one retries. A refused request removes its own row.
+ */
+export async function reserveWithinLimit(ledger: UsageLedger, limit: number): Promise<Reservation> {
+  const reservationId = await ledger.insert();
+  const used = await ledger.count();
+  if (used > limit) {
+    await ledger.remove(reservationId);
+    return { allowed: false, used: used - 1 };
+  }
+  return { allowed: true, reservationId };
+}
+
 // Calendar-month boundary - usage resets naturally each month with no
 // separate period-reset job needed, since it's just a WHERE created_at >=
 // this filter on ai_usage_events.
