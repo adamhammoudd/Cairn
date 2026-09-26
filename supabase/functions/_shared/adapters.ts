@@ -2,6 +2,8 @@
 // common NormalizedItem[]. Re-weighting or disabling a provider needs no
 // code change - only adding a genuinely new response shape does.
 
+import { SEC_USER_AGENT } from "./sec-user-agent.ts";
+
 export interface NormalizedItem {
   external_id: string | null;
   title: string;
@@ -111,15 +113,8 @@ async function fetchSecEdgarFulltext(provider: ProviderRow): Promise<NormalizedI
   }
 
   // SEC's fair-access policy blocks clients that don't identify a real,
-  // monitored contact in the User-Agent - this used to be hardcoded to
-  // "contact@example.com", which is not a real mailbox and could get Cairn
-  // rate-limited or blocked outright. Failing loudly on a missing contact is
-  // safer than silently sending a fake one - same choice
-  // scripts/seed-symbol-directory.mjs already makes for this exact var.
-  const secContact = Deno.env.get("SEC_CONTACT_EMAIL");
-  if (!secContact) throw new Error(`${provider.name}: SEC_CONTACT_EMAIL is not set (required by SEC's fair-access policy)`);
-
-  const res = await fetch(url.toString(), { headers: { "User-Agent": `Cairn/1.0 ${secContact}` } });
+  // monitored contact in the User-Agent - see _shared/sec-user-agent.ts.
+  const res = await fetch(url.toString(), { headers: { "User-Agent": SEC_USER_AGENT } });
   if (!res.ok) throw new Error(`${provider.name}: HTTP ${res.status}`);
   const json = await res.json();
 

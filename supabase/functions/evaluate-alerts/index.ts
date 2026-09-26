@@ -9,6 +9,7 @@
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 import { requireCronSecret } from "../_shared/auth.ts";
+import { readNewestFirstPaged } from "../_shared/paged-read.ts";
 
 type Comparator = "above" | "below";
 type ConfidenceLevel = "low" | "medium" | "high";
@@ -181,10 +182,30 @@ Deno.serve(async (req) => {
   // date, so a symbol whose last bar is older than the others gets fewer bars
   // - or none - and its alerts quietly stop evaluating. recent_prices() puts
   // the limit inside a lateral join, one per symbol.
-  const { data: prices } = await supabase.rpc("recent_prices", { symbols, per_symbol: 250 });
+  //
+  // Paged: the API returns at most 1000 rows per request, so with five or more
+  // watched symbols one call came back short and the symbols past row 1000 had
+  // no series - their alerts stopped evaluating without an error. Ordered by
+  // symbol, then newest-first, so the pages join without gaps; a failed page
+  // throws rather than evaluating on a partial read.
+  const BARS_PER_SYMBOL = 250;
+  let prices: { symbol: string; close: number | null; volume: number | null }[];
+  try {
+    prices = await readNewestFirstPaged(
+      (from, to) =>
+        supabase
+          .rpc("recent_prices", { symbols, per_symbol: BARS_PER_SYMBOL })
+          .order("symbol", { ascending: true })
+          .order("ts", { ascending: false })
+          .range(from, to),
+      symbols.length * BARS_PER_SYMBOL,
+    );
+  } catch (err) {
+    return Response.json({ error: err instanceof Error ? err.message : String(err) }, { status: 500, headers: corsHeaders });
+  }
 
   const seriesBySymbol = new Map<string, Series>();
-  for (const p of prices ?? []) {
+  for (const p of prices) {
     const s = seriesBySymbol.get(p.symbol) ?? { closes: [], volumes: [] };
     if (p.close !== null) s.closes.push(p.close);
     if (p.volume !== null) s.volumes.push(p.volume);

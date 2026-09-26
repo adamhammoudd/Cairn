@@ -206,7 +206,7 @@ export function DailyBriefing({ briefing, dateLabel }: { briefing: Briefing; dat
           <div className="flex flex-col gap-3">
             <h3 className={H2}>Coming up</h3>
             {briefing.comingUp.length === 0 ? (
-              <p className="m-0 text-body text-muted">No earnings or dividend dates for your holdings in the next two weeks.</p>
+              <p className="m-0 text-body text-muted">No earnings or dividend dates for your holdings in the next 30 days.</p>
             ) : (
               <ul className="m-0 flex list-none flex-col p-0 text-[14px] leading-[1.5]">
                 {briefing.comingUp.map((e) => (

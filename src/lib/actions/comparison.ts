@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { cryptoRolling24hFor } from "@/lib/market-data/current-price";
 import { unwrapRows, MIGRATIONS } from "@/lib/supabase/read";
+import { readNewestFirstPaged } from "@/lib/market-data/paged-read";
 import type { ComparisonRow } from "@/lib/comparison";
 
 // The universe every symbol picker draws on (Compare, the Sector Heat Map).
@@ -27,6 +28,9 @@ export async function getTrackedSymbols(): Promise<string[]> {
   return rows.map((row) => row.symbol.toUpperCase());
 }
 
+/** Bars per symbol Compare reads: enough for its longest (1Y) chart. */
+const COMPARISON_BARS_PER_SYMBOL = 400;
+
 // Derives marketCap/pe/dividendYield the same way runScreen() and
 // ticker-workspace.tsx already do independently - accepted small
 // duplication, the formula is already computed in three places in this
@@ -40,8 +44,27 @@ export async function getComparisonData(symbols: string[]): Promise<ComparisonRo
   // ascending it returns the *oldest* rows (so `price` was a months-stale
   // bar), and ordered descending a symbol with a longer history starves the
   // others of rows entirely.
-  const [barsRes, fundamentalsRes, directoryRes, coinsRes] = await Promise.all([
-    supabase.rpc("recent_prices", { symbols, per_symbol: 400 }),
+  //
+  // Paged: the API returns at most 1000 rows per request, so one call for
+  // three symbols x 400 bars came back with 1000 rows and the third symbol
+  // with none - it dropped off the comparison without an error. Ordered by
+  // symbol, then newest-first, so the pages join without gaps.
+  const [barRows, fundamentalsRes, directoryRes, coinsRes] = await Promise.all([
+    readNewestFirstPaged(
+      async (from, to) => ({
+        data: unwrapRows(
+          "Comparison price history (recent_prices)",
+          await supabase
+            .rpc("recent_prices", { symbols, per_symbol: COMPARISON_BARS_PER_SYMBOL })
+            .order("symbol", { ascending: true })
+            .order("ts", { ascending: false })
+            .range(from, to),
+          MIGRATIONS.onDemandIngestion,
+        ),
+        error: null,
+      }),
+      symbols.length * COMPARISON_BARS_PER_SYMBOL,
+    ),
     supabase.from("fundamentals").select("symbol, shares_outstanding, eps_ttm, dividends_ttm").in("symbol", symbols),
     supabase.from("symbol_directory").select("symbol, asset_type, name").in("symbol", symbols),
     // A coin has no shares outstanding, so its market cap can only come from
@@ -52,7 +75,6 @@ export async function getComparisonData(symbols: string[]): Promise<ComparisonRo
 
   // Fail loud on a failed read rather than rendering an empty comparison that
   // looks like "no data for these symbols" - the rule the Screener follows.
-  const barRows = unwrapRows("Comparison price history (recent_prices)", barsRes, MIGRATIONS.onDemandIngestion);
   const fundamentals = unwrapRows("Comparison fundamentals", fundamentalsRes);
   const directory = unwrapRows("Comparison symbol list (symbol_directory)", directoryRes, MIGRATIONS.onDemandIngestion);
   const coins = unwrapRows("Comparison crypto market caps", coinsRes);

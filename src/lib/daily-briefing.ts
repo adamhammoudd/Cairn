@@ -101,8 +101,8 @@ export interface Briefing {
 export const BRIEFING_RULES = {
   /** Earnings this many days ahead or fewer make a "Coming up" card. */
   earningsCardDays: 7,
-  /** "Coming up" lists the next 14 days. */
-  comingUpDays: 14,
+  /** "Coming up" lists the next 30 days. */
+  comingUpDays: 30,
   /** A dividend filing newer than this is news. */
   dividendNewsDays: 21,
   /** A dividend change smaller than 1% is rounding, not news. */

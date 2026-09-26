@@ -20,14 +20,14 @@ import { parseCompanyFacts, trailingPerShare, type CompanyFacts, type ParsedComp
 import { companyMetrics, dividendGrowthYears, peHistory, sortQuarters, ttmSnapshot, type Quarter } from "@/lib/fundamentals";
 import { dividendDimension, growthDimension, healthDimension, sectorMedianPe, valuationDimension, type Dimension } from "@/lib/scorecard";
 import { templateSummary } from "@/lib/ai/plain-summary";
+import { SEC_USER_AGENT } from "../supabase/functions/_shared/sec-user-agent";
 
-const UA = "cairn-ingest contact@example.com";
 const cacheDir = process.argv[2];
 
 async function companyFacts(symbol: string, cik: string): Promise<CompanyFacts> {
   const cached = cacheDir ? path.join(cacheDir, `${symbol}.json`) : null;
   if (cached && fs.existsSync(cached)) return JSON.parse(fs.readFileSync(cached, "utf8"));
-  const res = await fetch(`https://data.sec.gov/api/xbrl/companyfacts/CIK${cik}.json`, { headers: { "User-Agent": UA } });
+  const res = await fetch(`https://data.sec.gov/api/xbrl/companyfacts/CIK${cik}.json`, { headers: { "User-Agent": SEC_USER_AGENT } });
   if (!res.ok) throw new Error(`${symbol}: SEC ${res.status}`);
   await new Promise((r) => setTimeout(r, 300));
   return res.json();
