@@ -49,6 +49,7 @@ import { runWaitlistEmailSuite } from "./waitlist-email";
 import { runProxyPublicPathsSuite } from "./proxy-public-paths";
 import { runSignupConsentSuite } from "./signup-consent";
 import { runLiveRefreshSuite } from "./live-refresh";
+import { runBriefingOnOpenSuite } from "./briefing-on-open";
 import { runCalendarIngestSuite } from "./calendar-ingest";
 import { runSplitAdjustmentSuite } from "./split-adjustment";
 import { runHealthInputsSuite } from "./health-inputs";
@@ -109,6 +110,7 @@ async function main() {
     priceRowCapSuites,
     plainSummarySuites,
     portfolioHistorySuites,
+    briefingOnOpenSuites,
   ] = await Promise.all([
     guarded("Adversarial scope guard", runAdversarialScopeGuardSuites),
     guarded("Methodology substance", async () => [await runMethodologySubstanceSuite()]),
@@ -138,6 +140,7 @@ async function main() {
     guarded("Price reads past the 1000-row API cap", async () => [await runPriceRowCapSuite()]),
     guarded("Plain summary", async () => [await runPlainSummarySuite()]),
     guarded("Portfolio chart history read", async () => [await runPortfolioHistoryReadSuite()]),
+    guarded("Daily briefing built on open", async () => [await runBriefingOnOpenSuite()]),
   ]);
 
   const allSuites = [
@@ -183,6 +186,7 @@ async function main() {
     ...priceRowCapSuites,
     ...plainSummarySuites,
     ...portfolioHistorySuites,
+    ...briefingOnOpenSuites,
   ];
   const reportPath = writeReport(allSuites);
 

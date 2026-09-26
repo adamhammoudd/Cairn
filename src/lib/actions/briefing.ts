@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { generateBriefing, type BriefingContent } from "@/lib/ai/briefing";
+import { generateBriefing, storedOrBuiltBriefing, type BriefingContent } from "@/lib/ai/briefing";
 
 export async function getTodayBriefing(): Promise<BriefingContent | null> {
   const supabase = await createClient();
@@ -20,7 +20,8 @@ export async function getTodayBriefing(): Promise<BriefingContent | null> {
     .eq("briefing_date", today)
     .maybeSingle();
 
-  return (data?.content as unknown as BriefingContent) ?? null;
+  // Nothing for today yet: build it now, so opening the page is all it takes.
+  return storedOrBuiltBriefing(data, () => generateBriefing(user.id));
 }
 
 export async function requestBriefing() {
