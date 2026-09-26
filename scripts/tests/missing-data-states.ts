@@ -27,6 +27,7 @@ const EUR: DisplayPrefs = {
   effectiveCurrency: "EUR",
   fxRate: 0.92,
   fxAsOf: "2026-09-05",
+  fxSource: "ECB",
   fxUnavailable: false,
   metricStyle: "percent",
   compactMode: false,

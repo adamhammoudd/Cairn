@@ -17,6 +17,7 @@ import {
 } from "@/components/settings/settings-card";
 import { SECTORS } from "@/lib/sectors";
 import { SUPPORTED_CURRENCIES } from "@/lib/market-data/fx";
+import { formatRateDate } from "@/components/layout/currency-note";
 import type { SettingsTabId } from "@/lib/settings-categories";
 import type { AlertChannelName, AssetFilter, ChartView, Database } from "@/lib/supabase/types";
 
@@ -125,10 +126,23 @@ export function SettingsForm({ settings, activeTab, sectorOptions, watchlists, f
     return outcome;
   }, null);
 
+  useEffect(() => () => clearTimeout(toastTimer.current), []);
+
+  // After a save React resets this uncontrolled form to its DEFAULT values -
+  // and a <select>'s default is fixed when it mounts, so the refreshed
+  // `settings` never reached it: Currency snapped back to the old USD right
+  // after saving EUR, and the next save of any other setting wrote USD back
+  // (both of the founder's 2026-09-25/26 saves returned 204; the row held
+  // USD). Keying the form on the saved row remounts it with the new defaults.
+  const savedKey = JSON.stringify(settings);
+  const [baselineKey, setBaselineKey] = useState(savedKey);
+  if (baselineKey !== savedKey) {
+    setBaselineKey(savedKey);
+    setUnsaved(0);
+  }
   useEffect(() => {
     if (formRef.current) baseline.current = snapshot(formRef.current);
-    return () => clearTimeout(toastTimer.current);
-  }, []);
+  }, [savedKey]);
 
   function recount() {
     if (formRef.current) setUnsaved(changedFieldCount(baseline.current, snapshot(formRef.current)));
@@ -149,14 +163,17 @@ export function SettingsForm({ settings, activeTab, sectorOptions, watchlists, f
   const briefingCategories = settings.briefing_news_categories ?? [];
   const browserZone = typeof Intl !== "undefined" ? Intl.DateTimeFormat().resolvedOptions().timeZone : "UTC";
 
+  // States what is actually happening: which rate, from whom, dated - or that
+  // the rate could not be fetched and figures are still in USD.
   const currencyHint = fx.unavailable
-    ? "Rates come from the market-data provider, which isn't reachable right now, so every figure is still shown in USD. Nothing is converted at a guessed rate."
+    ? "The European Central Bank reference rate couldn't be fetched just now, so every figure is still shown in USD. Nothing is converted at a guessed rate."
     : fx.effectiveCurrency === "USD"
       ? "Applied to every price, portfolio value and gain/loss figure in the app."
-      : `Applied to every figure, converted from USD at the provider's live rate${fx.asOf ? ` (quoted ${new Date(fx.asOf).toLocaleString()})` : ""}.`;
+      : `Applied to every figure, converted from USD at the European Central Bank reference rate${fx.asOf ? ` of ${formatRateDate(fx.asOf)}` : ""}. Rates: European Central Bank reference rates${fx.asOf ? `, ${fx.asOf}` : ""}.`;
 
   return (
     <form
+      key={savedKey}
       ref={formRef}
       action={formAction}
       onChange={recount}
