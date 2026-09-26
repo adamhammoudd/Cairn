@@ -64,6 +64,8 @@ async function DashboardBody() {
         "id, reasoning_text, plain_summary, headline, text_source, confidence_level, sample_size, scope_type, scope_value, analysis_type, created_at, direction_n, direction_higher, direction_horizon_sessions, direction_confidence, direction_p25, direction_median, direction_p75, direction_worst, direction_best",
       )
       .eq("status", "validated")
+      // Current analyses only: a regenerated one supersedes the old (migration 0054).
+      .is("superseded_by", null)
       .order("created_at", { ascending: false })
       .limit(1),
   ]);

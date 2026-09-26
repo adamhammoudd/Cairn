@@ -386,6 +386,8 @@ export async function listAnalyses(): Promise<AnalysisWithMethodology[]> {
     .from("ai_analyses")
     .select(ANALYSIS_COLUMNS)
     .eq("status", "validated")
+    // Current analyses only: a regenerated one supersedes the old (migration 0054).
+    .is("superseded_by", null)
     .order("created_at", { ascending: false })
     .limit(20);
 
@@ -398,6 +400,8 @@ export async function getAnalysesForScope(scopeType: ScopeType, scopeValue: stri
     .from("ai_analyses")
     .select(ANALYSIS_COLUMNS)
     .eq("status", "validated")
+    // Current analyses only: a regenerated one supersedes the old (migration 0054).
+    .is("superseded_by", null)
     .eq("scope_type", scopeType)
     .eq("scope_value", scopeValue)
     .order("created_at", { ascending: false })

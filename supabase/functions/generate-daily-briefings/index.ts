@@ -177,6 +177,7 @@ Deno.serve(async (req) => {
         // The headline, never the >=5% band (a Premium trader figure; docs/decisions/2026-09-27-analysis-rebuild.md).
         .select("id, scope_value, analysis_type, confidence_level, headline")
         .eq("status", "validated")
+        .is("superseded_by", null)
         .order("created_at", { ascending: false })
         .limit(10);
       if (symbols.length > 0) analysisQuery = analysisQuery.in("scope_value", symbols);
