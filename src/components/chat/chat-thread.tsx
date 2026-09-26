@@ -17,8 +17,6 @@ import {
 } from "@/components/analysis/research-states";
 import type { ChatMessageData } from "@/components/chat/chat-message";
 import { MethodologyCard } from "@/components/analysis/methodology-card";
-import { getUserPlan } from "@/lib/actions/billing";
-import { TIER_LIMITS } from "@/lib/billing";
 import Link from "next/link";
 import { Disclosure } from "@/components/compliance/disclosure";
 import { ChatMessage } from "@/components/chat/chat-message";
@@ -89,19 +87,17 @@ function sessionWhen(session: ChatSession): string {
  */
 function MethodologyBlock({
   analyses,
-  depth,
   dense,
   open,
 }: {
   analyses: React.ComponentProps<typeof MethodologyCard>["analysis"][];
-  depth: React.ComponentProps<typeof MethodologyCard>["depth"];
   dense: boolean;
   open: boolean;
 }) {
   const cards = (
     <div className="flex flex-col gap-3">
       {analyses.map((a) => (
-        <MethodologyCard key={a.id} analysis={a} depth={depth} dense={dense} />
+        <MethodologyCard key={a.id} analysis={a} dense={dense} />
       ))}
     </div>
   );
@@ -156,7 +152,6 @@ export function ChatThread({
   const [sessionsLoading, setSessionsLoading] = useState(true);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [search, setSearch] = useState("");
-  const [depth, setDepth] = useState<"top_line" | "full">("full");
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(false);
   const [loadingOlder, setLoadingOlder] = useState(false);
@@ -234,8 +229,9 @@ export function ChatThread({
   useEffect(() => {
     (async () => {
       try {
-        const [list, plan] = await Promise.all([listChatSessions(), getUserPlan()]);
-        setDepth(TIER_LIMITS[plan].analysisDepth);
+        // The plan gate is applied on the server (attachMethodology), before
+        // the analyses reach this component.
+        const list = await listChatSessions();
         setSessions(list);
         // No session is created here. An empty thread is a UI state, not a row.
         if (list.length > 0) await loadSession(list[0].id);
@@ -448,7 +444,6 @@ export function ChatThread({
                   {analyses.length > 0 && (
                     <MethodologyBlock
                       analyses={analyses}
-                      depth={depth}
                       dense={compact}
                       // The newest reply follows Settings > AI Assistant >
                       // "Show methodology by default"; older turns always

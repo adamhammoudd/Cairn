@@ -174,7 +174,8 @@ Deno.serve(async (req) => {
 
       let analysisQuery = supabase
         .from("ai_analyses")
-        .select("id, scope_value, analysis_type, probability_low, probability_high, confidence_level")
+        // The headline, never the >=5% band (a Premium trader figure; docs/decisions/2026-09-27-analysis-rebuild.md).
+        .select("id, scope_value, analysis_type, confidence_level, headline")
         .eq("status", "validated")
         .order("created_at", { ascending: false })
         .limit(10);
@@ -306,8 +307,7 @@ Deno.serve(async (req) => {
             `${analysisList.length} relevant ${analysisList.length === 1 ? "analysis" : "analyses"}: ${analysisList
               .slice(0, 3)
               .map(
-                (a: { scope_value: string; probability_low: number; probability_high: number; confidence_level: string }) =>
-                  `${a.scope_value} (${a.probability_low}–${a.probability_high}%, ${a.confidence_level} confidence)`,
+                (a: { scope_value: string; confidence_level: string }) => `${a.scope_value} (${a.confidence_level} confidence)`,
               )
               .join(", ")}${analysisList.length > 3 ? ", and more" : ""}.`,
           );

@@ -35,8 +35,8 @@ interface Series {
 interface AnalysisRow {
   confidence_level: ConfidenceLevel;
   analysis_type: string;
-  probability_low: number;
-  probability_high: number;
+  /** The analysis headline (migration 0052); null on older rows. Never the >=5% band, which is Premium. */
+  headline: string | null;
   created_at: string;
 }
 
@@ -90,7 +90,7 @@ function evaluate(
     if (!match) return null;
     return (
       `${alert.scope_value}: a ${match.confidence_level}-confidence ${match.analysis_type.replace(/_/g, " ")} ` +
-      `analysis (${match.probability_low}–${match.probability_high}%) is available. ` +
+      `analysis is available${match.headline ? `: ${match.headline}` : "."} ` +
       `Market-level analysis only - not advice about any position.`
     );
   }
@@ -216,7 +216,7 @@ Deno.serve(async (req) => {
 
   const { data: analyses } = await supabase
     .from("ai_analyses")
-    .select("scope_value, confidence_level, analysis_type, probability_low, probability_high, created_at")
+    .select("scope_value, confidence_level, analysis_type, headline, created_at")
     .eq("status", "validated")
     .in("scope_value", symbols)
     .order("created_at", { ascending: false });

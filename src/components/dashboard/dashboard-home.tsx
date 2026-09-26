@@ -74,8 +74,8 @@ interface DashboardHomeProps {
       scopeType: string;
       scopeValue: string;
       analysisType: string;
-      probabilityLow: number;
-      probabilityHigh: number;
+      /** "Higher 2 weeks later in 9 of 14 similar moments." - never a probability. */
+      historyLine: string;
       createdAt: string;
       /** Highest-weighted headline the analysis was built from, if any. */
       topSource: { title: string; source: string; publishedAt: string } | null;
@@ -494,9 +494,8 @@ export function DashboardHome({
                 </p>
               ))}
             </div>
-            {/* Confidence and the range it qualifies, on one rule: a bare
-                range never appears without the confidence beside it. Low
-                confidence takes the warning tone, not the gain green. */}
+            {/* Confidence beside the history line it qualifies. Low confidence
+                takes the warning tone, not the gain green. */}
             <div className="mt-5 flex flex-wrap items-center gap-4 border-y border-[#1a1a1a] py-3.5">
               <span
                 className={`inline-flex items-center gap-[7px] rounded-lg border px-[11px] py-1.5 text-[11.5px] capitalize ${
@@ -512,23 +511,9 @@ export function DashboardHome({
                 />
                 {analysis.confidenceLevel} confidence
               </span>
-              <div className="min-w-[150px] flex-1 basis-[180px]">
-                <div className="flex items-baseline justify-between gap-2.5">
-                  <span className="font-mono text-[9px] tracking-[0.14em] text-dim uppercase">Probability range</span>
-                  <span className="font-mono text-lead tabular-nums text-primary">
-                    {analysis.probabilityLow}–{analysis.probabilityHigh}%
-                  </span>
-                </div>
-                <div className="relative mt-[9px] h-[5px] overflow-hidden rounded-full bg-[#1c1c1c]">
-                  <div
-                    className="absolute top-0 bottom-0 origin-left rounded-full bg-gradient-to-r from-accent to-accent-light"
-                    style={{
-                      left: `${Math.min(100, Math.max(0, analysis.probabilityLow))}%`,
-                      right: `${Math.min(100, Math.max(0, 100 - analysis.probabilityHigh))}%`,
-                      animation: "cn-grow 760ms cubic-bezier(.4,0,.2,1) 320ms both",
-                    }}
-                  />
-                </div>
+              <div className="min-w-[150px] flex-1 basis-[220px]">
+                <div className="font-mono text-[9px] tracking-[0.14em] text-dim uppercase">What history says</div>
+                <p className="mt-1.5 text-body leading-[1.5] text-primary text-pretty">{analysis.historyLine}</p>
               </div>
             </div>
             {analysis.topSource && (

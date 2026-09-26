@@ -20,6 +20,8 @@ import { FACTOR_HISTORY_RANGE, TARGET_FACTOR_HISTORY_BARS } from "@/lib/ai/facto
 import { LlmBusyError } from "@/lib/ai/llm";
 import { detectTickers } from "@/lib/ai/context";
 import type { ScopeType } from "@/lib/supabase/types";
+import { buildAnalysisDisplay, type AnalysisDisplay, type AnalysisRowLike, type CaseRow, type Plan } from "@/lib/analysis-display";
+import { plainName } from "@/lib/ai/ticker-analysis";
 
 /**
  * The single generation pipeline. Both entry points - the Research page's
@@ -202,8 +204,13 @@ export interface AnalysisWithMethodology {
   scope_type: ScopeType;
   scope_value: string;
   analysis_type: string;
-  probability_low: number;
-  probability_high: number;
+  /**
+   * The >=5% move band: a Premium trader figure (docs/decisions/2026-09-27-
+   * analysis-rebuild.md). Null on Free - it is removed here, on the server,
+   * not hidden in the page.
+   */
+  probability_low: number | null;
+  probability_high: number | null;
   confidence_level: string;
   sample_size: number;
   reasoning_text: string;
@@ -220,47 +227,62 @@ export interface AnalysisWithMethodology {
     similarity_score: number;
     note: string | null;
   }[];
+  /** The one view every surface draws (lib/analysis-display.ts), already cut to the reader's plan. */
+  display: AnalysisDisplay;
 }
 
-type BareAnalysis = Omit<AnalysisWithMethodology, "sources" | "analogs">;
+type BareAnalysis = AnalysisRowLike & { model_version: string; scope_type: ScopeType };
 
-// Shared by every surface that renders MethodologyCard (research page, daily
-// briefing, chat citations) - Phase 6 requires the same component with the
-// same data everywhere, so the enrichment query lives in exactly one place.
+/**
+ * Columns read for display. Never "*": text_failures (reason codes for
+ * rejected drafts) is for review only.
+ */
+const ANALYSIS_COLUMNS =
+  "id, scope_type, scope_value, analysis_type, probability_low, probability_high, confidence_level, sample_size, reasoning_text, model_version, created_at, plain_summary, headline, bullets, watch, sources_used, text_source, direction_horizon_sessions, direction_n, direction_higher, direction_up_low, direction_up_high, direction_confidence, direction_p25, direction_median, direction_p75, direction_worst, direction_best, direction_conditions";
+
+// Shared by every surface that renders an analysis (ticker page, Research,
+// Assistant, briefing) - the same component with the same data everywhere, so
+// the enrichment lives in exactly one place.
 //
-// PLAN GATE. The Free/Premium analog-depth difference is enforced HERE, not in
-// the component. MethodologyCard's `depth` prop still decides what it draws,
-// but a server action's return value is readable directly - a Free account
-// could open devtools and read the full premium analog set straight out of the
-// payload while the UI showed one. So the rows a Free plan may not see are
-// dropped before they are ever serialized. The analog table itself is closed
-// to anon and authenticated reads (migration 0051: its public policy let
-// anyone read the whole Premium set over the REST API), so it is read here
-// with the service role, AFTER the plan is known.
-//
-// What is NOT gated, deliberately: the finding, the probability range,
-// confidence level, sample_size, sources, and the low-confidence warning. Those
-// are the honesty guarantee and they are identical on both plans - see the
-// `depth` docs on MethodologyCardProps.
+// PLAN GATE. The Free/Premium difference is enforced HERE, not in the
+// component: a server action's return value is readable directly, so what a
+// Free account may not see is dropped before it is serialised:
+//   * every historical case but the closest one (the analog rows are
+//     service-role only since migration 0051);
+//   * the trader figures - the >=5% band and the factor readings (both
+//     service-role only since migration 0053).
+// What is NOT gated: the summary, the history headline (counts, range,
+// confidence, and the up/down dots without dates), the scorecard, what to
+// watch and the sources. Those are the honesty guarantee and identical on
+// both plans.
 async function attachMethodology(
   supabase: Awaited<ReturnType<typeof createClient>>,
   analyses: BareAnalysis[],
 ): Promise<AnalysisWithMethodology[]> {
   if (analyses.length === 0) return [];
 
+  const plan: Plan = (await getUserPlan()) === "free" ? "free" : "premium";
   // Free sees the single closest analog. sample_size on the analysis row still
-  // reports the true count, so "1 of 7 shown" and the upgrade note stay honest
-  // without shipping the other six.
-  const analogLimit = (await getUserPlan()) === "free" ? 1 : Infinity;
+  // reports the true count, so the upgrade note stays honest without shipping
+  // the other cases.
+  const analogLimit = plan === "free" ? 1 : Infinity;
 
   const ids = analyses.map((a) => a.id);
+  const admin = createAdminClient();
 
-  const [{ data: sourceLinks }, { data: analogLinks }] = await Promise.all([
-    supabase.from("ai_analysis_sources").select("analysis_id, news_item_id").in("analysis_id", ids),
-    createAdminClient()
+  const [{ data: sourceLinks }, { data: analogLinks }, { data: factorRows }, { data: dirRows }] = await Promise.all([
+    // Service role: this table's read policy checks the parent through
+    // ai_analyses, which migration 0053 closed to signed-in reads. `ids` are
+    // validated analyses read above.
+    admin.from("ai_analysis_sources").select("analysis_id, news_item_id").in("analysis_id", ids),
+    admin
       .from("ai_analysis_historical_analogs")
-      .select("analysis_id, historical_event_id, similarity_score, note")
+      .select("analysis_id, historical_event_id, similarity_score, note, in_direction_set")
       .in("analysis_id", ids),
+    plan === "premium"
+      ? admin.from("ai_analysis_factors").select("analysis_id, factor_key, value, percentile, detail").in("analysis_id", ids)
+      : Promise.resolve({ data: [] as { analysis_id: string; factor_key: string; value: number | null; percentile: number | null; detail: Record<string, unknown> }[] }),
+    supabase.from("symbol_directory").select("symbol, name, asset_type").in("symbol", Array.from(new Set(analyses.map((a) => a.scope_value)))),
   ]);
 
   const newsIds = Array.from(new Set((sourceLinks ?? []).map((s) => s.news_item_id)));
@@ -273,62 +295,115 @@ async function attachMethodology(
     eventIds.length > 0
       ? supabase
           .from("historical_events")
-          .select("id, symbol, sector, event_type, event_date, description")
+          .select("id, symbol, sector, event_type, event_date, description, price_before, price_after, metadata")
           .in("id", eventIds)
       : Promise.resolve({ data: [] }),
   ]);
 
   const newsById = new Map((newsRows ?? []).map((n) => [n.id, n]));
   const eventById = new Map((eventRows ?? []).map((e) => [e.id, e]));
+  const dirBySymbol = new Map((dirRows ?? []).map((d) => [d.symbol, d]));
 
-  return analyses.map((a) => ({
-    ...a,
-    sources: (sourceLinks ?? [])
+  return analyses.map((a) => {
+    const links = (analogLinks ?? []).filter((l) => l.analysis_id === a.id);
+    const sources = (sourceLinks ?? [])
       .filter((s) => s.analysis_id === a.id)
       .map((s) => newsById.get(s.news_item_id))
-      .filter((n): n is NonNullable<typeof n> => !!n),
-    analogs: (analogLinks ?? [])
-      .filter((l) => l.analysis_id === a.id)
+      .filter((n): n is NonNullable<typeof n> => !!n);
+    const dir = a.scope_type === "ticker" ? dirBySymbol.get(a.scope_value) : undefined;
+    const assetType = (dir?.asset_type as string | undefined) ?? null;
+    const name = a.scope_type === "ticker" ? plainName((dir?.name as string | undefined) ?? a.scope_value, a.scope_value, assetType) : a.scope_value;
+    const cases: CaseRow[] = links
       .map((l) => {
-        const event = eventById.get(l.historical_event_id);
-        if (!event) return null;
-        return { ...event, similarity_score: l.similarity_score, note: l.note };
+        const e = eventById.get(l.historical_event_id);
+        if (!e) return null;
+        const after = (e.metadata as { date_after?: unknown } | null)?.date_after;
+        return {
+          event_date: String(e.event_date).slice(0, 10),
+          price_before: e.price_before === null ? null : Number(e.price_before),
+          price_after: e.price_after === null ? null : Number(e.price_after),
+          note: l.note,
+          date_after: typeof after === "string" ? after : null,
+          in_direction_set: !!l.in_direction_set,
+        };
       })
-      .filter((e): e is NonNullable<typeof e> => !!e)
-      // Closest match first, then truncate. Sorting before the slice is what
-      // makes "the one analog Free sees" the best one rather than whichever
-      // row the join happened to return first.
-      .sort((x, y) => y.similarity_score - x.similarity_score)
-      .slice(0, analogLimit),
-  }));
+      .filter((c): c is CaseRow => !!c);
+    const display = buildAnalysisDisplay({
+      row: a,
+      name,
+      assetType,
+      plan,
+      cases,
+      sources,
+      factors: (factorRows ?? []).filter((f) => f.analysis_id === a.id),
+    });
+    return {
+      id: a.id,
+      scope_type: a.scope_type,
+      scope_value: a.scope_value,
+      analysis_type: a.analysis_type,
+      probability_low: plan === "premium" ? (a.probability_low ?? null) : null,
+      probability_high: plan === "premium" ? (a.probability_high ?? null) : null,
+      confidence_level: a.confidence_level,
+      sample_size: a.sample_size,
+      reasoning_text: a.reasoning_text,
+      model_version: a.model_version,
+      created_at: a.created_at,
+      sources,
+      analogs: links
+        .map((l) => {
+          const event = eventById.get(l.historical_event_id);
+          if (!event) return null;
+          return {
+            id: event.id,
+            symbol: event.symbol,
+            sector: event.sector,
+            event_type: event.event_type,
+            event_date: event.event_date,
+            description: event.description,
+            similarity_score: l.similarity_score,
+            note: l.note,
+          };
+        })
+        .filter((e): e is NonNullable<typeof e> => !!e)
+        // Closest match first, then truncate. Sorting before the slice is what
+        // makes "the one analog Free sees" the best one rather than whichever
+        // row the join happened to return first.
+        .sort((x, y) => y.similarity_score - x.similarity_score)
+        .slice(0, analogLimit),
+      display,
+    };
+  });
 }
+
+// ai_analyses is read with the service role (migration 0053 closed it to anon
+// and authenticated, because the row carries the Premium >=5% band), and only
+// validated rows, exactly as the old "public read" policy allowed.
 
 export async function listAnalyses(): Promise<AnalysisWithMethodology[]> {
   const supabase = await createClient();
-
-  const { data: analyses } = await supabase
+  const { data: analyses } = await createAdminClient()
     .from("ai_analyses")
-    .select("*")
+    .select(ANALYSIS_COLUMNS)
     .eq("status", "validated")
     .order("created_at", { ascending: false })
     .limit(20);
 
-  return attachMethodology(supabase, analyses ?? []);
+  return attachMethodology(supabase, (analyses ?? []) as unknown as BareAnalysis[]);
 }
 
 export async function getAnalysesForScope(scopeType: ScopeType, scopeValue: string): Promise<AnalysisWithMethodology[]> {
   const supabase = await createClient();
-
-  const { data: analyses } = await supabase
+  const { data: analyses } = await createAdminClient()
     .from("ai_analyses")
-    .select("*")
+    .select(ANALYSIS_COLUMNS)
     .eq("status", "validated")
     .eq("scope_type", scopeType)
     .eq("scope_value", scopeValue)
     .order("created_at", { ascending: false })
     .limit(10);
 
-  return attachMethodology(supabase, analyses ?? []);
+  return attachMethodology(supabase, (analyses ?? []) as unknown as BareAnalysis[]);
 }
 
 export async function getAnalysesByIds(ids: string[]): Promise<AnalysisWithMethodology[]> {
@@ -339,8 +414,8 @@ export async function getAnalysesByIds(ids: string[]): Promise<AnalysisWithMetho
   // path without it, so an analysis withdrawn for being built on bad data
   // (migration 0047 withdrew a BTC one computed from ETF prices) still
   // rendered wherever a chat message had cited it.
-  const { data: analyses } = await supabase.from("ai_analyses").select("*").in("id", ids).eq("status", "validated");
-  return attachMethodology(supabase, analyses ?? []);
+  const { data: analyses } = await createAdminClient().from("ai_analyses").select(ANALYSIS_COLUMNS).in("id", ids).eq("status", "validated");
+  return attachMethodology(supabase, (analyses ?? []) as unknown as BareAnalysis[]);
 }
 
 /**

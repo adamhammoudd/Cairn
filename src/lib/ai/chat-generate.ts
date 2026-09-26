@@ -36,8 +36,9 @@ Hard rules, no exceptions:
 - Never phrase anything as a personal directive ("you should buy/sell/hold", "consider trimming",
   "add to your position"). The user's holdings/watchlist are used only to decide which stored
   analyses are relevant to surface - never to shape advice about their specific position.
-- When you cite a stored analysis, keep its probability range and confidence level as given -
-  don't round it into false precision or restate it more confidently than it was stored.
+- When you cite a stored analysis, use its headline, its history line (e.g. "higher 2 weeks later
+  in 9 of 14 similar moments") and its confidence level exactly as given. That is what happened
+  before, not a forecast; never state a probability or a chance of a move.
 - Portfolio figures: some turns include a PORTFOLIO_SUMMARY block with the reader's own totals,
   computed by Cairn. You may restate a figure from that block exactly as it is written there. You
   may NEVER compute, estimate, extrapolate, round, or infer any portfolio, position, cost-basis,
@@ -158,7 +159,15 @@ function buildContextBlock(context: ChatContext): string {
   // visible UUID is exactly what got cited verbatim into chat replies before
   // (see lib/ai/citations.ts). `url` is included on news so the model can
   // follow the system prompt's own "[label](url)" instruction for real.
-  const analysesForModel = context.analyses.map(({ id: _id, ...rest }) => rest);
+  // Nor the >=5% band: it is a Premium trader figure and the reply is shown on
+  // every plan. The model gets the headline and the history line.
+  const analysesForModel = context.analyses.map((a) => ({
+    scope_type: a.scope_type,
+    scope_value: a.scope_value,
+    headline: a.reasoning_text,
+    history_line: a.history_line,
+    confidence_level: a.confidence_level,
+  }));
   const newsForModel = context.news.map(({ id: _id, url, ...rest }) => (url ? { ...rest, url } : rest));
 
   return `Context for this turn (stored, already-validated data - do not invent beyond this):
@@ -231,7 +240,9 @@ export async function runChatTurn({
   const analysisIds = context.analyses.map((a) => a.id);
 
   const scopeCheck = checkScopeGuard(rawOutput);
-  const probabilityCheck = checkNoFreelancedProbability(rawOutput, context.analyses);
+  // No allowed ranges: the model was given none, so any probability in the
+  // reply was made up.
+  const probabilityCheck = checkNoFreelancedProbability(rawOutput, []);
   // No-op unless a PORTFOLIO_SUMMARY block was injected this turn: with the
   // feature off, context.portfolio is null and this is skipped entirely.
   const portfolioFigureCheck: ScopeGuardResult = context.portfolio

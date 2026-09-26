@@ -1,4 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { summaryLine, type AnalysisRowLike } from "@/lib/analysis-display";
 import { normalizeSectorsForMatching } from "@/lib/sectors";
 import { priceMovesFromBars } from "../../../supabase/functions/_shared/price-moves";
 
@@ -6,13 +8,19 @@ export interface BriefingContent {
   generated_at: string;
   relevant_symbols: string[];
   summary: string;
+  /**
+   * The headline and the history line of each analysis, never a probability
+   * (docs/decisions/2026-09-27-analysis-rebuild.md: the >=5% band is a Premium
+   * trader figure). Briefings stored before this carry probability_low/high
+   * instead; readers ignore them.
+   */
   analyses: {
     id: string;
     scope_value: string;
     analysis_type: string;
-    probability_low: number;
-    probability_high: number;
     confidence_level: string;
+    headline?: string;
+    history_line?: string;
   }[];
   upcoming_events: { symbol: string | null; event_type: string; event_date: string; title: string }[];
   /**
@@ -111,7 +119,7 @@ export function composeBriefingSummary(i: SummaryInput): string {
     parts.push(
       `${i.analyses.length} relevant ${i.analyses.length === 1 ? "analysis" : "analyses"}: ${i.analyses
         .slice(0, 3)
-        .map((a) => `${a.scope_value} (${a.probability_low}–${a.probability_high}%, ${a.confidence_level} confidence)`)
+        .map((a) => (a.history_line ? `${a.scope_value}: ${a.history_line.replace(/.$/, "").replace(/^./, (c) => c.toLowerCase())}` : a.scope_value))
         .join(", ")}${i.analyses.length > 3 ? ", and more" : ""}.`,
     );
   }
@@ -262,19 +270,28 @@ export async function generateBriefing(userId: string): Promise<BriefingContent>
   // how a briefing headed "Built from your holdings and every watchlist"
   // came to lead with AMZN for an account holding NVDA, ISRG and BTC.
   // No symbols means nothing to report on, not everything.
+  //
+  // Read with the service role (migration 0053 closed ai_analyses to signed-in
+  // reads because the row carries the Premium >=5% band); only the headline and
+  // history line leave this function.
   const rawAnalyses =
     symbols.length > 0
       ? (
-          await supabase
+          await createAdminClient()
             .from("ai_analyses")
-            .select("id, scope_value, analysis_type, probability_low, probability_high, confidence_level")
+            .select(
+              "id, scope_type, scope_value, analysis_type, confidence_level, sample_size, created_at, reasoning_text, plain_summary, headline, text_source, direction_n, direction_higher, direction_horizon_sessions, direction_confidence, direction_p25, direction_median, direction_p75, direction_worst, direction_best",
+            )
             .eq("status", "validated")
             .in("scope_value", symbols)
             .order("created_at", { ascending: false })
             .limit(10)
         ).data ?? []
       : [];
-  const analyses = dedupeLatestPerSymbol(rawAnalyses);
+  const analyses: BriefingContent["analyses"] = dedupeLatestPerSymbol(rawAnalyses).map((a) => {
+    const line = summaryLine(a as unknown as AnalysisRowLike, a.scope_value, null);
+    return { id: a.id, scope_value: a.scope_value, analysis_type: a.analysis_type, confidence_level: a.confidence_level, headline: line.headline, history_line: line.historyLine };
+  });
 
   const today = new Date().toISOString().slice(0, 10);
   const twoWeeksOut = new Date();

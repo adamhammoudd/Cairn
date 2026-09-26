@@ -599,6 +599,12 @@ export interface AnalysisForRewrite {
   probability_high: number;
   confidence_level: string;
   reasoning_text: string;
+  /**
+   * The analysis's history line ("Higher 2 weeks later in 9 of 14 similar
+   * moments."). When present it replaces the >=5% range in the rewrite: that
+   * range is a Premium trader figure and never goes back to a chat reader.
+   */
+  history_line?: string;
 }
 
 const REWRITE_INTRO =
@@ -615,7 +621,9 @@ export function rewriteForScopeGuard(contextAnalyses: AnalysisForRewrite[]): str
   } else {
     const lines = contextAnalyses.map(
       (a) =>
-        `- ${a.scope_type} · ${a.scope_value}: ${a.probability_low}-${a.probability_high}% (${a.confidence_level} confidence) - ${a.reasoning_text}`,
+        a.history_line
+          ? `- ${a.scope_type} · ${a.scope_value}: ${a.reasoning_text} ${a.history_line} (${a.confidence_level} confidence)`
+          : `- ${a.scope_type} · ${a.scope_value}: ${a.probability_low}-${a.probability_high}% (${a.confidence_level} confidence) - ${a.reasoning_text}`,
     );
     text = `${REWRITE_INTRO} Here's what's already on record at the market/sector/ticker level:\n\n${lines.join("\n")}`;
   }
