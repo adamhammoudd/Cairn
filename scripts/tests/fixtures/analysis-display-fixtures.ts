@@ -88,6 +88,13 @@ export function fixture(name: string) {
         "SPY",
         [],
       );
+    case "baseline":
+      return make(
+        base({ headline: "NVIDIA is a fast-growing company whose share costs less than usual for its profit.", bullets: ["Sales are up 83% on last year.", "Up 31% over 6 months.", "Nothing is unusual about NVIDIA's price today. Over any 2 weeks in its stored prices, it ended higher in 9 of 14."], direction_conditions: { basis: "baseline", factor: [], extra: [], base_count: 14 } }),
+        "free",
+        "equity",
+        "NVIDIA",
+      );
     case "legacy":
       return make(
         { id: "old", scope_type: "ticker", scope_value: "NVDA", analysis_type: "volatility_likelihood", created_at: "2026-09-25T00:00:00Z", confidence_level: "medium", sample_size: 24, probability_low: 9, probability_high: 40, reasoning_text: "NVDA saw elevated moves in 5 of 24 analogs. More detail follows.", plain_summary: null },

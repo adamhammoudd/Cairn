@@ -12,6 +12,8 @@ import {
   benchmarkSymbolFor,
   computeFactorSet,
   deriveFactorAnalogs,
+  FACTOR_FORWARD_SESSIONS,
+  scanWindows,
   FACTOR_HISTORY_RANGE,
   TARGET_FACTOR_HISTORY_BARS,
   type FactorAnalogResult,
@@ -33,12 +35,20 @@ const PAGE = 1000;
 
 export const FACTOR_EVENT_TYPE = "factor_signal";
 
+/**
+ * A plain window of a symbol's own price history, stored only as the base rate
+ * for a day when nothing about it is unusual (docs/decisions/2026-09-27-
+ * analysis-rebuild.md, decision 4). Never an analog: it is kept out of the
+ * >=5% band and out of the curated-event read in generate.ts.
+ */
+export const BASELINE_EVENT_TYPE = "price_window";
+
 /** A factor-derived analog shaped like a historical_events row, plus its link note. */
 export interface FactorEventRow {
   id: string;
   symbol: string;
   sector: null;
-  event_type: typeof FACTOR_EVENT_TYPE;
+  event_type: typeof FACTOR_EVENT_TYPE | typeof BASELINE_EVENT_TYPE;
   event_date: string;
   description: string;
   price_before: number;
@@ -56,6 +66,8 @@ export interface FactorAnalysis {
   result: FactorAnalogResult;
   /** Present only when the analog scan cleared MIN_FACTOR_ANALOG_SAMPLE. */
   events: FactorEventRow[];
+  /** Present only when nothing about today was unusual: the base-rate windows, stored. */
+  baselineEvents?: FactorEventRow[];
 }
 
 export async function loadBars(supabase: SupabaseClient<Database>, symbol: string): Promise<FactorBar[]> {
@@ -120,7 +132,10 @@ export async function analyzeFactors(
   if (!set) return null;
 
   const result = deriveFactorAnalogs(set);
-  if (!result.ok) return { set, benchmark, result, events: [] };
+  if (!result.ok) {
+    const baselineEvents = result.reason === "no_active_conditions" ? await persistBaseline(symbol, set) : [];
+    return { set, benchmark, result, events: [], baselineEvents };
+  }
 
   const { analogs } = result;
   const matchFraction = analogs.conditions.length / (analogs.conditions.length + analogs.droppedConditions.length);
@@ -176,6 +191,57 @@ export async function analyzeFactors(
   });
 
   return { set, benchmark, result, events };
+}
+
+/**
+ * Store every non-overlapping window of the symbol's history as a
+ * BASELINE_EVENT_TYPE row (idempotent on the unique symbol/type/date index), so
+ * each case behind the base rate is a stored, citable row like any analog.
+ */
+async function persistBaseline(symbol: string, set: FactorSet): Promise<FactorEventRow[]> {
+  const windows = scanWindows(set, FACTOR_FORWARD_SESSIONS);
+  if (windows.length === 0) return [];
+  const description = `A ${FACTOR_FORWARD_SESSIONS}-session stretch of this symbol's own price history (base rate; not matched to today).`;
+  const admin = createAdminClient();
+  const { error: upsertError } = await admin.from("historical_events").upsert(
+    windows.map((w) => ({
+      symbol,
+      sector: null,
+      event_type: BASELINE_EVENT_TYPE,
+      event_date: w.date,
+      description,
+      price_before: w.priceBefore,
+      price_after: w.priceAfter,
+      metadata: { source: "baseline_scan", horizon_sessions: FACTOR_FORWARD_SESSIONS, date_after: w.dateAfter },
+    })),
+    { onConflict: "symbol,event_type,event_date", ignoreDuplicates: false },
+  );
+  if (upsertError) throw new Error(`Failed to store base-rate windows: ${upsertError.message}`);
+  const { data: stored, error: readError } = await admin
+    .from("historical_events")
+    .select("id, event_date")
+    .eq("symbol", symbol)
+    .eq("event_type", BASELINE_EVENT_TYPE)
+    .in("event_date", windows.map((w) => w.date));
+  if (readError) throw new Error(`Failed to read back base-rate windows: ${readError.message}`);
+  const idByDate = new Map((stored ?? []).map((r) => [String(r.event_date).slice(0, 10), r.id]));
+  return windows.map((w) => {
+    const id = idByDate.get(w.date);
+    if (!id) throw new Error(`Base-rate window for ${symbol} on ${w.date} was not persisted.`);
+    return {
+      id,
+      symbol,
+      sector: null,
+      event_type: BASELINE_EVENT_TYPE,
+      event_date: w.date,
+      description,
+      price_before: w.priceBefore,
+      price_after: w.priceAfter,
+      volume_at_event: null,
+      note: `Base rate: close moved ${fmtPct(w.movePct)} over the next ${FACTOR_FORWARD_SESSIONS} sessions (${w.date} to ${w.dateAfter}).`,
+      matchFraction: 1,
+    };
+  });
 }
 
 /**

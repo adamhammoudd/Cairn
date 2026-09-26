@@ -502,6 +502,17 @@ function scan(set: FactorSet, conditions: FactorCondition[], horizon: number): F
 }
 
 /**
+ * Every non-overlapping `horizon`-session stretch in the symbol's history,
+ * with no condition at all: its base rate. Used only when nothing about today
+ * is unusual (deriveFactorAnalogs found no active condition), and always
+ * labelled as the base rate, never as "similar moments"
+ * (docs/decisions/2026-09-27-analysis-rebuild.md, decision 4).
+ */
+export function scanWindows(set: FactorSet, horizon: number = FACTOR_FORWARD_SESSIONS): FactorInstance[] {
+  return scan(set, [], horizon);
+}
+
+/**
  * Find every past day the symbol was in the same state as today and measure
  * what followed.
  *

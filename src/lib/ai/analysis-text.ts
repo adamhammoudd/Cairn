@@ -60,6 +60,8 @@ export interface TextInputs {
   history: DirectionalHistory | null;
   /** Why there is no history (only read when `history` is null). */
   noHistoryReason: "no_active_conditions" | "insufficient_instances" | "no_price_history" | null;
+  /** "baseline" when nothing is unusual today and `history` is the base rate (never "similar moments"). */
+  historyBasis?: "similar" | "baseline";
   /** Plain words for what the similar moments were matched on. */
   matchedOn?: string[];
   scorecard: Scorecard;
@@ -99,6 +101,7 @@ export type TextFailure =
   | "sentence_too_long"
   | "watch_unsourced"
   | "unknown_source"
+  | "baseline_called_similar"
   | "classifier_flagged"
   | "classifier_unavailable"
   | "model_error"
@@ -137,6 +140,8 @@ export function historyWords(
   name: string,
   assetType: string | null,
   noHistoryReason: TextInputs["noHistoryReason"],
+  /** "baseline": nothing unusual today, so `h` is every stretch of its history - worded as the base rate. */
+  basis: "similar" | "baseline" = "similar",
 ): HistoryWords | null {
   const caveat = "This is what happened before, not a forecast.";
   if (!h) {
@@ -149,6 +154,9 @@ export function historyWords(
     return { line, range: null, extremes: null, confidence: "Confidence: low.", caveat };
   }
   const when = horizonPhrase(h.horizonSessions, assetType);
+  if (h.status === "too_few" && basis === "baseline") {
+    return { line: `Nothing is unusual about ${name}'s price today, and too little price history is stored to give its usual pattern.`, range: null, extremes: null, confidence: "Confidence: low.", caveat };
+  }
   if (h.status === "too_few") {
     const line =
       h.n === 0
@@ -158,7 +166,10 @@ export function historyWords(
   }
   const t = h.typical!;
   return {
-    line: `Higher ${when} later in ${h.higher} of ${h.n} similar moments.`,
+    line:
+      basis === "baseline"
+        ? `Nothing is unusual about ${name}'s price today. Over any ${when} in its stored prices, it ended higher in ${h.higher} of ${h.n}.`
+        : `Higher ${when} later in ${h.higher} of ${h.n} similar moments.`,
     range: `Usually between ${signedPct(t.p25)} and ${signedPct(t.p75)}, with the middle case ${signedPct(t.median)}.`,
     extremes: `The worst case was ${signedPct(h.worst!)} and the best ${signedPct(h.best!)}.`,
     confidence: `Confidence: ${h.confidence}, from ${h.confidence === "high" ? "" : "only "}${h.n} cases.`,
@@ -181,7 +192,7 @@ function eventLabel(e: TextEvent): string {
 }
 
 export function buildComputedFigures(i: TextInputs): string {
-  const hw = historyWords(i.history, i.name, i.assetType, i.noHistoryReason)!;
+  const hw = historyWords(i.history, i.name, i.assetType, i.noHistoryReason, i.historyBasis)!;
   const when = i.history ? horizonPhrase(i.history.horizonSessions, i.assetType) : horizonPhrase(10, i.assetType);
   const history = [hw.line, hw.range, hw.extremes, hw.confidence, i.matchedOn && i.matchedOn.length > 0 ? `Matched on: ${i.matchedOn.join("; ")}.` : null, hw.caveat]
     .filter(Boolean)
@@ -198,7 +209,7 @@ export function buildComputedFigures(i: TextInputs): string {
   return `COMPUTED FIGURES for ${i.name} (${i.symbol}). Calculated in code from stored prices, SEC filings and past cases.
 Use only these numbers, written exactly as shown, sign included.
 
-WHAT HISTORY SAYS (similar moments in its own price history, each measured ${when} later):
+WHAT HISTORY SAYS (${i.historyBasis === "baseline" ? `nothing is unusual about it today, so this is its base rate: every ${when} stretch in its stored prices. These are NOT similar moments; never call them that` : `similar moments in its own price history, each measured ${when} later`}):
 ${history.join("\n")}
 
 SCORECARD (six plain-language descriptions of its numbers):
@@ -246,7 +257,7 @@ export function extractSignedNumbers(text: string): string[] {
 const unsigned = (n: string) => n.replace(/^[+-]/, "");
 
 export function allowedNumbers(i: TextInputs): { signed: Set<string>; magnitude: Set<string> } {
-  const hw = historyWords(i.history, i.name, i.assetType, i.noHistoryReason)!;
+  const hw = historyWords(i.history, i.name, i.assetType, i.noHistoryReason, i.historyBasis)!;
   const texts: string[] = [i.name, i.symbol, hw.line, hw.range ?? "", hw.extremes ?? "", hw.confidence, ...(i.matchedOn ?? [])];
   for (const d of i.scorecard.dimensions) texts.push(d.verdict, d.sentence, ...d.inputs.map((x) => x.display ?? ""));
   for (const e of i.events) texts.push(plainDate(e.date));
@@ -333,6 +344,8 @@ export function checkAnalysisText(t: ModelAnalysisText, i: TextInputs, opts: { m
   for (const p of parts) if (ADVICE.test(p)) return fail("advice_phrasing", p);
   for (const p of parts) if (STATED_AS_FACT.test(p)) return fail("stated_as_fact", p);
   for (const p of parts) if (ELEVATED.test(p)) return fail("elevated_move", p);
+  // The base rate is every stretch of history, not moments like today.
+  if (i.historyBasis === "baseline") for (const p of parts) if (/\bsimilar\s+(?:past\s+)?moments?\b/i.test(p)) return fail("baseline_called_similar", p);
   if (!checkNoFreelancedProbability(all, []).passed) return fail("freelanced_probability", all);
 
   const allowed = allowedNumbers(i);
@@ -390,7 +403,7 @@ export function templateAnalysisText(i: TextInputs): ModelAnalysisText {
         ? `${i.name} is a fund holding many companies, so this covers its price record.`
         : `${i.name}'s company figures are not available, so this covers its price record.`;
 
-  const hw = historyWords(i.history, i.name, i.assetType, i.noHistoryReason)!;
+  const hw = historyWords(i.history, i.name, i.assetType, i.noHistoryReason, i.historyBasis)!;
   const partOk = (s: string) => {
     const probe = { headline, bullets: [s, s, s], watch: [], sources_used: [] };
     return checkAnalysisText(probe, i, { minWatch: 0 }).passed;

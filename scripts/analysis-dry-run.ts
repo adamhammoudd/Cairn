@@ -52,7 +52,7 @@ export function renderDryRun(r: DryRun): string {
   if (!r.inputs || !r.generated) return `## ${r.symbol}\n\nSkipped: ${r.skipped}\n`;
   const i = r.inputs;
   const g = r.generated;
-  const hw = historyWords(i.history, i.name, i.assetType, i.noHistoryReason)!;
+  const hw = historyWords(i.history, i.name, i.assetType, i.noHistoryReason, i.historyBasis)!;
   const watch = g.text.watch.map((w) => `- ${w.text} _(${w.ref.split(":")[0]})_`).join("\n") || "- (nothing dated in the calendar and no headline without a number)";
   return `## ${r.symbol} - ${i.name} (${i.assetType ?? "unknown"})
 

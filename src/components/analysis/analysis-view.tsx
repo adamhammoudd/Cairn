@@ -88,7 +88,7 @@ function Dots({ dots, horizon }: { dots: ("higher" | "lower")[]; horizon: string
 
 export function DirectionPanel({ display, onShowCases, dense, action }: { display: AnalysisDisplay; onShowCases?: () => void; dense?: boolean; action?: ReactNode }) {
   const h = display.history;
-  const count = h.kind === "direction" && h.n > 0 ? `${h.higher} of ${h.n}` : null;
+  const count = (h.kind === "direction" || h.kind === "baseline") && h.n > 0 ? `${h.higher} of ${h.n}` : null;
   const [before, after] = count ? h.line.split(count) : [h.line, undefined];
   return (
     <section aria-label="What history says" className={`flex flex-col gap-4 rounded-[18px] border border-line bg-panel ${dense ? "p-4" : "px-5 py-6 md:px-9 md:py-8"}`}>
@@ -139,7 +139,7 @@ export function WatchPanel({ display, dense }: { display: AnalysisDisplay; dense
                 {w.kind === "event" ? "◷" : "↗"}
               </span>
               {w.url ? (
-                <a href={w.url} target="_blank" rel="noreferrer" className="text-pretty text-primary/85 underline decoration-line-strong underline-offset-2 hover:text-accent">
+                <a href={w.url} target="_blank" rel="noreferrer" className="tap text-pretty text-primary/85 underline decoration-line-strong underline-offset-2 hover:text-accent">
                   {decodeEntities(w.text)}
                 </a>
               ) : (
@@ -270,7 +270,7 @@ function SourcesRow({ sources, used }: { sources: AnalysisSource[]; used: Set<st
       {sources.map((s) => (
         <li key={s.id} className="text-body leading-[1.5]">
           {s.url ? (
-            <a href={s.url} target="_blank" rel="noreferrer" className="text-primary hover:text-accent">
+            <a href={s.url} target="_blank" rel="noreferrer" className="tap text-primary hover:text-accent">
               {decodeEntities(s.title)}
             </a>
           ) : (
@@ -301,7 +301,7 @@ function HowRow({ display }: { display: AnalysisDisplay }) {
         days in the same state as today (and, where it leaves at least 5 cases, with results due or not and the same price trend), then counts
         how often the price was higher {display.history.horizon} later. The typical range is the middle half of those moves (25th to 75th
         percentile). Confidence is low under 5 cases and never high when the 95% Wilson interval on the up-rate is wide. Windows derived from
-        volatility alone are not counted. It describes the past; it is not a forecast.
+        volatility alone are not counted. When nothing about the price is unusual that day, there are no similar moments; Cairn then shows the base rate instead, every {display.history.horizon} stretch in the stored prices, and says so. It describes the past; it is not a forecast.
       </p>
       <p className="m-0">
         <strong className="font-medium text-primary">Scorecard.</strong> Each tile is computed in code from SEC filings and stored prices,

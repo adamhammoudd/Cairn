@@ -21,7 +21,8 @@ import type { Scorecard } from "@/lib/scorecard";
 export type Plan = "free" | "premium";
 
 export interface DisplayHistory {
-  kind: "direction" | "legacy" | "none";
+  /** "baseline": nothing unusual that day, so the base rate over every stretch - never "similar moments". */
+  kind: "direction" | "baseline" | "legacy" | "none";
   line: string;
   range: string | null;
   extremes: string | null;
@@ -205,9 +206,10 @@ export function displayHistory(row: AnalysisRowLike, name: string, assetType: st
 
   const d = storedDirection(row);
   if (d || row.headline) {
-    const w = historyWords(d, name, assetType, d ? null : "no_active_conditions")!;
+    const basis = (row.direction_conditions as { basis?: string } | null)?.basis === "baseline" ? "baseline" : "similar";
+    const w = historyWords(d, name, assetType, d ? null : "no_active_conditions", basis)!;
     return {
-      kind: d ? "direction" : "none",
+      kind: d ? (basis === "baseline" ? "baseline" : "direction") : "none",
       line: w.line,
       range: w.range,
       extremes: w.extremes,
@@ -317,7 +319,7 @@ export function buildAnalysisDisplay(args: {
     watch: watchFrom(row, args.sources),
     sourcesUsed: Array.isArray(row.sources_used) ? row.sources_used : [],
     cases: premium ? cases : null,
-    caseCount: history.kind === "direction" ? history.n : cases.length,
+    caseCount: history.kind === "direction" || history.kind === "baseline" ? history.n : cases.length,
     trader:
       premium && hasBand
         ? {

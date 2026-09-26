@@ -23,7 +23,7 @@ import {
   EARNINGS_WINDOW_SESSIONS,
   todayConditionStates,
 } from "@/lib/ai/similar-moments";
-import { computeFactorSet } from "@/lib/ai/factors";
+import { computeFactorSet, scanWindows } from "@/lib/ai/factors";
 import { conditionSpecs, ENGINE_CONDITIONS, similarMoments } from "@/lib/ai/similar-moments-data";
 import type { Scorecard } from "@/lib/scorecard";
 import { trendDimension, trendInputsFromFactorSet, THRESHOLDS } from "@/lib/scorecard";
@@ -264,7 +264,34 @@ export function runDirectionEngineSuite(): SuiteResult {
     stockNoReleases.applies === true && stockNoReleases.today === null,
     JSON.stringify({ applies: stockNoReleases.applies, today: stockNoReleases.today }),
   );
-  check("too_few is returned as null by the glue when the factor scan failed", similarMoments({ set: coinSet, result: { ok: false, reason: "no_active_conditions", bestSampleSize: 0, conditions: [] }, assetType: "crypto", scorecard: coinCard, data: { releaseDates: [], quarters: [], annualEps: new Map(), pricesAsc: [], upcomingEarnings: [] }, today: "2024-03-25" }) === null, "null");
+  check("too_few is returned as null by the glue when the factor scan failed", similarMoments({ set: coinSet, result: { ok: false, reason: "insufficient_instances", bestSampleSize: 2, conditions: [] }, assetType: "crypto", scorecard: coinCard, data: { releaseDates: [], quarters: [], annualEps: new Map(), pricesAsc: [], upcomingEarnings: [] }, today: "2024-03-25" }) === null, "null");
+
+  // ------------------------------------ nothing unusual today: the base rate
+  const windows = scanWindows(coinSet, 10);
+  check(
+    "base-rate windows: every non-overlapping 10-session stretch, forward window complete",
+    windows.length === Math.floor((coinSet.bars.length - 1 - 10) / 10) + 1 && windows.every((w, i) => i === 0 || w.index - windows[i - 1].index === 10),
+    `${windows.length} windows over ${coinSet.bars.length} bars`,
+  );
+  const baseline = similarMoments({
+    set: coinSet,
+    result: { ok: false, reason: "no_active_conditions", bestSampleSize: 0, conditions: [] },
+    assetType: "crypto",
+    scorecard: coinCard,
+    data: { releaseDates: [], quarters: [], annualEps: new Map(), pricesAsc: [], upcomingEarnings: [] },
+    today: "2024-03-25",
+  });
+  check(
+    "no unusual state today: the base rate over every window, labelled 'baseline', no extra conditions applied",
+    baseline !== null && baseline.kind === "baseline" && baseline.history.n === windows.length && baseline.conditions.length === 0 && baseline.factorConditions.length === 0,
+    JSON.stringify({ kind: baseline?.kind, n: baseline?.history.n, conditions: baseline?.conditions.length }),
+  );
+  check(
+    "a rare state (too few cases) is NOT swapped for the base rate",
+    similarMoments({ set: coinSet, result: { ok: false, reason: "insufficient_instances", bestSampleSize: 3, conditions: [] }, assetType: "crypto", scorecard: coinCard, data: { releaseDates: [], quarters: [], annualEps: new Map(), pricesAsc: [], upcomingEarnings: [] }, today: "2024-03-25" }) === null,
+    "null",
+  );
+  check("a normal result is labelled 'similar'", sm.kind === "similar", String(sm.kind));
 
   return { suiteName: "Direction engine (up-rate, typical range, similar-moment conditions)", gating: true, cases: out };
 }
