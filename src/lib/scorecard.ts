@@ -103,6 +103,12 @@ export const THRESHOLDS = {
   nextEvent: {
     /** Events further out than this are not "next" enough to mention. */
     horizonDays: 60,
+    /**
+     * How far ahead Cairn's calendar is filled: ingest-calendar fetches this
+     * many days (its DAYS_AHEAD; a test keeps the two equal). An empty result
+     * is only ever stated for this reach, never for the full horizon.
+     */
+    calendarLooksAheadDays: 21,
     /** An earnings-day move of 5% or more counts as a big move in the history sentence. */
     bigMove: 0.05,
     /** Fewer past reactions than this are not summarised. */
@@ -470,6 +476,9 @@ export function plainDate(iso: string): string {
   return d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" });
 }
 
+/** The next-event verdict when Cairn's calendar has nothing for the symbol. */
+export const NO_EVENT_VERDICT = "None in calendar";
+
 export function nextEventDimension(today: string, events: UpcomingEvent[], reactions: EarningsReaction[]): Dimension {
   const label = "Next event";
   const T = THRESHOLDS.nextEvent;
@@ -477,7 +486,18 @@ export function nextEventDimension(today: string, events: UpcomingEvent[], react
     .filter((e) => e.date >= today && daysBetween(today, e.date) <= T.horizonDays)
     .sort((a, b) => (a.date < b.date ? -1 : 1))[0];
   if (!upcoming) {
-    return { key: "next_event", label, level: "not_applicable", rated: false, verdict: "Nothing scheduled", sentence: `No earnings or dividend dates in the next ${T.horizonDays} days.`, inputs: [], sources: [] };
+    // A statement about Cairn's calendar, not about the world: the calendar
+    // only reaches a few weeks out and its source can fail.
+    return {
+      key: "next_event",
+      label,
+      level: "not_applicable",
+      rated: false,
+      verdict: NO_EVENT_VERDICT,
+      sentence: `Cairn's calendar has no earnings or dividend dates for it in the next ${T.calendarLooksAheadDays} days.`,
+      inputs: [],
+      sources: [],
+    };
   }
   const n = daysBetween(today, upcoming.date);
   const when = n === 0 ? "today" : n === 1 ? "tomorrow" : `in ${n} days`;

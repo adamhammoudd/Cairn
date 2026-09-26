@@ -16,6 +16,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import {
+  NO_EVENT_VERDICT,
   THRESHOLDS,
   barSegments,
   buildScorecard,
@@ -263,8 +264,24 @@ export function runScorecardSuite(opts: { update?: boolean } = {}): SuiteResult 
   );
   check(
     "next event: past dates and dates beyond 60 days are ignored",
-    nextEventDimension("2025-09-26", [cal("2025-09-20"), cal("2025-12-01")], []).verdict === "Nothing scheduled",
+    nextEventDimension("2025-09-26", [cal("2025-09-20"), cal("2025-12-01")], []).verdict === NO_EVENT_VERDICT,
     nextEventDimension("2025-09-26", [cal("2025-09-20"), cal("2025-12-01")], []).sentence,
+  );
+  // An empty calendar is a fact about Cairn's calendar, not about the world:
+  // the ingest only looks a few weeks ahead and can fail, so the tile names
+  // its source and the reach it actually has.
+  const none = nextEventDimension("2025-09-26", [], []);
+  check(
+    "next event: nothing found is attributed to Cairn's calendar and its real reach",
+    none.verdict === "None in calendar" && none.sentence === `Cairn's calendar has no earnings or dividend dates for it in the next ${THRESHOLDS.nextEvent.calendarLooksAheadDays} days.`,
+    `${none.verdict}: ${none.sentence}`,
+  );
+  const ingestSrc = fs.readFileSync(path.join(process.cwd(), "supabase/functions/ingest-calendar/index.ts"), "utf8");
+  const daysAhead = Number(/const DAYS_AHEAD = (\d+);/.exec(ingestSrc)?.[1]);
+  check(
+    "next event: the stated reach matches how far ingest-calendar fetches",
+    daysAhead === THRESHOLDS.nextEvent.calendarLooksAheadDays,
+    `ingest DAYS_AHEAD=${daysAhead}, scorecard=${THRESHOLDS.nextEvent.calendarLooksAheadDays}`,
   );
   const exd = nextEventDimension("2025-09-26", [cal("2025-09-27", "ex_dividend")], []);
   check("next event: a dividend cut-off date is explained", exd.verdict === "Dividend cut-off date tomorrow" && /Only shares owned before this day/.test(exd.sentence), exd.sentence);
@@ -312,7 +329,7 @@ export function runScorecardSuite(opts: { update?: boolean } = {}): SuiteResult 
       const shown = new Set(d.inputs.map((i) => i.display).filter((x): x is string => !!x).flatMap(numberTokens));
       for (const tok of numberTokens(d.sentence)) {
         // Dates and fixed wording ("6 months", "200 trading days", "200 days", "5-year") are not data.
-        if (/^(6|200|5|12|60)$/.test(tok) && /(6 months|200 (trading )?days|5-year|in the next 60 days)/.test(d.sentence)) continue;
+        if (/^(6|200|5|12|60|21)$/.test(tok) && /(6 months|200 (trading )?days|5-year|in the next \d+ days)/.test(d.sentence)) continue;
         if (!shown.has(tok) && !shown.has(tok.replace("%", ""))) missing.push(`${card.symbol}.${d.key}: "${tok}" in "${d.sentence}"`);
       }
     }
