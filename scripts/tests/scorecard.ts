@@ -18,6 +18,7 @@ import { pathToFileURL } from "node:url";
 import {
   NO_EVENT_VERDICT,
   THRESHOLDS,
+  hasUpcomingEvent,
   barSegments,
   buildScorecard,
   dividendDimension,
@@ -275,6 +276,11 @@ export function runScorecardSuite(opts: { update?: boolean } = {}): SuiteResult 
     "next event: nothing found is attributed to Cairn's calendar and its real reach",
     none.verdict === "None in calendar" && none.sentence === `Cairn's calendar has no earnings or dividend dates for it in the next ${THRESHOLDS.nextEvent.calendarLooksAheadDays} days.`,
     `${none.verdict}: ${none.sentence}`,
+  );
+  check(
+    "next event: an empty tile is not an upcoming event, a dated one is",
+    !hasUpcomingEvent(none) && hasUpcomingEvent(ne) && !hasUpcomingEvent(tr(0.34, 0.12)),
+    `${hasUpcomingEvent(none)} ${hasUpcomingEvent(ne)}`,
   );
   const ingestSrc = fs.readFileSync(path.join(process.cwd(), "supabase/functions/ingest-calendar/index.ts"), "utf8");
   const daysAhead = Number(/const DAYS_AHEAD = (\d+);/.exec(ingestSrc)?.[1]);
