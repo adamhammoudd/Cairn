@@ -14,7 +14,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import {
   NO_EVENT_VERDICT,
   THRESHOLDS,
@@ -343,7 +343,7 @@ export function runScorecardSuite(opts: { update?: boolean } = {}): SuiteResult 
   check("every number in a sentence appears in that dimension's inputs", missing.length === 0, missing.join(" | ") || "all present");
 
   // ---- snapshot -------------------------------------------------------------
-  const file = path.join(path.dirname(new URL(import.meta.url).pathname), "fixtures", "scorecard-snapshots.json");
+  const file = path.join(path.dirname(fileURLToPath(import.meta.url)), "fixtures", "scorecard-snapshots.json");
   const current = JSON.stringify(cards, null, 2) + "\n";
   if (opts.update || !fs.existsSync(file)) {
     fs.mkdirSync(path.dirname(file), { recursive: true });

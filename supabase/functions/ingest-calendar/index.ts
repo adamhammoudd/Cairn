@@ -6,6 +6,17 @@
 // shape without notice, so every row is defensively parsed and a failed day is
 // reported rather than aborting the run.
 //
+// Where Nasdaq has no earnings date for a tracked company inside the window,
+// an ESTIMATE is added from the company's own SEC release history (see
+// _shared/earnings-estimate.ts), stored with metadata.source = "sec_estimate"
+// and confirmed = false, and labelled as an estimate wherever it is shown.
+//
+// LICENSING: Nasdaq.com's terms (nasdaq.com/legal, updated 2026-05-11) grant
+// a "personal, non-commercial use" licence and prohibit any automated process
+// that captures data from the Service. Cairn is a paid product. Setting
+// CALENDAR_NASDAQ_ENABLED=false stops every Nasdaq call and removes its rows;
+// the SEC estimates keep working without it. Pending cfo-legal-advisor review.
+//
 // Not covered: economic releases and IPO pricing. Nasdaq's IPO endpoint returned
 // nothing usable for a forward window and no keyless economic-calendar feed was
 // found (the Fed's calendar.json is a historical archive). Those two event_types
@@ -14,17 +25,20 @@
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 import { requireCronSecret } from "../_shared/auth.ts";
+import { trackedSymbols, withEstimates, type CalendarRow } from "../_shared/earnings-estimate.ts";
 
 const UA = "Mozilla/5.0 (compatible; cairn-ingest/1.0)";
-const DAYS_AHEAD = 21;
+// As far ahead as the scorecard looks for a next event
+// (THRESHOLDS.nextEvent.horizonDays). At 21 days most companies' next
+// results, weeks away, were never fetched.
+const DAYS_AHEAD = 60;
+// Days fetched at once (two requests each), with a pause between batches, so
+// 60 days stay well inside the function's time limit without a burst of 120.
+const DAYS_PER_BATCH = 6;
+const BATCH_PAUSE_MS = 300;
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-interface EventRow {
-  symbol: string | null;
-  event_type: string;
-  event_date: string;
-  title: string;
-  metadata: Record<string, unknown>;
-}
+type EventRow = CalendarRow;
 
 async function nasdaqJson(url: string): Promise<Record<string, unknown> | null> {
   try {
@@ -109,37 +123,38 @@ Deno.serve(async (req) => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
 
-  // Only track symbols the app actually has price history for - Nasdaq returns
-  // hundreds of names per day and the calendar is only useful next to data we hold.
-  const { data: providers } = await supabase
-    .from("data_providers")
-    .select("config")
-    .eq("provider_type", "market_data")
-    .eq("enabled", true);
+  // Only track symbols the app has data for - Nasdaq returns hundreds of names
+  // per day and the calendar is only useful next to data we hold. Held and
+  // watched symbols count too: ISRG was held but not on the provider list, so
+  // it could never get a date.
+  const [{ data: providers }, { data: held }, { data: watched }] = await Promise.all([
+    supabase.from("data_providers").select("config").eq("provider_type", "market_data").eq("enabled", true),
+    supabase.from("holdings").select("symbol"),
+    supabase.from("watchlist_items").select("symbol"),
+  ]);
+  const tracked = trackedSymbols(providers ?? [], held ?? [], watched ?? []);
 
-  const tracked = new Set(
-    (providers ?? [])
-      .flatMap((p: { config: Record<string, unknown> }) => {
-        // config.symbols accepts plain strings and { symbol, asset_type }
-        // objects (see ingest-market-data). Only the ticker matters here.
-        const syms = Array.isArray(p.config?.symbols) ? (p.config.symbols as unknown[]) : [];
-        return syms
-          .map((s) => (typeof s === "string" ? s : (s as { symbol?: string })?.symbol))
-          .filter((s): s is string => typeof s === "string");
-      })
-      .map((s) => s.toUpperCase()),
-  );
-
+  const nasdaqEnabled = (Deno.env.get("CALENDAR_NASDAQ_ENABLED") ?? "true").toLowerCase() !== "false";
   const collected: EventRow[] = [];
   const failures: string[] = [];
 
-  for (let i = 0; i < DAYS_AHEAD; i++) {
-    const date = isoDate(i);
-    const [earnings, dividends] = await Promise.all([fetchEarnings(date), fetchDividends(date)]);
-    if (earnings.length === 0 && dividends.length === 0) failures.push(date);
-    collected.push(...earnings, ...dividends);
+  if (nasdaqEnabled) {
+    for (let start = 0; start < DAYS_AHEAD; start += DAYS_PER_BATCH) {
+      const batch = Array.from({ length: Math.min(DAYS_PER_BATCH, DAYS_AHEAD - start) }, (_, k) => isoDate(start + k));
+      const results = await Promise.all(
+        batch.map(async (date) => {
+          const [earnings, dividends] = await Promise.all([fetchEarnings(date), fetchDividends(date)]);
+          return { date, earnings, dividends };
+        }),
+      );
+      for (const { date, earnings, dividends } of results) {
+        if (earnings.length === 0 && dividends.length === 0) failures.push(date);
+        collected.push(...earnings, ...dividends);
+      }
+      await sleep(BATCH_PAUSE_MS);
+    }
+    collected.push(...(await fetchSplits()));
   }
-  collected.push(...(await fetchSplits()));
 
   const relevant = collected.filter((e) => e.symbol && tracked.has(e.symbol));
 
@@ -149,7 +164,7 @@ Deno.serve(async (req) => {
   // was non-empty - so one blocked run wiped the calendar and left it empty
   // until a run happened to get through. Only touch the table when the fetch
   // clearly worked: at least one day in the window returned rows.
-  const fetchWorked = failures.length < DAYS_AHEAD;
+  const fetchWorked = nasdaqEnabled && failures.length < DAYS_AHEAD;
 
   let inserted = 0;
   if (fetchWorked) {
@@ -160,6 +175,38 @@ Deno.serve(async (req) => {
       if (error) return Response.json({ error: error.message }, { status: 500, headers: corsHeaders });
       inserted = relevant.length;
     }
+  } else if (!nasdaqEnabled) {
+    // Switched off: stale Nasdaq rows must not linger as if current.
+    await supabase.from("calendar_events").delete().eq("metadata->>source", "nasdaq");
+  }
+
+  // SEC estimates for tracked companies Nasdaq has no earnings date for.
+  // Checked against the Nasdaq rows actually in the table, so a blocked Nasdaq
+  // run (rows kept from the last good run) does not add duplicates.
+  const today = isoDate(0);
+  const [{ data: nasdaqNow }, { data: releaseRows }] = await Promise.all([
+    supabase
+      .from("calendar_events")
+      .select("symbol, event_type, event_date, title, metadata")
+      .eq("metadata->>source", "nasdaq")
+      .gte("event_date", today),
+    supabase
+      .from("earnings_releases")
+      .select("symbol, release_date")
+      .in("symbol", [...tracked])
+      .gte("release_date", isoDate(-3 * 365)),
+  ]);
+  const releasesBySymbol: Record<string, string[]> = {};
+  for (const r of (releaseRows ?? []) as { symbol: string; release_date: string }[]) {
+    (releasesBySymbol[r.symbol] ??= []).push(String(r.release_date));
+  }
+  const estimates = withEstimates((nasdaqNow ?? []) as EventRow[], releasesBySymbol, today, DAYS_AHEAD).filter(
+    (e) => e.metadata.source === "sec_estimate",
+  );
+  await supabase.from("calendar_events").delete().eq("metadata->>source", "sec_estimate");
+  if (estimates.length > 0) {
+    const { error } = await supabase.from("calendar_events").insert(estimates);
+    if (error) return Response.json({ error: error.message }, { status: 500, headers: corsHeaders });
   }
 
   return Response.json(
@@ -170,6 +217,8 @@ Deno.serve(async (req) => {
       days_with_data: DAYS_AHEAD - failures.length,
       days_with_no_data: failures.length,
       write_skipped: !fetchWorked,
+      nasdaq_enabled: nasdaqEnabled,
+      sec_estimates: estimates.map((e) => `${e.symbol} ${e.event_date}`),
     },
     { headers: corsHeaders },
   );

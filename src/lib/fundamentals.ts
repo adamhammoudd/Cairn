@@ -118,6 +118,18 @@ export function ratio(num: number | null, den: number | null): number | null {
   return num / den;
 }
 
+/**
+ * A per-share dollar figure for display: cents, or three decimals below a
+ * cent so NVIDIA's $0.004 split-adjusted dividend does not read "$0.00".
+ * Rounds away float noise from derived values (1.7600000000000002 -> $1.76).
+ */
+export function perShare(v: number): string {
+  const abs = Math.abs(v);
+  const digits = abs > 0 && abs < 0.01 ? 3 : 2;
+  const s = abs.toFixed(digits);
+  return `${v < 0 && Number(s) !== 0 ? "-" : ""}$${s}`;
+}
+
 export interface TtmSnapshot {
   period_end: string;
   revenue: number | null;

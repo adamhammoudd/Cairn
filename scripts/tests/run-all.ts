@@ -141,6 +141,7 @@ async function main() {
     runFactorAnalogsSuite(),
     runDeepHistorySuite(),
     runFundamentalsSuite(),
+    runCalendarIngestSuite(),
     runScorecardSuite(),
     runHistoryPlainSuite(),
     runExposureSuite(),
