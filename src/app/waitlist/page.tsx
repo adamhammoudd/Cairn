@@ -74,7 +74,7 @@ export default async function WaitlistPage() {
       <header className="mx-auto flex max-w-[1140px] flex-wrap items-center justify-between gap-3.5 border-b border-[#1a1a1a] px-7 pt-[22px] pb-5">
         <Logo size={27} />
         <span className="flex items-center gap-2.5 font-mono text-[10.5px] tracking-[0.18em] text-[#7b7b7b] uppercase">
-          In development
+          Beta open
           <span className="text-[#2a2a2a]">·</span>
           <span className="text-[#5ee6a6]">Waitlist open</span>
         </span>
@@ -95,7 +95,7 @@ export default async function WaitlistPage() {
                   style={{ animation: "wl-ping 2.4s cubic-bezier(0,0,.2,1) infinite" }}
                 />
               </span>
-              Not yet launched
+              Beta now open
             </span>
 
             {/*
