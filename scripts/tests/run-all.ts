@@ -50,6 +50,11 @@ import { runProxyPublicPathsSuite } from "./proxy-public-paths";
 import { runSignupConsentSuite } from "./signup-consent";
 import { runLiveRefreshSuite } from "./live-refresh";
 import { runBriefingOnOpenSuite } from "./briefing-on-open";
+import { runCalendarIngestSuite } from "./calendar-ingest";
+import { runSplitAdjustmentSuite } from "./split-adjustment";
+import { runHealthInputsSuite } from "./health-inputs";
+import { runPortfolioHistoryReadSuite } from "./portfolio-history-read";
+import { runRunAllRegistrationSuite } from "./run-all-registration";
 
 // A suite that throws (missing credentials, unreachable service) must surface
 // as a hard failure of that suite, not take the whole run down with a stack
@@ -142,6 +147,9 @@ async function main() {
     runDeepHistorySuite(),
     runFundamentalsSuite(),
     runCalendarIngestSuite(),
+    runSplitAdjustmentSuite(),
+    runHealthInputsSuite(),
+    runRunAllRegistrationSuite(),
     runScorecardSuite(),
     runHistoryPlainSuite(),
     runExposureSuite(),
