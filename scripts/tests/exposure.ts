@@ -36,7 +36,7 @@ export function runExposureSuite(): SuiteResult {
     "lines read as facts",
     lines[0] === "NVIDIA is 25% of your portfolio, the biggest part of it." &&
       lines[1] === "On a typical results day it has moved 6.8%, roughly €210 either way on this holding." &&
-      lines[2] === "Nothing in the company's numbers weakened this week.",
+      lines[2] === "Nothing on its scorecard weakened this week.",
     lines.join(" | "),
   );
   check("every line passes the scope guard (no advice, no evaluation)", lines.every((l) => checkScopeGuard(l).passed), lines.map((l) => checkScopeGuard(l).reason ?? "ok").join(", "));
@@ -51,6 +51,9 @@ export function runExposureSuite(): SuiteResult {
   );
   const weakened = exposureLines("Amazon", exposureFacts({ symbol: "AMZN", holdings, medianEarningsMove: null, weakenedThisWeek: ["Financial health"] })!, eur);
   check("a weakened dimension is not hidden behind 'nothing weakened'", !weakened.some((l) => /Nothing .* weakened/.test(l)), weakened.join(" | "));
+  // A coin has no company, but its price trend is still on the scorecard.
+  const coinLines = exposureLines("Bitcoin", exposureFacts({ symbol: "BTC", holdings, medianEarningsMove: null, weakenedThisWeek: [] })!, eur);
+  check("a coin's 'nothing weakened' line never mentions a company", coinLines.every((l) => !/company/i.test(l)), coinLines.join(" | "));
   check("not held -> no box", exposureFacts({ symbol: "TSLA", holdings, medianEarningsMove: 0.05, weakenedThisWeek: [] }) === null, "null");
   check("unpriced portfolio -> no box rather than a guess", exposureFacts({ symbol: "NVDA", holdings: [{ symbol: "NVDA", value: null }], medianEarningsMove: 0.05, weakenedThisWeek: [] }) === null, "null");
   check("rough money: two significant figures", roughMoney(230.52) === 230 && roughMoney(1834) === 1800 && roughMoney(7.4) === 7.4, `${roughMoney(230.52)} ${roughMoney(1834)} ${roughMoney(7.4)}`);
