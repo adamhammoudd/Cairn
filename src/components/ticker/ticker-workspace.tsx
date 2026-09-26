@@ -225,7 +225,7 @@ export function TickerWorkspace({
             <div className="animate-rise-in overflow-hidden rounded-card border border-line bg-panel">
               <div className="flex items-center justify-between gap-2.5 border-b border-line-soft px-4 py-3.5">
                 <span className="font-mono text-eyebrow text-muted uppercase">Related news</span>
-                <Link href="/news" className="text-micro text-accent hover:underline">
+                <Link href="/news" className="tap text-micro text-accent hover:underline">
                   All news →
                 </Link>
               </div>
@@ -248,7 +248,7 @@ export function TickerWorkspace({
                           href={n.url}
                           target="_blank"
                           rel="noreferrer"
-                          className="block text-body leading-[1.5] text-primary text-pretty hover:text-accent"
+                          className="tap block text-body leading-[1.5] text-primary text-pretty hover:text-accent"
                         >
                           {decodeEntities(n.title)}
                         </a>

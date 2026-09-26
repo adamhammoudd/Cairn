@@ -204,7 +204,7 @@ export function WatchlistPanel({ watchlists }: { watchlists: WatchlistWithItems[
               >
                 {listSize === 0 ? "No symbols yet" : `${greens} up · ${listSize - greens} down`}
               </span>
-              <label className="flex items-center gap-[7px] rounded-[10px] border border-line bg-[#0c0c0c] px-3 py-2">
+              <label className="flex items-center gap-[7px] rounded-[10px] border border-line bg-[#0c0c0c] px-3 py-2 pointer-coarse:min-h-11">
                 <span aria-hidden className="text-caption text-dim">
                   ⌕
                 </span>
@@ -241,7 +241,7 @@ export function WatchlistPanel({ watchlists }: { watchlists: WatchlistWithItems[
               placeholder="Add symbol (e.g. NVDA)"
               exclude={active.items.map((i) => i.symbol)}
               className="w-52"
-              inputClassName="w-full rounded-control border border-line bg-transparent px-3 py-2 text-body text-primary uppercase outline-none transition-colors duration-base ease-standard hover:border-line-strong focus:border-line-strong"
+              inputClassName="w-full rounded-control border border-line bg-transparent px-3 py-2 pointer-coarse:min-h-11 text-body text-primary uppercase outline-none transition-colors duration-base ease-standard hover:border-line-strong focus:border-line-strong"
             />
             <button
               type="submit"

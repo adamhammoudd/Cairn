@@ -291,7 +291,7 @@ export function AlertForm({ alert, defaultChannels, onDone, onCancel }: AlertFor
             <label
               key={c.value}
               title={c.hint}
-              className={`flex items-center gap-2 text-body ${c.value === "in_app" ? "text-primary" : "text-muted"}`}
+              className={`flex items-center gap-2 text-body pointer-coarse:min-h-11 ${c.value === "in_app" ? "text-primary" : "text-muted"}`}
             >
               <input
                 type="checkbox"

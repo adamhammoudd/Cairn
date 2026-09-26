@@ -190,7 +190,7 @@ export function NewsPanel({ items }: { items: NewsFeedItem[] }) {
             );
           })}
         </div>
-        <label className="flex min-w-0 flex-1 basis-[220px] items-center gap-2 rounded-[11px] border border-line bg-panel px-[13px] py-[9px] transition-colors duration-base ease-standard hover:border-line-strong">
+        <label className="flex min-w-0 flex-1 basis-[220px] items-center gap-2 rounded-[11px] border border-line bg-panel px-[13px] py-[9px] pointer-coarse:min-h-11 transition-colors duration-base ease-standard hover:border-line-strong">
           <span aria-hidden className="text-[13px] text-dim">
             ⌕
           </span>
@@ -229,7 +229,7 @@ export function NewsPanel({ items }: { items: NewsFeedItem[] }) {
                   href={item.url}
                   target="_blank"
                   rel="noreferrer"
-                  className="font-serif text-[20px] leading-[1.32] tracking-[-0.005em] text-primary text-pretty transition-colors duration-fast ease-standard hover:text-accent"
+                  className="tap font-serif text-[20px] leading-[1.32] tracking-[-0.005em] text-primary text-pretty transition-colors duration-fast ease-standard hover:text-accent"
                 >
                   {decodeEntities(item.title)}
                 </a>

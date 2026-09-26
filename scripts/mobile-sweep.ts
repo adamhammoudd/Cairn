@@ -143,8 +143,8 @@ function measure(minTap: number): Measurement {
       if (r.right < 0 || r.left > vw) return false;
       // Inline links inside running text are exempt (WCAG 2.5.8 "inline").
       if (el.tagName === "A" && getComputedStyle(el).display === "inline" && el.parentElement && /^(P|LI|SPAN|TD)$/.test(el.parentElement.tagName)) return false;
-      // An input wrapped by a label is sized by the label.
-      if (el.tagName === "INPUT" && ["checkbox", "radio"].includes((el as HTMLInputElement).type)) {
+      // A field wrapped by a label is tapped through the label.
+      if (el.tagName === "INPUT") {
         const label = el.closest("label");
         if (label) {
           const lr = label.getBoundingClientRect();
@@ -175,6 +175,13 @@ function measure(minTap: number): Measurement {
   for (const el of all) {
     if (!visible(el) || !Array.from(el.childNodes).some((n) => n.nodeType === 3 && n.textContent!.trim())) continue;
     if (el.getBoundingClientRect().width <= 1 || getComputedStyle(el).clip.startsWith("rect(0")) continue;
+    // A moving ticker tape is clipped on purpose: its text scrolls through view.
+    let animated = false;
+    for (let a: Element | null = el; a && a !== document.body; a = a.parentElement) {
+      const st = getComputedStyle(a);
+      if (st.animationName !== "none" && st.animationIterationCount === "infinite") { animated = true; break; }
+    }
+    if (animated) continue;
     const range = document.createRange();
     range.selectNodeContents(el);
     const tr = range.getBoundingClientRect();

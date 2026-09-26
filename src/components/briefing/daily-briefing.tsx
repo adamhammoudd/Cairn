@@ -153,7 +153,7 @@ export function DailyBriefing({ briefing, dateLabel }: { briefing: Briefing; dat
                 {briefing.holdings.map((h) => (
                   <tr key={h.symbol} className="border-b border-line-soft last:border-b-0 hover:bg-active">
                     <th scope="row" className="px-4 py-3.5 font-normal">
-                      <Link href={h.href} className="text-primary hover:text-accent-light">
+                      <Link href={h.href} className="tap text-primary hover:text-accent-light">
                         {h.name}
                       </Link>
                       <div className="font-mono text-micro text-dim">

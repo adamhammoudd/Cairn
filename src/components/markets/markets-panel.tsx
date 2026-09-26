@@ -129,7 +129,7 @@ export function MarketsPanel({
             );
           })}
         </div>
-        <div className="flex min-w-[220px] flex-1 items-center gap-2 rounded-[11px] border border-line bg-panel px-3.5 py-[9px] transition-colors duration-base ease-standard hover:border-line-strong focus-within:border-accent">
+        <label className="flex min-w-[220px] flex-1 items-center gap-2 rounded-[11px] border border-line bg-panel px-3.5 py-[9px] transition-colors duration-base ease-standard hover:border-line-strong focus-within:border-accent pointer-coarse:min-h-11">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--color-dim)" strokeWidth="2" className="shrink-0">
             <circle cx="11" cy="11" r="7" />
             <line x1="21" y1="21" x2="16.65" y2="16.65" />
@@ -139,9 +139,10 @@ export function MarketsPanel({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Filter this view"
+            aria-label="Filter this view"
             className="w-full min-w-0 bg-transparent text-[12.5px] text-primary placeholder:text-dim outline-none"
           />
-        </div>
+        </label>
       </div>
 
       <p className="mb-2 text-caption text-dim">{deckMethod}</p>
