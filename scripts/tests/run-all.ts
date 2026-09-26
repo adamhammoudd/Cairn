@@ -104,6 +104,7 @@ async function main() {
     liveRefreshSuites,
     priceRowCapSuites,
     plainSummarySuites,
+    portfolioHistorySuites,
   ] = await Promise.all([
     guarded("Adversarial scope guard", runAdversarialScopeGuardSuites),
     guarded("Methodology substance", async () => [await runMethodologySubstanceSuite()]),
@@ -132,6 +133,7 @@ async function main() {
     guarded("Live-quote polling", () => [runLiveRefreshSuite()]),
     guarded("Price reads past the 1000-row API cap", async () => [await runPriceRowCapSuite()]),
     guarded("Plain summary", async () => [await runPlainSummarySuite()]),
+    guarded("Portfolio chart history read", async () => [await runPortfolioHistoryReadSuite()]),
   ]);
 
   const allSuites = [
@@ -173,6 +175,7 @@ async function main() {
     ...liveRefreshSuites,
     ...priceRowCapSuites,
     ...plainSummarySuites,
+    ...portfolioHistorySuites,
   ];
   const reportPath = writeReport(allSuites);
 

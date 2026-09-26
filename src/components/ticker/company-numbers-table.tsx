@@ -6,6 +6,7 @@
 // past quarters at today's exchange rate would print numbers no filing contains.
 
 import type { CompanyNumbersRow } from "@/lib/analysis-summary";
+import { perShare } from "@/lib/fundamentals";
 
 const usdCompact = (v: number | null) =>
   v === null ? "-" : v.toLocaleString("en-US", { style: "currency", currency: "USD", notation: "compact", maximumFractionDigits: 1 });
@@ -20,7 +21,7 @@ export function CompanyNumbersTable({ rows, status }: { rows: CompanyNumbersRow[
     ["Free cash flow", (r) => usdCompact(r.freeCashFlow)],
     ["Cash", (r) => usdCompact(r.cash)],
     ["Debt", (r) => usdCompact(r.debt)],
-    ["Profit per share", (r) => (r.eps === null ? "-" : `$${r.eps.toFixed(2)}`)],
+    ["Profit per share", (r) => (r.eps === null ? "-" : perShare(r.eps))],
   ];
   return (
     <div className="flex flex-col gap-3">
