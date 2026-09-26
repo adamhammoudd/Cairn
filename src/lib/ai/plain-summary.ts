@@ -24,7 +24,7 @@
 //   * sentence_too_long: at most 25 words (the target is under 20).
 
 import { checkNoFreelancedProbability, checkScopeGuard } from "@/lib/ai/scope-guard";
-import type { Scorecard, Dimension } from "@/lib/scorecard";
+import { NO_EVENT_VERDICT, type Scorecard, type Dimension } from "@/lib/scorecard";
 import type { HistoryPlain } from "@/lib/ai/history-plain";
 
 export interface SummaryInputs {
@@ -236,7 +236,7 @@ function pricePhrase(valuation: string | undefined): string {
 
 /** "Earnings in 5 days" -> "Earnings are due in 5 days." Only within two weeks. */
 function eventPhrase(next: Dimension | undefined): string {
-  if (!next || next.verdict === "Nothing scheduled") return "";
+  if (!next || next.verdict === NO_EVENT_VERDICT) return "";
   const days = next.inputs.find((i) => i.label === "Days until the event")?.value;
   if (typeof days !== "number" || days > 14) return "";
   const when = days === 0 ? "today" : days === 1 ? "tomorrow" : `in ${days} days`;
@@ -274,7 +274,7 @@ export function templateSummary(inputs: SummaryInputs): SummaryText {
     if (bullets.length === 4) break;
   }
   if (bullets.length < 4 && inputs.history?.status === "ok") bullets.push(inputs.history.headline);
-  if (bullets.length < 3 && next && next.verdict !== "Nothing scheduled" && !eventPhrase(next)) bullets.push(next.sentence);
+  if (bullets.length < 3 && next && next.verdict !== NO_EVENT_VERDICT && !eventPhrase(next)) bullets.push(next.sentence);
   return { headline, bullets };
 }
 
