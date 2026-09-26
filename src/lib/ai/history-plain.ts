@@ -12,7 +12,7 @@
 // the factor-derived instances, which are labelled as "times it looked like
 // this" in its own price history.
 
-import { wilsonInterval } from "@/lib/ai/analytics";
+import { gradeConfidence, wilsonInterval } from "@/lib/ai/analytics";
 import { MIN_FACTOR_ANALOG_SAMPLE } from "@/lib/ai/factors";
 
 export interface HistoryInstance {
@@ -93,14 +93,6 @@ export function horizonWords(sessions: number, assetType: string | null): string
   return `${sessions} trading days`;
 }
 
-/** Same grading as computeProbabilityBand in analytics.ts. */
-function confidenceFor(n: number, lowFrac: number, highFrac: number): "low" | "medium" | "high" {
-  const width = (highFrac - lowFrac) * 100;
-  if (n < 5 || width > 50) return "low";
-  if (n < 15 || width > 30) return "medium";
-  return "high";
-}
-
 export function historyInPlainWords(input: HistoryInput): HistoryPlain {
   const valid = input.instances
     .filter((i) => i.priceBefore > 0 && Number.isFinite(i.priceAfter))
@@ -136,7 +128,7 @@ export function historyInPlainWords(input: HistoryInput): HistoryPlain {
   const { low, high } = wilsonInterval(higher, n);
   const rateLow = Math.round(low * 10);
   const rateHigh = Math.round(high * 10);
-  const confidence = confidenceFor(n, low, high);
+  const confidence = gradeConfidence(n, low, high);
   const conditions = input.conditions ? plainConditions(input.conditions) : "";
   const like = conditions ? `looked like this (${conditions})` : "looked like this";
   const headline = `The last ${n} times ${input.name} ${like}, ${subject} was higher ${when} later ${higher} times.`;
