@@ -25,12 +25,14 @@ import {
   nextEventDimension,
   sectorMedianPe,
   trendDimension,
+  trendInputsFromFactorSet,
   valuationDimension,
   type Dimension,
   type ScorecardInput,
   type ValuationInput,
 } from "@/lib/scorecard";
 import type { CompanyMetrics, PeHistory } from "@/lib/fundamentals";
+import type { FactorSet } from "@/lib/ai/factors";
 import { writeReport, type SuiteResult, type TestCase } from "./report";
 
 const FILING = { accn: "0001045810-25-000230", form: "10-Q", filed: "2025-11-19", cik: "0001045810" };
@@ -206,6 +208,45 @@ export function runScorecardSuite(opts: { update?: boolean } = {}): SuiteResult 
     tr(0.34, 0.12).sentence,
   );
 
+  // Six months is 126 trading sessions for a share but about 183 days for a
+  // coin, which trades every day. The factor engine's 126-bar change is only
+  // about four months of a coin's prices, so the scorecard measures six
+  // months itself from the bars, using the asset's own periods per year.
+  const factorSet = (periodsPerYear: number, closes: number[], pctVsSma200: number): FactorSet =>
+    ({
+      symbol: "X",
+      asOf: "2026-09-26",
+      barCount: closes.length,
+      periodsPerYear,
+      readings: [
+        { key: "trend", detail: { pct_vs_sma200: pctVsSma200 } },
+        { key: "momentum_3m", detail: { roc_6m_pct: 999 } },
+      ],
+      series: {},
+      bars: closes.map((close, i) => ({ date: `d${i}`, open: close, high: close, low: close, close, volume: 0 })),
+    }) as unknown as FactorSet;
+  // 400 bars rising by 1 a bar: the close 6 months back is known exactly.
+  const ramp = Array.from({ length: 400 }, (_, i) => 100 + i);
+  const coin = trendInputsFromFactorSet(factorSet(365, ramp, 5));
+  check(
+    "trend: a coin's 6 months is 183 daily bars, not 126",
+    coin.return6m !== null && Math.abs(coin.return6m - (499 / (499 - 183) - 1)) < 1e-12 && coin.dailyBars === true,
+    JSON.stringify(coin),
+  );
+  const share = trendInputsFromFactorSet(factorSet(252, ramp, 5));
+  check(
+    "trend: a share's 6 months is 126 trading sessions",
+    share.return6m !== null && Math.abs(share.return6m - (499 / (499 - 126) - 1)) < 1e-12 && share.dailyBars === false && share.vs200d === 0.05,
+    JSON.stringify(share),
+  );
+  check(
+    "trend: a coin's 200-bar average is described as 200 days, not trading days",
+    trendDimension({ return6m: 0.34, vs200d: 0.12, asOf: "2026-09-26", dailyBars: true }).sentence ===
+      "Up 34% over 6 months, and 12% above its average price of the last 200 days.",
+    trendDimension({ return6m: 0.34, vs200d: 0.12, asOf: "2026-09-26", dailyBars: true }).sentence,
+  );
+  check("trend: no factor set means not available", trendInputsFromFactorSet(null).return6m === null, "null");
+
   // ---- next event ---------------------------------------------------------
   const cal = (date: string, type: "earnings" | "ex_dividend" = "earnings") => ({ type, date, source: { kind: "calendar" as const, label: "Nasdaq earnings calendar", ref: date } });
   const reacts = [0.08, -0.07, 0.03, 0.09, -0.02, 0.065, 0.011, -0.12].map((m, i) => ({ release_date: `2025-0${(i % 9) + 1}-10`, reaction_date: `2025-0${(i % 9) + 1}-11`, move: m }));
@@ -331,7 +372,7 @@ export function snapshotCards() {
     metrics: null,
     valuation: val({}),
     dividend: { perShareTtm: null, price: null, payoutOfFcf: null, freeCashFlow: null, growthYears: null, filing: null },
-    trend: { return6m: -0.09, vs200d: -0.04, asOf: today },
+    trend: { return6m: -0.09, vs200d: -0.04, asOf: today, dailyBars: true },
     events: [],
     reactions: [],
     filing: null,
