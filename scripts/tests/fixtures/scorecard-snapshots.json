@@ -493,7 +493,7 @@
         "level": "weak",
         "rated": true,
         "verdict": "Falling",
-        "sentence": "Down 9% over 6 months, and 4% below its average price of the last 200 trading days.",
+        "sentence": "Down 9% over 6 months, and 4% below its average price of the last 200 days.",
         "inputs": [
           {
             "label": "6-month price change",
