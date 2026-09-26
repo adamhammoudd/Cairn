@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { DailyBriefing } from "@/components/briefing/daily-briefing";
+import type { Briefing } from "@/lib/daily-briefing";
 import { getMarketStatus } from "@/lib/market-hours";
 import { useLiveRefresh } from "@/components/use-live-refresh";
 import { useDisplayPrefs } from "@/components/display-prefs-provider";
@@ -21,6 +23,10 @@ import {
 
 interface DashboardHomeProps {
   today: string;
+  /** "What changed for what you own" (feat/daily-briefing); leads the page. */
+  briefing?: Briefing | null;
+  /** Long date for the briefing's eyebrow. */
+  briefingDate?: string;
   /** From user_settings.refresh_rate_seconds - written by the settings form and, until now, read by nothing. */
   refreshRateSeconds?: number;
   /** Date of the newest close behind every price on this page. */
@@ -137,6 +143,8 @@ function formatShortDate(iso: string): string {
 
 export function DashboardHome({
   today,
+  briefing = null,
+  briefingDate = "",
   tickerItems,
   portfolio,
   markets,
@@ -641,6 +649,9 @@ export function DashboardHome({
           </button>
         </div>
       </div>
+
+      {briefing && <DailyBriefing briefing={briefing} dateLabel={briefingDate} />}
+
 
       {/* Three tiers, in the order the questions actually get asked: where do
           I stand, what should I know, what else moved. The old layout was a

@@ -21,6 +21,8 @@ import { ebitda, freeCashFlow, median, totalDebt, type Quarter } from "@/lib/fun
 import { exposureFacts, isExposureEnabled, type ExposureFacts } from "@/lib/exposure";
 import type { Scorecard } from "@/lib/scorecard";
 import type { AnalysisWithMethodology } from "@/lib/actions/analysis";
+import { weekAgoLevels } from "@/lib/daily-briefing-data";
+import { scorecardChanges } from "@/lib/daily-briefing";
 
 export interface CompanyNumbersRow {
   label: string;
@@ -154,8 +156,12 @@ export async function loadAnalysisSummary(args: {
           return { symbol: h.symbol, value: c === null ? null : c * Number(h.quantity) };
         }),
         medianEarningsMove,
-        // Week-old scorecards arrive with the daily briefing (feat/daily-briefing).
-        weakenedThisWeek: null,
+        // Compared with the card from about a week ago (scorecard_snapshots,
+        // migration 0050); null - and the line left out - until one exists.
+        weakenedThisWeek:
+          scorecardChanges(bundle.scorecard, await weekAgoLevels(args.symbol, bundle.scorecard, new Date().toISOString().slice(0, 10)))?.weakened.map(
+            (c) => c.label,
+          ) ?? null,
       });
     }
   }

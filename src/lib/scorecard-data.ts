@@ -43,6 +43,8 @@ export interface ScorecardBundle {
   reactions: EarningsReaction[];
   price: { value: number | null; asOf: string | null };
   assetType: string | null;
+  /** Daily closes, oldest first, as read for the card (up to ~5.5 years). */
+  pricesAsc: PricePoint[];
 }
 
 function todayIso(): string {
@@ -172,5 +174,5 @@ export async function loadScorecard(symbolRaw: string, opts: LoadOptions = {}): 
     filing,
   });
 
-  return { scorecard, metrics, quarters, reactions, price: { value: price, asOf: priceDate }, assetType };
+  return { scorecard, metrics, quarters, reactions, price: { value: price, asOf: priceDate }, assetType, pricesAsc };
 }
