@@ -1,7 +1,7 @@
 # Decision: how an analysis is generated and shown (the rebuild)
 
 **Owner:** Adam · **Raised by:** dev-lead · **Date:** 2026-09-27
-**Status:** `[DECISION: Adam]` **awaiting sign-off.** Sections 1 (engine) and 2 (generation) are built against this record; section 2 does not ship until it is approved.
+**Status:** **approved by Adam, 2026-09-27** ("do what you recommend" on the recommendations below). Sections 1-4 are built against this record.
 **Supersedes:** the earlier "directional analysis" brief (no branch for it existed, so nothing is folded in). **Builds on:** `2026-09-26-free-vs-premium.md` (whose table this adopts) and `2026-08-20-volatility-regime-as-analog.md` (Option B).
 
 ## Why
@@ -48,8 +48,12 @@ Each candidate condition (earnings within 7 sessions; scorecard trend level; val
 
 "Enforced on the server" means the Free payload does not contain the Premium fields. Hiding them in the UI is not enforcement. The analog rows stay private (migration 0051).
 
-## Open decisions for Adam
-1. **Sign-off on this record.** Section 2 waits for it.
-2. **Classifier posture for stored analyses.** Recommended: `strict`. If the classifier is down, don't store model text; store the template.
-3. **"What this means for you" wording in CLAUDE.md.** The box stays flagged off until then.
-4. **Regenerating the stored analyses.** Dry run first; the real run only on Adam's OK. Old rows are marked superseded, never deleted.
+## Decisions (Adam, 2026-09-27)
+1. **This record:** approved.
+2. **Classifier posture for stored analyses:** `strict`. If the classifier is down, no model text is stored; the template is. (`ANALYSIS_CLASSIFIER_MODE`, default strict.)
+3. **Regenerating the stored analyses:** approved, once migrations 0052 and 0054 are live. Dry run first; old rows are marked superseded, never deleted.
+4. **Nothing unusual today (no similar moments):** show a clearly labelled base rate instead of nothing - "over any 2 weeks in its stored prices, higher in X of N". It is never called "similar moments".
+5. **Technicals tab:** stays open on every plan. It charts public prices in the browser; the Premium trader indicators are Cairn's analysis readings and the >=5% band.
+
+## Still open
+- **"What this means for you" wording in CLAUDE.md.** No wording has been proposed for approval yet; the box stays behind `ENABLE_EXPOSURE_FIGURES` until it is.
