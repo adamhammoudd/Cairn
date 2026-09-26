@@ -18,6 +18,7 @@ import { runCitationFreshnessSuite } from "./citation-freshness";
 import { runProbabilityMathSuite } from "./probability-math";
 import { runFactorAnalogsSuite } from "./factor-analogs";
 import { runDeepHistorySuite } from "./deep-history";
+import { runFundamentalsSuite } from "./fundamentals";
 import { runPriceRowCapSuite } from "./price-row-cap";
 import { runAssetClassIdentitySuite } from "./asset-class-identity";
 import { runResearchDropdownStackingSuite } from "./research-dropdown-stacking";
@@ -129,6 +130,7 @@ async function main() {
     runProbabilityMathSuite(),
     runFactorAnalogsSuite(),
     runDeepHistorySuite(),
+    runFundamentalsSuite(),
     runAssetClassIdentitySuite(),
     runResearchDropdownStackingSuite(),
     ...adversarialSuites,
