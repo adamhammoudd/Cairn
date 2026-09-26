@@ -11,6 +11,7 @@
 // Writes scripts/tests/fixtures/sec/{NVDA,MSFT,KO}.json.
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 const UA = process.argv[2];
 if (!UA || !UA.includes("@")) {
@@ -37,7 +38,7 @@ async function getJson(url) {
   return res.json();
 }
 
-const outDir = path.join(path.dirname(new URL(import.meta.url).pathname), "tests", "fixtures", "sec");
+const outDir = path.join(path.dirname(fileURLToPath(import.meta.url)), "tests", "fixtures", "sec");
 fs.mkdirSync(outDir, { recursive: true });
 
 for (const [symbol, cik] of Object.entries(COMPANIES)) {
