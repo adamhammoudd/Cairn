@@ -412,6 +412,20 @@ select,
   }
 }
 
+/* No zoom when a field is tapped. iOS Safari zooms the whole page in when a
+   field whose text is under 16px gets focus, and every field here is 12.5-14px.
+   16px on touch screens stops it. Deliberately outside @layer: unlayered
+   rules outrank Tailwind's `text-*` utilities without !important. Pinch-zoom
+   is untouched - `maximum-scale=1` would also stop that, which is an
+   accessibility failure. */
+@media (pointer: coarse) {
+  input:not([type="checkbox"], [type="radio"], [type="range"], [type="hidden"], [type="button"], [type="submit"], [type="reset"]),
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
 /* Touch targets: at least 44x44 under a finger, without changing how anything
    looks. The mobile sweep (scripts/mobile-sweep.ts) found range pills at 37x26,
    row actions at 30x30 and chips at 21px tall on every page. Rather than grow
