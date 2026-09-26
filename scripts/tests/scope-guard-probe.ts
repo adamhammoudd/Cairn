@@ -133,6 +133,10 @@ const COMPLIANT: ProbeCase[] = [
   ["summary: growth share", "It is a growth share, not an income share."],
   ["summary: fund description", "A fund holds many companies, so single-company figures don't apply."],
   ["summary: priced high", "The share is priced high for its profit, above its 5-year average."],
+  // fix/valuation-wording: the relative verdicts and sentences.
+  ["summary: costs more than usual", "A strong, growing company whose share costs more than usual for its profit."],
+  ["summary: costs less than usual", "The share costs less than usual for its profit."],
+  ["summary: cheaper than usual, with the market", "The share costs 28 times the company's yearly profit, lower than its own 5-year average of 61. For comparison, the middle figure across the 15 companies Cairn tracks is 39."],
   ["summary: wise spending", "The company has been careful with its spending this year."],
   // Neutral factual statements about the reader's own position. These name a
   // holding but carry no trade action and no advice frame, so they are not

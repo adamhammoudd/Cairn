@@ -8,8 +8,8 @@
         "label": "Price vs profit",
         "level": "weak",
         "rated": true,
-        "verdict": "Expensive",
-        "sentence": "The share costs 45 times the company's yearly profit. For comparison, its 5-year average is 38; similar companies average 24.",
+        "verdict": "Pricier than usual",
+        "sentence": "The share costs 45 times the company's yearly profit, higher than its own 5-year average of 38. For comparison, similar companies average 24; the middle figure across the 15 companies Cairn tracks is 39.",
         "inputs": [
           {
             "label": "Price ÷ yearly profit per share",
@@ -30,6 +30,16 @@
             "label": "Similar companies counted",
             "value": 8,
             "display": "8"
+          },
+          {
+            "label": "Companies Cairn tracks (median)",
+            "value": 39,
+            "display": "39"
+          },
+          {
+            "label": "Companies Cairn tracks, counted",
+            "value": 15,
+            "display": "15"
           }
         ],
         "sources": [
@@ -240,8 +250,8 @@
         "label": "Price vs profit",
         "level": "mixed",
         "rated": true,
-        "verdict": "Fair",
-        "sentence": "The share costs 24 times the company's yearly profit. For comparison, its 5-year average is 23; similar companies average 21.",
+        "verdict": "About usual",
+        "sentence": "The share costs 24 times the company's yearly profit, about the same as its own 5-year average of 23. For comparison, similar companies average 21.",
         "inputs": [
           {
             "label": "Price ÷ yearly profit per share",
@@ -262,6 +272,16 @@
             "label": "Similar companies counted",
             "value": 8,
             "display": "8"
+          },
+          {
+            "label": "Companies Cairn tracks (median)",
+            "value": null,
+            "display": null
+          },
+          {
+            "label": "Companies Cairn tracks, counted",
+            "value": null,
+            "display": null
           }
         ],
         "sources": [
