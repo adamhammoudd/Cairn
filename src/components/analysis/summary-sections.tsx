@@ -9,7 +9,7 @@
 
 import { useId, useState, type ReactNode } from "react";
 import type { Dimension, Level, Scorecard } from "@/lib/scorecard";
-import { barSegments } from "@/lib/scorecard";
+import { barSegments, hasUpcomingEvent } from "@/lib/scorecard";
 import type { HistoryPlain } from "@/lib/ai/history-plain";
 
 const H2 = "m-0 font-mono text-micro font-medium uppercase tracking-[0.16em] text-muted";
@@ -104,7 +104,7 @@ function Bars({ d }: { d: Dimension }) {
 
 function Tile({ d }: { d: Dimension }) {
   const isEvent = d.key === "next_event";
-  const upcoming = isEvent && d.verdict !== "Nothing scheduled";
+  const upcoming = hasUpcomingEvent(d);
   const days = d.inputs.find((i) => i.label === "Days until the event")?.value;
   return (
     <div
