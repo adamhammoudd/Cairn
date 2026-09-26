@@ -26,6 +26,12 @@ interface PortfolioChartProps {
    * whole portfolio - see timelineCoverage() in lib/portfolio.ts.
    */
   missingHistory?: string[];
+  /**
+   * The history read hit the database's row cap and came back short, so
+   * `missingHistory` may name symbols that DO have stored history, and the
+   * last symbol read may be missing its older bars - see isHistoryTruncated().
+   */
+  historyTruncated?: boolean;
   /** Total held positions, so the header can say "2 of 4". */
   positionCount?: number;
 }
@@ -35,6 +41,7 @@ export function PortfolioChart({
   hasHoldings,
   asOf = null,
   missingHistory = [],
+  historyTruncated = false,
   positionCount = 0,
 }: PortfolioChartProps) {
   // Opens on Settings > Display > "Default chart timeframe", same as the
@@ -155,16 +162,32 @@ export function PortfolioChart({
           Naming the gap is the honest option: the alternative is carrying a
           current price backwards as flat history, and this product does not
           invent prices it does not have. */}
-      {missingHistory.length > 0 && (
+      {(missingHistory.length > 0 || historyTruncated) && (
         <div className="relative mt-3.5 flex items-start gap-2.5 rounded-[11px] border border-[#2a2418] bg-warning/[0.07] px-3.5 py-[11px] text-[12.5px] leading-[1.55] text-[#c8c0ad] text-pretty">
           <span aria-hidden className="w-[3px] flex-none self-stretch rounded-xs bg-warning" />
-          <span>
-          Not in this line:{" "}
-          <span className="text-primary">{missingHistory.join(", ")}</span> &middot; no stored price
-          history yet, so {missingHistory.length === 1 ? "it contributes" : "they contribute"} nothing to
-          the plotted value. The totals above still include{" "}
-          {missingHistory.length === 1 ? "it" : "them"}.
-          </span>
+          {historyTruncated ? (
+            // Cut short by the row cap, not absent: "no stored history" would
+            // be false for these, and the line may also be missing the older
+            // part of the last position that did load.
+            <span>
+            Price history for this chart was cut short at the database&apos;s read limit
+            {missingHistory.length > 0 && (
+              <>
+                {" "}- not in this line: <span className="text-primary">{missingHistory.join(", ")}</span>
+              </>
+            )}
+            , and older points may leave out part of the portfolio. The totals above are priced
+            separately and include every position.
+            </span>
+          ) : (
+            <span>
+            Not in this line:{" "}
+            <span className="text-primary">{missingHistory.join(", ")}</span> &middot; no stored price
+            history yet, so {missingHistory.length === 1 ? "it contributes" : "they contribute"} nothing to
+            the plotted value. The totals above still include{" "}
+            {missingHistory.length === 1 ? "it" : "them"}.
+            </span>
+          )}
         </div>
       )}
 
