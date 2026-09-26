@@ -151,6 +151,19 @@ const ADVICE_FRAMES: { pattern: RegExp; reason: string }[] = [
     pattern: /\b(?:now\s+(?:is|would\s+be|'s)\s+(?:a\s+|the\s+)?(?:good|right|ideal|perfect|great|opportune)?\s*time\s+to|the\s+time\s+to\s+\w+\s+is\s+now|this\s+is\s+the\s+(?:moment|time)\s+to|before\s+it(?:'s|\s+is)\s+too\s+late)\b/i,
     reason: "timing_prescription",
   },
+  // The same timing advice without "now" (feat/plain-summary): "a good time to
+  // buy", "the right moment to sell", "not the time to sell". Only fires with a
+  // trade action in the clause (see checkScopeGuard), so "a good time for the
+  // company" and "in a short time" are untouched.
+  {
+    pattern: /\b(?:(?:a|the)\s+(?:good|great|right|ideal|perfect|opportune|smart|wise|bad|wrong|poor)\s+(?:time|moment|point|opportunity|entry(?:\s+point)?|window)\s+to|(?:is|'s)\s+not\s+the\s+(?:time|moment)\s+to)\b/i,
+    reason: "timing_prescription",
+  },
+  // Prudence framing: "it could be wise to", "it would be prudent to".
+  {
+    pattern: /\b(?:(?:could|would|might|may)\s+be|it(?:'s|\s+is))\s+(?:wise|smart|prudent|sensible|sound|advisable|a\s+good\s+idea|a\s+smart\s+idea)\s+to\b/i,
+    reason: "prescriptive_evaluation",
+  },
   // Softened imperative: "consider trimming", "you might consider".
   {
     pattern: /\bconsider(?:ing)?\s+(?:\w+ing\b|to\s+\w+)/i,
@@ -349,9 +362,16 @@ export function splitClauses(text: string): string[] {
     .filter((c) => c.length > 0);
 }
 
+// A hedge in front of an imperative does not turn it into a description:
+// "Perhaps lock in gains", "Maybe hold off buying" (feat/plain-summary).
+const IMPERATIVE_HEDGE = /^(?:perhaps|maybe|possibly|probably|arguably|ideally|if\s+anything),?\s+/i;
+
 function isImperativeDirective(clause: string): boolean {
-  const stripped = clause.replace(/^[-*\d.)\s"']+/, "");
+  const stripped = clause.replace(/^[-*\d.)\s"']+/, "").replace(IMPERATIVE_HEDGE, "");
   if (!IMPERATIVE_LEAD.test(stripped)) return false;
+  // "off" is in the jargon exclusions for descriptions like "sell off", but
+  // "hold off buying" / "hold off on selling" is an instruction.
+  if (/^hold\s+off\s+(?:on\s+)?\w+ing\b/i.test(stripped) && TRADE_ACTION.test(stripped.replace(/^hold\s+off\s+/i, ""))) return true;
   if (IMPERATIVE_EXCLUSIONS.test(stripped)) return false;
   if (LEADING_WORD_IS_SUBJECT.test(stripped)) return false;
   return TRADE_ACTION.test(stripped);

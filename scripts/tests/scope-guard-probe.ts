@@ -124,6 +124,16 @@ const COMPLIANT: ProbeCase[] = [
   ["descriptive: rotation as observation", "Fund flows showed rotation out of technology and into defensives last week."],
   ["descriptive: hedging as observation", "Options positioning suggests some investors are hedging into the print."],
   ["descriptive: takes profits, third person", "Some holders took profits after the 20% run."],
+  // Plain-summary style (feat/plain-summary): descriptions that share words
+  // with the new timing/prudence frames and must not be flagged.
+  ["summary: history sentence", "The last 14 times NVIDIA looked like this, the share was higher two weeks later 9 times."],
+  ["summary: next event", "Earnings are due in 5 days, on Wed 1 Oct."],
+  ["summary: a time description", "Most of the gain came in a short time after the last report."],
+  ["summary: good time for the company", "It was a good time for the company: sales are up 56% on last year."],
+  ["summary: growth share", "It is a growth share, not an income share."],
+  ["summary: fund description", "A fund holds many companies, so single-company figures don't apply."],
+  ["summary: priced high", "The share is priced high for its profit, above its 5-year average."],
+  ["summary: wise spending", "The company has been careful with its spending this year."],
   // Neutral factual statements about the reader's own position. These name a
   // holding but carry no trade action and no advice frame, so they are not
   // personal DIRECTION - the scope guard is a directive filter, not a filter on

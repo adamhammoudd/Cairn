@@ -20,6 +20,8 @@ import { runFactorAnalogsSuite } from "./factor-analogs";
 import { runDeepHistorySuite } from "./deep-history";
 import { runFundamentalsSuite } from "./fundamentals";
 import { runScorecardSuite } from "./scorecard";
+import { runHistoryPlainSuite } from "./history-plain";
+import { runPlainSummarySuite } from "./plain-summary";
 import { runPriceRowCapSuite } from "./price-row-cap";
 import { runAssetClassIdentitySuite } from "./asset-class-identity";
 import { runResearchDropdownStackingSuite } from "./research-dropdown-stacking";
@@ -98,6 +100,7 @@ async function main() {
     signupConsentSuites,
     liveRefreshSuites,
     priceRowCapSuites,
+    plainSummarySuites,
   ] = await Promise.all([
     guarded("Adversarial scope guard", runAdversarialScopeGuardSuites),
     guarded("Methodology substance", async () => [await runMethodologySubstanceSuite()]),
@@ -125,6 +128,7 @@ async function main() {
     guarded("Signup consent", async () => [await runSignupConsentSuite()]),
     guarded("Live-quote polling", () => [runLiveRefreshSuite()]),
     guarded("Price reads past the 1000-row API cap", async () => [await runPriceRowCapSuite()]),
+    guarded("Plain summary", async () => [await runPlainSummarySuite()]),
   ]);
 
   const allSuites = [
@@ -133,6 +137,7 @@ async function main() {
     runDeepHistorySuite(),
     runFundamentalsSuite(),
     runScorecardSuite(),
+    runHistoryPlainSuite(),
     runAssetClassIdentitySuite(),
     runResearchDropdownStackingSuite(),
     ...adversarialSuites,
@@ -161,6 +166,7 @@ async function main() {
     ...signupConsentSuites,
     ...liveRefreshSuites,
     ...priceRowCapSuites,
+    ...plainSummarySuites,
   ];
   const reportPath = writeReport(allSuites);
 

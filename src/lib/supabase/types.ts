@@ -299,8 +299,11 @@ export interface Database {
           model_version: string;
           status: AnalysisStatus;
           created_at: string;
+          /** feat/plain-summary; see src/lib/ai/plain-summary-store.ts. */
+          plain_summary: Record<string, unknown> | null;
         };
         Insert: {
+          plain_summary?: Record<string, unknown> | null;
           scope_type: ScopeType;
           scope_value: string;
           analysis_type: string;
@@ -316,7 +319,7 @@ export interface Database {
         // `validated` once its sources and analogs are on disk (lib/ai/generate.ts);
         // nothing else about a stored analysis is ever rewritten, so the rest of
         // the row stays immutable.
-        Update: { status: AnalysisStatus };
+        Update: { status?: AnalysisStatus; plain_summary?: Record<string, unknown> | null };
         Relationships: [];
       };
       // Per-user pins on the shared ai_analyses rows (migration 0043).

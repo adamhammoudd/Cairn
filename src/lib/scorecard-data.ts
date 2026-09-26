@@ -4,6 +4,8 @@
 // and ./scorecard.ts where it is tested.
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/lib/supabase/types";
 import { readNewestFirstPaged } from "@/lib/market-data/paged-read";
 import { getCurrentPrice } from "@/lib/market-data/current-price";
 import { computeFactorSet, type FactorBar } from "@/lib/ai/factors";
@@ -47,9 +49,27 @@ function todayIso(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-export async function loadScorecard(symbolRaw: string, today: string = todayIso()): Promise<ScorecardBundle> {
+export interface LoadOptions {
+  today?: string;
+  /** A client to read with; scripts and background jobs have no request scope for createClient(). */
+  supabase?: SupabaseClient<Database>;
+}
+
+async function currentPriceOrNull(symbol: string): Promise<{ price: number | null; asOf: string | null }> {
+  // getCurrentPrice reads through the request-scoped client; outside a request
+  // (a script, a background job) it throws, and the stored close is used.
+  try {
+    const p = await getCurrentPrice(symbol);
+    return { price: p.price, asOf: p.asOf };
+  } catch {
+    return { price: null, asOf: null };
+  }
+}
+
+export async function loadScorecard(symbolRaw: string, opts: LoadOptions = {}): Promise<ScorecardBundle> {
   const symbol = symbolRaw.toUpperCase();
-  const supabase = await createClient();
+  const today = opts.today ?? todayIso();
+  const supabase = opts.supabase ?? (await createClient());
 
   const [dirRes, qRes, aRes, fRes, relRes, calRes, bars, current] = await Promise.all([
     supabase.from("symbol_directory").select("asset_type").eq("symbol", symbol).maybeSingle(),
@@ -68,7 +88,7 @@ export async function loadScorecard(symbolRaw: string, today: string = todayIso(
         supabase.from("historical_prices").select("ts, close, volume").eq("symbol", symbol).not("close", "is", null).order("ts", { ascending: false }).range(from, to),
       PRICE_BARS,
     ),
-    getCurrentPrice(symbol),
+    currentPriceOrNull(symbol),
   ]);
 
   const assetType = (dirRes.data?.asset_type as string | undefined) ?? null;
