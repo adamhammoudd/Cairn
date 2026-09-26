@@ -520,7 +520,7 @@
         "level": "not_applicable",
         "rated": false,
         "verdict": "None in calendar",
-        "sentence": "Cairn's calendar has no earnings or dividend dates for it in the next 21 days.",
+        "sentence": "Cairn's calendar has no earnings or dividend dates for it in the next 60 days.",
         "inputs": [],
         "sources": []
       }
