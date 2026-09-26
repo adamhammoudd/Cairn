@@ -79,7 +79,7 @@ export function exposureLines(name: string, f: ExposureFacts, formatRough: (usd:
     );
   }
   if (f.weakenedThisWeek !== null && f.weakenedThisWeek.length === 0) {
-    lines.push("Nothing in the company's numbers weakened this week.");
+    lines.push("Nothing on its scorecard weakened this week.");
   }
   return lines;
 }
