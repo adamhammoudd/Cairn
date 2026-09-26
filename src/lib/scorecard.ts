@@ -108,7 +108,7 @@ export const THRESHOLDS = {
      * many days (its DAYS_AHEAD; a test keeps the two equal). An empty result
      * is only ever stated for this reach, never for the full horizon.
      */
-    calendarLooksAheadDays: 21,
+    calendarLooksAheadDays: 60,
     /** An earnings-day move of 5% or more counts as a big move in the history sentence. */
     bigMove: 0.05,
     /** Fewer past reactions than this are not summarised. */
@@ -465,6 +465,8 @@ export interface UpcomingEvent {
   type: "earnings" | "ex_dividend" | "dividend_payment";
   date: string;
   source: Source;
+  /** Projected from SEC filing history, not a date the company has announced. */
+  estimated?: boolean;
 }
 
 function daysBetween(a: string, b: string): number {
@@ -516,10 +518,12 @@ export function nextEventDimension(today: string, events: UpcomingEvent[], react
   const n = daysBetween(today, upcoming.date);
   const when = n === 0 ? "today" : n === 1 ? "tomorrow" : `in ${n} days`;
   const what = upcoming.type === "earnings" ? "Earnings" : upcoming.type === "ex_dividend" ? "Dividend cut-off date" : "Dividend payment";
-  const verdict = `${what} ${when}`;
+  const verdict = upcoming.estimated ? `${what} in about ${n} days (estimated)` : `${what} ${when}`;
   const inputs = [input("Days until the event", n, String(n)), input("Event date", null, plainDate(upcoming.date))];
   const sources: Source[] = [upcoming.source];
-  let sentence = `${what}, ${plainDate(upcoming.date)}.`;
+  let sentence = upcoming.estimated
+    ? `${what}, around ${plainDate(upcoming.date)}. This is an estimate from last year's results date, not a date the company has announced.`
+    : `${what}, ${plainDate(upcoming.date)}.`;
   if (upcoming.type === "ex_dividend") sentence += " Only shares owned before this day get the next dividend.";
   if (upcoming.type === "earnings") {
     const recent = reactions.slice(0, T.maxReactions);

@@ -71,7 +71,7 @@ export async function updateSettings(_prevState: string | null, formData: FormDa
   const briefingDelivery: BriefingDelivery =
     submittedDelivery === "email" || submittedDelivery === "push" ? submittedDelivery : "in_app";
 
-  const { error } = await supabase
+  const { data: updated, error } = await supabase
     .from("user_settings")
     .update({
       default_chart_view: formData.get("default_chart_view") as ChartView,
@@ -97,9 +97,17 @@ export async function updateSettings(_prevState: string | null, formData: FormDa
       briefing_news_categories: briefingNewsCategories,
       briefing_delivery: briefingDelivery,
     })
-    .eq("user_id", user.id);
+    .eq("user_id", user.id)
+    // An UPDATE that matches no row (no settings row, or RLS hiding it) is not
+    // an error to PostgREST - it answers 204 and this said "saved" while
+    // nothing was stored. Ask for the row back and require it.
+    .select("user_id");
 
   if (error) return error.message;
+  if (!updated || updated.length === 0) {
+    console.error("[settings] update matched no user_settings row", { userId: user.id });
+    return "Your settings could not be saved - no settings record was found for your account. Please contact support.";
+  }
 
   // These preferences change how other pages render on first paint, so their
   // cached RSC payloads have to go too -- not just /settings. The layout entry

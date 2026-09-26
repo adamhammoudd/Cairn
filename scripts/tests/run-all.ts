@@ -51,6 +51,13 @@ import { runSignupConsentSuite } from "./signup-consent";
 import { runLiveRefreshSuite } from "./live-refresh";
 import { runPremiumAnalogsPrivateSuite } from "./premium-analogs-private";
 import { runAiMethodologyGapsSuite } from "./ai-methodology-gaps";
+import { runFxRatesSuite } from "./fx-rates";
+import { runBriefingOnOpenSuite } from "./briefing-on-open";
+import { runCalendarIngestSuite } from "./calendar-ingest";
+import { runSplitAdjustmentSuite } from "./split-adjustment";
+import { runHealthInputsSuite } from "./health-inputs";
+import { runPortfolioHistoryReadSuite } from "./portfolio-history-read";
+import { runRunAllRegistrationSuite } from "./run-all-registration";
 
 // A suite that throws (missing credentials, unreachable service) must surface
 // as a hard failure of that suite, not take the whole run down with a stack
@@ -106,6 +113,9 @@ async function main() {
     priceRowCapSuites,
     plainSummarySuites,
     aiMethodologyGapsSuites,
+    fxRatesSuites,
+    portfolioHistorySuites,
+    briefingOnOpenSuites,
   ] = await Promise.all([
     guarded("Adversarial scope guard", runAdversarialScopeGuardSuites),
     guarded("Methodology substance", async () => [await runMethodologySubstanceSuite()]),
@@ -135,6 +145,9 @@ async function main() {
     guarded("Price reads past the 1000-row API cap", async () => [await runPriceRowCapSuite()]),
     guarded("Plain summary", async () => [await runPlainSummarySuite()]),
     guarded("AI methodology gaps", async () => [await runAiMethodologyGapsSuite()]),
+    guarded("Display currency", async () => [await runFxRatesSuite()]),
+    guarded("Portfolio chart history read", async () => [await runPortfolioHistoryReadSuite()]),
+    guarded("Daily briefing built on open", async () => [await runBriefingOnOpenSuite()]),
   ]);
 
   const allSuites = [
@@ -143,6 +156,10 @@ async function main() {
     runDeepHistorySuite(),
     runFundamentalsSuite(),
     runPremiumAnalogsPrivateSuite(),
+    runCalendarIngestSuite(),
+    runSplitAdjustmentSuite(),
+    runHealthInputsSuite(),
+    runRunAllRegistrationSuite(),
     runScorecardSuite(),
     runHistoryPlainSuite(),
     runExposureSuite(),
@@ -177,6 +194,9 @@ async function main() {
     ...priceRowCapSuites,
     ...plainSummarySuites,
     ...aiMethodologyGapsSuites,
+    ...fxRatesSuites,
+    ...portfolioHistorySuites,
+    ...briefingOnOpenSuites,
   ];
   const reportPath = writeReport(allSuites);
 

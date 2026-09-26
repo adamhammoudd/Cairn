@@ -10,13 +10,11 @@ February 2027, once the business is registered.
 
 ## Blocking - fix before inviting anyone in
 
-| # | Item | Who |
-|---|---|---|
-| B1 | **hCaptcha site key.** Captcha protection is on in Supabase Auth, so sign-in, sign-up and password reset need a token. Set `NEXT_PUBLIC_HCAPTCHA_SITE_KEY` in Vercel (Production + Preview) before the hCaptcha PR deploys; without it every sign-in fails. | Founder |
-| B2 | **Beta invite codes.** Sign-up is invite-only: set `BETA_INVITE_CODES` in Vercel and share `/signup?invite=<code>` links. Empty = nobody can sign up. | Founder |
-| B3 | **Daily briefings fail.** The scheduled run at the users' briefing hour (12:00 UTC) returned HTTP 500 on 2026-09-24 and 2026-09-25; the other hours only skip. The deployed `generate-daily-briefings` is version 4 (2026-08-30) and older than the repo copy. Redeploy it from the repo and check the next 12:00 UTC run. | Founder approves deploy |
-| B4 | **AI provider: Groq Developer tier.** DeepInfra needed a VAT number, so Cairn stays on Groq (same model). Upgrade Groq to the paid Developer tier with a spending limit, put the Groq key in `LLM_API_KEY` in Vercel (`LLM_BASE_URL` already points at Groq), then generate one analysis to prove it. | Founder |
-| B5 | Supabase leaked-password protection is off (Authentication → Settings). | Founder |
+Nothing left blocking the closed beta as of 2026-09-26. hCaptcha and invite-only
+sign-up (#130) and the move back to Groq's Developer tier (#131) are live, and
+the daily briefing is now built when the reader opens the Assistant page if the
+scheduled run hasn't made one yet. Before inviting people: sign in on the live
+site, generate one analysis, and open one invite link in a private window.
 
 ## Open - before public launch
 
@@ -26,6 +24,8 @@ February 2027, once the business is registered.
 | O2 | CSP is still `Report-Only` (`next.config.ts`). One pass against the live site with the console open, then switch to enforcing. | Engineering |
 | O3 | Migration `0046_factor_analogs` is applied live but has no row in the migration ledger (`supabase_migrations.schema_migrations`). Backfill the row. | Engineering |
 | O4 | Re-run `test:scope-guard` Tier B (22 chat turns back-to-back) on Groq's Developer tier; it could never pass on the free tier. | Engineering |
+| O9 | Supabase leaked-password protection (HaveIBeenPwned check) needs the Pro plan. Accepted for the closed beta: sign-up is invite-only and every auth form has hCaptcha. Turn it on when upgrading, or add a server-side pwned-password check in the sign-up and change-password actions. | Founder |
+| O10 | The scheduled `generate-daily-briefings` function is the 2026-08-30 version and its 12:00 UTC run failed on 2026-09-24/25 (a transient Supabase 401 on its first query). Readers are covered by the on-open briefing; redeploying the repo version would add price moves and holding news to scheduled briefings. | Founder, optional |
 | O8 | The waitlist form has no captcha (it has IP rate limits and email confirmation). Add hCaptcha there too if spam shows up; that needs the hCaptcha secret in Vercel for server-side verification. | Engineering |
 | O5 | 3 of 42 replayed production scope-guard flags still over-fire on genuine refusals. Measure with `npm run replay:guard-log`. | Engineering |
 | O6 | Two separate billing screens (`/billing` and Settings → Billing) - keep one. | Design |

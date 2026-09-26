@@ -29,6 +29,8 @@ export interface BriefingEvent {
   date: string;
   /** Dividend per share when the calendar gives it. */
   perShare?: number | null;
+  /** An earnings date projected from SEC filing history, not announced by the company. */
+  estimated?: boolean;
 }
 
 export interface BriefingHolding {
@@ -343,8 +345,11 @@ export function buildBriefing(input: { today: string; holdings: BriefingHolding[
       const d = days(today, earnings.date);
       const when = d === 0 ? "today" : d === 1 ? "tomorrow" : `in ${d} days`;
       const past = reactionSentence(h.reactions);
+      const due = earnings.estimated
+        ? `Results are expected around ${plainDate(earnings.date)}, an estimate from last year's results date.`
+        : `Results are due ${plainDate(earnings.date)}.`;
       candidates.push({
-        card: { ...base, tag: "Coming up", title: `Reports earnings ${when}`, body: [`Results are due ${plainDate(earnings.date)}.`, ...(past ? [past] : [])] },
+        card: { ...base, tag: "Coming up", title: `Reports earnings ${when}${earnings.estimated ? " (estimated)" : ""}`, body: [due, ...(past ? [past] : [])] },
         priority: 2,
         order: d,
         value,
@@ -419,7 +424,7 @@ export function buildBriefing(input: { today: string; holdings: BriefingHolding[
         .map((e) => ({
           date: e.date,
           symbol: h.symbol,
-          title: e.type === "earnings" ? `${h.name} earnings` : e.type === "ex_dividend" ? `${h.name} dividend cut-off date` : `${h.name} dividend paid`,
+          title: e.type === "earnings" ? `${h.name} earnings${e.estimated ? " (estimated)" : ""}` : e.type === "ex_dividend" ? `${h.name} dividend cut-off date` : `${h.name} dividend paid`,
           detail:
             e.type === "earnings"
               ? reactionSentence(h.reactions)
