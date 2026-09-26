@@ -38,7 +38,8 @@ export async function getDisplayPrefs(): Promise<DisplayPrefs> {
     // wrong figure on a balance screen.
     effectiveCurrency: fx ? currency : "USD",
     fxRate: fx?.rate ?? 1,
-    fxAsOf: fx?.asOf ?? null,
+    fxAsOf: currency !== "USD" ? (fx?.asOf ?? null) : null,
+    fxSource: currency !== "USD" ? (fx?.source ?? null) : null,
     fxUnavailable: currency !== "USD" && fx === null,
     metricStyle: data.metric_style ?? "percent",
     compactMode: data.compact_mode ?? false,

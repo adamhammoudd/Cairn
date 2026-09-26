@@ -36,6 +36,7 @@ import {
   type BreakdownRow,
 } from "@/components/analysis/summary-sections";
 import { CompanyNumbersTable } from "@/components/ticker/company-numbers-table";
+import { isEstimatedEvent } from "@/lib/calendar";
 
 interface TickerWorkspaceProps {
   data: TickerData;
@@ -196,9 +197,9 @@ export function TickerWorkspace({
             {
               label: "Next event",
               value: data.nextEvent
-                ? `${data.nextEvent.event_type.charAt(0).toUpperCase()}${data.nextEvent.event_type.slice(1)} · ${new Date(
-                    data.nextEvent.event_date,
-                  ).toLocaleDateString(undefined, { month: "short", day: "numeric" })}`
+                ? `${data.nextEvent.event_type.charAt(0).toUpperCase()}${data.nextEvent.event_type.slice(1)}${
+                    isEstimatedEvent(data.nextEvent.metadata) ? " (est.)" : ""
+                  } · ${new Date(data.nextEvent.event_date).toLocaleDateString(undefined, { month: "short", day: "numeric" })}`
                 : "None scheduled",
             },
           ];

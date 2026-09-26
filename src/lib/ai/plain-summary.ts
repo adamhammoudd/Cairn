@@ -24,7 +24,7 @@
 //   * sentence_too_long: at most 25 words (the target is under 20).
 
 import { checkNoFreelancedProbability, checkScopeGuard } from "@/lib/ai/scope-guard";
-import { NO_EVENT_VERDICT, type Scorecard, type Dimension } from "@/lib/scorecard";
+import { NO_EVENT_VERDICT, VALUATION_VERDICTS, type Scorecard, type Dimension } from "@/lib/scorecard";
 import type { HistoryPlain } from "@/lib/ai/history-plain";
 
 export interface SummaryInputs {
@@ -227,10 +227,11 @@ export function qualityPhrase(growth: string | undefined, health: string | undef
   return "A company";
 }
 
+/** Relative to the share's own history, never "cheap": that reads as "a bargain". */
 function pricePhrase(valuation: string | undefined): string {
-  if (valuation === "Expensive") return " whose share is priced high for its profit";
-  if (valuation === "Cheap") return " whose share is priced low for its profit";
-  if (valuation === "Fair") return " whose share is fairly priced for its profit";
+  if (valuation === VALUATION_VERDICTS.pricier) return " whose share costs more than usual for its profit";
+  if (valuation === VALUATION_VERDICTS.cheaper) return " whose share costs less than usual for its profit";
+  if (valuation === VALUATION_VERDICTS.usual) return " whose share is priced about as usual for its profit";
   return "";
 }
 
@@ -240,7 +241,7 @@ function eventPhrase(next: Dimension | undefined): string {
   const days = next.inputs.find((i) => i.label === "Days until the event")?.value;
   if (typeof days !== "number" || days > 14) return "";
   const when = days === 0 ? "today" : days === 1 ? "tomorrow" : `in ${days} days`;
-  if (next.verdict.startsWith("Earnings")) return ` Earnings are due ${when}.`;
+  if (next.verdict.startsWith("Earnings")) return next.verdict.includes("estimated") ? ` Earnings are expected ${when} (an estimate).` : ` Earnings are due ${when}.`;
   if (next.verdict.startsWith("Dividend cut-off")) return ` Its dividend cut-off date is ${when}.`;
   if (next.verdict.startsWith("Dividend payment")) return ` Its next dividend is paid ${when}.`;
   return "";

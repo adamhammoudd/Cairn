@@ -84,13 +84,21 @@ export const FIELD_SPECS = {
   },
   net_income: { kind: "duration", unit: "USD", chain: ["NetIncomeLoss"] },
   operating_income: { kind: "duration", unit: "USD", chain: ["OperatingIncomeLoss"] },
+  // `Depreciation` is last: Microsoft and Tesla file their cash-flow D&A
+  // line under a company-specific tag, so plain depreciation is the only
+  // us-gaap figure. It leaves out amortisation of intangibles, so EBITDA from
+  // it is slightly understated (the cautious direction); provenance names the
+  // concept used.
   depreciation_amortization: {
     kind: "duration",
     unit: "USD",
-    chain: ["DepreciationDepletionAndAmortization", "DepreciationAndAmortization"],
+    chain: ["DepreciationDepletionAndAmortization", "DepreciationAndAmortization", "Depreciation"],
   },
   operating_cash_flow: { kind: "duration", unit: "USD", chain: ["NetCashProvidedByUsedInOperatingActivities"] },
-  capex: { kind: "duration", unit: "USD", chain: ["PaymentsToAcquirePropertyPlantAndEquipment"] },
+  // NVIDIA, Amazon, Intuitive Surgical and Kratos report capital spending as
+  // PaymentsToAcquireProductiveAssets ("purchases related to property and
+  // equipment and intangible assets"); without it they had no free cash flow.
+  capex: { kind: "duration", unit: "USD", chain: ["PaymentsToAcquirePropertyPlantAndEquipment", "PaymentsToAcquireProductiveAssets"] },
   dividends_paid: { kind: "duration", unit: "USD", chain: ["PaymentsOfDividends", "PaymentsOfDividendsCommonStock"] },
   eps_diluted: { kind: "duration", unit: "USD/shares", chain: ["EarningsPerShareDiluted"] },
   dividends_per_share: {

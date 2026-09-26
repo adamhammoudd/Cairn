@@ -7,8 +7,11 @@
 //
 // Run: npx tsx --conditions=react-server scripts/tests/daily-briefing.ts
 
-import { pathToFileURL } from "node:url";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import {
+  BRIEFING_RULES,
   buildBriefing,
   unusualMove,
   moveHistory,
@@ -155,17 +158,39 @@ export function runDailyBriefingSuite(): SuiteResult {
   check("no holdings -> an invitation, not a briefing", buildBriefing({ today: TODAY, holdings: [], exposureEnabled: true }).headline === "Add what you own to get a briefing about it.", "empty");
 
   // ---- holdings at a glance ----------------------------------------------------
-  check("holdings line for a company", holdingLine(cards.GROW, "equity") === "A strong, growing company. The share is priced high for its profit.", holdingLine(cards.GROW, "equity"));
+  check("holdings line for a company", holdingLine(cards.GROW, "equity") === "A strong, growing company. The share costs more than usual for its profit.", holdingLine(cards.GROW, "equity"));
   check("holdings line for a coin", holdingLine(cards.BTC, "crypto") === "No company behind it, so only the price trend applies, and it is falling.", holdingLine(cards.BTC, "crypto"));
   const nvRow = b.holdings.find((h) => h.symbol === "NVDA")!;
   check("glance row carries four mini bars (price vs profit, growth, health, trend)", nvRow.bars.map((x) => `${x.key}:${x.level}`).join() === "valuation:weak,growth:strong,health:strong,trend:strong", nvRow.bars.map((x) => `${x.key}:${x.level}`).join());
 
   // ---- coming up ------------------------------------------------------------------
   check(
-    "coming up: next 14 days, dated, with the approximate dividend to the reader",
+    "coming up: dated, in order, with the approximate dividend to the reader",
     b.comingUp.map((c) => `${c.date} ${c.title}`).join(" | ") === "2025-10-01 NVIDIA earnings | 2025-10-09 Microsoft dividend cut-off date" &&
       Math.abs((b.comingUp[1].amountUsd ?? 0) - 9.1) < 1e-9,
     b.comingUp.map((c) => `${c.date} ${c.title} ${c.amountUsd ?? ""}`).join(" | "),
+  );
+  // The window is 30 days (it was 14, which left most months' earnings off).
+  const later = holding({
+    symbol: "KO",
+    name: "Coca-Cola",
+    events: [
+      { type: "earnings", date: "2025-10-16" }, // day 20
+      { type: "ex_dividend", date: "2025-10-26", perShare: 0.51 }, // day 30
+      { type: "dividend_payment", date: "2025-10-27", perShare: 0.51 }, // day 31
+    ],
+  });
+  const window = buildBriefing({ today: TODAY, holdings: [later], exposureEnabled: true }).comingUp;
+  check(
+    "coming up: the next 30 days - day 20 and day 30 in, day 31 out",
+    BRIEFING_RULES.comingUpDays === 30 && window.map((c) => c.date).join(",") === "2025-10-16,2025-10-26",
+    window.map((c) => `${c.date} ${c.title}`).join(" | ") || "none",
+  );
+  const loader = fs.readFileSync(path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../src/lib/daily-briefing-data.ts"), "utf8");
+  check(
+    "coming up: the loader fetches events for the same window the rule shows",
+    /\.lte\("event_date", isoDaysAgo\(today, -BRIEFING_RULES\.comingUpDays\)\)/.test(loader),
+    "src/lib/daily-briefing-data.ts calendar_events read",
   );
   const noExposure = buildBriefing({ today: TODAY, holdings: [nvda, msft, btc, amzn], exposureEnabled: false });
   check("personal amounts and the mix are off without the flag", noExposure.mix === null && noExposure.comingUp.every((c) => c.amountUsd === null), "flag off");

@@ -14,7 +14,7 @@
 // Money stays in USD here; the page formats it in the reader's currency.
 
 import type { DimensionKey, Level, Scorecard } from "@/lib/scorecard";
-import { plainDate } from "@/lib/scorecard";
+import { VALUATION_VERDICTS, plainDate } from "@/lib/scorecard";
 import type { EarningsReaction, PricePoint } from "@/lib/fundamentals";
 import { median } from "@/lib/fundamentals";
 import { qualityPhrase } from "@/lib/ai/plain-summary";
@@ -29,6 +29,8 @@ export interface BriefingEvent {
   date: string;
   /** Dividend per share when the calendar gives it. */
   perShare?: number | null;
+  /** An earnings date projected from SEC filing history, not announced by the company. */
+  estimated?: boolean;
 }
 
 export interface BriefingHolding {
@@ -101,8 +103,8 @@ export interface Briefing {
 export const BRIEFING_RULES = {
   /** Earnings this many days ahead or fewer make a "Coming up" card. */
   earningsCardDays: 7,
-  /** "Coming up" lists the next 14 days. */
-  comingUpDays: 14,
+  /** "Coming up" lists the next 30 days. */
+  comingUpDays: 30,
   /** A dividend filing newer than this is news. */
   dividendNewsDays: 21,
   /** A dividend change smaller than 1% is rounding, not news. */
@@ -243,12 +245,12 @@ export function holdingLine(card: Scorecard, assetType: string | null): string {
   const quality = qualityPhrase(dim("growth")?.verdict, dim("health")?.verdict);
   const v = dim("valuation")?.verdict;
   const price =
-    v === "Expensive"
-      ? "The share is priced high for its profit."
-      : v === "Cheap"
-        ? "The share is priced low for its profit."
-        : v === "Fair"
-          ? "The share is fairly priced for its profit."
+    v === VALUATION_VERDICTS.pricier
+      ? "The share costs more than usual for its profit."
+      : v === VALUATION_VERDICTS.cheaper
+        ? "The share costs less than usual for its profit."
+        : v === VALUATION_VERDICTS.usual
+          ? "The share is priced about as usual for its profit."
           : `Its price trend is ${trend}.`;
   return `${quality}. ${price}`;
 }
@@ -343,8 +345,11 @@ export function buildBriefing(input: { today: string; holdings: BriefingHolding[
       const d = days(today, earnings.date);
       const when = d === 0 ? "today" : d === 1 ? "tomorrow" : `in ${d} days`;
       const past = reactionSentence(h.reactions);
+      const due = earnings.estimated
+        ? `Results are expected around ${plainDate(earnings.date)}, an estimate from last year's results date.`
+        : `Results are due ${plainDate(earnings.date)}.`;
       candidates.push({
-        card: { ...base, tag: "Coming up", title: `Reports earnings ${when}`, body: [`Results are due ${plainDate(earnings.date)}.`, ...(past ? [past] : [])] },
+        card: { ...base, tag: "Coming up", title: `Reports earnings ${when}${earnings.estimated ? " (estimated)" : ""}`, body: [due, ...(past ? [past] : [])] },
         priority: 2,
         order: d,
         value,
@@ -419,7 +424,7 @@ export function buildBriefing(input: { today: string; holdings: BriefingHolding[
         .map((e) => ({
           date: e.date,
           symbol: h.symbol,
-          title: e.type === "earnings" ? `${h.name} earnings` : e.type === "ex_dividend" ? `${h.name} dividend cut-off date` : `${h.name} dividend paid`,
+          title: e.type === "earnings" ? `${h.name} earnings${e.estimated ? " (estimated)" : ""}` : e.type === "ex_dividend" ? `${h.name} dividend cut-off date` : `${h.name} dividend paid`,
           detail:
             e.type === "earnings"
               ? reactionSentence(h.reactions)

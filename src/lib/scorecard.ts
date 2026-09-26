@@ -63,15 +63,17 @@ export interface Scorecard {
 
 export const THRESHOLDS = {
   valuation: {
-    /** P/E at most 15% below a comparison counts as cheap against it: a gap smaller than that is noise in one quarter's profit. */
+    /** P/E at most 15% below its own 5-year average is "cheaper than usual": a gap smaller than that is noise in one quarter's profit. */
     cheapRatio: 0.85,
-    /** P/E at least 15% above a comparison counts as expensive against it, symmetric with cheap. */
+    /** P/E at least 15% above its own 5-year average is "pricier than usual", symmetric with cheaper. */
     expensiveRatio: 1.15,
     /** Sector median needs this many profitable tracked peers, or it is not quoted: fewer is an anecdote. */
     minSectorPeers: 5,
-    /** When there is no profit, free-cash-flow yield at or above this is cheap: roughly what a long government bond pays. */
+    /** The tracked-market median needs this many profitable stored companies, or it is not quoted: fewer is not a market. */
+    minMarketCompanies: 10,
+    /** When there is no profit, free-cash-flow yield at or above this is high: roughly what a long government bond pays. */
     fcfYieldCheap: 0.05,
-    /** Below this free-cash-flow yield is expensive: under 2% the price assumes a lot of future growth. */
+    /** Below this free-cash-flow yield is low: under 2% the price assumes a lot of future growth. */
     fcfYieldExpensive: 0.02,
   },
   growth: {
@@ -108,7 +110,7 @@ export const THRESHOLDS = {
      * many days (its DAYS_AHEAD; a test keeps the two equal). An empty result
      * is only ever stated for this reach, never for the full horizon.
      */
-    calendarLooksAheadDays: 21,
+    calendarLooksAheadDays: 60,
     /** An earnings-day move of 5% or more counts as a big move in the history sentence. */
     bigMove: 0.05,
     /** Fewer past reactions than this are not summarised. */
@@ -162,15 +164,40 @@ export interface ValuationInput {
   pe: PeHistory | null;
   /** Median current P/E of profitable tracked peers in the same sector. */
   sector: { median: number; peers: number; name: string } | null;
+  /** Median current P/E of every profitable company Cairn stores figures for. */
+  market?: { median: number; companies: number } | null;
   /** TTM free cash flow / market value, for companies without profit. */
   fcfYield: number | null;
   priceDate: string | null;
   filing: FilingRef | null;
 }
 
+/**
+ * Price-vs-profit verdicts. Relative on purpose: "Cheap" read as "a bargain"
+ * when all it meant was "below its own 5-year average" (NVDA at 28x against an
+ * average of 61). The verdict compares the share with its own history only;
+ * similar companies and the tracked market are given in the sentence.
+ */
+export const VALUATION_VERDICTS = {
+  cheaper: "Cheaper than usual",
+  usual: "About usual",
+  pricier: "Pricier than usual",
+  /** No profit: free-cash-flow yield, which is an absolute measure, not "usual". */
+  highCash: "High cash yield",
+  modestCash: "Modest cash yield",
+  lowCash: "Low cash yield",
+} as const;
+
+/** "lower than", "about the same as", "higher than" for one comparison. */
+function relation(ratio: number): string {
+  const T = THRESHOLDS.valuation;
+  return ratio <= T.cheapRatio ? "lower than" : ratio >= T.expensiveRatio ? "higher than" : "about the same as";
+}
+
 export function valuationDimension(v: ValuationInput): Dimension {
   const label = "Price vs profit";
   const T = THRESHOLDS.valuation;
+  const V = VALUATION_VERDICTS;
   const cur = v.pe?.current ?? null;
   const sources: Source[] = [
     ...filingSource(v.filing, "profit per share"),
@@ -180,41 +207,44 @@ export function valuationDimension(v: ValuationInput): Dimension {
   if (cur) {
     const own = v.pe?.fiveYearAverage ?? null;
     const sector = v.sector && v.sector.peers >= T.minSectorPeers ? v.sector : null;
-    const score = (ratio: number) => (ratio <= T.cheapRatio ? 1 : ratio >= T.expensiveRatio ? -1 : 0);
-    const scores: number[] = [];
-    if (own) scores.push(score(cur.pe / own));
-    if (sector) scores.push(score(cur.pe / sector.median));
+    const market = v.market && v.market.companies >= T.minMarketCompanies ? v.market : null;
     const inputs = [
       input("Price ÷ yearly profit per share", cur.pe, times(cur.pe)),
       input("Its 5-year average", own, own ? times(own) : null),
       input("Similar companies (median)", sector?.median ?? null, sector ? times(sector.median) : null),
       input("Similar companies counted", sector?.peers ?? null, sector ? String(sector.peers) : null),
+      input("Companies Cairn tracks (median)", market?.median ?? null, market ? times(market.median) : null),
+      input("Companies Cairn tracks, counted", market?.companies ?? null, market ? String(market.companies) : null),
     ];
-    if (scores.length === 0) {
+    // Similar companies and the tracked market, as context in the sentence.
+    const others = [
+      sector ? `similar companies average ${times(sector.median)}` : null,
+      market ? `the middle figure across the ${market.companies} companies Cairn tracks is ${times(market.median)}` : null,
+    ].filter(Boolean);
+    const context = others.length > 0 ? ` For comparison, ${others.join("; ")}.` : "";
+    const opening = `The share costs ${times(cur.pe)} times the company's yearly profit`;
+    if (!own) {
       return {
         key: "valuation",
         label,
         level: "not_applicable",
         rated: true,
         verdict: "Not enough history",
-        sentence: `The share costs ${times(cur.pe)} times its yearly profit. There is not enough history yet to compare that.`,
+        sentence: `${opening}. There is not enough history yet to say what is usual for it.${context}`,
         inputs,
         sources,
       };
     }
-    const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
-    const verdict = avg >= 0.5 ? "Cheap" : avg <= -0.5 ? "Expensive" : "Fair";
-    const level: Level = verdict === "Cheap" ? "strong" : verdict === "Fair" ? "mixed" : "weak";
-    const compare = [own ? `its 5-year average is ${times(own)}` : null, sector ? `similar companies average ${times(sector.median)}` : null]
-      .filter(Boolean)
-      .join("; ");
+    const ratio = cur.pe / own;
+    const verdict = ratio <= T.cheapRatio ? V.cheaper : ratio >= T.expensiveRatio ? V.pricier : V.usual;
+    const level: Level = verdict === V.cheaper ? "strong" : verdict === V.usual ? "mixed" : "weak";
     return {
       key: "valuation",
       label,
       level,
       rated: true,
       verdict,
-      sentence: `The share costs ${times(cur.pe)} times the company's yearly profit. For comparison, ${compare}.`,
+      sentence: `${opening}, ${relation(ratio)} its own 5-year average of ${times(own)}.${context}`,
       inputs,
       sources,
     };
@@ -222,8 +252,8 @@ export function valuationDimension(v: ValuationInput): Dimension {
 
   // No profit: fall back to free-cash-flow yield.
   if (v.fcfYield !== null) {
-    const verdict = v.fcfYield >= T.fcfYieldCheap ? "Cheap" : v.fcfYield < T.fcfYieldExpensive ? "Expensive" : "Fair";
-    const level: Level = verdict === "Cheap" ? "strong" : verdict === "Fair" ? "mixed" : "weak";
+    const verdict = v.fcfYield >= T.fcfYieldCheap ? V.highCash : v.fcfYield < T.fcfYieldExpensive ? V.lowCash : V.modestCash;
+    const level: Level = verdict === V.highCash ? "strong" : verdict === V.modestCash ? "mixed" : "weak";
     const sentence =
       v.fcfYield <= 0
         ? "It has no yearly profit and burns cash, so the price rests on future results."
@@ -465,6 +495,8 @@ export interface UpcomingEvent {
   type: "earnings" | "ex_dividend" | "dividend_payment";
   date: string;
   source: Source;
+  /** Projected from SEC filing history, not a date the company has announced. */
+  estimated?: boolean;
 }
 
 function daysBetween(a: string, b: string): number {
@@ -516,10 +548,12 @@ export function nextEventDimension(today: string, events: UpcomingEvent[], react
   const n = daysBetween(today, upcoming.date);
   const when = n === 0 ? "today" : n === 1 ? "tomorrow" : `in ${n} days`;
   const what = upcoming.type === "earnings" ? "Earnings" : upcoming.type === "ex_dividend" ? "Dividend cut-off date" : "Dividend payment";
-  const verdict = `${what} ${when}`;
+  const verdict = upcoming.estimated ? `${what} in about ${n} days (estimated)` : `${what} ${when}`;
   const inputs = [input("Days until the event", n, String(n)), input("Event date", null, plainDate(upcoming.date))];
   const sources: Source[] = [upcoming.source];
-  let sentence = `${what}, ${plainDate(upcoming.date)}.`;
+  let sentence = upcoming.estimated
+    ? `${what}, around ${plainDate(upcoming.date)}. This is an estimate from last year's results date, not a date the company has announced.`
+    : `${what}, ${plainDate(upcoming.date)}.`;
   if (upcoming.type === "ex_dividend") sentence += " Only shares owned before this day get the next dividend.";
   if (upcoming.type === "earnings") {
     const recent = reactions.slice(0, T.maxReactions);
@@ -592,6 +626,12 @@ export function buildScorecard(i: ScorecardInput): Scorecard {
 /** Bar segments for a level: the length carries the meaning, not just colour. */
 export function barSegments(level: Level): 0 | 1 | 2 | 3 {
   return level === "strong" ? 3 : level === "mixed" ? 2 : level === "weak" ? 1 : 0;
+}
+
+/** Median current P/E of every profitable stored company; null below the market minimum. */
+export function marketMedianPe(pes: (number | null)[]): { median: number; companies: number } | null {
+  const m = sectorMedianPe(pes, THRESHOLDS.valuation.minMarketCompanies);
+  return m ? { median: m.median, companies: m.peers } : null;
 }
 
 /** Median of peers' current P/E, positive only; null below the peer minimum. */

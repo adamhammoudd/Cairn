@@ -216,6 +216,27 @@ async function briefingSymbols(
 // passed the scope guard when it was generated (Phase 4), so templating it
 // into a briefing can't introduce a new personal-directive or fabricated
 // number the way a fresh generation call could.
+/**
+ * Today's stored briefing, or a freshly built one when there is none yet.
+ * The hourly scheduled job can miss a day (on 2026-09-24 and 09-25 its first
+ * query was rejected by Supabase with a transient 401), and without this the
+ * reader saw an empty card until they pressed Generate. Building is plain
+ * database reads - no model call - so doing it on page load is cheap. A failed
+ * build is logged and falls back to the empty card rather than breaking the page.
+ */
+export async function storedOrBuiltBriefing(
+  stored: { content: unknown } | null,
+  build: () => Promise<BriefingContent>,
+): Promise<BriefingContent | null> {
+  if (stored?.content) return stored.content as BriefingContent;
+  try {
+    return await build();
+  } catch (err) {
+    console.error("[briefing] on-open generation failed", err);
+    return null;
+  }
+}
+
 export async function generateBriefing(userId: string): Promise<BriefingContent> {
   const supabase = await createClient();
 

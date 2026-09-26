@@ -5,7 +5,7 @@ import { createAlert, updateAlert } from "@/lib/actions/alerts";
 import { MAX_AMOUNT_INPUT } from "@/lib/input-limits";
 import { SymbolTypeahead } from "@/components/symbol-typeahead";
 import { useDisplayPrefs } from "@/components/display-prefs-provider";
-import { currencySymbol } from "@/lib/display-prefs";
+import { currencySymbol, usdToDisplayAmount } from "@/lib/display-prefs";
 import {
   ALERT_TYPE_LABELS,
   COOLDOWN_OPTIONS,
@@ -66,7 +66,11 @@ export function AlertForm({ alert, defaultChannels, onDone, onCancel }: AlertFor
   // them across a failed submit, matching new-watchlist-form.tsx.
   const [cond, setCond] = useState({
     comparator: str(condition, "comparator", "above"),
-    value: "value" in condition ? String(num(condition, "value", 0)) : "",
+    // A price threshold is stored in USD; edit it in the currency the label names.
+    value:
+      "value" in condition
+        ? String(alert?.alert_type === "price" ? usdToDisplayAmount(num(condition, "value", 0), prefs) : num(condition, "value", 0))
+        : "",
     multiplier: String(num(condition, "multiplier", 2)),
     fastDays: String(num(condition, "fastDays", 50)),
     slowDays: String(num(condition, "slowDays", 200)),

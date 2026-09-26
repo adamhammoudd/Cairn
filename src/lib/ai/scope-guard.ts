@@ -505,6 +505,25 @@ export function checkNoFreelancedProbability(
   return { passed: true, reason: null };
 }
 
+/**
+ * The same gate for a stored analysis's reasoning_text. The band is computed
+ * in code, but the prose around it is the model's, and nothing stopped it
+ * writing "roughly a 90% probability" next to a stored 21-64% range - which
+ * then sat in ai_analyses as if the engine had said it. The only probability
+ * figures the prose may state are the computed low/high and the observed base
+ * rate (inside the Wilson interval by construction, allowed explicitly anyway).
+ */
+export function checkAnalysisProbabilityClaims(
+  reasoningText: string,
+  band: { low: number; high: number; pointEstimate: number | null },
+): ScopeGuardResult {
+  const allowed: ProbabilityRangeContext[] = [{ probability_low: band.low, probability_high: band.high }];
+  if (band.pointEstimate !== null) {
+    allowed.push({ probability_low: band.pointEstimate, probability_high: band.pointEstimate });
+  }
+  return checkNoFreelancedProbability(reasoningText, allowed);
+}
+
 // ---------------------------------------------------------------------------
 // Chat-specific gate: portfolio figure drift.
 //

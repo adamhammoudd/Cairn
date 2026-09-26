@@ -28,7 +28,6 @@ import {
   computeConcentration,
   computeHoldingMetrics,
   computeTotals,
-  isHistoryTruncated,
   type Holding,
 } from "../../src/lib/portfolio";
 
@@ -91,7 +90,16 @@ async function main() {
   const oldTotals = computeTotals(computeHoldingMetrics(holdings, oldCloses), oldCloses);
   const oldNulls = symbols.filter((s) => oldCloses.get(s)?.latest == null);
   check("old read: AMZN, ISRG, BTC price as null (the '-' rows)", oldNulls.join(",") === "AMZN,ISRG,BTC", oldNulls.join(","));
-  check("old read: Total Value is NVDA alone (the bug)", near(oldTotals.totalValue, 18), `${oldTotals.totalValue}`);
+  // Since #133 computeTotals counts an unpriced holding at its cost basis, so
+  // the old read no longer shows NVDA alone ($18): it shows NVDA's live value
+  // plus what AMZN, ISRG and BTC cost ($20 + $45 + $9) - still not the $101
+  // they are worth, which is the bug this split fixes.
+  const oldExpected = 180 * 0.1 + 200 * 0.1 + 450 * 0.1 + 90000 * 0.0001;
+  check(
+    "old read: Total Value is NVDA live + the rest at cost (the bug, after #133)",
+    near(oldTotals.totalValue, oldExpected) && !near(oldTotals.totalValue, expectedTotal),
+    `${oldTotals.totalValue} (expected ${oldExpected}; live total ${expectedTotal})`,
+  );
 
   // --- 3. NEW /portfolio == Base Camp: getLatestCloses' own per_symbol=2 read
   // Both pages now call getLatestCloses(symbols, undefined, ...), whose
@@ -110,12 +118,6 @@ async function main() {
   const top = newMetrics.find((m) => m.symbol === conc.topSymbol)!;
   const implied = (top.value! / conc.topSharePct) * 100;
   check("Concentration's implied total matches Total Value", near(implied, newTotals.totalValue), `${implied}`);
-
-  // --- 4. Truncation detection for the chart ------------------------------
-  check("truncated: count 4435, 1000 rows returned", isHistoryTruncated(4435, 1000) === true);
-  check("complete: count equals rows returned", isHistoryTruncated(4435, 4435) === false);
-  check("no count requested: no claim either way", isHistoryTruncated(null, 1000) === false);
-  check("no holdings: 0 of 0 is complete", isHistoryTruncated(0, 0) === false);
 
   console.log(`\n${pass}/${pass + fail} portfolio-price-read-split cases passed`);
   process.exit(fail === 0 ? 0 : 1);

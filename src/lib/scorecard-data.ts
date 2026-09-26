@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/types";
 import { readNewestFirstPaged } from "@/lib/market-data/paged-read";
+import { upcomingEventsFromCalendar } from "@/lib/calendar";
 import { getCurrentPrice } from "@/lib/market-data/current-price";
 import { computeFactorSet, type FactorBar } from "@/lib/ai/factors";
 import {
@@ -25,6 +26,7 @@ import {
 } from "@/lib/fundamentals";
 import {
   buildScorecard,
+  marketMedianPe,
   sectorMedianPe,
   trendInputsFromFactorSet,
   type FilingRef,
@@ -66,6 +68,50 @@ async function currentPriceOrNull(symbol: string): Promise<{ price: number | nul
   } catch {
     return { price: null, asOf: null };
   }
+}
+
+/**
+ * Median current P/E across every profitable company Cairn stores figures for
+ * - the "tracked market" the price-vs-profit sentence compares against. Same
+ * method as the sector median (latest close / EPS over the last four
+ * quarters), over all of `fundamentals`. Both reads are paged: the universe
+ * grows with on-demand ingestion and the API caps a response at 1000 rows.
+ * Kept for five minutes, since the briefing builds a card per holding.
+ */
+const MARKET_TTL_MS = 5 * 60 * 1000;
+let marketMemo: { at: number; value: Promise<{ median: number; companies: number } | null> } | null = null;
+
+async function readTrackedMarketPe(supabase: SupabaseClient<Database>): Promise<{ median: number; companies: number } | null> {
+  const companies = await readNewestFirstPaged(
+    (from, to) => supabase.from("fundamentals").select("symbol, eps_ttm").gt("eps_ttm", 0).order("symbol").range(from, to),
+    100_000,
+  );
+  if (companies.length === 0) return null;
+  const symbols = companies.map((c) => c.symbol);
+  const lastBars = await readNewestFirstPaged(
+    (from, to) =>
+      supabase
+        .rpc("recent_prices", { symbols, per_symbol: 1 })
+        .order("symbol", { ascending: true })
+        .range(from, to),
+    symbols.length,
+  );
+  const close = new Map(lastBars.map((b: { symbol: string; close: number | null }) => [b.symbol, b.close === null ? null : Number(b.close)]));
+  return marketMedianPe(
+    companies.map((c) => {
+      const px = close.get(c.symbol);
+      const eps = c.eps_ttm === null ? null : Number(c.eps_ttm);
+      return px && eps && eps > 0 ? px / eps : null;
+    }),
+  );
+}
+
+function trackedMarketPe(supabase: SupabaseClient<Database>): Promise<{ median: number; companies: number } | null> {
+  if (marketMemo && Date.now() - marketMemo.at < MARKET_TTL_MS) return marketMemo.value;
+  // A failed read leaves the comparison out of the sentence; it is context, not the verdict.
+  const value = readTrackedMarketPe(supabase).catch(() => null);
+  marketMemo = { at: Date.now(), value };
+  return value;
 }
 
 export async function loadScorecard(symbolRaw: string, opts: LoadOptions = {}): Promise<ScorecardBundle> {
@@ -135,6 +181,8 @@ export async function loadScorecard(symbolRaw: string, opts: LoadOptions = {}): 
     }
   }
 
+  const market = status === "available" ? await trackedMarketPe(supabase) : null;
+
   const shares = fRes.data?.shares_outstanding === null || fRes.data?.shares_outstanding === undefined ? null : Number(fRes.data.shares_outstanding);
   const fcf = metrics?.ttm.free_cash_flow ?? null;
   const fcfYield = fcf !== null && shares && price ? fcf / (shares * price) : null;
@@ -142,13 +190,7 @@ export async function loadScorecard(symbolRaw: string, opts: LoadOptions = {}): 
   const releases: ReleaseDate[] = (relRes.data ?? []).map((r) => ({ release_date: String(r.release_date), timing: r.timing as ReleaseDate["timing"] }));
   const reactions = earningsReactions(releases, pricesAsc);
 
-  const events: UpcomingEvent[] = (calRes.data ?? [])
-    .filter((e) => e.event_type === "earnings" || e.event_type === "ex_dividend" || e.event_type === "dividend")
-    .map((e) => ({
-      type: e.event_type === "earnings" ? "earnings" : "ex_dividend",
-      date: String(e.event_date),
-      source: { kind: "calendar", label: `Nasdaq calendar: ${e.title ?? e.event_type}`, ref: String(e.event_date) },
-    }));
+  const events: UpcomingEvent[] = upcomingEventsFromCalendar(calRes.data ?? []);
 
   const factorSet = factorBars.length >= 252 ? computeFactorSet({ symbol, assetType, bars: factorBars }) : null;
   const snap = status === "available" ? ttmSnapshot(quarters, 0, annualEps) : null;
@@ -159,7 +201,7 @@ export async function loadScorecard(symbolRaw: string, opts: LoadOptions = {}): 
     today,
     companyData: status,
     metrics,
-    valuation: { pe, sector, fcfYield: pe?.current ? null : fcfYield, priceDate, filing },
+    valuation: { pe, sector, market, fcfYield: pe?.current ? null : fcfYield, priceDate, filing },
     dividend: {
       perShareTtm: snap?.dividends_per_share ?? null,
       price,
