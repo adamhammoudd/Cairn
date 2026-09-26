@@ -9,11 +9,19 @@
 import { createClient, type SupabaseClient } from "jsr:@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 import { requireCronSecret } from "../_shared/auth.ts";
-import { FIELDS, parseCompanyFacts, parseEarningsReleases, type CompanyFacts, type Submissions } from "../_shared/sec-companyfacts.ts";
+import {
+  FIELDS,
+  parseCompanyFacts,
+  parseEarningsReleases,
+  trailingPerShare,
+  type CompanyFacts,
+  type ParsedCompany,
+  type Submissions,
+} from "../_shared/sec-companyfacts.ts";
 
 const UA = "cairn-ingest contact@example.com";
-// SEC's fair-access limit is 10 requests/second. Each symbol makes five
-// (four concept/submission calls plus one companyfacts), so pace between symbols.
+// SEC's fair-access limit is 10 requests/second. Each symbol makes three
+// (share count, submissions, companyfacts), so pace between symbols.
 const SYMBOL_DELAY_MS = 600;
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -33,32 +41,6 @@ interface ConceptFact {
 function factsFor(doc: unknown, unit: string): ConceptFact[] {
   const units = (doc as { units?: Record<string, ConceptFact[]> } | null)?.units;
   return units?.[unit] ?? [];
-}
-
-// Sum the four most recent non-overlapping quarterly periods to get a TTM
-// figure. SEC reports both quarterly and cumulative year-to-date rows for the
-// same concept, so filter to ~quarter-length windows before summing - adding
-// a YTD row to quarterly rows would double-count.
-function trailingTwelveMonths(facts: ConceptFact[]): number | null {
-  const quarterly = facts
-    .filter((f) => f.start && f.end && (f.form === "10-Q" || f.form === "10-K"))
-    .filter((f) => {
-      const days = (new Date(f.end).getTime() - new Date(f.start!).getTime()) / 86_400_000;
-      return days >= 60 && days <= 120;
-    })
-    .sort((a, b) => (a.end < b.end ? 1 : -1));
-
-  const seen = new Set<string>();
-  const distinct: ConceptFact[] = [];
-  for (const f of quarterly) {
-    if (seen.has(f.end)) continue;
-    seen.add(f.end);
-    distinct.push(f);
-    if (distinct.length === 4) break;
-  }
-
-  if (distinct.length === 0) return null;
-  return distinct.reduce((sum, f) => sum + f.val, 0);
 }
 
 function latestInstant(facts: ConceptFact[]): ConceptFact | null {
@@ -147,20 +129,20 @@ Deno.serve(async (req) => {
 
     try {
       const base = `https://data.sec.gov/api/xbrl/companyconcept/CIK${cik}/us-gaap`;
-      const [epsDoc, sharesDoc, divDoc, submissionsDoc, factsDoc] = await Promise.all([
-        secJson(`${base}/EarningsPerShareDiluted.json`),
+      const [sharesDoc, submissionsDoc, factsDoc] = await Promise.all([
         secJson(`${base}/CommonStockSharesOutstanding.json`),
-        secJson(`${base}/CommonStockDividendsPerShareDeclared.json`),
         secJson(`https://data.sec.gov/submissions/CIK${cik}.json`),
         // One call per company for the quarterly history (feat/fundamentals-expansion).
         secJson(`https://data.sec.gov/api/xbrl/companyfacts/CIK${cik}.json`),
       ]);
 
-      const history = await storeHistory(supabase, symbol, cik, factsDoc as CompanyFacts | null, submissionsDoc as Submissions | null);
+      const { out: history, parsed } = await storeHistory(supabase, symbol, cik, factsDoc as CompanyFacts | null, submissionsDoc as Submissions | null);
 
-      const epsTtm = trailingTwelveMonths(factsFor(epsDoc, "USD/shares"));
+      // From the parsed, split-adjusted quarters: the concept endpoints mix
+      // share bases across a split, and summing their 3-month rows skipped Q4.
+      const epsTtm = parsed ? trailingPerShare(parsed, "eps_diluted") : null;
       const sharesFact = latestInstant(factsFor(sharesDoc, "shares"));
-      const divTtm = trailingTwelveMonths(factsFor(divDoc, "USD/shares"));
+      const divTtm = parsed ? trailingPerShare(parsed, "dividends_per_share") : null;
       const sector = (submissionsDoc as { sicDescription?: string } | null)?.sicDescription ?? null;
       const sic = (submissionsDoc as { sic?: string } | null)?.sic ?? null;
 
@@ -184,7 +166,7 @@ Deno.serve(async (req) => {
         { onConflict: "symbol" },
       );
 
-      results.push({ symbol, eps_ttm: epsTtm, shares: sharesFact?.val ?? null, dividends_ttm: divTtm, sector, history, error: error?.message });
+      results.push({ symbol, eps_ttm: epsTtm, shares: sharesFact?.val ?? null, dividends_ttm: divTtm, sector, splits: parsed?.splits ?? [], history, error: error?.message });
     } catch (err) {
       results.push({ symbol, error: err instanceof Error ? err.message : String(err) });
     }
@@ -210,13 +192,14 @@ async function storeHistory(
   cik: string,
   facts: CompanyFacts | null,
   submissions: Submissions | null,
-): Promise<Record<string, unknown>> {
+): Promise<{ out: Record<string, unknown>; parsed: ParsedCompany | null }> {
   const out: Record<string, unknown> = {};
+  let parsed: ParsedCompany | null = null;
   if (!facts?.facts?.["us-gaap"]) {
     out.quarters = 0;
     out.quarters_note = "no us-gaap facts (not filed under US GAAP)";
   } else {
-    const parsed = parseCompanyFacts(facts);
+    parsed = parseCompanyFacts(facts);
     const now = new Date().toISOString();
     const quarterRows = parsed.quarters.map((q) => ({
       symbol,
@@ -263,5 +246,5 @@ async function storeHistory(
   } else {
     out.earnings_releases = 0;
   }
-  return out;
+  return { out, parsed };
 }
