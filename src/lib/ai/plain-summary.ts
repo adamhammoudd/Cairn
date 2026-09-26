@@ -210,7 +210,7 @@ function dim(card: Scorecard, key: Dimension["key"]): Dimension | undefined {
   return card.dimensions.find((d) => d.key === key);
 }
 
-function qualityPhrase(growth: string | undefined, health: string | undefined): string {
+export function qualityPhrase(growth: string | undefined, health: string | undefined): string {
   if (growth === "Shrinking") return health === "Stretched" ? "A company with shrinking sales and stretched finances" : "A company whose sales are shrinking";
   if (growth === "Strong") {
     if (health === "Strong") return "A strong, growing company";

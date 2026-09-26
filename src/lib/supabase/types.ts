@@ -989,6 +989,23 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["earnings_releases"]["Insert"]>;
         Relationships: [];
       };
+      scorecard_snapshots: {
+        Row: {
+          id: number;
+          symbol: string;
+          as_of: string;
+          levels: Record<string, { level: string; verdict: string }>;
+          created_at: string;
+        };
+        Insert: {
+          symbol: string;
+          as_of: string;
+          levels: Record<string, { level: string; verdict: string }>;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["scorecard_snapshots"]["Insert"]>;
+        Relationships: [];
+      };
       option_contracts: {
         Row: {
           id: number;

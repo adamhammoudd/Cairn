@@ -449,9 +449,18 @@ function daysBetween(a: string, b: string): number {
   return Math.round((Date.parse(`${b}T00:00:00Z`) - Date.parse(`${a}T00:00:00Z`)) / 86_400_000);
 }
 
+const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+/**
+ * "Wed 1 Oct". Built by hand, not with toLocaleDateString: Node's and the
+ * browser's ICU data format "en-GB" differently ("Wed 1 Oct" vs "Wed, 1 Oct"),
+ * which broke hydration, and the summary's number guard compares these
+ * strings exactly.
+ */
 export function plainDate(iso: string): string {
   const d = new Date(`${iso}T00:00:00Z`);
-  return d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" });
+  return `${WEEKDAYS[d.getUTCDay()]} ${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]}`;
 }
 
 export function nextEventDimension(today: string, events: UpcomingEvent[], reactions: EarningsReaction[]): Dimension {

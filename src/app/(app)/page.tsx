@@ -7,6 +7,7 @@ import { computeHoldingMetrics, computeTimelineSeries, computeTotals, type Price
 import { getLatestCloses, latestDataDate } from "@/lib/market-data/current-price";
 
 import { guardReads } from "@/components/data-unavailable";
+import { loadDailyBriefing } from "@/lib/daily-briefing-data";
 
 // A failed market-data read renders the panel instead of throwing into a
 // minified React error; anything else propagates as before.
@@ -207,8 +208,14 @@ async function DashboardBody() {
   // card reads.
   const dataAsOf = await latestDataDate(Array.from(new Set([...symbols, ...watchlistSymbols, ...topMarketRows.map((r) => r.symbol)])));
 
+  // "What changed for what you own" leads the page (feat/daily-briefing).
+  const briefing = await loadDailyBriefing(user.id);
+  const briefingDate = new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
+
   return (
     <DashboardHome
+      briefing={briefing}
+      briefingDate={briefingDate}
       refreshRateSeconds={settingsRes.data?.refresh_rate_seconds ?? 30}
       dataAsOf={dataAsOf}
       today={today}
