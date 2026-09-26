@@ -3,7 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { cryptoRolling24hFor } from "@/lib/market-data/current-price";
 import { unwrapRows, MIGRATIONS } from "@/lib/supabase/read";
-import { readNewestFirstPaged } from "@/lib/market-data/paged-read";
+import { readRecentPrices } from "@/lib/market-data/paged-read";
 import type { ComparisonRow } from "@/lib/comparison";
 
 // The universe every symbol picker draws on (Compare, the Sector Heat Map).
@@ -46,25 +46,11 @@ export async function getComparisonData(symbols: string[]): Promise<ComparisonRo
   // others of rows entirely.
   //
   // Paged: the API returns at most 1000 rows per request, so one call for
-  // three symbols x 400 bars came back with 1000 rows and the third symbol
-  // with none - it dropped off the comparison without an error. Ordered by
-  // symbol, then newest-first, so the pages join without gaps.
+  // four symbols x 400 bars came back with 1000 rows and the fourth symbol
+  // with none - it dropped off the comparison without an error.
+  // readRecentPrices (#150) pages it over a total order.
   const [barRows, fundamentalsRes, directoryRes, coinsRes] = await Promise.all([
-    readNewestFirstPaged(
-      async (from, to) => ({
-        data: unwrapRows(
-          "Comparison price history (recent_prices)",
-          await supabase
-            .rpc("recent_prices", { symbols, per_symbol: COMPARISON_BARS_PER_SYMBOL })
-            .order("symbol", { ascending: true })
-            .order("ts", { ascending: false })
-            .range(from, to),
-          MIGRATIONS.onDemandIngestion,
-        ),
-        error: null,
-      }),
-      symbols.length * COMPARISON_BARS_PER_SYMBOL,
-    ),
+    readRecentPrices(supabase, symbols, COMPARISON_BARS_PER_SYMBOL),
     supabase.from("fundamentals").select("symbol, shares_outstanding, eps_ttm, dividends_ttm").in("symbol", symbols),
     supabase.from("symbol_directory").select("symbol, asset_type, name").in("symbol", symbols),
     // A coin has no shares outstanding, so its market cap can only come from

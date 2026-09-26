@@ -207,17 +207,21 @@ export async function runPriceRowCapSuite(): Promise<SuiteResult> {
   // The wiring: every recent_prices() call in the two callers goes through the
   // paged helper with a total order, never as one capped request.
   const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
-  for (const file of ["src/lib/actions/comparison.ts", "supabase/functions/evaluate-alerts/index.ts"]) {
-    const src = fs.readFileSync(path.join(root, file), "utf8");
-    const calls = [...src.matchAll(/\.rpc\(\s*"recent_prices"/g)].map((m) => src.slice(m.index, m.index + 400));
-    check(
-      `${file}: recent_prices() is paged, ordered by symbol then newest-first`,
-      src.includes("readNewestFirstPaged(") &&
-        calls.length > 0 &&
-        calls.every((c) => /\.order\("symbol", \{ ascending: true \}\)\s*\.order\("ts", \{ ascending: false \}\)\s*\.range\(from, to\)/.test(c)),
-      `${calls.length} recent_prices call(s)`,
-    );
-  }
+  const compare = fs.readFileSync(path.join(root, "src/lib/actions/comparison.ts"), "utf8");
+  check(
+    "src/lib/actions/comparison.ts: bars come from the paged readRecentPrices, never one recent_prices call",
+    /readRecentPrices\(supabase, symbols, /.test(compare) && !/\.rpc\(\s*"recent_prices"/.test(compare),
+    "readRecentPrices (#150)",
+  );
+  const alerts = fs.readFileSync(path.join(root, "supabase/functions/evaluate-alerts/index.ts"), "utf8");
+  const rpcCalls = [...alerts.matchAll(/\.rpc\(\s*"recent_prices"/g)].map((m) => alerts.slice(m.index, m.index + 400));
+  check(
+    "supabase/functions/evaluate-alerts: recent_prices() is paged over symbol, asset type, newest-first",
+    alerts.includes("readNewestFirstPaged(") &&
+      rpcCalls.length > 0 &&
+      rpcCalls.every((c) => /\.order\("symbol", \{ ascending: true \}\)\s*\.order\("asset_type", \{ ascending: true \}\)\s*\.order\("ts", \{ ascending: false \}\)\s*\.range\(from, to\)/.test(c)),
+    `${rpcCalls.length} recent_prices call(s)`,
+  );
 
   return { suiteName: "Price reads past the 1000-row API cap", gating: true, cases };
 }

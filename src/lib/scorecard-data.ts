@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/types";
 import { readNewestFirstPaged } from "@/lib/market-data/paged-read";
+import { upcomingEventsFromCalendar } from "@/lib/calendar";
 import { getCurrentPrice } from "@/lib/market-data/current-price";
 import { computeFactorSet, type FactorBar } from "@/lib/ai/factors";
 import {
@@ -142,13 +143,7 @@ export async function loadScorecard(symbolRaw: string, opts: LoadOptions = {}): 
   const releases: ReleaseDate[] = (relRes.data ?? []).map((r) => ({ release_date: String(r.release_date), timing: r.timing as ReleaseDate["timing"] }));
   const reactions = earningsReactions(releases, pricesAsc);
 
-  const events: UpcomingEvent[] = (calRes.data ?? [])
-    .filter((e) => e.event_type === "earnings" || e.event_type === "ex_dividend" || e.event_type === "dividend")
-    .map((e) => ({
-      type: e.event_type === "earnings" ? "earnings" : "ex_dividend",
-      date: String(e.event_date),
-      source: { kind: "calendar", label: `Nasdaq calendar: ${e.title ?? e.event_type}`, ref: String(e.event_date) },
-    }));
+  const events: UpcomingEvent[] = upcomingEventsFromCalendar(calRes.data ?? []);
 
   const factorSet = factorBars.length >= 252 ? computeFactorSet({ symbol, assetType, bars: factorBars }) : null;
   const snap = status === "available" ? ttmSnapshot(quarters, 0, annualEps) : null;

@@ -186,7 +186,8 @@ Deno.serve(async (req) => {
   // Paged: the API returns at most 1000 rows per request, so with five or more
   // watched symbols one call came back short and the symbols past row 1000 had
   // no series - their alerts stopped evaluating without an error. Ordered by
-  // symbol, then newest-first, so the pages join without gaps; a failed page
+  // symbol, asset type, then newest-first (the order readRecentPrices uses in
+  // the app), so the pages join without gaps; a failed page
   // throws rather than evaluating on a partial read.
   const BARS_PER_SYMBOL = 250;
   let prices: { symbol: string; close: number | null; volume: number | null }[];
@@ -196,6 +197,7 @@ Deno.serve(async (req) => {
         supabase
           .rpc("recent_prices", { symbols, per_symbol: BARS_PER_SYMBOL })
           .order("symbol", { ascending: true })
+          .order("asset_type", { ascending: true })
           .order("ts", { ascending: false })
           .range(from, to),
       symbols.length * BARS_PER_SYMBOL,

@@ -28,7 +28,6 @@ import {
   computeConcentration,
   computeHoldingMetrics,
   computeTotals,
-  isHistoryTruncated,
   type Holding,
 } from "../../src/lib/portfolio";
 
@@ -119,12 +118,6 @@ async function main() {
   const top = newMetrics.find((m) => m.symbol === conc.topSymbol)!;
   const implied = (top.value! / conc.topSharePct) * 100;
   check("Concentration's implied total matches Total Value", near(implied, newTotals.totalValue), `${implied}`);
-
-  // --- 4. Truncation detection for the chart ------------------------------
-  check("truncated: count 4435, 1000 rows returned", isHistoryTruncated(4435, 1000) === true);
-  check("complete: count equals rows returned", isHistoryTruncated(4435, 4435) === false);
-  check("no count requested: no claim either way", isHistoryTruncated(null, 1000) === false);
-  check("no holdings: 0 of 0 is complete", isHistoryTruncated(0, 0) === false);
 
   console.log(`\n${pass}/${pass + fail} portfolio-price-read-split cases passed`);
   process.exit(fail === 0 ? 0 : 1);

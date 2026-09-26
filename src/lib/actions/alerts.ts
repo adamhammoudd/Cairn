@@ -7,6 +7,8 @@ import { MAX_AMOUNT_INPUT } from "@/lib/input-limits";
 import { validateAlertScope } from "@/lib/validation";
 import { dedupeConsecutiveDeliveries, parseCooldownSeconds } from "@/lib/alerts";
 import type { Alert, AlertDelivery, AlertType } from "@/lib/alerts";
+import { getDisplayPrefs } from "@/lib/actions/display-prefs";
+import { displayAmountToUsd } from "@/lib/display-prefs";
 
 export async function listAlerts(): Promise<Alert[]> {
   const supabase = await createClient();
@@ -28,14 +30,22 @@ export async function listAlerts(): Promise<Alert[]> {
 // rather than dumping the whole form, so a stray field can't end up stored
 // as part of the condition and silently change how it evaluates. Shared by
 // create and update so an edited alert is validated exactly like a new one.
-function buildCondition(alertType: AlertType, formData: FormData): Record<string, unknown> | string {
+//
+// A price threshold is typed in the display currency (the form labels it so)
+// and stored in USD, because evaluate-alerts compares it with USD prices.
+// fxRate comes from getDisplayPrefs() on the server - the same rate the form
+// label reflects - never from anything the browser posts.
+function buildCondition(alertType: AlertType, formData: FormData, fxRate: number): Record<string, unknown> | string {
   switch (alertType) {
     case "price":
     case "pct_change": {
       const value = Number(formData.get("value"));
       if (!Number.isFinite(value)) return "Enter a numeric threshold.";
       if (Math.abs(value) > MAX_AMOUNT_INPUT) return `Threshold must be within ±${MAX_AMOUNT_INPUT.toLocaleString("en-US")}.`;
-      return { comparator: String(formData.get("comparator") ?? "above"), value };
+      return {
+        comparator: String(formData.get("comparator") ?? "above"),
+        value: alertType === "price" ? displayAmountToUsd(value, { fxRate }) : value,
+      };
     }
     case "volume_spike": {
       const multiplier = Number(formData.get("multiplier"));
@@ -73,7 +83,7 @@ export async function createAlert(_prevState: string | null, formData: FormData)
   const cooldownSeconds = parseCooldownSeconds(formData.get("cooldown_seconds"));
   if (typeof cooldownSeconds === "string") return cooldownSeconds;
 
-  const condition = buildCondition(alertType, formData);
+  const condition = buildCondition(alertType, formData, (await getDisplayPrefs()).fxRate);
   if (typeof condition === "string") return condition;
 
   const channels = (formData.getAll("channels") as string[]).filter(Boolean);
@@ -114,7 +124,7 @@ export async function updateAlert(_prevState: string | null, formData: FormData)
   const cooldownSeconds = parseCooldownSeconds(formData.get("cooldown_seconds"));
   if (typeof cooldownSeconds === "string") return cooldownSeconds;
 
-  const condition = buildCondition(alertType, formData);
+  const condition = buildCondition(alertType, formData, (await getDisplayPrefs()).fxRate);
   if (typeof condition === "string") return condition;
 
   const channels = (formData.getAll("channels") as string[]).filter(Boolean);
