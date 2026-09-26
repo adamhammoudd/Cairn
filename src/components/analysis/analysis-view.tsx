@@ -139,7 +139,7 @@ export function WatchPanel({ display, dense }: { display: AnalysisDisplay; dense
                 {w.kind === "event" ? "◷" : "↗"}
               </span>
               {w.url ? (
-                <a href={w.url} target="_blank" rel="noreferrer" className="text-pretty text-primary/85 underline decoration-line-strong underline-offset-2 hover:text-accent">
+                <a href={w.url} target="_blank" rel="noreferrer" className="tap text-pretty text-primary/85 underline decoration-line-strong underline-offset-2 hover:text-accent">
                   {decodeEntities(w.text)}
                 </a>
               ) : (
@@ -270,7 +270,7 @@ function SourcesRow({ sources, used }: { sources: AnalysisSource[]; used: Set<st
       {sources.map((s) => (
         <li key={s.id} className="text-body leading-[1.5]">
           {s.url ? (
-            <a href={s.url} target="_blank" rel="noreferrer" className="text-primary hover:text-accent">
+            <a href={s.url} target="_blank" rel="noreferrer" className="tap text-primary hover:text-accent">
               {decodeEntities(s.title)}
             </a>
           ) : (
