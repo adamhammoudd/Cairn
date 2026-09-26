@@ -76,7 +76,7 @@ export function BriefingCard({ briefing }: BriefingCardProps) {
                       <a
                         key={m.symbol}
                         href={`/ticker/${encodeURIComponent(m.symbol)}`}
-                        className="rounded-control border border-line bg-canvas/55 px-2.5 py-1.5 text-caption hover:border-line-strong"
+                        className="tap rounded-control border border-line bg-canvas/55 px-2.5 py-1.5 text-caption hover:border-line-strong"
                       >
                         <span className="text-primary">{m.symbol}</span>{" "}
                         <span className={up ? "text-accent" : "text-negative"}>
@@ -162,7 +162,7 @@ export function BriefingCard({ briefing }: BriefingCardProps) {
                     <Link
                       key={a.id}
                       href={`/ticker/${encodeURIComponent(a.scope_value)}`}
-                      className="rounded-control border border-line bg-canvas/55 px-2.5 py-1.5 text-caption hover:border-line-strong"
+                      className="tap rounded-control border border-line bg-canvas/55 px-2.5 py-1.5 text-caption hover:border-line-strong"
                     >
                       <span className="text-primary">{a.scope_value}</span>{" "}
                       <span className="tabular-nums text-muted">

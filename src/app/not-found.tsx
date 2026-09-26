@@ -41,7 +41,7 @@ export default function RootNotFound() {
           </Link>
           <Link
             href="/welcome"
-            className="rounded-control border border-line px-4 py-2.5 text-body text-primary transition-colors duration-base ease-standard hover:border-line-strong hover:bg-active"
+            className="tap rounded-control border border-line px-4 py-2.5 text-body text-primary transition-colors duration-base ease-standard hover:border-line-strong hover:bg-active"
           >
             About Cairn
           </Link>

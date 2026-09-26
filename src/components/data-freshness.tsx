@@ -46,7 +46,9 @@ export function DataFreshness({ source, asOf, detail, className = "" }: DataFres
           ? "Prices from the live quote provider."
           : "No live-quote provider is configured, so prices are the last daily close from the trend store."
       }
-      className={`font-mono text-eyebrow whitespace-nowrap text-dim uppercase ${className}`}
+      // Wraps on a phone: on one line the ticker chart's "Delayed · daily
+      // closes · close of Sep 25, 2026" ran past its card at 360px and was cut.
+      className={`font-mono text-eyebrow text-dim uppercase sm:whitespace-nowrap ${className}`}
     >
       {freshnessText({ source, asOf, detail })}
     </span>

@@ -105,7 +105,7 @@ export function WatchlistPanel({ watchlists }: { watchlists: WatchlistWithItems[
         </div>
         <Link
           href="/watchlists/new"
-          className="rounded-[9px] bg-accent px-4 py-[9px] text-[12.5px] font-bold text-canvas transition-[background,transform] duration-base ease-standard hover:-translate-y-px hover:bg-accent-light"
+          className="tap rounded-[9px] bg-accent px-4 py-[9px] text-[12.5px] font-bold text-canvas transition-[background,transform] duration-base ease-standard hover:-translate-y-px hover:bg-accent-light"
         >
           + New list
         </Link>
@@ -149,7 +149,7 @@ export function WatchlistPanel({ watchlists }: { watchlists: WatchlistWithItems[
           })}
           <Link
             href="/watchlists/new"
-            className="mt-1.5 flex items-center justify-center gap-1.5 rounded-[10px] border border-dashed border-[#2f2f2f] p-2.5 text-[12.5px] text-muted transition-colors duration-base ease-standard hover:border-accent/50 hover:text-accent-light"
+            className="tap mt-1.5 flex items-center justify-center gap-1.5 rounded-[10px] border border-dashed border-[#2f2f2f] p-2.5 text-[12.5px] text-muted transition-colors duration-base ease-standard hover:border-accent/50 hover:text-accent-light"
           >
             + Add list
           </Link>
@@ -204,7 +204,7 @@ export function WatchlistPanel({ watchlists }: { watchlists: WatchlistWithItems[
               >
                 {listSize === 0 ? "No symbols yet" : `${greens} up · ${listSize - greens} down`}
               </span>
-              <label className="flex items-center gap-[7px] rounded-[10px] border border-line bg-[#0c0c0c] px-3 py-2">
+              <label className="flex items-center gap-[7px] rounded-[10px] border border-line bg-[#0c0c0c] px-3 py-2 pointer-coarse:min-h-11">
                 <span aria-hidden className="text-caption text-dim">
                   ⌕
                 </span>
@@ -241,7 +241,7 @@ export function WatchlistPanel({ watchlists }: { watchlists: WatchlistWithItems[
               placeholder="Add symbol (e.g. NVDA)"
               exclude={active.items.map((i) => i.symbol)}
               className="w-52"
-              inputClassName="w-full rounded-control border border-line bg-transparent px-3 py-2 text-body text-primary uppercase outline-none transition-colors duration-base ease-standard hover:border-line-strong focus:border-line-strong"
+              inputClassName="w-full rounded-control border border-line bg-transparent px-3 py-2 pointer-coarse:min-h-11 text-body text-primary uppercase outline-none transition-colors duration-base ease-standard hover:border-line-strong focus:border-line-strong"
             />
             <button
               type="submit"
@@ -314,7 +314,7 @@ export function WatchlistPanel({ watchlists }: { watchlists: WatchlistWithItems[
                           >
                             ⠿
                           </span>
-                          <Link href={`/ticker/${item.symbol}`} className="flex min-w-0 items-center gap-2.5">
+                          <Link href={`/ticker/${item.symbol}`} className="tap flex min-w-0 items-center gap-2.5">
                             <span
                               className={`flex h-7.5 w-7.5 shrink-0 items-center justify-center rounded-[9px] border font-mono text-[10.5px] ${tintClassesForWatchlist(
                                 active.id,

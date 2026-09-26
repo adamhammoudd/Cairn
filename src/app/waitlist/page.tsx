@@ -294,16 +294,16 @@ export default async function WaitlistPage() {
             execution.
           </p>
           <nav className="flex flex-wrap gap-[18px] text-caption text-[#8a8a8a]">
-            <Link href="/privacy" className="hover:text-[#5ee6a6]">
+            <Link href="/privacy" className="tap hover:text-[#5ee6a6]">
               Privacy Policy
             </Link>
-            <Link href="/terms" className="hover:text-[#5ee6a6]">
+            <Link href="/terms" className="tap hover:text-[#5ee6a6]">
               Terms
             </Link>
-            <Link href="/refunds" className="hover:text-[#5ee6a6]">
+            <Link href="/refunds" className="tap hover:text-[#5ee6a6]">
               Cancellation &amp; refunds
             </Link>
-            <Link href="/accessibility" className="hover:text-[#5ee6a6]">
+            <Link href="/accessibility" className="tap hover:text-[#5ee6a6]">
               Accessibility
             </Link>
           </nav>

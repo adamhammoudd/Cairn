@@ -4,6 +4,7 @@ import { useState } from "react";
 import { getFinancialStatements } from "@/lib/actions/reference";
 import { useLazyPanel } from "@/components/ticker/use-lazy-panel";
 import type { StatementKind, PeriodType } from "@/lib/market-data/reference";
+import { ScrollX } from "@/components/scroll-x";
 
 const STATEMENTS: { id: StatementKind; label: string }[] = [
   { id: "income", label: "Income" },
@@ -71,7 +72,7 @@ export function StatementsPanel({ symbol }: { symbol: string }) {
       ) : !table || table.periods.length === 0 ? (
         <p className="mx-auto max-w-[52ch] px-4 py-10 text-center text-body text-muted text-pretty">{table?.detail}</p>
       ) : (
-        <div className="overflow-x-auto">
+        <ScrollX label={`${symbol} ${statement} statement`} hintClassName="sm:hidden">
           <table className="w-full min-w-[560px] border-collapse text-body">
             <thead>
               <tr className="border-b border-line">
@@ -105,7 +106,7 @@ export function StatementsPanel({ symbol }: { symbol: string }) {
             As filed with the market-data provider. Only lines the filing reported are listed - an omitted line is left
             out rather than shown as zero. Figures are not restated, adjusted, or estimated by Cairn.
           </p>
-        </div>
+        </ScrollX>
       )}
     </div>
   );

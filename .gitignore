@@ -64,3 +64,6 @@ scripts/tests/report/
 # the app, but tsconfig's **/*.ts include would otherwise type-check them and
 # fail the build (also excluded in tsconfig.json).
 external/
+# mobile sweep (scripts/mobile-sweep.ts): a live session and its screenshots
+/.auth/
+/mobile-sweep/

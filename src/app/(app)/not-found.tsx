@@ -30,7 +30,7 @@ export default function NotFound() {
         </Link>
         <Link
           href="/"
-          className="rounded-control border border-line px-4 py-2.5 text-body text-primary transition-colors duration-base ease-standard hover:border-line-strong hover:bg-active"
+          className="tap rounded-control border border-line px-4 py-2.5 text-body text-primary transition-colors duration-base ease-standard hover:border-line-strong hover:bg-active"
         >
           Back to dashboard
         </Link>

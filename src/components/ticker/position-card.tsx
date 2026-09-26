@@ -76,7 +76,7 @@ export function PositionCard({
           )}
         </div>
 
-        <Link href="/portfolio" className="mt-4 inline-block text-body text-accent hover:underline">
+        <Link href="/portfolio" className="tap mt-4 inline-block text-body text-accent hover:underline">
           Open in Portfolio →
         </Link>
       </div>

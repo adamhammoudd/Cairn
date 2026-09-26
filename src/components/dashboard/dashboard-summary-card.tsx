@@ -85,7 +85,7 @@ export function DashboardSummaryCard({
         </div>
         <Link
           href={href}
-          className="text-caption text-dim transition-colors duration-fast ease-standard hover:text-accent"
+          className="tap text-caption text-dim transition-colors duration-fast ease-standard hover:text-accent"
         >
           {ctaLabel} →
         </Link>

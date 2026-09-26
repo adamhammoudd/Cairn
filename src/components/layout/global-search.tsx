@@ -35,7 +35,7 @@ export function GlobalSearch({ className = "" }: { className?: string }) {
   return (
     <div
       ref={containerRef}
-      className={`flex items-center gap-2 rounded-control border border-line px-3 py-2 transition-colors duration-base ease-standard hover:border-line-strong focus-within:border-accent ${className}`}
+      className={`flex items-center gap-2 rounded-control border border-line px-3 transition-colors duration-base ease-standard hover:border-line-strong focus-within:border-accent ${className}`}
     >
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--color-dim)" strokeWidth="2" className="shrink-0">
         <circle cx="11" cy="11" r="7" />
@@ -48,7 +48,12 @@ export function GlobalSearch({ className = "" }: { className?: string }) {
         placeholder="Search tickers, news"
         onSelect={(r) => router.push(`/ticker/${encodeURIComponent(r.symbol)}`)}
         className="min-w-0 flex-1"
-        inputClassName="w-full min-w-0 bg-transparent text-body text-primary placeholder:text-dim outline-none"
+        // The padding is on the field, not the box, so the field fills the box:
+        // 44px tall on phones, the old 35px (37px box) from 900px up.
+        inputClassName="w-full min-w-0 min-h-11 bg-transparent py-2 text-body text-primary placeholder:text-dim outline-none min-[900px]:min-h-0"
+        // The box sits at the right of the header; a menu hung from its left
+        // edge ran ~100px off a 360px phone screen.
+        menuAlign="right"
       />
       <span className="hidden rounded-xs border border-line px-1 py-0.5 font-mono text-eyebrow text-dim min-[1080px]:inline">
         /

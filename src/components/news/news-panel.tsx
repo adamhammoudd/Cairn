@@ -131,7 +131,7 @@ export function NewsPanel({ items }: { items: NewsFeedItem[] }) {
                   <Link
                     key={t}
                     href={`/ticker/${t}`}
-                    className="rounded-full border border-violet/30 bg-violet/10 px-2.5 py-[5px] font-mono text-eyebrow tracking-[0.1em] text-violet transition-colors duration-fast ease-standard hover:border-violet"
+                    className="tap rounded-full border border-violet/30 bg-violet/10 px-2.5 py-[5px] font-mono text-eyebrow tracking-[0.1em] text-violet transition-colors duration-fast ease-standard hover:border-violet"
                   >
                     {t}
                   </Link>
@@ -190,7 +190,7 @@ export function NewsPanel({ items }: { items: NewsFeedItem[] }) {
             );
           })}
         </div>
-        <label className="flex min-w-0 flex-1 basis-[220px] items-center gap-2 rounded-[11px] border border-line bg-panel px-[13px] py-[9px] transition-colors duration-base ease-standard hover:border-line-strong">
+        <label className="flex min-w-0 flex-1 basis-[220px] items-center gap-2 rounded-[11px] border border-line bg-panel px-[13px] py-[9px] pointer-coarse:min-h-11 transition-colors duration-base ease-standard hover:border-line-strong">
           <span aria-hidden className="text-[13px] text-dim">
             ⌕
           </span>
@@ -229,7 +229,7 @@ export function NewsPanel({ items }: { items: NewsFeedItem[] }) {
                   href={item.url}
                   target="_blank"
                   rel="noreferrer"
-                  className="font-serif text-[20px] leading-[1.32] tracking-[-0.005em] text-primary text-pretty transition-colors duration-fast ease-standard hover:text-accent"
+                  className="tap font-serif text-[20px] leading-[1.32] tracking-[-0.005em] text-primary text-pretty transition-colors duration-fast ease-standard hover:text-accent"
                 >
                   {decodeEntities(item.title)}
                 </a>
@@ -247,7 +247,7 @@ export function NewsPanel({ items }: { items: NewsFeedItem[] }) {
                     <Link
                       key={ticker}
                       href={`/ticker/${ticker}`}
-                      className="rounded-full border border-line bg-[#121212] px-2.5 py-[3px] font-mono text-eyebrow tracking-[0.1em] text-muted transition-colors duration-base ease-standard hover:border-accent hover:text-primary"
+                      className="tap rounded-full border border-line bg-[#121212] px-2.5 py-[3px] font-mono text-eyebrow tracking-[0.1em] text-muted transition-colors duration-base ease-standard hover:border-accent hover:text-primary"
                     >
                       {ticker}
                     </Link>

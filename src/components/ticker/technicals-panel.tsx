@@ -140,6 +140,14 @@ export function TechnicalsPanel({ symbol, bars, priceSource, priceAsOf, volatili
   // Settings > Display > Primary currency like the rest of the Ticker page.
   const prefs = useDisplayPrefs();
   const money = (n: number) => formatMoney(n, prefs);
+  // Wide enough for the longest price label: at a fixed 62px, a coin's
+  // "$115,517.88" was cut at the chart's left edge on a phone.
+  const priceAxisWidth = useMemo(() => {
+    const closes = points.map((p) => p.close).filter((c): c is number => typeof c === "number");
+    const longest = closes.length ? Math.max(money(Math.max(...closes)).length, money(Math.min(...closes)).length) : 0;
+    return Math.max(62, longest * 6 + 8);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [points, prefs]);
 
   // A window shorter than an indicator's period has no value to draw, and the
   // reader is told which rather than shown an empty axis.
@@ -275,7 +283,7 @@ export function TechnicalsPanel({ symbol, bars, priceSource, priceAsOf, volatili
             <ComposedChart data={points} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
               <CartesianGrid {...CHART_GRID} />
               <XAxis dataKey="ts" tickFormatter={tickFormat} minTickGap={48} tick={CHART_AXIS_TICK} axisLine={false} tickLine={false} />
-              <YAxis domain={["dataMin", "dataMax"]} width={62} tick={CHART_AXIS_TICK} axisLine={false} tickLine={false} tickFormatter={(v) => money(Number(v))} />
+              <YAxis domain={["dataMin", "dataMax"]} width={priceAxisWidth} tick={CHART_AXIS_TICK} axisLine={false} tickLine={false} tickFormatter={(v) => money(Number(v))} />
               <Tooltip
                 {...CHART_TOOLTIP}
                 formatter={(value, name) => [money(Number(value)), String(name)] as [string, string]}
