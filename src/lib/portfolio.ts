@@ -212,6 +212,17 @@ export function timelineCoverage(
   };
 }
 
+/**
+ * Whether a history read came back cut short. PostgREST caps every response at
+ * its max-rows setting (1000 on this project) and returns the first rows
+ * without an error, so recent_prices(per_symbol: 1500) across several symbols
+ * silently loses every symbol after the first. `count` is the exact total the
+ * read asked PostgREST for; null means it was not requested, so no claim.
+ */
+export function isHistoryTruncated(count: number | null | undefined, returned: number): boolean {
+  return count != null && count > returned;
+}
+
 export function computeTimelineSeries(holdings: Holding[], prices: PriceBar[], timeframe: ChartView): TimelinePoint[] {
   if (holdings.length === 0) return [];
 
