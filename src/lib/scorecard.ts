@@ -391,19 +391,34 @@ export interface TrendInput {
   /** Price vs its 200-day average, fraction (+0.08 = 8% above). */
   vs200d: number | null;
   asOf: string | null;
+  /**
+   * True when the bars are every calendar day (crypto trades daily), so the
+   * 200-bar average is 200 days rather than 200 trading days.
+   */
+  dailyBars?: boolean;
 }
 
-/** Trend inputs from the existing factor engine (src/lib/ai/factors.ts). */
+/**
+ * Trend inputs from the existing factor engine (src/lib/ai/factors.ts).
+ *
+ * Six months is measured here from the bars, as half the asset's periods per
+ * year: 126 sessions for a share, 183 days for a coin. The factor engine's
+ * roc_6m_pct is a fixed 126 bars, which is only about four months of a coin's
+ * daily prices, so it is not used for the "over 6 months" sentence.
+ */
 export function trendInputsFromFactorSet(set: FactorSet | null): TrendInput {
   if (!set) return { return6m: null, vs200d: null, asOf: null };
   const trend = set.readings.find((r) => r.key === "trend");
-  const mom = set.readings.find((r) => r.key === "momentum_3m");
-  const roc6 = mom?.detail.roc_6m_pct;
   const vs = trend?.detail.pct_vs_sma200;
+  const lookback = Math.round(set.periodsPerYear / 2);
+  const last = set.bars.length - 1;
+  const past = last - lookback >= 0 ? set.bars[last - lookback].close : null;
+  const return6m = past !== null && past > 0 ? set.bars[last].close / past - 1 : null;
   return {
-    return6m: typeof roc6 === "number" ? roc6 / 100 : null,
+    return6m,
     vs200d: typeof vs === "number" ? vs / 100 : null,
     asOf: set.asOf,
+    dailyBars: set.periodsPerYear > 252,
   };
 }
 
@@ -418,12 +433,13 @@ export function trendDimension(t: TrendInput): Dimension {
   const verdict = up && above ? "Rising" : down && below ? "Falling" : "Sideways";
   const level: Level = verdict === "Rising" ? "strong" : verdict === "Sideways" ? "mixed" : "weak";
   const move = t.return6m >= 0 ? `Up ${pct(t.return6m)} over 6 months` : `Down ${pct(t.return6m)} over 6 months`;
+  const days = t.dailyBars ? "200 days" : "200 trading days";
   const avg =
     t.vs200d === null
       ? ""
       : t.vs200d >= 0
-        ? `, and ${pct(t.vs200d)} above its average price of the last 200 trading days`
-        : `, and ${pct(t.vs200d)} below its average price of the last 200 trading days`;
+        ? `, and ${pct(t.vs200d)} above its average price of the last ${days}`
+        : `, and ${pct(t.vs200d)} below its average price of the last ${days}`;
   return {
     key: "trend",
     label,
