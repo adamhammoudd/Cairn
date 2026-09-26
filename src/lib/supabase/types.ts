@@ -301,9 +301,47 @@ export interface Database {
           created_at: string;
           /** feat/plain-summary; see src/lib/ai/plain-summary-store.ts. */
           plain_summary: Record<string, unknown> | null;
+          // Migration 0052 (feat/analysis-generation-v2). Null on older rows.
+          direction_horizon_sessions: number | null;
+          direction_n: number | null;
+          direction_higher: number | null;
+          direction_up_low: number | null;
+          direction_up_high: number | null;
+          direction_confidence: ConfidenceLevel | null;
+          direction_p25: number | null;
+          direction_median: number | null;
+          direction_p75: number | null;
+          direction_worst: number | null;
+          direction_best: number | null;
+          direction_conditions: Record<string, unknown> | null;
+          headline: string | null;
+          bullets: string[] | null;
+          watch: { text: string; ref: string }[] | null;
+          sources_used: string[] | null;
+          text_source: "model" | "template" | null;
+          text_failures: Record<string, unknown>[] | null;
         };
         Insert: {
           plain_summary?: Record<string, unknown> | null;
+          direction_horizon_sessions?: number | null;
+          direction_n?: number | null;
+          direction_higher?: number | null;
+          direction_up_low?: number | null;
+          direction_up_high?: number | null;
+          direction_confidence?: ConfidenceLevel | null;
+          direction_p25?: number | null;
+          direction_median?: number | null;
+          direction_p75?: number | null;
+          direction_worst?: number | null;
+          direction_best?: number | null;
+          direction_conditions?: Record<string, unknown> | null;
+          headline?: string | null;
+          bullets?: string[] | null;
+          watch?: { text: string; ref: string }[] | null;
+          sources_used?: string[] | null;
+          text_source?: "model" | "template" | null;
+          text_failures?: Record<string, unknown>[] | null;
+
           scope_type: ScopeType;
           scope_value: string;
           analysis_type: string;
@@ -344,12 +382,15 @@ export interface Database {
           historical_event_id: string;
           similarity_score: number;
           note: string | null;
+          /** Migration 0052: counted in the direction and typical range. */
+          in_direction_set: boolean;
         };
         Insert: {
           analysis_id: string;
           historical_event_id: string;
           similarity_score: number;
           note?: string | null;
+          in_direction_set?: boolean;
         };
         Update: never;
         Relationships: [];

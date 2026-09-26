@@ -1,5 +1,15 @@
-// The probability engine. Runs against a hosted model over an
-// OpenAI-compatible API (Groq; see lib/ai/llm.ts).
+// The analysis engine. Runs against a hosted model over an OpenAI-compatible
+// API (see lib/ai/llm.ts).
+//
+// TICKER scopes (feat/analysis-generation-v2): the analysis leads with
+// direction and a typical range from similar moments (lib/ai/direction.ts,
+// similar-moments*.ts), and the model writes a headline, bullets and things
+// to watch around figures computed in code (lib/ai/analysis-text.ts, via
+// lib/ai/generate-ticker.ts). Guards fail closed to Cairn's template; a
+// guard failure no longer discards the analysis. The >=5% band below is still
+// computed and stored, as a trader figure only.
+//
+// SECTOR and MARKET scopes keep the original prose path described below.
 //
 // Division of labour, which is the important design decision in this file:
 //
@@ -35,7 +45,7 @@ import {
 } from "@/lib/ai/analytics";
 import { analyzeFactors, formatFactorBlock, FACTOR_EVENT_TYPE, type FactorAnalysis, type FactorEventRow } from "@/lib/ai/factor-analysis";
 import { llmCompleteJsonWithProvider } from "@/lib/ai/llm";
-import { attachPlainSummary } from "@/lib/ai/plain-summary-store";
+import { writeTickerText, type Written } from "@/lib/ai/generate-ticker";
 import type { ScopeType, Database } from "@/lib/supabase/types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
@@ -160,7 +170,7 @@ export async function generateAnalysis({ scopeType, scopeValue, supabaseClient }
   // ordering, which is only correct while every row agrees.)
   const { data: assetRow } = await supabase
     .from("symbol_directory")
-    .select("asset_type")
+    .select("asset_type, name")
     .eq("symbol", scopeValue)
     .maybeSingle();
   const isCrypto = scopeType === "ticker" && assetRow?.asset_type === "crypto";
@@ -222,6 +232,13 @@ export async function generateAnalysis({ scopeType, scopeValue, supabaseClient }
     throw new Error(`No news items for "${scopeValue}" - an analysis must cite at least one source.`);
   }
 
+  const admin = createAdminClient();
+
+  // Sector and market scopes keep the original prose path: the direction
+  // engine needs a symbol's own price history, which only a ticker has.
+  // (Body kept at its original indentation so the prompt's multi-line
+  // template strings are byte-for-byte what they were.)
+  const writeLegacyProse = async (): Promise<Written> => {
   const statsBlock =
     stats.sampleCount === 0
       ? "No analogs with both a before/after price are available."
@@ -287,7 +304,6 @@ Respond with only a JSON object matching the required schema.`,
     isModelProse,
   );
 
-  const admin = createAdminClient();
 
   // The scope guard still runs on the model's prose before anything is stored
   // - unchanged from the previous implementation. Completeness is now
@@ -344,24 +360,50 @@ Respond with only a JSON object matching the required schema.`,
     });
     throw new Error("This analysis was flagged by the scope guard and was not stored or shown.");
   }
+    return { analysisType: prose.analysis_type, reasoningText: prose.reasoning_text, modelVersion, columns: {}, plainSummary: null, directionDates: new Set() };
+  };
+
+  const written = scopeType === "ticker"
+    ? await writeTickerText({
+        supabase,
+        admin,
+        symbol: scopeValue,
+        name: assetRow?.name ?? scopeValue,
+        assetType: assetRow?.asset_type ?? null,
+        factorAnalysis,
+        band,
+        news: newsList,
+        sourceCount: sourceIds.length,
+        analogCount: analogIds.length,
+      })
+    : await writeLegacyProse();
+
+  // The direction's own cases are always stored as analog rows, even where
+  // the >=5% band's set dropped one as overlapping a curated event: every
+  // case behind "higher in X of N" must be traceable to a stored row.
+  const directionEvents = (factorAnalysis?.events ?? []).filter((e) => written.directionDates.has(e.event_date));
+  const linkedIds = new Set(analogIds);
+  const linkedAnalogs = [...usableAnalogs, ...directionEvents.filter((e) => !linkedIds.has(e.id))];
 
   const { data: analysis, error: insertError } = await admin
     .from("ai_analyses")
     .insert({
       scope_type: scopeType,
       scope_value: scopeValue,
-      analysis_type: prose.analysis_type,
+      analysis_type: written.analysisType,
       probability_low: band.low,
       probability_high: band.high,
       confidence_level: band.confidence,
       sample_size: band.sampleCount,
-      reasoning_text: prose.reasoning_text,
+      reasoning_text: written.reasoningText,
+      ...written.columns,
+      plain_summary: written.plainSummary,
       // Provider-qualified so a row is traceable to what actually served it.
       // This once said "self-hosted:" long after a hosted provider shipped,
       // which mislabeled every stored analysis. It now reads the ACTUAL
       // serving endpoint - "groq:...", or the fallback's host if one
       // served the request (see lib/ai/llm.ts).
-      model_version: modelVersion,
+      model_version: written.modelVersion,
       // Written as `pending`, promoted to `validated` only once the sources and
       // analogs are actually on disk.
       //
@@ -391,19 +433,16 @@ Respond with only a JSON object matching the required schema.`,
     .from("ai_analysis_sources")
     .insert(sourceIds.map((news_item_id) => ({ analysis_id: analysis.id, news_item_id })));
 
-  const analogById = new Map(usableAnalogs.map((e) => [e.id, e]));
   const { error: analogsError } = await admin.from("ai_analysis_historical_analogs").insert(
-    analogIds.map((historical_event_id) => {
-      const e = analogById.get(historical_event_id)!;
-      return {
-        analysis_id: analysis.id,
-        historical_event_id,
-        similarity_score: computeSimilarityScore(e.event_date, new Date(), e.matchFraction ?? 1),
-        // Which conditions a factor-derived analog matched. Null for curated
-        // analogs, exactly as before.
-        note: e.note ?? null,
-      };
-    }),
+    linkedAnalogs.map((e) => ({
+      analysis_id: analysis.id,
+      historical_event_id: e.id,
+      similarity_score: computeSimilarityScore(e.event_date, new Date(), e.matchFraction ?? 1),
+      // Which conditions a factor-derived analog matched. Null for curated
+      // analogs, exactly as before.
+      note: e.note ?? null,
+      in_direction_set: e.event_type === FACTOR_EVENT_TYPE && written.directionDates.has(e.event_date),
+    })),
   );
 
   // The factor readings behind this analysis, one row each - written whenever
@@ -445,21 +484,6 @@ Respond with only a JSON object matching the required schema.`,
   if (promoteError || !promoted) {
     await admin.from("ai_analyses").delete().eq("id", analysis.id);
     throw new Error(promoteError?.message ?? "Failed to publish analysis.");
-  }
-
-  // The "In plain words" summary (feat/plain-summary). Built only after the
-  // analysis is validated, from the scorecard and this analysis's own analog
-  // result; a failure here never takes the analysis down (it is logged, and
-  // the page builds the template instead).
-  if (scopeType === "ticker") {
-    const stored = await attachPlainSummary({
-      analysisId: analysis.id,
-      symbol: scopeValue,
-      assetType: assetRow?.asset_type ?? null,
-      factorAnalysis,
-      supabase,
-    });
-    if (stored) return { ...promoted, plain_summary: stored as unknown as Record<string, unknown> };
   }
 
   return promoted;

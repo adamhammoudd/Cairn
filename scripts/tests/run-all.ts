@@ -60,6 +60,7 @@ import { runHealthInputsSuite } from "./health-inputs";
 import { runPortfolioHistoryReadSuite } from "./portfolio-history-read";
 import { runRunAllRegistrationSuite } from "./run-all-registration";
 import { runDirectionEngineSuite } from "./direction-engine";
+import { runAnalysisTextSuite } from "./analysis-text";
 
 // A suite that throws (missing credentials, unreachable service) must surface
 // as a hard failure of that suite, not take the whole run down with a stack
@@ -118,6 +119,7 @@ async function main() {
     fxRatesSuites,
     portfolioHistorySuites,
     briefingOnOpenSuites,
+    analysisTextSuites,
   ] = await Promise.all([
     guarded("Adversarial scope guard", runAdversarialScopeGuardSuites),
     guarded("Methodology substance", async () => [await runMethodologySubstanceSuite()]),
@@ -150,6 +152,7 @@ async function main() {
     guarded("Display currency", async () => [await runFxRatesSuite()]),
     guarded("Portfolio chart history read", async () => [await runPortfolioHistoryReadSuite()]),
     guarded("Daily briefing built on open", async () => [await runBriefingOnOpenSuite()]),
+    guarded("Analysis text", async () => [await runAnalysisTextSuite()]),
   ]);
 
   const allSuites = [
@@ -201,6 +204,7 @@ async function main() {
     ...fxRatesSuites,
     ...portfolioHistorySuites,
     ...briefingOnOpenSuites,
+    ...analysisTextSuites,
   ];
   const reportPath = writeReport(allSuites);
 
