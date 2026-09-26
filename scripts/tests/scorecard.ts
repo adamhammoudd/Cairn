@@ -311,8 +311,8 @@ export function runScorecardSuite(opts: { update?: boolean } = {}): SuiteResult 
     for (const d of card.dimensions) {
       const shown = new Set(d.inputs.map((i) => i.display).filter((x): x is string => !!x).flatMap(numberTokens));
       for (const tok of numberTokens(d.sentence)) {
-        // Dates and fixed wording ("6 months", "200 trading days", "5-year") are not data.
-        if (/^(6|200|5|12|60)$/.test(tok) && /(6 months|200 trading days|5-year|in the next 60 days)/.test(d.sentence)) continue;
+        // Dates and fixed wording ("6 months", "200 trading days", "200 days", "5-year") are not data.
+        if (/^(6|200|5|12|60)$/.test(tok) && /(6 months|200 (trading )?days|5-year|in the next 60 days)/.test(d.sentence)) continue;
         if (!shown.has(tok) && !shown.has(tok.replace("%", ""))) missing.push(`${card.symbol}.${d.key}: "${tok}" in "${d.sentence}"`);
       }
     }
