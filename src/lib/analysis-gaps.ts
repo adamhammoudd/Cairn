@@ -120,7 +120,7 @@ export interface GapInputs {
   analogCount: number;
   /** Stored fallback cases (the base-rate windows) a ticker can fall back on. */
   fallbackCount?: number;
-  /** Sources the analysis can cite. */
+  /** Sources the analysis can cite: news, plus a ticker's data sources (filings, prices, calendar). */
   sourceCount: number;
   /** The factor scan, for a ticker: null when it could not run (too few bars). */
   factor: { ok: true } | { ok: false; reason: "no_active_conditions" | "insufficient_instances"; bestSampleSize: number } | null;

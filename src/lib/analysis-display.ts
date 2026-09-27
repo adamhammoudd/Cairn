@@ -17,6 +17,7 @@ import { historyWords, horizonPhrase, type HistoryBasis, type HistoryContext } f
 import type { DirectionalHistory } from "@/lib/ai/direction";
 import { plainConditions } from "@/lib/ai/history-plain";
 import type { Scorecard } from "@/lib/scorecard";
+import { noNewsLine } from "@/lib/ai/data-sources";
 
 export type Plan = "free" | "premium";
 
@@ -43,6 +44,13 @@ export interface DisplayHistory {
   dots: ("higher" | "lower")[];
   /** What the similar moments were matched on, in plain words. */
   matchedOn: string[];
+}
+
+export interface DisplayDataSource {
+  kind: string;
+  label: string;
+  reference: string;
+  url: string | null;
 }
 
 export interface DisplayCase {
@@ -81,6 +89,10 @@ export interface AnalysisDisplay {
   watch: DisplayWatch[];
   /** news_items ids the summary relied on (a subset of the analysis sources). */
   sourcesUsed: string[];
+  /** The data the figures were computed from (migration 0057): filings, prices, calendar. Every plan. */
+  dataSources: DisplayDataSource[];
+  /** Set when the analysis cites no news: the plain line saying so, computed in code. */
+  noNews: string | null;
   /** Premium: every case the direction was counted from. Null on Free. */
   cases: DisplayCase[] | null;
   /** How many cases exist, on every plan (so Free can say "Premium shows all 14"). */
@@ -310,6 +322,7 @@ export function buildAnalysisDisplay(args: {
   plan: Plan;
   cases: CaseRow[];
   sources: { id: string; url: string | null }[];
+  dataSources?: DisplayDataSource[];
   factors: { factor_key: string; value: number | null; percentile: number | null; detail: Record<string, unknown> }[];
 }): AnalysisDisplay {
   const { row, plan } = args;
@@ -339,6 +352,9 @@ export function buildAnalysisDisplay(args: {
     scorecard: legacySummary(row)?.scorecard ?? null,
     watch: watchFrom(row, args.sources),
     sourcesUsed: Array.isArray(row.sources_used) ? row.sources_used : [],
+    dataSources: args.dataSources ?? [],
+    // Only a ticker analysed from its data says this; old rows and sectors always had news.
+    noNews: args.sources.length === 0 && (args.dataSources ?? []).length > 0 ? noNewsLine(args.name, args.dataSources ?? []) : null,
     cases: premium ? cases : null,
     caseCount: history.kind === "direction" || history.kind === "baseline" || history.kind === "earnings" ? history.n : cases.length,
     trader:

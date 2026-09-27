@@ -13,6 +13,7 @@ import { isEstimatedEvent } from "@/lib/calendar";
 import { decodeEntities } from "@/lib/news";
 import type { Scorecard } from "@/lib/scorecard";
 import type { Database } from "@/lib/supabase/types";
+import { noNewsLine, type DataSource } from "@/lib/ai/data-sources";
 
 const SUFFIX = /,?\s+(?:inc\.?|incorporated|corporation|corp\.?|co\.?|company|ltd\.?|limited|plc|holdings?|n\.v\.|s\.a\.|ag|se|the)$/i;
 
@@ -80,6 +81,7 @@ export function textInputsFor(a: {
   calendar: CalendarRow[];
   news: NewsRow[];
   band: ProbabilityBand;
+  dataSources?: DataSource[];
 }): TextInputs {
   const events: TextEvent[] = a.calendar
     .filter((e) => e.event_type === "earnings" || e.event_type === "ex_dividend" || e.event_type === "dividend")
@@ -104,6 +106,9 @@ export function textInputsFor(a: {
   const fa = a.factorAnalysis;
   return {
     name: plainName(a.name, a.symbol, a.assetType),
+    // No tagged news: said plainly, computed in code, and the data cited instead.
+    ...(a.news.length === 0 ? { noNews: noNewsLine(plainName(a.name, a.symbol, a.assetType), a.dataSources ?? []) } : {}),
+    dataSources: (a.dataSources ?? []).map((d) => d.label),
     symbol: a.symbol,
     assetType: a.assetType,
     history: a.sm?.history ?? null,

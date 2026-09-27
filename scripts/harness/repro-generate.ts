@@ -7,7 +7,7 @@
 //   npx tsx --conditions=react-server --tsconfig scripts/harness/tsconfig.readonly.json scripts/harness/repro-generate.ts MU AMD
 import "../tests/env";
 import { generateForScope } from "@/lib/ai/analysis-pipeline";
-import { interceptedWrites, readOnlyClient, resetOverlay } from "./readonly-supabase";
+import { interceptedWrites, overlayRows, readOnlyClient, resetOverlay } from "./readonly-supabase";
 
 export function summarise(stored: Record<string, unknown>): string {
   const cond = stored.direction_conditions as { basis?: string; fallback?: unknown } | null;
@@ -19,7 +19,14 @@ async function main() {
     resetOverlay();
     const out = await generateForScope("ticker", raw, { supabaseClient: readOnlyClient() });
     console.log(`\n=== ${raw}`);
-    if (out.ok) console.log(`GENERATED (not stored): ${summarise(out.stored)}`);
+    if (out.ok) {
+      console.log(`GENERATED (not stored): ${summarise(out.stored)}`);
+      const news = overlayRows("ai_analysis_sources").length;
+      const data = overlayRows("ai_analysis_data_sources").map((d) => `${d.kind}: ${d.label}${d.kind === "sec_filing" ? ` [${d.reference}]` : ""}`);
+      console.log(`  cites: ${news} news item(s)${data.length ? `; data: ${data.join(" | ")}` : ""}`);
+      const bullets = (out.stored.bullets as string[] | null) ?? [];
+      console.log(`  bullets: ${bullets.map((b) => JSON.stringify(b)).join(" ")}`);
+    }
     else console.log(`FAILED (${out.kind}): ${out.message}${out.gap ? `  [reasons: ${out.gap.reasons.join(", ")}]` : ""}`);
     const writes = interceptedWrites.reduce<Record<string, number>>((m, w) => ((m[`${w.op} ${w.table}`] = (m[`${w.op} ${w.table}`] ?? 0) + w.rows), m), {});
     console.log(`writes intercepted (never sent): ${JSON.stringify(writes)}`);

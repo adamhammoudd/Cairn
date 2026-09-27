@@ -127,6 +127,22 @@ type Result = { data: unknown; error: unknown; count?: number | null; status?: n
 async function runRead(real: SupabaseClient<Database>, table: string, calls: Call[]): Promise<Result> {
   const o = overlay.get(table);
   const local = o ? o.rows.filter((r) => matches(r, calls)) : [];
+  // A count ({ count: "exact", head: true }) over real + overlay rows: page the
+  // real rows' conflict keys and count the union.
+  const selectOpts = calls[0]?.m === "select" ? (calls[0].args[1] as { count?: string; head?: boolean } | undefined) : undefined;
+  if (selectOpts?.count && local.length > 0) {
+    const keys = o!.keys ?? ["id"];
+    const seen = new Set(local.map((r) => keyOf(r, keys)));
+    for (let from = 0; ; from += 1000) {
+      let q: any = real.from(table as never).select(keys.join(","));
+      for (const c of calls.slice(1)) if (!NON_FILTERS.has(c.m)) q = q[c.m](...c.args);
+      const { data, error } = await q.range(from, from + 999);
+      if (error) return { data: null, error };
+      for (const r of (data ?? []) as Row[]) seen.add(keyOf(r, keys));
+      if (!data || data.length < 1000) break;
+    }
+    if (selectOpts.head) return { data: null, error: null, count: seen.size };
+  }
   const single = calls.find((c) => c.m === "single" || c.m === "maybeSingle")?.m;
   const range = calls.find((c) => c.m === "range")?.args as [number, number] | undefined;
   const limit = calls.find((c) => c.m === "limit")?.args[0] as number | undefined;
@@ -268,4 +284,9 @@ export function readOnlyClient(): SupabaseClient<Database> {
 export function resetOverlay(): void {
   overlay.clear();
   interceptedWrites.length = 0;
+}
+
+/** The rows a run would have written to `table` (for printing what an analysis would cite). */
+export function overlayRows(table: string): Row[] {
+  return [...(overlay.get(table)?.rows ?? [])];
 }

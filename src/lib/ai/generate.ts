@@ -57,7 +57,8 @@ import {
 import { MIN_FACTOR_ANALOG_SAMPLE } from "@/lib/ai/factors";
 import { AnalysisDataGap, findDataGaps } from "@/lib/analysis-gaps";
 import { llmCompleteJsonWithProvider } from "@/lib/ai/llm";
-import { writeTickerText, type Written } from "@/lib/ai/generate-ticker";
+import { loadUpcomingCalendar, writeTickerText, type Written } from "@/lib/ai/generate-ticker";
+import { loadDataSources } from "@/lib/ai/data-sources-data";
 import type { ScopeType, Database } from "@/lib/supabase/types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
@@ -232,6 +233,18 @@ export async function generateAnalysis({ scopeType, scopeValue, supabaseClient }
   // to name. Same for sources: the news actually fed into the prompt.
   const usableAnalogs = bandSet.filter((e) => e.price_before !== null && e.price_after !== null && e.price_before !== 0);
   const sourceIds = newsList.map((n) => n.id);
+
+  // A ticker cites its data too - the SEC filings, the price history and the
+  // calendar entries its figures come from (lib/ai/data-sources.ts), each
+  // built from a row read here. So a share nobody has written about is still
+  // analysed, and says plainly that no news was found; a sector or market
+  // scope (no data of its own) still needs news.
+  const today = new Date().toISOString().slice(0, 10);
+  const calendarRows = scopeType === "ticker" ? await loadUpcomingCalendar(supabase, scopeValue, today) : [];
+  const dataSources =
+    scopeType === "ticker"
+      ? await loadDataSources(supabase, { symbol: scopeValue, assetType: assetRow?.asset_type ?? null, name: assetRow?.name ?? null, calendar: calendarRows })
+      : [];
   const analogIds = usableAnalogs.map((e) => e.id);
 
   // Every reason this scope cannot be analysed, found together so the reader
@@ -242,7 +255,7 @@ export async function generateAnalysis({ scopeType, scopeValue, supabaseClient }
     analogCount: analogIds.length,
     // The base rate is always there for a ticker the factor scan could run on.
     fallbackCount: factorAnalysis?.baselineEvents?.length ?? 0,
-    sourceCount: sourceIds.length,
+    sourceCount: sourceIds.length + dataSources.length,
     factor: factorAnalysis ? (factorAnalysis.result.ok ? { ok: true } : factorAnalysis.result) : null,
     // Counted only on the failure path where the scan could not run.
     bars: scopeType === "ticker" && analogIds.length === 0 && !factorAnalysis ? (await loadBars(supabase, scopeValue)).length : undefined,
@@ -393,7 +406,9 @@ Respond with only a JSON object matching the required schema.`,
         factorAnalysis,
         band,
         news: newsList,
-        sourceCount: sourceIds.length,
+        sourceCount: sourceIds.length + dataSources.length,
+        calendar: calendarRows,
+        dataSources,
         analogCount: analogIds.length,
       })
     : await writeLegacyProse();
@@ -459,9 +474,16 @@ Respond with only a JSON object matching the required schema.`,
     throw new Error(insertError?.message ?? "Failed to store analysis.");
   }
 
-  const { error: sourcesError } = await admin
-    .from("ai_analysis_sources")
-    .insert(sourceIds.map((news_item_id) => ({ analysis_id: analysis.id, news_item_id })));
+  const { error: sourcesError } =
+    sourceIds.length > 0
+      ? await admin.from("ai_analysis_sources").insert(sourceIds.map((news_item_id) => ({ analysis_id: analysis.id, news_item_id })))
+      : { error: null };
+  const { error: dataSourcesError } =
+    dataSources.length > 0
+      ? await admin.from("ai_analysis_data_sources").insert(
+          dataSources.map((d) => ({ analysis_id: analysis.id, kind: d.kind, label: d.label, reference: d.reference, as_of: d.asOf, url: d.url })),
+        )
+      : { error: null };
 
   const { error: analogsError } = await admin.from("ai_analysis_historical_analogs").insert(
     linkedAnalogs.map((e) => ({
@@ -494,13 +516,13 @@ Respond with only a JSON object matching the required schema.`,
       )
     : { error: null };
 
-  if (sourcesError || analogsError || factorsError) {
+  if (sourcesError || dataSourcesError || analogsError || factorsError) {
     // Leave the parent `pending` and take the row back out. Failing loudly is
     // the point: a missing analysis is a retry, a sourceless one is a bare
     // score the product promises never to show.
     await admin.from("ai_analyses").delete().eq("id", analysis.id);
     throw new Error(
-      `Failed to store analysis evidence: ${sourcesError?.message ?? analogsError?.message ?? factorsError?.message}`,
+      `Failed to store analysis evidence: ${sourcesError?.message ?? dataSourcesError?.message ?? analogsError?.message ?? factorsError?.message}`,
     );
   }
 
