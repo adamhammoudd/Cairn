@@ -33,6 +33,24 @@ export function runRunAllRegistrationSuite(): SuiteResult {
       });
     }
   }
+  // A guarded(...) call whose result is never spread into allSuites runs the
+  // suite and throws its result away: nothing fails, nothing is reported
+  // (fix/analysis-failure-reasons added suites that way before this check).
+  // There must be one destructured name per guarded call, each spread into
+  // allSuites.
+  const destructured = runAll.match(/const \[([\s\S]*?)\] = await Promise\.all\(\[([\s\S]*?)\]\);/);
+  if (!destructured) {
+    cases.push({ name: "run-all destructures its guarded suites", status: "fail", detail: "pattern not found" });
+  } else {
+    const names = destructured[1].split(",").map((n) => n.trim()).filter(Boolean);
+    const calls = (destructured[2].match(/\bguarded\(/g) ?? []).length;
+    cases.push({ name: "every guarded(...) call has a named result", status: names.length === calls ? "pass" : "fail", detail: `${names.length} names for ${calls} guarded calls` });
+    const all = runAll.slice(runAll.indexOf("const allSuites"));
+    for (const n of names) {
+      const spread = new RegExp(`\\.\\.\\.${n}\\b`).test(all);
+      cases.push({ name: `run-all reports ${n}`, status: spread ? "pass" : "fail", detail: spread ? "in allSuites" : "result discarded: not spread into allSuites" });
+    }
+  }
   return { suiteName: "Every test suite is registered in run-all", gating: true, cases };
 }
 
