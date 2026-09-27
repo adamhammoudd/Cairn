@@ -24,7 +24,7 @@ Branch `feat/assistant-v2`, 2026-09-27. Engineering note for dev-lead and Adam. 
 
   On failure there is one repair attempt. If that also fails, the answer is rebuilt in code from the tools' own fact sentences. It never refuses with "go to the Research page".
 - **Web content** is fenced as untrusted data in the prompt, with URL and publisher kept for citation.
-- **Per message** (`chat_messages.meta`, migration 0057): the Checked line, tiles, sources, follow-ups, the tool log, guard failures, token usage and cost.
+- **Per message** (`chat_messages.meta`, migration 0059): the Checked line, tiles, sources, follow-ups, the tool log, guard failures, token usage and cost.
 - **Portfolio context**: the global env gate is replaced by the per-user `assistant_use_portfolio_context` (already defaulting to ON), with a switch and a one-line note in the chat header.
 
 ### Exemptions in the figure guard (so they can be reviewed)

@@ -68,7 +68,7 @@ Worst case prices every answer at the top of the range and assumes every answer 
 - [ ] Is `browser_search` provided by a third-party search vendor? If so, do that vendor's terms flow down to us (display rules, attribution, bans on storage)?
 - [ ] May search results, snippets and cited URLs be **shown to end users** in a **commercial, paid** product? Are there limits on redistribution?
 - [ ] Are there required attribution or "powered by" marks, or rules on how citations must be shown?
-- [ ] May we **store** results or cited snippets in `chat_messages` (migration 0057 meta)? For how long? May we show them again from history?
+- [ ] May we **store** results or cited snippets in `chat_messages` (migration 0059 meta)? For how long? May we show them again from history?
 - [ ] Does using cited pages' content (quoting or summarising third-party news) raise copyright or publisher-ToS issues on our side, whatever Groq permits?
       Counsel should consider this alongside the existing Nasdaq ToS escalation.
 - [ ] Does the AUP limit financial-information use cases, or require disclaimers when outputs concern securities?

@@ -100,7 +100,7 @@ export async function POST(req: Request) {
 
         // Both halves of the turn land together, so history can never hold a
         // user message without its reply. meta is written only where the
-        // column exists (migration 0057), so a deploy ahead of the migration
+        // column exists (migration 0059), so a deploy ahead of the migration
         // still saves the answer text.
         type MessageInsert = Database["public"]["Tables"]["chat_messages"]["Insert"];
         const rows: MessageInsert[] = [

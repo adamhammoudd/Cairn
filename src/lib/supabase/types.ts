@@ -493,7 +493,7 @@ export interface Database {
           content: string;
           referenced_analysis_ids: string[];
           created_at: string;
-          /** Assistant v2 (migration 0057): checked line, tiles, sources, follow-ups, tool log, cost. */
+          /** Assistant v2 (migration 0059): checked line, tiles, sources, follow-ups, tool log, cost. */
           meta?: Record<string, unknown> | null;
         };
         Insert: {
