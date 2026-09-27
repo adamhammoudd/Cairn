@@ -24,6 +24,8 @@ const SUFFIX = /,?\s+(?:inc\.?|incorporated|corporation|corp\.?|co\.?|company|lt
 export function plainName(name: string, symbol: string, assetType: string | null): string {
   if (assetType === "etf") return symbol;
   let n = name.trim();
+  // Yahoo names coins by their quote pair ("Injective USD"); the coin is "Injective".
+  if (assetType === "crypto") n = n.replace(/\s+USD$/i, "").trim();
   // Only a name written wholly in capitals (SEC's style) is softened; a brand
   // that is capitals by choice inside a normal name ("NVIDIA Corporation") is not.
   const secCapitals = !/[a-z]/.test(n);

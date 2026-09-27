@@ -64,6 +64,8 @@ import { runAnalysisTextSuite } from "./analysis-text";
 import { runAnalysisDisplaySuite } from "./analysis-display";
 import { runRegenerateAnalysesSuite } from "./regenerate-analyses";
 import { runEventTypeConstraintSuite } from "./event-type-constraint";
+import { runHistoryDepthSuite } from "./history-depth";
+import { runAnalysisFailureReasonsSuite } from "./analysis-failure-reasons";
 
 // A suite that throws (missing credentials, unreachable service) must surface
 // as a hard failure of that suite, not take the whole run down with a stack
@@ -123,6 +125,8 @@ async function main() {
     portfolioHistorySuites,
     briefingOnOpenSuites,
     analysisTextSuites,
+    historyDepthSuites,
+    analysisFailureReasonsSuites,
   ] = await Promise.all([
     guarded("Adversarial scope guard", runAdversarialScopeGuardSuites),
     guarded("Methodology substance", async () => [await runMethodologySubstanceSuite()]),
@@ -156,6 +160,8 @@ async function main() {
     guarded("Portfolio chart history read", async () => [await runPortfolioHistoryReadSuite()]),
     guarded("Daily briefing built on open", async () => [await runBriefingOnOpenSuite()]),
     guarded("Analysis text", async () => [await runAnalysisTextSuite()]),
+    guarded("History depth", async () => [await runHistoryDepthSuite()]),
+    guarded("Analysis failure reasons", async () => [await runAnalysisFailureReasonsSuite()]),
   ]);
 
   const allSuites = [
@@ -211,6 +217,8 @@ async function main() {
     ...portfolioHistorySuites,
     ...briefingOnOpenSuites,
     ...analysisTextSuites,
+    ...historyDepthSuites,
+    ...analysisFailureReasonsSuites,
   ];
   const reportPath = writeReport(allSuites);
 

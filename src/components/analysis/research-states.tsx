@@ -1,4 +1,5 @@
-import { UNAVAILABLE_MESSAGE } from "@/lib/analysis";
+import { UNAVAILABLE_MESSAGE, type YoungHistoryInfo } from "@/lib/analysis";
+import type { GapExplanation } from "@/lib/analysis-gaps";
 import { TIER_LIMITS } from "@/lib/billing";
 
 // The Research detail column's non-populated states, transcribed from the
@@ -131,9 +132,15 @@ export function EmptyPanel({ onGenerate }: { onGenerate?: () => void }) {
 export function UnavailablePanel({
   onBroaden,
   onAskAssistant,
+  young,
+  gap,
 }: {
   onBroaden?: () => void;
   onAskAssistant?: () => void;
+  /** The symbol is simply too new: say that, not "not enough data". */
+  young?: YoungHistoryInfo | null;
+  /** The real reason(s) generation stopped (lib/analysis-gaps.ts). Preferred over the generic wording whenever present. */
+  gap?: GapExplanation | null;
 }) {
   return (
     <div className={PANEL_SOLID}>
@@ -143,11 +150,27 @@ export function UnavailablePanel({
       >
         <span className="h-0.5 w-4.5 rounded-xs bg-muted" />
       </div>
-      <div className={`${HEADING} text-h3`}>Not enough history for a reliable read</div>
-      <p className={`${BLURB} max-w-[420px]`}>
-        {UNAVAILABLE_MESSAGE} Rather than show you a number we don&apos;t trust, we&apos;d rather say so. Try a broader
-        scope, like the sector or market-wide view.
-      </p>
+      <div className={`${HEADING} text-h3`}>
+        {gap ? gap.title : young ? "Too new to compare with its own past" : "Not enough history for a reliable read"}
+      </div>
+      {young ? (
+        <>
+          <p className={`${BLURB} max-w-[440px]`}>{gap?.message ?? young.message}</p>
+          {young.comparison && (
+            <div className="mx-auto mb-5 max-w-[440px] rounded-control border border-line bg-panel px-4 py-3 text-left">
+              <div className="mb-1 font-mono text-eyebrow text-dim uppercase">Market base rate, for comparison</div>
+              <p className="text-body leading-[1.55] text-muted text-pretty">{young.comparison}</p>
+            </div>
+          )}
+        </>
+      ) : gap ? (
+        <p className={`${BLURB} max-w-[440px]`}>{gap.message}</p>
+      ) : (
+        <p className={`${BLURB} max-w-[420px]`}>
+          {UNAVAILABLE_MESSAGE} Rather than show you a number we don&apos;t trust, we&apos;d rather say so. Try a broader
+          scope, like the sector or market-wide view.
+        </p>
+      )}
       <div className="flex flex-wrap justify-center gap-2">
         {onBroaden && (
           <button type="button" onClick={onBroaden} className={PRIMARY_BUTTON}>

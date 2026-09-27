@@ -43,7 +43,9 @@ import {
   dedupeFactorAnalogs,
   ELEVATED_MOVE_THRESHOLD_PCT,
 } from "@/lib/ai/analytics";
-import { analyzeFactors, formatFactorBlock, FACTOR_EVENT_TYPE, BASELINE_EVENT_TYPE, type FactorAnalysis, type FactorEventRow } from "@/lib/ai/factor-analysis";
+import { analyzeFactors, formatFactorBlock, loadBars, FACTOR_EVENT_TYPE, BASELINE_EVENT_TYPE, type FactorAnalysis, type FactorEventRow } from "@/lib/ai/factor-analysis";
+import { MIN_FACTOR_ANALOG_SAMPLE } from "@/lib/ai/factors";
+import { AnalysisDataGap, findDataGaps } from "@/lib/analysis-gaps";
 import { llmCompleteJsonWithProvider } from "@/lib/ai/llm";
 import { writeTickerText, type Written } from "@/lib/ai/generate-ticker";
 import type { ScopeType, Database } from "@/lib/supabase/types";
@@ -204,12 +206,6 @@ export async function generateAnalysis({ scopeType, scopeValue, supabaseClient }
     ...factorEvents,
   ];
 
-  if (newsList.length === 0 && eventsList.length === 0) {
-    throw new Error(
-      `No news or historical event data for "${scopeValue}" yet - ingestion may not have run for this scope.`,
-    );
-  }
-
   // --- Everything numeric is decided here, before the model is involved. ---
   const stats = computeHistoricalStats(eventsList);
   const band = computeProbabilityBand(eventsList);
@@ -221,16 +217,20 @@ export async function generateAnalysis({ scopeType, scopeValue, supabaseClient }
   const sourceIds = newsList.map((n) => n.id);
   const analogIds = usableAnalogs.map((e) => e.id);
 
-  if (analogIds.length === 0) {
-    throw new Error(
-      `No historical analogs with usable before/after prices for "${scopeValue}" - cannot compute a probability band. ` +
-        (factorAnalysis
-          ? `The factor scan found too few comparable past occasions in its own price history. `
-          : `Not enough price history to derive factor-based analogs, and no curated events on file. `),
-    );
-  }
-  if (sourceIds.length === 0) {
-    throw new Error(`No news items for "${scopeValue}" - an analysis must cite at least one source.`);
+  // Every reason this scope cannot be analysed, found together so the reader
+  // (and the server log) gets each of them in its own words
+  // (lib/analysis-gaps.ts) - never one catch-all about "historical data".
+  const gaps = findDataGaps({
+    scopeType,
+    analogCount: analogIds.length,
+    sourceCount: sourceIds.length,
+    factor: factorAnalysis ? (factorAnalysis.result.ok ? { ok: true } : factorAnalysis.result) : null,
+    // Counted only on the failure path where the scan could not run.
+    bars: scopeType === "ticker" && analogIds.length === 0 && !factorAnalysis ? (await loadBars(supabase, scopeValue)).length : undefined,
+    minSample: MIN_FACTOR_ANALOG_SAMPLE,
+  });
+  if (gaps.length > 0) {
+    throw new AnalysisDataGap(scopeValue, gaps, { name: assetRow?.name ?? null, assetType: assetRow?.asset_type ?? null });
   }
 
   const admin = createAdminClient();

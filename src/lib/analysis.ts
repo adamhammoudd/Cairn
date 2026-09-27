@@ -44,7 +44,20 @@ export function eventTypeLabel(eventType: string): string {
 
 export type GenerateOutcome =
   | { ok: true; analysisId: string }
-  | { ok: false; kind: "quota" | "unavailable" | "error"; message: string };
+  | { ok: false; kind: "quota" | "unavailable" | "error"; message: string; gap?: import("@/lib/analysis-gaps").GapExplanation; young?: YoungHistoryInfo };
+
+/**
+ * Present on an "unavailable" outcome when the symbol is simply too new for
+ * the analog scan (lib/ai/history-depth.ts). The panel shows this instead of
+ * the generic thin-data wording.
+ */
+export interface YoungHistoryInfo {
+  message: string;
+  /** A labelled benchmark base rate - never the symbol's own history. */
+  comparison: string | null;
+  bars: number;
+  benchmark: string | null;
+}
 
 /**
  * The one wording for the thin-data case. Every surface renders this exact
