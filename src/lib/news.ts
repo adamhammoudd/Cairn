@@ -108,7 +108,7 @@ export function rankWithinPage(items: NewsFeedItem[]): NewsFeedItem[] {
 export interface NewsSearch {
   /** An exact ticker to match in `tickers`, when the query looks like one. */
   ticker: string | null;
-  /** Words to match in the title (trigram index, migration 0056). */
+  /** Words to match in the title (trigram index, migration 0058). */
   keyword: string | null;
 }
 
