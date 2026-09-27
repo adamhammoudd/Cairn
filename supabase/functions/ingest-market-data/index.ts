@@ -41,6 +41,25 @@ const REQUEST_DELAY_MS = 400;
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+// A symbol with less stored history than this is fetched at full depth
+// ("max"); anything deeper only needs the routine 2y refresh. Same figure as
+// TARGET_FACTOR_HISTORY_BARS in src/lib/ai/factors.ts (Deno cannot import it).
+const DEEPEN_BELOW_BARS = 1000;
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function storedBarCount(supabase: any, symbol: string): Promise<number | null> {
+  const { count, error } = await supabase
+    .from("historical_prices")
+    .select("*", { count: "exact", head: true })
+    .eq("symbol", symbol);
+  return error ? null : (count ?? 0);
+}
+
+/** "max" for a first fetch or a short series, the routine window otherwise. */
+function refreshRange(stored: number | null): string {
+  return stored === null || stored < DEEPEN_BELOW_BARS ? "max" : "2y";
+}
+
 function readSymbols(config: Record<string, unknown> | null, fallback: PriceBar["asset_type"]): TrackedSymbol[] {
   const raw = Array.isArray(config?.symbols) ? (config.symbols as unknown[]) : [];
   const out: TrackedSymbol[] = [];
@@ -111,7 +130,8 @@ Deno.serve(async (req) => {
       const now = new Date().toISOString();
       try {
         await sleep(REQUEST_DELAY_MS);
-        const bars = await fetchYahooFinanceDaily(symbol, assetType);
+        const before = await storedBarCount(supabase, symbol.toUpperCase());
+        const bars = await fetchYahooFinanceDaily(symbol, assetType, refreshRange(before));
         if (bars.length === 0) {
           results.push({ provider: provider.name, symbol, error: "no data returned" });
           await supabase
@@ -124,6 +144,10 @@ Deno.serve(async (req) => {
         const { error: upsertError } = await supabase
           .from("historical_prices")
           .upsert(bars, { onConflict: "symbol,ts", ignoreDuplicates: false });
+        // What is stored, not what this call fetched: a 2y refresh of a
+        // 30-year series used to write bars=~505 back, which made the
+        // analysis path think the symbol was shallow and re-fetch it.
+        const storedAfter = (await storedBarCount(supabase, symbol.toUpperCase())) ?? bars.length;
 
         // Every configured symbol gets its directory row bumped here -
         // previously only the on-demand pass below did this, so this loop's
@@ -136,7 +160,7 @@ Deno.serve(async (req) => {
             buildDirectoryPatch(
               upsertError
                 ? { kind: "error", message: upsertError.message }
-                : { kind: "success", bars: bars.length },
+                : { kind: "success", bars: storedAfter },
               now,
             ),
           )
@@ -180,7 +204,8 @@ Deno.serve(async (req) => {
       // Storage symbols drop the provider's suffix (BTC-USD -> BTC); forex and
       // indices keep theirs, so re-derive the provider form here.
       const providerSymbol = row.asset_type === "forex" ? `${symbol}=X` : symbol;
-      const bars = await fetchYahooFinanceDaily(providerSymbol, row.asset_type as PriceBar["asset_type"]);
+      const before = await storedBarCount(supabase, symbol);
+      const bars = await fetchYahooFinanceDaily(providerSymbol, row.asset_type as PriceBar["asset_type"], refreshRange(before));
       if (bars.length === 0) {
         results.push({ provider: "on_demand", symbol, error: "no data returned" });
         continue;
@@ -190,7 +215,7 @@ Deno.serve(async (req) => {
         .upsert(bars.map((b) => ({ ...b, symbol })), { onConflict: "symbol,ts", ignoreDuplicates: false });
       await supabase
         .from("symbol_directory")
-        .update({ last_success_at: new Date().toISOString(), last_checked_at: new Date().toISOString(), bars: bars.length })
+        .update({ last_success_at: new Date().toISOString(), last_checked_at: new Date().toISOString(), bars: (await storedBarCount(supabase, symbol)) ?? bars.length })
         .eq("symbol", symbol);
       results.push({ provider: "on_demand", symbol, asset_type: row.asset_type, bars: bars.length, error: upsertError?.message });
     } catch (err) {

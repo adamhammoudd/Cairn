@@ -107,8 +107,10 @@ export function runDeepHistorySuite(): SuiteResult {
   );
   check(
     "the requested range can actually supply the target",
-    FACTOR_HISTORY_RANGE === "5y" && TARGET_FACTOR_HISTORY_BARS <= 5 * 252,
-    `${FACTOR_HISTORY_RANGE} is ~${5 * 252} equity sessions, target ${TARGET_FACTOR_HISTORY_BARS}`,
+    // "max" = everything the provider holds; the target (~4 years) is only
+    // unreachable for a symbol that is genuinely younger than that.
+    FACTOR_HISTORY_RANGE === "max",
+    `${FACTOR_HISTORY_RANGE} covers the full listed history, target ${TARGET_FACTOR_HISTORY_BARS}`,
   );
 
   return { suiteName: "Deep-history top-up (analysis needs more bars than a chart)", gating: true, cases };

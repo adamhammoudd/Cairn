@@ -156,7 +156,29 @@ export function storageSymbol(providerSymbol: string): string {
 }
 
 // --------------------------------------------------------------- the provider
-async function fetchChart(providerSymbol: string, range: string): Promise<ProviderResponse | ProviderFailure> {
+
+/**
+ * Full daily history. Yahoo's chart endpoint takes range=max, but with it
+ * silently downgrades interval=1d to monthly or quarterly bars (checked
+ * 2026-09-27: AAPL came back at 3mo granularity, 169 rows). An explicit
+ * period1=0..now keeps daily bars back to the first listing (AAPL: 11,539
+ * rows from 1980-12-12). Storing monthly bars as daily ones would corrupt every
+ * return, window and percentile computed from historical_prices.
+ */
+export const FULL_HISTORY_RANGE = "max";
+
+/** The query-string time window for a chart request. Pure, for tests. */
+export function chartRangeQuery(range: string, nowMs: number = Date.now()): string {
+  if (range === FULL_HISTORY_RANGE) return `period1=0&period2=${Math.floor(nowMs / 1000)}`;
+  return `range=${range}`;
+}
+
+/** Absent (older responses) or "1d" is daily; anything else is refused. */
+export function isDailyGranularity(granularity: string | undefined): boolean {
+  return granularity === undefined || granularity === "1d";
+}
+
+async function fetchChart(providerSymbol: string, range: string, fetchImpl: typeof fetch = fetch): Promise<ProviderResponse | ProviderFailure> {
   if (!takeToken()) {
     return {
       ok: false,
@@ -166,10 +188,10 @@ async function fetchChart(providerSymbol: string, range: string): Promise<Provid
     };
   }
 
-  const url = `${CHART_BASE}/v8/finance/chart/${encodeURIComponent(providerSymbol)}?range=${range}&interval=1d`;
+  const url = `${CHART_BASE}/v8/finance/chart/${encodeURIComponent(providerSymbol)}?${chartRangeQuery(range)}&interval=1d`;
   let res: Response;
   try {
-    res = await fetch(url, {
+    res = await fetchImpl(url, {
       headers: { "User-Agent": "Mozilla/5.0 (cairn-ingest/1.0)" },
       // A user is waiting on this; fail fast rather than holding the request.
       signal: AbortSignal.timeout(Number(process.env.MARKET_DATA_TIMEOUT_MS ?? 8000)),
@@ -193,7 +215,7 @@ async function fetchChart(providerSymbol: string, range: string): Promise<Provid
   const chart = (json as { chart?: { result?: unknown[]; error?: { description?: string } } }).chart;
   const result = chart?.result?.[0] as
     | {
-        meta?: { instrumentType?: string; longName?: string; shortName?: string; symbol?: string };
+        meta?: { instrumentType?: string; longName?: string; shortName?: string; symbol?: string; dataGranularity?: string };
         timestamp?: number[];
         indicators?: { quote?: { open?: (number | null)[]; high?: (number | null)[]; low?: (number | null)[]; close?: (number | null)[]; volume?: (number | null)[] }[] };
       }
@@ -201,6 +223,12 @@ async function fetchChart(providerSymbol: string, range: string): Promise<Provid
 
   if (!result) {
     return { ok: false, status: "unavailable", detail: chart?.error?.description ?? "Provider returned no series" };
+  }
+
+  // historical_prices holds DAILY bars only. A provider that quietly answered
+  // at another granularity (see FULL_HISTORY_RANGE) is an error, not data.
+  if (!isDailyGranularity(result.meta?.dataGranularity)) {
+    return { ok: false, status: "error", detail: `Provider returned ${result.meta?.dataGranularity} bars, not daily` };
   }
 
   const timestamps = result.timestamp ?? [];
@@ -405,8 +433,45 @@ function isFresh(row: { status: string; last_checked_at: string }): boolean {
   return age < COOLDOWN_MS; // rate_limited / error
 }
 
+/**
+ * Read-only: what the provider would return for `symbol` at `range`, without
+ * storing anything. For the history backfill's dry run
+ * (scripts/backfill-history.ts). Draws on the same request budget.
+ */
+export async function probeProviderHistory(
+  symbol: string,
+  knownAssetType: string | null,
+  range: string = FULL_HISTORY_RANGE,
+  /** Injectable for tests - never swap the global fetch, other suites share it. */
+  fetchImpl: typeof fetch = fetch,
+): Promise<
+  | { ok: true; bars: number; firstTs: string; lastTs: string; assetType: AssetType; recent: { ts: string; close: number }[] }
+  | { ok: false; status: string; detail: string }
+> {
+  let failure: ProviderFailure | null = null;
+  for (const candidate of providerCandidates(symbol, knownAssetType)) {
+    const res = await fetchChart(candidate, range, fetchImpl);
+    if (!res.ok) {
+      failure = res;
+      if (res.status !== "unavailable") break;
+      continue;
+    }
+    return {
+      ok: true,
+      bars: res.bars.length,
+      firstTs: res.bars[0].ts,
+      lastTs: res.bars[res.bars.length - 1].ts,
+      assetType: res.assetType,
+      // For an identity check against stored closes: same ticker is not proof
+      // of the same instrument (BTC once resolved to a $37 ETF).
+      recent: res.bars.slice(-30).map((b) => ({ ts: b.ts, close: b.close as number })),
+    };
+  }
+  return { ok: false, status: failure?.status ?? "unavailable", detail: failure?.detail ?? "no data" };
+}
+
 export interface EnsureOptions {
-  /** How much history to pull on a first fetch. */
+  /** How much history to pull on a first fetch. Defaults to FULL_HISTORY_RANGE. */
   range?: string;
   /** Ignore the freshness window (the daily refresh job). */
   force?: boolean;
@@ -461,7 +526,9 @@ export async function ensureSymbolIngested(symbolRaw: string, options: EnsureOpt
 
     let failure: ProviderFailure | null = null;
     for (const candidate of providerCandidates(symbol, known?.asset_type)) {
-      const res = await fetchChart(candidate, options.range ?? "2y");
+      // Full history on first fetch: the analog scan needs >=252 bars plus room to
+      // find past cases, and a 2y first fetch left every new symbol short of that.
+      const res = await fetchChart(candidate, options.range ?? FULL_HISTORY_RANGE);
       if (!res.ok) {
         failure = res;
         // A rate limit or transport error is about the provider, not the

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { toggleAnalysisPin } from "@/lib/actions/analysis";
 import { useRouter } from "next/navigation";
 import { runAnalysisGeneration, type AnalysisWithMethodology } from "@/lib/actions/analysis";
-import { eventTypeLabel } from "@/lib/analysis";
+import { eventTypeLabel, type YoungHistoryInfo } from "@/lib/analysis";
 import { searchSymbols, type SymbolSearchResult } from "@/lib/actions/symbols";
 import { MethodologyCard } from "@/components/analysis/methodology-card";
 import { decodeEntities } from "@/lib/news";
@@ -125,6 +125,7 @@ export function ResearchWorkspace({
   const [pinError, setPinError] = useState<string | null>(null);
   const [sort, setSort] = useState<"date" | "confidence">("date");
   const [phase, setPhase] = useState<"idle" | "generating" | "unavailable" | "quota">("idle");
+  const [young, setYoung] = useState<YoungHistoryInfo | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const held = new Set(heldSymbols);
@@ -202,7 +203,10 @@ export function ResearchWorkspace({
         return;
       }
       if (outcome.kind === "quota") setPhase("quota");
-      else if (outcome.kind === "unavailable") setPhase("unavailable");
+      else if (outcome.kind === "unavailable") {
+        setYoung(outcome.young ?? null);
+        setPhase("unavailable");
+      }
       else {
         setPhase("idle");
         setError(outcome.message);
@@ -491,6 +495,7 @@ export function ResearchWorkspace({
               <GeneratingPanel scopeLabel={scope?.label} />
             ) : phase === "unavailable" ? (
               <UnavailablePanel
+                young={young}
                 onBroaden={() => {
                   setScope(null);
                   setQuery("");

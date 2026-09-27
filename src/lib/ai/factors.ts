@@ -75,7 +75,11 @@ export const TARGET_FACTOR_HISTORY_BARS = 1000;
  * the methodology's data requirement and the fetch that satisfies it cannot
  * drift apart; it is just a string here, the fetching lives in market-data.
  */
-export const FACTOR_HISTORY_RANGE = "5y";
+//
+// "max" (was "5y"): new symbols are now ingested at full history anyway, and a
+// deepening fetch should not stop short of what the provider has. The engine
+// still reads only the newest MAX_BARS (lib/ai/factor-analysis.ts).
+export const FACTOR_HISTORY_RANGE = "max";
 
 /** Most conditions combined into one signal. More would starve the sample. */
 const MAX_CONDITIONS = 3;

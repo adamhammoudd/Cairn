@@ -14,6 +14,8 @@ export interface ChatGenerationState {
   kind: "quota" | "unavailable";
   /** The scope that was attempted, for the panel's context. */
   scope: string;
+  /** Present only for kind === "unavailable" when the symbol is too new (lib/ai/history-depth.ts). */
+  young?: import("@/lib/analysis").YoungHistoryInfo;
   /** Present only for kind === "quota" - drives the panel's counts and CTA. */
   quota?: {
     used: number;

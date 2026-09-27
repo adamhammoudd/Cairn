@@ -16,7 +16,9 @@ import {
   type GenerateOutcome,
 } from "@/lib/analysis";
 import { ensureSymbolIngested } from "@/lib/market-data/ingest";
-import { FACTOR_HISTORY_RANGE, TARGET_FACTOR_HISTORY_BARS } from "@/lib/ai/factors";
+import { FACTOR_HISTORY_RANGE, TARGET_FACTOR_HISTORY_BARS, benchmarkSymbolFor } from "@/lib/ai/factors";
+import { loadBars } from "@/lib/ai/factor-analysis";
+import { isTooYoung, youngHistory } from "@/lib/ai/history-depth";
 import { LlmBusyError } from "@/lib/ai/llm";
 import { detectTickers } from "@/lib/ai/context";
 import type { ScopeType } from "@/lib/supabase/types";
@@ -83,6 +85,7 @@ export async function runAnalysisGeneration(
 // data or a provider failure never costs the user one.
 async function generateWithinReservation(scopeType: ScopeType, initialScopeValue: string): Promise<GenerateOutcome> {
   let scopeValue = initialScopeValue;
+  let assetType: string | null = null;
 
   // Precondition, not a second pipeline: make sure the symbol's price history
   // is on disk before any analysis is attempted. A symbol nobody has asked
@@ -111,6 +114,7 @@ async function generateWithinReservation(scopeType: ScopeType, initialScopeValue
       // The provider's canonical form (BTC-USD is stored as BTC), which is what
       // the price history is keyed by.
       scopeValue = ingest.symbol;
+      assetType = ingest.assetType;
     } catch (err) {
       console.error("[analysis] ingestion precondition failed", {
         scopeValue,
@@ -130,7 +134,8 @@ async function generateWithinReservation(scopeType: ScopeType, initialScopeValue
   } catch (err) {
     const message = err instanceof Error ? err.message : "Failed to generate analysis.";
     if (isThinDataFailure(message)) {
-      return { ok: false, kind: "unavailable", message: UNAVAILABLE_MESSAGE };
+      const young = scopeType === "ticker" ? await describeYoungHistory(scopeValue, assetType) : null;
+      return { ok: false, kind: "unavailable", message: young?.message ?? UNAVAILABLE_MESSAGE, ...(young ? { young } : {}) };
     }
     // Everything below here used to `return { message }` with the exception's
     // own text. On a provider 429 that text is the provider's error body -
@@ -153,6 +158,29 @@ async function generateWithinReservation(scopeType: ScopeType, initialScopeValue
   if (scopeType === "ticker") revalidatePath(`/ticker/${scopeValue}`);
 
   return { ok: true, analysisId };
+}
+
+/**
+ * When a ticker failed as thin data because it is genuinely young (fewer
+ * stored bars than the factor scan needs), say so plainly, with a labelled
+ * benchmark base rate where one exists. Null when the symbol has enough
+ * history - then the failure is something else and keeps the generic wording.
+ * Best effort: a read failure here falls back to the generic panel rather
+ * than turning a data gap into an error.
+ */
+async function describeYoungHistory(symbol: string, assetType: string | null) {
+  try {
+    // Prices are public data; the service role only avoids a request-scope dependency.
+    const db = createAdminClient();
+    const bars = await loadBars(db, symbol);
+    if (!isTooYoung(bars.length)) return null;
+    const benchmark = benchmarkSymbolFor(symbol, assetType);
+    const benchmarkBars = benchmark ? await loadBars(db, benchmark) : [];
+    return youngHistory(symbol, bars.length, assetType, benchmarkBars);
+  } catch (err) {
+    console.error("[analysis] young-history read failed", { symbol, error: err instanceof Error ? err.message : String(err) });
+    return null;
+  }
 }
 
 /**
