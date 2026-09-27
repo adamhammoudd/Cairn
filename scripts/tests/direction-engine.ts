@@ -264,7 +264,11 @@ export function runDirectionEngineSuite(): SuiteResult {
     stockNoReleases.applies === true && stockNoReleases.today === null,
     JSON.stringify({ applies: stockNoReleases.applies, today: stockNoReleases.today }),
   );
-  check("too_few is returned as null by the glue when the factor scan failed", similarMoments({ set: coinSet, result: { ok: false, reason: "insufficient_instances", bestSampleSize: 2, conditions: [] }, assetType: "crypto", scorecard: coinCard, data: { releaseDates: [], quarters: [], annualEps: new Map(), pricesAsc: [], upcomingEarnings: [] }, today: "2024-03-25" }) === null, "null");
+  // fix/analysis-coverage: a failed scan is no longer a dead end - it falls
+  // back to a labelled base rate (scripts/tests/analysis-coverage.ts covers
+  // the order). What stays true: it is never presented as similar moments.
+  const rareCoin = similarMoments({ set: coinSet, result: { ok: false, reason: "insufficient_instances", bestSampleSize: 2, conditions: [] }, assetType: "crypto", scorecard: coinCard, data: { releaseDates: [], quarters: [], annualEps: new Map(), pricesAsc: [], upcomingEarnings: [] }, today: "2024-03-25" });
+  check("a failed factor scan falls back, never as 'similar'", rareCoin !== null && rareCoin.kind === "baseline" && rareCoin.fallback?.matches === 2, JSON.stringify({ kind: rareCoin?.kind, fallback: rareCoin?.fallback }));
 
   // ------------------------------------ nothing unusual today: the base rate
   const windows = scanWindows(coinSet, 10);
@@ -286,10 +290,11 @@ export function runDirectionEngineSuite(): SuiteResult {
     baseline !== null && baseline.kind === "baseline" && baseline.history.n === windows.length && baseline.conditions.length === 0 && baseline.factorConditions.length === 0,
     JSON.stringify({ kind: baseline?.kind, n: baseline?.history.n, conditions: baseline?.conditions.length }),
   );
+  const rare = similarMoments({ set: coinSet, result: { ok: false, reason: "insufficient_instances", bestSampleSize: 3, conditions: [] }, assetType: "crypto", scorecard: coinCard, data: { releaseDates: [], quarters: [], annualEps: new Map(), pricesAsc: [], upcomingEarnings: [] }, today: "2024-03-25" });
   check(
-    "a rare state (too few cases) is NOT swapped for the base rate",
-    similarMoments({ set: coinSet, result: { ok: false, reason: "insufficient_instances", bestSampleSize: 3, conditions: [] }, assetType: "crypto", scorecard: coinCard, data: { releaseDates: [], quarters: [], annualEps: new Map(), pricesAsc: [], upcomingEarnings: [] }, today: "2024-03-25" }) === null,
-    "null",
+    "a rare state (too few cases) is swapped for the base rate only WITH its fallback label (never silently)",
+    rare !== null && rare.kind === "baseline" && rare.fallback?.reason === "unusual_setup" && rare.fallback.matches === 3 && baseline.fallback === undefined,
+    JSON.stringify({ rare: rare?.fallback, ordinary: baseline?.fallback }),
   );
   check("a normal result is labelled 'similar'", sm.kind === "similar", String(sm.kind));
 

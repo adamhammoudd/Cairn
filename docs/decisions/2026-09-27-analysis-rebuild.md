@@ -53,6 +53,7 @@ Each candidate condition (earnings within 7 sessions; scorecard trend level; val
 2. **Classifier posture for stored analyses:** `strict`. If the classifier is down, no model text is stored; the template is. (`ANALYSIS_CLASSIFIER_MODE`, default strict.)
 3. **Regenerating the stored analyses:** approved, once migrations 0052 and 0054 are live. Dry run first; old rows are marked superseded, never deleted.
 4. **Nothing unusual today (no similar moments):** show a clearly labelled base rate instead of nothing - "over any 2 weeks in its stored prices, higher in X of N". It is never called "similar moments".
+   *Extended 2026-09-27 (fix/analysis-coverage, at Adam's request: "never show a dead end for a stock with years of prices"):* when today's setup matches **too few** similar moments (fewer than 5), the history falls back too - first to past results releases measured from the same point before (a share with results due within the horizon), then to the base rate - and says which, e.g. "Today's setup for AMD is unusual: it matched only 3 past moments, too few to measure. Its base rate instead: ...". Stored as `direction_conditions.basis` + `fallback`; never mixed into one count.
 5. **Technicals tab:** stays open on every plan. It charts public prices in the browser; the Premium trader indicators are Cairn's analysis readings and the >=5% band.
 
 ## Still open
