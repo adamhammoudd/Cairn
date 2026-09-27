@@ -43,12 +43,20 @@ export const FACTOR_EVENT_TYPE = "factor_signal";
  */
 export const BASELINE_EVENT_TYPE = "price_window";
 
+/**
+ * Past results releases measured from the same point before (lib/ai/
+ * similar-moments.ts earningsWindows): the fallback history when today's
+ * setup matched too few past moments and results are due within the horizon.
+ * Never in the >=5% band's curated read.
+ */
+export const EARNINGS_WINDOW_EVENT_TYPE = "earnings_window";
+
 /** A factor-derived analog shaped like a historical_events row, plus its link note. */
 export interface FactorEventRow {
   id: string;
   symbol: string;
   sector: null;
-  event_type: typeof FACTOR_EVENT_TYPE | typeof BASELINE_EVENT_TYPE;
+  event_type: typeof FACTOR_EVENT_TYPE | typeof BASELINE_EVENT_TYPE | typeof EARNINGS_WINDOW_EVENT_TYPE;
   event_date: string;
   description: string;
   price_before: number;
@@ -66,7 +74,11 @@ export interface FactorAnalysis {
   result: FactorAnalogResult;
   /** Present only when the analog scan cleared MIN_FACTOR_ANALOG_SAMPLE. */
   events: FactorEventRow[];
-  /** Present only when nothing about today was unusual: the base-rate windows, stored. */
+  /**
+   * The base-rate windows, stored, whenever the analog scan came up short -
+   * nothing unusual today, or too few past moments like it. They are the
+   * fallback history (lib/ai/similar-moments-data.ts) and never an analog.
+   */
   baselineEvents?: FactorEventRow[];
 }
 
@@ -132,10 +144,10 @@ export async function analyzeFactors(
   if (!set) return null;
 
   const result = deriveFactorAnalogs(set);
-  if (!result.ok) {
-    const baselineEvents = result.reason === "no_active_conditions" ? await persistBaseline(symbol, set) : [];
-    return { set, benchmark, result, events: [], baselineEvents };
-  }
+  // Every analysed ticker gets its base-rate windows stored: the fallback
+  // when the scan comes up short, and a citable row for every case behind it.
+  const baselineEvents = await persistBaseline(symbol, set);
+  if (!result.ok) return { set, benchmark, result, events: [], baselineEvents };
 
   const { analogs } = result;
   const matchFraction = analogs.conditions.length / (analogs.conditions.length + analogs.droppedConditions.length);
@@ -190,7 +202,7 @@ export async function analyzeFactors(
     });
   });
 
-  return { set, benchmark, result, events };
+  return { set, benchmark, result, events, baselineEvents };
 }
 
 /**
@@ -200,48 +212,90 @@ export async function analyzeFactors(
  */
 async function persistBaseline(symbol: string, set: FactorSet): Promise<FactorEventRow[]> {
   const windows = scanWindows(set, FACTOR_FORWARD_SESSIONS);
+  return persistWindows(symbol, BASELINE_EVENT_TYPE, windows, {
+    description: `A ${FACTOR_FORWARD_SESSIONS}-session stretch of this symbol's own price history (base rate; not matched to today).`,
+    source: "baseline_scan",
+    note: (w) => `Base rate: close moved ${fmtPct(w.movePct)} over the next ${FACTOR_FORWARD_SESSIONS} sessions (${w.date} to ${w.dateAfter}).`,
+  });
+}
+
+/** One measured window: the close on `date` and `dateAfter`. */
+export interface StoredWindow {
+  date: string;
+  dateAfter: string;
+  priceBefore: number;
+  priceAfter: number;
+  movePct: number;
+  /** Anything else worth keeping on the row (the release date for an earnings window). */
+  metadata?: Record<string, unknown>;
+}
+
+/**
+ * Store measured windows as historical_events rows of `eventType`
+ * (idempotent on the unique symbol/type/date index) and hand them back with
+ * their ids, so every case behind a figure is a stored, citable row.
+ */
+export async function persistWindows(
+  symbol: string,
+  eventType: typeof BASELINE_EVENT_TYPE | typeof EARNINGS_WINDOW_EVENT_TYPE,
+  windows: StoredWindow[],
+  label: { description: string; source: string; note: (w: StoredWindow) => string },
+): Promise<FactorEventRow[]> {
   if (windows.length === 0) return [];
-  const description = `A ${FACTOR_FORWARD_SESSIONS}-session stretch of this symbol's own price history (base rate; not matched to today).`;
   const admin = createAdminClient();
   const { error: upsertError } = await admin.from("historical_events").upsert(
     windows.map((w) => ({
       symbol,
       sector: null,
-      event_type: BASELINE_EVENT_TYPE,
+      event_type: eventType,
       event_date: w.date,
-      description,
+      description: label.description,
       price_before: w.priceBefore,
       price_after: w.priceAfter,
-      metadata: { source: "baseline_scan", horizon_sessions: FACTOR_FORWARD_SESSIONS, date_after: w.dateAfter },
+      metadata: { source: label.source, horizon_sessions: FACTOR_FORWARD_SESSIONS, date_after: w.dateAfter, ...(w.metadata ?? {}) },
     })),
     { onConflict: "symbol,event_type,event_date", ignoreDuplicates: false },
   );
-  if (upsertError) throw new Error(`Failed to store base-rate windows: ${upsertError.message}`);
+  if (upsertError) throw new Error(`Failed to store ${eventType} rows: ${upsertError.message}`);
   const { data: stored, error: readError } = await admin
     .from("historical_events")
     .select("id, event_date")
     .eq("symbol", symbol)
-    .eq("event_type", BASELINE_EVENT_TYPE)
+    .eq("event_type", eventType)
     .in("event_date", windows.map((w) => w.date));
-  if (readError) throw new Error(`Failed to read back base-rate windows: ${readError.message}`);
+  if (readError) throw new Error(`Failed to read back ${eventType} rows: ${readError.message}`);
   const idByDate = new Map((stored ?? []).map((r) => [String(r.event_date).slice(0, 10), r.id]));
   return windows.map((w) => {
     const id = idByDate.get(w.date);
-    if (!id) throw new Error(`Base-rate window for ${symbol} on ${w.date} was not persisted.`);
+    if (!id) throw new Error(`${eventType} row for ${symbol} on ${w.date} was not persisted.`);
     return {
       id,
       symbol,
       sector: null,
-      event_type: BASELINE_EVENT_TYPE,
+      event_type: eventType,
       event_date: w.date,
-      description,
+      description: label.description,
       price_before: w.priceBefore,
       price_after: w.priceAfter,
       volume_at_event: null,
-      note: `Base rate: close moved ${fmtPct(w.movePct)} over the next ${FACTOR_FORWARD_SESSIONS} sessions (${w.date} to ${w.dateAfter}).`,
+      note: label.note(w),
       matchFraction: 1,
     };
   });
+}
+
+/** Store the earnings-window fallback cases (lib/ai/similar-moments.ts earningsWindows). */
+export function persistEarningsWindows(symbol: string, cases: (StoredWindow & { releaseDate: string })[], sessionsToRelease: number): Promise<FactorEventRow[]> {
+  return persistWindows(
+    symbol,
+    EARNINGS_WINDOW_EVENT_TYPE,
+    cases.map((c) => ({ ...c, metadata: { release_date: c.releaseDate, sessions_before_release: sessionsToRelease } })),
+    {
+      description: `The ${FACTOR_FORWARD_SESSIONS} sessions from ${sessionsToRelease} session${sessionsToRelease === 1 ? "" : "s"} before a past results release (SEC 8-K item 2.02).`,
+      source: "earnings_window",
+      note: (w) => `Around past results (${(w.metadata?.release_date as string) ?? "?"}): close moved ${fmtPct(w.movePct)} over the next ${FACTOR_FORWARD_SESSIONS} sessions (${w.date} to ${w.dateAfter}).`,
+    },
+  );
 }
 
 /**

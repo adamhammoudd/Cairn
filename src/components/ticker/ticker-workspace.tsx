@@ -273,6 +273,7 @@ export function TickerWorkspace({
         bullets: summary.summary.bullets,
         history: {
           kind: "none",
+          basisLabel: null,
           line: `No analysis of ${summary.name} yet. An analysis looks for past moments like today in its own prices and counts what followed.`,
           range: null,
           extremes: null,

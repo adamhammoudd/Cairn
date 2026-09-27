@@ -118,6 +118,8 @@ export interface GapInputs {
   scopeType: "ticker" | "sector" | "market";
   /** Analogs with a usable before/after price, of any source. */
   analogCount: number;
+  /** Stored fallback cases (the base-rate windows) a ticker can fall back on. */
+  fallbackCount?: number;
   /** Sources the analysis can cite. */
   sourceCount: number;
   /** The factor scan, for a ticker: null when it could not run (too few bars). */
@@ -131,7 +133,8 @@ export interface GapInputs {
 /** Every reason generation cannot go on, in reading order: the history first, then sources. Empty when it can. */
 export function findDataGaps(i: GapInputs): DataGap[] {
   const gaps: DataGap[] = [];
-  if (i.analogCount === 0) {
+  // A ticker with a usable fallback (the base rate) is never a dead end.
+  if (i.analogCount === 0 && !(i.scopeType === "ticker" && (i.fallbackCount ?? 0) >= i.minSample)) {
     if (i.scopeType !== "ticker") gaps.push({ reason: i.sourceCount === 0 ? "no_record" : "no_past_events" });
     else if (!i.factor) gaps.push(i.bars ? { reason: "short_history", bars: i.bars } : { reason: "no_price_history", bars: 0 });
     else if (!i.factor.ok && i.factor.reason === "insufficient_instances") gaps.push({ reason: "unusual_setup", matches: i.factor.bestSampleSize, needed: i.minSample });

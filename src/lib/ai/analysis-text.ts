@@ -60,8 +60,17 @@ export interface TextInputs {
   history: DirectionalHistory | null;
   /** Why there is no history (only read when `history` is null). */
   noHistoryReason: "no_active_conditions" | "insufficient_instances" | "no_price_history" | null;
-  /** "baseline" when nothing is unusual today and `history` is the base rate (never "similar moments"). */
-  historyBasis?: "similar" | "baseline";
+  /**
+   * "baseline": `history` is the base rate (never "similar moments") - either
+   * nothing is unusual today, or (with `fallback`) today's setup matched too
+   * few past moments. "earnings": results are due within the horizon and
+   * `history` is past results releases measured from the same point before.
+   */
+  historyBasis?: HistoryBasis;
+  /** Present when the history is a fallback because the similar-moment scan came up short. */
+  fallback?: HistoryContext["fallback"];
+  /** For "earnings": sessions until results. */
+  sessionsToRelease?: number;
   /** Plain words for what the similar moments were matched on. */
   matchedOn?: string[];
   scorecard: Scorecard;
@@ -127,6 +136,14 @@ export function horizonPhrase(sessions: number, assetType: string | null): strin
   return sessions % 5 === 0 ? `${sessions / 5} week${sessions === 5 ? "" : "s"}` : `${sessions} trading days`;
 }
 
+export type HistoryBasis = "similar" | "baseline" | "earnings";
+
+/** What a fallback history needs to say which one it is. */
+export interface HistoryContext {
+  fallback?: { matches: number };
+  sessionsToRelease?: number;
+}
+
 export interface HistoryWords {
   line: string;
   range: string | null;
@@ -140,10 +157,15 @@ export function historyWords(
   name: string,
   assetType: string | null,
   noHistoryReason: TextInputs["noHistoryReason"],
-  /** "baseline": nothing unusual today, so `h` is every stretch of its history - worded as the base rate. */
-  basis: "similar" | "baseline" = "similar",
+  /** "baseline": `h` is every stretch of its history - worded as the base rate. "earnings": past results releases. */
+  basis: HistoryBasis = "similar",
+  ctx: HistoryContext = {},
 ): HistoryWords | null {
   const caveat = "This is what happened before, not a forecast.";
+  // A fallback says why it is not similar moments before it says anything else.
+  const unusual = ctx.fallback
+    ? `Today's setup for ${name} is unusual: it matched ${ctx.fallback.matches === 0 ? "no" : `only ${ctx.fallback.matches}`} past moment${ctx.fallback.matches === 1 ? "" : "s"}, too few to measure.`
+    : null;
   if (!h) {
     const line =
       noHistoryReason === "no_active_conditions"
@@ -155,7 +177,10 @@ export function historyWords(
   }
   const when = horizonPhrase(h.horizonSessions, assetType);
   if (h.status === "too_few" && basis === "baseline") {
-    return { line: `Nothing is unusual about ${name}'s price today, and too little price history is stored to give its usual pattern.`, range: null, extremes: null, confidence: "Confidence: low.", caveat };
+    const line = unusual
+      ? `${unusual} Too little price history is stored to give its usual pattern instead.`
+      : `Nothing is unusual about ${name}'s price today, and too little price history is stored to give its usual pattern.`;
+    return { line, range: null, extremes: null, confidence: "Confidence: low.", caveat };
   }
   if (h.status === "too_few") {
     const line =
@@ -167,14 +192,23 @@ export function historyWords(
   const t = h.typical!;
   return {
     line:
-      basis === "baseline"
-        ? `Nothing is unusual about ${name}'s price today. Over any ${when} in its stored prices, it ended higher in ${h.higher} of ${h.n}.`
-        : `Higher ${when} later in ${h.higher} of ${h.n} similar moments.`,
+      basis === "earnings"
+        ? `${unusual ? `${unusual} ` : ""}Results are due in ${ctx.sessionsToRelease} trading day${ctx.sessionsToRelease === 1 ? "" : "s"}. From the same point before past results, ${name} ended higher ${when} later in ${h.higher} of ${h.n}.`
+        : basis === "baseline" && unusual
+          ? `${unusual} Its base rate instead: over any ${when} in its stored prices, it ended higher in ${h.higher} of ${h.n}.`
+          : basis === "baseline"
+            ? `Nothing is unusual about ${name}'s price today. Over any ${when} in its stored prices, it ended higher in ${h.higher} of ${h.n}.`
+            : `Higher ${when} later in ${h.higher} of ${h.n} similar moments.`,
     range: `Usually between ${signedPct(t.p25)} and ${signedPct(t.p75)}, with the middle case ${signedPct(t.median)}.`,
     extremes: `The worst case was ${signedPct(h.worst!)} and the best ${signedPct(h.best!)}.`,
     confidence: `Confidence: ${h.confidence}, from ${h.confidence === "high" ? "" : "only "}${h.n} cases.`,
     caveat,
   };
+}
+
+/** The fallback context historyWords needs, from the text inputs. */
+export function historyContext(i: Pick<TextInputs, "fallback" | "sessionsToRelease">): HistoryContext {
+  return { ...(i.fallback ? { fallback: i.fallback } : {}), ...(i.sessionsToRelease !== undefined ? { sessionsToRelease: i.sessionsToRelease } : {}) };
 }
 
 // ------------------------------------------------------------- the inputs
@@ -191,8 +225,15 @@ function eventLabel(e: TextEvent): string {
   return `Dividend paid ${d}`;
 }
 
+function historyHeader(i: TextInputs, when: string): string {
+  const why = i.fallback ? "today's setup matched too few past moments to measure" : "nothing is unusual about it today";
+  if (i.historyBasis === "earnings") return `${why}, and results are due within ${when}, so these are its past results releases, each measured ${when} on from the same point before results. These are NOT similar moments; never call them that`;
+  if (i.historyBasis === "baseline") return `${why}, so this is its base rate: every ${when} stretch in its stored prices. These are NOT similar moments; never call them that`;
+  return `similar moments in its own price history, each measured ${when} later`;
+}
+
 export function buildComputedFigures(i: TextInputs): string {
-  const hw = historyWords(i.history, i.name, i.assetType, i.noHistoryReason, i.historyBasis)!;
+  const hw = historyWords(i.history, i.name, i.assetType, i.noHistoryReason, i.historyBasis, historyContext(i))!;
   const when = i.history ? horizonPhrase(i.history.horizonSessions, i.assetType) : horizonPhrase(10, i.assetType);
   const history = [hw.line, hw.range, hw.extremes, hw.confidence, i.matchedOn && i.matchedOn.length > 0 ? `Matched on: ${i.matchedOn.join("; ")}.` : null, hw.caveat]
     .filter(Boolean)
@@ -209,7 +250,7 @@ export function buildComputedFigures(i: TextInputs): string {
   return `COMPUTED FIGURES for ${i.name} (${i.symbol}). Calculated in code from stored prices, SEC filings and past cases.
 Use only these numbers, written exactly as shown, sign included.
 
-WHAT HISTORY SAYS (${i.historyBasis === "baseline" ? `nothing is unusual about it today, so this is its base rate: every ${when} stretch in its stored prices. These are NOT similar moments; never call them that` : `similar moments in its own price history, each measured ${when} later`}):
+WHAT HISTORY SAYS (${historyHeader(i, when)}):
 ${history.join("\n")}
 
 SCORECARD (six plain-language descriptions of its numbers):
@@ -257,7 +298,7 @@ export function extractSignedNumbers(text: string): string[] {
 const unsigned = (n: string) => n.replace(/^[+-]/, "");
 
 export function allowedNumbers(i: TextInputs): { signed: Set<string>; magnitude: Set<string> } {
-  const hw = historyWords(i.history, i.name, i.assetType, i.noHistoryReason, i.historyBasis)!;
+  const hw = historyWords(i.history, i.name, i.assetType, i.noHistoryReason, i.historyBasis, historyContext(i))!;
   const texts: string[] = [i.name, i.symbol, hw.line, hw.range ?? "", hw.extremes ?? "", hw.confidence, ...(i.matchedOn ?? [])];
   for (const d of i.scorecard.dimensions) texts.push(d.verdict, d.sentence, ...d.inputs.map((x) => x.display ?? ""));
   for (const e of i.events) texts.push(plainDate(e.date));
@@ -345,7 +386,7 @@ export function checkAnalysisText(t: ModelAnalysisText, i: TextInputs, opts: { m
   for (const p of parts) if (STATED_AS_FACT.test(p)) return fail("stated_as_fact", p);
   for (const p of parts) if (ELEVATED.test(p)) return fail("elevated_move", p);
   // The base rate is every stretch of history, not moments like today.
-  if (i.historyBasis === "baseline") for (const p of parts) if (/\bsimilar\s+(?:past\s+)?moments?\b/i.test(p)) return fail("baseline_called_similar", p);
+  if (i.historyBasis === "baseline" || i.historyBasis === "earnings") for (const p of parts) if (/\bsimilar\s+(?:past\s+)?moments?\b/i.test(p)) return fail("baseline_called_similar", p);
   if (!checkNoFreelancedProbability(all, []).passed) return fail("freelanced_probability", all);
 
   const allowed = allowedNumbers(i);
@@ -403,7 +444,7 @@ export function templateAnalysisText(i: TextInputs): ModelAnalysisText {
         ? `${i.name} is a fund holding many companies, so this covers its price record.`
         : `${i.name}'s company figures are not available, so this covers its price record.`;
 
-  const hw = historyWords(i.history, i.name, i.assetType, i.noHistoryReason, i.historyBasis)!;
+  const hw = historyWords(i.history, i.name, i.assetType, i.noHistoryReason, i.historyBasis, historyContext(i))!;
   const partOk = (s: string) => {
     const probe = { headline, bullets: [s, s, s], watch: [], sources_used: [] };
     return checkAnalysisText(probe, i, { minWatch: 0 }).passed;
@@ -607,10 +648,15 @@ export async function generateAnalysisText(
     return { text: toStored(draft, i), source: "model", attempts, model };
   }
 
-  const template = templateAnalysisText(i);
   // Defense in depth: the template must pass the checks it stands in for.
-  // If it ever does not, nothing is stored rather than unchecked text.
-  const tc = checkAnalysisText(template, i, { minWatch: 0 });
-  if (!tc.passed) throw new Error(`Analysis template for ${i.symbol} failed its own checks (${tc.reason}: ${tc.evidence ?? ""}).`);
-  return { text: toStored(template, i), source: "template", attempts, model };
+  // If it ever does not, nothing is stored rather than unchecked text. A name
+  // the checks cannot read (SEC's "Lifecore Biomedical, INC. DE" split the
+  // headline into two sentences) gets one retry under the bare ticker.
+  for (const inputs of i.name === i.symbol ? [i] : [i, { ...i, name: i.symbol }]) {
+    const template = templateAnalysisText(inputs);
+    const tc = checkAnalysisText(template, inputs, { minWatch: 0 });
+    if (tc.passed) return { text: toStored(template, inputs), source: "template", attempts, model };
+    if (inputs.name === i.symbol) throw new Error(`Analysis template for ${i.symbol} failed its own checks (${tc.reason}: ${tc.evidence ?? ""}).`);
+  }
+  throw new Error(`Analysis template for ${i.symbol} failed its own checks.`);
 }

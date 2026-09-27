@@ -773,3 +773,53 @@ export function parseEarningsReleases(sub: Submissions): EarningsRelease[] {
   for (const e of out) if (!byDate.has(e.release_date)) byDate.set(e.release_date, e);
   return [...byDate.values()].sort((a, b) => (a.release_date < b.release_date ? 1 : -1));
 }
+
+// ------------------------------------------------------------ stored rows
+
+/**
+ * The rows one company's filings become: company_financials_quarterly,
+ * company_financials_annual and earnings_releases. Shared by the weekly
+ * ingest-fundamentals Edge Function and the on-demand path the analysis runs
+ * for a share nobody has analysed yet (src/lib/market-data/company-data.ts),
+ * so the two can never store the same filing differently.
+ */
+export function secHistoryRows(
+  symbol: string,
+  cik: string,
+  parsed: ParsedCompany | null,
+  releases: EarningsRelease[],
+  now: string,
+): { quarters: Record<string, unknown>[]; annual: Record<string, unknown>[]; releases: Record<string, unknown>[] } {
+  return {
+    quarters: (parsed?.quarters ?? []).map((q) => ({
+      symbol,
+      cik,
+      fiscal_year: q.fiscal_year,
+      fiscal_quarter: q.fiscal_quarter,
+      period_start: q.period_start,
+      period_end: q.period_end,
+      ...q.values,
+      provenance: q.provenance,
+      updated_at: now,
+    })),
+    annual: (parsed?.annual ?? []).map((a) => ({
+      symbol,
+      cik,
+      fiscal_year: a.fiscal_year,
+      period_start: a.period_start,
+      period_end: a.period_end,
+      ...Object.fromEntries(FIELDS.filter((f) => f in a.values).map((f) => [f, a.values[f] ?? null])),
+      updated_at: now,
+    })),
+    releases: releases.map((r) => ({ symbol, cik, ...r, updated_at: now })),
+  };
+}
+
+/** The newest reported shares-outstanding figure in a companyfacts document (us-gaap, then dei). */
+export function latestSharesOutstanding(doc: CompanyFacts | null): { end: string; val: number } | null {
+  const pick = (facts: XbrlFact[] | undefined) =>
+    [...(facts ?? [])].filter((f) => typeof f.val === "number" && typeof f.end === "string").sort((a, b) => (a.end < b.end ? 1 : -1))[0] ?? null;
+  const f = doc?.facts as Record<string, Record<string, { units?: Record<string, XbrlFact[]> }> | undefined> | undefined;
+  const hit = pick(f?.["us-gaap"]?.CommonStockSharesOutstanding?.units?.shares) ?? pick(f?.dei?.EntityCommonStockSharesOutstanding?.units?.shares);
+  return hit ? { end: hit.end, val: hit.val } : null;
+}

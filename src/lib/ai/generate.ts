@@ -43,7 +43,17 @@ import {
   dedupeFactorAnalogs,
   ELEVATED_MOVE_THRESHOLD_PCT,
 } from "@/lib/ai/analytics";
-import { analyzeFactors, formatFactorBlock, loadBars, FACTOR_EVENT_TYPE, BASELINE_EVENT_TYPE, type FactorAnalysis, type FactorEventRow } from "@/lib/ai/factor-analysis";
+import {
+  analyzeFactors,
+  formatFactorBlock,
+  loadBars,
+  persistEarningsWindows,
+  FACTOR_EVENT_TYPE,
+  BASELINE_EVENT_TYPE,
+  EARNINGS_WINDOW_EVENT_TYPE,
+  type FactorAnalysis,
+  type FactorEventRow,
+} from "@/lib/ai/factor-analysis";
 import { MIN_FACTOR_ANALOG_SAMPLE } from "@/lib/ai/factors";
 import { AnalysisDataGap, findDataGaps } from "@/lib/analysis-gaps";
 import { llmCompleteJsonWithProvider } from "@/lib/ai/llm";
@@ -186,7 +196,7 @@ export async function generateAnalysis({ scopeType, scopeValue, supabaseClient }
   // any left over from an earlier run (a different state, a different day) must
   // not be read back in as if they were curated analogs of today's state.
   // Base-rate windows (price_window) are not analogs either and never enter the band.
-  if (scopeType === "ticker") eventsQuery = eventsQuery.eq("symbol", scopeValue).not("event_type", "in", `(${FACTOR_EVENT_TYPE},${BASELINE_EVENT_TYPE})`);
+  if (scopeType === "ticker") eventsQuery = eventsQuery.eq("symbol", scopeValue).not("event_type", "in", `(${FACTOR_EVENT_TYPE},${BASELINE_EVENT_TYPE},${EARNINGS_WINDOW_EVENT_TYPE})`);
   else if (scopeType === "sector") eventsQuery = eventsQuery.eq("sector", scopeValue);
   const { data: events } = await eventsQuery;
 
@@ -208,12 +218,19 @@ export async function generateAnalysis({ scopeType, scopeValue, supabaseClient }
 
   // --- Everything numeric is decided here, before the model is involved. ---
   const stats = computeHistoricalStats(eventsList);
-  const band = computeProbabilityBand(eventsList);
+  // The >=5% band is measured over the analogs (curated + factor-derived).
+  // When a ticker has none - today's setup matched too few past moments and
+  // nothing curated is on file - it is measured over the stored base-rate
+  // windows instead, and labelled as such (band_basis), never mixed in.
+  const hasAnalogs = eventsList.some((e) => e.price_before !== null && e.price_after !== null && e.price_before !== 0);
+  const bandBasis: "analogs" | "base_rate" = hasAnalogs || !factorAnalysis?.baselineEvents?.length ? "analogs" : "base_rate";
+  const bandSet: typeof eventsList = bandBasis === "analogs" ? eventsList : factorAnalysis!.baselineEvents!;
+  const band = computeProbabilityBand(bandSet);
 
   // Cite exactly the analogs that actually contributed to the computation
   // (those with a usable before/after price), not whichever ids a model chose
   // to name. Same for sources: the news actually fed into the prompt.
-  const usableAnalogs = eventsList.filter((e) => e.price_before !== null && e.price_after !== null && e.price_before !== 0);
+  const usableAnalogs = bandSet.filter((e) => e.price_before !== null && e.price_after !== null && e.price_before !== 0);
   const sourceIds = newsList.map((n) => n.id);
   const analogIds = usableAnalogs.map((e) => e.id);
 
@@ -223,6 +240,8 @@ export async function generateAnalysis({ scopeType, scopeValue, supabaseClient }
   const gaps = findDataGaps({
     scopeType,
     analogCount: analogIds.length,
+    // The base rate is always there for a ticker the factor scan could run on.
+    fallbackCount: factorAnalysis?.baselineEvents?.length ?? 0,
     sourceCount: sourceIds.length,
     factor: factorAnalysis ? (factorAnalysis.result.ok ? { ok: true } : factorAnalysis.result) : null,
     // Counted only on the failure path where the scan could not run.
@@ -382,9 +401,19 @@ Respond with only a JSON object matching the required schema.`,
   // The direction's own cases are always stored as analog rows, even where
   // the >=5% band's set dropped one as overlapping a curated event: every
   // case behind "higher in X of N" must be traceable to a stored row.
-  const directionEvents = [...(factorAnalysis?.events ?? []), ...(factorAnalysis?.baselineEvents ?? [])].filter((e) => written.directionDates.has(e.event_date));
+  // Taken from the one source the direction was counted from, so a base-rate
+  // window and a factor analog on the same date can never both be flagged.
+  const sm = written.sm ?? null;
+  const directionEvents =
+    sm?.kind === "earnings" && sm.earnings
+      ? await persistEarningsWindows(scopeValue, sm.earnings.windows, sm.earnings.sessionsToRelease)
+      : (sm?.kind === "baseline" ? (factorAnalysis?.baselineEvents ?? []) : (factorAnalysis?.events ?? [])).filter((e) => written.directionDates.has(e.event_date));
+  const directionIds = new Set(directionEvents.map((e) => e.id));
   const linkedIds = new Set(analogIds);
   const linkedAnalogs = [...usableAnalogs, ...directionEvents.filter((e) => !linkedIds.has(e.id))];
+  const columns = written.columns.direction_conditions
+    ? { ...written.columns, direction_conditions: { ...(written.columns.direction_conditions as Record<string, unknown>), band_basis: bandBasis } }
+    : written.columns;
 
   const { data: analysis, error: insertError } = await admin
     .from("ai_analyses")
@@ -397,7 +426,7 @@ Respond with only a JSON object matching the required schema.`,
       confidence_level: band.confidence,
       sample_size: band.sampleCount,
       reasoning_text: written.reasoningText,
-      ...written.columns,
+      ...columns,
       plain_summary: written.plainSummary,
       // Provider-qualified so a row is traceable to what actually served it.
       // This once said "self-hosted:" long after a hosted provider shipped,
@@ -442,7 +471,7 @@ Respond with only a JSON object matching the required schema.`,
       // Which conditions a factor-derived analog matched. Null for curated
       // analogs, exactly as before.
       note: e.note ?? null,
-      in_direction_set: (e.event_type === FACTOR_EVENT_TYPE || e.event_type === BASELINE_EVENT_TYPE) && written.directionDates.has(e.event_date),
+      in_direction_set: directionIds.has(e.id),
     })),
   );
 

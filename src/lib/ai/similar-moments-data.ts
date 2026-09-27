@@ -6,13 +6,15 @@ import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/types";
-import { FACTOR_FORWARD_SESSIONS, scanWindows, type FactorAnalogResult, type FactorInstance, type FactorSet } from "@/lib/ai/factors";
+import { FACTOR_FORWARD_SESSIONS, MIN_FACTOR_ANALOG_SAMPLE, scanWindows, type FactorAnalogResult, type FactorInstance, type FactorSet } from "@/lib/ai/factors";
 import { directionalHistory, type DirectionalHistory } from "@/lib/ai/direction";
 import {
   applyConditions,
   CONDITION_LABELS,
   EARNINGS_WINDOW_SESSIONS,
   earningsWithinSessions,
+  earningsWindows,
+  sessionsUntil,
   todayConditionStates,
   trendLevelSeries,
   valuationLevelAt,
@@ -45,7 +47,15 @@ export interface SimilarMoments {
    * about today is unusual, so every stretch of its history (the base rate) -
    * never to be described as similar moments.
    */
-  kind: "similar" | "baseline";
+  kind: "similar" | "baseline" | "earnings";
+  /**
+   * Set when this is a fallback: today's factor state matched fewer than
+   * MIN_FACTOR_ANALOG_SAMPLE past moments, so the history is the earnings
+   * windows or the base rate instead - said so, never mixed into one count.
+   */
+  fallback?: { reason: "unusual_setup"; matches: number; needed: number };
+  /** For kind "earnings": results are due in this many sessions, on this date. */
+  earnings?: { sessionsToRelease: number; releaseDate: string; windows: ReturnType<typeof earningsWindows> };
   history: DirectionalHistory;
   /** The factor states the base cases were matched on (today's price state). */
   factorConditions: { key: string; state: string; label: string }[];
@@ -139,7 +149,35 @@ export function conditionSpecs(args: {
   return args.keys.map((k) => all[k]);
 }
 
-/** The directional history for today's analysis, or null when the factor scan found no usable set. */
+/**
+ * Results due within the horizon, and enough past releases in stored prices:
+ * the earnings windows (lib/ai/similar-moments.ts earningsWindows). Shares
+ * only - a coin or a fund has no results. Null otherwise.
+ */
+function earningsFallback(args: { set: FactorSet; assetType: string | null; data: ConditionData; today: string }): Omit<SimilarMoments, "fallback"> | null {
+  if (args.assetType !== "equity" || args.data.releaseDates.length === 0) return null;
+  const next = args.data.upcomingEarnings
+    .map((d) => ({ d, k: sessionsUntil(args.today, d) }))
+    .filter((x) => x.k >= 1 && x.k <= FACTOR_FORWARD_SESSIONS)
+    .sort((a, b) => a.k - b.k)[0];
+  if (!next) return null;
+  const cases = earningsWindows(args.set.bars, args.data.releaseDates.filter((r) => r < args.today), next.k, FACTOR_FORWARD_SESSIONS);
+  if (cases.length < MIN_FACTOR_ANALOG_SAMPLE) return null;
+  return {
+    kind: "earnings",
+    earnings: { sessionsToRelease: next.k, releaseDate: next.d, windows: cases },
+    history: directionalHistory(
+      cases.map((c) => ({ date: c.date, dateAfter: c.dateAfter, priceBefore: c.priceBefore, priceAfter: c.priceAfter })),
+      FACTOR_FORWARD_SESSIONS,
+    ),
+    factorConditions: [],
+    baseCount: cases.length,
+    cases,
+    conditions: [],
+  };
+}
+
+/** The directional history for today's analysis, or null when there is no factor set to scan. */
 export function similarMoments(args: {
   set: FactorSet;
   result: FactorAnalogResult;
@@ -150,10 +188,21 @@ export function similarMoments(args: {
   keys?: ExtraConditionKey[];
 }): SimilarMoments | null {
   if (!args.result.ok) {
-    // A rare state stays "too rarely to say"; only an ordinary day gets the base rate.
-    if (args.result.reason !== "no_active_conditions") return null;
+    // Too few past moments like today: never a dead end for a symbol with
+    // years of prices. Fall back, in this order, to (1) past results
+    // releases measured from the same point before, when results are due
+    // within the horizon, then (2) the base rate - labelled as whichever it is.
+    const fallback =
+      args.result.reason === "insufficient_instances"
+        ? { reason: "unusual_setup" as const, matches: args.result.bestSampleSize, needed: MIN_FACTOR_ANALOG_SAMPLE }
+        : undefined;
+    if (fallback) {
+      const e = earningsFallback(args);
+      if (e) return { ...e, fallback };
+    }
     const windows = scanWindows(args.set, FACTOR_FORWARD_SESSIONS);
     return {
+      ...(fallback ? { fallback } : {}),
       kind: "baseline",
       history: directionalHistory(
         windows.map((c) => ({ date: c.date, dateAfter: c.dateAfter, priceBefore: c.priceBefore, priceAfter: c.priceAfter })),

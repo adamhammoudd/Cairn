@@ -13,7 +13,7 @@
 // from the plain summary (or the first sentence of the old prose), and their
 // history from the plain summary's history.
 
-import { historyWords, horizonPhrase } from "@/lib/ai/analysis-text";
+import { historyWords, horizonPhrase, type HistoryBasis, type HistoryContext } from "@/lib/ai/analysis-text";
 import type { DirectionalHistory } from "@/lib/ai/direction";
 import { plainConditions } from "@/lib/ai/history-plain";
 import type { Scorecard } from "@/lib/scorecard";
@@ -21,8 +21,13 @@ import type { Scorecard } from "@/lib/scorecard";
 export type Plan = "free" | "premium";
 
 export interface DisplayHistory {
-  /** "baseline": nothing unusual that day, so the base rate over every stretch - never "similar moments". */
-  kind: "direction" | "baseline" | "legacy" | "none";
+  /**
+   * "baseline": the base rate over every stretch - never "similar moments".
+   * "earnings": results were due, so past results releases from the same point before.
+   */
+  kind: "direction" | "baseline" | "earnings" | "legacy" | "none";
+  /** Which analog source this is, in words, when it is not similar moments: "Base rate" / "Around past results". */
+  basisLabel: string | null;
   line: string;
   range: string | null;
   extremes: string | null;
@@ -206,10 +211,24 @@ export function displayHistory(row: AnalysisRowLike, name: string, assetType: st
 
   const d = storedDirection(row);
   if (d || row.headline) {
-    const basis = (row.direction_conditions as { basis?: string } | null)?.basis === "baseline" ? "baseline" : "similar";
-    const w = historyWords(d, name, assetType, d ? null : "no_active_conditions", basis)!;
+    const cond = (row.direction_conditions ?? null) as { basis?: string; fallback?: { matches?: number }; earnings?: { sessions_to_release?: number } } | null;
+    const basis: HistoryBasis = cond?.basis === "baseline" ? "baseline" : cond?.basis === "earnings" ? "earnings" : "similar";
+    const ctx: HistoryContext = {
+      ...(typeof cond?.fallback?.matches === "number" ? { fallback: { matches: cond.fallback.matches } } : {}),
+      ...(typeof cond?.earnings?.sessions_to_release === "number" ? { sessionsToRelease: cond.earnings.sessions_to_release } : {}),
+    };
+    const w = historyWords(d, name, assetType, d ? null : "no_active_conditions", basis, ctx)!;
     return {
-      kind: d ? (basis === "baseline" ? "baseline" : "direction") : "none",
+      kind: d ? (basis === "baseline" ? "baseline" : basis === "earnings" ? "earnings" : "direction") : "none",
+      basisLabel: !d
+        ? null
+        : basis === "earnings"
+          ? "Around past results: today's setup matched too few past moments"
+          : basis === "baseline"
+            ? ctx.fallback
+              ? "Base rate: today's setup matched too few past moments"
+              : "Base rate: nothing unusual today"
+            : null,
       line: w.line,
       range: w.range,
       extremes: w.extremes,
@@ -230,6 +249,7 @@ export function displayHistory(row: AnalysisRowLike, name: string, assetType: st
   if (h && h.headline) {
     return {
       kind: "legacy",
+      basisLabel: null,
       line: h.headline,
       range: h.rangeSentence || null,
       extremes: null,
@@ -246,6 +266,7 @@ export function displayHistory(row: AnalysisRowLike, name: string, assetType: st
   }
   return {
     kind: "none",
+    basisLabel: null,
     line: `This analysis of ${name} was made before Cairn counted similar moments.`,
     range: null,
     extremes: null,
@@ -319,7 +340,7 @@ export function buildAnalysisDisplay(args: {
     watch: watchFrom(row, args.sources),
     sourcesUsed: Array.isArray(row.sources_used) ? row.sources_used : [],
     cases: premium ? cases : null,
-    caseCount: history.kind === "direction" || history.kind === "baseline" ? history.n : cases.length,
+    caseCount: history.kind === "direction" || history.kind === "baseline" || history.kind === "earnings" ? history.n : cases.length,
     trader:
       premium && hasBand
         ? {
