@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getTodayBriefing } from "@/lib/actions/briefing";
 import { getUserSettings } from "@/lib/actions/settings";
+import { getBetaAccessLabel } from "@/lib/actions/billing";
 import { BriefingCard } from "@/components/briefing/briefing-card";
 import { ChatThread } from "@/components/chat/chat-thread";
 
@@ -12,7 +13,7 @@ export default async function AssistantPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const [briefing, settings] = await Promise.all([getTodayBriefing(), getUserSettings()]);
+  const [briefing, settings, betaUntil] = await Promise.all([getTodayBriefing(), getUserSettings(), getBetaAccessLabel()]);
 
   return (
     <div className="animate-page-in">
@@ -30,6 +31,8 @@ export default async function AssistantPage() {
       <ChatThread
         expandMethodology={settings?.assistant_expand_methodology ?? true}
         briefing={<BriefingCard briefing={briefing} />}
+        betaUntil={betaUntil}
+        usePortfolioContext={settings?.assistant_use_portfolio_context ?? true}
       />
     </div>
   );

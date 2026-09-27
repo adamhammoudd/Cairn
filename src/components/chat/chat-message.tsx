@@ -2,6 +2,8 @@
 
 import type { AnalysisWithMethodology } from "@/lib/actions/analysis";
 import { MarkdownMessage } from "@/components/chat/markdown-message";
+import { AnswerTiles, CheckedLine, FactsNote, FollowUps } from "@/components/chat/answer-extras";
+import type { AssistantMeta } from "@/lib/ai/assistant/types";
 
 // Just the bubble, per the `messages` sc-for in the AI Assistant artboard
 // (Cairn.dc.html): flex row, gap 11px, justify-<end|start>; bubble max-width
@@ -24,16 +26,30 @@ export interface ChatMessageData {
    * rather than dressed up as an assistant reply.
    */
   failed?: boolean;
+  /** Assistant v2: tiles, sources, follow-ups, what was checked (chat_messages.meta). */
+  meta?: AssistantMeta | null;
+  /** While a turn is in flight: the tools being checked, as the server reports them. */
+  activity?: string[];
 }
 
 interface ChatMessageProps {
   message: ChatMessageData;
   /** Renders the blinking caret while this message is still streaming. */
   streaming?: boolean;
+  /** Sends a follow-up suggestion as the next question. */
+  onFollowUp?: (q: string) => void;
 }
 
-export function ChatMessage({ message, streaming }: ChatMessageProps) {
+/** The lead paragraph, then everything after it - the tiles sit between the two. */
+function splitLead(content: string): [string, string] {
+  const at = content.indexOf("\n\n");
+  return at < 0 ? [content, ""] : [content.slice(0, at), content.slice(at + 2)];
+}
+
+export function ChatMessage({ message, streaming, onFollowUp }: ChatMessageProps) {
   const isUser = message.role === "user";
+  const meta = !isUser && !message.failed ? (message.meta ?? null) : null;
+  const [lead, rest] = meta ? splitLead(message.content) : [message.content, ""];
 
   return (
     <div className={`animate-rise-in flex gap-3 ${isUser ? "justify-end" : "justify-start"}`}>
@@ -73,7 +89,22 @@ export function ChatMessage({ message, streaming }: ChatMessageProps) {
         {/* Assistant replies render as real markdown; the user's own text and
             failure notices stay literal. The scope guard ran on the raw text
             server-side, so rendering changes nothing it checked. */}
-        {isUser || message.failed ? message.content : <MarkdownMessage content={message.content} />}
+        {!isUser && !message.failed && (meta ? <CheckedLine checked={meta.checked} /> : message.activity && message.activity.length > 0 ? <CheckedLine checked={message.activity} live /> : null)}
+        {isUser || message.failed ? (
+          message.content
+        ) : meta ? (
+          <>
+            <div className="text-[15px] leading-[1.6]">
+              <MarkdownMessage content={lead} />
+            </div>
+            <AnswerTiles tiles={meta.tiles} />
+            {rest && <MarkdownMessage content={rest} />}
+            <FactsNote meta={meta} />
+            {!streaming && <FollowUps items={meta.followUps} onPick={onFollowUp} />}
+          </>
+        ) : (
+          <MarkdownMessage content={message.content} />
+        )}
         {streaming && (
           <span className="ml-1 inline-block h-[15px] w-[7px] translate-y-[2px] animate-blink bg-accent align-middle" />
         )}

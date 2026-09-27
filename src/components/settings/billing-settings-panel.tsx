@@ -3,10 +3,11 @@
 import { useActionState } from "react";
 import { setTier, type BillingDetail } from "@/lib/actions/billing";
 import { createCheckoutSession, createPortalSession } from "@/lib/actions/checkout";
-import { TIER_LIMITS } from "@/lib/billing";
+import { TIER_LIMITS, BETA_CHAT_DAILY_CAP } from "@/lib/billing";
 import { nextResetLabel } from "@/lib/chat-state";
 import { useDisplayPrefs } from "@/components/display-prefs-provider";
 import { formatMoney } from "@/lib/display-prefs";
+import { BetaNote } from "@/components/billing/beta-note";
 
 // Settings > Billing, transcribed from Cairn Settings.dc.html: a plan card
 // (gradient + glow on Premium) beside a "This period" usage card, then payment
@@ -57,7 +58,7 @@ export function BillingSettingsPanel({ detail }: { detail: BillingDetail }) {
   const [error, formAction] = useActionState(setTier, null);
   const [checkoutError, checkout] = useActionState(checkoutAction, null);
   const [portalError, portal] = useActionState(portalAction, null);
-  const { usage, chat, renewsAt, history, billingEnabled, hasStripeCustomer } = detail;
+  const { usage, chat, renewsAt, history, billingEnabled, hasStripeCustomer, betaUntil } = detail;
   const premium = usage.tier === "premium";
   const config = TIER_LIMITS[usage.tier];
   const actionError = [error, checkoutError, portalError].find((e) => e && e !== "saved");
@@ -69,6 +70,7 @@ export function BillingSettingsPanel({ detail }: { detail: BillingDetail }) {
 
   return (
     <div className="flex flex-col gap-3.5">
+      {betaUntil && <BetaNote until={betaUntil} />}
       <div className="grid grid-cols-1 items-start gap-3.5 min-[1000px]:grid-cols-[1.35fr_1fr]">
         {/* Plan card */}
         <div
@@ -99,7 +101,7 @@ export function BillingSettingsPanel({ detail }: { detail: BillingDetail }) {
                       figure in the app (Stripe's own price isn't shown here at
                       all, precisely to avoid a mismatch - $0 is the one figure
                       safe to render locally since 0 converts to 0 in any currency). */}
-                  <span className="text-body text-muted">{premium ? "billed monthly" : formatMoney(0, prefs)}</span>
+                  <span className="text-body text-muted">{betaUntil ? "free during the beta" : premium ? "billed monthly" : formatMoney(0, prefs)}</span>
                 </div>
                 <p className="mt-2.5 max-w-[380px] text-body leading-[1.55] text-muted text-pretty">
                   {premium
@@ -109,7 +111,7 @@ export function BillingSettingsPanel({ detail }: { detail: BillingDetail }) {
               </div>
 
               <div className="flex shrink-0 flex-wrap gap-2">
-                {!premium ? (
+                {betaUntil ? null : !premium ? (
                   billingEnabled ? (
                     <form action={checkout}>
                       <button
@@ -158,12 +160,12 @@ export function BillingSettingsPanel({ detail }: { detail: BillingDetail }) {
             <div className="mt-4.5 flex flex-wrap gap-x-5.5 gap-y-3 border-t border-line-soft pt-4">
               <div>
                 <div className="font-mono text-eyebrow text-dim uppercase">
-                  {premium ? "Renews" : "Allowance resets"}
+                  {betaUntil && !renewsAt ? "Beta ends" : premium ? "Renews" : "Allowance resets"}
                 </div>
                 <div className="mt-1.5 text-body text-primary">
                   {renewsAt
                     ? new Date(renewsAt).toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" })
-                    : nextResetLabel()}
+                    : (betaUntil ?? nextResetLabel())}
                 </div>
               </div>
               <div>
@@ -210,7 +212,9 @@ export function BillingSettingsPanel({ detail }: { detail: BillingDetail }) {
                   ? `${config.label}-plan allowance, resets at midnight.`
                   : usage.unlimited
                     ? adminNote
-                    : "Unlimited on Premium. Shown for your own tracking."
+                    : betaUntil
+                      ? `Unlimited during the beta, up to ${BETA_CHAT_DAILY_CAP} a day. Shown for your own tracking.`
+                      : "Unlimited on Premium. Shown for your own tracking."
               }
             />
           </div>

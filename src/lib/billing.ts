@@ -109,3 +109,47 @@ export function startOfTodayIso(): string {
   const now = new Date();
   return new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
 }
+
+// ---------------------------------------------------------------------------
+// Beta access.
+//
+// One switch: BETA_PREMIUM_UNTIL=<ISO date>. While it is set and in the
+// future, every signed-in user resolves to Premium through getUserPlan(). It
+// writes nothing - no subscriptions row, no Stripe object - so unsetting the
+// variable (or letting the date pass) reverts everyone to their stored tier
+// with no data migration. A malformed value is treated as unset: the safe
+// direction is "beta off", never "Premium for everyone forever".
+// ---------------------------------------------------------------------------
+
+/**
+ * Chat is unlimited on Premium, but during the beta every signed-in user is on
+ * Premium and every message is a paid model call. This is the abuse ceiling,
+ * not a plan limit: no real conversation gets near it.
+ */
+export const BETA_CHAT_DAILY_CAP = 200;
+
+/** The beta end as a Date, or null when beta access is off (unset, malformed, or past). */
+export function betaPremiumUntil(raw: string | undefined = process.env.BETA_PREMIUM_UNTIL, now: Date = new Date()): Date | null {
+  if (!raw || !raw.trim()) return null;
+  const trimmed = raw.trim();
+  // A bare date means "through the end of that day" (UTC), which is how a
+  // person writes "until 2026-12-31".
+  const until = /^\d{4}-\d{2}-\d{2}$/.test(trimmed) ? new Date(`${trimmed}T23:59:59.999Z`) : new Date(trimmed);
+  if (Number.isNaN(until.getTime())) return null;
+  return until.getTime() > now.getTime() ? until : null;
+}
+
+/**
+ * The single plan rule getUserPlan() applies. Pure, so the on / off / expired
+ * cases are testable without a request scope.
+ */
+export function resolvePlan(storedTier: SubscriptionTier | null | undefined, signedIn: boolean, betaUntil: Date | null): SubscriptionTier {
+  if (!signedIn) return "free";
+  if (betaUntil) return "premium";
+  return storedTier ?? "free";
+}
+
+/** "31 December 2026" - how the beta end is shown in Billing and the assistant. */
+export function formatBetaUntil(until: Date): string {
+  return until.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
+}

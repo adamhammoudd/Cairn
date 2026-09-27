@@ -493,12 +493,15 @@ export interface Database {
           content: string;
           referenced_analysis_ids: string[];
           created_at: string;
+          /** Assistant v2 (migration 0059): checked line, tiles, sources, follow-ups, tool log, cost. */
+          meta?: Record<string, unknown> | null;
         };
         Insert: {
           session_id: string;
           role: "user" | "assistant";
           content: string;
           referenced_analysis_ids?: string[];
+          meta?: Record<string, unknown> | null;
         };
         Update: never;
         Relationships: [];

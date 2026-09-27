@@ -8,7 +8,7 @@ import { formatMoney } from "@/lib/display-prefs";
 import { formatSupply } from "@/lib/crypto";
 import { formatQuantity } from "@/lib/portfolio";
 import { assetName } from "@/lib/asset-names";
-import { decodeEntities } from "@/lib/news";
+import { TickerNewsList } from "@/components/news/ticker-news-list";
 import type { TickerData } from "@/lib/actions/ticker";
 import type { AnalysisWithMethodology } from "@/lib/actions/analysis";
 import { TickerHero } from "@/components/ticker/ticker-hero";
@@ -215,45 +215,11 @@ export function TickerWorkspace({
             <div className="animate-rise-in overflow-hidden rounded-card border border-line bg-panel">
               <div className="flex items-center justify-between gap-2.5 border-b border-line-soft px-4 py-3.5">
                 <span className="font-mono text-eyebrow text-muted uppercase">Related news</span>
-                <Link href="/news" className="tap text-micro text-accent hover:underline">
+                <Link href={`/news?q=${encodeURIComponent(data.symbol)}`} className="tap text-micro text-accent hover:underline">
                   All news →
                 </Link>
               </div>
-              {data.news.length === 0 ? (
-                <p className="px-4 py-4 text-body text-dim">No recent news ingested for {data.symbol}.</p>
-              ) : (
-                data.news.slice(0, 8).map((n) => (
-                  <div
-                    key={n.id}
-                    className="flex items-start gap-3 border-b border-line-soft px-4 py-3.5 transition-colors duration-fast ease-standard last:border-b-0 hover:bg-active"
-                  >
-                    {/* The mock colours this rail by story sentiment. Nothing
-                        in the pipeline scores sentiment (news_items has the
-                        column; no ingest writes it), so it stays neutral
-                        rather than being coloured from a guess. */}
-                    <span aria-hidden className="w-[3px] shrink-0 self-stretch rounded-xs bg-line" />
-                    <div className="min-w-0">
-                      {n.url ? (
-                        <a
-                          href={n.url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="tap block text-body leading-[1.5] text-primary text-pretty hover:text-accent"
-                        >
-                          {decodeEntities(n.title)}
-                        </a>
-                      ) : (
-                        <span className="block text-body leading-[1.5] text-primary text-pretty">
-                          {decodeEntities(n.title)}
-                        </span>
-                      )}
-                      <div className="mt-1.5 font-mono text-micro text-dim">
-                        {n.source_name} · {new Date(n.published_at).toLocaleDateString()}
-                      </div>
-                    </div>
-                  </div>
-                ))
-              )}
+              <TickerNewsList symbol={data.symbol} initial={data.news} />
             </div>
   );
   // The analysis this page shows: the latest one, drawn by the same component

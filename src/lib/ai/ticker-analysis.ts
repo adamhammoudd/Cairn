@@ -24,6 +24,9 @@ const SUFFIX = /,?\s+(?:inc\.?|incorporated|corporation|corp\.?|co\.?|company|lt
  */
 export function plainName(name: string, symbol: string, assetType: string | null): string {
   if (assetType === "etf") return symbol;
+  // No stored name: callers pass the symbol itself, which is not an SEC
+  // capitals name to soften ("TSLA" must not become "Tsla").
+  if (name.trim().toUpperCase() === symbol.toUpperCase()) return symbol;
   // SEC appends the state or country of incorporation: "Lifecore Biomedical,
   // INC. DE", "Bank OF Montreal /CAN/". Neither is part of the name.
   let n = name.trim().replace(/\s*\/[A-Z]{2,4}\/$/, "").replace(/(\b(?:inc|corp|co|ltd|plc)\.?)\s+[A-Z]{2}$/i, "$1");

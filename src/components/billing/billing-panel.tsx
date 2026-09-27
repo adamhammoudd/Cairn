@@ -5,6 +5,7 @@ import { setTier, type BillingDetail } from "@/lib/actions/billing";
 import { createCheckoutSession, createPortalSession } from "@/lib/actions/checkout";
 import { TIER_LIMITS } from "@/lib/billing";
 import type { SubscriptionTier } from "@/lib/supabase/types";
+import { BetaNote } from "@/components/billing/beta-note";
 
 const TIER_ORDER: SubscriptionTier[] = ["free", "premium"];
 
@@ -21,7 +22,7 @@ export function BillingPanel({ detail }: { detail: BillingDetail }) {
   const [error, formAction] = useActionState(setTier, null);
   const [checkoutError, checkout] = useActionState(checkoutAction, null);
   const [portalError, portal] = useActionState(portalAction, null);
-  const { usage, renewsAt, billingEnabled, hasStripeCustomer } = detail;
+  const { usage, renewsAt, billingEnabled, hasStripeCustomer, betaUntil } = detail;
   const usagePct = usage.unlimited ? 100 : usage.limit > 0 ? Math.min((usage.used / usage.limit) * 100, 100) : 0;
   const actionError = [error, checkoutError, portalError].find((e) => e && e !== "saved");
 
@@ -35,6 +36,8 @@ export function BillingPanel({ detail }: { detail: BillingDetail }) {
             : "Premium isn't available yet - payments open at launch. Everything on the Free plan works in the meantime."}
         </p>
       </div>
+
+      {betaUntil && <BetaNote until={betaUntil} />}
 
       <div className="rounded-card border border-line bg-panel p-6">
         <div className="flex items-center justify-between">
@@ -103,6 +106,10 @@ export function BillingPanel({ detail }: { detail: BillingDetail }) {
                 >
                   Current plan
                 </button>
+              ) : betaUntil ? (
+                // Beta grants Premium without a subscription row, so a plan
+                // switch here would change nothing the user could see.
+                <p className="text-caption text-muted">Plan changes open when the beta ends.</p>
               ) : isUpgrade && billingEnabled ? (
                 <form action={checkout}>
                   <button

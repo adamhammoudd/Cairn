@@ -1,0 +1,7332 @@
+{
+ "capturedAt": "2026-09-27T09:46:25.522Z",
+ "inputs": {
+  "NVDA": {
+   "name": "NVIDIA",
+   "symbol": "NVDA",
+   "assetType": "equity",
+   "history": {
+    "horizonSessions": 10,
+    "n": 125,
+    "higher": 73,
+    "lower": 52,
+    "upRate": {
+     "point": 58,
+     "low": 50,
+     "high": 67
+    },
+    "confidence": "high",
+    "cases": [
+     {
+      "date": "2021-09-24",
+      "dateAfter": "2021-10-08",
+      "movePct": -5.7
+     },
+     {
+      "date": "2021-10-08",
+      "dateAfter": "2021-10-22",
+      "movePct": 9.1
+     },
+     {
+      "date": "2021-10-22",
+      "dateAfter": "2021-11-05",
+      "movePct": 30.9
+     },
+     {
+      "date": "2021-11-05",
+      "dateAfter": "2021-11-19",
+      "movePct": 10.9
+     },
+     {
+      "date": "2021-11-19",
+      "dateAfter": "2021-12-06",
+      "movePct": -8.9
+     },
+     {
+      "date": "2021-12-06",
+      "dateAfter": "2021-12-20",
+      "movePct": -7.7
+     },
+     {
+      "date": "2021-12-20",
+      "dateAfter": "2022-01-04",
+      "movePct": 5.7
+     },
+     {
+      "date": "2022-01-04",
+      "dateAfter": "2022-01-19",
+      "movePct": -14.4
+     },
+     {
+      "date": "2022-01-19",
+      "dateAfter": "2022-02-02",
+      "movePct": 0.7
+     },
+     {
+      "date": "2022-02-02",
+      "dateAfter": "2022-02-16",
+      "movePct": 5
+     },
+     {
+      "date": "2022-02-16",
+      "dateAfter": "2022-03-03",
+      "movePct": -10.6
+     },
+     {
+      "date": "2022-03-03",
+      "dateAfter": "2022-03-17",
+      "movePct": 4.4
+     },
+     {
+      "date": "2022-03-17",
+      "dateAfter": "2022-03-31",
+      "movePct": 10.2
+     },
+     {
+      "date": "2022-03-31",
+      "dateAfter": "2022-04-14",
+      "movePct": -22.1
+     },
+     {
+      "date": "2022-04-14",
+      "dateAfter": "2022-04-29",
+      "movePct": -12.8
+     },
+     {
+      "date": "2022-04-29",
+      "dateAfter": "2022-05-13",
+      "movePct": -4.5
+     },
+     {
+      "date": "2022-05-13",
+      "dateAfter": "2022-05-27",
+      "movePct": 6.2
+     },
+     {
+      "date": "2022-05-27",
+      "dateAfter": "2022-06-13",
+      "movePct": -16.8
+     },
+     {
+      "date": "2022-06-13",
+      "dateAfter": "2022-06-28",
+      "movePct": 2.1
+     },
+     {
+      "date": "2022-06-28",
+      "dateAfter": "2022-07-13",
+      "movePct": -5.1
+     },
+     {
+      "date": "2022-07-13",
+      "dateAfter": "2022-07-27",
+      "movePct": 17.3
+     },
+     {
+      "date": "2022-07-27",
+      "dateAfter": "2022-08-10",
+      "movePct": 1.7
+     },
+     {
+      "date": "2022-08-10",
+      "dateAfter": "2022-08-24",
+      "movePct": -4.8
+     },
+     {
+      "date": "2022-08-24",
+      "dateAfter": "2022-09-08",
+      "movePct": -18.8
+     },
+     {
+      "date": "2022-09-08",
+      "dateAfter": "2022-09-22",
+      "movePct": -10.2
+     },
+     {
+      "date": "2022-09-22",
+      "dateAfter": "2022-10-06",
+      "movePct": 4.5
+     },
+     {
+      "date": "2022-10-06",
+      "dateAfter": "2022-10-20",
+      "movePct": -7.1
+     },
+     {
+      "date": "2022-10-20",
+      "dateAfter": "2022-11-03",
+      "movePct": 10.1
+     },
+     {
+      "date": "2022-11-03",
+      "dateAfter": "2022-11-17",
+      "movePct": 16.8
+     },
+     {
+      "date": "2022-11-17",
+      "dateAfter": "2022-12-02",
+      "movePct": 7.6
+     },
+     {
+      "date": "2022-12-02",
+      "dateAfter": "2022-12-16",
+      "movePct": -1.8
+     },
+     {
+      "date": "2022-12-16",
+      "dateAfter": "2023-01-03",
+      "movePct": -13.6
+     },
+     {
+      "date": "2023-01-03",
+      "dateAfter": "2023-01-18",
+      "movePct": 21.4
+     },
+     {
+      "date": "2023-01-18",
+      "dateAfter": "2023-02-01",
+      "movePct": 20.5
+     },
+     {
+      "date": "2023-02-01",
+      "dateAfter": "2023-02-15",
+      "movePct": 8.7
+     },
+     {
+      "date": "2023-02-15",
+      "dateAfter": "2023-03-02",
+      "movePct": 2.4
+     },
+     {
+      "date": "2023-03-02",
+      "dateAfter": "2023-03-16",
+      "movePct": 9.6
+     },
+     {
+      "date": "2023-03-16",
+      "dateAfter": "2023-03-30",
+      "movePct": 7.2
+     },
+     {
+      "date": "2023-03-30",
+      "dateAfter": "2023-04-14",
+      "movePct": -2.3
+     },
+     {
+      "date": "2023-04-14",
+      "dateAfter": "2023-04-28",
+      "movePct": 3.7
+     },
+     {
+      "date": "2023-04-28",
+      "dateAfter": "2023-05-12",
+      "movePct": 2.1
+     },
+     {
+      "date": "2023-05-12",
+      "dateAfter": "2023-05-26",
+      "movePct": 37.4
+     },
+     {
+      "date": "2023-05-26",
+      "dateAfter": "2023-06-12",
+      "movePct": 1.4
+     },
+     {
+      "date": "2023-06-12",
+      "dateAfter": "2023-06-27",
+      "movePct": 6.1
+     },
+     {
+      "date": "2023-06-27",
+      "dateAfter": "2023-07-12",
+      "movePct": 4.8
+     },
+     {
+      "date": "2023-07-12",
+      "dateAfter": "2023-07-26",
+      "movePct": 3.5
+     },
+     {
+      "date": "2023-07-26",
+      "dateAfter": "2023-08-09",
+      "movePct": -6.4
+     },
+     {
+      "date": "2023-08-09",
+      "dateAfter": "2023-08-23",
+      "movePct": 10.7
+     },
+     {
+      "date": "2023-08-23",
+      "dateAfter": "2023-09-07",
+      "movePct": -1.9
+     },
+     {
+      "date": "2023-09-07",
+      "dateAfter": "2023-09-21",
+      "movePct": -11.3
+     },
+     {
+      "date": "2023-09-21",
+      "dateAfter": "2023-10-05",
+      "movePct": 8.9
+     },
+     {
+      "date": "2023-10-05",
+      "dateAfter": "2023-10-19",
+      "movePct": -5.8
+     },
+     {
+      "date": "2023-10-19",
+      "dateAfter": "2023-11-02",
+      "movePct": 3.3
+     },
+     {
+      "date": "2023-11-02",
+      "dateAfter": "2023-11-16",
+      "movePct": 13.7
+     },
+     {
+      "date": "2023-11-16",
+      "dateAfter": "2023-12-01",
+      "movePct": -5.5
+     },
+     {
+      "date": "2023-12-01",
+      "dateAfter": "2023-12-15",
+      "movePct": 4.5
+     },
+     {
+      "date": "2023-12-15",
+      "dateAfter": "2024-01-02",
+      "movePct": -1.5
+     },
+     {
+      "date": "2024-01-02",
+      "dateAfter": "2024-01-17",
+      "movePct": 16.4
+     },
+     {
+      "date": "2024-01-17",
+      "dateAfter": "2024-01-31",
+      "movePct": 9.8
+     },
+     {
+      "date": "2024-01-31",
+      "dateAfter": "2024-02-14",
+      "movePct": 20.1
+     },
+     {
+      "date": "2024-02-14",
+      "dateAfter": "2024-02-29",
+      "movePct": 7.1
+     },
+     {
+      "date": "2024-02-29",
+      "dateAfter": "2024-03-14",
+      "movePct": 11.2
+     },
+     {
+      "date": "2024-03-14",
+      "dateAfter": "2024-03-28",
+      "movePct": 2.7
+     },
+     {
+      "date": "2024-03-28",
+      "dateAfter": "2024-04-12",
+      "movePct": -2.4
+     },
+     {
+      "date": "2024-04-12",
+      "dateAfter": "2024-04-26",
+      "movePct": -0.5
+     },
+     {
+      "date": "2024-04-26",
+      "dateAfter": "2024-05-10",
+      "movePct": 2.4
+     },
+     {
+      "date": "2024-05-10",
+      "dateAfter": "2024-05-24",
+      "movePct": 18.5
+     },
+     {
+      "date": "2024-05-24",
+      "dateAfter": "2024-06-10",
+      "movePct": 14.4
+     },
+     {
+      "date": "2024-06-10",
+      "dateAfter": "2024-06-25",
+      "movePct": 3.5
+     },
+     {
+      "date": "2024-06-25",
+      "dateAfter": "2024-07-10",
+      "movePct": 7
+     },
+     {
+      "date": "2024-07-10",
+      "dateAfter": "2024-07-24",
+      "movePct": -15.3
+     },
+     {
+      "date": "2024-07-24",
+      "dateAfter": "2024-08-07",
+      "movePct": -13.4
+     },
+     {
+      "date": "2024-08-07",
+      "dateAfter": "2024-08-21",
+      "movePct": 29.9
+     },
+     {
+      "date": "2024-08-21",
+      "dateAfter": "2024-09-05",
+      "movePct": -16.6
+     },
+     {
+      "date": "2024-09-05",
+      "dateAfter": "2024-09-19",
+      "movePct": 9.9
+     },
+     {
+      "date": "2024-09-19",
+      "dateAfter": "2024-10-03",
+      "movePct": 4.2
+     },
+     {
+      "date": "2024-10-03",
+      "dateAfter": "2024-10-17",
+      "movePct": 11.5
+     },
+     {
+      "date": "2024-10-17",
+      "dateAfter": "2024-10-31",
+      "movePct": -3
+     },
+     {
+      "date": "2024-10-31",
+      "dateAfter": "2024-11-14",
+      "movePct": 10.5
+     },
+     {
+      "date": "2024-11-14",
+      "dateAfter": "2024-11-29",
+      "movePct": -5.8
+     },
+     {
+      "date": "2024-11-29",
+      "dateAfter": "2024-12-13",
+      "movePct": -2.9
+     },
+     {
+      "date": "2024-12-13",
+      "dateAfter": "2024-12-30",
+      "movePct": 2.4
+     },
+     {
+      "date": "2024-12-30",
+      "dateAfter": "2025-01-15",
+      "movePct": -0.9
+     },
+     {
+      "date": "2025-01-15",
+      "dateAfter": "2025-01-30",
+      "movePct": -8.5
+     },
+     {
+      "date": "2025-01-30",
+      "dateAfter": "2025-02-13",
+      "movePct": 8.5
+     },
+     {
+      "date": "2025-02-13",
+      "dateAfter": "2025-02-28",
+      "movePct": -7.7
+     },
+     {
+      "date": "2025-02-28",
+      "dateAfter": "2025-03-14",
+      "movePct": -2.6
+     },
+     {
+      "date": "2025-03-14",
+      "dateAfter": "2025-03-28",
+      "movePct": -9.9
+     },
+     {
+      "date": "2025-03-28",
+      "dateAfter": "2025-04-11",
+      "movePct": 1.1
+     },
+     {
+      "date": "2025-04-11",
+      "dateAfter": "2025-04-28",
+      "movePct": -2
+     },
+     {
+      "date": "2025-04-28",
+      "dateAfter": "2025-05-12",
+      "movePct": 13.1
+     },
+     {
+      "date": "2025-05-12",
+      "dateAfter": "2025-05-27",
+      "movePct": 10.2
+     },
+     {
+      "date": "2025-05-27",
+      "dateAfter": "2025-06-10",
+      "movePct": 6.2
+     },
+     {
+      "date": "2025-06-10",
+      "dateAfter": "2025-06-25",
+      "movePct": 7.2
+     },
+     {
+      "date": "2025-06-25",
+      "dateAfter": "2025-07-10",
+      "movePct": 6.3
+     },
+     {
+      "date": "2025-07-10",
+      "dateAfter": "2025-07-24",
+      "movePct": 5.9
+     },
+     {
+      "date": "2025-07-24",
+      "dateAfter": "2025-08-07",
+      "movePct": 4
+     },
+     {
+      "date": "2025-08-07",
+      "dateAfter": "2025-08-21",
+      "movePct": -3.2
+     },
+     {
+      "date": "2025-08-21",
+      "dateAfter": "2025-09-05",
+      "movePct": -4.5
+     },
+     {
+      "date": "2025-09-05",
+      "dateAfter": "2025-09-19",
+      "movePct": 5.8
+     },
+     {
+      "date": "2025-09-19",
+      "dateAfter": "2025-10-03",
+      "movePct": 6.2
+     },
+     {
+      "date": "2025-10-03",
+      "dateAfter": "2025-10-17",
+      "movePct": -2.3
+     },
+     {
+      "date": "2025-10-17",
+      "dateAfter": "2025-10-31",
+      "movePct": 10.5
+     },
+     {
+      "date": "2025-10-31",
+      "dateAfter": "2025-11-14",
+      "movePct": -6.1
+     },
+     {
+      "date": "2025-11-14",
+      "dateAfter": "2025-12-01",
+      "movePct": -5.4
+     },
+     {
+      "date": "2025-12-01",
+      "dateAfter": "2025-12-15",
+      "movePct": -2
+     },
+     {
+      "date": "2025-12-15",
+      "dateAfter": "2025-12-30",
+      "movePct": 6.4
+     },
+     {
+      "date": "2025-12-30",
+      "dateAfter": "2026-01-14",
+      "movePct": -2.3
+     },
+     {
+      "date": "2026-01-14",
+      "dateAfter": "2026-01-29",
+      "movePct": 5.1
+     },
+     {
+      "date": "2026-01-29",
+      "dateAfter": "2026-02-12",
+      "movePct": -2.9
+     },
+     {
+      "date": "2026-02-12",
+      "dateAfter": "2026-02-27",
+      "movePct": -5.2
+     },
+     {
+      "date": "2026-02-27",
+      "dateAfter": "2026-03-13",
+      "movePct": 1.7
+     },
+     {
+      "date": "2026-03-13",
+      "dateAfter": "2026-03-27",
+      "movePct": -7.1
+     },
+     {
+      "date": "2026-03-27",
+      "dateAfter": "2026-04-13",
+      "movePct": 13
+     },
+     {
+      "date": "2026-04-13",
+      "dateAfter": "2026-04-27",
+      "movePct": 14.4
+     },
+     {
+      "date": "2026-04-27",
+      "dateAfter": "2026-05-11",
+      "movePct": 1.3
+     },
+     {
+      "date": "2026-05-11",
+      "dateAfter": "2026-05-26",
+      "movePct": -2.1
+     },
+     {
+      "date": "2026-05-26",
+      "dateAfter": "2026-06-09",
+      "movePct": -3.1
+     },
+     {
+      "date": "2026-06-09",
+      "dateAfter": "2026-06-24",
+      "movePct": -4.4
+     },
+     {
+      "date": "2026-06-24",
+      "dateAfter": "2026-07-09",
+      "movePct": 1.9
+     },
+     {
+      "date": "2026-07-09",
+      "dateAfter": "2026-07-23",
+      "movePct": 2.9
+     },
+     {
+      "date": "2026-07-23",
+      "dateAfter": "2026-08-06",
+      "movePct": 4.9
+     },
+     {
+      "date": "2026-08-06",
+      "dateAfter": "2026-08-20",
+      "movePct": -1
+     },
+     {
+      "date": "2026-08-20",
+      "dateAfter": "2026-09-03",
+      "movePct": 5.3
+     },
+     {
+      "date": "2026-09-03",
+      "dateAfter": "2026-09-18",
+      "movePct": -2.7
+     }
+    ],
+    "trader": {
+     "thresholdPct": 5,
+     "moveBand": {
+      "pointEstimate": 61,
+      "low": 52,
+      "high": 69,
+      "confidence": "high",
+      "sampleCount": 125,
+      "hitCount": 76
+     }
+    },
+    "status": "ok",
+    "typical": {
+     "p25": -4.4,
+     "median": 2.4,
+     "p75": 7.6
+    },
+    "worst": -22.1,
+    "best": 37.4
+   },
+   "historyBasis": "baseline",
+   "noHistoryReason": null,
+   "matchedOn": [],
+   "scorecard": {
+    "symbol": "NVDA",
+    "asOf": "2026-09-27",
+    "dimensions": [
+     {
+      "key": "valuation",
+      "label": "Price vs profit",
+      "level": "strong",
+      "rated": true,
+      "verdict": "Cheaper than usual",
+      "sentence": "The share costs 28 times the company's yearly profit, lower than its own 5-year average of 61. For comparison, the middle figure across the 15 companies Cairn tracks is 39.",
+      "inputs": [
+       {
+        "label": "Price ÷ yearly profit per share",
+        "value": 28.45385680457886,
+        "display": "28"
+       },
+       {
+        "label": "Its 5-year average",
+        "value": 61.42233629746413,
+        "display": "61"
+       },
+       {
+        "label": "Similar companies (median)",
+        "value": null,
+        "display": null
+       },
+       {
+        "label": "Similar companies counted",
+        "value": null,
+        "display": null
+       },
+       {
+        "label": "Companies Cairn tracks (median)",
+        "value": 39.1584394172467,
+        "display": "39"
+       },
+       {
+        "label": "Companies Cairn tracks, counted",
+        "value": 15,
+        "display": "15"
+       }
+      ],
+      "sources": [
+       {
+        "kind": "sec_filing",
+        "label": "10-Q filed 2026-08-26 (profit per share)",
+        "ref": "0001045810-26-000075",
+        "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581026000075/"
+       },
+       {
+        "kind": "price_history",
+        "label": "Closing price 2026-09-25",
+        "ref": "2026-09-25"
+       }
+      ]
+     },
+     {
+      "key": "growth",
+      "label": "Growth",
+      "level": "strong",
+      "rated": true,
+      "verdict": "Strong",
+      "sentence": "Sales are up 83% on last year, and profit is up 123%. Growth is speeding up.",
+      "inputs": [
+       {
+        "label": "Sales growth, last 12 months vs the 12 before",
+        "value": 0.8337529809100703,
+        "display": "83%"
+       },
+       {
+        "label": "Profit growth, last 12 months vs the 12 before",
+        "value": 1.227317343556936,
+        "display": "123%"
+       },
+       {
+        "label": "Latest quarter's sales growth vs a year earlier",
+        "value": 1.0585114348672526,
+        "display": "+106%"
+       },
+       {
+        "label": "Previous quarter's sales growth vs a year earlier",
+        "value": 0.8522763378875222,
+        "display": "+85%"
+       }
+      ],
+      "sources": [
+       {
+        "kind": "sec_filing",
+        "label": "10-Q filed 2026-08-26 (sales and profit)",
+        "ref": "0001045810-26-000075",
+        "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581026000075/"
+       }
+      ]
+     },
+     {
+      "key": "health",
+      "label": "Financial health",
+      "level": "not_applicable",
+      "rated": true,
+      "verdict": "Not available",
+      "sentence": "Profit and cash-flow figures are not complete for this company.",
+      "inputs": [],
+      "sources": []
+     },
+     {
+      "key": "dividend",
+      "label": "Dividend",
+      "level": "not_applicable",
+      "rated": true,
+      "verdict": "Tiny",
+      "sentence": "Pays 0.12% a year. It is a growth share, not an income share.",
+      "inputs": [
+       {
+        "label": "Dividend yield (last 12 months ÷ price)",
+        "value": 0.0012440573638790233,
+        "display": "0.12%"
+       },
+       {
+        "label": "Share of free cash flow paid out",
+        "value": null,
+        "display": null
+       },
+       {
+        "label": "Years in a row the dividend rose",
+        "value": 2,
+        "display": "2"
+       }
+      ],
+      "sources": [
+       {
+        "kind": "sec_filing",
+        "label": "10-Q filed 2026-08-26 (dividends and cash flow)",
+        "ref": "0001045810-26-000075",
+        "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581026000075/"
+       }
+      ]
+     },
+     {
+      "key": "trend",
+      "label": "Price trend",
+      "level": "strong",
+      "rated": true,
+      "verdict": "Rising",
+      "sentence": "Up 31% over 6 months, and 13% above its average price of the last 200 trading days.",
+      "inputs": [
+       {
+        "label": "6-month price change",
+        "value": 0.31435412347731795,
+        "display": "31%"
+       },
+       {
+        "label": "Price vs 200-day average",
+        "value": 0.1283,
+        "display": "13%"
+       }
+      ],
+      "sources": [
+       {
+        "kind": "price_history",
+        "label": "Daily closing prices to 2026-09-25",
+        "ref": "2026-09-25"
+       }
+      ]
+     },
+     {
+      "key": "next_event",
+      "label": "Next event",
+      "level": "not_applicable",
+      "rated": false,
+      "verdict": "Earnings in about 52 days (estimated)",
+      "sentence": "Earnings, around Wed 18 Nov. This is an estimate from last year's results date, not a date the company has announced. On its last 12 results days the share moved 5% or more 6 times; the typical move was 4.4%.",
+      "inputs": [
+       {
+        "label": "Days until the event",
+        "value": 52,
+        "display": "52"
+       },
+       {
+        "label": "Event date",
+        "value": null,
+        "display": "Wed 18 Nov"
+       },
+       {
+        "label": "Past results days counted",
+        "value": 12,
+        "display": "12"
+       },
+       {
+        "label": "Results days with a move of 5% or more",
+        "value": 6,
+        "display": "6"
+       },
+       {
+        "label": "Typical results-day move",
+        "value": 0.04352572972500496,
+        "display": "4.4%"
+       }
+      ],
+      "sources": [
+       {
+        "kind": "earnings_release",
+        "label": "Estimate from SEC filings: results released 2025-11-19 + 52 weeks; this matched to the day on its last releases",
+        "ref": "2025-11-19"
+       },
+       {
+        "kind": "earnings_release",
+        "label": "12 earnings releases (SEC 8-K item 2.02) and closing prices",
+        "ref": "2023-11-21..2026-08-26"
+       }
+      ]
+     }
+    ]
+   },
+   "events": [
+    {
+     "id": "E1",
+     "rowId": "5922f8e5-100a-459a-90b7-6ca99c38b46a",
+     "kind": "earnings",
+     "date": "2026-11-18",
+     "estimated": true
+    }
+   ],
+   "news": [
+    {
+     "id": "N1",
+     "rowId": "3b1f0dbc-6c87-4721-a245-ec6fb32a5afd",
+     "title": "Micron investors should get ready for a seesaw ride, analyst says",
+     "source": "MarketWatch Top Stories",
+     "date": "2026-09-25T16:27:00+00:00"
+    },
+    {
+     "id": "N2",
+     "rowId": "50c682b3-2de4-445d-9882-d9a233b9041d",
+     "title": "Nvidia Scores Winning Streak: Trump-Xi Meeting, China Sales Outlook In Focus",
+     "source": "Yahoo Finance News",
+     "date": "2026-09-23T17:00:17+00:00"
+    },
+    {
+     "id": "N3",
+     "rowId": "f14d4e7e-c981-49c3-8129-142d0473ef46",
+     "title": "Nvidia Director Is Cashing Out $300M. Should You Be Worried?",
+     "source": "Yahoo Finance News",
+     "date": "2026-09-23T16:35:58+00:00"
+    },
+    {
+     "id": "N4",
+     "rowId": "1d4f47c6-7114-4c9b-9e4b-d246bb0047ed",
+     "title": "Losing to Win: A VC Lens Will Find the Next Nvidia",
+     "source": "Yahoo Finance News",
+     "date": "2026-09-23T15:27:01+00:00"
+    },
+    {
+     "id": "N5",
+     "rowId": "61db695e-9a54-4512-a1e7-2e9c83040711",
+     "title": "IonQ Surges 11% as NVIDIA Research Center Deal Follows Error-Decoder Breakthrough; D-Wave Climbs 5%, Rigetti Rises 4%",
+     "source": "Yahoo Finance News",
+     "date": "2026-09-23T13:19:45+00:00"
+    },
+    {
+     "id": "N6",
+     "rowId": "968c32ca-2f92-4baf-8dd2-596faec2d161",
+     "title": "Nvidia Just Qualified Tesla and Vertiv Products for Its New AI-Factory Standard",
+     "source": "Yahoo Finance News",
+     "date": "2026-09-23T13:01:44+00:00"
+    }
+   ],
+   "trader": {
+    "moveBandLow": 0,
+    "moveBandHigh": 100,
+    "moveBandPoint": 0,
+    "hitCount": 0,
+    "sampleCount": 0,
+    "readings": [
+     {
+      "label": "RSI-14",
+      "display": "55.17"
+     },
+     {
+      "label": "30-day realized volatility (annualized)",
+      "display": "0.38"
+     },
+     {
+      "label": "Drawdown from trailing 1-year high (%)",
+      "display": "-4.53"
+     }
+    ]
+   }
+  },
+  "MSFT": {
+   "name": "Microsoft",
+   "symbol": "MSFT",
+   "assetType": "equity",
+   "history": {
+    "horizonSessions": 10,
+    "n": 17,
+    "higher": 11,
+    "lower": 6,
+    "upRate": {
+     "point": 65,
+     "low": 41,
+     "high": 83
+    },
+    "confidence": "medium",
+    "cases": [
+     {
+      "date": "2023-03-15",
+      "dateAfter": "2023-03-29",
+      "movePct": 5.7
+     },
+     {
+      "date": "2023-04-25",
+      "dateAfter": "2023-05-09",
+      "movePct": 11.5
+     },
+     {
+      "date": "2023-05-25",
+      "dateAfter": "2023-06-09",
+      "movePct": 0.3
+     },
+     {
+      "date": "2023-06-16",
+      "dateAfter": "2023-07-03",
+      "movePct": -1.3
+     },
+     {
+      "date": "2023-08-31",
+      "dateAfter": "2023-09-15",
+      "movePct": 0.8
+     },
+     {
+      "date": "2023-09-15",
+      "dateAfter": "2023-09-29",
+      "movePct": -4.4
+     },
+     {
+      "date": "2023-10-24",
+      "dateAfter": "2023-11-07",
+      "movePct": 9.1
+     },
+     {
+      "date": "2023-11-20",
+      "dateAfter": "2023-12-05",
+      "movePct": -1.3
+     },
+     {
+      "date": "2023-12-15",
+      "dateAfter": "2024-01-02",
+      "movePct": 0
+     },
+     {
+      "date": "2024-01-30",
+      "dateAfter": "2024-02-13",
+      "movePct": -0.6
+     },
+     {
+      "date": "2024-03-14",
+      "dateAfter": "2024-03-28",
+      "movePct": -1.1
+     },
+     {
+      "date": "2024-05-30",
+      "dateAfter": "2024-06-13",
+      "movePct": 6.5
+     },
+     {
+      "date": "2024-06-21",
+      "dateAfter": "2024-07-08",
+      "movePct": 3.7
+     },
+     {
+      "date": "2025-06-20",
+      "dateAfter": "2025-07-07",
+      "movePct": 4.3
+     },
+     {
+      "date": "2025-07-30",
+      "dateAfter": "2025-08-13",
+      "movePct": 1.4
+     },
+     {
+      "date": "2025-09-05",
+      "dateAfter": "2025-09-19",
+      "movePct": 4.6
+     },
+     {
+      "date": "2025-09-19",
+      "dateAfter": "2025-10-03",
+      "movePct": -0.1
+     }
+    ],
+    "trader": {
+     "thresholdPct": 5,
+     "moveBand": {
+      "pointEstimate": 24,
+      "low": 10,
+      "high": 47,
+      "confidence": "medium",
+      "sampleCount": 17,
+      "hitCount": 4
+     }
+    },
+    "status": "ok",
+    "typical": {
+     "p25": -0.6,
+     "median": 0.8,
+     "p75": 4.6
+    },
+    "worst": -4.4,
+    "best": 11.5
+   },
+   "historyBasis": "similar",
+   "noHistoryReason": null,
+   "matchedOn": [
+    "unusually heavy trading",
+    "no results due within 7 trading days",
+    "a rising price trend"
+   ],
+   "scorecard": {
+    "symbol": "MSFT",
+    "asOf": "2026-09-27",
+    "dimensions": [
+     {
+      "key": "valuation",
+      "label": "Price vs profit",
+      "level": "mixed",
+      "rated": true,
+      "verdict": "About usual",
+      "sentence": "The share costs 29 times the company's yearly profit, about the same as its own 5-year average of 31. For comparison, the middle figure across the 15 companies Cairn tracks is 39.",
+      "inputs": [
+       {
+        "label": "Price ÷ yearly profit per share",
+        "value": 28.755987905858287,
+        "display": "29"
+       },
+       {
+        "label": "Its 5-year average",
+        "value": 31.40367481460172,
+        "display": "31"
+       },
+       {
+        "label": "Similar companies (median)",
+        "value": null,
+        "display": null
+       },
+       {
+        "label": "Similar companies counted",
+        "value": null,
+        "display": null
+       },
+       {
+        "label": "Companies Cairn tracks (median)",
+        "value": 39.1584394172467,
+        "display": "39"
+       },
+       {
+        "label": "Companies Cairn tracks, counted",
+        "value": 15,
+        "display": "15"
+       }
+      ],
+      "sources": [
+       {
+        "kind": "sec_filing",
+        "label": "10-K filed 2026-07-29 (profit per share)",
+        "ref": "0001193125-26-323660",
+        "url": "https://www.sec.gov/Archives/edgar/data/789019/000119312526323660/"
+       },
+       {
+        "kind": "price_history",
+        "label": "Closing price 2026-09-25",
+        "ref": "2026-09-25"
+       }
+      ]
+     },
+     {
+      "key": "growth",
+      "label": "Growth",
+      "level": "strong",
+      "rated": true,
+      "verdict": "Strong",
+      "sentence": "Sales are up 18% on last year, and profit is up 31%. The pace is steady.",
+      "inputs": [
+       {
+        "label": "Sales growth, last 12 months vs the 12 before",
+        "value": 0.17788686799846665,
+        "display": "18%"
+       },
+       {
+        "label": "Profit growth, last 12 months vs the 12 before",
+        "value": 0.3134279990572708,
+        "display": "31%"
+       },
+       {
+        "label": "Latest quarter's sales growth vs a year earlier",
+        "value": 0.17747020577962092,
+        "display": "+18%"
+       },
+       {
+        "label": "Previous quarter's sales growth vs a year earlier",
+        "value": 0.18297034224873698,
+        "display": "+18%"
+       }
+      ],
+      "sources": [
+       {
+        "kind": "sec_filing",
+        "label": "10-K filed 2026-07-29 (sales and profit)",
+        "ref": "0001193125-26-323660",
+        "url": "https://www.sec.gov/Archives/edgar/data/789019/000119312526323660/"
+       }
+      ]
+     },
+     {
+      "key": "health",
+      "label": "Financial health",
+      "level": "not_applicable",
+      "rated": true,
+      "verdict": "Not available",
+      "sentence": "Profit and cash-flow figures are not complete for this company.",
+      "inputs": [],
+      "sources": []
+     },
+     {
+      "key": "dividend",
+      "label": "Dividend",
+      "level": "strong",
+      "rated": true,
+      "verdict": "Well covered",
+      "sentence": "Pays 0.71% a year. The payments use 39% of its free cash flow (cash left after running and investing in the business). It has raised it 6 years in a row.",
+      "inputs": [
+       {
+        "label": "Dividend yield (last 12 months ÷ price)",
+        "value": 0.007051940485724783,
+        "display": "0.71%"
+       },
+       {
+        "label": "Share of free cash flow paid out",
+        "value": 0.3947780912714407,
+        "display": "39%"
+       },
+       {
+        "label": "Years in a row the dividend rose",
+        "value": 6,
+        "display": "6"
+       }
+      ],
+      "sources": [
+       {
+        "kind": "sec_filing",
+        "label": "10-K filed 2026-07-29 (dividends and cash flow)",
+        "ref": "0001193125-26-323660",
+        "url": "https://www.sec.gov/Archives/edgar/data/789019/000119312526323660/"
+       }
+      ]
+     },
+     {
+      "key": "trend",
+      "label": "Price trend",
+      "level": "strong",
+      "rated": true,
+      "verdict": "Rising",
+      "sentence": "Up 41% over 6 months, and 19% above its average price of the last 200 trading days.",
+      "inputs": [
+       {
+        "label": "6-month price change",
+        "value": 0.4104161029277178,
+        "display": "41%"
+       },
+       {
+        "label": "Price vs 200-day average",
+        "value": 0.19469999999999998,
+        "display": "19%"
+       }
+      ],
+      "sources": [
+       {
+        "kind": "price_history",
+        "label": "Daily closing prices to 2026-09-25",
+        "ref": "2026-09-25"
+       }
+      ]
+     },
+     {
+      "key": "next_event",
+      "label": "Next event",
+      "level": "not_applicable",
+      "rated": false,
+      "verdict": "Earnings in about 31 days (estimated)",
+      "sentence": "Earnings, around Wed 28 Oct. This is an estimate from last year's results date, not a date the company has announced. On its last 12 results days the share moved 5% or more 5 times; the typical move was 3.9%.",
+      "inputs": [
+       {
+        "label": "Days until the event",
+        "value": 31,
+        "display": "31"
+       },
+       {
+        "label": "Event date",
+        "value": null,
+        "display": "Wed 28 Oct"
+       },
+       {
+        "label": "Past results days counted",
+        "value": 12,
+        "display": "12"
+       },
+       {
+        "label": "Results days with a move of 5% or more",
+        "value": 5,
+        "display": "5"
+       },
+       {
+        "label": "Typical results-day move",
+        "value": 0.03938585105864084,
+        "display": "3.9%"
+       }
+      ],
+      "sources": [
+       {
+        "kind": "earnings_release",
+        "label": "Estimate from SEC filings: results released 2025-10-29 + 52 weeks; this matched to the day on its last releases",
+        "ref": "2025-10-29"
+       },
+       {
+        "kind": "earnings_release",
+        "label": "12 earnings releases (SEC 8-K item 2.02) and closing prices",
+        "ref": "2023-10-24..2026-07-29"
+       }
+      ]
+     }
+    ]
+   },
+   "events": [
+    {
+     "id": "E1",
+     "rowId": "49249355-6829-442c-be01-654b3ac53986",
+     "kind": "earnings",
+     "date": "2026-10-28",
+     "estimated": true
+    }
+   ],
+   "news": [
+    {
+     "id": "N1",
+     "rowId": "aaa37b24-6dbf-4900-a266-dbdd8c17a736",
+     "title": "Microsoft’s stock has roared back to life, closing at its highest level of the year",
+     "source": "MarketWatch Top Stories",
+     "date": "2026-09-25T21:04:00+00:00"
+    },
+    {
+     "id": "N2",
+     "rowId": "45485d17-ee9e-4629-87ea-7b04788eadf6",
+     "title": "Microsoft’s stock has roared back to life and is now headed for its highest close of the year",
+     "source": "MarketWatch Top Stories",
+     "date": "2026-09-25T19:14:00+00:00"
+    },
+    {
+     "id": "N3",
+     "rowId": "f7b852d6-e958-43cf-b95c-ccc4ae92f93c",
+     "title": "Microsoft has ‘clearly turned the corner.’ How its stock can chart more gains.",
+     "source": "MarketWatch Top Stories",
+     "date": "2026-09-23T16:58:00+00:00"
+    },
+    {
+     "id": "N4",
+     "rowId": "7d0de3e7-6d00-4ce4-9e5d-764c5f4fceb6",
+     "title": "Microsoft Stock Gets Another Upgrade, Price-Target Hike",
+     "source": "Yahoo Finance News",
+     "date": "2026-09-23T15:01:49+00:00"
+    },
+    {
+     "id": "N5",
+     "rowId": "280f34b5-08c1-408f-ab30-6ce901cf5e1c",
+     "title": "Trump Logged 1,156 Trades in One Month and Sold Microsoft. The Reason Is a Tax Strategy You Can Copy.",
+     "source": "Yahoo Finance News",
+     "date": "2026-09-23T13:50:24+00:00"
+    },
+    {
+     "id": "N6",
+     "rowId": "a6603d04-edb1-408d-8cef-9fe02f358680",
+     "title": "IREN Has Microsoft and $14 Billion of Funding. Execution Is the Real Test",
+     "source": "Yahoo Finance News",
+     "date": "2026-09-23T13:14:03+00:00"
+    }
+   ],
+   "trader": {
+    "moveBandLow": 0,
+    "moveBandHigh": 100,
+    "moveBandPoint": 0,
+    "hitCount": 0,
+    "sampleCount": 0,
+    "readings": [
+     {
+      "label": "RSI-14",
+      "display": "63.22"
+     },
+     {
+      "label": "30-day realized volatility (annualized)",
+      "display": "0.23"
+     },
+     {
+      "label": "Drawdown from trailing 1-year high (%)",
+      "display": "-4.78"
+     }
+    ]
+   }
+  },
+  "AAPL": {
+   "name": "Apple",
+   "symbol": "AAPL",
+   "assetType": "equity",
+   "history": {
+    "horizonSessions": 10,
+    "n": 17,
+    "higher": 13,
+    "lower": 4,
+    "upRate": {
+     "point": 76,
+     "low": 53,
+     "high": 90
+    },
+    "confidence": "medium",
+    "cases": [
+     {
+      "date": "2023-05-18",
+      "dateAfter": "2023-06-02",
+      "movePct": 3.4
+     },
+     {
+      "date": "2023-06-02",
+      "dateAfter": "2023-06-16",
+      "movePct": 2.2
+     },
+     {
+      "date": "2023-06-22",
+      "dateAfter": "2023-07-07",
+      "movePct": 2
+     },
+     {
+      "date": "2023-07-17",
+      "dateAfter": "2023-07-31",
+      "movePct": 1.3
+     },
+     {
+      "date": "2023-12-13",
+      "dateAfter": "2023-12-28",
+      "movePct": -2.2
+     },
+     {
+      "date": "2024-06-13",
+      "dateAfter": "2024-06-28",
+      "movePct": -1.7
+     },
+     {
+      "date": "2024-07-01",
+      "dateAfter": "2024-07-16",
+      "movePct": 8.3
+     },
+     {
+      "date": "2024-07-16",
+      "dateAfter": "2024-07-30",
+      "movePct": -6.8
+     },
+     {
+      "date": "2024-10-18",
+      "dateAfter": "2024-11-01",
+      "movePct": -5.1
+     },
+     {
+      "date": "2024-11-29",
+      "dateAfter": "2024-12-13",
+      "movePct": 4.6
+     },
+     {
+      "date": "2024-12-13",
+      "dateAfter": "2024-12-30",
+      "movePct": 1.6
+     },
+     {
+      "date": "2025-10-20",
+      "dateAfter": "2025-11-03",
+      "movePct": 2.6
+     },
+     {
+      "date": "2025-11-11",
+      "dateAfter": "2025-11-25",
+      "movePct": 0.6
+     },
+     {
+      "date": "2025-11-25",
+      "dateAfter": "2025-12-10",
+      "movePct": 0.7
+     },
+     {
+      "date": "2026-05-06",
+      "dateAfter": "2026-05-20",
+      "movePct": 5.1
+     },
+     {
+      "date": "2026-05-20",
+      "dateAfter": "2026-06-04",
+      "movePct": 3
+     },
+     {
+      "date": "2026-07-09",
+      "dateAfter": "2026-07-23",
+      "movePct": 1.7
+     }
+    ],
+    "trader": {
+     "thresholdPct": 5,
+     "moveBand": {
+      "pointEstimate": 24,
+      "low": 10,
+      "high": 47,
+      "confidence": "medium",
+      "sampleCount": 17,
+      "hitCount": 4
+     }
+    },
+    "status": "ok",
+    "typical": {
+     "p25": 0.6,
+     "median": 1.7,
+     "p75": 3
+    },
+    "worst": -6.8,
+    "best": 8.3
+   },
+   "historyBasis": "similar",
+   "noHistoryReason": null,
+   "matchedOn": [
+    "a new high for the year",
+    "a rising price trend",
+    "no results due within 7 trading days"
+   ],
+   "scorecard": {
+    "symbol": "AAPL",
+    "asOf": "2026-09-27",
+    "dimensions": [
+     {
+      "key": "valuation",
+      "label": "Price vs profit",
+      "level": "weak",
+      "rated": true,
+      "verdict": "Pricier than usual",
+      "sentence": "The share costs 39 times the company's yearly profit, higher than its own 5-year average of 30. For comparison, the middle figure across the 15 companies Cairn tracks is 39.",
+      "inputs": [
+       {
+        "label": "Price ÷ yearly profit per share",
+        "value": 39.158439417246704,
+        "display": "39"
+       },
+       {
+        "label": "Its 5-year average",
+        "value": 30.253753268789346,
+        "display": "30"
+       },
+       {
+        "label": "Similar companies (median)",
+        "value": null,
+        "display": null
+       },
+       {
+        "label": "Similar companies counted",
+        "value": null,
+        "display": null
+       },
+       {
+        "label": "Companies Cairn tracks (median)",
+        "value": 39.1584394172467,
+        "display": "39"
+       },
+       {
+        "label": "Companies Cairn tracks, counted",
+        "value": 15,
+        "display": "15"
+       }
+      ],
+      "sources": [
+       {
+        "kind": "sec_filing",
+        "label": "10-Q filed 2026-07-31 (profit per share)",
+        "ref": "0000320193-26-000020",
+        "url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000020/"
+       },
+       {
+        "kind": "price_history",
+        "label": "Closing price 2026-09-25",
+        "ref": "2026-09-25"
+       }
+      ]
+     },
+     {
+      "key": "growth",
+      "label": "Growth",
+      "level": "strong",
+      "rated": true,
+      "verdict": "Strong",
+      "sentence": "Sales are up 14% on last year, and profit is up 30%. The pace is steady.",
+      "inputs": [
+       {
+        "label": "Sales growth, last 12 months vs the 12 before",
+        "value": 0.14242398286937896,
+        "display": "14%"
+       },
+       {
+        "label": "Profit growth, last 12 months vs the 12 before",
+        "value": 0.2986502820306205,
+        "display": "30%"
+       },
+       {
+        "label": "Latest quarter's sales growth vs a year earlier",
+        "value": 0.16356501765281384,
+        "display": "+16%"
+       },
+       {
+        "label": "Previous quarter's sales growth vs a year earlier",
+        "value": 0.16595182415922993,
+        "display": "+17%"
+       }
+      ],
+      "sources": [
+       {
+        "kind": "sec_filing",
+        "label": "10-Q filed 2026-07-31 (sales and profit)",
+        "ref": "0000320193-26-000020",
+        "url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000020/"
+       }
+      ]
+     },
+     {
+      "key": "health",
+      "label": "Financial health",
+      "level": "strong",
+      "rated": true,
+      "verdict": "Strong",
+      "sentence": "Keeps 36 cents of every dollar of sales as EBITDA (profit before interest, tax and write-downs). It brings in more cash than it spends. Its debt minus its cash equals 0.3 years of EBITDA.",
+      "inputs": [
+       {
+        "label": "EBITDA margin",
+        "value": 0.35979161266689946,
+        "display": "36"
+       },
+       {
+        "label": "Free cash flow, last 12 months (USD)",
+        "value": 136683000000,
+        "display": null
+       },
+       {
+        "label": "Net debt (USD)",
+        "value": 44753000000,
+        "display": null
+       },
+       {
+        "label": "Net debt ÷ EBITDA",
+        "value": 0.266451931721432,
+        "display": "0.3"
+       }
+      ],
+      "sources": [
+       {
+        "kind": "sec_filing",
+        "label": "10-Q filed 2026-07-31 (EBITDA, cash flow and debt)",
+        "ref": "0000320193-26-000020",
+        "url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000020/"
+       }
+      ]
+     },
+     {
+      "key": "dividend",
+      "label": "Dividend",
+      "level": "not_applicable",
+      "rated": true,
+      "verdict": "Tiny",
+      "sentence": "Pays 0.31% a year. It is a growth share, not an income share.",
+      "inputs": [
+       {
+        "label": "Dividend yield (last 12 months ÷ price)",
+        "value": 0.0030785468597415468,
+        "display": "0.31%"
+       },
+       {
+        "label": "Share of free cash flow paid out",
+        "value": 0.11442534916558753,
+        "display": "11%"
+       },
+       {
+        "label": "Years in a row the dividend rose",
+        "value": 5,
+        "display": "5"
+       }
+      ],
+      "sources": [
+       {
+        "kind": "sec_filing",
+        "label": "10-Q filed 2026-07-31 (dividends and cash flow)",
+        "ref": "0000320193-26-000020",
+        "url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000020/"
+       }
+      ]
+     },
+     {
+      "key": "trend",
+      "label": "Price trend",
+      "level": "strong",
+      "rated": true,
+      "verdict": "Rising",
+      "sentence": "Up 35% over 6 months, and 19% above its average price of the last 200 trading days.",
+      "inputs": [
+       {
+        "label": "6-month price change",
+        "value": 0.3486891856039911,
+        "display": "35%"
+       },
+       {
+        "label": "Price vs 200-day average",
+        "value": 0.1852,
+        "display": "19%"
+       }
+      ],
+      "sources": [
+       {
+        "kind": "price_history",
+        "label": "Daily closing prices to 2026-09-25",
+        "ref": "2026-09-25"
+       }
+      ]
+     },
+     {
+      "key": "next_event",
+      "label": "Next event",
+      "level": "not_applicable",
+      "rated": false,
+      "verdict": "Earnings in about 32 days (estimated)",
+      "sentence": "Earnings, around Thu 29 Oct. This is an estimate from last year's results date, not a date the company has announced. On its last 12 results days the share moved 5% or more 2 times; the typical move was 1.0%.",
+      "inputs": [
+       {
+        "label": "Days until the event",
+        "value": 32,
+        "display": "32"
+       },
+       {
+        "label": "Event date",
+        "value": null,
+        "display": "Thu 29 Oct"
+       },
+       {
+        "label": "Past results days counted",
+        "value": 12,
+        "display": "12"
+       },
+       {
+        "label": "Results days with a move of 5% or more",
+        "value": 2,
+        "display": "2"
+       },
+       {
+        "label": "Typical results-day move",
+        "value": 0.010074507196487614,
+        "display": "1.0%"
+       }
+      ],
+      "sources": [
+       {
+        "kind": "earnings_release",
+        "label": "Estimate from SEC filings: results released 2025-10-30 + 52 weeks; this matched to the day on its last releases",
+        "ref": "2025-10-30"
+       },
+       {
+        "kind": "earnings_release",
+        "label": "12 earnings releases (SEC 8-K item 2.02) and closing prices",
+        "ref": "2023-11-02..2026-07-30"
+       }
+      ]
+     }
+    ]
+   },
+   "events": [
+    {
+     "id": "E1",
+     "rowId": "9471fbd8-8d20-4269-bc04-fa94590ec528",
+     "kind": "earnings",
+     "date": "2026-10-29",
+     "estimated": true
+    }
+   ],
+   "news": [
+    {
+     "id": "N1",
+     "rowId": "3c0a7b9f-9d7c-415b-b9bf-44c591916281",
+     "title": "Apple’s expensive new iPhones could be a double-edged sword for the company",
+     "source": "MarketWatch Top Stories",
+     "date": "2026-09-25T16:11:00+00:00"
+    },
+    {
+     "id": "N2",
+     "rowId": "fd6ad488-28e4-450e-aeb0-ae4e12041abc",
+     "title": "Stocks to Watch Recap: Meta, Schwab, Shopify, Apple",
+     "source": "Yahoo Finance News",
+     "date": "2026-09-22T20:54:34+00:00"
+    },
+    {
+     "id": "N3",
+     "rowId": "966f80ea-7e44-4724-a7ff-dcad0988a8c1",
+     "title": "Why Apple could soon join Nvidia in the exclusive $5 trillion club",
+     "source": "MarketWatch Top Stories",
+     "date": "2026-09-22T20:54:00+00:00"
+    },
+    {
+     "id": "N4",
+     "rowId": "60587c57-ad8b-46cc-a008-8cf227547f9e",
+     "title": "Stock Market Today: Dow Skids But Apple Eyes A Buy Point; Filing Says Trump Makes These Trades",
+     "source": "Yahoo Finance News",
+     "date": "2026-09-22T20:40:00+00:00"
+    },
+    {
+     "id": "N5",
+     "rowId": "39b9c739-b8f5-4d8c-99c9-7d4217d4d5aa",
+     "title": "Apple Just Misses $5 Trillion Market Cap. The Milestone Is Likely Coming Soon.",
+     "source": "Yahoo Finance News",
+     "date": "2026-09-22T20:29:00+00:00"
+    },
+    {
+     "id": "N6",
+     "rowId": "d38540b7-3b73-47f9-89a7-bb9e038c14c4",
+     "title": "Apple Takes Aim at Nvidia’s AI Economics: New Macs Have ‘No Cost per Token,’ Hardware Chief Says",
+     "source": "Yahoo Finance News",
+     "date": "2026-09-22T19:32:50+00:00"
+    }
+   ],
+   "trader": {
+    "moveBandLow": 0,
+    "moveBandHigh": 100,
+    "moveBandPoint": 0,
+    "hitCount": 0,
+    "sampleCount": 0,
+    "readings": [
+     {
+      "label": "RSI-14",
+      "display": "65.67"
+     },
+     {
+      "label": "30-day realized volatility (annualized)",
+      "display": "0.2"
+     },
+     {
+      "label": "Drawdown from trailing 1-year high (%)",
+      "display": "0"
+     }
+    ]
+   }
+  },
+  "AMZN": {
+   "name": "Amazon.com",
+   "symbol": "AMZN",
+   "assetType": "equity",
+   "history": {
+    "horizonSessions": 10,
+    "n": 125,
+    "higher": 69,
+    "lower": 56,
+    "upRate": {
+     "point": 55,
+     "low": 46,
+     "high": 64
+    },
+    "confidence": "high",
+    "cases": [
+     {
+      "date": "2021-09-27",
+      "dateAfter": "2021-10-11",
+      "movePct": -4.7
+     },
+     {
+      "date": "2021-10-11",
+      "dateAfter": "2021-10-25",
+      "movePct": 2.3
+     },
+     {
+      "date": "2021-10-25",
+      "dateAfter": "2021-11-08",
+      "movePct": 5.1
+     },
+     {
+      "date": "2021-11-08",
+      "dateAfter": "2021-11-22",
+      "movePct": 2.4
+     },
+     {
+      "date": "2021-11-22",
+      "dateAfter": "2021-12-07",
+      "movePct": -1.4
+     },
+     {
+      "date": "2021-12-07",
+      "dateAfter": "2021-12-21",
+      "movePct": -3.3
+     },
+     {
+      "date": "2021-12-21",
+      "dateAfter": "2022-01-05",
+      "movePct": -3.6
+     },
+     {
+      "date": "2022-01-05",
+      "dateAfter": "2022-01-20",
+      "movePct": -7.7
+     },
+     {
+      "date": "2022-01-20",
+      "dateAfter": "2022-02-03",
+      "movePct": -8.5
+     },
+     {
+      "date": "2022-02-03",
+      "dateAfter": "2022-02-17",
+      "movePct": 11.4
+     },
+     {
+      "date": "2022-02-17",
+      "dateAfter": "2022-03-04",
+      "movePct": -5.8
+     },
+     {
+      "date": "2022-03-04",
+      "dateAfter": "2022-03-18",
+      "movePct": 10.7
+     },
+     {
+      "date": "2022-03-18",
+      "dateAfter": "2022-04-01",
+      "movePct": 1.4
+     },
+     {
+      "date": "2022-04-01",
+      "dateAfter": "2022-04-18",
+      "movePct": -6.6
+     },
+     {
+      "date": "2022-04-18",
+      "dateAfter": "2022-05-02",
+      "movePct": -18.5
+     },
+     {
+      "date": "2022-05-02",
+      "dateAfter": "2022-05-16",
+      "movePct": -11
+     },
+     {
+      "date": "2022-05-16",
+      "dateAfter": "2022-05-31",
+      "movePct": 8.5
+     },
+     {
+      "date": "2022-05-31",
+      "dateAfter": "2022-06-14",
+      "movePct": -14.9
+     },
+     {
+      "date": "2022-06-14",
+      "dateAfter": "2022-06-29",
+      "movePct": 6.5
+     },
+     {
+      "date": "2022-06-29",
+      "dateAfter": "2022-07-14",
+      "movePct": 1.6
+     },
+     {
+      "date": "2022-07-14",
+      "dateAfter": "2022-07-28",
+      "movePct": 10.5
+     },
+     {
+      "date": "2022-07-28",
+      "dateAfter": "2022-08-11",
+      "movePct": 15
+     },
+     {
+      "date": "2022-08-11",
+      "dateAfter": "2022-08-25",
+      "movePct": -2.4
+     },
+     {
+      "date": "2022-08-25",
+      "dateAfter": "2022-09-09",
+      "movePct": -2.9
+     },
+     {
+      "date": "2022-09-09",
+      "dateAfter": "2022-09-23",
+      "movePct": -14.6
+     },
+     {
+      "date": "2022-09-23",
+      "dateAfter": "2022-10-07",
+      "movePct": 0.7
+     },
+     {
+      "date": "2022-10-07",
+      "dateAfter": "2022-10-21",
+      "movePct": 4.2
+     },
+     {
+      "date": "2022-10-21",
+      "dateAfter": "2022-11-04",
+      "movePct": -23.8
+     },
+     {
+      "date": "2022-11-04",
+      "dateAfter": "2022-11-18",
+      "movePct": 3.5
+     },
+     {
+      "date": "2022-11-18",
+      "dateAfter": "2022-12-05",
+      "movePct": -3.3
+     },
+     {
+      "date": "2022-12-05",
+      "dateAfter": "2022-12-19",
+      "movePct": -6.7
+     },
+     {
+      "date": "2022-12-19",
+      "dateAfter": "2023-01-04",
+      "movePct": 0.3
+     },
+     {
+      "date": "2023-01-04",
+      "dateAfter": "2023-01-19",
+      "movePct": 10
+     },
+     {
+      "date": "2023-01-19",
+      "dateAfter": "2023-02-02",
+      "movePct": 20.5
+     },
+     {
+      "date": "2023-02-02",
+      "dateAfter": "2023-02-16",
+      "movePct": -13.1
+     },
+     {
+      "date": "2023-02-16",
+      "dateAfter": "2023-03-03",
+      "movePct": -3.3
+     },
+     {
+      "date": "2023-03-03",
+      "dateAfter": "2023-03-17",
+      "movePct": 4.3
+     },
+     {
+      "date": "2023-03-17",
+      "dateAfter": "2023-03-31",
+      "movePct": 4.4
+     },
+     {
+      "date": "2023-03-31",
+      "dateAfter": "2023-04-17",
+      "movePct": -0.5
+     },
+     {
+      "date": "2023-04-17",
+      "dateAfter": "2023-05-01",
+      "movePct": -0.7
+     },
+     {
+      "date": "2023-05-01",
+      "dateAfter": "2023-05-15",
+      "movePct": 9
+     },
+     {
+      "date": "2023-05-15",
+      "dateAfter": "2023-05-30",
+      "movePct": 9.4
+     },
+     {
+      "date": "2023-05-30",
+      "dateAfter": "2023-06-13",
+      "movePct": 4.1
+     },
+     {
+      "date": "2023-06-13",
+      "dateAfter": "2023-06-28",
+      "movePct": 1.9
+     },
+     {
+      "date": "2023-06-28",
+      "dateAfter": "2023-07-13",
+      "movePct": 4.1
+     },
+     {
+      "date": "2023-07-13",
+      "dateAfter": "2023-07-27",
+      "movePct": -4.5
+     },
+     {
+      "date": "2023-07-27",
+      "dateAfter": "2023-08-10",
+      "movePct": 8
+     },
+     {
+      "date": "2023-08-10",
+      "dateAfter": "2023-08-24",
+      "movePct": -4.8
+     },
+     {
+      "date": "2023-08-24",
+      "dateAfter": "2023-09-08",
+      "movePct": 4.8
+     },
+     {
+      "date": "2023-09-08",
+      "dateAfter": "2023-09-22",
+      "movePct": -6.6
+     },
+     {
+      "date": "2023-09-22",
+      "dateAfter": "2023-10-06",
+      "movePct": -0.9
+     },
+     {
+      "date": "2023-10-06",
+      "dateAfter": "2023-10-20",
+      "movePct": -2.2
+     },
+     {
+      "date": "2023-10-20",
+      "dateAfter": "2023-11-03",
+      "movePct": 10.7
+     },
+     {
+      "date": "2023-11-03",
+      "dateAfter": "2023-11-17",
+      "movePct": 4.7
+     },
+     {
+      "date": "2023-11-17",
+      "dateAfter": "2023-12-04",
+      "movePct": -0.2
+     },
+     {
+      "date": "2023-12-04",
+      "dateAfter": "2023-12-18",
+      "movePct": 6.4
+     },
+     {
+      "date": "2023-12-18",
+      "dateAfter": "2024-01-03",
+      "movePct": -3.6
+     },
+     {
+      "date": "2024-01-03",
+      "dateAfter": "2024-01-18",
+      "movePct": 3.4
+     },
+     {
+      "date": "2024-01-18",
+      "dateAfter": "2024-02-01",
+      "movePct": 3.8
+     },
+     {
+      "date": "2024-02-01",
+      "dateAfter": "2024-02-15",
+      "movePct": 6.6
+     },
+     {
+      "date": "2024-02-15",
+      "dateAfter": "2024-03-01",
+      "movePct": 5
+     },
+     {
+      "date": "2024-03-01",
+      "dateAfter": "2024-03-15",
+      "movePct": -2.1
+     },
+     {
+      "date": "2024-03-15",
+      "dateAfter": "2024-04-01",
+      "movePct": 3.8
+     },
+     {
+      "date": "2024-04-01",
+      "dateAfter": "2024-04-15",
+      "movePct": 1.5
+     },
+     {
+      "date": "2024-04-15",
+      "dateAfter": "2024-04-29",
+      "movePct": -1.4
+     },
+     {
+      "date": "2024-04-29",
+      "dateAfter": "2024-05-13",
+      "movePct": 3.1
+     },
+     {
+      "date": "2024-05-13",
+      "dateAfter": "2024-05-28",
+      "movePct": -2.4
+     },
+     {
+      "date": "2024-05-28",
+      "dateAfter": "2024-06-11",
+      "movePct": 2.8
+     },
+     {
+      "date": "2024-06-11",
+      "dateAfter": "2024-06-26",
+      "movePct": 3.4
+     },
+     {
+      "date": "2024-06-26",
+      "dateAfter": "2024-07-11",
+      "movePct": 0.7
+     },
+     {
+      "date": "2024-07-11",
+      "dateAfter": "2024-07-25",
+      "movePct": -7.8
+     },
+     {
+      "date": "2024-07-25",
+      "dateAfter": "2024-08-08",
+      "movePct": -7.8
+     },
+     {
+      "date": "2024-08-08",
+      "dateAfter": "2024-08-22",
+      "movePct": 6.2
+     },
+     {
+      "date": "2024-08-22",
+      "dateAfter": "2024-09-06",
+      "movePct": -2.7
+     },
+     {
+      "date": "2024-09-06",
+      "dateAfter": "2024-09-20",
+      "movePct": 11.8
+     },
+     {
+      "date": "2024-09-20",
+      "dateAfter": "2024-10-04",
+      "movePct": -2.7
+     },
+     {
+      "date": "2024-10-04",
+      "dateAfter": "2024-10-18",
+      "movePct": 1.3
+     },
+     {
+      "date": "2024-10-18",
+      "dateAfter": "2024-11-01",
+      "movePct": 4.7
+     },
+     {
+      "date": "2024-11-01",
+      "dateAfter": "2024-11-15",
+      "movePct": 2.4
+     },
+     {
+      "date": "2024-11-15",
+      "dateAfter": "2024-12-02",
+      "movePct": 4
+     },
+     {
+      "date": "2024-12-02",
+      "dateAfter": "2024-12-16",
+      "movePct": 10.5
+     },
+     {
+      "date": "2024-12-16",
+      "dateAfter": "2024-12-31",
+      "movePct": -5.8
+     },
+     {
+      "date": "2024-12-31",
+      "dateAfter": "2025-01-16",
+      "movePct": 0.6
+     },
+     {
+      "date": "2025-01-16",
+      "dateAfter": "2025-01-31",
+      "movePct": 7.7
+     },
+     {
+      "date": "2025-01-31",
+      "dateAfter": "2025-02-14",
+      "movePct": -3.8
+     },
+     {
+      "date": "2025-02-14",
+      "dateAfter": "2025-03-03",
+      "movePct": -10.3
+     },
+     {
+      "date": "2025-03-03",
+      "dateAfter": "2025-03-17",
+      "movePct": -4.5
+     },
+     {
+      "date": "2025-03-17",
+      "dateAfter": "2025-03-31",
+      "movePct": -2.8
+     },
+     {
+      "date": "2025-03-31",
+      "dateAfter": "2025-04-14",
+      "movePct": -4.3
+     },
+     {
+      "date": "2025-04-14",
+      "dateAfter": "2025-04-29",
+      "movePct": 2.9
+     },
+     {
+      "date": "2025-04-29",
+      "dateAfter": "2025-05-13",
+      "movePct": 12.8
+     },
+     {
+      "date": "2025-05-13",
+      "dateAfter": "2025-05-28",
+      "movePct": -3.1
+     },
+     {
+      "date": "2025-05-28",
+      "dateAfter": "2025-06-11",
+      "movePct": 4.1
+     },
+     {
+      "date": "2025-06-11",
+      "dateAfter": "2025-06-26",
+      "movePct": 1.8
+     },
+     {
+      "date": "2025-06-26",
+      "dateAfter": "2025-07-11",
+      "movePct": 3.6
+     },
+     {
+      "date": "2025-07-11",
+      "dateAfter": "2025-07-25",
+      "movePct": 2.9
+     },
+     {
+      "date": "2025-07-25",
+      "dateAfter": "2025-08-08",
+      "movePct": -3.8
+     },
+     {
+      "date": "2025-08-08",
+      "dateAfter": "2025-08-22",
+      "movePct": 2.8
+     },
+     {
+      "date": "2025-08-22",
+      "dateAfter": "2025-09-08",
+      "movePct": 3.1
+     },
+     {
+      "date": "2025-09-08",
+      "dateAfter": "2025-09-22",
+      "movePct": -3.5
+     },
+     {
+      "date": "2025-09-22",
+      "dateAfter": "2025-10-06",
+      "movePct": -3
+     },
+     {
+      "date": "2025-10-06",
+      "dateAfter": "2025-10-20",
+      "movePct": -2
+     },
+     {
+      "date": "2025-10-20",
+      "dateAfter": "2025-11-03",
+      "movePct": 17.3
+     },
+     {
+      "date": "2025-11-03",
+      "dateAfter": "2025-11-17",
+      "movePct": -8.3
+     },
+     {
+      "date": "2025-11-17",
+      "dateAfter": "2025-12-02",
+      "movePct": 0.7
+     },
+     {
+      "date": "2025-12-02",
+      "dateAfter": "2025-12-16",
+      "movePct": -5.1
+     },
+     {
+      "date": "2025-12-16",
+      "dateAfter": "2025-12-31",
+      "movePct": 3.7
+     },
+     {
+      "date": "2025-12-31",
+      "dateAfter": "2026-01-15",
+      "movePct": 3.2
+     },
+     {
+      "date": "2026-01-15",
+      "dateAfter": "2026-01-30",
+      "movePct": 0.5
+     },
+     {
+      "date": "2026-01-30",
+      "dateAfter": "2026-02-13",
+      "movePct": -16.9
+     },
+     {
+      "date": "2026-02-13",
+      "dateAfter": "2026-03-02",
+      "movePct": 4.8
+     },
+     {
+      "date": "2026-03-02",
+      "dateAfter": "2026-03-16",
+      "movePct": 1.6
+     },
+     {
+      "date": "2026-03-16",
+      "dateAfter": "2026-03-30",
+      "movePct": -5.1
+     },
+     {
+      "date": "2026-03-30",
+      "dateAfter": "2026-04-14",
+      "movePct": 23.9
+     },
+     {
+      "date": "2026-04-14",
+      "dateAfter": "2026-04-28",
+      "movePct": 4.3
+     },
+     {
+      "date": "2026-04-28",
+      "dateAfter": "2026-05-12",
+      "movePct": 2.4
+     },
+     {
+      "date": "2026-05-12",
+      "dateAfter": "2026-05-27",
+      "movePct": 2.3
+     },
+     {
+      "date": "2026-05-27",
+      "dateAfter": "2026-06-10",
+      "movePct": -12.5
+     },
+     {
+      "date": "2026-06-10",
+      "dateAfter": "2026-06-25",
+      "movePct": -4.6
+     },
+     {
+      "date": "2026-06-25",
+      "dateAfter": "2026-07-10",
+      "movePct": 8.1
+     },
+     {
+      "date": "2026-07-10",
+      "dateAfter": "2026-07-24",
+      "movePct": -5.4
+     },
+     {
+      "date": "2026-07-24",
+      "dateAfter": "2026-08-07",
+      "movePct": 18.3
+     },
+     {
+      "date": "2026-08-07",
+      "dateAfter": "2026-08-21",
+      "movePct": -5.8
+     },
+     {
+      "date": "2026-08-21",
+      "dateAfter": "2026-09-04",
+      "movePct": 0
+     },
+     {
+      "date": "2026-09-04",
+      "dateAfter": "2026-09-21",
+      "movePct": 0
+     }
+    ],
+    "trader": {
+     "thresholdPct": 5,
+     "moveBand": {
+      "pointEstimate": 38,
+      "low": 30,
+      "high": 46,
+      "confidence": "high",
+      "sampleCount": 125,
+      "hitCount": 47
+     }
+    },
+    "status": "ok",
+    "typical": {
+     "p25": -3.6,
+     "median": 1.3,
+     "p75": 4.3
+    },
+    "worst": -23.8,
+    "best": 23.9
+   },
+   "historyBasis": "baseline",
+   "noHistoryReason": null,
+   "matchedOn": [],
+   "scorecard": {
+    "symbol": "AMZN",
+    "asOf": "2026-09-27",
+    "dimensions": [
+     {
+      "key": "valuation",
+      "label": "Price vs profit",
+      "level": "strong",
+      "rated": true,
+      "verdict": "Cheaper than usual",
+      "sentence": "The share costs 20 times the company's yearly profit, lower than its own 5-year average of 64. For comparison, the middle figure across the 15 companies Cairn tracks is 39.",
+      "inputs": [
+       {
+        "label": "Price ÷ yearly profit per share",
+        "value": 20.086081912224085,
+        "display": "20"
+       },
+       {
+        "label": "Its 5-year average",
+        "value": 63.649979952006426,
+        "display": "64"
+       },
+       {
+        "label": "Similar companies (median)",
+        "value": null,
+        "display": null
+       },
+       {
+        "label": "Similar companies counted",
+        "value": null,
+        "display": null
+       },
+       {
+        "label": "Companies Cairn tracks (median)",
+        "value": 39.1584394172467,
+        "display": "39"
+       },
+       {
+        "label": "Companies Cairn tracks, counted",
+        "value": 15,
+        "display": "15"
+       }
+      ],
+      "sources": [
+       {
+        "kind": "sec_filing",
+        "label": "10-Q filed 2026-07-31 (profit per share)",
+        "ref": "0001018724-26-000026",
+        "url": "https://www.sec.gov/Archives/edgar/data/1018724/000101872426000026/"
+       },
+       {
+        "kind": "price_history",
+        "label": "Closing price 2026-09-25",
+        "ref": "2026-09-25"
+       }
+      ]
+     },
+     {
+      "key": "growth",
+      "label": "Growth",
+      "level": "strong",
+      "rated": true,
+      "verdict": "Strong",
+      "sentence": "Sales are up 16% on last year, and profit is up 92%. Growth is speeding up.",
+      "inputs": [
+       {
+        "label": "Sales growth, last 12 months vs the 12 before",
+        "value": 0.15766568463281194,
+        "display": "16%"
+       },
+       {
+        "label": "Profit growth, last 12 months vs the 12 before",
+        "value": 0.9155374311484927,
+        "display": "92%"
+       },
+       {
+        "label": "Latest quarter's sales growth vs a year earlier",
+        "value": 0.19620517346245125,
+        "display": "+20%"
+       },
+       {
+        "label": "Previous quarter's sales growth vs a year earlier",
+        "value": 0.16607244952366274,
+        "display": "+17%"
+       }
+      ],
+      "sources": [
+       {
+        "kind": "sec_filing",
+        "label": "10-Q filed 2026-07-31 (sales and profit)",
+        "ref": "0001018724-26-000026",
+        "url": "https://www.sec.gov/Archives/edgar/data/1018724/000101872426000026/"
+       }
+      ]
+     },
+     {
+      "key": "health",
+      "label": "Financial health",
+      "level": "not_applicable",
+      "rated": true,
+      "verdict": "Not available",
+      "sentence": "Profit and cash-flow figures are not complete for this company.",
+      "inputs": [],
+      "sources": []
+     },
+     {
+      "key": "dividend",
+      "label": "Dividend",
+      "level": "not_applicable",
+      "rated": true,
+      "verdict": "None",
+      "sentence": "It does not pay a dividend.",
+      "inputs": [],
+      "sources": [
+       {
+        "kind": "sec_filing",
+        "label": "10-Q filed 2026-07-31 (dividends)",
+        "ref": "0001018724-26-000026",
+        "url": "https://www.sec.gov/Archives/edgar/data/1018724/000101872426000026/"
+       }
+      ]
+     },
+     {
+      "key": "trend",
+      "label": "Price trend",
+      "level": "strong",
+      "rated": true,
+      "verdict": "Rising",
+      "sentence": "Up 20% over 6 months, and 4% above its average price of the last 200 trading days.",
+      "inputs": [
+       {
+        "label": "6-month price change",
+        "value": 0.20299704271806718,
+        "display": "20%"
+       },
+       {
+        "label": "Price vs 200-day average",
+        "value": 0.0366,
+        "display": "4%"
+       }
+      ],
+      "sources": [
+       {
+        "kind": "price_history",
+        "label": "Daily closing prices to 2026-09-25",
+        "ref": "2026-09-25"
+       }
+      ]
+     },
+     {
+      "key": "next_event",
+      "label": "Next event",
+      "level": "not_applicable",
+      "rated": false,
+      "verdict": "Earnings in about 32 days (estimated)",
+      "sentence": "Earnings, around Thu 29 Oct. This is an estimate from last year's results date, not a date the company has announced. On its last 12 results days the share moved 5% or more 8 times; the typical move was 6.5%.",
+      "inputs": [
+       {
+        "label": "Days until the event",
+        "value": 32,
+        "display": "32"
+       },
+       {
+        "label": "Event date",
+        "value": null,
+        "display": "Thu 29 Oct"
+       },
+       {
+        "label": "Past results days counted",
+        "value": 12,
+        "display": "12"
+       },
+       {
+        "label": "Results days with a move of 5% or more",
+        "value": 8,
+        "display": "8"
+       },
+       {
+        "label": "Typical results-day move",
+        "value": 0.06509218973858022,
+        "display": "6.5%"
+       }
+      ],
+      "sources": [
+       {
+        "kind": "earnings_release",
+        "label": "Estimate from SEC filings: results released 2025-10-30 + 52 weeks; this matched to the day on its last releases",
+        "ref": "2025-10-30"
+       },
+       {
+        "kind": "earnings_release",
+        "label": "12 earnings releases (SEC 8-K item 2.02) and closing prices",
+        "ref": "2023-10-26..2026-07-30"
+       }
+      ]
+     }
+    ]
+   },
+   "events": [
+    {
+     "id": "E1",
+     "rowId": "eb32a7b8-ccaa-47d7-a8da-88722d8b3374",
+     "kind": "earnings",
+     "date": "2026-10-29",
+     "estimated": true
+    }
+   ],
+   "news": [
+    {
+     "id": "N1",
+     "rowId": "2c39ef5f-b620-4d7e-955e-604f312678bf",
+     "title": "SpaceX vs Amazon: Which Is the Better Stock to Own Over the Next 10 Years",
+     "source": "Yahoo Finance News",
+     "date": "2026-09-23T16:20:00+00:00"
+    },
+    {
+     "id": "N2",
+     "rowId": "832e41df-c41d-4a7f-85d6-f8b9243cdf3d",
+     "title": "Morgan Stanley Just Put a $54 Target on This AI-Pivoting Bitcoin Miner. Amazon Is Already a Customer",
+     "source": "Yahoo Finance News",
+     "date": "2026-09-23T13:09:39+00:00"
+    },
+    {
+     "id": "N3",
+     "rowId": "6ee500f5-def1-45dc-b263-54f095b0810c",
+     "title": "VGT Holders Bought ‘Tech’ and Own No Google, Meta, or Amazon: The Sector Rule That Decides What’s Inside",
+     "source": "Yahoo Finance News",
+     "date": "2026-09-22T22:15:04+00:00"
+    },
+    {
+     "id": "N4",
+     "rowId": "144c4952-6822-4ec0-9a78-3cd88e152efe",
+     "title": "AWS Is Growing at Its Fastest Rate in 18 Quarters. Is Amazon Stock Still a Buy at $255?",
+     "source": "Yahoo Finance News",
+     "date": "2026-09-22T21:31:30+00:00"
+    },
+    {
+     "id": "N5",
+     "rowId": "cfa6ec39-f5bc-423b-9b31-60c25e84ecd4",
+     "title": "Generac Rallies on Power Deal With Amazon. How to Play GNRC Stock Now.",
+     "source": "Yahoo Finance News",
+     "date": "2026-09-22T20:35:30+00:00"
+    },
+    {
+     "id": "N6",
+     "rowId": "0a3cfe3a-de20-46b7-883f-dbac22c28755",
+     "title": "After 40 investors rejected Jeff Bezos’ Amazon pitch, his parents offered $245,573 of their retirement savings",
+     "source": "Yahoo Finance News",
+     "date": "2026-09-22T19:01:24+00:00"
+    }
+   ],
+   "trader": {
+    "moveBandLow": 0,
+    "moveBandHigh": 100,
+    "moveBandPoint": 0,
+    "hitCount": 0,
+    "sampleCount": 0,
+    "readings": [
+     {
+      "label": "RSI-14",
+      "display": "44.54"
+     },
+     {
+      "label": "30-day realized volatility (annualized)",
+      "display": "0.25"
+     },
+     {
+      "label": "Drawdown from trailing 1-year high (%)",
+      "display": "-12.09"
+     }
+    ]
+   }
+  },
+  "TSLA": {
+   "name": "TSLA",
+   "symbol": "TSLA",
+   "assetType": "equity",
+   "history": {
+    "horizonSessions": 10,
+    "n": 53,
+    "higher": 30,
+    "lower": 23,
+    "upRate": {
+     "point": 57,
+     "low": 43,
+     "high": 69
+    },
+    "confidence": "high",
+    "cases": [
+     {
+      "date": "2024-08-08",
+      "dateAfter": "2024-08-22",
+      "movePct": 5.9
+     },
+     {
+      "date": "2024-08-22",
+      "dateAfter": "2024-09-06",
+      "movePct": 0
+     },
+     {
+      "date": "2024-09-06",
+      "dateAfter": "2024-09-20",
+      "movePct": 13.1
+     },
+     {
+      "date": "2024-09-20",
+      "dateAfter": "2024-10-04",
+      "movePct": 5
+     },
+     {
+      "date": "2024-10-04",
+      "dateAfter": "2024-10-18",
+      "movePct": -11.7
+     },
+     {
+      "date": "2024-10-18",
+      "dateAfter": "2024-11-01",
+      "movePct": 12.8
+     },
+     {
+      "date": "2024-11-01",
+      "dateAfter": "2024-11-15",
+      "movePct": 28.8
+     },
+     {
+      "date": "2024-11-15",
+      "dateAfter": "2024-12-02",
+      "movePct": 11.3
+     },
+     {
+      "date": "2024-12-02",
+      "dateAfter": "2024-12-16",
+      "movePct": 29.7
+     },
+     {
+      "date": "2024-12-16",
+      "dateAfter": "2024-12-31",
+      "movePct": -12.8
+     },
+     {
+      "date": "2024-12-31",
+      "dateAfter": "2025-01-16",
+      "movePct": 2.5
+     },
+     {
+      "date": "2025-01-16",
+      "dateAfter": "2025-01-31",
+      "movePct": -2.2
+     },
+     {
+      "date": "2025-01-31",
+      "dateAfter": "2025-02-14",
+      "movePct": -12.1
+     },
+     {
+      "date": "2025-02-14",
+      "dateAfter": "2025-03-03",
+      "movePct": -20
+     },
+     {
+      "date": "2025-03-03",
+      "dateAfter": "2025-03-17",
+      "movePct": -16.4
+     },
+     {
+      "date": "2025-03-17",
+      "dateAfter": "2025-03-31",
+      "movePct": 8.9
+     },
+     {
+      "date": "2025-03-31",
+      "dateAfter": "2025-04-14",
+      "movePct": -2.6
+     },
+     {
+      "date": "2025-04-14",
+      "dateAfter": "2025-04-29",
+      "movePct": 15.7
+     },
+     {
+      "date": "2025-04-29",
+      "dateAfter": "2025-05-13",
+      "movePct": 14.4
+     },
+     {
+      "date": "2025-05-13",
+      "dateAfter": "2025-05-28",
+      "movePct": 6.8
+     },
+     {
+      "date": "2025-05-28",
+      "dateAfter": "2025-06-11",
+      "movePct": -8.5
+     },
+     {
+      "date": "2025-06-11",
+      "dateAfter": "2025-06-26",
+      "movePct": -0.2
+     },
+     {
+      "date": "2025-06-26",
+      "dateAfter": "2025-07-11",
+      "movePct": -3.8
+     },
+     {
+      "date": "2025-07-11",
+      "dateAfter": "2025-07-25",
+      "movePct": 0.8
+     },
+     {
+      "date": "2025-07-25",
+      "dateAfter": "2025-08-08",
+      "movePct": 4.3
+     },
+     {
+      "date": "2025-08-08",
+      "dateAfter": "2025-08-22",
+      "movePct": 3.1
+     },
+     {
+      "date": "2025-08-22",
+      "dateAfter": "2025-09-08",
+      "movePct": 1.9
+     },
+     {
+      "date": "2025-09-08",
+      "dateAfter": "2025-09-22",
+      "movePct": 25.3
+     },
+     {
+      "date": "2025-09-22",
+      "dateAfter": "2025-10-06",
+      "movePct": 4.4
+     },
+     {
+      "date": "2025-10-06",
+      "dateAfter": "2025-10-20",
+      "movePct": -1.3
+     },
+     {
+      "date": "2025-10-20",
+      "dateAfter": "2025-11-03",
+      "movePct": 4.7
+     },
+     {
+      "date": "2025-11-03",
+      "dateAfter": "2025-11-17",
+      "movePct": -12.7
+     },
+     {
+      "date": "2025-11-17",
+      "dateAfter": "2025-12-02",
+      "movePct": 5
+     },
+     {
+      "date": "2025-12-02",
+      "dateAfter": "2025-12-16",
+      "movePct": 14.1
+     },
+     {
+      "date": "2025-12-16",
+      "dateAfter": "2025-12-31",
+      "movePct": -8.2
+     },
+     {
+      "date": "2025-12-31",
+      "dateAfter": "2026-01-15",
+      "movePct": -2.5
+     },
+     {
+      "date": "2026-01-15",
+      "dateAfter": "2026-01-30",
+      "movePct": -1.9
+     },
+     {
+      "date": "2026-01-30",
+      "dateAfter": "2026-02-13",
+      "movePct": -3
+     },
+     {
+      "date": "2026-02-13",
+      "dateAfter": "2026-03-02",
+      "movePct": -3.4
+     },
+     {
+      "date": "2026-03-02",
+      "dateAfter": "2026-03-16",
+      "movePct": -1.9
+     },
+     {
+      "date": "2026-03-16",
+      "dateAfter": "2026-03-30",
+      "movePct": -10.2
+     },
+     {
+      "date": "2026-03-30",
+      "dateAfter": "2026-04-14",
+      "movePct": 2.5
+     },
+     {
+      "date": "2026-04-14",
+      "dateAfter": "2026-04-28",
+      "movePct": 3.2
+     },
+     {
+      "date": "2026-04-28",
+      "dateAfter": "2026-05-12",
+      "movePct": 15.3
+     },
+     {
+      "date": "2026-05-12",
+      "dateAfter": "2026-05-27",
+      "movePct": 1.6
+     },
+     {
+      "date": "2026-05-27",
+      "dateAfter": "2026-06-10",
+      "movePct": -13.3
+     },
+     {
+      "date": "2026-06-10",
+      "dateAfter": "2026-06-25",
+      "movePct": -1.7
+     },
+     {
+      "date": "2026-06-25",
+      "dateAfter": "2026-07-10",
+      "movePct": 8.7
+     },
+     {
+      "date": "2026-07-10",
+      "dateAfter": "2026-07-24",
+      "movePct": -23.2
+     },
+     {
+      "date": "2026-07-24",
+      "dateAfter": "2026-08-07",
+      "movePct": 5
+     },
+     {
+      "date": "2026-08-07",
+      "dateAfter": "2026-08-21",
+      "movePct": 10.4
+     },
+     {
+      "date": "2026-08-21",
+      "dateAfter": "2026-09-04",
+      "movePct": -2.4
+     },
+     {
+      "date": "2026-09-04",
+      "dateAfter": "2026-09-21",
+      "movePct": 6
+     }
+    ],
+    "trader": {
+     "thresholdPct": 5,
+     "moveBand": {
+      "pointEstimate": 51,
+      "low": 38,
+      "high": 64,
+      "confidence": "high",
+      "sampleCount": 53,
+      "hitCount": 27
+     }
+    },
+    "status": "ok",
+    "typical": {
+     "p25": -3,
+     "median": 1.9,
+     "p75": 6.8
+    },
+    "worst": -23.2,
+    "best": 29.7
+   },
+   "historyBasis": "baseline",
+   "noHistoryReason": null,
+   "matchedOn": [],
+   "scorecard": {
+    "symbol": "TSLA",
+    "asOf": "2026-09-27",
+    "dimensions": [
+     {
+      "key": "valuation",
+      "label": "Price vs profit",
+      "level": "weak",
+      "rated": true,
+      "verdict": "Pricier than usual",
+      "sentence": "The share costs 345 times the company's yearly profit, higher than its own 5-year average of 257. For comparison, the middle figure across the 15 companies Cairn tracks is 39.",
+      "inputs": [
+       {
+        "label": "Price ÷ yearly profit per share",
+        "value": 344.5462827329282,
+        "display": "345"
+       },
+       {
+        "label": "Its 5-year average",
+        "value": 257.456042833283,
+        "display": "257"
+       },
+       {
+        "label": "Similar companies (median)",
+        "value": null,
+        "display": null
+       },
+       {
+        "label": "Similar companies counted",
+        "value": null,
+        "display": null
+       },
+       {
+        "label": "Companies Cairn tracks (median)",
+        "value": 39.1584394172467,
+        "display": "39"
+       },
+       {
+        "label": "Companies Cairn tracks, counted",
+        "value": 15,
+        "display": "15"
+       }
+      ],
+      "sources": [
+       {
+        "kind": "sec_filing",
+        "label": "10-Q filed 2026-07-23 (profit per share)",
+        "ref": "0001628280-26-049270",
+        "url": "https://www.sec.gov/Archives/edgar/data/1318605/000162828026049270/"
+       },
+       {
+        "kind": "price_history",
+        "label": "Closing price 2026-09-25",
+        "ref": "2026-09-25"
+       }
+      ]
+     },
+     {
+      "key": "growth",
+      "label": "Growth",
+      "level": "mixed",
+      "rated": true,
+      "verdict": "Steady",
+      "sentence": "Sales are up 12% on last year, but profit is down 35%. Growth is speeding up.",
+      "inputs": [
+       {
+        "label": "Sales growth, last 12 months vs the 12 before",
+        "value": 0.11754745470232963,
+        "display": "12%"
+       },
+       {
+        "label": "Profit growth, last 12 months vs the 12 before",
+        "value": -0.35328119687181236,
+        "display": "35%"
+       },
+       {
+        "label": "Latest quarter's sales growth vs a year earlier",
+        "value": 0.25515647226173543,
+        "display": "+26%"
+       },
+       {
+        "label": "Previous quarter's sales growth vs a year earlier",
+        "value": 0.15784846133953967,
+        "display": "+16%"
+       }
+      ],
+      "sources": [
+       {
+        "kind": "sec_filing",
+        "label": "10-Q filed 2026-07-23 (sales and profit)",
+        "ref": "0001628280-26-049270",
+        "url": "https://www.sec.gov/Archives/edgar/data/1318605/000162828026049270/"
+       }
+      ]
+     },
+     {
+      "key": "health",
+      "label": "Financial health",
+      "level": "not_applicable",
+      "rated": true,
+      "verdict": "Not available",
+      "sentence": "Profit and cash-flow figures are not complete for this company.",
+      "inputs": [],
+      "sources": []
+     },
+     {
+      "key": "dividend",
+      "label": "Dividend",
+      "level": "not_applicable",
+      "rated": true,
+      "verdict": "None",
+      "sentence": "It does not pay a dividend.",
+      "inputs": [],
+      "sources": [
+       {
+        "kind": "sec_filing",
+        "label": "10-Q filed 2026-07-23 (dividends)",
+        "ref": "0001628280-26-049270",
+        "url": "https://www.sec.gov/Archives/edgar/data/1318605/000162828026049270/"
+       }
+      ]
+     },
+     {
+      "key": "trend",
+      "label": "Price trend",
+      "level": "mixed",
+      "rated": true,
+      "verdict": "Sideways",
+      "sentence": "Up 0% over 6 months, and 6% below its average price of the last 200 trading days.",
+      "inputs": [
+       {
+        "label": "6-month price change",
+        "value": 0,
+        "display": "0%"
+       },
+       {
+        "label": "Price vs 200-day average",
+        "value": -0.0594,
+        "display": "6%"
+       }
+      ],
+      "sources": [
+       {
+        "kind": "price_history",
+        "label": "Daily closing prices to 2026-09-25",
+        "ref": "2026-09-25"
+       }
+      ]
+     },
+     {
+      "key": "next_event",
+      "label": "Next event",
+      "level": "not_applicable",
+      "rated": false,
+      "verdict": "Earnings in about 4 days (estimated)",
+      "sentence": "Earnings, around Thu 1 Oct. This is an estimate from last year's results date, not a date the company has announced. On its last 12 results days the share moved 5% or more 7 times; the typical move was 5.2%.",
+      "inputs": [
+       {
+        "label": "Days until the event",
+        "value": 4,
+        "display": "4"
+       },
+       {
+        "label": "Event date",
+        "value": null,
+        "display": "Thu 1 Oct"
+       },
+       {
+        "label": "Past results days counted",
+        "value": 12,
+        "display": "12"
+       },
+       {
+        "label": "Results days with a move of 5% or more",
+        "value": 7,
+        "display": "7"
+       },
+       {
+        "label": "Typical results-day move",
+        "value": 0.052163386540554524,
+        "display": "5.2%"
+       }
+      ],
+      "sources": [
+       {
+        "kind": "earnings_release",
+        "label": "Estimate from SEC filings: results released 2025-10-02 + 52 weeks; usually within 1 day",
+        "ref": "2025-10-02"
+       },
+       {
+        "kind": "earnings_release",
+        "label": "12 earnings releases (SEC 8-K item 2.02) and closing prices",
+        "ref": "2025-04-02..2026-07-22"
+       }
+      ]
+     }
+    ]
+   },
+   "events": [
+    {
+     "id": "E1",
+     "rowId": "58f66dfe-7521-4bc2-91d7-a34bd06c2fa8",
+     "kind": "earnings",
+     "date": "2026-10-01",
+     "estimated": true
+    }
+   ],
+   "news": [
+    {
+     "id": "N1",
+     "rowId": "aec6c34d-6a10-4bc5-a250-2bb0b4d815b7",
+     "title": "Tesla’s stock falls as launch of Semi truck fails to excite investors",
+     "source": "MarketWatch Top Stories",
+     "date": "2026-09-25T15:53:00+00:00"
+    },
+    {
+     "id": "N2",
+     "rowId": "ec5538f8-13c8-47d6-a3fe-56dd41431b3b",
+     "title": "As diesel prices surge, Tesla makes its big play for the trucking market",
+     "source": "MarketWatch Top Stories",
+     "date": "2026-09-24T15:54:00+00:00"
+    },
+    {
+     "id": "N3",
+     "rowId": "79e77297-bcd2-40b3-95ed-54b9d095da8e",
+     "title": "I Speculated That Stanley Druckenmiller's Tesla Buy Was About FSD. Billionaire Investor Ron Baron Just Confirmed My Thesis.",
+     "source": "Yahoo Finance News",
+     "date": "2026-09-23T16:27:00+00:00"
+    },
+    {
+     "id": "N4",
+     "rowId": "e2cafea4-3cb6-49ee-9071-4172ebeb1864",
+     "title": "Musk praises China’s leadership and pushes for AI regulation ahead of state dinner",
+     "source": "MarketWatch Top Stories",
+     "date": "2026-09-23T15:08:00+00:00"
+    },
+    {
+     "id": "N5",
+     "rowId": "654124b4-3d18-4fd5-9828-650fc8483cb0",
+     "title": "Uber: Insider Buying and Selling Activity to Watch Amid Panic After Tesla Cybercab Rollout",
+     "source": "Yahoo Finance News",
+     "date": "2026-09-23T14:39:57+00:00"
+    },
+    {
+     "id": "N6",
+     "rowId": "968c32ca-2f92-4baf-8dd2-596faec2d161",
+     "title": "Nvidia Just Qualified Tesla and Vertiv Products for Its New AI-Factory Standard",
+     "source": "Yahoo Finance News",
+     "date": "2026-09-23T13:01:44+00:00"
+    }
+   ],
+   "trader": {
+    "moveBandLow": 0,
+    "moveBandHigh": 100,
+    "moveBandPoint": 0,
+    "hitCount": 0,
+    "sampleCount": 0,
+    "readings": [
+     {
+      "label": "RSI-14",
+      "display": "55.31"
+     },
+     {
+      "label": "30-day realized volatility (annualized)",
+      "display": "0.42"
+     },
+     {
+      "label": "Drawdown from trailing 1-year high (%)",
+      "display": "-24.04"
+     }
+    ]
+   }
+  },
+  "GOOGL": {
+   "name": "GOOGL",
+   "symbol": "GOOGL",
+   "assetType": "equity",
+   "history": {
+    "horizonSessions": 10,
+    "n": 53,
+    "higher": 33,
+    "lower": 20,
+    "upRate": {
+     "point": 62,
+     "low": 49,
+     "high": 74
+    },
+    "confidence": "high",
+    "cases": [
+     {
+      "date": "2024-08-08",
+      "dateAfter": "2024-08-22",
+      "movePct": 1.1
+     },
+     {
+      "date": "2024-08-22",
+      "dateAfter": "2024-09-06",
+      "movePct": -7.9
+     },
+     {
+      "date": "2024-09-06",
+      "dateAfter": "2024-09-20",
+      "movePct": 8.4
+     },
+     {
+      "date": "2024-09-20",
+      "dateAfter": "2024-10-04",
+      "movePct": 2.1
+     },
+     {
+      "date": "2024-10-04",
+      "dateAfter": "2024-10-18",
+      "movePct": -2.2
+     },
+     {
+      "date": "2024-10-18",
+      "dateAfter": "2024-11-01",
+      "movePct": 4.8
+     },
+     {
+      "date": "2024-11-01",
+      "dateAfter": "2024-11-15",
+      "movePct": 0.7
+     },
+     {
+      "date": "2024-11-15",
+      "dateAfter": "2024-12-02",
+      "movePct": -0.6
+     },
+     {
+      "date": "2024-12-02",
+      "dateAfter": "2024-12-16",
+      "movePct": 14.7
+     },
+     {
+      "date": "2024-12-16",
+      "dateAfter": "2024-12-31",
+      "movePct": -3.7
+     },
+     {
+      "date": "2024-12-31",
+      "dateAfter": "2025-01-16",
+      "movePct": 1.9
+     },
+     {
+      "date": "2025-01-16",
+      "dateAfter": "2025-01-31",
+      "movePct": 5.8
+     },
+     {
+      "date": "2025-01-31",
+      "dateAfter": "2025-02-14",
+      "movePct": -9.2
+     },
+     {
+      "date": "2025-02-14",
+      "dateAfter": "2025-03-03",
+      "movePct": -9.8
+     },
+     {
+      "date": "2025-03-03",
+      "dateAfter": "2025-03-17",
+      "movePct": -1.6
+     },
+     {
+      "date": "2025-03-17",
+      "dateAfter": "2025-03-31",
+      "movePct": -5.9
+     },
+     {
+      "date": "2025-03-31",
+      "dateAfter": "2025-04-14",
+      "movePct": 2.9
+     },
+     {
+      "date": "2025-04-14",
+      "dateAfter": "2025-04-29",
+      "movePct": 0.7
+     },
+     {
+      "date": "2025-04-29",
+      "dateAfter": "2025-05-13",
+      "movePct": -0.4
+     },
+     {
+      "date": "2025-05-13",
+      "dateAfter": "2025-05-28",
+      "movePct": 8
+     },
+     {
+      "date": "2025-05-28",
+      "dateAfter": "2025-06-11",
+      "movePct": 2.9
+     },
+     {
+      "date": "2025-06-11",
+      "dateAfter": "2025-06-26",
+      "movePct": -2.1
+     },
+     {
+      "date": "2025-06-26",
+      "dateAfter": "2025-07-11",
+      "movePct": 3.8
+     },
+     {
+      "date": "2025-07-11",
+      "dateAfter": "2025-07-25",
+      "movePct": 7.2
+     },
+     {
+      "date": "2025-07-25",
+      "dateAfter": "2025-08-08",
+      "movePct": 4.3
+     },
+     {
+      "date": "2025-08-08",
+      "dateAfter": "2025-08-22",
+      "movePct": 2.3
+     },
+     {
+      "date": "2025-08-22",
+      "dateAfter": "2025-09-08",
+      "movePct": 13.6
+     },
+     {
+      "date": "2025-09-08",
+      "dateAfter": "2025-09-22",
+      "movePct": 7.9
+     },
+     {
+      "date": "2025-09-22",
+      "dateAfter": "2025-10-06",
+      "movePct": -0.8
+     },
+     {
+      "date": "2025-10-06",
+      "dateAfter": "2025-10-20",
+      "movePct": 2.4
+     },
+     {
+      "date": "2025-10-20",
+      "dateAfter": "2025-11-03",
+      "movePct": 10.6
+     },
+     {
+      "date": "2025-11-03",
+      "dateAfter": "2025-11-17",
+      "movePct": 0.5
+     },
+     {
+      "date": "2025-11-17",
+      "dateAfter": "2025-12-02",
+      "movePct": 10.8
+     },
+     {
+      "date": "2025-12-02",
+      "dateAfter": "2025-12-16",
+      "movePct": -2.9
+     },
+     {
+      "date": "2025-12-16",
+      "dateAfter": "2025-12-31",
+      "movePct": 2.1
+     },
+     {
+      "date": "2025-12-31",
+      "dateAfter": "2026-01-15",
+      "movePct": 6.3
+     },
+     {
+      "date": "2026-01-15",
+      "dateAfter": "2026-01-30",
+      "movePct": 1.6
+     },
+     {
+      "date": "2026-01-30",
+      "dateAfter": "2026-02-13",
+      "movePct": -9.6
+     },
+     {
+      "date": "2026-02-13",
+      "dateAfter": "2026-03-02",
+      "movePct": 0.3
+     },
+     {
+      "date": "2026-03-02",
+      "dateAfter": "2026-03-16",
+      "movePct": -0.3
+     },
+     {
+      "date": "2026-03-16",
+      "dateAfter": "2026-03-30",
+      "movePct": -10.5
+     },
+     {
+      "date": "2026-03-30",
+      "dateAfter": "2026-04-14",
+      "movePct": 21.7
+     },
+     {
+      "date": "2026-04-14",
+      "dateAfter": "2026-04-28",
+      "movePct": 5.1
+     },
+     {
+      "date": "2026-04-28",
+      "dateAfter": "2026-05-12",
+      "movePct": 10.7
+     },
+     {
+      "date": "2026-05-12",
+      "dateAfter": "2026-05-27",
+      "movePct": 0.4
+     },
+     {
+      "date": "2026-05-27",
+      "dateAfter": "2026-06-10",
+      "movePct": -8.3
+     },
+     {
+      "date": "2026-06-10",
+      "dateAfter": "2026-06-25",
+      "movePct": -3.6
+     },
+     {
+      "date": "2026-06-25",
+      "dateAfter": "2026-07-10",
+      "movePct": 3.9
+     },
+     {
+      "date": "2026-07-10",
+      "dateAfter": "2026-07-24",
+      "movePct": -10.5
+     },
+     {
+      "date": "2026-07-24",
+      "dateAfter": "2026-08-07",
+      "movePct": 10.8
+     },
+     {
+      "date": "2026-08-07",
+      "dateAfter": "2026-08-21",
+      "movePct": -2.7
+     },
+     {
+      "date": "2026-08-21",
+      "dateAfter": "2026-09-04",
+      "movePct": -1.8
+     },
+     {
+      "date": "2026-09-04",
+      "dateAfter": "2026-09-21",
+      "movePct": 4.9
+     }
+    ],
+    "trader": {
+     "thresholdPct": 5,
+     "moveBand": {
+      "pointEstimate": 42,
+      "low": 29,
+      "high": 55,
+      "confidence": "high",
+      "sampleCount": 53,
+      "hitCount": 22
+     }
+    },
+    "status": "ok",
+    "typical": {
+     "p25": -2.1,
+     "median": 1.6,
+     "p75": 5.1
+    },
+    "worst": -10.5,
+    "best": 21.7
+   },
+   "historyBasis": "baseline",
+   "noHistoryReason": null,
+   "matchedOn": [],
+   "scorecard": {
+    "symbol": "GOOGL",
+    "asOf": "2026-09-27",
+    "dimensions": [
+     {
+      "key": "valuation",
+      "label": "Price vs profit",
+      "level": "strong",
+      "rated": true,
+      "verdict": "Cheaper than usual",
+      "sentence": "The share costs 17 times the company's yearly profit, lower than its own 5-year average of 22. For comparison, the middle figure across the 15 companies Cairn tracks is 39.",
+      "inputs": [
+       {
+        "label": "Price ÷ yearly profit per share",
+        "value": 17.273732467490426,
+        "display": "17"
+       },
+       {
+        "label": "Its 5-year average",
+        "value": 21.802992929908775,
+        "display": "22"
+       },
+       {
+        "label": "Similar companies (median)",
+        "value": null,
+        "display": null
+       },
+       {
+        "label": "Similar companies counted",
+        "value": null,
+        "display": null
+       },
+       {
+        "label": "Companies Cairn tracks (median)",
+        "value": 39.1584394172467,
+        "display": "39"
+       },
+       {
+        "label": "Companies Cairn tracks, counted",
+        "value": 15,
+        "display": "15"
+       }
+      ],
+      "sources": [
+       {
+        "kind": "sec_filing",
+        "label": "10-Q filed 2026-07-23 (profit per share)",
+        "ref": "0001652044-26-000071",
+        "url": "https://www.sec.gov/Archives/edgar/data/1652044/000165204426000071/"
+       },
+       {
+        "kind": "price_history",
+        "label": "Closing price 2026-09-25",
+        "ref": "2026-09-25"
+       }
+      ]
+     },
+     {
+      "key": "growth",
+      "label": "Growth",
+      "level": "strong",
+      "rated": true,
+      "verdict": "Strong",
+      "sentence": "Sales are up 20% on last year, and profit is up 111%. The pace is steady.",
+      "inputs": [
+       {
+        "label": "Sales growth, last 12 months vs the 12 before",
+        "value": 0.20050404012934875,
+        "display": "20%"
+       },
+       {
+        "label": "Profit growth, last 12 months vs the 12 before",
+        "value": 1.112993519247575,
+        "display": "111%"
+       },
+       {
+        "label": "Latest quarter's sales growth vs a year earlier",
+        "value": 0.2423362508814868,
+        "display": "+24%"
+       },
+       {
+        "label": "Previous quarter's sales growth vs a year earlier",
+        "value": 0.21790012633818745,
+        "display": "+22%"
+       }
+      ],
+      "sources": [
+       {
+        "kind": "sec_filing",
+        "label": "10-Q filed 2026-07-23 (sales and profit)",
+        "ref": "0001652044-26-000071",
+        "url": "https://www.sec.gov/Archives/edgar/data/1652044/000165204426000071/"
+       }
+      ]
+     },
+     {
+      "key": "health",
+      "label": "Financial health",
+      "level": "not_applicable",
+      "rated": true,
+      "verdict": "Not available",
+      "sentence": "Profit and cash-flow figures are not complete for this company.",
+      "inputs": [],
+      "sources": []
+     },
+     {
+      "key": "dividend",
+      "label": "Dividend",
+      "level": "not_applicable",
+      "rated": true,
+      "verdict": "Tiny",
+      "sentence": "Pays 0.25% a year. It is a growth share, not an income share.",
+      "inputs": [
+       {
+        "label": "Dividend yield (last 12 months ÷ price)",
+        "value": 0.0024715049046676223,
+        "display": "0.25%"
+       },
+       {
+        "label": "Share of free cash flow paid out",
+        "value": null,
+        "display": null
+       },
+       {
+        "label": "Years in a row the dividend rose",
+        "value": null,
+        "display": null
+       }
+      ],
+      "sources": [
+       {
+        "kind": "sec_filing",
+        "label": "10-Q filed 2026-07-23 (dividends and cash flow)",
+        "ref": "0001652044-26-000071",
+        "url": "https://www.sec.gov/Archives/edgar/data/1652044/000165204426000071/"
+       }
+      ]
+     },
+     {
+      "key": "trend",
+      "label": "Price trend",
+      "level": "strong",
+      "rated": true,
+      "verdict": "Rising",
+      "sentence": "Up 22% over 6 months, and 2% above its average price of the last 200 trading days.",
+      "inputs": [
+       {
+        "label": "6-month price change",
+        "value": 0.22426312469263254,
+        "display": "22%"
+       },
+       {
+        "label": "Price vs 200-day average",
+        "value": 0.0169,
+        "display": "2%"
+       }
+      ],
+      "sources": [
+       {
+        "kind": "price_history",
+        "label": "Daily closing prices to 2026-09-25",
+        "ref": "2026-09-25"
+       }
+      ]
+     },
+     {
+      "key": "next_event",
+      "label": "Next event",
+      "level": "not_applicable",
+      "rated": false,
+      "verdict": "Earnings in about 31 days (estimated)",
+      "sentence": "Earnings, around Wed 28 Oct. This is an estimate from last year's results date, not a date the company has announced. On its last 8 results days the share moved 5% or more 3 times; the typical move was 2.7%.",
+      "inputs": [
+       {
+        "label": "Days until the event",
+        "value": 31,
+        "display": "31"
+       },
+       {
+        "label": "Event date",
+        "value": null,
+        "display": "Wed 28 Oct"
+       },
+       {
+        "label": "Past results days counted",
+        "value": 8,
+        "display": "8"
+       },
+       {
+        "label": "Results days with a move of 5% or more",
+        "value": 3,
+        "display": "3"
+       },
+       {
+        "label": "Typical results-day move",
+        "value": 0.026668697500624505,
+        "display": "2.7%"
+       }
+      ],
+      "sources": [
+       {
+        "kind": "earnings_release",
+        "label": "Estimate from SEC filings: results released 2025-10-29 + 52 weeks; usually within 1 day",
+        "ref": "2025-10-29"
+       },
+       {
+        "kind": "earnings_release",
+        "label": "8 earnings releases (SEC 8-K item 2.02) and closing prices",
+        "ref": "2024-10-29..2026-07-22"
+       }
+      ]
+     }
+    ]
+   },
+   "events": [
+    {
+     "id": "E1",
+     "rowId": "c6c1a58b-3e18-4ce5-8f6e-8d6e5a274f2d",
+     "kind": "earnings",
+     "date": "2026-10-28",
+     "estimated": true
+    }
+   ],
+   "news": [
+    {
+     "id": "N1",
+     "rowId": "50441e07-1252-4ee0-a398-7c2475659cf6",
+     "title": "Stock Market Today: Dow Off 300; These Software Firms Are Beating Alphabet (Live Coverage)",
+     "source": "Yahoo Finance News",
+     "date": "2026-09-23T16:51:56+00:00"
+    },
+    {
+     "id": "N2",
+     "rowId": "1a18118f-b214-42ee-906e-288772f6df3c",
+     "title": "Alphabet’s Spark Agentic AI Will Beat Meta’s Muse in the Long Run",
+     "source": "Yahoo Finance News",
+     "date": "2026-09-23T14:26:10+00:00"
+    },
+    {
+     "id": "N3",
+     "rowId": "23d9fcb6-4bd9-4a52-973b-cfa9496bba7b",
+     "title": "Prediction: The Cheapest Mega Cap in the AI Trade, Alphabet Could Hit $600 in 2027",
+     "source": "Yahoo Finance News",
+     "date": "2026-09-23T13:30:31+00:00"
+    },
+    {
+     "id": "N4",
+     "rowId": "13327c9b-0717-4fa1-91b2-374d665074a5",
+     "title": "Netflix stock is getting shredded — and Google's YouTube may be the reason",
+     "source": "Yahoo Finance News",
+     "date": "2026-09-23T12:30:41+00:00"
+    },
+    {
+     "id": "N5",
+     "rowId": "6c15b82f-56f9-4f5c-b875-bb8119c6ffd9",
+     "title": "Broadcom Just Named Its Next AI Customer. It Isn’t Google.",
+     "source": "Yahoo Finance News",
+     "date": "2026-09-22T22:20:44+00:00"
+    },
+    {
+     "id": "N6",
+     "rowId": "6ee500f5-def1-45dc-b263-54f095b0810c",
+     "title": "VGT Holders Bought ‘Tech’ and Own No Google, Meta, or Amazon: The Sector Rule That Decides What’s Inside",
+     "source": "Yahoo Finance News",
+     "date": "2026-09-22T22:15:04+00:00"
+    }
+   ],
+   "trader": {
+    "moveBandLow": 0,
+    "moveBandHigh": 100,
+    "moveBandPoint": 0,
+    "hitCount": 0,
+    "sampleCount": 0,
+    "readings": [
+     {
+      "label": "RSI-14",
+      "display": "49.72"
+     },
+     {
+      "label": "30-day realized volatility (annualized)",
+      "display": "0.23"
+     },
+     {
+      "label": "Drawdown from trailing 1-year high (%)",
+      "display": "-14.58"
+     }
+    ]
+   }
+  },
+  "RKLB": {
+   "name": "Rocket Lab",
+   "symbol": "RKLB",
+   "assetType": "equity",
+   "history": {
+    "horizonSessions": 10,
+    "n": 6,
+    "higher": 4,
+    "lower": 2,
+    "upRate": {
+     "point": 67,
+     "low": 30,
+     "high": 90
+    },
+    "confidence": "low",
+    "cases": [
+     {
+      "date": "2022-11-11",
+      "dateAfter": "2022-11-28",
+      "movePct": -28.8
+     },
+     {
+      "date": "2023-01-06",
+      "dateAfter": "2023-01-23",
+      "movePct": 13.9
+     },
+     {
+      "date": "2023-12-22",
+      "dateAfter": "2024-01-09",
+      "movePct": 0.2
+     },
+     {
+      "date": "2024-05-21",
+      "dateAfter": "2024-06-05",
+      "movePct": -0.4
+     },
+     {
+      "date": "2024-06-10",
+      "dateAfter": "2024-06-25",
+      "movePct": 3.9
+     },
+     {
+      "date": "2024-07-09",
+      "dateAfter": "2024-07-23",
+      "movePct": 6.3
+     }
+    ],
+    "trader": {
+     "thresholdPct": 5,
+     "moveBand": {
+      "pointEstimate": 50,
+      "low": 19,
+      "high": 81,
+      "confidence": "low",
+      "sampleCount": 6,
+      "hitCount": 3
+     }
+    },
+    "status": "ok",
+    "typical": {
+     "p25": -0.3,
+     "median": 2.1,
+     "p75": 5.7
+    },
+    "worst": -28.8,
+    "best": 13.9
+   },
+   "historyBasis": "similar",
+   "noHistoryReason": null,
+   "matchedOn": [
+    "a price well above its recent average",
+    "no results due within 7 trading days",
+    "a sideways price trend"
+   ],
+   "scorecard": {
+    "symbol": "RKLB",
+    "asOf": "2026-09-27",
+    "dimensions": [
+     {
+      "key": "valuation",
+      "label": "Price vs profit",
+      "level": "weak",
+      "rated": true,
+      "verdict": "Low cash yield",
+      "sentence": "It has no yearly profit and burns cash, so the price rests on future results.",
+      "inputs": [
+       {
+        "label": "Free cash flow ÷ market value",
+        "value": -0.008390082406163303,
+        "display": null
+       }
+      ],
+      "sources": [
+       {
+        "kind": "sec_filing",
+        "label": "10-Q filed 2026-08-10 (profit per share)",
+        "ref": "0001819994-26-000062",
+        "url": "https://www.sec.gov/Archives/edgar/data/1819994/000181999426000062/"
+       },
+       {
+        "kind": "price_history",
+        "label": "Closing price 2026-09-25",
+        "ref": "2026-09-25"
+       }
+      ]
+     },
+     {
+      "key": "growth",
+      "label": "Growth",
+      "level": "strong",
+      "rated": true,
+      "verdict": "Strong",
+      "sentence": "Sales are up 53% on last year. The pace is steady.",
+      "inputs": [
+       {
+        "label": "Sales growth, last 12 months vs the 12 before",
+        "value": 0.5252873996307483,
+        "display": "53%"
+       },
+       {
+        "label": "Profit growth, last 12 months vs the 12 before",
+        "value": null,
+        "display": null
+       },
+       {
+        "label": "Latest quarter's sales growth vs a year earlier",
+        "value": 0.6198563301914213,
+        "display": "+62%"
+       },
+       {
+        "label": "Previous quarter's sales growth vs a year earlier",
+        "value": 0.6345731791888651,
+        "display": "+63%"
+       }
+      ],
+      "sources": [
+       {
+        "kind": "sec_filing",
+        "label": "10-Q filed 2026-08-10 (sales and profit)",
+        "ref": "0001819994-26-000062",
+        "url": "https://www.sec.gov/Archives/edgar/data/1819994/000181999426000062/"
+       }
+      ]
+     },
+     {
+      "key": "health",
+      "label": "Financial health",
+      "level": "weak",
+      "rated": true,
+      "verdict": "Stretched",
+      "sentence": "It makes no EBITDA (profit before interest, tax and write-downs). It spent more cash than it brought in last year. It has more cash than debt.",
+      "inputs": [
+       {
+        "label": "EBITDA margin",
+        "value": -0.2094413804401245,
+        "display": null
+       },
+       {
+        "label": "Free cash flow, last 12 months (USD)",
+        "value": -371139000,
+        "display": null
+       },
+       {
+        "label": "Net debt (USD)",
+        "value": -2116356000,
+        "display": null
+       },
+       {
+        "label": "Net debt ÷ EBITDA",
+        "value": null,
+        "display": null
+       }
+      ],
+      "sources": [
+       {
+        "kind": "sec_filing",
+        "label": "10-Q filed 2026-08-10 (EBITDA, cash flow and debt)",
+        "ref": "0001819994-26-000062",
+        "url": "https://www.sec.gov/Archives/edgar/data/1819994/000181999426000062/"
+       }
+      ]
+     },
+     {
+      "key": "dividend",
+      "label": "Dividend",
+      "level": "not_applicable",
+      "rated": true,
+      "verdict": "None",
+      "sentence": "It does not pay a dividend.",
+      "inputs": [],
+      "sources": [
+       {
+        "kind": "sec_filing",
+        "label": "10-Q filed 2026-08-10 (dividends)",
+        "ref": "0001819994-26-000062",
+        "url": "https://www.sec.gov/Archives/edgar/data/1819994/000181999426000062/"
+       }
+      ]
+     },
+     {
+      "key": "trend",
+      "label": "Price trend",
+      "level": "mixed",
+      "rated": true,
+      "verdict": "Sideways",
+      "sentence": "Up 12% over 6 months, and 9% below its average price of the last 200 trading days.",
+      "inputs": [
+       {
+        "label": "6-month price change",
+        "value": 0.1214739795309161,
+        "display": "12%"
+       },
+       {
+        "label": "Price vs 200-day average",
+        "value": -0.08810000000000001,
+        "display": "9%"
+       }
+      ],
+      "sources": [
+       {
+        "kind": "price_history",
+        "label": "Daily closing prices to 2026-09-25",
+        "ref": "2026-09-25"
+       }
+      ]
+     },
+     {
+      "key": "next_event",
+      "label": "Next event",
+      "level": "not_applicable",
+      "rated": false,
+      "verdict": "Earnings in about 43 days (estimated)",
+      "sentence": "Earnings, around Mon 9 Nov. This is an estimate from last year's results date, not a date the company has announced. On its last 12 results days the share moved 5% or more 4 times; the typical move was 3.0%.",
+      "inputs": [
+       {
+        "label": "Days until the event",
+        "value": 43,
+        "display": "43"
+       },
+       {
+        "label": "Event date",
+        "value": null,
+        "display": "Mon 9 Nov"
+       },
+       {
+        "label": "Past results days counted",
+        "value": 12,
+        "display": "12"
+       },
+       {
+        "label": "Results days with a move of 5% or more",
+        "value": 4,
+        "display": "4"
+       },
+       {
+        "label": "Typical results-day move",
+        "value": 0.029693668836961173,
+        "display": "3.0%"
+       }
+      ],
+      "sources": [
+       {
+        "kind": "earnings_release",
+        "label": "Estimate from SEC filings: results released 2025-11-10 + 52 weeks; this matched to the day on its last releases",
+        "ref": "2025-11-10"
+       },
+       {
+        "kind": "earnings_release",
+        "label": "12 earnings releases (SEC 8-K item 2.02) and closing prices",
+        "ref": "2024-01-31..2026-08-10"
+       }
+      ]
+     }
+    ]
+   },
+   "events": [
+    {
+     "id": "E1",
+     "rowId": "926ec173-c6d0-4537-afd2-7568108b3f90",
+     "kind": "earnings",
+     "date": "2026-11-09",
+     "estimated": true
+    }
+   ],
+   "news": [
+    {
+     "id": "N1",
+     "rowId": "8ed5e741-1dbe-4850-85ba-73fd07cec648",
+     "title": "Rocket Lab Readies For Mission, Cathie Wood Buys $25 Million In Shares",
+     "source": "Yahoo Finance News",
+     "date": "2026-09-23T12:38:57+00:00"
+    },
+    {
+     "id": "N2",
+     "rowId": "12b93beb-7fa3-48f1-8c47-ca07f689b224",
+     "title": "Wall Street Thinks Rocket Lab Is a Buy. Here's Why I'm Not So Sure.",
+     "source": "Yahoo Finance News",
+     "date": "2026-09-22T17:50:00+00:00"
+    },
+    {
+     "id": "N3",
+     "rowId": "e64f5fe0-d0e4-40a4-8869-e56e5a47cd11",
+     "title": "Redwire vs. Rocket Lab: Which Space Stock Is a Better Buy in 2026?",
+     "source": "Yahoo Finance News",
+     "date": "2026-09-22T17:19:35+00:00"
+    },
+    {
+     "id": "N4",
+     "rowId": "ba9b16ae-b931-4d24-94b3-c8982617ae22",
+     "title": "Rocket Lab Stock Breaks Above Key Trendline",
+     "source": "Yahoo Finance News",
+     "date": "2026-09-22T16:57:28+00:00"
+    },
+    {
+     "id": "N5",
+     "rowId": "e701fe73-9b1f-4dca-99cf-adee0b158ca3",
+     "title": "Rocket Lab Looks More and More Like a SpaceX Competitor. The Stock Is Up.",
+     "source": "Yahoo Finance News",
+     "date": "2026-09-21T20:36:00+00:00"
+    },
+    {
+     "id": "N6",
+     "rowId": "c6c7bb27-2159-4c01-a656-9d59dfaec24a",
+     "title": "Archer Aviation vs. Rocket Lab: Which Aerospace Stock Is a Better Buy in 2026?",
+     "source": "Yahoo Finance News",
+     "date": "2026-09-21T19:23:23+00:00"
+    }
+   ],
+   "trader": {
+    "moveBandLow": 0,
+    "moveBandHigh": 100,
+    "moveBandPoint": 0,
+    "hitCount": 0,
+    "sampleCount": 0,
+    "readings": [
+     {
+      "label": "RSI-14",
+      "display": "59.41"
+     },
+     {
+      "label": "30-day realized volatility (annualized)",
+      "display": "0.52"
+     },
+     {
+      "label": "Drawdown from trailing 1-year high (%)",
+      "display": "-50.78"
+     }
+    ]
+   }
+  },
+  "SMCI": {
+   "name": "Super Micro Computer",
+   "symbol": "SMCI",
+   "assetType": "equity",
+   "history": {
+    "horizonSessions": 10,
+    "n": 5,
+    "higher": 2,
+    "lower": 3,
+    "upRate": {
+     "point": 40,
+     "low": 12,
+     "high": 77
+    },
+    "confidence": "low",
+    "cases": [
+     {
+      "date": "2025-02-25",
+      "dateAfter": "2025-03-11",
+      "movePct": -10.3
+     },
+     {
+      "date": "2025-06-30",
+      "dateAfter": "2025-07-15",
+      "movePct": 8.5
+     },
+     {
+      "date": "2025-07-15",
+      "dateAfter": "2025-07-29",
+      "movePct": 10.3
+     },
+     {
+      "date": "2026-05-29",
+      "dateAfter": "2026-06-12",
+      "movePct": -33.9
+     },
+     {
+      "date": "2026-06-22",
+      "dateAfter": "2026-07-07",
+      "movePct": -26
+     }
+    ],
+    "trader": {
+     "thresholdPct": 5,
+     "moveBand": {
+      "pointEstimate": 100,
+      "low": 57,
+      "high": 100,
+      "confidence": "medium",
+      "sampleCount": 5,
+      "hitCount": 5
+     }
+    },
+    "status": "ok",
+    "typical": {
+     "p25": -26,
+     "median": -10.3,
+     "p75": 8.5
+    },
+    "worst": -33.9,
+    "best": 10.3
+   },
+   "historyBasis": "similar",
+   "noHistoryReason": null,
+   "matchedOn": [
+    "unusually strong gains over three months",
+    "doing much better than the market",
+    "no results due within 7 trading days"
+   ],
+   "scorecard": {
+    "symbol": "SMCI",
+    "asOf": "2026-09-27",
+    "dimensions": [
+     {
+      "key": "valuation",
+      "label": "Price vs profit",
+      "level": "strong",
+      "rated": true,
+      "verdict": "Cheaper than usual",
+      "sentence": "The share costs 13 times the company's yearly profit, lower than its own 5-year average of 20. For comparison, the middle figure across the 15 companies Cairn tracks is 39.",
+      "inputs": [
+       {
+        "label": "Price ÷ yearly profit per share",
+        "value": 13.269938135439634,
+        "display": "13"
+       },
+       {
+        "label": "Its 5-year average",
+        "value": 19.894712023823065,
+        "display": "20"
+       },
+       {
+        "label": "Similar companies (median)",
+        "value": null,
+        "display": null
+       },
+       {
+        "label": "Similar companies counted",
+        "value": null,
+        "display": null
+       },
+       {
+        "label": "Companies Cairn tracks (median)",
+        "value": 39.1584394172467,
+        "display": "39"
+       },
+       {
+        "label": "Companies Cairn tracks, counted",
+        "value": 15,
+        "display": "15"
+       }
+      ],
+      "sources": [
+       {
+        "kind": "sec_filing",
+        "label": "10-K filed 2026-08-31 (profit per share)",
+        "ref": "0001375365-26-000022",
+        "url": "https://www.sec.gov/Archives/edgar/data/1375365/000137536526000022/"
+       },
+       {
+        "kind": "price_history",
+        "label": "Closing price 2026-09-25",
+        "ref": "2026-09-25"
+       }
+      ]
+     },
+     {
+      "key": "growth",
+      "label": "Growth",
+      "level": "strong",
+      "rated": true,
+      "verdict": "Strong",
+      "sentence": "Sales are up 78% on last year, and profit is up 113%. Growth is slowing.",
+      "inputs": [
+       {
+        "label": "Sales growth, last 12 months vs the 12 before",
+        "value": 0.7778535103837869,
+        "display": "78%"
+       },
+       {
+        "label": "Profit growth, last 12 months vs the 12 before",
+        "value": 1.1265619428442855,
+        "display": "113%"
+       },
+       {
+        "label": "Latest quarter's sales growth vs a year earlier",
+        "value": 0.931552702482286,
+        "display": "+93%"
+       },
+       {
+        "label": "Previous quarter's sales growth vs a year earlier",
+        "value": 1.2267842891811216,
+        "display": "+123%"
+       }
+      ],
+      "sources": [
+       {
+        "kind": "sec_filing",
+        "label": "10-K filed 2026-08-31 (sales and profit)",
+        "ref": "0001375365-26-000022",
+        "url": "https://www.sec.gov/Archives/edgar/data/1375365/000137536526000022/"
+       }
+      ]
+     },
+     {
+      "key": "health",
+      "label": "Financial health",
+      "level": "weak",
+      "rated": true,
+      "verdict": "Stretched",
+      "sentence": "Keeps 7 cents of every dollar of sales as EBITDA (profit before interest, tax and write-downs). It spent more cash than it brought in last year.",
+      "inputs": [
+       {
+        "label": "EBITDA margin",
+        "value": 0.07228018318682156,
+        "display": "7"
+       },
+       {
+        "label": "Free cash flow, last 12 months (USD)",
+        "value": -6971885000,
+        "display": null
+       },
+       {
+        "label": "Net debt (USD)",
+        "value": null,
+        "display": null
+       },
+       {
+        "label": "Net debt ÷ EBITDA",
+        "value": null,
+        "display": null
+       }
+      ],
+      "sources": [
+       {
+        "kind": "sec_filing",
+        "label": "10-K filed 2026-08-31 (EBITDA, cash flow and debt)",
+        "ref": "0001375365-26-000022",
+        "url": "https://www.sec.gov/Archives/edgar/data/1375365/000137536526000022/"
+       }
+      ]
+     },
+     {
+      "key": "dividend",
+      "label": "Dividend",
+      "level": "not_applicable",
+      "rated": true,
+      "verdict": "None",
+      "sentence": "It does not pay a dividend.",
+      "inputs": [],
+      "sources": [
+       {
+        "kind": "sec_filing",
+        "label": "10-K filed 2026-08-31 (dividends)",
+        "ref": "0001375365-26-000022",
+        "url": "https://www.sec.gov/Archives/edgar/data/1375365/000137536526000022/"
+       }
+      ]
+     },
+     {
+      "key": "trend",
+      "label": "Price trend",
+      "level": "strong",
+      "rated": true,
+      "verdict": "Rising",
+      "sentence": "Up 95% over 6 months, and 36% above its average price of the last 200 trading days.",
+      "inputs": [
+       {
+        "label": "6-month price change",
+        "value": 0.947771278918103,
+        "display": "95%"
+       },
+       {
+        "label": "Price vs 200-day average",
+        "value": 0.36060000000000003,
+        "display": "36%"
+       }
+      ],
+      "sources": [
+       {
+        "kind": "price_history",
+        "label": "Daily closing prices to 2026-09-25",
+        "ref": "2026-09-25"
+       }
+      ]
+     },
+     {
+      "key": "next_event",
+      "label": "Next event",
+      "level": "not_applicable",
+      "rated": false,
+      "verdict": "Earnings in about 25 days (estimated)",
+      "sentence": "Earnings, around Thu 22 Oct. This is an estimate from last year's results date, not a date the company has announced. On its last 11 results days the share moved 5% or more 9 times; the typical move was 13.8%.",
+      "inputs": [
+       {
+        "label": "Days until the event",
+        "value": 25,
+        "display": "25"
+       },
+       {
+        "label": "Event date",
+        "value": null,
+        "display": "Thu 22 Oct"
+       },
+       {
+        "label": "Past results days counted",
+        "value": 11,
+        "display": "11"
+       },
+       {
+        "label": "Results days with a move of 5% or more",
+        "value": 9,
+        "display": "9"
+       },
+       {
+        "label": "Typical results-day move",
+        "value": 0.137849620314195,
+        "display": "13.8%"
+       }
+      ],
+      "sources": [
+       {
+        "kind": "earnings_release",
+        "label": "Estimate from SEC filings: results released 2025-10-23 + 52 weeks; usually within 7 days",
+        "ref": "2025-10-23"
+       },
+       {
+        "kind": "earnings_release",
+        "label": "11 earnings releases (SEC 8-K item 2.02) and closing prices",
+        "ref": "2024-11-05..2026-08-11"
+       }
+      ]
+     }
+    ]
+   },
+   "events": [
+    {
+     "id": "E1",
+     "rowId": "53247507-59e8-4609-b8c1-6de3c31ec5b4",
+     "kind": "earnings",
+     "date": "2026-10-22",
+     "estimated": true
+    }
+   ],
+   "news": [
+    {
+     "id": "N1",
+     "rowId": "b5e476ae-e3b1-478a-bc46-335434da3741",
+     "title": "Super Micro Computer Looks Very Intriguing Right Now",
+     "source": "Yahoo Finance News",
+     "date": "2026-09-21T15:00:40+00:00"
+    },
+    {
+     "id": "N2",
+     "rowId": "176e9528-e698-4bdc-8bac-0330d98100bc",
+     "title": "Better Artificial Intelligence Stock: Aehr Test Systems vs. Super Micro Computer",
+     "source": "Yahoo Finance News",
+     "date": "2026-09-19T02:36:30+00:00"
+    },
+    {
+     "id": "N3",
+     "rowId": "cbd10cf0-9138-44d3-a1e4-5f29e54dd19d",
+     "title": "Did SMCI Stock Just Rise For The Wrong Reason?",
+     "source": "Yahoo Finance News",
+     "date": "2026-09-18T19:15:18+00:00"
+    },
+    {
+     "id": "N4",
+     "rowId": "688cc6e5-0d86-4c15-b77e-49b5bc3a32f8",
+     "title": "SMCI Has Something Nvidia Doesn’t. Here’s Why That Matters",
+     "source": "Yahoo Finance News",
+     "date": "2026-09-16T16:30:37+00:00"
+    },
+    {
+     "id": "N5",
+     "rowId": "2ff3e327-dc96-415b-8ff2-802f3aede68b",
+     "title": "Jim Cramer Favors Dell (DELL) Over Super Micro (SMCI) as AI Server Demand Surges",
+     "source": "Yahoo Finance News",
+     "date": "2026-09-12T09:37:23+00:00"
+    },
+    {
+     "id": "N6",
+     "rowId": "629aa7d7-144b-42f2-82fe-e2af5e3696f2",
+     "title": "Super Micro Computer Sees $60B AI Order Book Powering Fiscal 2027 Outlook",
+     "source": "Yahoo Finance News",
+     "date": "2026-09-10T21:02:15+00:00"
+    }
+   ],
+   "trader": {
+    "moveBandLow": 0,
+    "moveBandHigh": 100,
+    "moveBandPoint": 0,
+    "hitCount": 0,
+    "sampleCount": 0,
+    "readings": [
+     {
+      "label": "RSI-14",
+      "display": "63.82"
+     },
+     {
+      "label": "30-day realized volatility (annualized)",
+      "display": "0.66"
+     },
+     {
+      "label": "Drawdown from trailing 1-year high (%)",
+      "display": "-26.28"
+     }
+    ]
+   }
+  },
+  "SPY": {
+   "name": "SPY",
+   "symbol": "SPY",
+   "assetType": "etf",
+   "history": {
+    "horizonSessions": 10,
+    "n": 125,
+    "higher": 76,
+    "lower": 49,
+    "upRate": {
+     "point": 61,
+     "low": 52,
+     "high": 69
+    },
+    "confidence": "high",
+    "cases": [
+     {
+      "date": "2021-09-24",
+      "dateAfter": "2021-10-08",
+      "movePct": -1.4
+     },
+     {
+      "date": "2021-10-08",
+      "dateAfter": "2021-10-22",
+      "movePct": 3.5
+     },
+     {
+      "date": "2021-10-22",
+      "dateAfter": "2021-11-05",
+      "movePct": 3.4
+     },
+     {
+      "date": "2021-11-05",
+      "dateAfter": "2021-11-19",
+      "movePct": 0.1
+     },
+     {
+      "date": "2021-11-19",
+      "dateAfter": "2021-12-06",
+      "movePct": -2.2
+     },
+     {
+      "date": "2021-12-06",
+      "dateAfter": "2021-12-20",
+      "movePct": -0.8
+     },
+     {
+      "date": "2021-12-20",
+      "dateAfter": "2022-01-04",
+      "movePct": 5
+     },
+     {
+      "date": "2022-01-04",
+      "dateAfter": "2022-01-19",
+      "movePct": -5.4
+     },
+     {
+      "date": "2022-01-19",
+      "dateAfter": "2022-02-02",
+      "movePct": 1.2
+     },
+     {
+      "date": "2022-02-02",
+      "dateAfter": "2022-02-16",
+      "movePct": -2.4
+     },
+     {
+      "date": "2022-02-16",
+      "dateAfter": "2022-03-03",
+      "movePct": -2.4
+     },
+     {
+      "date": "2022-03-03",
+      "dateAfter": "2022-03-17",
+      "movePct": 1.2
+     },
+     {
+      "date": "2022-03-17",
+      "dateAfter": "2022-03-31",
+      "movePct": 2.4
+     },
+     {
+      "date": "2022-03-31",
+      "dateAfter": "2022-04-14",
+      "movePct": -3.1
+     },
+     {
+      "date": "2022-04-14",
+      "dateAfter": "2022-04-29",
+      "movePct": -5.9
+     },
+     {
+      "date": "2022-04-29",
+      "dateAfter": "2022-05-13",
+      "movePct": -2.5
+     },
+     {
+      "date": "2022-05-13",
+      "dateAfter": "2022-05-27",
+      "movePct": 3.4
+     },
+     {
+      "date": "2022-05-27",
+      "dateAfter": "2022-06-13",
+      "movePct": -9.7
+     },
+     {
+      "date": "2022-06-13",
+      "dateAfter": "2022-06-28",
+      "movePct": 1.5
+     },
+     {
+      "date": "2022-06-28",
+      "dateAfter": "2022-07-13",
+      "movePct": -0.5
+     },
+     {
+      "date": "2022-07-13",
+      "dateAfter": "2022-07-27",
+      "movePct": 5.9
+     },
+     {
+      "date": "2022-07-27",
+      "dateAfter": "2022-08-10",
+      "movePct": 4.7
+     },
+     {
+      "date": "2022-08-10",
+      "dateAfter": "2022-08-24",
+      "movePct": -1.5
+     },
+     {
+      "date": "2022-08-24",
+      "dateAfter": "2022-09-08",
+      "movePct": -3.2
+     },
+     {
+      "date": "2022-09-08",
+      "dateAfter": "2022-09-22",
+      "movePct": -6.5
+     },
+     {
+      "date": "2022-09-22",
+      "dateAfter": "2022-10-06",
+      "movePct": -0.3
+     },
+     {
+      "date": "2022-10-06",
+      "dateAfter": "2022-10-20",
+      "movePct": -2.1
+     },
+     {
+      "date": "2022-10-20",
+      "dateAfter": "2022-11-03",
+      "movePct": 1.5
+     },
+     {
+      "date": "2022-11-03",
+      "dateAfter": "2022-11-17",
+      "movePct": 6.3
+     },
+     {
+      "date": "2022-11-17",
+      "dateAfter": "2022-12-02",
+      "movePct": 3.2
+     },
+     {
+      "date": "2022-12-02",
+      "dateAfter": "2022-12-16",
+      "movePct": -5.8
+     },
+     {
+      "date": "2022-12-16",
+      "dateAfter": "2023-01-03",
+      "movePct": -0.6
+     },
+     {
+      "date": "2023-01-03",
+      "dateAfter": "2023-01-18",
+      "movePct": 2.8
+     },
+     {
+      "date": "2023-01-18",
+      "dateAfter": "2023-02-01",
+      "movePct": 4.9
+     },
+     {
+      "date": "2023-02-01",
+      "dateAfter": "2023-02-15",
+      "movePct": 0.8
+     },
+     {
+      "date": "2023-02-15",
+      "dateAfter": "2023-03-02",
+      "movePct": -3.9
+     },
+     {
+      "date": "2023-03-02",
+      "dateAfter": "2023-03-16",
+      "movePct": -0.4
+     },
+     {
+      "date": "2023-03-16",
+      "dateAfter": "2023-03-30",
+      "movePct": 1.9
+     },
+     {
+      "date": "2023-03-30",
+      "dateAfter": "2023-04-14",
+      "movePct": 2.2
+     },
+     {
+      "date": "2023-04-14",
+      "dateAfter": "2023-04-28",
+      "movePct": 0.8
+     },
+     {
+      "date": "2023-04-28",
+      "dateAfter": "2023-05-12",
+      "movePct": -1
+     },
+     {
+      "date": "2023-05-12",
+      "dateAfter": "2023-05-26",
+      "movePct": 2
+     },
+     {
+      "date": "2023-05-26",
+      "dateAfter": "2023-06-12",
+      "movePct": 3.3
+     },
+     {
+      "date": "2023-06-12",
+      "dateAfter": "2023-06-27",
+      "movePct": 0.5
+     },
+     {
+      "date": "2023-06-27",
+      "dateAfter": "2023-07-12",
+      "movePct": 2.3
+     },
+     {
+      "date": "2023-07-12",
+      "dateAfter": "2023-07-26",
+      "movePct": 2.1
+     },
+     {
+      "date": "2023-07-26",
+      "dateAfter": "2023-08-09",
+      "movePct": -2.1
+     },
+     {
+      "date": "2023-08-09",
+      "dateAfter": "2023-08-23",
+      "movePct": -0.6
+     },
+     {
+      "date": "2023-08-23",
+      "dateAfter": "2023-09-07",
+      "movePct": 0.4
+     },
+     {
+      "date": "2023-09-07",
+      "dateAfter": "2023-09-21",
+      "movePct": -3
+     },
+     {
+      "date": "2023-09-21",
+      "dateAfter": "2023-10-05",
+      "movePct": -1.6
+     },
+     {
+      "date": "2023-10-05",
+      "dateAfter": "2023-10-19",
+      "movePct": 0.5
+     },
+     {
+      "date": "2023-10-19",
+      "dateAfter": "2023-11-02",
+      "movePct": 1
+     },
+     {
+      "date": "2023-11-02",
+      "dateAfter": "2023-11-16",
+      "movePct": 4.5
+     },
+     {
+      "date": "2023-11-16",
+      "dateAfter": "2023-12-01",
+      "movePct": 2
+     },
+     {
+      "date": "2023-12-01",
+      "dateAfter": "2023-12-15",
+      "movePct": 2.2
+     },
+     {
+      "date": "2023-12-15",
+      "dateAfter": "2024-01-02",
+      "movePct": 0.7
+     },
+     {
+      "date": "2024-01-02",
+      "dateAfter": "2024-01-17",
+      "movePct": -0.1
+     },
+     {
+      "date": "2024-01-17",
+      "dateAfter": "2024-01-31",
+      "movePct": 2.2
+     },
+     {
+      "date": "2024-01-31",
+      "dateAfter": "2024-02-14",
+      "movePct": 3.2
+     },
+     {
+      "date": "2024-02-14",
+      "dateAfter": "2024-02-29",
+      "movePct": 1.9
+     },
+     {
+      "date": "2024-02-29",
+      "dateAfter": "2024-03-14",
+      "movePct": 1.4
+     },
+     {
+      "date": "2024-03-14",
+      "dateAfter": "2024-03-28",
+      "movePct": 1.6
+     },
+     {
+      "date": "2024-03-28",
+      "dateAfter": "2024-04-12",
+      "movePct": -2.3
+     },
+     {
+      "date": "2024-04-12",
+      "dateAfter": "2024-04-26",
+      "movePct": -0.5
+     },
+     {
+      "date": "2024-04-26",
+      "dateAfter": "2024-05-10",
+      "movePct": 2.5
+     },
+     {
+      "date": "2024-05-10",
+      "dateAfter": "2024-05-24",
+      "movePct": 1.7
+     },
+     {
+      "date": "2024-05-24",
+      "dateAfter": "2024-06-10",
+      "movePct": 1.2
+     },
+     {
+      "date": "2024-06-10",
+      "dateAfter": "2024-06-25",
+      "movePct": 1.7
+     },
+     {
+      "date": "2024-06-25",
+      "dateAfter": "2024-07-10",
+      "movePct": 3
+     },
+     {
+      "date": "2024-07-10",
+      "dateAfter": "2024-07-24",
+      "movePct": -3.6
+     },
+     {
+      "date": "2024-07-24",
+      "dateAfter": "2024-08-07",
+      "movePct": -4.2
+     },
+     {
+      "date": "2024-08-07",
+      "dateAfter": "2024-08-21",
+      "movePct": 8.1
+     },
+     {
+      "date": "2024-08-21",
+      "dateAfter": "2024-09-05",
+      "movePct": -2
+     },
+     {
+      "date": "2024-09-05",
+      "dateAfter": "2024-09-19",
+      "movePct": 3.9
+     },
+     {
+      "date": "2024-09-19",
+      "dateAfter": "2024-10-03",
+      "movePct": -0.6
+     },
+     {
+      "date": "2024-10-03",
+      "dateAfter": "2024-10-17",
+      "movePct": 2.6
+     },
+     {
+      "date": "2024-10-17",
+      "dateAfter": "2024-10-31",
+      "movePct": -2.4
+     },
+     {
+      "date": "2024-10-31",
+      "dateAfter": "2024-11-14",
+      "movePct": 4.3
+     },
+     {
+      "date": "2024-11-14",
+      "dateAfter": "2024-11-29",
+      "movePct": 1.6
+     },
+     {
+      "date": "2024-11-29",
+      "dateAfter": "2024-12-13",
+      "movePct": 0.3
+     },
+     {
+      "date": "2024-12-13",
+      "dateAfter": "2024-12-30",
+      "movePct": -2.6
+     },
+     {
+      "date": "2024-12-30",
+      "dateAfter": "2025-01-15",
+      "movePct": 0.8
+     },
+     {
+      "date": "2025-01-15",
+      "dateAfter": "2025-01-30",
+      "movePct": 2.1
+     },
+     {
+      "date": "2025-01-30",
+      "dateAfter": "2025-02-13",
+      "movePct": 0.8
+     },
+     {
+      "date": "2025-02-13",
+      "dateAfter": "2025-02-28",
+      "movePct": -2.6
+     },
+     {
+      "date": "2025-02-28",
+      "dateAfter": "2025-03-14",
+      "movePct": -5.3
+     },
+     {
+      "date": "2025-03-14",
+      "dateAfter": "2025-03-28",
+      "movePct": -1.3
+     },
+     {
+      "date": "2025-03-28",
+      "dateAfter": "2025-04-11",
+      "movePct": -3.9
+     },
+     {
+      "date": "2025-04-11",
+      "dateAfter": "2025-04-28",
+      "movePct": 3.2
+     },
+     {
+      "date": "2025-04-28",
+      "dateAfter": "2025-05-12",
+      "movePct": 5.8
+     },
+     {
+      "date": "2025-05-12",
+      "dateAfter": "2025-05-27",
+      "movePct": 1.4
+     },
+     {
+      "date": "2025-05-27",
+      "dateAfter": "2025-06-10",
+      "movePct": 2
+     },
+     {
+      "date": "2025-06-10",
+      "dateAfter": "2025-06-25",
+      "movePct": 0.7
+     },
+     {
+      "date": "2025-06-25",
+      "dateAfter": "2025-07-10",
+      "movePct": 3.1
+     },
+     {
+      "date": "2025-07-10",
+      "dateAfter": "2025-07-24",
+      "movePct": 1.4
+     },
+     {
+      "date": "2025-07-24",
+      "dateAfter": "2025-08-07",
+      "movePct": -0.3
+     },
+     {
+      "date": "2025-08-07",
+      "dateAfter": "2025-08-21",
+      "movePct": 0.5
+     },
+     {
+      "date": "2025-08-21",
+      "dateAfter": "2025-09-05",
+      "movePct": 1.8
+     },
+     {
+      "date": "2025-09-05",
+      "dateAfter": "2025-09-19",
+      "movePct": 2.5
+     },
+     {
+      "date": "2025-09-19",
+      "dateAfter": "2025-10-03",
+      "movePct": 0.8
+     },
+     {
+      "date": "2025-10-03",
+      "dateAfter": "2025-10-17",
+      "movePct": -0.7
+     },
+     {
+      "date": "2025-10-17",
+      "dateAfter": "2025-10-31",
+      "movePct": 2.7
+     },
+     {
+      "date": "2025-10-31",
+      "dateAfter": "2025-11-14",
+      "movePct": -1.5
+     },
+     {
+      "date": "2025-11-14",
+      "dateAfter": "2025-12-01",
+      "movePct": 1.2
+     },
+     {
+      "date": "2025-12-01",
+      "dateAfter": "2025-12-15",
+      "movePct": 0.1
+     },
+     {
+      "date": "2025-12-15",
+      "dateAfter": "2025-12-30",
+      "movePct": 0.9
+     },
+     {
+      "date": "2025-12-30",
+      "dateAfter": "2026-01-14",
+      "movePct": 0.5
+     },
+     {
+      "date": "2026-01-14",
+      "dateAfter": "2026-01-29",
+      "movePct": 0.5
+     },
+     {
+      "date": "2026-01-29",
+      "dateAfter": "2026-02-12",
+      "movePct": -1.8
+     },
+     {
+      "date": "2026-02-12",
+      "dateAfter": "2026-02-27",
+      "movePct": 0.7
+     },
+     {
+      "date": "2026-02-27",
+      "dateAfter": "2026-03-13",
+      "movePct": -3.5
+     },
+     {
+      "date": "2026-03-13",
+      "dateAfter": "2026-03-27",
+      "movePct": -4.3
+     },
+     {
+      "date": "2026-03-27",
+      "dateAfter": "2026-04-13",
+      "movePct": 8.2
+     },
+     {
+      "date": "2026-04-13",
+      "dateAfter": "2026-04-27",
+      "movePct": 4.2
+     },
+     {
+      "date": "2026-04-27",
+      "dateAfter": "2026-05-11",
+      "movePct": 3.4
+     },
+     {
+      "date": "2026-05-11",
+      "dateAfter": "2026-05-26",
+      "movePct": 1.5
+     },
+     {
+      "date": "2026-05-26",
+      "dateAfter": "2026-06-09",
+      "movePct": -1.8
+     },
+     {
+      "date": "2026-06-09",
+      "dateAfter": "2026-06-24",
+      "movePct": -0.5
+     },
+     {
+      "date": "2026-06-24",
+      "dateAfter": "2026-07-09",
+      "movePct": 2.5
+     },
+     {
+      "date": "2026-07-09",
+      "dateAfter": "2026-07-23",
+      "movePct": -1.8
+     },
+     {
+      "date": "2026-07-23",
+      "dateAfter": "2026-08-06",
+      "movePct": 4.1
+     },
+     {
+      "date": "2026-08-06",
+      "dateAfter": "2026-08-20",
+      "movePct": -0.8
+     },
+     {
+      "date": "2026-08-20",
+      "dateAfter": "2026-09-03",
+      "movePct": 1.4
+     },
+     {
+      "date": "2026-09-03",
+      "dateAfter": "2026-09-18",
+      "movePct": -1.5
+     }
+    ],
+    "trader": {
+     "thresholdPct": 5,
+     "moveBand": {
+      "pointEstimate": 9,
+      "low": 5,
+      "high": 15,
+      "confidence": "high",
+      "sampleCount": 125,
+      "hitCount": 11
+     }
+    },
+    "status": "ok",
+    "typical": {
+     "p25": -1.5,
+     "median": 0.8,
+     "p75": 2.2
+    },
+    "worst": -9.7,
+    "best": 8.2
+   },
+   "historyBasis": "baseline",
+   "noHistoryReason": null,
+   "matchedOn": [],
+   "scorecard": {
+    "symbol": "SPY",
+    "asOf": "2026-09-27",
+    "dimensions": [
+     {
+      "key": "valuation",
+      "label": "Price vs profit",
+      "level": "not_applicable",
+      "rated": true,
+      "verdict": "Not applicable",
+      "sentence": "A fund holds many companies, so single-company figures don't apply.",
+      "inputs": [],
+      "sources": []
+     },
+     {
+      "key": "growth",
+      "label": "Growth",
+      "level": "not_applicable",
+      "rated": true,
+      "verdict": "Not applicable",
+      "sentence": "A fund holds many companies, so single-company figures don't apply.",
+      "inputs": [],
+      "sources": []
+     },
+     {
+      "key": "health",
+      "label": "Financial health",
+      "level": "not_applicable",
+      "rated": true,
+      "verdict": "Not applicable",
+      "sentence": "A fund holds many companies, so single-company figures don't apply.",
+      "inputs": [],
+      "sources": []
+     },
+     {
+      "key": "dividend",
+      "label": "Dividend",
+      "level": "not_applicable",
+      "rated": true,
+      "verdict": "Not applicable",
+      "sentence": "A fund holds many companies, so single-company figures don't apply.",
+      "inputs": [],
+      "sources": []
+     },
+     {
+      "key": "trend",
+      "label": "Price trend",
+      "level": "strong",
+      "rated": true,
+      "verdict": "Rising",
+      "sentence": "Up 20% over 6 months, and 7% above its average price of the last 200 trading days.",
+      "inputs": [
+       {
+        "label": "6-month price change",
+        "value": 0.1957245399466656,
+        "display": "20%"
+       },
+       {
+        "label": "Price vs 200-day average",
+        "value": 0.0736,
+        "display": "7%"
+       }
+      ],
+      "sources": [
+       {
+        "kind": "price_history",
+        "label": "Daily closing prices to 2026-09-25",
+        "ref": "2026-09-25"
+       }
+      ]
+     },
+     {
+      "key": "next_event",
+      "label": "Next event",
+      "level": "not_applicable",
+      "rated": false,
+      "verdict": "None in calendar",
+      "sentence": "Cairn's calendar has no earnings or dividend dates for it in the next 60 days.",
+      "inputs": [],
+      "sources": []
+     }
+    ]
+   },
+   "events": [],
+   "news": [
+    {
+     "id": "N1",
+     "rowId": "7f5b2ed7-bf37-4be6-80d7-c4b1c3767497",
+     "title": "VOO vs. SPY: Is There Actually a Difference?",
+     "source": "Yahoo Finance News",
+     "date": "2026-09-19T08:35:00+00:00"
+    },
+    {
+     "id": "N2",
+     "rowId": "b7d036cc-3cac-4f83-9612-0e01462767a4",
+     "title": "A $10,000 Investment in SPY at Its 1993 Launch Is Worth This Much Today Without You Adding a Dime",
+     "source": "Yahoo Finance News",
+     "date": "2026-09-18T21:05:57+00:00"
+    },
+    {
+     "id": "N3",
+     "rowId": "0cc2af8d-f932-416a-b17d-0f36c66913a7",
+     "title": "You Can’t Spell SPY Without AI: How the Stock Market Became a 1-Way Bet on the Future",
+     "source": "Yahoo Finance News",
+     "date": "2026-09-13T01:00:02+00:00"
+    },
+    {
+     "id": "N4",
+     "rowId": "39d514d0-2d06-4d2d-90bb-32f7f13c5126",
+     "title": "Prediction: This ETF Will Beat the SPY Through 2027 (Not the QQQ!)",
+     "source": "Yahoo Finance News",
+     "date": "2026-09-08T17:05:36+00:00"
+    },
+    {
+     "id": "N5",
+     "rowId": "807b42c1-f824-4391-933d-b37abb200c3b",
+     "title": "GPIX Is Paying 8% and Trailing SPY by Just Half a Point. Has Goldman Finally Fixed the Covered-Call ETF?",
+     "source": "Yahoo Finance News",
+     "date": "2026-09-04T15:48:39+00:00"
+    },
+    {
+     "id": "N6",
+     "rowId": "3e763ee8-9f4f-4496-92c1-59dab3fb1d42",
+     "title": "$57 Billion Just Rushed Into SPYM | Is SPY’s Cheaper Twin Finally Taking Over?",
+     "source": "Yahoo Finance News",
+     "date": "2026-08-29T16:10:08+00:00"
+    }
+   ],
+   "trader": {
+    "moveBandLow": 0,
+    "moveBandHigh": 100,
+    "moveBandPoint": 0,
+    "hitCount": 0,
+    "sampleCount": 0,
+    "readings": [
+     {
+      "label": "RSI-14",
+      "display": "55.89"
+     },
+     {
+      "label": "30-day realized volatility (annualized)",
+      "display": "0.1"
+     },
+     {
+      "label": "Drawdown from trailing 1-year high (%)",
+      "display": "-0.84"
+     }
+    ]
+   }
+  },
+  "BTC": {
+   "name": "Bitcoin",
+   "symbol": "BTC",
+   "assetType": "crypto",
+   "history": {
+    "horizonSessions": 10,
+    "n": 60,
+    "higher": 29,
+    "lower": 31,
+    "upRate": {
+     "point": 48,
+     "low": 36,
+     "high": 61
+    },
+    "confidence": "high",
+    "cases": [
+     {
+      "date": "2023-02-17",
+      "dateAfter": "2023-02-27",
+      "movePct": -4.2
+     },
+     {
+      "date": "2023-02-27",
+      "dateAfter": "2023-03-09",
+      "movePct": -13.4
+     },
+     {
+      "date": "2023-03-13",
+      "dateAfter": "2023-03-23",
+      "movePct": 17.1
+     },
+     {
+      "date": "2023-03-23",
+      "dateAfter": "2023-04-02",
+      "movePct": -0.5
+     },
+     {
+      "date": "2023-04-02",
+      "dateAfter": "2023-04-12",
+      "movePct": 6.9
+     },
+     {
+      "date": "2023-04-12",
+      "dateAfter": "2023-04-22",
+      "movePct": -7.7
+     },
+     {
+      "date": "2023-04-22",
+      "dateAfter": "2023-05-02",
+      "movePct": 3.1
+     },
+     {
+      "date": "2023-05-02",
+      "dateAfter": "2023-05-12",
+      "movePct": -6.5
+     },
+     {
+      "date": "2023-06-20",
+      "dateAfter": "2023-06-30",
+      "movePct": 7.6
+     },
+     {
+      "date": "2023-06-30",
+      "dateAfter": "2023-07-10",
+      "movePct": -0.2
+     },
+     {
+      "date": "2023-07-10",
+      "dateAfter": "2023-07-20",
+      "movePct": -2
+     },
+     {
+      "date": "2023-07-20",
+      "dateAfter": "2023-07-30",
+      "movePct": -1.7
+     },
+     {
+      "date": "2023-08-01",
+      "dateAfter": "2023-08-11",
+      "movePct": -0.9
+     },
+     {
+      "date": "2023-10-30",
+      "dateAfter": "2023-11-09",
+      "movePct": 6.3
+     },
+     {
+      "date": "2023-11-09",
+      "dateAfter": "2023-11-19",
+      "movePct": 1.9
+     },
+     {
+      "date": "2023-11-19",
+      "dateAfter": "2023-11-29",
+      "movePct": 1.3
+     },
+     {
+      "date": "2023-11-29",
+      "dateAfter": "2023-12-09",
+      "movePct": 15.5
+     },
+     {
+      "date": "2023-12-09",
+      "dateAfter": "2023-12-19",
+      "movePct": -3.3
+     },
+     {
+      "date": "2023-12-19",
+      "dateAfter": "2023-12-29",
+      "movePct": -0.4
+     },
+     {
+      "date": "2023-12-29",
+      "dateAfter": "2024-01-08",
+      "movePct": 11.6
+     },
+     {
+      "date": "2024-01-08",
+      "dateAfter": "2024-01-18",
+      "movePct": -12.2
+     },
+     {
+      "date": "2024-01-29",
+      "dateAfter": "2024-02-08",
+      "movePct": 4.7
+     },
+     {
+      "date": "2024-02-08",
+      "dateAfter": "2024-02-18",
+      "movePct": 15.1
+     },
+     {
+      "date": "2024-02-18",
+      "dateAfter": "2024-02-28",
+      "movePct": 19.9
+     },
+     {
+      "date": "2024-02-28",
+      "dateAfter": "2024-03-09",
+      "movePct": 9.6
+     },
+     {
+      "date": "2024-03-09",
+      "dateAfter": "2024-03-19",
+      "movePct": -9.6
+     },
+     {
+      "date": "2024-03-19",
+      "dateAfter": "2024-03-29",
+      "movePct": 12.9
+     },
+     {
+      "date": "2024-03-29",
+      "dateAfter": "2024-04-08",
+      "movePct": 2.5
+     },
+     {
+      "date": "2024-04-08",
+      "dateAfter": "2024-04-18",
+      "movePct": -11.3
+     },
+     {
+      "date": "2024-05-15",
+      "dateAfter": "2024-05-25",
+      "movePct": 4.5
+     },
+     {
+      "date": "2024-05-25",
+      "dateAfter": "2024-06-04",
+      "movePct": 1.9
+     },
+     {
+      "date": "2024-06-04",
+      "dateAfter": "2024-06-14",
+      "movePct": -6.5
+     },
+     {
+      "date": "2024-06-15",
+      "dateAfter": "2024-06-25",
+      "movePct": -6.6
+     },
+     {
+      "date": "2024-07-15",
+      "dateAfter": "2024-07-25",
+      "movePct": 1.4
+     },
+     {
+      "date": "2024-07-25",
+      "dateAfter": "2024-08-04",
+      "movePct": -11.6
+     },
+     {
+      "date": "2024-10-28",
+      "dateAfter": "2024-11-07",
+      "movePct": 8.6
+     },
+     {
+      "date": "2024-11-07",
+      "dateAfter": "2024-11-17",
+      "movePct": 18.4
+     },
+     {
+      "date": "2024-11-17",
+      "dateAfter": "2024-11-27",
+      "movePct": 6.8
+     },
+     {
+      "date": "2024-11-27",
+      "dateAfter": "2024-12-07",
+      "movePct": 4.1
+     },
+     {
+      "date": "2024-12-07",
+      "dateAfter": "2024-12-17",
+      "movePct": 6.2
+     },
+     {
+      "date": "2024-12-17",
+      "dateAfter": "2024-12-27",
+      "movePct": -11.3
+     },
+     {
+      "date": "2025-01-02",
+      "dateAfter": "2025-01-12",
+      "movePct": -2.5
+     },
+     {
+      "date": "2025-01-15",
+      "dateAfter": "2025-01-25",
+      "movePct": 4.2
+     },
+     {
+      "date": "2025-01-25",
+      "dateAfter": "2025-02-04",
+      "movePct": -6.5
+     },
+     {
+      "date": "2025-05-22",
+      "dateAfter": "2025-06-01",
+      "movePct": -5.4
+     },
+     {
+      "date": "2025-06-01",
+      "dateAfter": "2025-06-11",
+      "movePct": 2.9
+     },
+     {
+      "date": "2025-06-11",
+      "dateAfter": "2025-06-21",
+      "movePct": -5.9
+     },
+     {
+      "date": "2025-06-23",
+      "dateAfter": "2025-07-03",
+      "movePct": 3.9
+     },
+     {
+      "date": "2025-07-03",
+      "dateAfter": "2025-07-13",
+      "movePct": 8.6
+     },
+     {
+      "date": "2025-07-13",
+      "dateAfter": "2025-07-23",
+      "movePct": -0.3
+     },
+     {
+      "date": "2025-07-23",
+      "dateAfter": "2025-08-02",
+      "movePct": -5.2
+     },
+     {
+      "date": "2025-08-02",
+      "dateAfter": "2025-08-12",
+      "movePct": 6.8
+     },
+     {
+      "date": "2025-08-12",
+      "dateAfter": "2025-08-22",
+      "movePct": -2.7
+     },
+     {
+      "date": "2025-08-22",
+      "dateAfter": "2025-09-01",
+      "movePct": -6.5
+     },
+     {
+      "date": "2025-09-11",
+      "dateAfter": "2025-09-21",
+      "movePct": -0.2
+     },
+     {
+      "date": "2025-09-21",
+      "dateAfter": "2025-10-01",
+      "movePct": -1.1
+     },
+     {
+      "date": "2025-10-01",
+      "dateAfter": "2025-10-11",
+      "movePct": -0.9
+     },
+     {
+      "date": "2025-10-13",
+      "dateAfter": "2025-10-23",
+      "movePct": -6.5
+     },
+     {
+      "date": "2025-10-27",
+      "dateAfter": "2025-11-06",
+      "movePct": -9.2
+     },
+     {
+      "date": "2026-09-09",
+      "dateAfter": "2026-09-19",
+      "movePct": 3.1
+     }
+    ],
+    "trader": {
+     "thresholdPct": 5,
+     "moveBand": {
+      "pointEstimate": 55,
+      "low": 42,
+      "high": 67,
+      "confidence": "high",
+      "sampleCount": 60,
+      "hitCount": 33
+     }
+    },
+    "status": "ok",
+    "typical": {
+     "p25": -5.5,
+     "median": -0.2,
+     "p75": 6.3
+    },
+    "worst": -13.4,
+    "best": 19.9
+   },
+   "historyBasis": "similar",
+   "noHistoryReason": null,
+   "matchedOn": [
+    "a rising price trend"
+   ],
+   "scorecard": {
+    "symbol": "BTC",
+    "asOf": "2026-09-27",
+    "dimensions": [
+     {
+      "key": "valuation",
+      "label": "Price vs profit",
+      "level": "not_applicable",
+      "rated": true,
+      "verdict": "Not applicable",
+      "sentence": "There is no company behind it, so company figures don't apply.",
+      "inputs": [],
+      "sources": []
+     },
+     {
+      "key": "growth",
+      "label": "Growth",
+      "level": "not_applicable",
+      "rated": true,
+      "verdict": "Not applicable",
+      "sentence": "There is no company behind it, so company figures don't apply.",
+      "inputs": [],
+      "sources": []
+     },
+     {
+      "key": "health",
+      "label": "Financial health",
+      "level": "not_applicable",
+      "rated": true,
+      "verdict": "Not applicable",
+      "sentence": "There is no company behind it, so company figures don't apply.",
+      "inputs": [],
+      "sources": []
+     },
+     {
+      "key": "dividend",
+      "label": "Dividend",
+      "level": "not_applicable",
+      "rated": true,
+      "verdict": "Not applicable",
+      "sentence": "There is no company behind it, so company figures don't apply.",
+      "inputs": [],
+      "sources": []
+     },
+     {
+      "key": "trend",
+      "label": "Price trend",
+      "level": "strong",
+      "rated": true,
+      "verdict": "Rising",
+      "sentence": "Up 28% over 6 months, and 19% above its average price of the last 200 days.",
+      "inputs": [
+       {
+        "label": "6-month price change",
+        "value": 0.27744555692019346,
+        "display": "28%"
+       },
+       {
+        "label": "Price vs 200-day average",
+        "value": 0.1935,
+        "display": "19%"
+       }
+      ],
+      "sources": [
+       {
+        "kind": "price_history",
+        "label": "Daily closing prices to 2026-09-27",
+        "ref": "2026-09-27"
+       }
+      ]
+     },
+     {
+      "key": "next_event",
+      "label": "Next event",
+      "level": "not_applicable",
+      "rated": false,
+      "verdict": "None in calendar",
+      "sentence": "Cairn's calendar has no earnings or dividend dates for it in the next 60 days.",
+      "inputs": [],
+      "sources": []
+     }
+    ]
+   },
+   "events": [],
+   "news": [
+    {
+     "id": "N1",
+     "rowId": "e4e176d7-0521-4434-914a-73f92fc8c262",
+     "title": "Bitcoin Dips, But Its Forks Are Flying Again",
+     "source": "Yahoo Finance News",
+     "date": "2026-09-23T15:56:03+00:00"
+    },
+    {
+     "id": "N2",
+     "rowId": "832e41df-c41d-4a7f-85d6-f8b9243cdf3d",
+     "title": "Morgan Stanley Just Put a $54 Target on This AI-Pivoting Bitcoin Miner. Amazon Is Already a Customer",
+     "source": "Yahoo Finance News",
+     "date": "2026-09-23T13:09:39+00:00"
+    },
+    {
+     "id": "N3",
+     "rowId": "749b6b04-ef72-4213-a360-8ff72be4e5a4",
+     "title": "Michael Saylor's Strategy adds 950 Bitcoin worth $76 million, bringing total holdings to $74 billion",
+     "source": "Yahoo Finance News",
+     "date": "2026-09-23T13:00:00+00:00"
+    },
+    {
+     "id": "N4",
+     "rowId": "30d05f42-21bb-4e22-8199-a99a3e4e9b9d",
+     "title": "Bitcoin and ethereum prices today, Wednesday, September 23, 2026: Crypto prices open near 8-month highs. Is the crypto winter over?",
+     "source": "Yahoo Finance News",
+     "date": "2026-09-23T11:39:08+00:00"
+    },
+    {
+     "id": "N5",
+     "rowId": "63f5bfac-c788-4a80-b9dc-518de1ecc765",
+     "title": "Where Will Bitcoin and Solana Be in 2 Years?",
+     "source": "Yahoo Finance News",
+     "date": "2026-09-23T10:49:02+00:00"
+    },
+    {
+     "id": "N6",
+     "rowId": "dc1db3df-93e2-4965-ad83-ffe9cdbabfad",
+     "title": "Bitcoin Is Down Just 1.2% for 2026 After Clearing $86,000. Can It End the Year Green?",
+     "source": "Yahoo Finance News",
+     "date": "2026-09-23T10:37:14+00:00"
+    }
+   ],
+   "trader": {
+    "moveBandLow": 0,
+    "moveBandHigh": 100,
+    "moveBandPoint": 0,
+    "hitCount": 0,
+    "sampleCount": 0,
+    "readings": [
+     {
+      "label": "RSI-14",
+      "display": "65.72"
+     },
+     {
+      "label": "30-day realized volatility (annualized)",
+      "display": "0.42"
+     },
+     {
+      "label": "Drawdown from trailing 1-year high (%)",
+      "display": "-9.23"
+     }
+    ]
+   }
+  },
+  "NVDA@2026-09-26T22:52:01.6Z": {
+   "name": "NVIDIA",
+   "symbol": "NVDA",
+   "assetType": "equity",
+   "history": {
+    "horizonSessions": 10,
+    "n": 125,
+    "higher": 73,
+    "lower": 52,
+    "upRate": {
+     "point": 58,
+     "low": 50,
+     "high": 67
+    },
+    "confidence": "high",
+    "cases": [
+     {
+      "date": "2021-09-24",
+      "dateAfter": "2021-10-08",
+      "movePct": -5.7
+     },
+     {
+      "date": "2021-10-08",
+      "dateAfter": "2021-10-22",
+      "movePct": 9.1
+     },
+     {
+      "date": "2021-10-22",
+      "dateAfter": "2021-11-05",
+      "movePct": 30.9
+     },
+     {
+      "date": "2021-11-05",
+      "dateAfter": "2021-11-19",
+      "movePct": 10.9
+     },
+     {
+      "date": "2021-11-19",
+      "dateAfter": "2021-12-06",
+      "movePct": -8.9
+     },
+     {
+      "date": "2021-12-06",
+      "dateAfter": "2021-12-20",
+      "movePct": -7.7
+     },
+     {
+      "date": "2021-12-20",
+      "dateAfter": "2022-01-04",
+      "movePct": 5.7
+     },
+     {
+      "date": "2022-01-04",
+      "dateAfter": "2022-01-19",
+      "movePct": -14.4
+     },
+     {
+      "date": "2022-01-19",
+      "dateAfter": "2022-02-02",
+      "movePct": 0.7
+     },
+     {
+      "date": "2022-02-02",
+      "dateAfter": "2022-02-16",
+      "movePct": 5
+     },
+     {
+      "date": "2022-02-16",
+      "dateAfter": "2022-03-03",
+      "movePct": -10.6
+     },
+     {
+      "date": "2022-03-03",
+      "dateAfter": "2022-03-17",
+      "movePct": 4.4
+     },
+     {
+      "date": "2022-03-17",
+      "dateAfter": "2022-03-31",
+      "movePct": 10.2
+     },
+     {
+      "date": "2022-03-31",
+      "dateAfter": "2022-04-14",
+      "movePct": -22.1
+     },
+     {
+      "date": "2022-04-14",
+      "dateAfter": "2022-04-29",
+      "movePct": -12.8
+     },
+     {
+      "date": "2022-04-29",
+      "dateAfter": "2022-05-13",
+      "movePct": -4.5
+     },
+     {
+      "date": "2022-05-13",
+      "dateAfter": "2022-05-27",
+      "movePct": 6.2
+     },
+     {
+      "date": "2022-05-27",
+      "dateAfter": "2022-06-13",
+      "movePct": -16.8
+     },
+     {
+      "date": "2022-06-13",
+      "dateAfter": "2022-06-28",
+      "movePct": 2.1
+     },
+     {
+      "date": "2022-06-28",
+      "dateAfter": "2022-07-13",
+      "movePct": -5.1
+     },
+     {
+      "date": "2022-07-13",
+      "dateAfter": "2022-07-27",
+      "movePct": 17.3
+     },
+     {
+      "date": "2022-07-27",
+      "dateAfter": "2022-08-10",
+      "movePct": 1.7
+     },
+     {
+      "date": "2022-08-10",
+      "dateAfter": "2022-08-24",
+      "movePct": -4.8
+     },
+     {
+      "date": "2022-08-24",
+      "dateAfter": "2022-09-08",
+      "movePct": -18.8
+     },
+     {
+      "date": "2022-09-08",
+      "dateAfter": "2022-09-22",
+      "movePct": -10.2
+     },
+     {
+      "date": "2022-09-22",
+      "dateAfter": "2022-10-06",
+      "movePct": 4.5
+     },
+     {
+      "date": "2022-10-06",
+      "dateAfter": "2022-10-20",
+      "movePct": -7.1
+     },
+     {
+      "date": "2022-10-20",
+      "dateAfter": "2022-11-03",
+      "movePct": 10.1
+     },
+     {
+      "date": "2022-11-03",
+      "dateAfter": "2022-11-17",
+      "movePct": 16.8
+     },
+     {
+      "date": "2022-11-17",
+      "dateAfter": "2022-12-02",
+      "movePct": 7.6
+     },
+     {
+      "date": "2022-12-02",
+      "dateAfter": "2022-12-16",
+      "movePct": -1.8
+     },
+     {
+      "date": "2022-12-16",
+      "dateAfter": "2023-01-03",
+      "movePct": -13.6
+     },
+     {
+      "date": "2023-01-03",
+      "dateAfter": "2023-01-18",
+      "movePct": 21.4
+     },
+     {
+      "date": "2023-01-18",
+      "dateAfter": "2023-02-01",
+      "movePct": 20.5
+     },
+     {
+      "date": "2023-02-01",
+      "dateAfter": "2023-02-15",
+      "movePct": 8.7
+     },
+     {
+      "date": "2023-02-15",
+      "dateAfter": "2023-03-02",
+      "movePct": 2.4
+     },
+     {
+      "date": "2023-03-02",
+      "dateAfter": "2023-03-16",
+      "movePct": 9.6
+     },
+     {
+      "date": "2023-03-16",
+      "dateAfter": "2023-03-30",
+      "movePct": 7.2
+     },
+     {
+      "date": "2023-03-30",
+      "dateAfter": "2023-04-14",
+      "movePct": -2.3
+     },
+     {
+      "date": "2023-04-14",
+      "dateAfter": "2023-04-28",
+      "movePct": 3.7
+     },
+     {
+      "date": "2023-04-28",
+      "dateAfter": "2023-05-12",
+      "movePct": 2.1
+     },
+     {
+      "date": "2023-05-12",
+      "dateAfter": "2023-05-26",
+      "movePct": 37.4
+     },
+     {
+      "date": "2023-05-26",
+      "dateAfter": "2023-06-12",
+      "movePct": 1.4
+     },
+     {
+      "date": "2023-06-12",
+      "dateAfter": "2023-06-27",
+      "movePct": 6.1
+     },
+     {
+      "date": "2023-06-27",
+      "dateAfter": "2023-07-12",
+      "movePct": 4.8
+     },
+     {
+      "date": "2023-07-12",
+      "dateAfter": "2023-07-26",
+      "movePct": 3.5
+     },
+     {
+      "date": "2023-07-26",
+      "dateAfter": "2023-08-09",
+      "movePct": -6.4
+     },
+     {
+      "date": "2023-08-09",
+      "dateAfter": "2023-08-23",
+      "movePct": 10.7
+     },
+     {
+      "date": "2023-08-23",
+      "dateAfter": "2023-09-07",
+      "movePct": -1.9
+     },
+     {
+      "date": "2023-09-07",
+      "dateAfter": "2023-09-21",
+      "movePct": -11.3
+     },
+     {
+      "date": "2023-09-21",
+      "dateAfter": "2023-10-05",
+      "movePct": 8.9
+     },
+     {
+      "date": "2023-10-05",
+      "dateAfter": "2023-10-19",
+      "movePct": -5.8
+     },
+     {
+      "date": "2023-10-19",
+      "dateAfter": "2023-11-02",
+      "movePct": 3.3
+     },
+     {
+      "date": "2023-11-02",
+      "dateAfter": "2023-11-16",
+      "movePct": 13.7
+     },
+     {
+      "date": "2023-11-16",
+      "dateAfter": "2023-12-01",
+      "movePct": -5.5
+     },
+     {
+      "date": "2023-12-01",
+      "dateAfter": "2023-12-15",
+      "movePct": 4.5
+     },
+     {
+      "date": "2023-12-15",
+      "dateAfter": "2024-01-02",
+      "movePct": -1.5
+     },
+     {
+      "date": "2024-01-02",
+      "dateAfter": "2024-01-17",
+      "movePct": 16.4
+     },
+     {
+      "date": "2024-01-17",
+      "dateAfter": "2024-01-31",
+      "movePct": 9.8
+     },
+     {
+      "date": "2024-01-31",
+      "dateAfter": "2024-02-14",
+      "movePct": 20.1
+     },
+     {
+      "date": "2024-02-14",
+      "dateAfter": "2024-02-29",
+      "movePct": 7.1
+     },
+     {
+      "date": "2024-02-29",
+      "dateAfter": "2024-03-14",
+      "movePct": 11.2
+     },
+     {
+      "date": "2024-03-14",
+      "dateAfter": "2024-03-28",
+      "movePct": 2.7
+     },
+     {
+      "date": "2024-03-28",
+      "dateAfter": "2024-04-12",
+      "movePct": -2.4
+     },
+     {
+      "date": "2024-04-12",
+      "dateAfter": "2024-04-26",
+      "movePct": -0.5
+     },
+     {
+      "date": "2024-04-26",
+      "dateAfter": "2024-05-10",
+      "movePct": 2.4
+     },
+     {
+      "date": "2024-05-10",
+      "dateAfter": "2024-05-24",
+      "movePct": 18.5
+     },
+     {
+      "date": "2024-05-24",
+      "dateAfter": "2024-06-10",
+      "movePct": 14.4
+     },
+     {
+      "date": "2024-06-10",
+      "dateAfter": "2024-06-25",
+      "movePct": 3.5
+     },
+     {
+      "date": "2024-06-25",
+      "dateAfter": "2024-07-10",
+      "movePct": 7
+     },
+     {
+      "date": "2024-07-10",
+      "dateAfter": "2024-07-24",
+      "movePct": -15.3
+     },
+     {
+      "date": "2024-07-24",
+      "dateAfter": "2024-08-07",
+      "movePct": -13.4
+     },
+     {
+      "date": "2024-08-07",
+      "dateAfter": "2024-08-21",
+      "movePct": 29.9
+     },
+     {
+      "date": "2024-08-21",
+      "dateAfter": "2024-09-05",
+      "movePct": -16.6
+     },
+     {
+      "date": "2024-09-05",
+      "dateAfter": "2024-09-19",
+      "movePct": 9.9
+     },
+     {
+      "date": "2024-09-19",
+      "dateAfter": "2024-10-03",
+      "movePct": 4.2
+     },
+     {
+      "date": "2024-10-03",
+      "dateAfter": "2024-10-17",
+      "movePct": 11.5
+     },
+     {
+      "date": "2024-10-17",
+      "dateAfter": "2024-10-31",
+      "movePct": -3
+     },
+     {
+      "date": "2024-10-31",
+      "dateAfter": "2024-11-14",
+      "movePct": 10.5
+     },
+     {
+      "date": "2024-11-14",
+      "dateAfter": "2024-11-29",
+      "movePct": -5.8
+     },
+     {
+      "date": "2024-11-29",
+      "dateAfter": "2024-12-13",
+      "movePct": -2.9
+     },
+     {
+      "date": "2024-12-13",
+      "dateAfter": "2024-12-30",
+      "movePct": 2.4
+     },
+     {
+      "date": "2024-12-30",
+      "dateAfter": "2025-01-15",
+      "movePct": -0.9
+     },
+     {
+      "date": "2025-01-15",
+      "dateAfter": "2025-01-30",
+      "movePct": -8.5
+     },
+     {
+      "date": "2025-01-30",
+      "dateAfter": "2025-02-13",
+      "movePct": 8.5
+     },
+     {
+      "date": "2025-02-13",
+      "dateAfter": "2025-02-28",
+      "movePct": -7.7
+     },
+     {
+      "date": "2025-02-28",
+      "dateAfter": "2025-03-14",
+      "movePct": -2.6
+     },
+     {
+      "date": "2025-03-14",
+      "dateAfter": "2025-03-28",
+      "movePct": -9.9
+     },
+     {
+      "date": "2025-03-28",
+      "dateAfter": "2025-04-11",
+      "movePct": 1.1
+     },
+     {
+      "date": "2025-04-11",
+      "dateAfter": "2025-04-28",
+      "movePct": -2
+     },
+     {
+      "date": "2025-04-28",
+      "dateAfter": "2025-05-12",
+      "movePct": 13.1
+     },
+     {
+      "date": "2025-05-12",
+      "dateAfter": "2025-05-27",
+      "movePct": 10.2
+     },
+     {
+      "date": "2025-05-27",
+      "dateAfter": "2025-06-10",
+      "movePct": 6.2
+     },
+     {
+      "date": "2025-06-10",
+      "dateAfter": "2025-06-25",
+      "movePct": 7.2
+     },
+     {
+      "date": "2025-06-25",
+      "dateAfter": "2025-07-10",
+      "movePct": 6.3
+     },
+     {
+      "date": "2025-07-10",
+      "dateAfter": "2025-07-24",
+      "movePct": 5.9
+     },
+     {
+      "date": "2025-07-24",
+      "dateAfter": "2025-08-07",
+      "movePct": 4
+     },
+     {
+      "date": "2025-08-07",
+      "dateAfter": "2025-08-21",
+      "movePct": -3.2
+     },
+     {
+      "date": "2025-08-21",
+      "dateAfter": "2025-09-05",
+      "movePct": -4.5
+     },
+     {
+      "date": "2025-09-05",
+      "dateAfter": "2025-09-19",
+      "movePct": 5.8
+     },
+     {
+      "date": "2025-09-19",
+      "dateAfter": "2025-10-03",
+      "movePct": 6.2
+     },
+     {
+      "date": "2025-10-03",
+      "dateAfter": "2025-10-17",
+      "movePct": -2.3
+     },
+     {
+      "date": "2025-10-17",
+      "dateAfter": "2025-10-31",
+      "movePct": 10.5
+     },
+     {
+      "date": "2025-10-31",
+      "dateAfter": "2025-11-14",
+      "movePct": -6.1
+     },
+     {
+      "date": "2025-11-14",
+      "dateAfter": "2025-12-01",
+      "movePct": -5.4
+     },
+     {
+      "date": "2025-12-01",
+      "dateAfter": "2025-12-15",
+      "movePct": -2
+     },
+     {
+      "date": "2025-12-15",
+      "dateAfter": "2025-12-30",
+      "movePct": 6.4
+     },
+     {
+      "date": "2025-12-30",
+      "dateAfter": "2026-01-14",
+      "movePct": -2.3
+     },
+     {
+      "date": "2026-01-14",
+      "dateAfter": "2026-01-29",
+      "movePct": 5.1
+     },
+     {
+      "date": "2026-01-29",
+      "dateAfter": "2026-02-12",
+      "movePct": -2.9
+     },
+     {
+      "date": "2026-02-12",
+      "dateAfter": "2026-02-27",
+      "movePct": -5.2
+     },
+     {
+      "date": "2026-02-27",
+      "dateAfter": "2026-03-13",
+      "movePct": 1.7
+     },
+     {
+      "date": "2026-03-13",
+      "dateAfter": "2026-03-27",
+      "movePct": -7.1
+     },
+     {
+      "date": "2026-03-27",
+      "dateAfter": "2026-04-13",
+      "movePct": 13
+     },
+     {
+      "date": "2026-04-13",
+      "dateAfter": "2026-04-27",
+      "movePct": 14.4
+     },
+     {
+      "date": "2026-04-27",
+      "dateAfter": "2026-05-11",
+      "movePct": 1.3
+     },
+     {
+      "date": "2026-05-11",
+      "dateAfter": "2026-05-26",
+      "movePct": -2.1
+     },
+     {
+      "date": "2026-05-26",
+      "dateAfter": "2026-06-09",
+      "movePct": -3.1
+     },
+     {
+      "date": "2026-06-09",
+      "dateAfter": "2026-06-24",
+      "movePct": -4.4
+     },
+     {
+      "date": "2026-06-24",
+      "dateAfter": "2026-07-09",
+      "movePct": 1.9
+     },
+     {
+      "date": "2026-07-09",
+      "dateAfter": "2026-07-23",
+      "movePct": 2.9
+     },
+     {
+      "date": "2026-07-23",
+      "dateAfter": "2026-08-06",
+      "movePct": 4.9
+     },
+     {
+      "date": "2026-08-06",
+      "dateAfter": "2026-08-20",
+      "movePct": -1
+     },
+     {
+      "date": "2026-08-20",
+      "dateAfter": "2026-09-03",
+      "movePct": 5.3
+     },
+     {
+      "date": "2026-09-03",
+      "dateAfter": "2026-09-18",
+      "movePct": -2.7
+     }
+    ],
+    "trader": {
+     "thresholdPct": 5,
+     "moveBand": {
+      "pointEstimate": 61,
+      "low": 52,
+      "high": 69,
+      "confidence": "high",
+      "sampleCount": 125,
+      "hitCount": 76
+     }
+    },
+    "status": "ok",
+    "typical": {
+     "p25": -4.4,
+     "median": 2.4,
+     "p75": 7.6
+    },
+    "worst": -22.1,
+    "best": 37.4
+   },
+   "historyBasis": "baseline",
+   "noHistoryReason": null,
+   "matchedOn": [],
+   "scorecard": {
+    "symbol": "NVDA",
+    "asOf": "2026-09-26",
+    "dimensions": [
+     {
+      "key": "valuation",
+      "label": "Price vs profit",
+      "level": "strong",
+      "rated": true,
+      "verdict": "Cheaper than usual",
+      "sentence": "The share costs 28 times the company's yearly profit, lower than its own 5-year average of 61. For comparison, the middle figure across the 15 companies Cairn tracks is 39.",
+      "inputs": [
+       {
+        "label": "Price ÷ yearly profit per share",
+        "value": 28.45385680457886,
+        "display": "28"
+       },
+       {
+        "label": "Its 5-year average",
+        "value": 61.42233629746413,
+        "display": "61"
+       },
+       {
+        "label": "Similar companies (median)",
+        "value": null,
+        "display": null
+       },
+       {
+        "label": "Similar companies counted",
+        "value": null,
+        "display": null
+       },
+       {
+        "label": "Companies Cairn tracks (median)",
+        "value": 39.1584394172467,
+        "display": "39"
+       },
+       {
+        "label": "Companies Cairn tracks, counted",
+        "value": 15,
+        "display": "15"
+       }
+      ],
+      "sources": [
+       {
+        "kind": "sec_filing",
+        "label": "10-Q filed 2026-08-26 (profit per share)",
+        "ref": "0001045810-26-000075",
+        "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581026000075/"
+       },
+       {
+        "kind": "price_history",
+        "label": "Closing price 2026-09-25",
+        "ref": "2026-09-25"
+       }
+      ]
+     },
+     {
+      "key": "growth",
+      "label": "Growth",
+      "level": "strong",
+      "rated": true,
+      "verdict": "Strong",
+      "sentence": "Sales are up 83% on last year, and profit is up 123%. Growth is speeding up.",
+      "inputs": [
+       {
+        "label": "Sales growth, last 12 months vs the 12 before",
+        "value": 0.8337529809100703,
+        "display": "83%"
+       },
+       {
+        "label": "Profit growth, last 12 months vs the 12 before",
+        "value": 1.227317343556936,
+        "display": "123%"
+       },
+       {
+        "label": "Latest quarter's sales growth vs a year earlier",
+        "value": 1.0585114348672526,
+        "display": "+106%"
+       },
+       {
+        "label": "Previous quarter's sales growth vs a year earlier",
+        "value": 0.8522763378875222,
+        "display": "+85%"
+       }
+      ],
+      "sources": [
+       {
+        "kind": "sec_filing",
+        "label": "10-Q filed 2026-08-26 (sales and profit)",
+        "ref": "0001045810-26-000075",
+        "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581026000075/"
+       }
+      ]
+     },
+     {
+      "key": "health",
+      "label": "Financial health",
+      "level": "not_applicable",
+      "rated": true,
+      "verdict": "Not available",
+      "sentence": "Profit and cash-flow figures are not complete for this company.",
+      "inputs": [],
+      "sources": []
+     },
+     {
+      "key": "dividend",
+      "label": "Dividend",
+      "level": "not_applicable",
+      "rated": true,
+      "verdict": "Tiny",
+      "sentence": "Pays 0.12% a year. It is a growth share, not an income share.",
+      "inputs": [
+       {
+        "label": "Dividend yield (last 12 months ÷ price)",
+        "value": 0.0012440573638790233,
+        "display": "0.12%"
+       },
+       {
+        "label": "Share of free cash flow paid out",
+        "value": null,
+        "display": null
+       },
+       {
+        "label": "Years in a row the dividend rose",
+        "value": 2,
+        "display": "2"
+       }
+      ],
+      "sources": [
+       {
+        "kind": "sec_filing",
+        "label": "10-Q filed 2026-08-26 (dividends and cash flow)",
+        "ref": "0001045810-26-000075",
+        "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581026000075/"
+       }
+      ]
+     },
+     {
+      "key": "trend",
+      "label": "Price trend",
+      "level": "strong",
+      "rated": true,
+      "verdict": "Rising",
+      "sentence": "Up 31% over 6 months, and 13% above its average price of the last 200 trading days.",
+      "inputs": [
+       {
+        "label": "6-month price change",
+        "value": 0.31435412347731795,
+        "display": "31%"
+       },
+       {
+        "label": "Price vs 200-day average",
+        "value": 0.1283,
+        "display": "13%"
+       }
+      ],
+      "sources": [
+       {
+        "kind": "price_history",
+        "label": "Daily closing prices to 2026-09-25",
+        "ref": "2026-09-25"
+       }
+      ]
+     },
+     {
+      "key": "next_event",
+      "label": "Next event",
+      "level": "not_applicable",
+      "rated": false,
+      "verdict": "Earnings in about 53 days (estimated)",
+      "sentence": "Earnings, around Wed 18 Nov. This is an estimate from last year's results date, not a date the company has announced. On its last 12 results days the share moved 5% or more 6 times; the typical move was 4.4%.",
+      "inputs": [
+       {
+        "label": "Days until the event",
+        "value": 53,
+        "display": "53"
+       },
+       {
+        "label": "Event date",
+        "value": null,
+        "display": "Wed 18 Nov"
+       },
+       {
+        "label": "Past results days counted",
+        "value": 12,
+        "display": "12"
+       },
+       {
+        "label": "Results days with a move of 5% or more",
+        "value": 6,
+        "display": "6"
+       },
+       {
+        "label": "Typical results-day move",
+        "value": 0.04352572972500496,
+        "display": "4.4%"
+       }
+      ],
+      "sources": [
+       {
+        "kind": "earnings_release",
+        "label": "Estimate from SEC filings: results released 2025-11-19 + 52 weeks; this matched to the day on its last releases",
+        "ref": "2025-11-19"
+       },
+       {
+        "kind": "earnings_release",
+        "label": "12 earnings releases (SEC 8-K item 2.02) and closing prices",
+        "ref": "2023-11-21..2026-08-26"
+       }
+      ]
+     }
+    ]
+   },
+   "events": [
+    {
+     "id": "E1",
+     "rowId": "5922f8e5-100a-459a-90b7-6ca99c38b46a",
+     "kind": "earnings",
+     "date": "2026-11-18",
+     "estimated": true
+    }
+   ],
+   "news": [
+    {
+     "id": "N1",
+     "rowId": "3b1f0dbc-6c87-4721-a245-ec6fb32a5afd",
+     "title": "Micron investors should get ready for a seesaw ride, analyst says",
+     "source": "MarketWatch Top Stories",
+     "date": "2026-09-25T16:27:00+00:00"
+    },
+    {
+     "id": "N2",
+     "rowId": "50c682b3-2de4-445d-9882-d9a233b9041d",
+     "title": "Nvidia Scores Winning Streak: Trump-Xi Meeting, China Sales Outlook In Focus",
+     "source": "Yahoo Finance News",
+     "date": "2026-09-23T17:00:17+00:00"
+    },
+    {
+     "id": "N3",
+     "rowId": "f14d4e7e-c981-49c3-8129-142d0473ef46",
+     "title": "Nvidia Director Is Cashing Out $300M. Should You Be Worried?",
+     "source": "Yahoo Finance News",
+     "date": "2026-09-23T16:35:58+00:00"
+    },
+    {
+     "id": "N4",
+     "rowId": "1d4f47c6-7114-4c9b-9e4b-d246bb0047ed",
+     "title": "Losing to Win: A VC Lens Will Find the Next Nvidia",
+     "source": "Yahoo Finance News",
+     "date": "2026-09-23T15:27:01+00:00"
+    },
+    {
+     "id": "N5",
+     "rowId": "61db695e-9a54-4512-a1e7-2e9c83040711",
+     "title": "IonQ Surges 11% as NVIDIA Research Center Deal Follows Error-Decoder Breakthrough; D-Wave Climbs 5%, Rigetti Rises 4%",
+     "source": "Yahoo Finance News",
+     "date": "2026-09-23T13:19:45+00:00"
+    },
+    {
+     "id": "N6",
+     "rowId": "968c32ca-2f92-4baf-8dd2-596faec2d161",
+     "title": "Nvidia Just Qualified Tesla and Vertiv Products for Its New AI-Factory Standard",
+     "source": "Yahoo Finance News",
+     "date": "2026-09-23T13:01:44+00:00"
+    }
+   ],
+   "trader": {
+    "moveBandLow": 0,
+    "moveBandHigh": 100,
+    "moveBandPoint": 0,
+    "hitCount": 0,
+    "sampleCount": 0,
+    "readings": [
+     {
+      "label": "RSI-14",
+      "display": "55.17"
+     },
+     {
+      "label": "30-day realized volatility (annualized)",
+      "display": "0.38"
+     },
+     {
+      "label": "Drawdown from trailing 1-year high (%)",
+      "display": "-4.53"
+     }
+    ]
+   }
+  },
+  "MSFT@2026-09-26T22:57:58.9Z": {
+   "name": "Microsoft",
+   "symbol": "MSFT",
+   "assetType": "equity",
+   "history": {
+    "horizonSessions": 10,
+    "n": 17,
+    "higher": 11,
+    "lower": 6,
+    "upRate": {
+     "point": 65,
+     "low": 41,
+     "high": 83
+    },
+    "confidence": "medium",
+    "cases": [
+     {
+      "date": "2023-03-15",
+      "dateAfter": "2023-03-29",
+      "movePct": 5.7
+     },
+     {
+      "date": "2023-04-25",
+      "dateAfter": "2023-05-09",
+      "movePct": 11.5
+     },
+     {
+      "date": "2023-05-25",
+      "dateAfter": "2023-06-09",
+      "movePct": 0.3
+     },
+     {
+      "date": "2023-06-16",
+      "dateAfter": "2023-07-03",
+      "movePct": -1.3
+     },
+     {
+      "date": "2023-08-31",
+      "dateAfter": "2023-09-15",
+      "movePct": 0.8
+     },
+     {
+      "date": "2023-09-15",
+      "dateAfter": "2023-09-29",
+      "movePct": -4.4
+     },
+     {
+      "date": "2023-10-24",
+      "dateAfter": "2023-11-07",
+      "movePct": 9.1
+     },
+     {
+      "date": "2023-11-20",
+      "dateAfter": "2023-12-05",
+      "movePct": -1.3
+     },
+     {
+      "date": "2023-12-15",
+      "dateAfter": "2024-01-02",
+      "movePct": 0
+     },
+     {
+      "date": "2024-01-30",
+      "dateAfter": "2024-02-13",
+      "movePct": -0.6
+     },
+     {
+      "date": "2024-03-14",
+      "dateAfter": "2024-03-28",
+      "movePct": -1.1
+     },
+     {
+      "date": "2024-05-30",
+      "dateAfter": "2024-06-13",
+      "movePct": 6.5
+     },
+     {
+      "date": "2024-06-21",
+      "dateAfter": "2024-07-08",
+      "movePct": 3.7
+     },
+     {
+      "date": "2025-06-20",
+      "dateAfter": "2025-07-07",
+      "movePct": 4.3
+     },
+     {
+      "date": "2025-07-30",
+      "dateAfter": "2025-08-13",
+      "movePct": 1.4
+     },
+     {
+      "date": "2025-09-05",
+      "dateAfter": "2025-09-19",
+      "movePct": 4.6
+     },
+     {
+      "date": "2025-09-19",
+      "dateAfter": "2025-10-03",
+      "movePct": -0.1
+     }
+    ],
+    "trader": {
+     "thresholdPct": 5,
+     "moveBand": {
+      "pointEstimate": 24,
+      "low": 10,
+      "high": 47,
+      "confidence": "medium",
+      "sampleCount": 17,
+      "hitCount": 4
+     }
+    },
+    "status": "ok",
+    "typical": {
+     "p25": -0.6,
+     "median": 0.8,
+     "p75": 4.6
+    },
+    "worst": -4.4,
+    "best": 11.5
+   },
+   "historyBasis": "similar",
+   "noHistoryReason": null,
+   "matchedOn": [
+    "unusually heavy trading",
+    "no results due within 7 trading days",
+    "a rising price trend"
+   ],
+   "scorecard": {
+    "symbol": "MSFT",
+    "asOf": "2026-09-26",
+    "dimensions": [
+     {
+      "key": "valuation",
+      "label": "Price vs profit",
+      "level": "mixed",
+      "rated": true,
+      "verdict": "About usual",
+      "sentence": "The share costs 29 times the company's yearly profit, about the same as its own 5-year average of 31. For comparison, the middle figure across the 15 companies Cairn tracks is 39.",
+      "inputs": [
+       {
+        "label": "Price ÷ yearly profit per share",
+        "value": 28.755987905858287,
+        "display": "29"
+       },
+       {
+        "label": "Its 5-year average",
+        "value": 31.40367481460172,
+        "display": "31"
+       },
+       {
+        "label": "Similar companies (median)",
+        "value": null,
+        "display": null
+       },
+       {
+        "label": "Similar companies counted",
+        "value": null,
+        "display": null
+       },
+       {
+        "label": "Companies Cairn tracks (median)",
+        "value": 39.1584394172467,
+        "display": "39"
+       },
+       {
+        "label": "Companies Cairn tracks, counted",
+        "value": 15,
+        "display": "15"
+       }
+      ],
+      "sources": [
+       {
+        "kind": "sec_filing",
+        "label": "10-K filed 2026-07-29 (profit per share)",
+        "ref": "0001193125-26-323660",
+        "url": "https://www.sec.gov/Archives/edgar/data/789019/000119312526323660/"
+       },
+       {
+        "kind": "price_history",
+        "label": "Closing price 2026-09-25",
+        "ref": "2026-09-25"
+       }
+      ]
+     },
+     {
+      "key": "growth",
+      "label": "Growth",
+      "level": "strong",
+      "rated": true,
+      "verdict": "Strong",
+      "sentence": "Sales are up 18% on last year, and profit is up 31%. The pace is steady.",
+      "inputs": [
+       {
+        "label": "Sales growth, last 12 months vs the 12 before",
+        "value": 0.17788686799846665,
+        "display": "18%"
+       },
+       {
+        "label": "Profit growth, last 12 months vs the 12 before",
+        "value": 0.3134279990572708,
+        "display": "31%"
+       },
+       {
+        "label": "Latest quarter's sales growth vs a year earlier",
+        "value": 0.17747020577962092,
+        "display": "+18%"
+       },
+       {
+        "label": "Previous quarter's sales growth vs a year earlier",
+        "value": 0.18297034224873698,
+        "display": "+18%"
+       }
+      ],
+      "sources": [
+       {
+        "kind": "sec_filing",
+        "label": "10-K filed 2026-07-29 (sales and profit)",
+        "ref": "0001193125-26-323660",
+        "url": "https://www.sec.gov/Archives/edgar/data/789019/000119312526323660/"
+       }
+      ]
+     },
+     {
+      "key": "health",
+      "label": "Financial health",
+      "level": "not_applicable",
+      "rated": true,
+      "verdict": "Not available",
+      "sentence": "Profit and cash-flow figures are not complete for this company.",
+      "inputs": [],
+      "sources": []
+     },
+     {
+      "key": "dividend",
+      "label": "Dividend",
+      "level": "strong",
+      "rated": true,
+      "verdict": "Well covered",
+      "sentence": "Pays 0.71% a year. The payments use 39% of its free cash flow (cash left after running and investing in the business). It has raised it 6 years in a row.",
+      "inputs": [
+       {
+        "label": "Dividend yield (last 12 months ÷ price)",
+        "value": 0.007051940485724783,
+        "display": "0.71%"
+       },
+       {
+        "label": "Share of free cash flow paid out",
+        "value": 0.3947780912714407,
+        "display": "39%"
+       },
+       {
+        "label": "Years in a row the dividend rose",
+        "value": 6,
+        "display": "6"
+       }
+      ],
+      "sources": [
+       {
+        "kind": "sec_filing",
+        "label": "10-K filed 2026-07-29 (dividends and cash flow)",
+        "ref": "0001193125-26-323660",
+        "url": "https://www.sec.gov/Archives/edgar/data/789019/000119312526323660/"
+       }
+      ]
+     },
+     {
+      "key": "trend",
+      "label": "Price trend",
+      "level": "strong",
+      "rated": true,
+      "verdict": "Rising",
+      "sentence": "Up 41% over 6 months, and 19% above its average price of the last 200 trading days.",
+      "inputs": [
+       {
+        "label": "6-month price change",
+        "value": 0.4104161029277178,
+        "display": "41%"
+       },
+       {
+        "label": "Price vs 200-day average",
+        "value": 0.19469999999999998,
+        "display": "19%"
+       }
+      ],
+      "sources": [
+       {
+        "kind": "price_history",
+        "label": "Daily closing prices to 2026-09-25",
+        "ref": "2026-09-25"
+       }
+      ]
+     },
+     {
+      "key": "next_event",
+      "label": "Next event",
+      "level": "not_applicable",
+      "rated": false,
+      "verdict": "Earnings in about 32 days (estimated)",
+      "sentence": "Earnings, around Wed 28 Oct. This is an estimate from last year's results date, not a date the company has announced. On its last 12 results days the share moved 5% or more 5 times; the typical move was 3.9%.",
+      "inputs": [
+       {
+        "label": "Days until the event",
+        "value": 32,
+        "display": "32"
+       },
+       {
+        "label": "Event date",
+        "value": null,
+        "display": "Wed 28 Oct"
+       },
+       {
+        "label": "Past results days counted",
+        "value": 12,
+        "display": "12"
+       },
+       {
+        "label": "Results days with a move of 5% or more",
+        "value": 5,
+        "display": "5"
+       },
+       {
+        "label": "Typical results-day move",
+        "value": 0.03938585105864084,
+        "display": "3.9%"
+       }
+      ],
+      "sources": [
+       {
+        "kind": "earnings_release",
+        "label": "Estimate from SEC filings: results released 2025-10-29 + 52 weeks; this matched to the day on its last releases",
+        "ref": "2025-10-29"
+       },
+       {
+        "kind": "earnings_release",
+        "label": "12 earnings releases (SEC 8-K item 2.02) and closing prices",
+        "ref": "2023-10-24..2026-07-29"
+       }
+      ]
+     }
+    ]
+   },
+   "events": [
+    {
+     "id": "E1",
+     "rowId": "49249355-6829-442c-be01-654b3ac53986",
+     "kind": "earnings",
+     "date": "2026-10-28",
+     "estimated": true
+    }
+   ],
+   "news": [
+    {
+     "id": "N1",
+     "rowId": "aaa37b24-6dbf-4900-a266-dbdd8c17a736",
+     "title": "Microsoft’s stock has roared back to life, closing at its highest level of the year",
+     "source": "MarketWatch Top Stories",
+     "date": "2026-09-25T21:04:00+00:00"
+    },
+    {
+     "id": "N2",
+     "rowId": "45485d17-ee9e-4629-87ea-7b04788eadf6",
+     "title": "Microsoft’s stock has roared back to life and is now headed for its highest close of the year",
+     "source": "MarketWatch Top Stories",
+     "date": "2026-09-25T19:14:00+00:00"
+    },
+    {
+     "id": "N3",
+     "rowId": "f7b852d6-e958-43cf-b95c-ccc4ae92f93c",
+     "title": "Microsoft has ‘clearly turned the corner.’ How its stock can chart more gains.",
+     "source": "MarketWatch Top Stories",
+     "date": "2026-09-23T16:58:00+00:00"
+    },
+    {
+     "id": "N4",
+     "rowId": "7d0de3e7-6d00-4ce4-9e5d-764c5f4fceb6",
+     "title": "Microsoft Stock Gets Another Upgrade, Price-Target Hike",
+     "source": "Yahoo Finance News",
+     "date": "2026-09-23T15:01:49+00:00"
+    },
+    {
+     "id": "N5",
+     "rowId": "280f34b5-08c1-408f-ab30-6ce901cf5e1c",
+     "title": "Trump Logged 1,156 Trades in One Month and Sold Microsoft. The Reason Is a Tax Strategy You Can Copy.",
+     "source": "Yahoo Finance News",
+     "date": "2026-09-23T13:50:24+00:00"
+    },
+    {
+     "id": "N6",
+     "rowId": "a6603d04-edb1-408d-8cef-9fe02f358680",
+     "title": "IREN Has Microsoft and $14 Billion of Funding. Execution Is the Real Test",
+     "source": "Yahoo Finance News",
+     "date": "2026-09-23T13:14:03+00:00"
+    }
+   ],
+   "trader": {
+    "moveBandLow": 0,
+    "moveBandHigh": 100,
+    "moveBandPoint": 0,
+    "hitCount": 0,
+    "sampleCount": 0,
+    "readings": [
+     {
+      "label": "RSI-14",
+      "display": "63.22"
+     },
+     {
+      "label": "30-day realized volatility (annualized)",
+      "display": "0.23"
+     },
+     {
+      "label": "Drawdown from trailing 1-year high (%)",
+      "display": "-4.78"
+     }
+    ]
+   }
+  }
+ }
+}

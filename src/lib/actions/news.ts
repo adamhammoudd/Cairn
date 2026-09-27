@@ -1,8 +1,17 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import type { NewsFeedItem, NewsRelevance } from "@/lib/news";
-import { normalizeSectorsForMatching } from "@/lib/sectors";
+import {
+  keysetOrFilter,
+  NEWS_PAGE_SIZE,
+  pageFromRows,
+  rankWithinPage,
+  type NewsCursor,
+  type NewsFeedItem,
+  type NewsFilter,
+  type NewsPage,
+} from "@/lib/news";
+import { applyNewsFilter, classifyNews, readNewsInterests, NEWS_COLUMNS } from "@/lib/news-query";
 
 // Relevance ranking: holdings/watchlist tickers first, then sectors the user
 // has explicitly typed onto a holding (the closest thing to a stated
@@ -14,65 +23,65 @@ import { normalizeSectorsForMatching } from "@/lib/sectors";
 // be compared as raw strings, so a holding typed as "Technology" never matched
 // a story the tagger wrote as "technology", and the whole "Your sectors" filter
 // worked only when the user happened to type the tagger's exact slug.
-export async function getNewsFeed(): Promise<NewsFeedItem[]> {
+//
+// The feed used to be the newest 60 rows, ranked, with filters and search
+// applied in the browser to those 60 - of 18,814 stored. It is now paged with
+// a keyset cursor (lib/news.ts), 40 at a time, and the filters and search run
+// in the database, so "Your holdings" and a search reach the whole archive.
+
+export interface NewsPageRequest {
+  filter?: NewsFilter;
+  /** Ticker or title keyword. */
+  search?: string;
+  /** Only stories tagged with this ticker (the ticker page's news list). */
+  ticker?: string;
+  cursor?: NewsCursor | null;
+  limit?: number;
+}
+
+/** One page of the feed: newest-first by (published_at, id), ranked by relevance within the page. */
+export async function getNewsPage(req: NewsPageRequest = {}): Promise<NewsPage> {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const interests = await readNewsInterests(supabase);
+  const limit = Math.min(Math.max(req.limit ?? NEWS_PAGE_SIZE, 1), 100);
 
-  const [{ data: articles }, holdingsRes, watchlistItemsRes] = await Promise.all([
-    supabase
-      .from("news_items")
-      .select("id, title, url, source_name, published_at, tickers, sectors")
-      .order("published_at", { ascending: false })
-      .limit(60),
-    user
-      ? supabase.from("holdings").select("symbol, sector").eq("user_id", user.id)
-      : Promise.resolve({ data: [] as { symbol: string; sector: string | null }[] }),
-    user ? supabase.from("watchlist_items").select("symbol") : Promise.resolve({ data: [] as { symbol: string }[] }),
-  ]);
+  let query = supabase.from("news_items").select(NEWS_COLUMNS);
+  if (req.cursor) query = query.or(keysetOrFilter(req.cursor));
+  const filtered = applyNewsFilter(query, req.filter ?? "all", interests, req.search ?? "", req.ticker?.toUpperCase());
+  if (!filtered) return { items: [], nextCursor: null };
 
-  const holdingSymbols = new Set((holdingsRes.data ?? []).map((h) => h.symbol));
-  const watchlistSymbols = new Set((watchlistItemsRes.data ?? []).map((w) => w.symbol));
-  const trackedSymbols = new Set([...holdingSymbols, ...watchlistSymbols]);
-  const statedSectors = normalizeSectorsForMatching((holdingsRes.data ?? []).map((h) => h.sector));
+  const { data, error } = await filtered.order("published_at", { ascending: false }).order("id", { ascending: false }).limit(limit + 1);
+  if (error) throw new Error(`News read failed: ${error.message}`);
 
-  const scored = (articles ?? []).map((a) => {
-    const tickerMatches = (a.tickers ?? []).filter((t) => trackedSymbols.has(t));
-    // Compared slug-to-slug, and the *original* tag is what gets reported as
-    // the match so the reason shown to the reader is the story's own wording.
-    const sectorMatches = (a.sectors ?? []).filter((s) => {
-      const normalized = normalizeSectorsForMatching([s]);
-      return [...normalized].some((n) => statedSectors.has(n));
-    });
+  const { rows, nextCursor } = pageFromRows(data ?? [], limit);
+  const items: NewsFeedItem[] = rows.map((a) => ({
+    id: a.id,
+    title: a.title,
+    url: a.url,
+    source_name: a.source_name,
+    published_at: a.published_at,
+    tickers: a.tickers ?? [],
+    sectors: a.sectors ?? [],
+    ...classifyNews(a, interests),
+  }));
+  return { items: rankWithinPage(items), nextCursor };
+}
 
-    let relevance: NewsRelevance = "general";
-    let matchedOn: string[] = [];
-    if (tickerMatches.length > 0) {
-      relevance = "holding";
-      matchedOn = tickerMatches;
-    } else if (sectorMatches.length > 0) {
-      relevance = "sector";
-      matchedOn = sectorMatches;
-    }
-
-    return {
-      id: a.id,
-      title: a.title,
-      url: a.url,
-      source_name: a.source_name,
-      published_at: a.published_at,
-      tickers: a.tickers ?? [],
-      sectors: a.sectors ?? [],
-      relevance,
-      matchedOn,
-    } satisfies NewsFeedItem;
-  });
-
-  const rank: Record<NewsRelevance, number> = { holding: 0, sector: 1, general: 2 };
-  return scored.sort((a, b) => {
-    const r = rank[a.relevance] - rank[b.relevance];
-    if (r !== 0) return r;
-    return a.published_at < b.published_at ? 1 : -1;
-  });
+/**
+ * Stories per filter across the whole archive (not the loaded page), for the
+ * filter chips. Head-only counts on indexed columns.
+ */
+export async function getNewsCounts(search = ""): Promise<Record<NewsFilter, number>> {
+  const supabase = await createClient();
+  const interests = await readNewsInterests(supabase);
+  const filters: NewsFilter[] = ["all", "holding", "sector", "general"];
+  const counts = await Promise.all(
+    filters.map(async (f) => {
+      const q = applyNewsFilter(supabase.from("news_items").select("id", { count: "exact", head: true }), f, interests, search);
+      if (!q) return 0;
+      const { count } = await q;
+      return count ?? 0;
+    }),
+  );
+  return Object.fromEntries(filters.map((f, i) => [f, counts[i]])) as Record<NewsFilter, number>;
 }

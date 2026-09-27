@@ -165,3 +165,38 @@ export async function updateChatPreferences(
   revalidatePath("/assistant");
   return null;
 }
+
+/**
+ * The chat header's "Portfolio context" switch (feat/assistant-v2). Writes the
+ * account-level Settings > AI Assistant preference - the same column the
+ * Settings page toggles - and clears this conversation's override, so the
+ * switch always shows what the next answer will actually do.
+ */
+export async function setAssistantPortfolioContext(enabled: boolean, sessionId: string | null): Promise<string | null> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const { error } = await supabase
+    .from("user_settings")
+    .upsert({ user_id: user.id, assistant_use_portfolio_context: enabled }, { onConflict: "user_id" });
+  if (error) return error.message;
+
+  if (sessionId) {
+    await supabase.from("chat_sessions").update({ use_portfolio_context: null }).eq("id", sessionId).eq("user_id", user.id);
+  }
+  return null;
+}
+
+/** The account-level "Portfolio context" preference (default on), for the chat header. */
+export async function getAssistantPortfolioContext(): Promise<boolean> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return true;
+  const { data } = await supabase.from("user_settings").select("assistant_use_portfolio_context").eq("user_id", user.id).maybeSingle();
+  return data?.assistant_use_portfolio_context ?? true;
+}

@@ -1,12 +1,13 @@
 import { createClient } from "@/lib/supabase/server";
-import { runChatTurn, MAX_CHAT_MESSAGE_CHARS, type ChatHistoryMessage } from "@/lib/ai/chat-generate";
-import { checkChatUsageAllowed, recordChatUsage, getBillingSummary } from "@/lib/actions/billing";
+import type { Database } from "@/lib/supabase/types";
+import { MAX_CHAT_MESSAGE_CHARS } from "@/lib/ai/chat-generate";
+import { checkChatUsageAllowed, recordChatUsage, getUserPlan } from "@/lib/actions/billing";
+import { getDisplayPrefs } from "@/lib/actions/display-prefs";
 import { rateLimit, sweepRateLimits } from "@/lib/rate-limit";
-import { findMissingAnalysisScope, runAnalysisGeneration } from "@/lib/actions/analysis";
-import { TIER_LIMITS } from "@/lib/billing";
-import type { ChatGenerationState } from "@/lib/chat-state";
-import { nextResetLabel } from "@/lib/chat-state";
 import { BUSY_MESSAGE, LlmBusyError } from "@/lib/ai/llm";
+import { runAssistantTurn } from "@/lib/ai/assistant/agent";
+import { liveAssistantData } from "@/lib/ai/assistant/data";
+import { encodeEvent, type ChatStreamEvent } from "@/lib/ai/assistant/stream";
 
 // Per-user burst limit, independent of the daily chat quota. Premium's daily
 // quota is unlimited, and even Free's is a day-scale number - neither stops one
@@ -15,6 +16,20 @@ import { BUSY_MESSAGE, LlmBusyError } from "@/lib/ai/llm";
 // every 4-5s sustained is well above any real conversation.
 const CHAT_BURST_LIMIT = 12;
 const CHAT_BURST_WINDOW_MS = 60_000;
+
+// Assistant v2 (feat/assistant-v2). The answer is built by a tool-using agent
+// (lib/ai/assistant/agent.ts) from live, server-side reads, guarded, and only
+// then persisted and streamed. The response is newline-delimited JSON events
+// (lib/ai/assistant/stream.ts): "activity" lines while tools run, then the
+// validated text in chunks, then the tiles/sources/follow-ups. Nothing
+// unvalidated is ever sent: activity events carry tool labels only, and the
+// text is streamed after runAssistantTurn has returned.
+//
+// There is no chat-triggered analysis generation any more. It used to run
+// runAnalysisGeneration for a ticker with nothing stored - spending one of the
+// reader's monthly analyses on a chat question, and dead-ending young symbols.
+// get_history_outcome now answers "what history says" live, without storing
+// anything or touching the analysis quota.
 
 export async function POST(req: Request) {
   const supabase = await createClient();
@@ -38,9 +53,8 @@ export async function POST(req: Request) {
     return new Response(`Message is too long - keep it under ${MAX_CHAT_MESSAGE_CHARS} characters.`, { status: 400 });
   }
 
-  // Verify the session belongs to this user. Scoped on user_id here rather
-  // than left to RLS: the authorization decision belongs in the route, and the
-  // policy is the backstop (see supabase/tests/rls_idor.sql).
+  // Scoped on user_id here rather than left to RLS: the authorization decision
+  // belongs in the route, and the policy is the backstop.
   const { data: session } = await supabase
     .from("chat_sessions")
     .select("id, title, use_portfolio_context")
@@ -52,164 +66,79 @@ export async function POST(req: Request) {
   const gate = await checkChatUsageAllowed(user.id);
   if (!gate.allowed) return new Response(gate.message ?? "Daily chat limit reached.", { status: 429 });
 
-  // Fetched before the insert below, so it's prior turns only - runChatTurn
-  // builds the current turn's content itself (grounding context + question).
-  //
-  // Newest-first at the DB so the LIMIT keeps the most *recent* 20 turns, then
-  // reversed back to chronological order for the model. Ordering ascending
-  // under a LIMIT returned the oldest 20 instead: past twenty messages the
-  // assistant re-read the opening of the conversation on every turn and never
-  // saw anything recent, which reads as the model forgetting what was just
-  // said. Same defect class as the ticker/compare stale-price bug.
+  // Newest-first at the DB so the LIMIT keeps the most recent turns, then
+  // reversed to chronological order for the model.
   const { data: recentHistoryDesc } = await supabase
     .from("chat_messages")
     .select("role, content")
     .eq("session_id", sessionId)
     .order("created_at", { ascending: false })
-    .limit(20);
-  const priorHistory = (recentHistoryDesc ?? []).slice().reverse();
+    .limit(12);
+  const history = (recentHistoryDesc ?? []).slice().reverse() as { role: "user" | "assistant"; content: string }[];
 
-  // NOTE: the user's message is deliberately NOT written here. It used to be,
-  // and when generation then failed the route 500'd with the user turn already
-  // committed - history reloaded showing a question with no answer, which reads
-  // as the assistant having silently dropped it. The turn is now persisted as a
-  // unit, after generation succeeds (below), so a failed turn leaves nothing
-  // behind to explain. `priorHistory` above is prior-turns-only either way.
-
-  // Hard gate: runChatTurn buffers the full model response, runs the scope
-  // guard, and rewrites it if flagged - nothing unvalidated leaves this call.
-  // Compare to the old implementation, which streamed raw model output
-  // straight to the client and only ran the guard afterward as a post-hoc,
-  // non-blocking audit.
   // Per-conversation override wins; null falls back to the account-level
-  // Settings > AI Assistant preference, which itself defaults to on.
-  const { data: settings } = await supabase
-    .from("user_settings")
-    .select("assistant_use_portfolio_context")
-    .eq("user_id", user.id)
-    .maybeSingle();
-  const usePortfolioContext =
-    session.use_portfolio_context ?? settings?.assistant_use_portfolio_context ?? true;
-
-  // --- Second entry point into the generation pipeline (Section 3). ---
-  //
-  // When the question names a scope we hold nothing on, generate it here
-  // rather than dead-ending the user at the Research page. This calls
-  // runAnalysisGeneration - the exact function the Research page's "Generate
-  // analysis" button calls - so quota accounting, the scope guard and storage
-  // are literally the same code path. There is no chat-specific generator, no
-  // chat-specific table and no chat-specific column: an analysis produced here
-  // is indistinguishable from one produced on the Research page and shows up
-  // in that page's library with no special handling.
-  //
-  // Runs BEFORE runChatTurn so the new analysis is already stored when
-  // buildChatContext reads. The reply is then grounded in the real generated
-  // record, and its id rides the normal CAIRN_REFS sentinel so the client
-  // renders the same MethodologyCard as every other surface.
-  let generatedState: ChatGenerationState | null = null;
-  try {
-    const missing = await findMissingAnalysisScope(message);
-    if (missing) {
-      const outcome = await runAnalysisGeneration(missing.scopeType, missing.scopeValue);
-      if (!outcome.ok && outcome.kind !== "error") {
-        // Quota and thin-data are states the UI renders, in Stage 1's wording -
-        // not raw errors, and not a reason to fail the turn.
-        generatedState = { kind: outcome.kind, scope: missing.scopeValue, ...(outcome.gap ? { gap: outcome.gap } : {}), ...(outcome.young ? { young: outcome.young } : {}) };
-        if (outcome.kind === "quota") {
-          const summary = await getBillingSummary();
-          generatedState.quota = {
-            used: summary.used,
-            limit: summary.limit,
-            planLabel: TIER_LIMITS[summary.tier].label,
-            resetLabel: nextResetLabel(),
-          };
-        }
-      }
-      // outcome.kind === "error" is a genuine fault in generation, not a
-      // product state. The turn still proceeds and answers from whatever
-      // context exists; nothing half-written is presented as an analysis.
-    }
-  } catch (err) {
-    console.error("[chat] inline generation failed:", err);
-  }
-
-  let result: Awaited<ReturnType<typeof runChatTurn>>;
-  try {
-    result = await runChatTurn({
-      userId: user.id,
-      message,
-      history: priorHistory as ChatHistoryMessage[],
-      usePortfolioContext,
-    });
-  } catch (err) {
-    // Provider rate-limited or overloaded us past the retry budget. The user
-    // gets the plain "try again shortly" line, never the provider's raw error;
-    // 503 + Retry-After is the honest status for "ask again later".
-    if (err instanceof LlmBusyError) {
-      console.error("[chat] provider unavailable:", err.message);
-      return new Response(BUSY_MESSAGE, { status: 503, headers: { "Retry-After": "20" } });
-    }
-    // Anything else is a real fault. Still no raw internals to the client, and
-    // still nothing persisted - the turn simply did not happen.
-    console.error("[chat] turn failed:", err);
-    return new Response("The assistant could not complete that request. Nothing was saved - please try again.", {
-      status: 500,
-    });
-  }
-
-  // Both halves of the turn land together, so history can never hold a user
-  // message without its reply.
-  await supabase.from("chat_messages").insert([
-    { session_id: sessionId, role: "user", content: message, referenced_analysis_ids: [] },
-    {
-      session_id: sessionId,
-      role: "assistant",
-      content: result.displayText,
-      referenced_analysis_ids: result.analysisIds,
-    },
+  // Settings > AI Assistant preference (default on). This replaces the old
+  // global ENABLE_PORTFOLIO_CONTEXT env gate.
+  const [{ data: settings }, plan, prefs] = await Promise.all([
+    supabase.from("user_settings").select("assistant_use_portfolio_context").eq("user_id", user.id).maybeSingle(),
+    getUserPlan(),
+    getDisplayPrefs(),
   ]);
-
-  // First message in a session titles it, so chat history has something more
-  // useful to list/search than a bare timestamp. After the insert for the same
-  // reason: a session that never got a turn should not look like it did.
-  if (!session.title) {
-    await supabase
-      .from("chat_sessions")
-      .update({ title: message.trim().slice(0, 60) })
-      .eq("id", sessionId);
-  }
-
-  // Only successful turns count against the daily allowance.
-  await recordChatUsage(user.id);
+  const usePortfolio = session.use_portfolio_context ?? settings?.assistant_use_portfolio_context ?? true;
 
   const encoder = new TextEncoder();
-  const CHUNK_SIZE = 24;
-
-  // The text below is already fully validated (and rewritten, if flagged) by
-  // this point. Chunking is purely for a responsive typing-style UI via the
-  // client's existing incremental-render loop - it is not, and cannot be, a
-  // vector for unvalidated content, since nothing reaches this stream until
-  // runChatTurn has already returned.
   const body = new ReadableStream({
-    start(controller) {
-      for (let i = 0; i < result.displayText.length; i += CHUNK_SIZE) {
-        controller.enqueue(encoder.encode(result.displayText.slice(i, i + CHUNK_SIZE)));
+    async start(controller) {
+      const send = (e: ChatStreamEvent) => controller.enqueue(encoder.encode(encodeEvent(e)));
+      try {
+        const result = await runAssistantTurn({
+          message,
+          history,
+          ctx: { data: liveAssistantData({ supabase, userId: user.id }), plan: plan === "premium" ? "premium" : "free", prefs, usePortfolio },
+          onActivity: (label) => send({ t: "activity", label }),
+        });
+
+        // Both halves of the turn land together, so history can never hold a
+        // user message without its reply. meta is written only where the
+        // column exists (migration 0059), so a deploy ahead of the migration
+        // still saves the answer text.
+        type MessageInsert = Database["public"]["Tables"]["chat_messages"]["Insert"];
+        const rows: MessageInsert[] = [
+          { session_id: sessionId, role: "user", content: message, referenced_analysis_ids: [] },
+          { session_id: sessionId, role: "assistant", content: result.markdown, referenced_analysis_ids: result.analysisIds, meta: result.meta as unknown as Record<string, unknown> },
+        ];
+        let { error: insertError } = await supabase.from("chat_messages").insert(rows);
+        if (insertError && /meta/.test(insertError.message)) {
+          ({ error: insertError } = await supabase.from("chat_messages").insert(rows.map((r) => ({ ...r, meta: undefined }))));
+        }
+        if (insertError) throw new Error(`Saving the turn failed: ${insertError.message}`);
+
+        if (!session.title) {
+          await supabase.from("chat_sessions").update({ title: message.trim().slice(0, 60) }).eq("id", sessionId);
+        }
+        await recordChatUsage(user.id);
+
+        console.info(`[assistant] turn cost $${result.meta.costUsd.toFixed(5)} (${result.meta.usage.calls} model calls, ${result.meta.usage.promptTokens}+${result.meta.usage.completionTokens} tokens, ${result.meta.usage.webSearches} web searches, source=${result.meta.source})`);
+
+        // Chunked purely for a typing-style UI: all of it is already validated.
+        for (let i = 0; i < result.markdown.length; i += 48) send({ t: "text", chunk: result.markdown.slice(i, i + 48) });
+        send({ t: "meta", meta: result.meta });
+        if (result.analysisIds.length > 0) send({ t: "refs", ids: result.analysisIds });
+        send({ t: "done" });
+      } catch (err) {
+        // Nothing was persisted: the turn simply did not happen.
+        if (err instanceof LlmBusyError) {
+          console.error("[chat] provider unavailable:", err.message);
+          send({ t: "error", message: BUSY_MESSAGE });
+        } else {
+          console.error("[chat] turn failed:", err);
+          send({ t: "error", message: "The assistant could not complete that request. Nothing was saved - please try again." });
+        }
+      } finally {
+        controller.close();
       }
-      // Trailing sentinel carrying the analyses actually offered as context this
-      // turn, so the client can render the same MethodologyCard used everywhere
-      // else - never parsed as visible text (stripped client-side before display).
-      if (result.analysisIds.length > 0) {
-        controller.enqueue(encoder.encode(` CAIRN_REFS:${JSON.stringify(result.analysisIds)}`));
-      }
-      // Quota-reached / not-enough-history from a chat-triggered generation.
-      // Carried as data so the client can render Stage 1's own panels rather
-      // than the model paraphrasing the situation in its own words.
-      if (generatedState) {
-        controller.enqueue(encoder.encode(` CAIRN_STATE:${JSON.stringify(generatedState)}`));
-      }
-      controller.close();
     },
   });
 
-  return new Response(body, { headers: { "Content-Type": "text/plain; charset=utf-8" } });
+  return new Response(body, { headers: { "Content-Type": "application/x-ndjson; charset=utf-8", "Cache-Control": "no-store" } });
 }
