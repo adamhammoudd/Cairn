@@ -59,6 +59,68 @@ function WeekChange({ pct }: { pct: number | null }) {
 }
 
 
+/** The mockup's short labels for the phone card's 2x2 grid. */
+const SHORT_LABEL: Partial<Record<GlanceRow["bars"][number]["key"], string>> = {
+  valuation: "Price vs profit",
+  growth: "Growth",
+  health: "Health",
+  trend: "Trend",
+};
+
+/** Why only the trend is rated, when the three company scores don't apply. */
+function trendOnlyNote(row: GlanceRow): string | null {
+  const company = row.bars.filter((b) => b.key !== "trend");
+  if (company.some((b) => b.level !== "not_applicable")) return null;
+  if (row.assetType === "crypto") return "No company behind it, so only the price trend is rated.";
+  if (row.assetType === "etf") return "A fund of many companies, so only the price trend is rated.";
+  return "Company figures aren't available, so only the price trend is rated.";
+}
+
+function ScoreCell({ bar }: { bar: GlanceRow["bars"][number] }) {
+  const label = SHORT_LABEL[bar.key] ?? bar.label;
+  return (
+    <div className="flex min-w-0 flex-col gap-1">
+      <dt className="font-mono text-eyebrow uppercase tracking-[0.1em] text-dim">{label}</dt>
+      <dd className="m-0 flex min-w-0 items-center gap-2">
+        <MiniBars level={bar.level} label={label} valuation={bar.key === "valuation"} />
+        <span className="truncate text-caption text-primary/85">{bar.verdict}</span>
+      </dd>
+    </div>
+  );
+}
+
+function HoldingCard({ row, value }: { row: GlanceRow; value: string }) {
+  const note = trendOnlyNote(row);
+  const shown = note ? row.bars.filter((b) => b.key === "trend") : row.bars;
+  return (
+    <li className="overflow-hidden rounded-[14px] border border-line bg-panel">
+      <Link href={row.href} className="tap flex flex-col gap-3 px-4 py-4 text-primary transition-colors duration-fast ease-standard hover:bg-active">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <div className="truncate text-[15px] font-medium">{row.name}</div>
+            <div className="mt-0.5 font-mono text-micro text-dim">
+              {row.symbol} · {formatQuantity(row.quantity)}
+              {unitFor(row)}
+            </div>
+          </div>
+          <div className="shrink-0 text-right">
+            <div className="font-mono text-[15px] tabular-nums">{value}</div>
+            <div className="mt-0.5 text-micro text-dim">
+              <WeekChange pct={row.weekChangePct} /> this week
+            </div>
+          </div>
+        </div>
+        <dl className="m-0 grid grid-cols-2 gap-x-3 gap-y-2.5">
+          {shown.map((b) => (
+            <ScoreCell key={b.key} bar={b} />
+          ))}
+        </dl>
+        <p className="m-0 text-[13px] leading-[1.5] text-primary/70">{note ?? row.line}</p>
+      </Link>
+    </li>
+  );
+}
+
 function unitFor(row: GlanceRow): string {
   return /^[A-Z]{2,6}$/.test(row.symbol) && row.quantity < 1 ? "" : row.quantity === 1 ? " share" : " shares";
 }
@@ -176,25 +238,12 @@ export function DailyBriefing({ briefing, dateLabel }: { briefing: Briefing; dat
               </tbody>
             </table>
           </div>
-          {/* Phones: a stacked list. */}
-          <ul className="m-0 list-none overflow-hidden rounded-[14px] border border-line bg-panel p-0 md:hidden">
+          {/* Phones: one card per holding. The table header is hidden below
+              768px, so every bar carries its own label and verdict word here -
+              a bar is never shown without saying what it measures. */}
+          <ul className="m-0 flex list-none flex-col gap-2.5 p-0 md:hidden" aria-label="Your holdings">
             {briefing.holdings.map((h) => (
-              <li key={h.symbol} className="border-b border-line-soft last:border-b-0">
-                <Link href={h.href} className="flex flex-col gap-1.5 px-4.5 py-4 text-primary">
-                  <span className="flex justify-between gap-3 text-[15px]">
-                    <span className="font-medium">{h.name}</span>
-                    <span>
-                      {money(h.valueUsd)} <span className="text-[13px]"><WeekChange pct={h.weekChangePct} /></span>
-                    </span>
-                  </span>
-                  <span className="flex gap-3">
-                    {h.bars.map((b) => (
-                      <MiniBars key={b.key} level={b.level} label={b.label} valuation={b.key === "valuation"} />
-                    ))}
-                  </span>
-                  <span className="text-[13px] leading-[1.5] text-primary/70">{h.line}</span>
-                </Link>
-              </li>
+              <HoldingCard key={h.symbol} row={h} value={money(h.valueUsd)} />
             ))}
           </ul>
         </div>

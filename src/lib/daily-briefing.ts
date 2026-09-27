@@ -66,9 +66,12 @@ export interface GlanceRow {
   quantity: number;
   valueUsd: number | null;
   weekChangePct: number | null;
-  bars: { key: DimensionKey; label: string; level: Level }[];
+  /** `verdict` is the scorecard's word for the level ("Cheaper than usual", "Strong"): a bar is never shown without it on phones. */
+  bars: { key: DimensionKey; label: string; level: Level; verdict: string }[];
   line: string;
   href: string;
+  /** For the phone card's "no company behind it" note. */
+  assetType: string | null;
 }
 
 export interface ComingUpRow {
@@ -409,10 +412,11 @@ export function buildBriefing(input: { today: string; holdings: BriefingHolding[
       weekChangePct,
       bars: (["valuation", "growth", "health", "trend"] as DimensionKey[]).map((k) => {
         const d = dims.find((x) => x.key === k)!;
-        return { key: k, label: d.label, level: d.level };
+        return { key: k, label: d.label, level: d.level, verdict: d.verdict };
       }),
       line: holdingLine(h.scorecard, h.assetType),
       href: `/ticker/${encodeURIComponent(h.symbol)}`,
+      assetType: h.assetType,
     });
   }
   rows.sort((a, b) => (b.valueUsd ?? -1) - (a.valueUsd ?? -1));
