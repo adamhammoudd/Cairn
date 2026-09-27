@@ -29,5 +29,5 @@ export function currencyNoteText(prefs: DisplayPrefs): string | null {
 export function CurrencyNote({ prefs }: { prefs: DisplayPrefs }) {
   const text = currencyNoteText(prefs);
   if (!text) return null;
-  return <p className="mb-3 text-right text-caption text-muted text-pretty">{text}</p>;
+  return <p className="cn-currency-note mb-3 text-right text-caption text-muted text-pretty">{text}</p>;
 }
