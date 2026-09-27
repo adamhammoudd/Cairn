@@ -1,0 +1,25 @@
+{
+  "_about": "The four model drafts rejected on 2026-09-26 (ai_scope_guard_log, source_surface = analysis), verbatim. Inputs for each are the '<SYM>@<time>' entries in analysis-inputs.json.",
+  "drafts": [
+    {
+      "inputs": "MSFT@2026-09-26T22:57:58.9Z",
+      "logged": "watch_unsourced",
+      "draft": {"headline":"Microsoft shares are trending up and have a history of modest gains two weeks later.","bullets":["Higher 2 weeks later in 11 of 17 similar moments, usually between -1% and +5% (middle +1%).","Price is about usual at 29 times profit, near its 5‑year average of 31 and below the sector median of 39.","Growth strong: sales up 18% year‑over‑year and profit up 31% year‑over‑year.","Rising trend: up 41% over 6 months and 19% above the 200‑day average."],"watch":[{"text":"Earnings expected around Wed 28 Oct (estimated).","ref":"E1"},{"text":"Stock rally noted by MarketWatch, 25 Sep.","ref":"N1"}],"sources_used":["N1"]}
+    },
+    {
+      "inputs": "MSFT@2026-09-26T22:57:58.9Z",
+      "logged": "unexplained_jargon",
+      "draft": {"headline":"Microsoft shares have risen recently and are likely to stay higher for a short term.","bullets":["Higher 2 weeks later in 11 of 17 similar moments, usually between -1% and +5% (middle case +1%).","Price vs profit about usual at 29× earnings, near its 5‑year average of 31× and below the sector median of 39×.","Sales up 18% YoY and profit up 31%, showing strong growth.","Rising trend: up 41% over 6 months and 19% above the 200‑day average price."],"watch":[{"text":"Earnings expected around Wed 28 Oct (estimated).","ref":"E1"},{"text":"Stock rally noted by MarketWatch, 25 Sep.","ref":"N1"}],"sources_used":["N1"]}
+    },
+    {
+      "inputs": "NVDA@2026-09-26T22:52:01.6Z",
+      "logged": "watch_unsourced",
+      "draft": {"headline":"NVIDIA's share is a bit cheaper than usual and has been rising lately.","bullets":["Higher 73 of 125 two‑week periods, usually between −4% and +8%, with the middle case +2%.","Cheaper at 28 × profit (P/E price/earnings ratio) versus its 5‑year average of 61; median across peers is 39.","Strong growth: sales up 83% vs last year, profit up 123% vs last year, and growth is accelerating.","Price trend rising: up 31% over 6 months and 13% above its 200‑day average."],"watch":[{"text":"Earnings around Wed 18 Nov (estimated).","ref":"E1"},{"text":"Nvidia Scores Winning Streak: Trump‑Xi Meeting, China Sales Outlook In Focus, MarketWatch, 23 Sep.","ref":"N2"},{"text":"Nvidia Just Qualified Tesla and Vertiv Products for Its New AI‑Factory Standard, Yahoo Finance, 23 Sep.","ref":"N6"}],"sources_used":["N2","N6"]}
+    },
+    {
+      "inputs": "NVDA@2026-09-26T22:52:01.6Z",
+      "logged": "unexplained_jargon",
+      "draft": {"headline":"NVIDIA's share is cheaper than usual and has been rising recently.","bullets":["Higher 73 of 125 two‑week periods, usually between −4% and +8% with a middle case +2%.","Cheaper at 28 × profit versus a 5‑year average of 61 ×; median across peers is 39 ×.","Strong growth: sales up 83% and profit up 123% year over year.","Rising price trend: up 31% over 6 months and 13% above its 200‑day average."],"watch":[{"text":"Earnings expected around Wed 18 Nov (estimated).","ref":"E1"}],"sources_used":["N2","N3","N6"]}
+    }
+  ]
+}
