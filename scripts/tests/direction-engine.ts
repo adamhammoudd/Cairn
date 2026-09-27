@@ -293,7 +293,7 @@ export function runDirectionEngineSuite(): SuiteResult {
   const rare = similarMoments({ set: coinSet, result: { ok: false, reason: "insufficient_instances", bestSampleSize: 3, conditions: [] }, assetType: "crypto", scorecard: coinCard, data: { releaseDates: [], quarters: [], annualEps: new Map(), pricesAsc: [], upcomingEarnings: [] }, today: "2024-03-25" });
   check(
     "a rare state (too few cases) is swapped for the base rate only WITH its fallback label (never silently)",
-    rare !== null && rare.kind === "baseline" && rare.fallback?.reason === "unusual_setup" && rare.fallback.matches === 3 && baseline.fallback === undefined,
+    rare !== null && rare.kind === "baseline" && rare.fallback?.reason === "unusual_setup" && rare.fallback.matches === 3 && baseline?.fallback === undefined,
     JSON.stringify({ rare: rare?.fallback, ordinary: baseline?.fallback }),
   );
   check("a normal result is labelled 'similar'", sm.kind === "similar", String(sm.kind));
