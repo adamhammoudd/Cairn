@@ -96,7 +96,11 @@ export async function writeTickerText(a: {
       console.warn(`[analysis] ${a.symbol}: model draft unavailable (${at.reason}): ${at.evidence ?? ""}`);
       continue;
     }
-    await a.admin.from("ai_scope_guard_log").insert({ raw_output: JSON.stringify(at.draft), flagged: true, flag_reason: at.reason, source_surface: "analysis" });
+    // The offending phrase rides with the reason ("unexplained_jargon: YoY in
+    // ..."): the reason code alone is what hid, for a week, that good drafts
+    // were failing on a feed name and on "year over year".
+    const flagReason = at.evidence ? `${at.reason}: ${at.evidence}`.slice(0, 500) : at.reason;
+    await a.admin.from("ai_scope_guard_log").insert({ raw_output: JSON.stringify(at.draft), flagged: true, flag_reason: flagReason, source_surface: "analysis" });
   }
 
   const reasoningText = [g.text.headline, ...g.text.bullets].join(" ");

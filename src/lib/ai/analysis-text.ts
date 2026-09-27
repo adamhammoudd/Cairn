@@ -28,7 +28,7 @@ import {
   wordCount,
 } from "@/lib/ai/plain-summary";
 import type { DirectionalHistory } from "@/lib/ai/direction";
-import { plainDate, type Dimension, type Scorecard } from "@/lib/scorecard";
+import { plainDate, VALUATION_VERDICTS, type Dimension, type Scorecard } from "@/lib/scorecard";
 
 // ------------------------------------------------------------------- types
 
@@ -217,6 +217,25 @@ export function historyContext(i: Pick<TextInputs, "fallback" | "sessionsToRelea
 
 // ------------------------------------------------------------- the inputs
 
+/**
+ * The publisher a reader would name: "MarketWatch Top Stories (RSS)" ->
+ * "MarketWatch", "Yahoo Finance News" -> "Yahoo Finance". Stored source names
+ * are feed names; a watch item that says "see MarketWatch" names its source
+ * correctly and used to be rejected for not spelling out the feed.
+ */
+export function publisherName(source: string): string {
+  const plain = source.replace(/\s*\(RSS\)\s*$/i, "").trim();
+  const bare = plain.replace(/\s+(?:Top\s+Stories|News|Press\s+Releases|Headlines)$/i, "").trim();
+  return bare || plain;
+}
+
+/** Whether `text` names the headline's source - the feed name or its publisher. */
+export function namesSource(text: string, source: string): boolean {
+  const t = text.toLowerCase();
+  const plain = source.replace(/\s*\(RSS\)\s*$/i, "").trim().toLowerCase();
+  return t.includes(plain) || t.includes(publisherName(source).toLowerCase());
+}
+
 /** "18 Nov": the part of a date a watch item must name. */
 export function dayMonth(iso: string): string {
   return plainDate(iso).slice(4);
@@ -244,7 +263,7 @@ export function buildComputedFigures(i: TextInputs): string {
     .map((l) => `- ${l}`);
   const card = i.scorecard.dimensions.map((d) => `- ${d.label}: ${d.verdict}. ${d.sentence}`);
   const events = i.events.length > 0 ? i.events.map((e) => `- ${e.id}: ${eventLabel(e)}`) : ["- none in Cairn's calendar"];
-  const news = i.news.length > 0 ? i.news.map((n) => `- ${n.id}: "${n.title}" (${n.source}, ${dayMonth(n.date.slice(0, 10))})`) : [`- none found.${i.noNews ? ` ${i.noNews}` : ""} Do not mention or imply any news.`];
+  const news = i.news.length > 0 ? i.news.map((n) => `- ${n.id}: "${n.title}" (${publisherName(n.source)}, ${dayMonth(n.date.slice(0, 10))})`) : [`- none found.${i.noNews ? ` ${i.noNews}` : ""} Do not mention or imply any news.`];
   const data = (i.dataSources ?? []).map((d) => `- ${d}`);
   const trader = i.trader
     ? [
@@ -353,7 +372,7 @@ const STATED_AS_FACT = new RegExp(
   [
     // "will rise", "is set to climb", "is likely to be higher"
     "\\b(?:will|won't|is\\s+going\\s+to|are\\s+going\\s+to|(?:is|are)\\s+(?:set|poised|bound|sure|certain|expected|likely)\\s+to)\\s+(?:\\w+\\s+){0,2}?" +
-      "(?:rise|fall|climb|drop|gain|lose|rally|surge|soar|jump|sink|slide|slump|go\\s+up|go\\s+down|increase|decrease|recover|rebound|bounce|outperform|underperform|double|crash|keep\\s+(?:rising|falling|climbing|going)|(?:be|end|finish|close)\\s+(?:higher|lower|up|down))\\b",
+      "(?:rise|fall|climb|drop|gain|lose|rally|surge|soar|jump|sink|slide|slump|go\\s+up|go\\s+down|increase|decrease|recover|rebound|bounce|outperform|underperform|double|crash|keep\\s+(?:rising|falling|climbing|going)|(?:be|end|finish|close|stay|remain|hold)\\s+(?:higher|lower|up|down|high|low|strong|weak|elevated|firm))\\b",
     // certainty words
     "\\b(?:guaranteed|certainly|definitely|no\\s+doubt|for\\s+sure)\\b",
     // "can expect gains", "odds favour a rise"
@@ -417,7 +436,7 @@ export function checkAnalysisText(t: ModelAnalysisText, i: TextInputs, opts: { m
     if (e) {
       if (!w.text.includes(dayMonth(e.date))) return fail("watch_unsourced", `${w.ref} without its date: "${w.text}"`);
     } else if (n) {
-      if (!w.text.toLowerCase().includes(n.source.toLowerCase())) return fail("watch_unsourced", `${w.ref} without naming ${n.source}: "${w.text}"`);
+      if (!namesSource(w.text, n.source)) return fail("watch_unsourced", `${w.ref} without naming ${publisherName(n.source)}: "${w.text}"`);
     } else {
       return fail("watch_unsourced", `"${w.text}" cites "${w.ref}"`);
     }
@@ -434,6 +453,125 @@ function dim(card: Scorecard, key: Dimension["key"]): Dimension | undefined {
 
 const lowerFirst = (s: string) => s.charAt(0).toLowerCase() + s.slice(1);
 
+// -------------------------------------------------- the template headline
+//
+// The template headline used to be one fixed shape - "X is a fast-growing
+// company whose share costs less than usual for its profit" - so every ticker
+// that fell back to the template read the same. It now leads with whatever is
+// most distinctive about the ticker TODAY, from the same computed inputs:
+// results or a dividend date coming up soon, a lopsided similar-moments
+// record, a big six-month move, stretched finances or shrinking sales, and
+// only then price versus profit. The runner-up is added when the sentence
+// stays short. Every candidate must pass checkAnalysisText like model text.
+
+/** An event this close is the news. */
+const EVENT_SOON_DAYS = 14;
+/** A similar-moments record at least this far from a coin toss is worth leading with. */
+const SKEWED_HISTORY = 0.2;
+/** A six-month move at least this big (percent) is worth leading with. */
+const BIG_SIX_MONTH_MOVE_PCT = 25;
+
+export interface HeadlineLead {
+  key: "event" | "history" | "trend" | "finances" | "valuation" | "growth";
+  score: number;
+  /** A full clause with its subject: "NVIDIA's share is up 31% over 6 months". */
+  clause: string;
+  /** The same fact as a tail after another clause: "its share is up 31% over 6 months". */
+  tail: string;
+}
+
+const daysUntil = (from: string, to: string) => Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 86_400_000);
+
+export function headlineLeads(i: TextInputs): HeadlineLead[] {
+  const leads: HeadlineLead[] = [];
+  const card = i.scorecard;
+  const noun = i.assetType === "crypto" || i.assetType === "etf" ? "price" : "share";
+  const today = card.asOf.slice(0, 10);
+
+  const e = i.events[0];
+  if (e) {
+    const days = daysUntil(today, e.date);
+    if (days >= 0 && days <= EVENT_SOON_DAYS) {
+      const when = `${e.estimated ? "around" : "on"} ${plainDate(e.date)}${e.estimated ? " (estimated)" : ""}`;
+      const [clause, tail] =
+        e.kind === "earnings"
+          ? [`${i.name} reports results ${when}`, `results are due ${when}`]
+          : e.kind === "ex_dividend"
+            ? [`${i.name}'s dividend cut-off date is ${plainDate(e.date)}`, `its dividend cut-off date is ${plainDate(e.date)}`]
+            : [`${i.name} pays its dividend on ${plainDate(e.date)}`, `it pays its dividend on ${plainDate(e.date)}`];
+      leads.push({ key: "event", score: 100 - days, clause, tail });
+    }
+  }
+
+  const h = i.history;
+  if (h && h.status === "ok" && i.historyBasis !== "baseline" && h.confidence !== "low" && h.n > 0) {
+    const skew = Math.abs(h.higher / h.n - 0.5);
+    if (skew >= SKEWED_HISTORY) {
+      const fact = `was higher ${horizonPhrase(h.horizonSessions, i.assetType)} later in ${h.higher} of ${h.n} similar moments`;
+      leads.push({ key: "history", score: 60 + skew * 100, clause: `${i.name}'s ${noun} ${fact}`, tail: `its ${noun} ${fact}` });
+    }
+  }
+
+  const trend = dim(card, "trend");
+  const move = trend?.sentence.match(/^(Up|Down) (\d+(?:\.\d+)?%) over 6 months/);
+  if (trend && move && Number.parseFloat(move[2]) >= BIG_SIX_MONTH_MOVE_PCT) {
+    const fact = `is ${move[1].toLowerCase()} ${move[2]} over 6 months`;
+    leads.push({ key: "trend", score: 40 + Math.min(Number.parseFloat(move[2]), 100) / 5, clause: `${i.name}'s ${noun} ${fact}`, tail: `its ${noun} ${fact}` });
+  }
+
+  const growth = dim(card, "growth");
+  const health = dim(card, "health");
+  if (health?.verdict === "Stretched") leads.push({ key: "finances", score: 45, clause: `${i.name}'s finances are stretched`, tail: "its finances are stretched" });
+  else if (growth?.verdict === "Shrinking") leads.push({ key: "finances", score: 45, clause: `${i.name}'s sales are shrinking`, tail: "its sales are shrinking" });
+
+  const valuation = dim(card, "valuation")?.verdict;
+  const cost = valuation === VALUATION_VERDICTS.cheaper ? "less than usual" : valuation === VALUATION_VERDICTS.pricier ? "more than usual" : null;
+  if (cost) leads.push({ key: "valuation", score: 30, clause: `${i.name}'s share costs ${cost} for its profit`, tail: `its share costs ${cost} for its profit` });
+
+  if (growth?.verdict === "Strong") leads.push({ key: "growth", score: 20, clause: `${i.name}'s sales are growing fast`, tail: "its sales are growing fast" });
+
+  return leads.sort((a, b) => b.score - a.score);
+}
+
+/** "NVIDIA's share is up 31% over 6 months" + "its share costs less..." -> "... and costs less ...". */
+function joinLeads(lead: HeadlineLead, next: HeadlineLead, name: string): string {
+  const subject = lead.clause.match(new RegExp(`^${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}'s (share|price) `))?.[1];
+  if (subject && next.tail.startsWith(`its ${subject} `)) return `${lead.clause} and ${next.tail.slice(`its ${subject} `.length)}.`;
+  return `${lead.clause}, and ${next.tail}.`;
+}
+
+/** The fixed shape, now only the fallback when nothing about today stands out. */
+function plainHeadline(i: TextInputs, companyApplies: boolean): string {
+  const card = i.scorecard;
+  return companyApplies
+    ? `${i.name} is ${lowerFirst(qualityPhrase(dim(card, "growth")?.verdict, dim(card, "health")?.verdict))}${pricePhrase(dim(card, "valuation")?.verdict)}.`
+    : i.assetType === "crypto"
+      ? `${i.name} has no company behind it, so this covers its price record.`
+      : i.assetType === "etf"
+        ? `${i.name} is a fund holding many companies, so this covers its price record.`
+        : `${i.name}'s company figures are not available, so this covers its price record.`;
+}
+
+export function distinctiveHeadline(i: TextInputs, companyApplies: boolean): string {
+  const filler = "Every figure here comes from stored prices and filings.";
+  const ok = (headline: string) =>
+    sentences(headline).length === 1 &&
+    wordCount(headline) <= MAX_SENTENCE_WORDS &&
+    checkAnalysisText({ headline, bullets: [filler, filler, filler], watch: [], sources_used: [] }, i, { minWatch: 0 }).passed;
+
+  const leads = headlineLeads(i);
+  for (const [n, lead] of leads.entries()) {
+    const next = leads.slice(n + 1).find((l) => l.key !== lead.key);
+    if (next) {
+      const both = joinLeads(lead, next, i.name);
+      if (ok(both)) return both;
+    }
+    const alone = `${lead.clause}.`;
+    if (ok(alone)) return alone;
+  }
+  return plainHeadline(i, companyApplies);
+}
+
 /** Cairn's own words, built from the scorecard and history sentences. Passes checkAnalysisText. */
 export function templateAnalysisText(i: TextInputs): ModelAnalysisText {
   const card = i.scorecard;
@@ -441,13 +579,7 @@ export function templateAnalysisText(i: TextInputs): ModelAnalysisText {
     const d = dim(card, k as Dimension["key"]);
     return d && d.level !== "not_applicable";
   });
-  const headline = companyApplies
-    ? `${i.name} is ${lowerFirst(qualityPhrase(dim(card, "growth")?.verdict, dim(card, "health")?.verdict))}${pricePhrase(dim(card, "valuation")?.verdict)}.`
-    : i.assetType === "crypto"
-      ? `${i.name} has no company behind it, so this covers its price record.`
-      : i.assetType === "etf"
-        ? `${i.name} is a fund holding many companies, so this covers its price record.`
-        : `${i.name}'s company figures are not available, so this covers its price record.`;
+  const headline = distinctiveHeadline(i, companyApplies);
 
   const hw = historyWords(i.history, i.name, i.assetType, i.noHistoryReason, i.historyBasis, historyContext(i))!;
   const partOk = (s: string) => {
@@ -522,6 +654,8 @@ Hard rules, no exceptions:
 - Never address the reader: no "you" or "your". Describe the company and its share.
 - No predictions stated as fact: never "will rise", "is set to fall". History is what happened before, not a forecast.
 - The first time a finance term appears (P/E, EBITDA, dividend yield...), explain it in brackets right after it.
+  Write out comparisons in words: "than a year ago", never abbreviations like "YoY" or "TTM".
+- In "watch", name a headline's source exactly as it is shown in brackets (e.g. "MarketWatch", "Yahoo Finance").
 - Every sentence under 20 words.`;
 
 type CompleterResult = ModelAnalysisText | { parsed: ModelAnalysisText; model: string } | null;

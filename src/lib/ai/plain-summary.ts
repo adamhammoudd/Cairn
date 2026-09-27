@@ -106,9 +106,14 @@ export function allowedNumbersFor(inputs: SummaryInputs): Set<string> {
  * Finance terms a 12-year-old would not know. Allowed only when a plain
  * explanation in brackets follows right away, as the scorecard does:
  * "EBITDA (profit before interest, tax and write-downs)".
+ *
+ * "year over year" spelled out was on this list and is not any more
+ * (fix/analysis-unique-titles): it is ordinary English for "compared with a
+ * year ago", and it was the phrase that rejected an otherwise plain NVIDIA
+ * draft on 2026-09-26. The abbreviation "YoY" stays: that is jargon.
  */
 const JARGON = [
-  "EBITDA", "P/E", "PE ratio", "price[- ]to[- ]earnings", "EPS", "TTM", "YoY", "year[- ]over[- ]year", "free cash flow", "FCF",
+  "EBITDA", "P/E", "PE ratio", "price[- ]to[- ]earnings", "EPS", "TTM", "YoY", "free cash flow", "FCF",
   "payout ratio", "RSI", "SMA", "moving average", "volatility", "drawdown", "analogs?", "basis points", "bps", "multiples?",
   "margins?", "market cap(?:italization)?", "dividend yield", "yield", "beta", "momentum", "overbought", "oversold",
   "Wilson", "confidence interval", "standard deviations?", "percentile", "ex-dividend", "guidance", "consensus", "valuation",
