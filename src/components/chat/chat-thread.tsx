@@ -6,15 +6,13 @@ import {
   deleteChatSession,
   listChatSessions,
   listChatMessages,
+  setAssistantPortfolioContext,
+  getAssistantPortfolioContext,
   type ChatSession,
 } from "@/lib/actions/chat";
-import { findMissingAnalysisScope, getAnalysesByIds } from "@/lib/actions/analysis";
-import { CHAT_STATE_MARKER, type ChatGenerationState } from "@/lib/chat-state";
-import {
-  GeneratingPanel,
-  QuotaReachedPanel,
-  UnavailablePanel,
-} from "@/components/analysis/research-states";
+import { getAnalysesByIds } from "@/lib/actions/analysis";
+import { decodeEvents } from "@/lib/ai/assistant/stream";
+import type { AssistantMeta } from "@/lib/ai/assistant/types";
 import type { ChatMessageData } from "@/components/chat/chat-message";
 import { MethodologyCard } from "@/components/analysis/methodology-card";
 import Link from "next/link";
@@ -24,52 +22,13 @@ import { BetaNote } from "@/components/billing/beta-note";
 
 const MESSAGES_PAGE_SIZE = 30;
 
-// Quick-start suggestions under the composer.
-//
-// The mock's three examples were kept verbatim, and two of them - "How is my
-// portfolio doing today?" and "Am I too concentrated in semis?" - ask about
-// the user's own position, which is exactly what the scope guard exists to
-// refuse. The product was advertising prompts it is built to reject, teaching
-// a first-run user the wrong shape of question and burning a message to do it.
-//
-// These three ask the same underlying things at market/sector/ticker scope,
-// which is what the engine actually answers.
-const SUGGESTED_PROMPTS = [
-  "What's moving semiconductors this week?",
-  "What's the volatility outlook on NVDA?",
-  "How have past rate decisions moved this market?",
-];
+// Quick-start suggestions under the composer. Assistant v2 answers factual
+// questions about the reader's own portfolio (never whether to keep or sell a
+// position), so "How's my portfolio doing?" is a question it is built for now.
+const SUGGESTED_PROMPTS = ["How's my portfolio doing?", "How's NVIDIA looking?", "What's moving the market this week?"];
 
 // The message shape lives with the component that renders it.
 type Message = ChatMessageData;
-
-const REFS_MARKER = /\sCAIRN_REFS:(\[[^\]]*\])$/;
-
-// CAIRN_STATE is emitted after CAIRN_REFS, so it is stripped first and the
-// refs parser then sees the same shape it always did.
-function splitStream(raw: string): { text: string; ids: string[]; state: ChatGenerationState | null } {
-  let rest = raw;
-  let state: ChatGenerationState | null = null;
-
-  const stateMatch = rest.match(CHAT_STATE_MARKER);
-  if (stateMatch) {
-    try {
-      state = JSON.parse(stateMatch[1]) as ChatGenerationState;
-      rest = rest.slice(0, stateMatch.index);
-    } catch {
-      // Malformed sentinel: leave the text alone rather than truncating a
-      // real reply on a parse failure.
-    }
-  }
-
-  const refsMatch = rest.match(REFS_MARKER);
-  if (!refsMatch) return { text: rest, ids: [], state };
-  try {
-    return { text: rest.slice(0, refsMatch.index), ids: JSON.parse(refsMatch[1]), state };
-  } catch {
-    return { text: rest, ids: [], state };
-  }
-}
 
 function sessionLabel(session: ChatSession): string {
   return session.title?.trim() || `Chat - ${new Date(session.created_at).toLocaleDateString()}`;
@@ -132,10 +91,13 @@ export function ChatThread({
   briefing,
   expandMethodology = true,
   betaUntil = null,
+  usePortfolioContext = true,
 }: {
   compact?: boolean;
   /** "31 December 2026" while beta Premium access is on (getBetaAccessLabel), else null. */
   betaUntil?: string | null;
+  /** Settings > AI Assistant "Portfolio context" (the account default; a conversation may override it). */
+  usePortfolioContext?: boolean;
   briefing?: ReactNode;
   /** Settings > AI Assistant default for expanding the methodology card. */
   expandMethodology?: boolean;
@@ -144,11 +106,9 @@ export function ChatThread({
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
-  // Set when this turn named a scope with nothing on file, so the reader sees
-  // the generation happening rather than a silent pause. Turn-local: never
-  // written to chat_messages, so no chat-specific storage exists.
-  const [generatingScope, setGeneratingScope] = useState<string | null>(null);
-  const [turnState, setTurnState] = useState<ChatGenerationState | null>(null);
+  // The account-level portfolio-context preference, as last set from the
+  // header switch. A conversation's own override (chat_sessions) wins.
+  const [portfolioDefault, setPortfolioDefault] = useState(usePortfolioContext);
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   // Distinguishes "we haven't looked yet" from "we looked and there is
   // nothing". Rendering the empty state during the fetch told returning users
@@ -191,6 +151,7 @@ export function ChatThread({
         role: m.role,
         content: m.content,
         analyses: analyses.length > 0 ? analyses : undefined,
+        meta: ((m as { meta?: unknown }).meta ?? null) as AssistantMeta | null,
       };
     });
   }
@@ -235,6 +196,9 @@ export function ChatThread({
       try {
         // The plan gate is applied on the server (attachMethodology), before
         // the analyses reach this component.
+        // The floating panel has no page to hand it the setting; read it here
+        // so the header never misstates what the next answer will do.
+        void getAssistantPortfolioContext().then(setPortfolioDefault).catch(() => {});
         const list = await listChatSessions();
         setSessions(list);
         // No session is created here. An empty thread is a UI state, not a row.
@@ -257,20 +221,6 @@ export function ChatThread({
     setInput("");
     setMessages((prev) => [...prev, { role: "user", content: text }, { role: "assistant", content: "" }]);
     setStreaming(true);
-    setTurnState(null);
-    setGeneratingScope(null);
-
-    // Ask the same question the route is about to ask - findMissingAnalysisScope
-    // is one function, so the panel below can never claim a generation the
-    // server isn't actually running. This only decides what the reader sees
-    // while they wait; the route decides what actually happens, and the
-    // generation itself is the route's single runAnalysisGeneration call.
-    try {
-      const missing = await findMissingAnalysisScope(text);
-      if (missing) setGeneratingScope(missing.scopeValue);
-    } catch {
-      // A failed probe just means no generating panel - never a failed turn.
-    }
 
     // The session row is created here, on the first real message, rather than
     // on mount. `createdNow` is remembered so a failed first turn can take the
@@ -311,32 +261,52 @@ export function ChatThread({
       if (!res.body) throw new Error("No response stream.");
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
-      let raw = "";
+      // Newline-delimited JSON events (lib/ai/assistant/stream.ts): tool
+      // activity while the answer is built, then the validated text, then its
+      // tiles, sources and follow-ups.
+      let buffer = "";
+      let answerText = "";
+      const activity: string[] = [];
+      let meta: AssistantMeta | null = null;
+      let refs: string[] = [];
+      let failure: string | null = null;
+      const update = (patch: Partial<Message>) =>
+        setMessages((prev) => {
+          const next = [...prev];
+          next[next.length - 1] = { ...next[next.length - 1], ...patch };
+          return next;
+        });
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        raw += decoder.decode(value, { stream: true });
-        const { text: displayText } = splitStream(raw);
-        setMessages((prev) => {
-          const next = [...prev];
-          next[next.length - 1] = { role: "assistant", content: displayText };
-          return next;
-        });
+        const decoded = decodeEvents(buffer + decoder.decode(value, { stream: true }));
+        buffer = decoded.rest;
+        for (const e of decoded.events) {
+          if (e.t === "activity") {
+            if (!activity.includes(e.label)) activity.push(e.label);
+            update({ activity: [...activity] });
+          } else if (e.t === "text") {
+            answerText += e.chunk;
+            update({ content: answerText, activity: undefined });
+          } else if (e.t === "meta") {
+            meta = e.meta;
+            update({ meta });
+          } else if (e.t === "refs") refs = e.ids;
+          else if (e.t === "error") failure = e.message;
+        }
       }
 
-      const { ids, state } = splitStream(raw);
-      // Generation is over either way - drop the in-flight panel before
-      // showing what came of it.
-      setGeneratingScope(null);
-      setTurnState(state);
-      if (ids.length > 0) {
-        const analyses = await getAnalysesByIds(ids);
-        setMessages((prev) => {
-          const next = [...prev];
-          next[next.length - 1] = { ...next[next.length - 1], analyses };
-          return next;
-        });
+      if (failure) {
+        // The server saved nothing for a failed turn.
+        update({ content: failure, failed: true, activity: undefined, meta: null });
+        if (createdNow && activeSessionId) await discardEmptySession(activeSessionId);
+        return;
+      }
+
+      if (refs.length > 0) {
+        const analyses = await getAnalysesByIds(refs);
+        update({ analyses });
       }
 
       // First send in a fresh session gives it a title server-side -- refresh
@@ -375,7 +345,6 @@ export function ChatThread({
     } finally {
       abortRef.current = null;
       setStreaming(false);
-      setGeneratingScope(null);
     }
   }
 
@@ -413,8 +382,36 @@ export function ChatThread({
     -1,
   );
 
+  const activeSession = sessions.find((x) => x.id === sessionId) ?? null;
+  const portfolioOn = activeSession?.use_portfolio_context ?? portfolioDefault;
+
+  async function togglePortfolio() {
+    const next = !portfolioOn;
+    setPortfolioDefault(next);
+    if (activeSession) setSessions((prev) => prev.map((x) => (x.id === activeSession.id ? { ...x, use_portfolio_context: null } : x)));
+    const error = await setAssistantPortfolioContext(next, sessionId);
+    if (error) setPortfolioDefault(!next);
+  }
+
   const conversation = (
     <>
+      <div className={`flex flex-wrap items-center justify-between gap-2 border-b border-line ${compact ? "px-3 py-2" : "px-5 py-2.5"}`}>
+        <p className="m-0 min-w-0 text-micro text-muted">
+          {portfolioOn ? "Using your portfolio: answers can include your holdings' values and dates." : "Not using your portfolio in answers."}
+        </p>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={portfolioOn}
+          onClick={togglePortfolio}
+          className="flex shrink-0 items-center gap-2 rounded-control px-1.5 py-1 text-micro text-muted transition-colors duration-fast ease-standard hover:text-primary pointer-coarse:min-h-11"
+        >
+          Portfolio context
+          <span aria-hidden className={`relative h-4 w-7 rounded-full transition-colors duration-fast ease-standard ${portfolioOn ? "bg-accent" : "bg-line-strong"}`}>
+            <span className={`absolute top-0.5 h-3 w-3 rounded-full bg-canvas transition-[left] duration-fast ease-standard ${portfolioOn ? "left-3.5" : "left-0.5"}`} />
+          </span>
+        </button>
+      </div>
       <div ref={scrollRef} className={`flex-1 overflow-y-auto ${compact ? "px-3 py-3" : "p-5"}`}>
         {messages.length === 0 ? (
           // Was the same 13px weight as the composer's own input text with no
@@ -425,7 +422,7 @@ export function ChatThread({
             <span aria-hidden className="not-italic">
               ↳
             </span>
-            Ask about a ticker, sector, or market trend - I&apos;ll answer from stored research only.
+            Ask about a share, a coin, the market or your own portfolio. Every figure comes from Cairn&apos;s data, with sources.
           </p>
         ) : (
           <div className="flex flex-col gap-4">
@@ -444,7 +441,7 @@ export function ChatThread({
               const analyses = m.role === "assistant" && !m.failed && !isStreaming ? (m.analyses ?? []) : [];
               return (
                 <div key={i} className="flex flex-col gap-3">
-                  <ChatMessage message={m} streaming={isStreaming} />
+                  <ChatMessage message={m} streaming={isStreaming} onFollowUp={i === lastAssistantIndex && !streaming ? (q) => send(q) : undefined} />
                   {analyses.length > 0 && (
                     <MethodologyBlock
                       analyses={analyses}
@@ -458,28 +455,6 @@ export function ChatThread({
                 </div>
               );
             })}
-
-            {/* Chat-triggered generation, shown inline. These are the Research
-                page's own panels, not chat-specific copies. */}
-            {generatingScope && (
-              <div>
-                <p className="mb-2.5 text-body leading-relaxed text-muted text-pretty">
-                  No analysis on record yet for {generatingScope} - generating one now…
-                </p>
-                <GeneratingPanel scopeLabel={generatingScope} />
-              </div>
-            )}
-
-            {turnState?.kind === "unavailable" && <UnavailablePanel young={turnState.young} gap={turnState.gap} />}
-
-            {turnState?.kind === "quota" && turnState.quota && (
-              <QuotaReachedPanel
-                used={turnState.quota.used}
-                limit={turnState.quota.limit}
-                planLabel={turnState.quota.planLabel}
-                resetLabel={turnState.quota.resetLabel}
-              />
-            )}
 
           </div>
         )}

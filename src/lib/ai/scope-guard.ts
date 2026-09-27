@@ -639,3 +639,12 @@ export function rewriteForScopeGuard(contextAnalyses: AnalysisForRewrite[]): str
   }
   return text;
 }
+
+/**
+ * Whether a clause is a refusal ("I can't tell you whether to sell NVDA").
+ * Exported for the assistant's guards, which skip their advice-vocabulary
+ * check on a refusal exactly as checkScopeGuard does.
+ */
+export function isRefusalClause(clause: string): boolean {
+  return REFUSAL.test(normalizeQuotes(clause));
+}

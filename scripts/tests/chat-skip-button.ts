@@ -25,9 +25,12 @@ function check(name: string, ok: boolean, detail = "") {
 }
 
 // --- the root cause the button can't fight: save happens before the stream ---
+// Assistant v2 opens the stream early to carry tool-activity lines, so the
+// invariant is now "saved before the first byte of ANSWER TEXT", which is what
+// Skip depends on.
 const insertIdx = route.indexOf('.from("chat_messages").insert');
-const streamIdx = route.indexOf("new ReadableStream");
-check("route.ts writes the turn to chat_messages before it streams", insertIdx > 0 && streamIdx > 0 && insertIdx < streamIdx);
+const streamIdx = route.indexOf('t: "text"');
+check("route.ts writes the turn to chat_messages before any answer text streams", insertIdx > 0 && streamIdx > 0 && insertIdx < streamIdx);
 
 // --- so the button is honest about that ---
 check('the streaming button label is "Skip", not "Stop"', /streaming \? "Skip" : "Send"/.test(thread));
