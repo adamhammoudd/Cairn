@@ -466,7 +466,7 @@ export function ChatThread({
               </div>
             )}
 
-            {turnState?.kind === "unavailable" && <UnavailablePanel young={turnState.young} />}
+            {turnState?.kind === "unavailable" && <UnavailablePanel young={turnState.young} gap={turnState.gap} />}
 
             {turnState?.kind === "quota" && turnState.quota && (
               <QuotaReachedPanel

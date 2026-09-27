@@ -205,10 +205,10 @@ export async function runAiMethodologyGapsSuite(): Promise<SuiteResult> {
   const analysis = stripComments(read("src/lib/actions/analysis.ts"));
   const run = fnBody(analysis, "runAnalysisGeneration");
   const reserveAt = run.indexOf("reserveAiUsage(");
-  const genAt = run.search(/generateWithinReservation\(|generateAnalysis\(/);
+  const genAt = run.search(/generateForScope\(|generateWithinReservation\(|generateAnalysis\(/);
   check(
     "requestAnalysis reserves the slot before generating and refunds a failure",
-    reserveAt > 0 && genAt > reserveAt && /if \(!outcome\.ok\) await releaseAiUsage/.test(run) && /catch[\s\S]*releaseAiUsage/.test(run),
+    reserveAt > 0 && genAt > reserveAt && /if \(!outcome\.ok\) \{?\s*await releaseAiUsage/.test(run) && /catch[\s\S]*releaseAiUsage/.test(run),
     reserveAt > 0 ? "reserve -> generate -> release on !ok or throw" : "no reservation",
   );
 

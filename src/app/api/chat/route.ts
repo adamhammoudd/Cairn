@@ -114,7 +114,7 @@ export async function POST(req: Request) {
       if (!outcome.ok && outcome.kind !== "error") {
         // Quota and thin-data are states the UI renders, in Stage 1's wording -
         // not raw errors, and not a reason to fail the turn.
-        generatedState = { kind: outcome.kind, scope: missing.scopeValue, ...(outcome.young ? { young: outcome.young } : {}) };
+        generatedState = { kind: outcome.kind, scope: missing.scopeValue, ...(outcome.gap ? { gap: outcome.gap } : {}), ...(outcome.young ? { young: outcome.young } : {}) };
         if (outcome.kind === "quota") {
           const summary = await getBillingSummary();
           generatedState.quota = {

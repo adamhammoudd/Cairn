@@ -44,7 +44,7 @@ export function eventTypeLabel(eventType: string): string {
 
 export type GenerateOutcome =
   | { ok: true; analysisId: string }
-  | { ok: false; kind: "quota" | "unavailable" | "error"; message: string; young?: YoungHistoryInfo };
+  | { ok: false; kind: "quota" | "unavailable" | "error"; message: string; gap?: import("@/lib/analysis-gaps").GapExplanation; young?: YoungHistoryInfo };
 
 /**
  * Present on an "unavailable" outcome when the symbol is simply too new for

@@ -65,6 +65,7 @@ import { runAnalysisDisplaySuite } from "./analysis-display";
 import { runRegenerateAnalysesSuite } from "./regenerate-analyses";
 import { runEventTypeConstraintSuite } from "./event-type-constraint";
 import { runHistoryDepthSuite } from "./history-depth";
+import { runAnalysisFailureReasonsSuite } from "./analysis-failure-reasons";
 
 // A suite that throws (missing credentials, unreachable service) must surface
 // as a hard failure of that suite, not take the whole run down with a stack
@@ -159,6 +160,7 @@ async function main() {
     guarded("Daily briefing built on open", async () => [await runBriefingOnOpenSuite()]),
     guarded("Analysis text", async () => [await runAnalysisTextSuite()]),
     guarded("History depth", async () => [await runHistoryDepthSuite()]),
+    guarded("Analysis failure reasons", async () => [await runAnalysisFailureReasonsSuite()]),
   ]);
 
   const allSuites = [

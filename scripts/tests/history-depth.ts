@@ -136,9 +136,16 @@ export async function runHistoryDepthSuite(): Promise<SuiteResult> {
   const noBench = youngHistory("BLORB", 4, "crypto", syntheticBars(100));
   cases.push(check("no comparison when the benchmark itself is too thin (never invented)", noBench.comparison === null && /only 4 days/.test(noBench.message), JSON.stringify(noBench)));
 
-  // The analysis action turns the thin-data failure into this, not an error.
-  const actionSrc = fs.readFileSync(path.resolve(process.cwd(), "src/lib/actions/analysis.ts"), "utf8");
-  cases.push(check("a thin-data failure on a young ticker returns kind 'unavailable' with the young message", /kind: "unavailable", message: young\?\.message \?\? UNAVAILABLE_MESSAGE, \.\.\.\(young \? \{ young \} : \{\}\)/.test(actionSrc), "source"));
+  // The pipeline turns a short-history gap into this, not an error
+  // (fix/analysis-failure-reasons moved the mapping to lib/ai/analysis-pipeline.ts).
+  const actionSrc = fs.readFileSync(path.resolve(process.cwd(), "src/lib/ai/analysis-pipeline.ts"), "utf8");
+  cases.push(
+    check(
+      "a short-history gap on a ticker returns kind 'unavailable' with the young comparison",
+      /gap\.reasons\.includes\("short_history"\) \? await describeYoungHistory/.test(actionSrc) && /kind: "unavailable", message: gap\.message, gap, \.\.\.\(young \? \{ young \} : \{\}\)/.test(actionSrc),
+      "source",
+    ),
+  );
 
   const panel = renderComponentText("src/components/analysis/research-states.tsx", "UnavailablePanel", { young: blorb });
   cases.push(check("the panel shows 'Too new to compare with its own past' and the plain message", /Too new to compare with its own past/.test(panel) && /BLORB has only 4 days of price history/.test(panel), panel.slice(0, 240)));
