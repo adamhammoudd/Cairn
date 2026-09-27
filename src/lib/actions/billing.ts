@@ -11,6 +11,10 @@ import {
   computeChatUsageSummary,
   startOfCurrentMonthIso,
   startOfTodayIso,
+  betaPremiumUntil,
+  resolvePlan,
+  formatBetaUntil,
+  BETA_CHAT_DAILY_CAP,
   type UsageSummary,
   type ChatUsageSummary,
 } from "@/lib/billing";
@@ -21,13 +25,28 @@ import { isAdminUser } from "@/lib/admin-role";
 // (CLAUDE.md: "Every premium/billing feature must route through the shared
 // getUserPlan() gate"). Previously named getTier() with zero call sites -
 // renamed so it's actually the thing every gate below calls.
+//
+// BETA_PREMIUM_UNTIL (see lib/billing.ts resolvePlan) is applied here and only
+// here, so every gate that already calls getUserPlan() picks it up.
 export async function getUserPlan(): Promise<SubscriptionTier> {
   const user = await getAuthUser();
   if (!user) return "free";
 
+  const beta = betaPremiumUntil();
+  if (beta) return resolvePlan(null, true, beta);
+
   const supabase = await createClient();
   const { data } = await supabase.from("subscriptions").select("tier").eq("user_id", user.id).maybeSingle();
-  return data?.tier ?? "free";
+  return resolvePlan(data?.tier, true, null);
+}
+
+/**
+ * The beta end date as display text ("31 December 2026"), or null when beta
+ * access is off. For the Billing note and the assistant sidebar.
+ */
+export async function getBetaAccessLabel(): Promise<string | null> {
+  const beta = betaPremiumUntil();
+  return beta ? formatBetaUntil(beta) : null;
 }
 
 export async function getBillingSummary(): Promise<UsageSummary> {
@@ -178,6 +197,8 @@ export interface BillingDetail {
   billingEnabled: boolean;
   /** True once this user has a Stripe customer - gates the "Manage billing" link. */
   hasStripeCustomer: boolean;
+  /** "31 December 2026" while BETA_PREMIUM_UNTIL grants Premium, else null. */
+  betaUntil: string | null;
 }
 
 /**
@@ -201,6 +222,7 @@ export async function getBillingDetail(): Promise<BillingDetail> {
       history: [],
       billingEnabled: billingEnabled(),
       hasStripeCustomer: false,
+      betaUntil: null,
     };
   }
 
@@ -234,7 +256,9 @@ export async function getBillingDetail(): Promise<BillingDetail> {
       .limit(20),
   ]);
 
-  const tier = subscription?.tier ?? "free";
+  // Same rule as getUserPlan(), applied to the row already fetched above.
+  const beta = betaPremiumUntil();
+  const tier = resolvePlan(subscription?.tier, true, beta);
 
   return {
     usage: computeUsageSummary(tier, aiCount ?? 0, admin),
@@ -251,6 +275,7 @@ export async function getBillingDetail(): Promise<BillingDetail> {
       createdAt: e.created_at,
     })),
     billingEnabled: billingEnabled(),
+    betaUntil: beta ? formatBetaUntil(beta) : null,
   };
 }
 
@@ -280,6 +305,15 @@ export async function checkChatUsageAllowed(userId: string): Promise<UsageGate> 
   ]);
 
   if (admin) return { allowed: true };
+
+  // Beta: everyone is on Premium (unlimited chat), so this abuse ceiling is
+  // the only thing between one account and the model bill.
+  if (betaPremiumUntil() && (count ?? 0) >= BETA_CHAT_DAILY_CAP) {
+    return {
+      allowed: false,
+      message: `You've sent ${BETA_CHAT_DAILY_CAP} messages today, the most the beta allows in one day. It resets tomorrow.`,
+    };
+  }
 
   const summary = computeChatUsageSummary(tier, count ?? 0);
   if (summary.limit !== null && (summary.remaining ?? 0) <= 0) {

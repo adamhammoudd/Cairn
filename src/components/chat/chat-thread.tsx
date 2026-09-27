@@ -20,6 +20,7 @@ import { MethodologyCard } from "@/components/analysis/methodology-card";
 import Link from "next/link";
 import { Disclosure } from "@/components/compliance/disclosure";
 import { ChatMessage } from "@/components/chat/chat-message";
+import { BetaNote } from "@/components/billing/beta-note";
 
 const MESSAGES_PAGE_SIZE = 30;
 
@@ -130,8 +131,11 @@ export function ChatThread({
   compact = false,
   briefing,
   expandMethodology = true,
+  betaUntil = null,
 }: {
   compact?: boolean;
+  /** "31 December 2026" while beta Premium access is on (getBetaAccessLabel), else null. */
+  betaUntil?: string | null;
   briefing?: ReactNode;
   /** Settings > AI Assistant default for expanding the methodology card. */
   expandMethodology?: boolean;
@@ -600,6 +604,11 @@ export function ChatThread({
               ))
             )}
           </div>
+          {betaUntil && (
+            <div className="border-t border-line px-3 py-3">
+              <BetaNote until={betaUntil} compact />
+            </div>
+          )}
         </aside>
 
         <div className="flex min-w-0 flex-col gap-4">

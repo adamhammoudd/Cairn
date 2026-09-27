@@ -71,6 +71,7 @@ import { runAnalysisSourcesSuite } from "./analysis-sources";
 import { runCoverageSweepLogicSuite } from "./coverage-sweep-logic";
 import { runMobileHoldingsSuite } from "./mobile-holdings";
 import { runAnalysisTitlesSuite } from "./analysis-titles";
+import { runBetaAccessSuite } from "./beta-access";
 
 // A suite that throws (missing credentials, unreachable service) must surface
 // as a hard failure of that suite, not take the whole run down with a stack
@@ -195,6 +196,7 @@ async function main() {
     runRegenerateAnalysesSuite(),
     runEventTypeConstraintSuite(),
     runMobileHoldingsSuite(),
+    runBetaAccessSuite(),
     runExposureSuite(),
     runDailyBriefingSuite(),
     runAssetClassIdentitySuite(),
