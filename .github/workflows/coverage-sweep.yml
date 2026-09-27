@@ -1,0 +1,58 @@
+# Coverage sweep: a REPORT, never a gate (scripts/coverage-sweep.ts).
+#
+# Runs the full analysis-generation pipeline on a seeded sample of searchable
+# tickers (60 US shares, 15 ETFs, 40 coins) against production data,
+# read-only (every write is kept in memory by scripts/harness), with the model
+# mocked. It needs the network (Yahoo, SEC, CoinGecko) and production
+# credentials, so it cannot gate a merge: the job is continue-on-error and
+# the report is posted as the job summary and an artifact.
+#
+# Secrets (repository settings -> Secrets and variables -> Actions), added by
+# Adam - without them the job says so and stops:
+#   SWEEP_SUPABASE_URL
+#   SWEEP_SUPABASE_SERVICE_ROLE_KEY
+# The harness never sends a write, but the key itself can write: see the open
+# decision in the PR before adding it.
+name: Coverage sweep (report)
+
+on:
+  workflow_dispatch:
+    inputs:
+      seed:
+        description: "Sample seed"
+        default: "20260927"
+  schedule:
+    - cron: "0 7 * * 1" # Mondays 07:00 UTC
+
+jobs:
+  sweep:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    timeout-minutes: 90
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SWEEP_SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SWEEP_SUPABASE_SERVICE_ROLE_KEY }}
+    steps:
+      - name: Needs production read credentials
+        if: env.SUPABASE_SERVICE_ROLE_KEY == ''
+        run: echo "::notice::SWEEP_SUPABASE_URL / SWEEP_SUPABASE_SERVICE_ROLE_KEY are not set; the coverage sweep did not run."
+      - uses: actions/checkout@v4
+        if: env.SUPABASE_SERVICE_ROLE_KEY != ''
+      - uses: actions/setup-node@v4
+        if: env.SUPABASE_SERVICE_ROLE_KEY != ''
+        with:
+          node-version: 24
+          cache: npm
+      - if: env.SUPABASE_SERVICE_ROLE_KEY != ''
+        run: npm ci
+      - name: Sweep
+        if: env.SUPABASE_SERVICE_ROLE_KEY != ''
+        run: npx tsx --conditions=react-server --tsconfig scripts/harness/tsconfig.readonly.json scripts/coverage-sweep.ts --label ci --seed "${{ github.event.inputs.seed || '20260927' }}"
+      - name: Report
+        if: always() && env.SUPABASE_SERVICE_ROLE_KEY != ''
+        run: cat docs/audits/coverage-sweep-ci.md >> "$GITHUB_STEP_SUMMARY" || true
+      - uses: actions/upload-artifact@v4
+        if: always() && env.SUPABASE_SERVICE_ROLE_KEY != ''
+        with:
+          name: coverage-sweep
+          path: docs/audits/coverage-sweep-ci.*

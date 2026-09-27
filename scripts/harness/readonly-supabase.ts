@@ -252,7 +252,22 @@ export function readOnly(real: SupabaseClient<Database>): SupabaseClient<Databas
           select: (...args: unknown[]) => chain((calls) => runRead(real, table, calls), [{ m: "select", args }]),
           insert: (values: unknown, opts?: Record<string, unknown>) => chain(async (calls) => applyWrite(table, "insert", values, opts, calls)),
           upsert: (values: unknown, opts?: Record<string, unknown>) => chain(async (calls) => applyWrite(table, "upsert", values, opts, calls)),
-          update: (values: unknown) => chain(async (calls) => applyWrite(table, "update", values, undefined, calls)),
+          update: (values: unknown) =>
+            chain(async (calls) => {
+              // An update to a row that only exists in production: copy the
+              // real row into the overlay first, so later reads see the change
+              // (e.g. symbol_directory.last_checked_at, which is what stops a
+              // benchmark being re-fetched for every symbol).
+              const o = overlayFor(table);
+              if (!o.rows.some((r) => matches(r, calls))) {
+                let q: any = real.from(table as never).select("*");
+                for (const c of calls) if (FILTERS.has(c.m)) q = q[c.m](...c.args);
+                const { data } = await q.limit(1000);
+                for (const r of (data ?? []) as Row[]) o.rows.push({ ...r });
+                if (!o.keys && table === "symbol_directory") o.keys = ["symbol"];
+              }
+              return applyWrite(table, "update", values, undefined, calls);
+            }),
           delete: () => chain(async (calls) => applyWrite(table, "delete", null, undefined, calls)),
         });
       }
@@ -281,8 +296,9 @@ export function readOnlyClient(): SupabaseClient<Database> {
 }
 
 /** Forget every swallowed write (between symbols in a sweep, so each starts from production as it is). */
-export function resetOverlay(): void {
-  overlay.clear();
+export function resetOverlay(keepSymbols: string[] = []): void {
+  if (keepSymbols.length === 0) overlay.clear();
+  else for (const o of overlay.values()) o.rows = o.rows.filter((r) => keepSymbols.includes(String(r.symbol)));
   interceptedWrites.length = 0;
 }
 
