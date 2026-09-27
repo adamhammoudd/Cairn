@@ -648,10 +648,15 @@ export async function generateAnalysisText(
     return { text: toStored(draft, i), source: "model", attempts, model };
   }
 
-  const template = templateAnalysisText(i);
   // Defense in depth: the template must pass the checks it stands in for.
-  // If it ever does not, nothing is stored rather than unchecked text.
-  const tc = checkAnalysisText(template, i, { minWatch: 0 });
-  if (!tc.passed) throw new Error(`Analysis template for ${i.symbol} failed its own checks (${tc.reason}: ${tc.evidence ?? ""}).`);
-  return { text: toStored(template, i), source: "template", attempts, model };
+  // If it ever does not, nothing is stored rather than unchecked text. A name
+  // the checks cannot read (SEC's "Lifecore Biomedical, INC. DE" split the
+  // headline into two sentences) gets one retry under the bare ticker.
+  for (const inputs of i.name === i.symbol ? [i] : [i, { ...i, name: i.symbol }]) {
+    const template = templateAnalysisText(inputs);
+    const tc = checkAnalysisText(template, inputs, { minWatch: 0 });
+    if (tc.passed) return { text: toStored(template, inputs), source: "template", attempts, model };
+    if (inputs.name === i.symbol) throw new Error(`Analysis template for ${i.symbol} failed its own checks (${tc.reason}: ${tc.evidence ?? ""}).`);
+  }
+  throw new Error(`Analysis template for ${i.symbol} failed its own checks.`);
 }

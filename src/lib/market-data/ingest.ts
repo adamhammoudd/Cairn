@@ -122,7 +122,9 @@ export function reserveProviderCall(): boolean {
 // ------------------------------------------------------------ symbol shaping
 // Index tickers lead with a caret (^GSPC), so the first character cannot be
 // restricted to alphanumerics or the Indices asset class is unreachable.
-const SYMBOL_RE = /^[A-Z0-9^][A-Z0-9.\-^=]{0,14}$/;
+// "_" too: CoinGecko-sourced coins in the directory use it (FIGR_HELOC), and
+// rejecting it refused an available coin with stored history as "not a valid symbol".
+const SYMBOL_RE = /^[A-Z0-9^][A-Z0-9._\-^=]{0,14}$/;
 
 export function normalizeSymbol(raw: string): string | null {
   const symbol = raw.trim().toUpperCase();

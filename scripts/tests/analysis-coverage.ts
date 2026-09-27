@@ -20,8 +20,9 @@ import { pathToFileURL } from "node:url";
 import { computeFactorSet, FACTOR_FORWARD_SESSIONS, MIN_FACTOR_ANALOG_SAMPLE, type FactorBar } from "@/lib/ai/factors";
 import { earningsWindows } from "@/lib/ai/similar-moments";
 import { similarMoments, type ConditionData } from "@/lib/ai/similar-moments-data";
-import { checkAnalysisText, historyWords, templateAnalysisText, type TextInputs } from "@/lib/ai/analysis-text";
-import { directionColumns, textInputsFor } from "@/lib/ai/ticker-analysis";
+import { checkAnalysisText, generateAnalysisText, historyWords, templateAnalysisText, type TextInputs } from "@/lib/ai/analysis-text";
+import { normalizeSymbol } from "@/lib/market-data/ingest";
+import { directionColumns, plainName, textInputsFor } from "@/lib/ai/ticker-analysis";
 import { displayHistory } from "@/lib/analysis-display";
 import { findDataGaps } from "@/lib/analysis-gaps";
 import { computeProbabilityBand } from "@/lib/ai/analytics";
@@ -179,6 +180,18 @@ export async function runAnalysisCoverageSuite(): Promise<SuiteResult> {
   cases.push(check("secHistoryRows: quarters, years and releases keyed for their upserts", built.quarters[0].fiscal_quarter === 1 && built.annual[0].fiscal_year === 2023 && built.releases[0].release_date === "2024-01-30" && built.releases[0].symbol === "AMD", JSON.stringify(built).slice(0, 200)));
   const shares = latestSharesOutstanding({ cik: 1, facts: { "us-gaap": { CommonStockSharesOutstanding: { units: { shares: [{ end: "2023-12-30", val: 1, accn: "a", form: "10-K", filed: "x" }, { end: "2024-06-29", val: 2, accn: "b", form: "10-Q", filed: "y" }] } } } } } as CompanyFacts);
   cases.push(check("shares outstanding: the newest reported figure", shares?.val === 2 && shares.end === "2024-06-29", JSON.stringify(shares)));
+
+  // --- 6b. Names and symbols the sweep tripped on (2026-09-27).
+  cases.push(check('SEC state suffix dropped: "Lifecore Biomedical, INC. DE" -> "Lifecore Biomedical"', plainName("Lifecore Biomedical, INC. DE", "LFCR", "equity") === "Lifecore Biomedical", plainName("Lifecore Biomedical, INC. DE", "LFCR", "equity")));
+  cases.push(check('SEC country suffix dropped: "Bank OF Montreal /CAN/" -> "Bank OF Montreal"', plainName("Bank OF Montreal /CAN/", "TAWN", "equity") === "Bank OF Montreal", plainName("Bank OF Montreal /CAN/", "TAWN", "equity")));
+  cases.push(check("a name with a real two-letter word is untouched", plainName("Bank of America Corp", "BAC", "equity") === "Bank of America", plainName("Bank of America Corp", "BAC", "equity")));
+  cases.push(check("an underscore symbol from the coin directory is valid (FIGR_HELOC)", normalizeSymbol("figr_heloc") === "FIGR_HELOC", String(normalizeSymbol("figr_heloc"))));
+  {
+    const band0 = computeProbabilityBand(far.cases.map((c, i) => ({ id: String(i), event_type: "price_window", event_date: c.date, price_before: c.priceBefore, price_after: c.priceAfter })));
+    const bad = textInputsFor({ name: "Odd Name, INC. X.Y. Z", symbol: "ODD", assetType: "equity", factorAnalysis: null, sm: far, scorecard: card, calendar: [], news: [], band: band0 });
+    const g = await generateAnalysisText(bad, { complete: async () => null, classify: async () => ({ status: "ok" }) as never });
+    cases.push(check("a name the checks cannot read: the template retries under the ticker instead of failing the analysis", g.source === "template" && g.text.headline.startsWith("ODD"), g.text.headline));
+  }
 
   // --- 7. Wiring (source).
   const read = (p: string) => fs.readFileSync(path.resolve(p), "utf8");
