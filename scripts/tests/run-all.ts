@@ -68,6 +68,7 @@ import { runHistoryDepthSuite } from "./history-depth";
 import { runAnalysisFailureReasonsSuite } from "./analysis-failure-reasons";
 import { runAnalysisCoverageSuite } from "./analysis-coverage";
 import { runAnalysisSourcesSuite } from "./analysis-sources";
+import { runCoverageSweepLogicSuite } from "./coverage-sweep-logic";
 
 // A suite that throws (missing credentials, unreachable service) must surface
 // as a hard failure of that suite, not take the whole run down with a stack
@@ -131,6 +132,7 @@ async function main() {
     analysisFailureReasonsSuites,
     analysisCoverageSuites,
     analysisSourcesSuites,
+    coverageSweepLogicSuites,
   ] = await Promise.all([
     guarded("Adversarial scope guard", runAdversarialScopeGuardSuites),
     guarded("Methodology substance", async () => [await runMethodologySubstanceSuite()]),
@@ -168,6 +170,7 @@ async function main() {
     guarded("Analysis failure reasons", async () => [await runAnalysisFailureReasonsSuite()]),
     guarded("Analysis coverage", async () => [await runAnalysisCoverageSuite()]),
     guarded("Analysis sources", async () => [await runAnalysisSourcesSuite()]),
+    guarded("Coverage sweep logic", () => [runCoverageSweepLogicSuite()]),
   ]);
 
   const allSuites = [
@@ -227,6 +230,7 @@ async function main() {
     ...analysisFailureReasonsSuites,
     ...analysisCoverageSuites,
     ...analysisSourcesSuites,
+    ...coverageSweepLogicSuites,
   ];
   const reportPath = writeReport(allSuites);
 
