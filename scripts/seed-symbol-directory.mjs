@@ -4,7 +4,8 @@
 //
 // Run:  node scripts/seed-symbol-directory.mjs
 //       node scripts/seed-symbol-directory.mjs --dry-run
-//       node scripts/seed-symbol-directory.mjs --only=sec
+//       node scripts/seed-symbol-directory.mjs --only=sec     (companies + funds)
+//       node scripts/seed-symbol-directory.mjs --only=funds
 //
 // Requires migration 0044 (adds the 'listed' status) to be applied first.
 //
@@ -53,6 +54,7 @@ const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const SEC_CONTACT = process.env.SEC_CONTACT_EMAIL;
 
 const SEC_URL = "https://www.sec.gov/files/company_tickers.json";
+const SEC_FUNDS_URL = "https://www.sec.gov/files/company_tickers_mf.json";
 const COINGECKO_URL = "https://api.coingecko.com/api/v3/coins/list";
 
 // Chunked so one failure does not lose the whole run, and so a 27k-row upsert
@@ -115,6 +117,35 @@ async function fetchSecEquities() {
       provider: "sec_company_tickers",
       bars: 0,
     });
+  }
+  return rows;
+}
+
+// SEC's company_tickers.json has operating companies and a few trusts (SPY,
+// GLD, DIA) but no registered funds, so without this list every ETF ticker a
+// coin also used went to the coin: QQQ was "Invesco QQQ - Robinhood Token"
+// and opened as crypto with no data (fixed in migration 0060). This is SEC's
+// list of every fund share class - ETFs and mutual funds. It carries no
+// names; the provider writes the fund's name on first ingest.
+async function fetchSecFunds() {
+  if (!SEC_CONTACT) die("SEC_CONTACT_EMAIL is not set (SEC requires a contact address in the User-Agent).");
+  const res = await fetch(SEC_FUNDS_URL, {
+    headers: { "User-Agent": `Cairn/1.0 ${SEC_CONTACT}`, "Accept-Encoding": "gzip, deflate" },
+  });
+  if (!res.ok) throw new Error(`SEC funds: HTTP ${res.status}`);
+
+  // Shape: { fields: ["cik", "seriesId", "classId", "symbol"], data: [[...], ...] }
+  const json = await res.json();
+  const at = (json?.fields ?? []).indexOf("symbol");
+  if (at < 0) throw new Error("SEC funds: no symbol field");
+  const rows = [];
+  const seen = new Set();
+
+  for (const entry of json.data ?? []) {
+    const symbol = usableSymbol(entry?.[at]);
+    if (!symbol || seen.has(symbol)) continue;
+    seen.add(symbol);
+    rows.push({ symbol, asset_type: "etf", name: null, status: "listed", provider: "sec_company_tickers_mf", bars: 0 });
   }
   return rows;
 }
@@ -222,6 +253,14 @@ async function main() {
     const rows = await fetchSecEquities();
     console.log(`  SEC: ${rows.length} usable tickers`);
     const { inserted } = await seed(db, rows, "SEC equities");
+    total += inserted;
+  }
+  // Order is precedence: seed() never overwrites a symbol already present, so
+  // a listed company, then a fund, keeps its ticker ahead of a coin using it.
+  if (!ONLY || ONLY === "sec" || ONLY === "funds") {
+    const rows = await fetchSecFunds();
+    console.log(`  SEC funds: ${rows.length} usable tickers`);
+    const { inserted } = await seed(db, rows, "SEC funds");
     total += inserted;
   }
   if (!ONLY || ONLY === "coingecko") {
