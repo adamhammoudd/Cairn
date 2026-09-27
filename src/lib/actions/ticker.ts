@@ -149,6 +149,8 @@ export async function loadTicker(symbolRaw: string): Promise<TickerData | Ticker
         .select("id, title, source_name, url, published_at")
         .contains("tickers", [symbol])
         .order("published_at", { ascending: false })
+        // Tie-break so the ticker news list's "Load more" cursor is exact.
+        .order("id", { ascending: false })
         .limit(15),
       supabase
         .from("calendar_events")

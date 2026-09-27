@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
-import { decodeEntities, type NewsFeedItem, type NewsRelevance } from "@/lib/news";
+import { decodeEntities, type NewsFeedItem, type NewsFilter, type NewsPage, type NewsRelevance } from "@/lib/news";
+import { getNewsCounts, getNewsPage } from "@/lib/actions/news";
 
 const RELEVANCE_LABEL: Record<NewsRelevance, string> = {
   holding: "In your portfolio",
@@ -27,7 +28,7 @@ const RELEVANCE_BADGE: Record<NewsRelevance, string> = {
 };
 
 const FILTERS: { id: "all" | NewsRelevance; label: string }[] = [
-  { id: "all", label: "Everything" },
+  { id: "all", label: "All" },
   { id: "holding", label: "Your holdings" },
   { id: "sector", label: "Your sectors" },
   { id: "general", label: "Macro" },
@@ -44,24 +45,76 @@ function relativeTime(iso: string) {
   return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
-export function NewsPanel({ items }: { items: NewsFeedItem[] }) {
-  const [filter, setFilter] = useState<"all" | NewsRelevance>("all");
-  const [query, setQuery] = useState("");
+/** Debounce for the search box: one request per pause in typing, not per key. */
+const SEARCH_DEBOUNCE_MS = 300;
 
-  const tierVisible = filter === "all" ? items : items.filter((item) => item.relevance === filter);
-  const q = query.trim().toLowerCase();
-  const visible = q
-    ? tierVisible.filter((item) =>
-        (decodeEntities(item.title) + " " + item.tickers.join(" ")).toLowerCase().includes(q),
-      )
-    : tierVisible;
+export function NewsPanel({
+  initialPage,
+  initialCounts,
+  initialQuery = "",
+}: {
+  initialPage: NewsPage;
+  initialCounts: Record<NewsFilter, number>;
+  initialQuery?: string;
+}) {
+  const [filter, setFilter] = useState<NewsFilter>("all");
+  const [query, setQuery] = useState(initialQuery);
+  const [items, setItems] = useState<NewsFeedItem[]>(initialPage.items);
+  const [nextCursor, setNextCursor] = useState(initialPage.nextCursor);
+  const [counts, setCounts] = useState(initialCounts);
+  const [error, setError] = useState<string | null>(null);
+  const [loadingMore, startLoadMore] = useTransition();
+  const [reloading, startReload] = useTransition();
+  // Filters and search run in the database now (the whole archive, not the
+  // newest 60), so a change reloads page one. A request that lands after a
+  // newer one is dropped, so a slow response can't overwrite a newer filter.
+  const requestSeq = useRef(0);
+  const firstRender = useRef(true);
+
+  useEffect(() => {
+    if (firstRender.current) {
+      firstRender.current = false;
+      return;
+    }
+    const seq = ++requestSeq.current;
+    const timer = setTimeout(() => {
+      startReload(async () => {
+        try {
+          const [page, nextCounts] = await Promise.all([getNewsPage({ filter, search: query }), getNewsCounts(query)]);
+          if (seq !== requestSeq.current) return;
+          setItems(page.items);
+          setNextCursor(page.nextCursor);
+          setCounts(nextCounts);
+          setError(null);
+        } catch {
+          if (seq === requestSeq.current) setError("News could not be loaded. Try again in a moment.");
+        }
+      });
+    }, SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(timer);
+  }, [filter, query]);
+
+  function loadMore() {
+    if (!nextCursor) return;
+    const seq = requestSeq.current;
+    startLoadMore(async () => {
+      try {
+        const page = await getNewsPage({ filter, search: query, cursor: nextCursor });
+        if (seq !== requestSeq.current) return;
+        // Each page arrives ranked on its own; appending keeps earlier pages
+        // exactly where the reader left them.
+        setItems((prev) => [...prev, ...page.items]);
+        setNextCursor(page.nextCursor);
+        setError(null);
+      } catch {
+        setError("More news could not be loaded. Try again in a moment.");
+      }
+    });
+  }
+
+  const visible = items;
+  const q = query.trim();
   const filterLabel = filter === "all" ? "your feed" : (FILTERS.find((f) => f.id === filter)?.label ?? "").toLowerCase();
-
-  // Counts per tier, for the filter chips and the coverage mix. Derived from
-  // the whole feed, not the filtered view - a chip that only counted what is
-  // already on screen would always read as the number you can see.
-  const counts: Record<NewsRelevance, number> = { holding: 0, sector: 0, general: 0 };
-  for (const item of items) counts[item.relevance] += 1;
   const maxCount = Math.max(counts.holding, counts.sector, counts.general, 1);
   const lead = visible[0];
 
@@ -80,7 +133,7 @@ export function NewsPanel({ items }: { items: NewsFeedItem[] }) {
         </div>
         <span className="flex items-center gap-[7px] rounded-[9px] border border-line px-3 py-2 text-[12.5px] text-muted">
           <span aria-hidden className="animate-breathe h-1.5 w-1.5 rounded-full bg-accent" />
-          {items.length} {items.length === 1 ? "item" : "items"}
+          {counts.all.toLocaleString("en-US")} {counts.all === 1 ? "story" : "stories"}
         </span>
       </div>
 
@@ -143,7 +196,7 @@ export function NewsPanel({ items }: { items: NewsFeedItem[] }) {
             </div>
 
             <div className="flex min-w-0 flex-[1_1_250px] flex-col gap-2.5">
-              <div className="font-mono text-eyebrow tracking-[0.16em] text-dim uppercase">Coverage mix today</div>
+              <div className="font-mono text-eyebrow tracking-[0.16em] text-dim uppercase">Stories by relevance</div>
               {(["holding", "sector", "general"] as NewsRelevance[]).map((tier, i) => (
                 <div key={tier} className="grid grid-cols-[92px_minmax(0,1fr)_34px] items-center gap-2.5 text-caption">
                   <span className="text-muted">{RELEVANCE_LABEL[tier]}</span>
@@ -156,7 +209,7 @@ export function NewsPanel({ items }: { items: NewsFeedItem[] }) {
                       }}
                     />
                   </span>
-                  <span className="text-right font-mono text-muted tabular-nums">{counts[tier]}</span>
+                  <span className="text-right font-mono text-muted tabular-nums">{counts[tier].toLocaleString("en-US")}</span>
                 </div>
               ))}
             </div>
@@ -168,7 +221,7 @@ export function NewsPanel({ items }: { items: NewsFeedItem[] }) {
         <div className="flex w-fit flex-wrap gap-[3px] rounded-[11px] border border-[#232323] bg-[#0c0c0c] p-[3px]">
           {FILTERS.map((f) => {
             const active = f.id === filter;
-            const tierCount = f.id === "all" ? items.length : counts[f.id];
+            const tierCount = counts[f.id];
             return (
               <button
                 key={f.id}
@@ -184,7 +237,7 @@ export function NewsPanel({ items }: { items: NewsFeedItem[] }) {
                     active ? "bg-accent/15 text-accent-light" : "bg-[#161616] text-dim"
                   }`}
                 >
-                  {tierCount}
+                  {tierCount.toLocaleString("en-US")}
                 </span>
               </button>
             );
@@ -197,14 +250,14 @@ export function NewsPanel({ items }: { items: NewsFeedItem[] }) {
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            aria-label="Filter headlines"
-            placeholder="Filter headlines"
+            aria-label="Search news by ticker or keyword"
+            placeholder="Search by ticker or keyword"
             className="min-w-0 flex-1 bg-transparent text-[12.5px] text-primary outline-none placeholder:text-dim"
           />
         </label>
       </div>
 
-      <div className="flex flex-col gap-2.5">
+      <div className={`flex flex-col gap-2.5 transition-opacity duration-base ease-standard ${reloading ? "opacity-60" : ""}`} aria-busy={reloading}>
         {visible.map((item, index) => (
           <article
             key={item.id}
@@ -258,7 +311,26 @@ export function NewsPanel({ items }: { items: NewsFeedItem[] }) {
           </article>
         ))}
 
-        {visible.length === 0 && (
+        {nextCursor && visible.length > 0 && (
+          <button
+            type="button"
+            onClick={loadMore}
+            disabled={loadingMore || reloading}
+            className="mx-auto mt-2 rounded-control border border-line px-4 py-2 text-body text-primary transition-colors duration-fast ease-standard hover:border-accent disabled:opacity-60 pointer-coarse:min-h-11"
+          >
+            {loadingMore ? "Loading…" : "Load more"}
+          </button>
+        )}
+        {!nextCursor && visible.length > 0 && (
+          <p className="mt-2 text-center text-caption text-dim">That&apos;s everything in this view.</p>
+        )}
+        {error && (
+          <p role="alert" className="text-center text-body text-warning">
+            {error}
+          </p>
+        )}
+
+        {visible.length === 0 && !reloading && (
           <div className="rounded-card border border-dashed border-line px-6 py-16 text-center">
             <div className="mb-4.5 flex h-10.5 items-end justify-center gap-1">
               <span className="h-2 w-8.5 rounded-full bg-active" />
