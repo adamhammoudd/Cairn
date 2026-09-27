@@ -2,7 +2,7 @@
 
 import type { AnalysisWithMethodology } from "@/lib/actions/analysis";
 import { MarkdownMessage } from "@/components/chat/markdown-message";
-import { AnswerTiles, CheckedLine, FactsNote, FollowUps } from "@/components/chat/answer-extras";
+import { AnswerTiles, CheckedLine, FactsNote, FollowUps, SourcesDisclosure, splitSources } from "@/components/chat/answer-extras";
 import type { AssistantMeta } from "@/lib/ai/assistant/types";
 
 // Just the bubble, per the `messages` sc-for in the AI Assistant artboard
@@ -49,7 +49,8 @@ function splitLead(content: string): [string, string] {
 export function ChatMessage({ message, streaming, onFollowUp }: ChatMessageProps) {
   const isUser = message.role === "user";
   const meta = !isUser && !message.failed ? (message.meta ?? null) : null;
-  const [lead, rest] = meta ? splitLead(message.content) : [message.content, ""];
+  const [body, sources] = !isUser && !message.failed ? splitSources(message.content) : [message.content, ""];
+  const [lead, rest] = meta ? splitLead(body) : [body, ""];
 
   return (
     <div className={`animate-rise-in flex gap-3 ${isUser ? "justify-end" : "justify-start"}`}>
@@ -100,10 +101,14 @@ export function ChatMessage({ message, streaming, onFollowUp }: ChatMessageProps
             <AnswerTiles tiles={meta.tiles} />
             {rest && <MarkdownMessage content={rest} />}
             <FactsNote meta={meta} />
+            <SourcesDisclosure sources={sources} />
             {!streaming && <FollowUps items={meta.followUps} onPick={onFollowUp} />}
           </>
         ) : (
-          <MarkdownMessage content={message.content} />
+          <>
+            <MarkdownMessage content={body} />
+            <SourcesDisclosure sources={sources} />
+          </>
         )}
         {streaming && (
           <span className="ml-1 inline-block h-[15px] w-[7px] translate-y-[2px] animate-blink bg-accent align-middle" />

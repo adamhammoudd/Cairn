@@ -1,5 +1,6 @@
 "use client";
 
+import { MarkdownMessage } from "@/components/chat/markdown-message";
 import type { AnswerTile, AssistantMeta } from "@/lib/ai/assistant/types";
 
 // The pieces of an assistant v2 answer around its text (feat/assistant-v2):
@@ -59,6 +60,39 @@ export function FollowUps({ items, onPick, disabled }: { items: string[]; onPick
         </button>
       ))}
     </div>
+  );
+}
+
+const SOURCES_HEADING = /(?:^|\n)### Sources\n/g;
+
+/**
+ * Splits the trailing "### Sources" section (agent.ts renderMarkdown) off an
+ * answer, so the list can sit behind a disclosure instead of trailing every turn.
+ */
+export function splitSources(content: string): [string, string] {
+  const matches = [...content.matchAll(SOURCES_HEADING)];
+  const last = matches.at(-1);
+  if (!last || last.index === undefined) return [content, ""];
+  return [content.slice(0, last.index).trimEnd(), content.slice(last.index + last[0].length).trim()];
+}
+
+/** The numbered source list, collapsed by default. The count stays visible so a reader knows the answer is sourced. */
+export function SourcesDisclosure({ sources }: { sources: string }) {
+  if (!sources) return null;
+  const count = sources.split("\n").filter((l) => /^\d+\./.test(l)).length;
+  return (
+    <details className="group mt-3.5 border-t border-line pt-3">
+      <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 font-mono text-micro text-muted transition-colors duration-fast ease-standard hover:text-primary [&::-webkit-details-marker]:hidden pointer-coarse:min-h-11">
+        <span aria-hidden className="inline-block transition-transform duration-fast group-open:rotate-90">
+          ›
+        </span>
+        <span className="group-open:hidden">See all sources{count > 0 ? ` (${count})` : ""}</span>
+        <span className="hidden group-open:inline">Hide sources</span>
+      </summary>
+      <div className="mt-2 text-caption">
+        <MarkdownMessage content={sources} />
+      </div>
+    </details>
   );
 }
 
