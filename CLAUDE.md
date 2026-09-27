@@ -8,9 +8,11 @@ trade execution - informational only. Freemium: limited daily AI chat + basic an
 on Free, unlimited chat + full methodology depth on Premium (Stripe-billed).
 
 ## Non-negotiable guardrails
-- The AI engine analyzes markets, sectors, and tickers - it NEVER analyzes or advises on a
-  specific user's personal position, and never resolves to "you should buy/hold/sell."
-  This is enforced by a server-side scope-guard validator, not just prompt instructions.
+- The AI engine analyzes markets, sectors, and tickers. The AI may show code-computed,
+  factual information about a user's own holdings (values, weights, changes, dates,
+  scorecards). It never advises on or evaluates a user's position, and never resolves to
+  "you should buy/hold/sell." This is enforced by a server-side scope-guard validator, not
+  just prompt instructions.
 - Every probability or analytical output must show its sources, historical analogs, and
   confidence level - never a bare score.
 - Every premium/billing feature must route through the shared `getUserPlan()` gate.

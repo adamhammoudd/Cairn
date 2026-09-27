@@ -595,3 +595,102 @@ function tryParseJson(raw: string): unknown {
   }
   return null;
 }
+
+// --------------------------------------------------------------------------
+// Tool-calling chat (feat/assistant-v2).
+//
+// The assistant runs an agent loop: the model asks for server-side tools, the
+// tools run, their results go back, and the model answers. That needs the
+// raw OpenAI-compatible message shapes (assistant tool_calls, role "tool"),
+// token usage for the per-message cost log, and which endpoint served it -
+// none of which llmComplete() exposes. Same endpoints, same retry/backoff and
+// the same busy/fallback rules as everything above.
+// --------------------------------------------------------------------------
+
+export type ChatRole = "system" | "user" | "assistant" | "tool";
+
+export interface ToolCall {
+  id: string;
+  type: "function";
+  function: { name: string; arguments: string };
+}
+
+export interface ChatMessage {
+  role: ChatRole;
+  content: string | null;
+  tool_calls?: ToolCall[];
+  tool_call_id?: string;
+  name?: string;
+}
+
+export interface ChatRequest {
+  messages: ChatMessage[];
+  /** OpenAI-style function tools, or a built-in tool such as { type: "browser_search" }. */
+  tools?: Record<string, unknown>[];
+  toolChoice?: "auto" | "none" | "required";
+  jsonSchema?: Record<string, unknown>;
+  schemaName?: string;
+  maxTokens?: number;
+  temperature?: number;
+}
+
+export interface ChatResponse {
+  message: ChatMessage & Record<string, unknown>;
+  finishReason: string | null;
+  usage: { promptTokens: number; completionTokens: number };
+  /** "groq:openai/gpt-oss-120b" - never a secret. */
+  model: string;
+}
+
+export async function llmChatRaw(req: ChatRequest): Promise<ChatResponse> {
+  const endpoints = configuredEndpoints();
+  if (endpoints.length === 0) throw new Error("No model provider configured: set LLM_API_KEY in .env.local and in Vercel.");
+  let firstError: unknown = null;
+  for (let i = 0; i < endpoints.length; i++) {
+    const endpoint = endpoints[i];
+    const body: Record<string, unknown> = {
+      model: endpoint.model,
+      messages: req.messages,
+      max_tokens: req.maxTokens ?? 1200,
+      temperature: req.temperature ?? 0.2,
+      reasoning_effort: process.env.LLM_REASONING_EFFORT || "low",
+      stream: false,
+    };
+    if (req.tools && req.tools.length > 0) {
+      body.tools = req.tools;
+      body.tool_choice = req.toolChoice ?? "auto";
+    }
+    if (req.jsonSchema) {
+      body.response_format = { type: "json_schema", json_schema: { name: req.schemaName ?? "output", schema: req.jsonSchema, strict: true } };
+    }
+    try {
+      let res = await postWithRetry(endpoint, body);
+      // Same degrade as completeAgainstEndpoint: a host that rejects json_schema gets plain JSON mode.
+      if (!res.ok && req.jsonSchema && (res.status === 400 || res.status === 422)) {
+        res = await postWithRetry(endpoint, { ...body, response_format: { type: "json_object" } });
+      }
+      if (!res.ok) {
+        const detail = await res.text().catch(() => "");
+        throw new Error(`Model request failed (HTTP ${res.status}) at ${endpoint.baseUrl} for model "${endpoint.model}". ${detail.slice(0, 300)}`);
+      }
+      const data = (await res.json()) as {
+        choices?: { message?: ChatMessage & Record<string, unknown>; finish_reason?: string }[];
+        usage?: { prompt_tokens?: number; completion_tokens?: number };
+        error?: { message?: string };
+      };
+      if (data.error?.message) throw new Error(`Model error: ${data.error.message}`);
+      const choice = data.choices?.[0];
+      if (!choice?.message) throw new Error(`Model "${endpoint.model}" returned no message.`);
+      return {
+        message: choice.message,
+        finishReason: choice.finish_reason ?? null,
+        usage: { promptTokens: data.usage?.prompt_tokens ?? 0, completionTokens: data.usage?.completion_tokens ?? 0 },
+        model: `${providerNameFor(endpoint.baseUrl)}:${endpoint.model}`,
+      };
+    } catch (err) {
+      if (!(err instanceof LlmBusyError)) throw err;
+      firstError ??= err;
+    }
+  }
+  throw firstError;
+}

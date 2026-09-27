@@ -32,6 +32,7 @@ export default async function AssistantPage() {
         expandMethodology={settings?.assistant_expand_methodology ?? true}
         briefing={<BriefingCard briefing={briefing} />}
         betaUntil={betaUntil}
+        usePortfolioContext={settings?.assistant_use_portfolio_context ?? true}
       />
     </div>
   );

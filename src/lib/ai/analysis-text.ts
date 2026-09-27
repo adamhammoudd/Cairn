@@ -801,3 +801,17 @@ export async function generateAnalysisText(
   }
   throw new Error(`Analysis template for ${i.symbol} failed its own checks.`);
 }
+
+// ---------------------------------------------------- shared with the assistant
+// The chat assistant (lib/ai/assistant/guards.ts) applies the same advice and
+// certainty vocabulary to its answers, so the two surfaces cannot drift.
+
+/** Advice by timing, prudence, verdict nouns or reassurance ("good time to", "a safe bet"). */
+export function hasAdvicePhrasing(text: string): boolean {
+  return ADVICE.test(text);
+}
+
+/** A prediction stated as fact ("will rise", "is set to fall", "guaranteed"). */
+export function hasCertainty(text: string): boolean {
+  return STATED_AS_FACT.test(text);
+}
