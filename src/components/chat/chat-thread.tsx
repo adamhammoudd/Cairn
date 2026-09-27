@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   createChatSession,
   deleteChatSession,
@@ -88,7 +88,6 @@ function MethodologyBlock({
 
 export function ChatThread({
   compact = false,
-  briefing,
   expandMethodology = true,
   betaUntil = null,
   usePortfolioContext = true,
@@ -98,7 +97,6 @@ export function ChatThread({
   betaUntil?: string | null;
   /** Settings > AI Assistant "Portfolio context" (the account default; a conversation may override it). */
   usePortfolioContext?: boolean;
-  briefing?: ReactNode;
   /** Settings > AI Assistant default for expanding the methodology card. */
   expandMethodology?: boolean;
 }) {
@@ -514,7 +512,7 @@ export function ChatThread({
   );
 
   // Full page: the mock's "232px 1fr" grid - a persistent history rail beside
-  // the briefing + conversation column. The compact floating panel has no room
+  // the conversation column. The compact floating panel has no room
   // for a rail, so it keeps history in a dropdown.
   if (!compact) {
     return (
@@ -587,7 +585,6 @@ export function ChatThread({
         </aside>
 
         <div className="flex min-w-0 flex-col gap-4">
-          {briefing}
           <div className="flex min-h-75 flex-col overflow-hidden rounded-2xl border border-[#232323] bg-panel">
             {conversation}
           </div>
