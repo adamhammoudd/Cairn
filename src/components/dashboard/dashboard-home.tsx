@@ -576,16 +576,9 @@ export function DashboardHome({
 
   return (
     <div className="animate-page-in">
-      {/* Edge to edge, escaping both the shell's px-5.5 and the reading column
-          below. A tape runs the width of the screen; boxing it inside the
-          content column makes it read as another card. The width is
-          `100vw - --sbw`, not `100vw`: the latter includes the scrollbar
-          gutter, which had the strip running -7 -> 1913 against a usable
-          1905 - overshooting both edges unevenly. See
-          layout/scrollbar-width-var.tsx. */}
-      <div className="relative left-1/2 -mt-6.5 mb-6.5 w-[calc(100vw-var(--sbw,0px))] -translate-x-1/2">
-        <TickerStrip items={tickerItems} />
-      </div>
+      {/* Glued under the header, edge to edge - placement and spacing live in
+          the strip itself so every page that shows it matches. */}
+      <TickerStrip items={tickerItems} />
 
       {/* Base Camp reads in a narrower column than the shell's 1560px.
           The page is one long read - a headline figure, a chart, a paragraph

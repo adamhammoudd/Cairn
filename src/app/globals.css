@@ -310,6 +310,12 @@
   }
 }
 
+/* The ticker band re-renders the currency note below itself so the note
+   cannot sit between the header and the strip. See dashboard/ticker-strip.tsx. */
+main:has(.cn-ticker-band) > .cn-currency-note {
+  display: none;
+}
+
 .animate-ticker {
   animation: cn-ticker var(--ticker-duration, 60s) linear infinite;
 }

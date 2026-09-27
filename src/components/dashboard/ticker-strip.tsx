@@ -1,4 +1,8 @@
+"use client";
+
 import Link from "next/link";
+import { useDisplayPrefs } from "@/components/display-prefs-provider";
+import { currencyNoteText } from "@/components/layout/currency-note";
 
 export interface TickerStripItem {
   symbol: string;
@@ -9,76 +13,88 @@ interface TickerStripProps {
   items: TickerStripItem[];
 }
 
+// Enough symbols per copy to overrun a 2560px window at ~100px a symbol.
+const MIN_SLOTS_PER_COPY = 28;
+// Constant speed: every slot takes the same time to cross, so a page with a
+// longer list does not scroll faster or slower than another.
+const SECONDS_PER_SLOT = 6;
+
 /**
- * The moving band of symbols under the header on Base Camp.
+ * The moving band of symbols under the header on Base Camp and Markets.
  *
  * It is decoration with a job: the page's first tier is one account's total,
  * which says nothing about whether the market moved. The strip answers that in
  * peripheral vision, without spending a card on it.
  *
- * Two rules it has to keep. The figures are the same stored daily closes every
- * other number on this page reads - a strip that scrolls implies a live tape,
- * so the page footer says plainly that it is not one. And the track renders
- * the list twice: the animation slides by 50%, so the second copy is what the
- * eye is on when the loop restarts, and there is no visible seam.
+ * The figures are the same stored daily closes every other number on the page
+ * reads - a strip that scrolls implies a live tape, so the page footer says
+ * plainly that it is not one. The track renders the list twice: the animation
+ * slides by 50%, so the second copy is what the eye is on when the loop
+ * restarts, and there is no visible seam.
  *
- * Each copy is also floored at one window's width. A four-symbol strip is
- * about 450px of content, so on a wide window the track was narrower than the
- * screen: the symbols bunched at the left, the rest of the band sat empty, and
- * the loop visibly jumped rather than sliding. The floor makes a short list
- * spread across whatever width it is given, and does nothing at all once the
- * symbols outgrow the window - which is the usual case.
+ * Spacing is fixed per symbol, not spread to fill the window. The old
+ * `justify-around` over a viewport-wide floor made the gap a function of how
+ * many symbols a page passed (12 on Markets, up to 18 on Base Camp), so the
+ * two strips looked different. A short list is instead repeated inside each
+ * copy until it outgrows any realistic window, which keeps the gap and the
+ * scroll speed identical wherever the strip appears.
+ *
+ * It also owns its placement. Each page used to break out of the shell with
+ * its own negative margin, which left a gap under the header whenever the
+ * shell's currency note rendered first. The band now cancels the shell's top
+ * padding itself, and the shell's note is hidden while the band is on the page
+ * (globals.css, `.cn-ticker-band`) and re-rendered below it, so nothing can
+ * sit between the header and the strip.
  */
 export function TickerStrip({ items }: TickerStripProps) {
+  const prefs = useDisplayPrefs();
   if (items.length === 0) return null;
 
-  // Roughly a constant scroll speed regardless of how many symbols are
-  // tracked: more symbols means a longer track, which needs proportionally
-  // longer to cross. A fixed duration would make a 4-symbol strip crawl and a
-  // 20-symbol strip sprint.
-  const durationSeconds = Math.max(30, items.length * 6);
+  const note = currencyNoteText(prefs);
+  const repeats = Math.ceil(MIN_SLOTS_PER_COPY / items.length);
+  const slots = Array.from({ length: repeats }, (_, rep) => items.map((item) => ({ ...item, rep }))).flat();
+  const durationSeconds = slots.length * SECONDS_PER_SLOT;
 
   return (
-    <div
-      className="relative overflow-hidden border-b border-[#171717] bg-[#0c0c0c]"
-      // Not a live region: it repeats on a loop and would be announced over
-      // and over. The same figures are reachable as real content on /markets.
-      aria-hidden="true"
-    >
+    <div className="cn-ticker-band mb-6.5">
+      {/* Edge to edge, escaping the shell's px-5.5 and pt-6.5. The width is
+          `100vw - --sbw`, not `100vw`: the latter includes the scrollbar
+          gutter and overshoots both edges. See layout/scrollbar-width-var.tsx. */}
       <div
-        className="animate-ticker flex w-max"
-        style={{ ["--ticker-duration" as string]: `${durationSeconds}s` }}
+        className="relative left-1/2 -mt-6.5 w-[calc(100vw-var(--sbw,0px))] -translate-x-1/2 overflow-hidden border-b border-[#171717] bg-[#0c0c0c]"
+        // Not a live region: it repeats on a loop and would be announced over
+        // and over. The same figures are reachable as real content on /markets.
+        aria-hidden="true"
       >
-        {[0, 1].map((copy) => (
-          <div
-            key={copy}
-            // The same `100vw - --sbw` the wrapper on Base Camp breaks out
-            // with, so the floor matches the band's real width rather than
-            // overshooting by the scrollbar gutter. See
-            // layout/scrollbar-width-var.tsx.
-            className="flex shrink-0 justify-around min-w-[calc(100vw-var(--sbw,0px))]"
-          >
-            {items.map((item) => (
-              <Link
-                key={`${copy}-${item.symbol}`}
-                href={`/ticker/${item.symbol}`}
-                className="flex items-center gap-1.5 px-[13px] py-[7px] transition-colors duration-fast ease-standard hover:bg-active"
-                tabIndex={-1}
-              >
-                <span className="font-mono text-[11px] tracking-[0.04em] text-muted uppercase">{item.symbol}</span>
-                <span
-                  className={`font-mono text-[11px] tracking-[0.04em] tabular-nums ${
-                    item.changePct >= 0 ? "text-accent" : "text-negative"
-                  }`}
+        <div
+          className="animate-ticker flex w-max"
+          style={{ ["--ticker-duration" as string]: `${durationSeconds}s` }}
+        >
+          {[0, 1].map((copy) => (
+            <div key={copy} className="flex shrink-0">
+              {slots.map((item) => (
+                <Link
+                  key={`${copy}-${item.rep}-${item.symbol}`}
+                  href={`/ticker/${item.symbol}`}
+                  className="flex shrink-0 items-center gap-1.5 px-4 py-[7px] transition-colors duration-fast ease-standard hover:bg-active"
+                  tabIndex={-1}
                 >
-                  {item.changePct >= 0 ? "+" : ""}
-                  {item.changePct.toFixed(1)}%
-                </span>
-              </Link>
-            ))}
-          </div>
-        ))}
+                  <span className="font-mono text-[11px] tracking-[0.04em] text-muted uppercase">{item.symbol}</span>
+                  <span
+                    className={`font-mono text-[11px] tracking-[0.04em] tabular-nums ${
+                      item.changePct >= 0 ? "text-accent" : "text-negative"
+                    }`}
+                  >
+                    {item.changePct >= 0 ? "+" : ""}
+                    {item.changePct.toFixed(1)}%
+                  </span>
+                </Link>
+              ))}
+            </div>
+          ))}
+        </div>
       </div>
+      {note && <p className="mt-3 text-right text-caption text-muted text-pretty">{note}</p>}
     </div>
   );
 }
