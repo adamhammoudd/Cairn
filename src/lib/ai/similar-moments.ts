@@ -202,3 +202,39 @@ export function applyConditions<C>(cases: C[], specs: ConditionSpec<C>[], min: n
   }
   return { cases: current, report };
 }
+
+// ------------------------------------------------------ earnings fallback
+
+/**
+ * "Results are due in k sessions": every past results release measured from
+ * the same point before it - the close k sessions before the release session,
+ * then `horizon` sessions on. Used only when today's factor state matched too
+ * few past moments (lib/ai/similar-moments-data.ts) and results fall inside
+ * the horizon; always labelled as past results, never as similar moments.
+ *
+ * `bars` oldest first. A release whose window runs off either end of the
+ * stored history is skipped, never shortened. Windows never overlap.
+ */
+export function earningsWindows(
+  bars: { date: string; close: number }[],
+  releaseDates: string[],
+  sessionsToRelease: number,
+  horizon: number,
+): { index: number; date: string; dateAfter: string; priceBefore: number; priceAfter: number; movePct: number; releaseDate: string }[] {
+  const out: ReturnType<typeof earningsWindows> = [];
+  let nextAllowed = 0;
+  for (const release of [...new Set(releaseDates)].sort()) {
+    // The release session: the first stored session on or after the release date.
+    const r = bars.findIndex((b) => b.date >= release);
+    if (r < 0) continue;
+    const start = r - sessionsToRelease;
+    const end = start + horizon;
+    if (start < 0 || end >= bars.length || start < nextAllowed) continue;
+    const before = bars[start].close;
+    const after = bars[end].close;
+    if (!(before > 0) || !Number.isFinite(after)) continue;
+    out.push({ index: start, date: bars[start].date, dateAfter: bars[end].date, priceBefore: before, priceAfter: after, movePct: ((after - before) / before) * 100, releaseDate: release });
+    nextAllowed = end;
+  }
+  return out;
+}

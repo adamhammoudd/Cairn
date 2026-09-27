@@ -88,11 +88,12 @@ function Dots({ dots, horizon }: { dots: ("higher" | "lower")[]; horizon: string
 
 export function DirectionPanel({ display, onShowCases, dense, action }: { display: AnalysisDisplay; onShowCases?: () => void; dense?: boolean; action?: ReactNode }) {
   const h = display.history;
-  const count = (h.kind === "direction" || h.kind === "baseline") && h.n > 0 ? `${h.higher} of ${h.n}` : null;
+  const count = (h.kind === "direction" || h.kind === "baseline" || h.kind === "earnings") && h.n > 0 ? `${h.higher} of ${h.n}` : null;
   const [before, after] = count ? h.line.split(count) : [h.line, undefined];
   return (
     <section aria-label="What history says" className={`flex flex-col gap-4 rounded-[18px] border border-line bg-panel ${dense ? "p-4" : "px-5 py-6 md:px-9 md:py-8"}`}>
       <h2 className={H2}>What history says</h2>
+      {h.basisLabel && <p className="m-0 -mt-2 font-mono text-eyebrow text-dim uppercase">{h.basisLabel}</p>}
       <p className={`m-0 font-serif leading-[1.3] text-primary text-pretty ${dense ? "text-[19px]" : "text-[22px] md:text-[26px]"}`}>
         {count && after !== undefined ? (
           <>

@@ -8,7 +8,7 @@ import type { Database } from "@/lib/supabase/types";
 import type { ProbabilityBand } from "@/lib/ai/analytics";
 import type { FactorAnalysis } from "@/lib/ai/factor-analysis";
 import { loadScorecard } from "@/lib/scorecard-data";
-import { loadConditionData, similarMoments } from "@/lib/ai/similar-moments-data";
+import { loadConditionData, similarMoments, type SimilarMoments } from "@/lib/ai/similar-moments-data";
 import { generateAnalysisText, type GeneratedText, type TextInputs } from "@/lib/ai/analysis-text";
 import { directionColumns, textInputsFor, type NewsRow } from "@/lib/ai/ticker-analysis";
 import { historyInPlainWords } from "@/lib/ai/history-plain";
@@ -23,8 +23,10 @@ export interface Written {
   modelVersion: string;
   columns: Partial<Insert>;
   plainSummary: Record<string, unknown> | null;
-  /** Dates of the factor cases the direction was counted from (their analog rows get in_direction_set). */
+  /** Dates of the cases the direction was counted from (their analog rows get in_direction_set). */
   directionDates: Set<string>;
+  /** The history the direction came from (ticker scopes): which basis, which cases. */
+  sm?: SimilarMoments | null;
 }
 
 export const CALENDAR_DAYS_AHEAD = 60;
@@ -118,5 +120,6 @@ export async function writeTickerText(a: {
       history,
     },
     directionDates: new Set(sm?.history.cases.map((c) => c.date) ?? []),
+    sm,
   };
 }

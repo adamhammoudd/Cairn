@@ -11,6 +11,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { generateAnalysis } from "@/lib/ai/generate";
 import { BUSY_MESSAGE, GENERIC_ERROR_MESSAGE, SYMBOL_UNAVAILABLE_MESSAGE, DATA_BUSY_MESSAGE, type GenerateOutcome } from "@/lib/analysis";
 import { ensureSymbolIngested } from "@/lib/market-data/ingest";
+import { ensureCompanyData } from "@/lib/market-data/company-data";
 import { FACTOR_HISTORY_RANGE, TARGET_FACTOR_HISTORY_BARS, benchmarkSymbolFor } from "@/lib/ai/factors";
 import { loadBars } from "@/lib/ai/factor-analysis";
 import { isTooYoung, youngHistory } from "@/lib/ai/history-depth";
@@ -63,6 +64,13 @@ export async function generateForScope(
       // the price history is keyed by.
       scopeValue = ingest.symbol;
       assetType = ingest.assetType;
+      // A share's own results history and company figures, built the first
+      // time anyone analyses it (SEC, cached, throttled). Best effort: without
+      // them the analysis still has the base rate from its prices.
+      if (assetType === "equity") {
+        const company = await ensureCompanyData(scopeValue);
+        if (company.sec === "failed") console.warn("[analysis] company data unavailable", company);
+      }
     } catch (err) {
       console.error("[analysis] ingestion precondition failed", {
         scopeValue,

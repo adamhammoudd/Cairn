@@ -10,8 +10,8 @@ import { createClient, type SupabaseClient } from "jsr:@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 import { requireCronSecret } from "../_shared/auth.ts";
 import {
-  FIELDS,
   parseCompanyFacts,
+  secHistoryRows,
   parseEarningsReleases,
   trailingPerShare,
   type CompanyFacts,
@@ -23,6 +23,10 @@ import { SEC_USER_AGENT } from "../_shared/sec-user-agent.ts";
 // SEC's fair-access limit is 10 requests/second. Each symbol makes three
 // (share count, submissions, companyfacts), so pace between symbols.
 const SYMBOL_DELAY_MS = 600;
+/** Symbols per run: ~3 SEC requests each plus the delay keeps a run well inside the Edge wall clock. */
+const MAX_SYMBOLS_PER_RUN = 40;
+/** A symbol refreshed this recently is not fetched again this run. */
+const FRESH_DAYS = 6;
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 async function secJson(url: string): Promise<unknown | null> {
@@ -90,13 +94,45 @@ Deno.serve(async (req) => {
     if (!symbols.includes(s)) symbols.push(s);
   }
 
+  // Every available US share in the symbol directory (fix/analysis-coverage):
+  // a share someone analysed, searched or opened is covered from then on,
+  // not just the provider list. Paged - the directory is far over the API's
+  // 1000-row response cap.
+  for (let from = 0; ; from += 1000) {
+    const { data: page, error } = await supabase
+      .from("symbol_directory")
+      .select("symbol")
+      .eq("status", "available")
+      .eq("asset_type", "equity")
+      .order("symbol")
+      .range(from, from + 999);
+    if (error) return Response.json({ error: `symbol_directory read failed: ${error.message}` }, { status: 500, headers: corsHeaders });
+    for (const r of (page ?? []) as { symbol: string }[]) {
+      const s = r.symbol.toUpperCase();
+      if (!symbols.includes(s)) symbols.push(s);
+    }
+    if (!page || page.length < 1000) break;
+  }
+
   if (symbols.length === 0) {
     return Response.json({ error: "no market_data provider symbols configured" }, { status: 400, headers: corsHeaders });
   }
 
+  // Bounded per run so the function stays inside its wall clock as the
+  // directory grows: stalest first (never fetched, then oldest refresh), and
+  // anything refreshed within FRESH_DAYS is skipped. ?limit= overrides.
+  const limit = Number(new URL(req.url).searchParams.get("limit") ?? MAX_SYMBOLS_PER_RUN);
+  const { data: freshRows } = await supabase.from("fundamentals").select("symbol, updated_at").in("symbol", symbols);
+  const lastRefresh = new Map<string, string>((freshRows ?? []).map((r: { symbol: string; updated_at: string }) => [r.symbol, r.updated_at]));
+  const cutoff = new Date(Date.now() - FRESH_DAYS * 86_400_000).toISOString();
+  const due = symbols
+    .filter((s) => (lastRefresh.get(s) ?? "") < cutoff)
+    .sort((a, b) => (lastRefresh.get(a) ?? "").localeCompare(lastRefresh.get(b) ?? ""))
+    .slice(0, Number.isFinite(limit) && limit > 0 ? limit : MAX_SYMBOLS_PER_RUN);
+
   // Only equities file company accounts. ETFs, funds and coins are skipped
   // here and shown as "not applicable" in the app, never as zero.
-  const { data: dirRows } = await supabase.from("symbol_directory").select("symbol, asset_type").in("symbol", symbols);
+  const { data: dirRows } = await supabase.from("symbol_directory").select("symbol, asset_type").in("symbol", due);
   const assetType = new Map<string, string>((dirRows ?? []).map((r: { symbol: string; asset_type: string }) => [r.symbol, r.asset_type]));
 
   const tickerMap = (await secJson("https://www.sec.gov/files/company_tickers.json")) as
@@ -114,7 +150,7 @@ Deno.serve(async (req) => {
   const results = [];
   const today = new Date().toISOString().slice(0, 10);
 
-  for (const symbol of symbols) {
+  for (const symbol of due) {
     const type = assetType.get(symbol);
     if (type && type !== "equity") {
       results.push({ symbol, skipped: `not applicable (${type})` });
@@ -172,7 +208,7 @@ Deno.serve(async (req) => {
     }
   }
 
-  return Response.json({ results }, { headers: corsHeaders });
+  return Response.json({ covered: symbols.length, due: due.length, results }, { headers: corsHeaders });
 });
 
 // ------------------------------------------------------------ quarterly history
@@ -200,27 +236,8 @@ async function storeHistory(
     out.quarters_note = "no us-gaap facts (not filed under US GAAP)";
   } else {
     parsed = parseCompanyFacts(facts);
-    const now = new Date().toISOString();
-    const quarterRows = parsed.quarters.map((q) => ({
-      symbol,
-      cik,
-      fiscal_year: q.fiscal_year,
-      fiscal_quarter: q.fiscal_quarter,
-      period_start: q.period_start,
-      period_end: q.period_end,
-      ...q.values,
-      provenance: q.provenance,
-      updated_at: now,
-    }));
-    const annualRows = parsed.annual.map((a) => ({
-      symbol,
-      cik,
-      fiscal_year: a.fiscal_year,
-      period_start: a.period_start,
-      period_end: a.period_end,
-      ...Object.fromEntries(FIELDS.filter((f) => f in a.values).map((f) => [f, a.values[f] ?? null])),
-      updated_at: now,
-    }));
+    // Same row builder as the on-demand path (src/lib/market-data/company-data.ts).
+    const { quarters: quarterRows, annual: annualRows } = secHistoryRows(symbol, cik, parsed, [], new Date().toISOString());
     const [qRes, aRes] = await Promise.all([
       quarterRows.length
         ? supabase.from("company_financials_quarterly").upsert(quarterRows, { onConflict: "symbol,fiscal_year,fiscal_quarter" })
@@ -238,7 +255,7 @@ async function storeHistory(
   const releases = submissions ? parseEarningsReleases(submissions) : [];
   if (releases.length) {
     const { error } = await supabase.from("earnings_releases").upsert(
-      releases.map((r) => ({ symbol, cik, ...r, updated_at: new Date().toISOString() })),
+      secHistoryRows(symbol, cik, null, releases, new Date().toISOString()).releases,
       { onConflict: "symbol,release_date" },
     );
     out.earnings_releases = error ? 0 : releases.length;

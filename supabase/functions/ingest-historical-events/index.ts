@@ -25,6 +25,21 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 import { deriveVolatilityRegimes, EQUITY_PERIODS_PER_YEAR } from "../_shared/volatility.ts";
 import { requireCronSecret } from "../_shared/auth.ts";
+import { earningsReactionRows, reactionWindow as sharedReactionWindow } from "../_shared/earnings-reactions.ts";
+import { readNewestFirstPaged } from "../_shared/paged-read.ts";
+
+/** Directory-only shares processed per run; the rest rotate through on later days. */
+const MAX_DIRECTORY_SYMBOLS_PER_RUN = 60;
+
+/**
+ * The close on the last session strictly before the event, and on the first
+ * session strictly after it - the one-session reaction window (shared with the
+ * on-demand path: _shared/earnings-reactions.ts), on this function's bar shape.
+ */
+function reactionWindow(bars: PriceBar[], eventDate: string) {
+  return sharedReactionWindow(bars.map((b) => ({ date: String(b.ts).slice(0, 10), close: b.close, volume: b.volume })), eventDate);
+}
+
 
 const UA_YAHOO = "Mozilla/5.0 (cairn-ingest/1.0)";
 const UA_NASDAQ = "Mozilla/5.0 (compatible; cairn-ingest/1.0)";
@@ -35,7 +50,7 @@ const EVENTS_RANGE = "2y";
 // Upper bound on the bars read per symbol when deriving volatility regimes.
 // 2y of daily bars is ~505; 1500 leaves headroom for a longer backfill without
 // ever depending on an unbounded read.
-const MAX_BARS = 1500;
+const MAX_BARS = 2000;
 
 interface PriceBar {
   ts: string;
@@ -138,32 +153,6 @@ async function fetchNasdaqEarnings(symbol: string): Promise<EarningsRow[]> {
     .filter((r): r is EarningsRow => r.date !== null);
 }
 
-/**
- * The close on the last session strictly before the event, and on the first
- * session strictly after it - the one-session reaction window. Bars are
- * ascending. Returns null if either leg is missing, which is what makes the
- * event unusable as an analog.
- */
-function reactionWindow(
-  bars: PriceBar[],
-  eventDate: string,
-): { before: number; after: number; volume: number | null } | null {
-  let beforeIdx = -1;
-  for (let i = 0; i < bars.length; i++) {
-    if (bars[i].ts < eventDate) beforeIdx = i;
-    else break;
-  }
-  const afterIdx = bars.findIndex((b) => b.ts > eventDate);
-  if (beforeIdx === -1 || afterIdx === -1) return null;
-
-  const before = bars[beforeIdx].close;
-  const after = bars[afterIdx].close;
-  if (before === null || after === null || Number(before) === 0) return null;
-
-  const onDay = bars.find((b) => b.ts === eventDate);
-  return { before: Number(before), after: Number(after), volume: onDay?.volume ?? null };
-}
-
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   // Scheduled callers must present the shared secret; see _shared/auth.ts.
@@ -200,22 +189,46 @@ Deno.serve(async (req) => {
     ),
   );
 
+  // Every available US share in the symbol directory too (fix/analysis-
+  // coverage), not only the provider list. The provider list runs every day;
+  // directory-only shares rotate through in slices so a run stays bounded.
+  const directory: string[] = [];
+  for (let from = 0; ; from += 1000) {
+    const { data: page, error } = await supabase
+      .from("symbol_directory")
+      .select("symbol")
+      .eq("status", "available")
+      .eq("asset_type", "equity")
+      .order("symbol")
+      .range(from, from + 999);
+    if (error) return Response.json({ error: `symbol_directory read failed: ${error.message}` }, { status: 500, headers: corsHeaders });
+    for (const r of (page ?? []) as { symbol: string }[]) {
+      const s = r.symbol.toUpperCase();
+      if (!symbols.includes(s) && !directory.includes(s)) directory.push(s);
+    }
+    if (!page || page.length < 1000) break;
+  }
+  const slices = Math.max(1, Math.ceil(directory.length / MAX_DIRECTORY_SYMBOLS_PER_RUN));
+  const slice = Math.floor(Date.now() / 86_400_000) % slices;
+  const todays = directory.slice(slice * MAX_DIRECTORY_SYMBOLS_PER_RUN, (slice + 1) * MAX_DIRECTORY_SYMBOLS_PER_RUN);
+  const runSymbols = [...symbols, ...todays];
+
   const results = [];
 
-  for (const symbol of symbols) {
+  for (const symbol of runSymbols) {
     try {
       // Newest-first with an explicit bound, then reversed: ordered ascending
       // with no limit, what comes back is whatever PostgREST's row cap allows
       // - the OLDEST rows - so the regimes derived here would be computed from
       // the start of the history and silently stop tracking recent ones.
-      const { data: bars } = await supabase
-        .from("historical_prices")
-        .select("ts, close, volume")
-        .eq("symbol", symbol)
-        .order("ts", { ascending: false })
-        .limit(MAX_BARS);
+      // Paged: the API returns at most 1000 rows per request, so a single
+      // .limit(MAX_BARS) read silently stopped at 1000 (about four years).
+      const bars = await readNewestFirstPaged<PriceBar>(
+        (from, to) => supabase.from("historical_prices").select("ts, close, volume").eq("symbol", symbol).order("ts", { ascending: false }).range(from, to),
+        MAX_BARS,
+      );
 
-      const priceBars = ((bars ?? []) as PriceBar[]).slice().reverse();
+      const priceBars = bars.slice().reverse();
       if (priceBars.length === 0) {
         results.push({ symbol, error: "no price history to measure events against" });
         continue;
@@ -282,6 +295,19 @@ Deno.serve(async (req) => {
         });
       }
 
+      // Earnings-day moves from the share's own SEC results releases (8-K item
+      // 2.02, stored by ingest-fundamentals). They cover every share with
+      // filings, not only the ones Nasdaq's endpoint answers for; a Nasdaq row
+      // for the same date wins, since it carries the EPS surprise.
+      const { data: releases } = await supabase.from("earnings_releases").select("release_date, accn, timing").eq("symbol", symbol);
+      const nasdaqDates = new Set(earnings.map((e) => e.date));
+      const secRows = earningsReactionRows(
+        symbol,
+        ((releases ?? []) as { release_date: string; accn: string; timing: string | null }[]).filter((r) => !nasdaqDates.has(String(r.release_date))),
+        priceBars.map((b) => ({ date: String(b.ts).slice(0, 10), close: b.close, volume: b.volume })),
+      );
+      for (const r of secRows) rows.push({ ...r, sector });
+
       // Derived volatility regimes, the same analog source ingest-crypto uses.
       //
       // Without these, a symbol's only analogs are Nasdaq earnings and Yahoo
@@ -325,6 +351,7 @@ Deno.serve(async (req) => {
       results.push({
         symbol,
         earnings: earnings.length,
+        sec_earnings: secRows.length,
         dividends: yahoo.dividends.length,
         splits: yahoo.splits.length,
         regimes: regimes.length,
@@ -336,5 +363,5 @@ Deno.serve(async (req) => {
     }
   }
 
-  return Response.json({ results }, { headers: corsHeaders });
+  return Response.json({ provider_symbols: symbols.length, directory_symbols: directory.length, directory_slice: `${slice + 1}/${slices}`, results }, { headers: corsHeaders });
 });

@@ -14,7 +14,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { BASELINE_EVENT_TYPE, FACTOR_EVENT_TYPE } from "@/lib/ai/factor-analysis";
+import { BASELINE_EVENT_TYPE, EARNINGS_WINDOW_EVENT_TYPE, FACTOR_EVENT_TYPE } from "@/lib/ai/factor-analysis";
 import { writeReport, type SuiteResult, type TestCase } from "./report";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
@@ -39,7 +39,7 @@ export function runEventTypeConstraintSuite(): SuiteResult {
   // Types the Next.js app inserts. The Edge Functions' types (earnings,
   // dividend, split, volatility_regime...) predate this and are covered by the
   // same list.
-  for (const t of [FACTOR_EVENT_TYPE, BASELINE_EVENT_TYPE]) {
+  for (const t of [FACTOR_EVENT_TYPE, BASELINE_EVENT_TYPE, EARNINGS_WINDOW_EVENT_TYPE, "earnings"]) {
     const ok = !!allowed?.types.includes(t);
     out.push({ name: `event_type "${t}" is allowed by the constraint`, status: ok ? "pass" : "fail", detail: ok ? `in ${allowed?.migration}` : `missing from ${allowed?.migration}: ${allowed?.types.join(", ")}` });
   }
