@@ -76,6 +76,10 @@ export interface TextInputs {
   scorecard: Scorecard;
   events: TextEvent[];
   news: TextNews[];
+  /** Set when no news mentions it: the plain line saying so (lib/ai/data-sources.ts noNewsLine). */
+  noNews?: string;
+  /** What the figures were computed from besides news, in words (context for the model, never cited by id). */
+  dataSources?: string[];
   /** Context for the model only; none of these numbers may appear in the text. */
   trader: {
     moveBandLow: number;
@@ -240,7 +244,8 @@ export function buildComputedFigures(i: TextInputs): string {
     .map((l) => `- ${l}`);
   const card = i.scorecard.dimensions.map((d) => `- ${d.label}: ${d.verdict}. ${d.sentence}`);
   const events = i.events.length > 0 ? i.events.map((e) => `- ${e.id}: ${eventLabel(e)}`) : ["- none in Cairn's calendar"];
-  const news = i.news.length > 0 ? i.news.map((n) => `- ${n.id}: "${n.title}" (${n.source}, ${dayMonth(n.date.slice(0, 10))})`) : ["- none"];
+  const news = i.news.length > 0 ? i.news.map((n) => `- ${n.id}: "${n.title}" (${n.source}, ${dayMonth(n.date.slice(0, 10))})`) : [`- none found.${i.noNews ? ` ${i.noNews}` : ""} Do not mention or imply any news.`];
+  const data = (i.dataSources ?? []).map((d) => `- ${d}`);
   const trader = i.trader
     ? [
         `- Chance of a move of 5% or more either way within ${when}: ${i.trader.moveBandLow}% to ${i.trader.moveBandHigh}% (${i.trader.hitCount} of ${i.trader.sampleCount} past cases)`,
@@ -261,7 +266,7 @@ ${events.join("\n")}
 
 RECENT HEADLINES (cite by id; do not quote any number from a headline):
 ${news.join("\n")}
-
+${data.length > 0 ? `\nDATA THE FIGURES WERE COMPUTED FROM (context only; do not quote numbers or dates from these lines):\n${data.join("\n")}\n` : ""}
 TRADER FIGURES (for context only; do not quote these numbers or mention them):
 ${trader.join("\n")}`;
 }
@@ -468,6 +473,8 @@ export function templateAnalysisText(i: TextInputs): ModelAnalysisText {
     const rest = bullets.filter((b) => b !== historyBullet).slice(0, 3);
     bullets = [...rest.slice(0, 2), historyBullet, ...rest.slice(2)].slice(0, 4);
   }
+  // No news: said plainly in the summary itself, not only in the sources list.
+  if (i.noNews && partOk(i.noNews)) bullets = [...bullets.slice(0, 3), i.noNews];
   for (const filler of ["Every figure here comes from stored prices and filings.", "The full breakdown below shows how each one was worked out."]) {
     if (bullets.length >= 3) break;
     bullets.push(filler);

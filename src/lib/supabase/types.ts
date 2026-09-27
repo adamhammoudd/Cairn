@@ -378,6 +378,30 @@ export interface Database {
         Update: never;
         Relationships: [];
       };
+      // Data an analysis cites besides news (migration 0057): SEC filings, the
+      // price history, calendar entries, a fund's or coin's profile.
+      ai_analysis_data_sources: {
+        Row: {
+          id: string;
+          analysis_id: string;
+          kind: "sec_filing" | "price_data" | "calendar" | "fund_profile" | "coin_profile";
+          label: string;
+          reference: string;
+          as_of: string | null;
+          url: string | null;
+          created_at: string;
+        };
+        Insert: {
+          analysis_id: string;
+          kind: "sec_filing" | "price_data" | "calendar" | "fund_profile" | "coin_profile";
+          label: string;
+          reference: string;
+          as_of?: string | null;
+          url?: string | null;
+        };
+        Update: never;
+        Relationships: [];
+      };
       ai_analysis_historical_analogs: {
         Row: {
           id: string;

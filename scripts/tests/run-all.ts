@@ -67,6 +67,7 @@ import { runEventTypeConstraintSuite } from "./event-type-constraint";
 import { runHistoryDepthSuite } from "./history-depth";
 import { runAnalysisFailureReasonsSuite } from "./analysis-failure-reasons";
 import { runAnalysisCoverageSuite } from "./analysis-coverage";
+import { runAnalysisSourcesSuite } from "./analysis-sources";
 
 // A suite that throws (missing credentials, unreachable service) must surface
 // as a hard failure of that suite, not take the whole run down with a stack
@@ -165,6 +166,7 @@ async function main() {
     guarded("History depth", async () => [await runHistoryDepthSuite()]),
     guarded("Analysis failure reasons", async () => [await runAnalysisFailureReasonsSuite()]),
     guarded("Analysis coverage", async () => [await runAnalysisCoverageSuite()]),
+    guarded("Analysis sources", async () => [await runAnalysisSourcesSuite()]),
   ]);
 
   const allSuites = [

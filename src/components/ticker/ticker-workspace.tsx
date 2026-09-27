@@ -290,6 +290,8 @@ export function TickerWorkspace({
         scorecard: summary.scorecard,
         watch: [],
         sourcesUsed: [],
+        dataSources: [],
+        noNews: null,
         cases: null,
         caseCount: 0,
         trader: null,

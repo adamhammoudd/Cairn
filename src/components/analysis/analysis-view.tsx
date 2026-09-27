@@ -264,8 +264,37 @@ function TraderRow({ display }: { display: AnalysisDisplay }) {
   );
 }
 
-function SourcesRow({ sources, used }: { sources: AnalysisSource[]; used: Set<string> }) {
-  if (sources.length === 0) return <p className="m-0 text-body text-muted">No news sources were cited.</p>;
+function DataSourcesList({ display }: { display: AnalysisDisplay }) {
+  if (display.dataSources.length === 0) return null;
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="font-mono text-eyebrow text-dim uppercase">Data the figures come from</div>
+      <ul className="m-0 flex list-none flex-col gap-2 p-0">
+        {display.dataSources.map((d) => (
+          <li key={`${d.kind}:${d.reference}`} className="text-body leading-[1.5]">
+            {d.url ? (
+              <a href={d.url} target="_blank" rel="noreferrer" className="tap text-primary hover:text-accent">
+                {d.label}
+              </a>
+            ) : (
+              <span className="text-primary">{d.label}</span>
+            )}
+            {d.kind === "sec_filing" && <span className="text-caption text-dim"> · accession {d.reference}</span>}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function SourcesRow({ sources, used, display }: { sources: AnalysisSource[]; used: Set<string>; display: AnalysisDisplay }) {
+  if (sources.length === 0)
+    return (
+      <div className="flex flex-col gap-4">
+        <p className="m-0 text-body text-muted">{display.noNews ?? "No news sources were cited."}</p>
+        <DataSourcesList display={display} />
+      </div>
+    );
   return (
     <ul className="m-0 flex list-none flex-col gap-2.5 p-0">
       {sources.map((s) => (
@@ -284,6 +313,11 @@ function SourcesRow({ sources, used }: { sources: AnalysisSource[]; used: Set<st
           </span>
         </li>
       ))}
+      {display.dataSources.length > 0 && (
+        <li className="list-none pt-2">
+          <DataSourcesList display={display} />
+        </li>
+      )}
     </ul>
   );
 }
@@ -302,7 +336,7 @@ function HowRow({ display }: { display: AnalysisDisplay }) {
         days in the same state as today (and, where it leaves at least 5 cases, with results due or not and the same price trend), then counts
         how often the price was higher {display.history.horizon} later. The typical range is the middle half of those moves (25th to 75th
         percentile). Confidence is low under 5 cases and never high when the 95% Wilson interval on the up-rate is wide. Windows derived from
-        volatility alone are not counted. When nothing about the price is unusual that day, there are no similar moments; Cairn then shows the base rate instead, every {display.history.horizon} stretch in the stored prices, and says so. It describes the past; it is not a forecast.
+        volatility alone are not counted. When nothing about the price is unusual that day, or today matches too few past moments to measure, Cairn says so and shows a fallback instead, labelled above the line: for a share with results due within {display.history.horizon}, its past results releases measured from the same point before; otherwise the base rate, every {display.history.horizon} stretch in the stored prices. It describes the past; it is not a forecast.
       </p>
       <p className="m-0">
         <strong className="font-medium text-primary">Scorecard.</strong> Each tile is computed in code from SEC filings and stored prices,
@@ -333,10 +367,15 @@ export function AnalysisView({ display, sources, closestCase, scorecard, forYou,
     {
       id: "sources",
       title: "Sources",
-      detail: `${sources.length} article${sources.length === 1 ? "" : "s"}`,
+      detail: [
+        sources.length > 0 || display.dataSources.length === 0 ? `${sources.length} article${sources.length === 1 ? "" : "s"}` : "no recent news",
+        display.dataSources.length > 0 ? `${display.dataSources.length} data source${display.dataSources.length === 1 ? "" : "s"}` : null,
+      ]
+        .filter(Boolean)
+        .join(" · "),
       content: (
         <div className="flex flex-col gap-4">
-          <SourcesRow sources={sources} used={used} />
+          <SourcesRow sources={sources} used={used} display={display} />
           {extras.sources}
         </div>
       ),

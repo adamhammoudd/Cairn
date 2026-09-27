@@ -181,7 +181,7 @@ async function attachMethodology(
   const ids = analyses.map((a) => a.id);
   const admin = createAdminClient();
 
-  const [{ data: sourceLinks }, { data: analogLinks }, { data: factorRows }, { data: dirRows }] = await Promise.all([
+  const [{ data: sourceLinks }, { data: analogLinks }, { data: factorRows }, { data: dirRows }, { data: dataSourceRows }] = await Promise.all([
     // Service role: this table's read policy checks the parent through
     // ai_analyses, which migration 0053 closed to signed-in reads. `ids` are
     // validated analyses read above.
@@ -194,6 +194,8 @@ async function attachMethodology(
       ? admin.from("ai_analysis_factors").select("analysis_id, factor_key, value, percentile, detail").in("analysis_id", ids)
       : Promise.resolve({ data: [] as { analysis_id: string; factor_key: string; value: number | null; percentile: number | null; detail: Record<string, unknown> }[] }),
     supabase.from("symbol_directory").select("symbol, name, asset_type").in("symbol", Array.from(new Set(analyses.map((a) => a.scope_value)))),
+    // Service role: migration 0057 grants no signed-in read. Every plan sees these - they are the honesty guarantee.
+    admin.from("ai_analysis_data_sources").select("analysis_id, kind, label, reference, url, as_of").in("analysis_id", ids).order("created_at"),
   ]);
 
   const newsIds = Array.from(new Set((sourceLinks ?? []).map((s) => s.news_item_id)));
@@ -246,6 +248,7 @@ async function attachMethodology(
       plan,
       cases,
       sources,
+      dataSources: (dataSourceRows ?? []).filter((d) => d.analysis_id === a.id).map((d) => ({ kind: d.kind, label: d.label, reference: d.reference, url: d.url })),
       factors: (factorRows ?? []).filter((f) => f.analysis_id === a.id),
     });
     return {

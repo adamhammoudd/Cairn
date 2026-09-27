@@ -10,7 +10,8 @@ import type { FactorAnalysis } from "@/lib/ai/factor-analysis";
 import { loadScorecard } from "@/lib/scorecard-data";
 import { loadConditionData, similarMoments, type SimilarMoments } from "@/lib/ai/similar-moments-data";
 import { generateAnalysisText, type GeneratedText, type TextInputs } from "@/lib/ai/analysis-text";
-import { directionColumns, textInputsFor, type NewsRow } from "@/lib/ai/ticker-analysis";
+import { directionColumns, textInputsFor, type CalendarRow, type NewsRow } from "@/lib/ai/ticker-analysis";
+import type { DataSource } from "@/lib/ai/data-sources";
 import { historyInPlainWords } from "@/lib/ai/history-plain";
 import { checkCompleteness } from "@/lib/ai/scope-guard";
 
@@ -41,25 +42,35 @@ export async function tickerTextInputs(a: {
   band: ProbabilityBand;
   news: NewsRow[];
   today?: string;
+  /** Already read by the caller (loadUpcomingCalendar); read here otherwise. */
+  calendar?: CalendarRow[];
+  /** The data this analysis cites besides news (lib/ai/data-sources.ts). */
+  dataSources?: DataSource[];
 }) {
   const today = a.today ?? new Date().toISOString().slice(0, 10);
   const bundle = await loadScorecard(a.symbol, { supabase: a.supabase, today });
   const data = await loadConditionData(a.supabase, a.symbol, today, bundle.pricesAsc);
   const fa = a.factorAnalysis;
   const sm = fa ? similarMoments({ set: fa.set, result: fa.result, assetType: a.assetType, scorecard: bundle.scorecard, data, today }) : null;
+  const calendar = a.calendar ?? (await loadUpcomingCalendar(a.supabase, a.symbol, today));
+  const inputs: TextInputs = textInputsFor({ name: a.name, symbol: a.symbol, assetType: a.assetType, factorAnalysis: fa, sm, scorecard: bundle.scorecard, calendar, news: a.news, band: a.band, dataSources: a.dataSources });
+  return { inputs, sm, scorecard: bundle.scorecard, today };
+}
+
+/** Results and dividend dates in the next CALENDAR_DAYS_AHEAD days, soonest first (at most 3). */
+export async function loadUpcomingCalendar(supabase: SupabaseClient<Database>, symbol: string, today: string): Promise<CalendarRow[]> {
   const until = new Date(Date.parse(`${today}T00:00:00Z`) + CALENDAR_DAYS_AHEAD * 86_400_000).toISOString().slice(0, 10);
-  const { data: calendar, error } = await a.supabase
+  const { data, error } = await supabase
     .from("calendar_events")
     .select("id, event_type, event_date, metadata")
-    .eq("symbol", a.symbol)
+    .eq("symbol", symbol)
     .in("event_type", ["earnings", "ex_dividend", "dividend"])
     .gte("event_date", today)
     .lte("event_date", until)
     .order("event_date")
     .limit(3);
-  if (error) throw new Error(`Failed to read calendar for ${a.symbol}: ${error.message}`);
-  const inputs: TextInputs = textInputsFor({ name: a.name, symbol: a.symbol, assetType: a.assetType, factorAnalysis: fa, sm, scorecard: bundle.scorecard, calendar: calendar ?? [], news: a.news, band: a.band });
-  return { inputs, sm, scorecard: bundle.scorecard, today };
+  if (error) throw new Error(`Failed to read calendar for ${symbol}: ${error.message}`);
+  return (data ?? []) as CalendarRow[];
 }
 
 export async function writeTickerText(a: {
@@ -73,6 +84,8 @@ export async function writeTickerText(a: {
   news: NewsRow[];
   sourceCount: number;
   analogCount: number;
+  calendar?: CalendarRow[];
+  dataSources?: DataSource[];
   generate?: (i: TextInputs) => Promise<GeneratedText>;
 }): Promise<Written> {
   const { inputs, sm, scorecard } = await tickerTextInputs(a);
