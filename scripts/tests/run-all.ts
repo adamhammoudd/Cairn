@@ -128,6 +128,7 @@ async function main() {
     analysisTextSuites,
     historyDepthSuites,
     analysisFailureReasonsSuites,
+    analysisCoverageSuites,
   ] = await Promise.all([
     guarded("Adversarial scope guard", runAdversarialScopeGuardSuites),
     guarded("Methodology substance", async () => [await runMethodologySubstanceSuite()]),
@@ -221,6 +222,7 @@ async function main() {
     ...analysisTextSuites,
     ...historyDepthSuites,
     ...analysisFailureReasonsSuites,
+    ...analysisCoverageSuites,
   ];
   const reportPath = writeReport(allSuites);
 
