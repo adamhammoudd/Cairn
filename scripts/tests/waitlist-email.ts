@@ -11,7 +11,7 @@
 
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { selectEmailProvider, buildConfirmationEmail, parseClientTimezone } from "../../src/lib/waitlist";
+import { selectEmailProvider, buildConfirmationEmail, parseClientTimezone, siteUrl } from "../../src/lib/waitlist";
 import type { SuiteResult, TestCase } from "./report";
 
 const cases: TestCase[] = [];
@@ -52,6 +52,36 @@ const GMAIL = { GMAIL_SMTP_USER: "x@gmail.com", GMAIL_SMTP_APP_PASSWORD: "abcd e
 // --- template ------------------------------------------------------------
 const URL = "https://cairn.example.com/waitlist/confirm?token=11111111-2222-3333-4444-555555555555";
 const msg = buildConfirmationEmail(URL);
+
+{
+  const savedSiteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+  try {
+    process.env.NEXT_PUBLIC_SITE_URL = "https://cairn.example.com/waitlist/";
+    check(
+      "configured site URL paths are removed before adding the confirmation route",
+      siteUrl(null) === "https://cairn.example.com",
+      "confirmation links must start at the site origin",
+    );
+  } finally {
+    if (savedSiteUrl === undefined) delete process.env.NEXT_PUBLIC_SITE_URL;
+    else process.env.NEXT_PUBLIC_SITE_URL = savedSiteUrl;
+  }
+}
+
+{
+  const savedSiteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+  try {
+    delete process.env.NEXT_PUBLIC_SITE_URL;
+    check(
+      "request origin paths are removed before adding the confirmation route",
+      siteUrl("https://cairn.example.com/waitlist") === "https://cairn.example.com",
+      "fallback confirmation links must start at the site origin",
+    );
+  } finally {
+    if (savedSiteUrl === undefined) delete process.env.NEXT_PUBLIC_SITE_URL;
+    else process.env.NEXT_PUBLIC_SITE_URL = savedSiteUrl;
+  }
+}
 
 check("subject is set", msg.subject.length > 0, msg.subject);
 check("plain-text part carries the confirm URL", msg.text.includes(URL), "URL present in text");
