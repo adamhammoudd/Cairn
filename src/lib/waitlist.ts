@@ -425,8 +425,14 @@ async function reserveGmailSlot(): Promise<{ ok: boolean }> {
 
 /** Absolute base URL for links in the confirmation email. */
 export function siteUrl(originHeader: string | null): string {
-  const configured = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "");
-  if (configured) return configured;
-  if (originHeader) return originHeader.replace(/\/$/, "");
+  for (const candidate of [process.env.NEXT_PUBLIC_SITE_URL, originHeader]) {
+    if (!candidate?.trim()) continue;
+    try {
+      const url = new URL(candidate.trim());
+      if (url.protocol === "http:" || url.protocol === "https:") return url.origin;
+    } catch {
+      continue;
+    }
+  }
   return "http://localhost:3000";
 }
