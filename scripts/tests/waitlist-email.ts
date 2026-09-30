@@ -146,6 +146,20 @@ check(
   );
 }
 
+{
+  const legacyConfirm = readFileSync(
+    join(import.meta.dirname, "..", "..", "src", "app", "waitlist", "waitlist", "confirm", "page.tsx"),
+    "utf8",
+  );
+  check(
+    "legacy duplicated confirmation paths redirect to the canonical route",
+    legacyConfirm.includes('redirect(`/waitlist/confirm?${params.toString()}`)') &&
+      legacyConfirm.includes("searchParams: Promise<{ token?: string }>") &&
+      legacyConfirm.includes("params.set(\"token\", token)"),
+    "old emails must remain usable after the URL fix",
+  );
+}
+
 export function runWaitlistEmailSuite(): SuiteResult {
   return { suiteName: "Waitlist confirmation email", gating: true, cases };
 }
