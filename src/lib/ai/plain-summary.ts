@@ -272,7 +272,8 @@ export function templateSummary(inputs: SummaryInputs): SummaryText {
   headline += eventPhrase(next);
 
   const bullets: string[] = [];
-  const order: Dimension["key"][] = ["growth", "valuation", "health", "dividend", "trend"];
+  // "Use of cash" last: it fills a spare bullet, never displaces one. [DECISION: Adam] whether it should rank higher.
+  const order: Dimension["key"][] = ["growth", "valuation", "health", "dividend", "trend", "capital"];
   for (const k of order) {
     const d = dim(card, k);
     if (!d || d.level === "not_applicable") continue;
@@ -288,7 +289,7 @@ export function templateSummary(inputs: SummaryInputs): SummaryText {
 
 export const SUMMARY_SYSTEM_PROMPT = `You write the "In plain words" summary at the top of a stock or crypto page for everyday investors.
 
-You are given the page's scorecard (six short, already-computed descriptions of the company's numbers and price) and,
+You are given the page's scorecard (seven short, already-computed descriptions of the company's numbers and price) and,
 when available, what happened in similar moments in its own price history. Write ONE headline (one sentence, two at
 most) and 3 or 4 short bullets that tell a beginner what matters most.
 

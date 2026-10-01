@@ -2,7 +2,7 @@
 
 // The top of the ticker analysis (feat/analysis-summary-layout), built to the
 // approved "Ticker analysis - summary + scorecard" board: In plain words (+
-// What this means for you), the six-tile scorecard, What history says, the
+// What this means for you), the seven-tile scorecard, What history says, the
 // collapsed Full breakdown, and the footer line. Colours come from the tokens
 // in globals.css; red appears only for "weak" business readings and for
 // "lower" in the history dots, never as decoration.
@@ -291,3 +291,67 @@ export function useBreakdownState(initial: string | null = null) {
   };
   return { openId, toggle, openAndScroll };
 }
+
+// ------------------------------------------------------- dimension detail
+
+/** Inputs the "Use of cash" row lists under "What the company has filed about next". */
+const PLAN_LABEL = /^(?:Buyback authorisation left|Dividend declared per share)/;
+
+/**
+ * One scorecard dimension in full, for the Full breakdown: its sentence, every
+ * input with the value the sentence used, and the filings behind them. Free:
+ * the scorecard is free, so nothing here is Premium-only.
+ */
+export function DimensionDetail({ d, definition }: { d: Dimension; definition?: string }) {
+  const own = d.inputs.filter((i) => !PLAN_LABEL.test(i.label));
+  const plan = d.inputs.filter((i) => PLAN_LABEL.test(i.label));
+  return (
+    <div className="flex max-w-[76ch] flex-col gap-4 text-[15px] leading-[1.6] text-primary/80">
+      <p className="m-0 text-pretty">{d.sentence}</p>
+      {own.length > 0 && (
+        <dl className="m-0 grid grid-cols-1 gap-x-6 gap-y-1.5 sm:grid-cols-[minmax(0,1fr)_auto]">
+          {own.map((i) => (
+            <div key={i.label} className="contents">
+              <dt className="text-muted">{i.label}</dt>
+              <dd className="m-0 tabular-nums text-primary sm:text-right">{i.display ?? "—"}</dd>
+            </div>
+          ))}
+        </dl>
+      )}
+      {plan.length > 0 && (
+        <div className="flex flex-col gap-1.5">
+          <h3 className={H2}>What the company has filed about next</h3>
+          <dl className="m-0 grid grid-cols-1 gap-x-6 gap-y-1.5 sm:grid-cols-[minmax(0,1fr)_auto]">
+            {plan.map((i) => (
+              <div key={i.label} className="contents">
+                <dt className="text-muted">{i.label}</dt>
+                <dd className="m-0 tabular-nums text-primary sm:text-right">{i.display ?? "—"}</dd>
+              </div>
+            ))}
+          </dl>
+          <p className="m-0 text-[13px] text-muted">Figures the company filed with the SEC. Cairn does not summarise earnings calls or forecasts.</p>
+        </div>
+      )}
+      {definition && <p className="m-0 text-[13px] leading-[1.6] text-muted">{definition}</p>}
+      {d.sources.length > 0 && (
+        <ul className="m-0 flex list-none flex-col gap-1.5 p-0 text-[13px]">
+          {d.sources.map((s) => (
+            <li key={`${s.ref ?? ""}${s.label}`}>
+              {s.url ? (
+                <a href={s.url} target="_blank" rel="noreferrer" className="tap text-primary hover:text-accent">
+                  {s.label}
+                </a>
+              ) : (
+                <span className="text-primary">{s.label}</span>
+              )}
+              {s.kind === "sec_filing" && s.ref && <span className="text-dim"> · accession {s.ref}</span>}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+export const CAPITAL_DEFINITION =
+  "Spare cash is free cash flow: cash from running the business minus spending on equipment and buildings, added up over the three fiscal years. Each use is shown as a share of that total. Share counts are the diluted yearly averages, adjusted for stock splits. A use marked “not reported” has no figure under a standard SEC tag in the company's filings (some companies file it under their own label); it is never counted as zero.";

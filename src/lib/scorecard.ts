@@ -1,4 +1,4 @@
-// The scorecard: six plain-language descriptions of a ticker's numbers.
+// The scorecard: seven plain-language descriptions of a ticker's numbers.
 //
 // Pure and deterministic. No model is involved: every level, verdict and
 // sentence here is computed from stored filings and prices, and the same
@@ -11,13 +11,13 @@
 // uses, so the plain summary's number guard can check against them) and its
 // sources (a filing, a price date, a release), so no number is bare.
 
-import type { CompanyMetrics, PeHistory, EarningsReaction } from "@/lib/fundamentals";
-import { median } from "@/lib/fundamentals";
+import type { CompanyMetrics, PeHistory, EarningsReaction, CapitalUse, AnnualCapitalRow, Quarter } from "@/lib/fundamentals";
+import { capitalUse, median, perShare, sortQuarters, totalDebt } from "@/lib/fundamentals";
 import type { FactorSet } from "@/lib/ai/factors";
 
 export type Level = "strong" | "mixed" | "weak" | "not_applicable";
 
-export type DimensionKey = "valuation" | "growth" | "health" | "dividend" | "trend" | "next_event";
+export type DimensionKey = "valuation" | "growth" | "health" | "dividend" | "capital" | "trend" | "next_event";
 
 export interface Input {
   label: string;
@@ -97,6 +97,18 @@ export const THRESHOLDS = {
     wellCoveredPayout: 0.6,
     /** Above 90% of free cash flow (or with no free cash flow) the dividend is at risk. Between is tight. */
     atRiskPayout: 0.9,
+  },
+  capital: {
+    /**
+     * Share count up by more than 3% over the three years is dilution large
+     * enough to set against per-share growth: about 1% a year, the stock-pay
+     * dilution large US companies commonly report.
+     */
+    dilution: 0.03,
+    /** Share count within +1% counts as flat: below that is rounding in stock-pay grants. */
+    flatShares: 0.01,
+    /** Debt up by at most 5% of where it started counts as flat. */
+    flatDebt: 0.05,
   },
   trend: {
     /** A 6-month move beyond +/-5% counts as a direction; inside it is sideways. */
@@ -421,6 +433,187 @@ export function dividendDimension(d: DividendInput): Dimension {
   return { key: "dividend", label, level, rated: true, verdict: coverage, sentence: `Pays ${yieldDisplay} a year.${paid}${streak}`, inputs, sources };
 }
 
+// ------------------------------------------------------------- use of cash
+
+export const CAPITAL_LABEL = "Use of cash";
+
+/**
+ * The company's own filed plan, only where it exists as a tagged number: the
+ * dollars left under its buyback authorisation, and its latest declared
+ * dividend per share. Never a summary of what management said.
+ */
+export interface CapitalPlan {
+  buybackRemaining: { value: number; asOf: string; source: Source } | null;
+  dividendDeclared: { perShare: number; periodEnd: string; source: Source } | null;
+}
+
+export interface CapitalInput {
+  use: CapitalUse | null;
+  /** The 10-K filings the three years' figures were taken from. */
+  sources: Source[];
+  plan: CapitalPlan | null;
+}
+
+export const CAPITAL_VERDICTS = { strong: "Strong", mixed: "Mixed", weak: "Weak" } as const;
+
+/** "$99.3B", "$850M": large dollar amounts, for inputs and the breakdown. */
+export function bigUsd(v: number): string {
+  const a = Math.abs(v);
+  const sign = v < 0 ? "-" : "";
+  if (a >= 1e9) return `${sign}$${(a / 1e9).toFixed(1)}B`;
+  if (a >= 1e6) return `${sign}$${Math.round(a / 1e6)}M`;
+  return `${sign}$${Math.round(a).toLocaleString("en-US")}`;
+}
+
+/** True when debt ended no more than THRESHOLDS.capital.flatDebt above where it started. */
+function debtFlatOrDown(c: CapitalUse): boolean | null {
+  if (c.debtStart === null || c.debtEnd === null) return null;
+  if (c.debtStart <= 0) return c.debtEnd <= 0;
+  return c.debtEnd - c.debtStart <= c.debtStart * THRESHOLDS.capital.flatDebt;
+}
+
+/**
+ * [DECISION: Adam] Proposed rules. They describe what happened per share;
+ * they do not judge management:
+ *   Weak   - free cash flow per share fell while cash went to buybacks,
+ *            dividends or acquisitions.
+ *   Mixed  - it rose, but the share count rose more than 3% (dilution), or
+ *            buybacks over the three years exceeded free cash flow (paid for
+ *            from savings or borrowing); also anything not Strong or Weak,
+ *            including a fall with no reported spending.
+ *   Strong - it rose, the share count is flat or down and debt is flat or down.
+ * Null when free cash flow per share cannot be measured at both ends.
+ */
+export function capitalLevel(c: CapitalUse): Exclude<Level, "not_applicable"> | null {
+  const T = THRESHOLDS.capital;
+  if (c.fcfPerShareFirst === null || c.fcfPerShareLast === null) return null;
+  const up = c.fcfPerShareLast > c.fcfPerShareFirst;
+  const spent = [c.dividends, c.buybacks, c.acquisitions].some((v) => v !== null && v > 0);
+  if (!up) return c.fcfPerShareLast < c.fcfPerShareFirst && spent ? "weak" : "mixed";
+  const diluted = c.shareChange !== null && c.shareChange > T.dilution;
+  const buybacksOverFcf = c.buybacks !== null && c.buybacks > c.freeCashFlow;
+  if (diluted || buybacksOverFcf) return "mixed";
+  const sharesFlatOrDown = c.shareChange !== null && c.shareChange <= T.flatShares;
+  return sharesFlatOrDown && debtFlatOrDown(c) === true ? "strong" : "mixed";
+}
+
+function joinWords(words: string[]): string {
+  return words.length <= 1 ? (words[0] ?? "") : `${words.slice(0, -1).join(", ")} and ${words[words.length - 1]}`;
+}
+
+/** Whole-percent display is zero: too small to state as a share. */
+const roundsToZero = (v: number) => Math.round(Math.abs(v) * 100) === 0;
+
+/**
+ * The plain sentences, each under 25 words with no finance jargon, so the
+ * plain summary may quote them. "Spare cash" is free cash flow, as in the
+ * price-vs-profit sentence; the breakdown names it.
+ */
+export function capitalSentences(c: CapitalUse): string[] {
+  const out: string[] = [];
+  const span = `In fiscal ${c.firstYear} to ${c.lastYear}`;
+  const uses: { words: string; value: number | null; share: number | null }[] = [
+    { words: "buying back shares", value: c.buybacks, share: c.buybacksShare },
+    { words: "dividends", value: c.dividends, share: c.dividendsShare },
+    { words: "buying companies", value: c.acquisitions, share: c.acquisitionsShare },
+  ];
+  if (c.freeCashFlow <= 0) {
+    out.push(`${span} it spent more cash than it brought in, so it had no spare cash to share out.`);
+  } else {
+    const spent = uses.filter((u) => u.value !== null && u.share !== null && u.value > 0 && !roundsToZero(u.share));
+    if (spent.length > 0) {
+      const parts = spent.map((u, n) => (n === 0 ? `${pct(u.share!)} of its spare cash on ${u.words}` : `${pct(u.share!)} on ${u.words}`));
+      out.push(`${span} it used ${joinWords(parts)}.`);
+      if (c.leftOverShare !== null) {
+        out.push(c.leftOverShare >= 0 ? `The other ${pct(c.leftOverShare)} was left over.` : `Together that was ${pct(c.leftOverShare)} more than its spare cash.`);
+      }
+    } else {
+      out.push(`${span} it spent none of its spare cash on the uses its filings report.`);
+    }
+  }
+  const missing = uses.filter((u) => u.value === null).map((u) => u.words);
+  if (missing.length > 0) out.push(`Its filings give no standard figure for ${joinWords(missing)}.`);
+
+  const shares =
+    c.shareChange === null ? null : roundsToZero(c.shareChange) ? "The share count barely changed" : `The share count ${c.shareChange > 0 ? "rose" : "fell"} ${pct(c.shareChange)}`;
+  let perShareCash: string | null = null;
+  if (c.fcfPerShareChange !== null) {
+    perShareCash = roundsToZero(c.fcfPerShareChange)
+      ? "spare cash per share barely changed"
+      : `spare cash per share ${c.fcfPerShareChange > 0 ? "rose" : "fell"} ${pct(c.fcfPerShareChange)}`;
+  } else if (c.fcfPerShareFirst !== null && c.fcfPerShareLast !== null) {
+    perShareCash =
+      c.fcfPerShareLast > 0 ? "spare cash per share turned positive" : c.fcfPerShareFirst > 0 ? "spare cash per share turned negative" : "spare cash per share stayed below zero";
+  }
+  if (shares && perShareCash) out.push(`${shares}, and ${perShareCash}.`);
+  else if (shares) out.push(`${shares}.`);
+
+  if (c.debtStart !== null && c.debtEnd !== null) {
+    if (c.debtStart <= 0) out.push(c.debtEnd <= 0 ? "It reported no debt." : "It took on debt where it reported none before.");
+    else {
+      const ch = c.debtEnd / c.debtStart - 1;
+      out.push(roundsToZero(ch) ? "Its debt stayed about the same." : `Its debt ${ch > 0 ? "rose" : "fell"} ${pct(ch)}.`);
+    }
+  }
+  return out;
+}
+
+export function capitalDimension(i: CapitalInput): Dimension {
+  const label = CAPITAL_LABEL;
+  const c = i.use;
+  if (!c) return NA("capital", label, "Three full years of cash-flow figures are not available.", "Not available");
+  const pctOrNull = (v: number | null) => (v === null ? null : pct(v));
+  // A change that rounds to 0% is shown unsigned: "-0%" reads as a fall.
+  const signed = (v: number | null) => (v === null ? null : roundsToZero(v) ? "0%" : signedPct(v));
+  const usdOrNr = (v: number | null) => (v === null ? "not reported" : bigUsd(v));
+  const sbcShare = c.stockCompensation === null || c.freeCashFlow <= 0 ? null : c.stockCompensation / c.freeCashFlow;
+  const inputs: Input[] = [
+    input("Fiscal years covered", c.years.length, `${c.firstYear} to ${c.lastYear}`),
+    input("Free cash flow over those years (USD)", c.freeCashFlow, bigUsd(c.freeCashFlow)),
+    input("Share buybacks (USD)", c.buybacks, usdOrNr(c.buybacks)),
+    input("Share buybacks ÷ free cash flow", c.buybacksShare, pctOrNull(c.buybacksShare)),
+    input("Dividends paid (USD)", c.dividends, usdOrNr(c.dividends)),
+    input("Dividends ÷ free cash flow", c.dividendsShare, pctOrNull(c.dividendsShare)),
+    input("Companies bought, net of their cash (USD)", c.acquisitions, usdOrNr(c.acquisitions)),
+    input("Companies bought ÷ free cash flow", c.acquisitionsShare, pctOrNull(c.acquisitionsShare)),
+    input("Left after these uses ÷ free cash flow", c.leftOverShare, pctOrNull(c.leftOverShare)),
+    input("Change in share count (diluted average)", c.shareChange, signed(c.shareChange)),
+    input(`Free cash flow per share, fiscal ${c.firstYear}`, c.fcfPerShareFirst, c.fcfPerShareFirst === null ? null : perShare(c.fcfPerShareFirst)),
+    input(`Free cash flow per share, fiscal ${c.lastYear}`, c.fcfPerShareLast, c.fcfPerShareLast === null ? null : perShare(c.fcfPerShareLast)),
+    input("Change in free cash flow per share", c.fcfPerShareChange, signed(c.fcfPerShareChange)),
+    input("Change in sales per share", c.revenuePerShareChange, signed(c.revenuePerShareChange)),
+    input(`R&D ÷ sales, fiscal ${c.lastYear}`, c.rndShareOfSales, c.rndShareOfSales === null ? "not reported" : pct(c.rndShareOfSales)),
+    input("Stock-based pay ÷ free cash flow", sbcShare, c.stockCompensation === null ? "not reported" : pctOrNull(sbcShare)),
+    input(`Debt at the end of fiscal ${c.firstYear - 1} (USD)`, c.debtStart, usdOrNr(c.debtStart)),
+    input(`Debt at the end of fiscal ${c.lastYear} (USD)`, c.debtEnd, usdOrNr(c.debtEnd)),
+  ];
+  const sources = [...i.sources];
+  const plan = i.plan;
+  if (plan?.buybackRemaining) {
+    inputs.push(input(`Buyback authorisation left at ${plan.buybackRemaining.asOf} (USD)`, plan.buybackRemaining.value, bigUsd(plan.buybackRemaining.value)));
+    if (!sources.some((x) => x.ref === plan.buybackRemaining!.source.ref)) sources.push(plan.buybackRemaining.source);
+  }
+  if (plan?.dividendDeclared) {
+    inputs.push(input(`Dividend declared per share, quarter to ${plan.dividendDeclared.periodEnd}`, plan.dividendDeclared.perShare, perShare(plan.dividendDeclared.perShare)));
+    if (!sources.some((x) => x.ref === plan.dividendDeclared!.source.ref)) sources.push(plan.dividendDeclared.source);
+  }
+  const level = capitalLevel(c);
+  const sentence = capitalSentences(c).join(" ");
+  if (level === null) {
+    return {
+      key: "capital",
+      label,
+      level: "not_applicable",
+      rated: true,
+      verdict: "Not enough data",
+      sentence: `${sentence} Its share count is not reported for both years, so per-share figures can't be compared.`.trim(),
+      inputs,
+      sources,
+    };
+  }
+  return { key: "capital", label, level, rated: true, verdict: CAPITAL_VERDICTS[level], sentence, inputs, sources };
+}
+
 export interface TrendInput {
   /** 6-month (126-session) return, fraction. */
   return6m: number | null;
@@ -583,6 +776,8 @@ export interface ScorecardInput {
   metrics: CompanyMetrics | null;
   valuation: ValuationInput;
   dividend: DividendInput;
+  /** Absent for callers that predate the dimension: it then reads "Not available". */
+  capital?: CapitalInput;
   trend: TrendInput;
   events: UpcomingEvent[];
   reactions: EarningsReaction[];
@@ -603,6 +798,7 @@ export function buildScorecard(i: ScorecardInput): Scorecard {
       NA("growth", "Growth", why),
       NA("health", "Financial health", why),
       NA("dividend", "Dividend", why),
+      NA("capital", CAPITAL_LABEL, why),
     ];
   } else if (i.companyData === "unavailable") {
     const why = "No US company filings are stored for it.";
@@ -611,6 +807,7 @@ export function buildScorecard(i: ScorecardInput): Scorecard {
       NA("growth", "Growth", why, "Not available"),
       NA("health", "Financial health", why, "Not available"),
       NA("dividend", "Dividend", why, "Not available"),
+      NA("capital", CAPITAL_LABEL, why, "Not available"),
     ];
   } else {
     company = [
@@ -618,6 +815,7 @@ export function buildScorecard(i: ScorecardInput): Scorecard {
       growthDimension(i.metrics, i.filing),
       healthDimension(i.metrics, i.filing),
       dividendDimension(i.dividend),
+      capitalDimension(i.capital ?? { use: null, sources: [], plan: null }),
     ];
   }
   return { symbol: i.symbol, asOf: i.today, dimensions: [...company, trend, next] };
@@ -639,4 +837,112 @@ export function sectorMedianPe(peerPes: (number | null)[], minPeers: number = TH
   const valid = peerPes.filter((p): p is number => p !== null && Number.isFinite(p) && p > 0);
   if (valid.length < minPeers) return null;
   return { median: median(valid)!, peers: valid.length };
+}
+
+// ------------------------------------------------- use of cash: stored rows
+
+interface RowProvenance {
+  concept?: string;
+  method?: string;
+  accn: string;
+  form: string;
+  filed: string;
+}
+
+/** A company_financials_annual row as read (columns added by 0061 may be absent before it is applied). */
+export interface StoredAnnualRow {
+  fiscal_year: number;
+  period_end: string;
+  revenue: number | string | null;
+  operating_cash_flow: number | string | null;
+  capex: number | string | null;
+  dividends_paid: number | string | null;
+  buybacks?: number | string | null;
+  acquisitions?: number | string | null;
+  research_development?: number | string | null;
+  stock_compensation?: number | string | null;
+  diluted_shares?: number | string | null;
+  provenance?: Record<string, RowProvenance | undefined> | null;
+}
+
+/** The Q-row fields the capital input reads, on top of the debt components. */
+export interface StoredQuarterRow extends Quarter {
+  cik: string;
+  buyback_authorization_remaining?: number | string | null;
+  provenance?: Record<string, RowProvenance | undefined> | null;
+}
+
+const num = (v: number | string | null | undefined): number | null => (v === null || v === undefined || v === "" ? null : Number(v));
+
+/** Flow fields whose filings the "Use of cash" sources cite. */
+const CAPITAL_FIELDS = ["operating_cash_flow", "capex", "dividends_paid", "buybacks", "acquisitions", "diluted_shares"] as const;
+const DEBT_FIELDS = ["long_term_debt", "long_term_debt_noncurrent", "debt_current", "short_term_borrowings", "cash"] as const;
+
+function citeOnce(out: Source[], cik: string, p: RowProvenance | undefined, what: string) {
+  if (!p?.accn || out.some((s) => s.ref === p.accn)) return;
+  out.push({ kind: "sec_filing", label: `${p.form} filed ${p.filed} (${what})`, ref: p.accn, url: filingUrl({ accn: p.accn, form: p.form, filed: p.filed, cik }) });
+}
+
+/**
+ * Everything the "Use of cash" dimension needs, from stored rows: the three
+ * years' figures, the 10-Ks they came from, debt at each year end (its Q4
+ * row), and the filed plan (buyback authorisation left, declared dividend).
+ */
+export function capitalInputFromRows(annualRows: StoredAnnualRow[], quarters: StoredQuarterRow[]): CapitalInput {
+  const cik = quarters[0]?.cik ?? "";
+  const annual: AnnualCapitalRow[] = annualRows.map((r) => ({
+    fiscal_year: r.fiscal_year,
+    period_end: String(r.period_end),
+    revenue: num(r.revenue),
+    operating_cash_flow: num(r.operating_cash_flow),
+    capex: num(r.capex),
+    dividends_paid: num(r.dividends_paid),
+    buybacks: num(r.buybacks),
+    acquisitions: num(r.acquisitions),
+    research_development: num(r.research_development),
+    stock_compensation: num(r.stock_compensation),
+    diluted_shares: num(r.diluted_shares),
+  }));
+  const yearEnd = new Map<number, StoredQuarterRow>();
+  for (const q of quarters) if (q.fiscal_quarter === 4) yearEnd.set(q.fiscal_year, q);
+  const debt = new Map<number, number | null>();
+  for (const [fy, q] of yearEnd) debt.set(fy, totalDebt(q));
+  const use = capitalUse(annual, debt);
+
+  const sources: Source[] = [];
+  if (use) {
+    const span = `fiscal ${use.firstYear} to ${use.lastYear}`;
+    for (const fy of [...use.years].reverse()) {
+      const row = annualRows.find((r) => r.fiscal_year === fy);
+      for (const f of CAPITAL_FIELDS) citeOnce(sources, cik, row?.provenance?.[f] ?? undefined, `cash flow and share count, ${span}`);
+    }
+    for (const fy of [use.lastYear, use.firstYear - 1]) {
+      const q = yearEnd.get(fy);
+      for (const f of DEBT_FIELDS) citeOnce(sources, cik, q?.provenance?.[f] ?? undefined, `debt at the end of fiscal ${fy}`);
+    }
+  }
+
+  // The filed plan: from the latest four quarters only, so a stale figure is never shown as current.
+  const recent = sortQuarters(quarters).slice(0, 4);
+  let buybackRemaining: CapitalPlan["buybackRemaining"] = null;
+  const withAuth = recent.find((q) => num(q.buyback_authorization_remaining) !== null);
+  const authProv = withAuth?.provenance?.buyback_authorization_remaining;
+  if (withAuth && authProv) {
+    buybackRemaining = {
+      value: num(withAuth.buyback_authorization_remaining)!,
+      asOf: withAuth.period_end,
+      source: { kind: "sec_filing", label: `${authProv.form} filed ${authProv.filed} (buyback authorisation left)`, ref: authProv.accn, url: filingUrl({ ...authProv, cik }) },
+    };
+  }
+  let dividendDeclared: CapitalPlan["dividendDeclared"] = null;
+  const latest = recent[0];
+  const dpsProv = latest?.provenance?.dividends_per_share;
+  if (latest && latest.dividends_per_share !== null && latest.dividends_per_share > 0 && dpsProv?.concept === "CommonStockDividendsPerShareDeclared") {
+    dividendDeclared = {
+      perShare: Number(latest.dividends_per_share),
+      periodEnd: latest.period_end,
+      source: { kind: "sec_filing", label: `${dpsProv.form} filed ${dpsProv.filed} (dividend declared)`, ref: dpsProv.accn, url: filingUrl({ ...dpsProv, cik }) },
+    };
+  }
+  return { use, sources, plan: buybackRemaining || dividendDeclared ? { buybackRemaining, dividendDeclared } : null };
 }

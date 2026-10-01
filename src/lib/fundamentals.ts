@@ -405,3 +405,150 @@ export function companyDataStatus(assetType: string | null | undefined, quarterC
   if (assetType !== "equity") return "not_applicable";
   return quarterCount > 0 ? "available" : "unavailable";
 }
+
+// ------------------------------------------------------------- use of cash
+//
+// What a company did with its cash over its last three full fiscal years
+// (feat/scorecard-capital-use). Flows come from the 10-K annual figures
+// (company_financials_annual); debt from the balance sheet at each fiscal year
+// end (the Q4 row of company_financials_quarterly). A use the company's
+// filings do not report under a standard tag is null - "not reported" - and
+// is never counted as zero: Microsoft's acquisitions since 2023 are filed
+// under its own tag and would otherwise read as "spent nothing on
+// acquisitions" in the year it bought Activision.
+
+export interface AnnualCapitalRow {
+  fiscal_year: number;
+  period_end: string;
+  revenue: number | null;
+  operating_cash_flow: number | null;
+  capex: number | null;
+  dividends_paid: number | null;
+  buybacks: number | null;
+  acquisitions: number | null;
+  research_development: number | null;
+  stock_compensation: number | null;
+  diluted_shares: number | null;
+}
+
+/** Three full fiscal years are compared: the first with the latest. */
+export const CAPITAL_YEARS = 3;
+
+export interface CapitalUse {
+  /** Fiscal years covered, oldest first. */
+  years: number[];
+  firstYear: number;
+  lastYear: number;
+  /** Free cash flow summed over the years. */
+  freeCashFlow: number;
+  /** Each use summed over the years; null when any year is not reported. */
+  dividends: number | null;
+  buybacks: number | null;
+  acquisitions: number | null;
+  /** Each use as a fraction of the summed free cash flow; null when either side is missing or free cash flow is not positive. */
+  dividendsShare: number | null;
+  buybacksShare: number | null;
+  acquisitionsShare: number | null;
+  /** Free cash flow not spent on the three uses; only when all three are reported. */
+  leftOver: number | null;
+  leftOverShare: number | null;
+  /** Diluted weighted-average share count, first and latest year. */
+  sharesFirst: number | null;
+  sharesLast: number | null;
+  shareChange: number | null;
+  fcfPerShareFirst: number | null;
+  fcfPerShareLast: number | null;
+  /** Growth of free cash flow per share; null when the first year's was not positive. */
+  fcfPerShareChange: number | null;
+  revenuePerShareFirst: number | null;
+  revenuePerShareLast: number | null;
+  revenuePerShareChange: number | null;
+  /** Latest year's R&D / latest year's revenue. */
+  rndShareOfSales: number | null;
+  /** Stock-based pay summed over the years. */
+  stockCompensation: number | null;
+  /** Total debt at the end of the year before the window, and at the end of the latest year. */
+  debtStart: number | null;
+  debtEnd: number | null;
+  debtChange: number | null;
+}
+
+/** Sum over every row, or null when any row lacks the field. */
+function sumAll(rows: AnnualCapitalRow[], f: (r: AnnualCapitalRow) => number | null): number | null {
+  let s = 0;
+  for (const r of rows) {
+    const v = f(r);
+    if (v === null || !Number.isFinite(v)) return null;
+    s += v;
+  }
+  return s;
+}
+
+/**
+ * The last CAPITAL_YEARS consecutive fiscal years with a complete free cash
+ * flow, and what happened to it. Null when there are not three such years.
+ * `debtAtYearEnd` maps fiscal year -> total debt at that year's end
+ * (fundamentals.totalDebt on the Q4 row), null where not reported.
+ */
+export function capitalUse(annual: AnnualCapitalRow[], debtAtYearEnd: Map<number, number | null>): CapitalUse | null {
+  const byYear = [...annual].sort((a, b) => b.fiscal_year - a.fiscal_year);
+  const latest = byYear[0];
+  if (!latest) return null;
+  const window: AnnualCapitalRow[] = [];
+  for (const r of byYear) {
+    if (window.length === CAPITAL_YEARS) break;
+    if (r.fiscal_year !== latest.fiscal_year - window.length) break;
+    window.push(r);
+  }
+  if (window.length < CAPITAL_YEARS) return null;
+  window.reverse();
+  const fcfOf = (r: AnnualCapitalRow) => freeCashFlow(r.operating_cash_flow, r.capex);
+  const fcf = sumAll(window, fcfOf);
+  if (fcf === null) return null;
+
+  const first = window[0];
+  const last = window[window.length - 1];
+  const dividends = sumAll(window, (r) => r.dividends_paid);
+  const buybacks = sumAll(window, (r) => r.buybacks);
+  const acquisitions = sumAll(window, (r) => r.acquisitions);
+  const share = (v: number | null) => (v === null ? null : ratio(v, fcf));
+  const leftOver = dividends !== null && buybacks !== null && acquisitions !== null ? fcf - dividends - buybacks - acquisitions : null;
+
+  const perShare = (v: number | null, shares: number | null) => (v === null || shares === null || shares <= 0 ? null : v / shares);
+  const fcfFirst = perShare(fcfOf(first), first.diluted_shares);
+  const fcfLast = perShare(fcfOf(last), last.diluted_shares);
+  const revFirst = perShare(first.revenue, first.diluted_shares);
+  const revLast = perShare(last.revenue, last.diluted_shares);
+
+  const debtStart = debtAtYearEnd.get(first.fiscal_year - 1) ?? null;
+  const debtEnd = debtAtYearEnd.get(last.fiscal_year) ?? null;
+
+  return {
+    years: window.map((r) => r.fiscal_year),
+    firstYear: first.fiscal_year,
+    lastYear: last.fiscal_year,
+    freeCashFlow: fcf,
+    dividends,
+    buybacks,
+    acquisitions,
+    dividendsShare: share(dividends),
+    buybacksShare: share(buybacks),
+    acquisitionsShare: share(acquisitions),
+    leftOver,
+    leftOverShare: share(leftOver),
+    sharesFirst: first.diluted_shares,
+    sharesLast: last.diluted_shares,
+    shareChange: growth(last.diluted_shares, first.diluted_shares),
+    fcfPerShareFirst: fcfFirst,
+    fcfPerShareLast: fcfLast,
+    fcfPerShareChange: growth(fcfLast, fcfFirst),
+    revenuePerShareFirst: revFirst,
+    revenuePerShareLast: revLast,
+    revenuePerShareChange: growth(revLast, revFirst),
+    rndShareOfSales: ratio(last.research_development, last.revenue),
+    stockCompensation: sumAll(window, (r) => r.stock_compensation),
+    debtStart,
+    debtEnd,
+    debtChange: debtStart === null || debtEnd === null ? null : debtEnd - debtStart,
+  };
+}

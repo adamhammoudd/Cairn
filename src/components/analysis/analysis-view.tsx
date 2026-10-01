@@ -6,10 +6,10 @@
 //
 //   1. In plain words        headline + bullets
 //   2. What history says     "Higher 2 weeks later in 9 of 14 similar moments", dots, range, confidence
-//   3. Scorecard             the six tiles
+//   3. Scorecard             the seven tiles
 //   4. What to watch         dated events and cited sources
 //   5. What this means for you   only when the reader holds it, and only behind the exposure flag
-//   6. Full breakdown        collapsed: sources, every case, company numbers, trader indicators, how
+//   6. Full breakdown        collapsed: sources, every case, company numbers, use of cash, trader indicators, how
 //   7. Footer
 //
 // Everything here draws what the server already decided the reader may see
@@ -22,7 +22,7 @@ import Link from "next/link";
 import type { AnalysisDisplay } from "@/lib/analysis-display";
 import type { Scorecard } from "@/lib/scorecard";
 import { decodeEntities } from "@/lib/news";
-import { AnalysisFooter, FullBreakdown, PlainWordsPanel, ScorecardGrid, useBreakdownState, type BreakdownRow } from "@/components/analysis/summary-sections";
+import { AnalysisFooter, CAPITAL_DEFINITION, DimensionDetail, FullBreakdown, PlainWordsPanel, ScorecardGrid, useBreakdownState, type BreakdownRow } from "@/components/analysis/summary-sections";
 
 const H2 = "m-0 font-mono text-micro font-medium uppercase tracking-[0.16em] text-muted";
 
@@ -355,6 +355,8 @@ export function AnalysisView({ display, sources, closestCase, scorecard, forYou,
   const breakdown = useBreakdownState(openBreakdown ?? null);
   const card = scorecard === undefined ? display.scorecard : scorecard;
   const used = new Set(display.sourcesUsed);
+  // Scorecards stored before the dimension existed have no "capital" entry: no row.
+  const capital = card?.dimensions.find((d) => d.key === "capital");
   const written = new Date(display.createdAt).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
   const meta =
     display.textSource === "model"
@@ -393,6 +395,9 @@ export function AnalysisView({ display, sources, closestCase, scorecard, forYou,
     },
     ...(companyNumbers !== undefined
       ? [{ id: "company", title: "Company numbers", detail: display.plan === "premium" ? "sales, EBITDA, cash flow, debt" : "Premium", content: companyNumbers }]
+      : []),
+    ...(capital && capital.inputs.length > 0
+      ? [{ id: "capital", title: "Use of cash", detail: capital.verdict, content: <DimensionDetail d={capital} definition={CAPITAL_DEFINITION} /> }]
       : []),
     {
       id: "trader",

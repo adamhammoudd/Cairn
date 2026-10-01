@@ -67,8 +67,8 @@ export const TOOL_SPECS = [
   fn("find_symbol", "Look up a company, fund or coin by name or ticker. Fetches it on demand if Cairn has never stored it.", { query: { type: "string" } }, ["query"]),
   fn("get_quote", "Latest price and today's change for one symbol.", { symbol: sym }, ["symbol"]),
   fn("get_price_summary", "Price now plus change over a week, month, 6 months and a year, and the 52-week range.", { symbol: sym }, ["symbol"]),
-  fn("get_scorecard", "Cairn's plain-language scorecard: price vs profit, growth, financial health, dividend, trend, next event.", { symbol: sym }, ["symbol"]),
-  fn("get_company_numbers", "Revenue, profit, EBITDA, cash flow, debt and dividend from SEC filings.", { symbol: sym }, ["symbol"]),
+  fn("get_scorecard", "Cairn's plain-language scorecard: price vs profit, growth, financial health, dividend, use of cash, trend, next event.", { symbol: sym }, ["symbol"]),
+  fn("get_company_numbers", "Revenue, profit, EBITDA, cash flow, debt and dividend from SEC filings, plus what the company did with its cash over three fiscal years (buybacks, dividends, acquisitions, share count, free cash flow per share).", { symbol: sym }, ["symbol"]),
   fn("get_history_outcome", "What happened next in past moments like today in this symbol's own price history (Cairn's analog engine).", { symbol: sym }, ["symbol"]),
   fn("get_news", "Recent news stored by Cairn, newest first, with source and date.", { symbol: sym, query: { type: "string", description: "Keyword, when not about one symbol." }, days: { type: "integer", minimum: 1, maximum: 30 } }, []),
   fn("get_calendar", "Upcoming earnings and dividend dates. symbol = a ticker, or \"portfolio\" for everything the reader holds.", { symbol: { type: "string" } }, ["symbol"]),
@@ -156,7 +156,7 @@ const IMPLS: Record<ToolName, Impl> = {
     return {
       ok: true,
       label: `${s} scorecard`,
-      data: { symbol: s, name: c.name, type: c.assetType, scores: c.dimensions.map((d) => ({ part: d.label, verdict: d.verdict, level: d.level, in_words: d.sentence })) },
+      data: { symbol: s, name: c.name, type: c.assetType, scores: c.dimensions.map((d) => ({ part: d.label, verdict: d.verdict, level: d.level, in_words: d.sentence, figures: d.figures })) },
       sources: c.sources.map((x) => ({ kind: "filing" as const, title: x.label, publisher: "SEC EDGAR", url: x.url, date: null })),
       facts: rated.map((d) => `${d.label}: ${d.verdict}. ${d.sentence}`),
       tiles: rated.filter((d) => d.key === "valuation" || d.key === "growth").map((d) => ({ label: d.label, value: d.verdict })),
@@ -186,12 +186,25 @@ const IMPLS: Record<ToolName, Impl> = {
       figures.net_profit && `Net profit: ${figures.net_profit}.`,
       figures.free_cash_flow && `Free cash flow (cash from operations minus spending on equipment): ${figures.free_cash_flow}.`,
       figures.dividends_paid && `Dividends paid: ${figures.dividends_paid}${payout ? `, ${payout} of free cash flow` : ""}.`,
+      n.useOfCash && `Use of cash (${n.useOfCash.verdict}): ${n.useOfCash.sentence}`,
     ].filter((x): x is string => !!x);
     return {
       ok: true,
       label: `${s} company numbers`,
-      data: { symbol: s, name: n.name, period: n.periodLabel, basis: n.basis === "ttm" ? "trailing twelve months (last four quarters)" : n.basis === "annual" ? "latest fiscal year" : "latest quarter", figures, dividends_as_share_of_free_cash_flow: payout },
-      sources: [{ kind: "filing", title: `${n.name} SEC filings, period to ${plainDate(n.periodEnd)}`, publisher: "SEC EDGAR", url: n.source.url, date: n.periodEnd }],
+      data: {
+        symbol: s,
+        name: n.name,
+        period: n.periodLabel,
+        basis: n.basis === "ttm" ? "trailing twelve months (last four quarters)" : n.basis === "annual" ? "latest fiscal year" : "latest quarter",
+        figures,
+        dividends_as_share_of_free_cash_flow: payout,
+        // "not reported" means no figure under a standard SEC tag, never zero.
+        use_of_cash: n.useOfCash ? { verdict: n.useOfCash.verdict, in_words: n.useOfCash.sentence, figures: n.useOfCash.figures } : null,
+      },
+      sources: [
+        { kind: "filing", title: `${n.name} SEC filings, period to ${plainDate(n.periodEnd)}`, publisher: "SEC EDGAR", url: n.source.url, date: n.periodEnd },
+        ...(n.useOfCash?.sources ?? []).map((x) => ({ kind: "filing" as const, title: x.label, publisher: "SEC EDGAR", url: x.url, date: null })),
+      ],
       facts,
       tiles: [figures.revenue && { label: "Revenue", value: figures.revenue, note: n.basis === "ttm" ? "last 4 quarters" : n.periodLabel }, figures.free_cash_flow && { label: "Free cash flow", value: figures.free_cash_flow }, payout && { label: "Dividends vs free cash", value: payout }].filter(Boolean) as AnswerTile[],
     };

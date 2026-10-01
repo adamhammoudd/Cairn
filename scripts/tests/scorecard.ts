@@ -1,4 +1,4 @@
-// Section 2 (feat/scorecard): the six-dimension scorecard.
+// Section 2 (feat/scorecard): the scorecard (seven dimensions since feat/scorecard-capital-use).
 //
 // Table-driven cases per dimension, including every threshold boundary,
 // missing data, crypto and ETFs, and a snapshot of the full card for three
@@ -344,10 +344,10 @@ export function runScorecardSuite(opts: { update?: boolean } = {}): SuiteResult 
   const btc = buildScorecard({ ...common, symbol: "BTC", assetType: "crypto", companyData: "not_applicable" });
   check(
     "crypto: company dimensions are not applicable, trend and next event still work",
-    btc.dimensions.length === 6 &&
-      btc.dimensions.slice(0, 4).every((d) => d.level === "not_applicable" && /no company behind it/.test(d.sentence)) &&
-      btc.dimensions[4].verdict === "Falling" &&
-      btc.dimensions[5].key === "next_event",
+    btc.dimensions.length === 7 &&
+      btc.dimensions.slice(0, 5).every((d) => d.level === "not_applicable" && /no company behind it/.test(d.sentence)) &&
+      btc.dimensions[5].verdict === "Falling" &&
+      btc.dimensions[6].key === "next_event",
     btc.dimensions.map((d) => `${d.key}:${d.verdict}`).join(", "),
   );
   const spy = buildScorecard({ ...common, symbol: "SPY", assetType: "etf", companyData: "not_applicable" });
@@ -392,7 +392,7 @@ export function runScorecardSuite(opts: { update?: boolean } = {}): SuiteResult 
     check("full scorecards match the reviewed snapshot (grower, dividend payer, coin)", stored === current, stored === current ? "identical" : "differs: rerun with --update after reviewing the diff");
   }
 
-  return { suiteName: "Scorecard (six plain-language dimensions)", gating: true, cases };
+  return { suiteName: "Scorecard (seven plain-language dimensions)", gating: true, cases };
 }
 
 /** Three synthetic companies, used for the snapshot. */

@@ -66,8 +66,13 @@ type Kind = "duration" | "instant";
 
 interface FieldSpec {
   kind: Kind;
-  unit: "USD" | "USD/shares";
+  unit: "USD" | "USD/shares" | "shares";
   chain: string[];
+  /**
+   * A weighted average over the period (share counts), not a running total:
+   * never differenced into Q2/Q3 or derived into Q4, and never summed.
+   */
+  average?: boolean;
 }
 
 /**
@@ -112,10 +117,44 @@ export const FIELD_SPECS = {
   // LongTermDebtCurrent" would count current maturities twice. Total debt is
   // computed in src/lib/fundamentals.ts (totalDebt) from these.
   long_term_debt: { kind: "instant", unit: "USD", chain: ["LongTermDebt"] },
-  long_term_debt_noncurrent: { kind: "instant", unit: "USD", chain: ["LongTermDebtNoncurrent"] },
-  long_term_debt_current: { kind: "instant", unit: "USD", chain: ["LongTermDebtCurrent"] },
+  // Coca-Cola moved to the "...AndCapitalLeaseObligations" pair in 2024 and
+  // stopped reporting LongTermDebt; without them its debt read as commercial
+  // paper alone ($1.5B against ~$45B). They include finance-lease obligations,
+  // a small addition; provenance names the concept used.
+  long_term_debt_noncurrent: { kind: "instant", unit: "USD", chain: ["LongTermDebtNoncurrent", "LongTermDebtAndCapitalLeaseObligations"] },
+  long_term_debt_current: { kind: "instant", unit: "USD", chain: ["LongTermDebtCurrent", "LongTermDebtAndCapitalLeaseObligationsCurrent"] },
   debt_current: { kind: "instant", unit: "USD", chain: ["DebtCurrent"] },
   short_term_borrowings: { kind: "instant", unit: "USD", chain: ["ShortTermBorrowings", "CommercialPaper"] },
+  // Use of cash (feat/scorecard-capital-use). Checked against the 32 ingested
+  // equities plus Coca-Cola on 2026-10-01. companyfacts carries only the
+  // standard taxonomies, so a line a company files under its own tag is absent
+  // here and stays null ("not reported"), never 0:
+  //   * buybacks: Dutch Bros and Super Micro file PaymentsForRepurchaseOfEquity.
+  //     Tesla, Rocket Lab, IonQ, Bloom, Kratos, Axon and Ampco report no line.
+  //   * acquisitions: Apple, Microsoft, Alphabet, Meta, Micron, Nike and
+  //     Coca-Cola have no standard-tag figure since 2023 (Microsoft files
+  //     Activision under its own "acquisitions ... and purchases of intangible
+  //     and other assets" line). Net of cash acquired only; the gross tag is a
+  //     different figure and is not mixed in.
+  //   * R&D: Amazon ("technology and infrastructure"), Coca-Cola, Nike, H.B.
+  //     Fuller, Dutch Bros and PENN report none under a standard tag.
+  //   * stock-based pay: Shopify reports only the expense concept; Bloom none.
+  buybacks: { kind: "duration", unit: "USD", chain: ["PaymentsForRepurchaseOfCommonStock", "PaymentsForRepurchaseOfEquity"] },
+  acquisitions: { kind: "duration", unit: "USD", chain: ["PaymentsToAcquireBusinessesNetOfCashAcquired"] },
+  research_development: {
+    kind: "duration",
+    unit: "USD",
+    chain: ["ResearchAndDevelopmentExpense", "ResearchAndDevelopmentExpenseExcludingAcquiredInProcessCost"],
+  },
+  stock_compensation: { kind: "duration", unit: "USD", chain: ["ShareBasedCompensation", "AllocatedShareBasedCompensationExpense"] },
+  diluted_shares: { kind: "duration", unit: "shares", chain: ["WeightedAverageNumberOfDilutedSharesOutstanding"], average: true },
+  // The company's own filed plan: dollars left under its board's buyback
+  // authorisation. The "1" concept replaced the original in the 2023 taxonomy.
+  buyback_authorization_remaining: {
+    kind: "instant",
+    unit: "USD",
+    chain: ["StockRepurchaseProgramRemainingAuthorizedRepurchaseAmount1", "StockRepurchaseProgramRemainingAuthorizedRepurchaseAmount"],
+  },
 } as const satisfies Record<string, FieldSpec>;
 
 export type Field = keyof typeof FIELD_SPECS;
@@ -155,6 +194,8 @@ export interface AnnualRow {
   period_end: string;
   /** Reported full-year figures (10-K), for fields where a year makes sense. */
   values: Partial<Record<Field, number | null>>;
+  /** The 10-K each annual figure was taken from (the latest one that reported it). */
+  provenance: Partial<Record<Field, Provenance>>;
 }
 
 export interface ParsedCompany {
@@ -461,12 +502,27 @@ export function shareBasis(doc: CompanyFacts): ShareBasis {
  * Facts from a filing whose basis is unknown are left out, so a quarter can
  * never be built from two bases.
  */
+/** Share-count concepts Cairn stores; scaled by the inverse of the per-share scale. */
+const SHARE_COUNT_CONCEPTS = new Set<string>(["WeightedAverageNumberOfDilutedSharesOutstanding"]);
+
 export function splitAdjusted(doc: CompanyFacts): { doc: CompanyFacts; splits: SplitEvent[] } {
   const usGaap = doc.facts?.["us-gaap"];
   if (!usGaap) return { doc, splits: [] };
   const { scale, splits } = shareBasis(doc);
   const out: NonNullable<CompanyFacts["facts"]>["us-gaap"] = {};
   for (const [concept, entry] of Object.entries(usGaap)) {
+    // A share count moves the opposite way to a per-share figure: NVIDIA's
+    // 10-for-1 split multiplied its share count by 10 and its EPS by 0.1.
+    const counts = SHARE_COUNT_CONCEPTS.has(concept) ? entry?.units?.shares : undefined;
+    if (counts) {
+      const adjusted = counts.flatMap((f) => {
+        const s = scale.get(f.accn);
+        if (s === undefined) return [];
+        return [s === 1 ? f : { ...f, val: Math.round(f.val / s) }];
+      });
+      out[concept] = { ...entry, units: { ...entry.units, shares: adjusted } };
+      continue;
+    }
     const perShare = entry?.units?.["USD/shares"];
     if (!perShare) {
       out[concept] = entry;
@@ -512,7 +568,7 @@ function prov(concept: string, method: Method, f: XbrlFact, approximate = false)
   return { concept, method, accn: f.accn, form: f.form, filed: f.filed, ...(approximate ? { approximate } : {}) };
 }
 
-function durationQuarters(doc: CompanyFacts, concept: string, unit: string, years: FiscalYear[]): ConceptQuarters {
+function durationQuarters(doc: CompanyFacts, concept: string, unit: string, years: FiscalYear[], average = false): ConceptQuarters {
   const placed = latestFiled(conceptFacts(doc, concept, unit))
     .map((f) => place(f, years))
     .filter((p): p is Placed => p !== null);
@@ -537,6 +593,8 @@ function durationQuarters(doc: CompanyFacts, concept: string, unit: string, year
 
   const isEps = unit === "USD/shares";
   for (const year of years) {
+    // A weighted-average share count is only ever the period it was reported for.
+    if (average) continue;
     const m = q.get(year.fy) ?? new Map();
     const y = ytd.get(year.fy) ?? new Map<number, XbrlFact>();
     // Q2 and Q3 from year-to-date figures where no 3-month fact exists.
@@ -596,7 +654,7 @@ export function parseCompanyFacts(raw: CompanyFacts): ParsedCompany {
     if (spec.kind !== "duration") continue;
     byField.set(
       field,
-      spec.chain.map((c) => durationQuarters(doc, c, spec.unit, years)),
+      spec.chain.map((c) => durationQuarters(doc, c, spec.unit, years, "average" in spec && spec.average === true)),
     );
   }
 
@@ -680,18 +738,21 @@ export function parseCompanyFacts(raw: CompanyFacts): ParsedCompany {
     .filter((y) => !y.open)
     .map((y) => {
       const values: AnnualRow["values"] = {};
+      const provenance: AnnualRow["provenance"] = {};
       for (const field of FIELDS) {
         const spec = FIELD_SPECS[field];
         if (spec.kind !== "duration") continue;
-        for (const cq of byField.get(field)!) {
-          const a = cq.annual.get(y.fy);
+        const perConcept = byField.get(field)!;
+        for (let i = 0; i < perConcept.length; i++) {
+          const a = perConcept[i].annual.get(y.fy);
           if (a) {
             values[field] = a.val;
+            provenance[field] = prov(spec.chain[i], "reported", a.fact);
             break;
           }
         }
       }
-      return { fiscal_year: y.fy, period_start: y.start, period_end: y.end, values };
+      return { fiscal_year: y.fy, period_start: y.start, period_end: y.end, values, provenance };
     });
 
   return { cik, entityName: doc.entityName ?? null, quarters, annual, splits };
@@ -809,6 +870,7 @@ export function secHistoryRows(
       period_start: a.period_start,
       period_end: a.period_end,
       ...Object.fromEntries(FIELDS.filter((f) => f in a.values).map((f) => [f, a.values[f] ?? null])),
+      provenance: a.provenance,
       updated_at: now,
     })),
     releases: releases.map((r) => ({ symbol, cik, ...r, updated_at: now })),

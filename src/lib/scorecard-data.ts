@@ -27,11 +27,14 @@ import {
 } from "@/lib/fundamentals";
 import {
   buildScorecard,
+  capitalInputFromRows,
   marketMedianPe,
   sectorMedianPe,
   trendInputsFromFactorSet,
   type FilingRef,
   type Scorecard,
+  type StoredAnnualRow,
+  type StoredQuarterRow,
   type UpcomingEvent,
 } from "@/lib/scorecard";
 
@@ -132,7 +135,8 @@ export async function loadScorecard(symbolRaw: string, opts: LoadOptions = {}): 
       .eq("symbol", symbol)
       .order("period_end", { ascending: false })
       .limit(QUARTERS),
-    secure.from("company_financials_annual").select("fiscal_year, eps_diluted").eq("symbol", symbol),
+    // Every column: the use-of-cash figures (migration 0061) are read when present.
+    secure.from("company_financials_annual").select("*").eq("symbol", symbol),
     supabase.from("fundamentals").select("shares_outstanding, sector").eq("symbol", symbol).maybeSingle(),
     supabase.from("earnings_releases").select("release_date, timing").eq("symbol", symbol).order("release_date", { ascending: false }).limit(16),
     supabase.from("calendar_events").select("event_type, event_date, title, metadata").eq("symbol", symbol).gte("event_date", today).order("event_date").limit(10),
@@ -215,6 +219,7 @@ export async function loadScorecard(symbolRaw: string, opts: LoadOptions = {}): 
       growthYears: status === "available" ? dividendGrowthYears(quarters) : null,
       filing,
     },
+    capital: status === "available" ? capitalInputFromRows((aRes.data ?? []) as unknown as StoredAnnualRow[], rows as unknown as StoredQuarterRow[]) : undefined,
     trend: trendInputsFromFactorSet(factorSet),
     events,
     reactions,

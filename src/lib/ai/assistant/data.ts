@@ -13,6 +13,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { ensureSymbolIngested, normalizeSymbol } from "@/lib/market-data/ingest";
 import { getCurrentPrice } from "@/lib/market-data/current-price";
 import { loadScorecard } from "@/lib/scorecard-data";
+import { capitalDimension, capitalInputFromRows, type Dimension, type StoredAnnualRow, type StoredQuarterRow } from "@/lib/scorecard";
 import { loadBars } from "@/lib/ai/factor-analysis";
 import { benchmarkSymbolFor, computeFactorSet, deriveFactorAnalogs, MIN_FACTOR_HISTORY_BARS } from "@/lib/ai/factors";
 import { tickerTextInputs } from "@/lib/ai/generate-ticker";
@@ -53,7 +54,16 @@ export interface ScorecardData {
   symbol: string;
   name: string;
   assetType: string | null;
-  dimensions: { key: string; label: string; level: string; verdict: string; sentence: string }[];
+  /** Each dimension's inputs with the exact values its sentence uses, so the figure guard can check against them. */
+  dimensions: { key: string; label: string; level: string; verdict: string; sentence: string; figures: { label: string; value: string }[] }[];
+  sources: { label: string; url: string | null }[];
+}
+
+/** The scorecard's "Use of cash" dimension, for the company-numbers tool. */
+export interface UseOfCashData {
+  verdict: string;
+  sentence: string;
+  figures: { label: string; value: string }[];
   sources: { label: string; url: string | null }[];
 }
 
@@ -76,6 +86,8 @@ export interface CompanyNumbersData {
   cash: number | null;
   debt: number | null;
   source: { label: string; url: string | null };
+  /** Null when three full fiscal years of cash-flow figures are not stored. */
+  useOfCash: UseOfCashData | null;
 }
 
 export interface HistoryData {
@@ -151,6 +163,26 @@ export interface AssistantData {
 }
 
 const today = () => new Date().toISOString().slice(0, 10);
+
+/** A dimension's inputs that have a displayed value, as label/value pairs. */
+function figuresOf(d: Dimension): { label: string; value: string }[] {
+  return d.inputs.filter((i) => i.display !== null).map((i) => ({ label: i.label, value: i.display! }));
+}
+
+/**
+ * "Use of cash" for one company, from the same rows and the same builder as
+ * the scorecard (src/lib/scorecard.ts), so the assistant can never state a
+ * different figure from the ticker page.
+ */
+async function useOfCash(admin: SupabaseClient<Database>, symbol: string): Promise<UseOfCashData | null> {
+  const [a, q] = await Promise.all([
+    admin.from("company_financials_annual").select("*").eq("symbol", symbol),
+    admin.from("company_financials_quarterly").select("*").eq("symbol", symbol).order("period_end", { ascending: false }).limit(28),
+  ]);
+  const d = capitalDimension(capitalInputFromRows((a.data ?? []) as unknown as StoredAnnualRow[], (q.data ?? []) as unknown as StoredQuarterRow[]));
+  if (d.inputs.length === 0) return null;
+  return { verdict: d.verdict, sentence: d.sentence, figures: figuresOf(d), sources: d.sources.map((x) => ({ label: x.label, url: x.url ?? null })) };
+}
 const addDays = (iso: string, d: number) => new Date(Date.parse(`${iso}T00:00:00Z`) + d * 86_400_000).toISOString().slice(0, 10);
 
 /** A fresh stored analysis is reused for "what history says" instead of recomputed. */
@@ -242,7 +274,7 @@ export function liveAssistantData(opts: { supabase: SupabaseClient<Database>; us
         symbol,
         name: plainName(dir?.name ?? symbol, symbol, bundle.assetType),
         assetType: bundle.assetType,
-        dimensions: bundle.scorecard.dimensions.map((d) => ({ key: d.key, label: d.label, level: d.level, verdict: d.verdict, sentence: d.sentence })),
+        dimensions: bundle.scorecard.dimensions.map((d) => ({ key: d.key, label: d.label, level: d.level, verdict: d.verdict, sentence: d.sentence, figures: figuresOf(d) })),
         sources: [...sources.values()].slice(0, 4),
       };
     },
@@ -293,6 +325,7 @@ export function liveAssistantData(opts: { supabase: SupabaseClient<Database>; us
             cash: latest.cash === null ? null : Number(latest.cash),
             debt,
             source: sec,
+            useOfCash: await useOfCash(admin, symbol),
           };
         }
       }
@@ -323,6 +356,7 @@ export function liveAssistantData(opts: { supabase: SupabaseClient<Database>; us
         cash: null,
         debt: null,
         source: sec,
+        useOfCash: await useOfCash(admin, symbol),
       };
     },
 

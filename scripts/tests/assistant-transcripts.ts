@@ -50,7 +50,7 @@ const card = (symbol: string, name: string, assetType: string, dims: [string, st
   symbol,
   name,
   assetType,
-  dimensions: dims.map(([key, label, level, verdict, sentence]) => ({ key, label, level, verdict, sentence })),
+  dimensions: dims.map(([key, label, level, verdict, sentence]) => ({ key, label, level, verdict, sentence, figures: [] })),
   sources: assetType === "crypto" ? [] : [{ label: `${name} 10-Q, filed 26 Aug`, url: `https://www.sec.gov/${symbol}-10q` }],
 });
 
@@ -100,6 +100,21 @@ const NEWS: Record<string, NewsItemData[]> = {
   MSFT: [{ id: "m1", title: "Microsoft raises quarterly dividend by 10%", publisher: "MarketWatch", url: "https://www.marketwatch.com/m1", date: "2026-09-16", tickers: ["MSFT"] }],
 };
 
+const NVDA_USE_OF_CASH = {
+  verdict: "Strong",
+  sentence:
+    "In fiscal 2024 to 2026 it used 45% of its spare cash on buying back shares, 1% on dividends and 1% on buying companies. The other 52% was left over. The share count fell 2%, and spare cash per share rose 264%. Its debt fell 23%.",
+  figures: [
+    { label: "Free cash flow over those years (USD)", value: "$184.6B" },
+    { label: "Share buybacks (USD)", value: "$83.3B" },
+    { label: "Share buybacks ÷ free cash flow", value: "45%" },
+    { label: "Change in share count (diluted average)", value: "-2%" },
+    { label: "Change in free cash flow per share", value: "+264%" },
+    { label: "Buyback authorisation left at 2026-07-26 (USD)", value: "$99.3B" },
+  ],
+  sources: [{ label: "10-K filed 2026-02-25 (cash flow and share count, fiscal 2024 to 2026)", url: "https://www.sec.gov/Archives/edgar/data/1045810/000104581026000021/" }],
+};
+
 const CAL: CalendarItemData[] = [
   { symbol: "NVDA", kind: "earnings", date: "2026-11-18", estimated: true, perShareUsd: null },
   { symbol: "MSFT", kind: "ex_dividend", date: "2026-11-19", estimated: false, perShareUsd: 0.91 },
@@ -129,8 +144,8 @@ export function mockData(o: MockOptions = {}): AssistantData {
     async companyNumbers(s) {
       if (s !== "MSFT" && s !== "NVDA") return null;
       return s === "MSFT"
-        ? { symbol: s, name: "Microsoft", basis: "ttm", periodLabel: "the four quarters to 2026-06-30", periodEnd: "2026-06-30", revenue: 281.7e9, netIncome: 101.8e9, operatingIncome: 128.5e9, ebitda: 162.1e9, operatingCashFlow: 136.2e9, freeCashFlow: 71.6e9, capex: -64.6e9, dividendsPerShare: 3.32, dividendsPaid: -24.7e9, cash: 94.6e9, debt: 43.2e9, source: { label: "SEC", url: "https://www.sec.gov/msft" } }
-        : { symbol: s, name: "NVIDIA", basis: "ttm", periodLabel: "the four quarters to 2026-07-27", periodEnd: "2026-07-27", revenue: 165.2e9, netIncome: 86.6e9, operatingIncome: 100.1e9, ebitda: 103.4e9, operatingCashFlow: 83.2e9, freeCashFlow: 78.9e9, capex: -4.3e9, dividendsPerShare: 0.04, dividendsPaid: -1.0e9, cash: 56.8e9, debt: 8.5e9, source: { label: "SEC", url: "https://www.sec.gov/nvda" } };
+        ? { symbol: s, name: "Microsoft", basis: "ttm", periodLabel: "the four quarters to 2026-06-30", periodEnd: "2026-06-30", revenue: 281.7e9, netIncome: 101.8e9, operatingIncome: 128.5e9, ebitda: 162.1e9, operatingCashFlow: 136.2e9, freeCashFlow: 71.6e9, capex: -64.6e9, dividendsPerShare: 3.32, dividendsPaid: -24.7e9, cash: 94.6e9, debt: 43.2e9, source: { label: "SEC", url: "https://www.sec.gov/msft" }, useOfCash: null }
+        : { symbol: s, name: "NVIDIA", basis: "ttm", periodLabel: "the four quarters to 2026-07-27", periodEnd: "2026-07-27", revenue: 165.2e9, netIncome: 86.6e9, operatingIncome: 100.1e9, ebitda: 103.4e9, operatingCashFlow: 83.2e9, freeCashFlow: 78.9e9, capex: -4.3e9, dividendsPerShare: 0.04, dividendsPaid: -1.0e9, cash: 56.8e9, debt: 8.5e9, source: { label: "SEC", url: "https://www.sec.gov/nvda" }, useOfCash: NVDA_USE_OF_CASH };
     },
     async history(s) {
       if (s === "BLORB") return { symbol: s, name: s, kind: "too_young", line: "BLORB has only 4 days of price history, too new to compare with its own past.", range: null, confidence: "Confidence: low.", caveat: "", n: 0, higher: 0, matchedOn: [], bars: 4 };
@@ -445,6 +460,35 @@ export async function runAssistantTranscriptsSuite(): Promise<SuiteResult> {
     }, { classify: async () => ({ status: "unavailable" as const, detail: "HTTP 402" }) });
     add("Classifier down: fails closed to the facts answer, still useful, no dead end", r.meta.source === "facts" && r.meta.guardFailures.some((g) => g.reason === "classifier_unavailable") && /\$178\.43/.test(r.markdown) && noDeadEnd(r.markdown), r.markdown.slice(0, 160), transcript("How's NVIDIA looking? (classifier down)", r));
     add("Facts answer passes every deterministic guard", checkAnswer(r.answer, r.outcomes, r.meta.sources).passed, JSON.stringify(r.meta.guardFailures));
+  }
+
+  // 11b. What does NVIDIA do with its cash? (feat/scorecard-capital-use)
+  {
+    const q = "What does NVIDIA do with its cash?";
+    const answer = (share: string) => () => ({
+      lead: `Over fiscal 2024 to 2026 NVIDIA used ${share} of its free cash flow on buying back shares.`,
+      tiles: [
+        { label: "Buybacks", value: `${share}`, note: "of free cash flow, 3 years" },
+        { label: "Free cash flow per share", value: "+264%", note: "fiscal 2024 to 2026" },
+      ],
+      sections: [
+        { heading: "The business" as const, body: "The share count fell 2%, and its debt fell 23%. Its board has $99.3B of buyback authorisation left, per its latest 10-Q." },
+      ],
+      follow_ups: ["How does NVIDIA's debt compare?", "What does NVIDIA sell?"],
+    });
+    const ok = await turn(q, { rounds: [[{ name: "get_company_numbers", args: { symbol: "NVDA" } }]], compose: [answer("45%")] });
+    add(
+      "Use of cash: an answer built from the tool's figures passes, with the filing as a source",
+      ok.meta.source === "model" && ok.meta.guardFailures.length === 0 && ok.meta.sources.some((x) => x.url === NVDA_USE_OF_CASH.sources[0].url) && noAdvice(ok.markdown),
+      JSON.stringify(ok.meta.guardFailures),
+      transcript(q, ok),
+    );
+    const bad = await turn(q, { rounds: [[{ name: "get_company_numbers", args: { symbol: "NVDA" } }]], compose: [answer("60%"), answer("45%")] });
+    add(
+      "Use of cash: an invented share (60%) is caught by the figure guard",
+      bad.meta.guardFailures[0]?.reason === "number_not_in_tool_results" && /60%/.test(bad.meta.guardFailures[0]?.evidence ?? "") && !/60%/.test(bad.markdown),
+      JSON.stringify(bad.meta.guardFailures),
+    );
   }
 
   // 12. Model unreachable at compose: the facts answer, not an error.

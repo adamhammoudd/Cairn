@@ -2,7 +2,7 @@
 // whether it is stored (docs/decisions/2026-09-27-analysis-rebuild.md).
 //
 // The model is handed ONE block of computed figures, in this order: what
-// history says (direction and typical range, lib/ai/direction.ts), the six-
+// history says (direction and typical range, lib/ai/direction.ts), the seven-
 // part scorecard (lib/scorecard.ts), upcoming dated events, 3-6 recent sourced
 // headlines, and the trader figures last, marked context-only. It writes:
 //
@@ -277,7 +277,7 @@ Use only these numbers, written exactly as shown, sign included.
 WHAT HISTORY SAYS (${historyHeader(i, when)}):
 ${history.join("\n")}
 
-SCORECARD (six plain-language descriptions of its numbers):
+SCORECARD (seven plain-language descriptions of its numbers):
 ${card.join("\n")}
 
 UPCOMING EVENTS (cite by id in "watch"):
@@ -633,7 +633,7 @@ export function templateAnalysisText(i: TextInputs): ModelAnalysisText {
 
 export const ANALYSIS_SYSTEM_PROMPT = `You write the analysis at the top of a share or coin page on Cairn, for everyday investors.
 
-You are given COMPUTED FIGURES: what happened in similar past moments in its own price history, a six-part
+You are given COMPUTED FIGURES: what happened in similar past moments in its own price history, a seven-part
 scorecard, upcoming dated events and recent sourced headlines. All of it was calculated in code. You only
 write words around it.
 

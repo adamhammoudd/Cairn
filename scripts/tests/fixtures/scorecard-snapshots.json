@@ -166,6 +166,16 @@
         ]
       },
       {
+        "key": "capital",
+        "label": "Use of cash",
+        "level": "not_applicable",
+        "rated": true,
+        "verdict": "Not available",
+        "sentence": "Three full years of cash-flow figures are not available.",
+        "inputs": [],
+        "sources": []
+      },
+      {
         "key": "trend",
         "label": "Price trend",
         "level": "strong",
@@ -408,6 +418,16 @@
         ]
       },
       {
+        "key": "capital",
+        "label": "Use of cash",
+        "level": "not_applicable",
+        "rated": true,
+        "verdict": "Not available",
+        "sentence": "Three full years of cash-flow figures are not available.",
+        "inputs": [],
+        "sources": []
+      },
+      {
         "key": "trend",
         "label": "Price trend",
         "level": "mixed",
@@ -500,6 +520,16 @@
       {
         "key": "dividend",
         "label": "Dividend",
+        "level": "not_applicable",
+        "rated": true,
+        "verdict": "Not applicable",
+        "sentence": "There is no company behind it, so company figures don't apply.",
+        "inputs": [],
+        "sources": []
+      },
+      {
+        "key": "capital",
+        "label": "Use of cash",
         "level": "not_applicable",
         "rated": true,
         "verdict": "Not applicable",
