@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Trimmed label linkbase, accession 0001375365-26-000022: labels of the members above. -->
+<link:linkbase xmlns:link="http://www.xbrl.org/2003/linkbase" xmlns:xlink="http://www.w3.org/1999/xlink">
+<link:labelLink>
+<link:loc xlink:type="locator" xlink:label="loc_smci_TwoThousandTwentyThreeCEOPerformanceAwardMember" xlink:href="smci-20260630.xsd#smci_TwoThousandTwentyThreeCEOPerformanceAwardMember"/>
+<link:loc xlink:type="locator" xlink:label="loc_smci_GreenEarthMember" xlink:href="smci-20260630.xsd#smci_GreenEarthMember"/>
+<link:loc xlink:type="locator" xlink:label="loc_smci_OtherCountriesMember" xlink:href="smci-20260630.xsd#smci_OtherCountriesMember"/>
+<link:loc xlink:type="locator" xlink:label="loc_country_US" xlink:href="https://xbrl.sec.gov/country/2026/country-2026.xsd#country_US"/>
+<link:loc xlink:type="locator" xlink:label="loc_smci_ServiceAndSoftwareMember" xlink:href="smci-20260630.xsd#smci_ServiceAndSoftwareMember"/>
+<link:loc xlink:type="locator" xlink:label="loc_smci_MilestoneTwoMember" xlink:href="smci-20260630.xsd#smci_MilestoneTwoMember"/>
+<link:loc xlink:type="locator" xlink:label="loc_smci_AblecomTechnologyMember" xlink:href="smci-20260630.xsd#smci_AblecomTechnologyMember"/>
+<link:loc xlink:type="locator" xlink:label="loc_us-gaap_ServiceMember" xlink:href="https://xbrl.fasb.org/us-gaap/2026/elts/us-gaap-2026.xsd#us-gaap_ServiceMember"/>
+<link:loc xlink:type="locator" xlink:label="loc_smci_CorporateVentureInChinaMember" xlink:href="smci-20260630.xsd#smci_CorporateVentureInChinaMember"/>
+<link:loc xlink:type="locator" xlink:label="loc_smci_MilestoneThreeMember" xlink:href="smci-20260630.xsd#smci_MilestoneThreeMember"/>
+<link:loc xlink:type="locator" xlink:label="loc_smci_MilestoneFiveMember" xlink:href="smci-20260630.xsd#smci_MilestoneFiveMember"/>
+<link:loc xlink:type="locator" xlink:label="loc_srt_EuropeMember" xlink:href="https://xbrl.fasb.org/srt/2026/elts/srt-2026.xsd#srt_EuropeMember"/>
+<link:loc xlink:type="locator" xlink:label="loc_smci_MilestoneOneMember" xlink:href="smci-20260630.xsd#smci_MilestoneOneMember"/>
+<link:loc xlink:type="locator" xlink:label="loc_smci_CompuwareMember" xlink:href="smci-20260630.xsd#smci_CompuwareMember"/>
+<link:loc xlink:type="locator" xlink:label="loc_srt_AsiaMember" xlink:href="https://xbrl.fasb.org/srt/2026/elts/srt-2026.xsd#srt_AsiaMember"/>
+<link:loc xlink:type="locator" xlink:label="loc_us-gaap_RelatedPartyMember" xlink:href="https://xbrl.fasb.org/us-gaap/2026/elts/us-gaap-2026.xsd#us-gaap_RelatedPartyMember"/>
+<link:loc xlink:type="locator" xlink:label="loc_smci_LeadtekMember" xlink:href="smci-20260630.xsd#smci_LeadtekMember"/>
+<link:loc xlink:type="locator" xlink:label="loc_smci_MilestoneFourMember" xlink:href="smci-20260630.xsd#smci_MilestoneFourMember"/>
+<link:label id="lab_smci_TwoThousandTwentyThreeCEOPerformanceAwardMember_019e8dd5-d1d6-76ad-ae14-3bf31b479a3b_terseLabel_en-US" xlink:label="lab_smci_TwoThousandTwentyThreeCEOPerformanceAwardMember" xlink:role="http://www.xbrl.org/2003/role/terseLabel" xlink:type="resource" xml:lang="en-US">2023 CEO Performance Award</link:label>
+<link:label id="lab_smci_TwoThousandTwentyThreeCEOPerformanceAwardMember_label_en-US" xlink:label="lab_smci_TwoThousandTwentyThreeCEOPerformanceAwardMember" xlink:role="http://www.xbrl.org/2003/role/label" xlink:type="resource" xml:lang="en-US">Two Thousand Twenty Three CEO Performance Award [Member]</link:label>
+<link:label id="lab_smci_GreenEarthMember_019f6b9a-9fb4-7921-933a-3e9f8fc0003e_terseLabel_en-US" xlink:label="lab_smci_GreenEarthMember" xlink:role="http://www.xbrl.org/2003/role/terseLabel" xlink:type="resource" xml:lang="en-US">Green Earth</link:label>
+<link:label id="lab_smci_GreenEarthMember_label_en-US" xlink:label="lab_smci_GreenEarthMember" xlink:role="http://www.xbrl.org/2003/role/label" xlink:type="resource" xml:lang="en-US">Green Earth [Member]</link:label>
+<link:label id="lab_smci_OtherCountriesMember_019e8dd5-d1d6-7671-8cbb-d8c8b59a0d4c_terseLabel_en-US" xlink:label="lab_smci_OtherCountriesMember" xlink:role="http://www.xbrl.org/2003/role/terseLabel" xlink:type="resource" xml:lang="en-US">Other</link:label>
+<link:label id="lab_smci_OtherCountriesMember_label_en-US" xlink:label="lab_smci_OtherCountriesMember" xlink:role="http://www.xbrl.org/2003/role/label" xlink:type="resource" xml:lang="en-US">Other Countries [Member]</link:label>
+<link:label id="lab_country_US_019e8dd5-d1d6-7fc6-b342-a7883a447818_terseLabel_en-US" xlink:label="lab_country_US" xlink:role="http://www.xbrl.org/2003/role/terseLabel" xlink:type="resource" xml:lang="en-US">United States</link:label>
+<link:label id="lab_country_US_label_en-US" xlink:label="lab_country_US" xlink:role="http://www.xbrl.org/2003/role/label" xlink:type="resource" xml:lang="en-US">UNITED STATES</link:label>
+<link:label id="lab_smci_ServiceAndSoftwareMember_019e8dd5-d1d6-7723-8029-eefabf553101_terseLabel_en-US" xlink:label="lab_smci_ServiceAndSoftwareMember" xlink:role="http://www.xbrl.org/2003/role/terseLabel" xlink:type="resource" xml:lang="en-US">Service and Software</link:label>
+<link:label id="lab_smci_ServiceAndSoftwareMember_label_en-US" xlink:label="lab_smci_ServiceAndSoftwareMember" xlink:role="http://www.xbrl.org/2003/role/label" xlink:type="resource" xml:lang="en-US">Service And Software [Member]</link:label>
+<link:label id="lab_smci_MilestoneTwoMember_019e8dd5-d1d6-76d9-9c08-35ce3b6b80fa_terseLabel_en-US" xlink:label="lab_smci_MilestoneTwoMember" xlink:role="http://www.xbrl.org/2003/role/terseLabel" xlink:type="resource" xml:lang="en-US">Milestone Two</link:label>
+<link:label id="lab_smci_MilestoneTwoMember_label_en-US" xlink:label="lab_smci_MilestoneTwoMember" xlink:role="http://www.xbrl.org/2003/role/label" xlink:type="resource" xml:lang="en-US">Milestone Two [Member]</link:label>
+<link:label id="lab_smci_AblecomTechnologyMember_019e8dd5-d1d6-732b-ade1-e9398b0d4faf_terseLabel_en-US" xlink:label="lab_smci_AblecomTechnologyMember" xlink:role="http://www.xbrl.org/2003/role/terseLabel" xlink:type="resource" xml:lang="en-US">Ablecom</link:label>
+<link:label id="lab_smci_AblecomTechnologyMember_label_en-US" xlink:label="lab_smci_AblecomTechnologyMember" xlink:role="http://www.xbrl.org/2003/role/label" xlink:type="resource" xml:lang="en-US">Ablecom Technology [Member]</link:label>
+<link:label id="lab_us-gaap_ServiceMember_019e8dd5-d1d6-79c8-a1f5-472d8a0a3cb6_terseLabel_en-US" xlink:label="lab_us-gaap_ServiceMember" xlink:role="http://www.xbrl.org/2003/role/terseLabel" xlink:type="resource" xml:lang="en-US">Service</link:label>
+<link:label id="lab_us-gaap_ServiceMember_label_en-US" xlink:label="lab_us-gaap_ServiceMember" xlink:role="http://www.xbrl.org/2003/role/label" xlink:type="resource" xml:lang="en-US">Service [Member]</link:label>
+<link:label id="lab_smci_CorporateVentureInChinaMember_019e8dd5-d1d6-7483-bc3d-3b8eddcc18d9_terseLabel_en-US" xlink:label="lab_smci_CorporateVentureInChinaMember" xlink:role="http://www.xbrl.org/2003/role/terseLabel" xlink:type="resource" xml:lang="en-US">Corporate Venture*</link:label>
+<link:label id="lab_smci_CorporateVentureInChinaMember_label_en-US" xlink:label="lab_smci_CorporateVentureInChinaMember" xlink:role="http://www.xbrl.org/2003/role/label" xlink:type="resource" xml:lang="en-US">Corporate Venture in China [Member]</link:label>
+<link:label id="lab_smci_MilestoneThreeMember_019e8dd5-d1d6-7dc7-9765-1dffa4aa90d9_terseLabel_en-US" xlink:label="lab_smci_MilestoneThreeMember" xlink:role="http://www.xbrl.org/2003/role/terseLabel" xlink:type="resource" xml:lang="en-US">Milestone Three</link:label>
+<link:label id="lab_smci_MilestoneThreeMember_label_en-US" xlink:label="lab_smci_MilestoneThreeMember" xlink:role="http://www.xbrl.org/2003/role/label" xlink:type="resource" xml:lang="en-US">Milestone Three [Member]</link:label>
+<link:label id="lab_smci_MilestoneFiveMember_019e8dd5-d1d6-7cce-82d2-b66b97b06f1e_terseLabel_en-US" xlink:label="lab_smci_MilestoneFiveMember" xlink:role="http://www.xbrl.org/2003/role/terseLabel" xlink:type="resource" xml:lang="en-US">Milestone Five</link:label>
+<link:label id="lab_smci_MilestoneFiveMember_label_en-US" xlink:label="lab_smci_MilestoneFiveMember" xlink:role="http://www.xbrl.org/2003/role/label" xlink:type="resource" xml:lang="en-US">Milestone Five [Member]</link:label>
+<link:label id="lab_srt_EuropeMember_019e8dd5-d133-7224-8128-2496bb4d5d98_terseLabel_en-US" xlink:label="lab_srt_EuropeMember" xlink:role="http://www.xbrl.org/2003/role/terseLabel" xlink:type="resource" xml:lang="en-US">Europe</link:label>
+<link:label id="lab_srt_EuropeMember_label_en-US" xlink:label="lab_srt_EuropeMember" xlink:role="http://www.xbrl.org/2003/role/label" xlink:type="resource" xml:lang="en-US">Europe [Member]</link:label>
+<link:label id="lab_smci_MilestoneOneMember_019e8dd5-d133-7943-99b1-ec192b2cbfe7_terseLabel_en-US" xlink:label="lab_smci_MilestoneOneMember" xlink:role="http://www.xbrl.org/2003/role/terseLabel" xlink:type="resource" xml:lang="en-US">Milestone One</link:label>
+<link:label id="lab_smci_MilestoneOneMember_label_en-US" xlink:label="lab_smci_MilestoneOneMember" xlink:role="http://www.xbrl.org/2003/role/label" xlink:type="resource" xml:lang="en-US">Milestone One [Member]</link:label>
+<link:label id="lab_smci_CompuwareMember_019e8dd5-d259-7c71-bfb7-b347a6c24693_terseLabel_en-US" xlink:label="lab_smci_CompuwareMember" xlink:role="http://www.xbrl.org/2003/role/terseLabel" xlink:type="resource" xml:lang="en-US">Compuware</link:label>
+<link:label id="lab_smci_CompuwareMember_label_en-US" xlink:label="lab_smci_CompuwareMember" xlink:role="http://www.xbrl.org/2003/role/label" xlink:type="resource" xml:lang="en-US">Compuware [Member]</link:label>
+<link:label id="lab_srt_AsiaMember_019e8dd5-d1d6-7bc4-a4e7-67777c87dc4f_terseLabel_en-US" xlink:label="lab_srt_AsiaMember" xlink:role="http://www.xbrl.org/2003/role/terseLabel" xlink:type="resource" xml:lang="en-US">Asia</link:label>
+<link:label id="lab_srt_AsiaMember_label_en-US" xlink:label="lab_srt_AsiaMember" xlink:role="http://www.xbrl.org/2003/role/label" xlink:type="resource" xml:lang="en-US">Asia [Member]</link:label>
+<link:label id="lab_us-gaap_RelatedPartyMember_019e8dd5-d1d6-7355-bc0a-2d43184aae09_terseLabel_en-US" xlink:label="lab_us-gaap_RelatedPartyMember" xlink:role="http://www.xbrl.org/2003/role/terseLabel" xlink:type="resource" xml:lang="en-US">Related Party</link:label>
+<link:label id="lab_us-gaap_RelatedPartyMember_label_en-US" xlink:label="lab_us-gaap_RelatedPartyMember" xlink:role="http://www.xbrl.org/2003/role/label" xlink:type="resource" xml:lang="en-US">Related Party [Member]</link:label>
+<link:label id="lab_smci_LeadtekMember_019e8dd5-d1d7-72ad-be97-8d02507e20aa_terseLabel_en-US" xlink:label="lab_smci_LeadtekMember" xlink:role="http://www.xbrl.org/2003/role/terseLabel" xlink:type="resource" xml:lang="en-US">Leadtek</link:label>
+<link:label id="lab_smci_LeadtekMember_label_en-US" xlink:label="lab_smci_LeadtekMember" xlink:role="http://www.xbrl.org/2003/role/label" xlink:type="resource" xml:lang="en-US">Leadtek [Member]</link:label>
+<link:label id="lab_smci_MilestoneFourMember_019e8dd5-d1d6-7341-9f30-94496ea114bb_terseLabel_en-US" xlink:label="lab_smci_MilestoneFourMember" xlink:role="http://www.xbrl.org/2003/role/terseLabel" xlink:type="resource" xml:lang="en-US">Milestone Four</link:label>
+<link:label id="lab_smci_MilestoneFourMember_label_en-US" xlink:label="lab_smci_MilestoneFourMember" xlink:role="http://www.xbrl.org/2003/role/label" xlink:type="resource" xml:lang="en-US">Milestone Four [Member]</link:label>
+<link:labelArc xlink:arcrole="http://www.xbrl.org/2003/arcrole/concept-label" xlink:from="loc_smci_TwoThousandTwentyThreeCEOPerformanceAwardMember" xlink:to="lab_smci_TwoThousandTwentyThreeCEOPerformanceAwardMember" xlink:type="arc" order="1"/>
+<link:labelArc xlink:arcrole="http://www.xbrl.org/2003/arcrole/concept-label" xlink:from="loc_smci_GreenEarthMember" xlink:to="lab_smci_GreenEarthMember" xlink:type="arc" order="1"/>
+<link:labelArc xlink:arcrole="http://www.xbrl.org/2003/arcrole/concept-label" xlink:from="loc_smci_OtherCountriesMember" xlink:to="lab_smci_OtherCountriesMember" xlink:type="arc" order="1"/>
+<link:labelArc xlink:arcrole="http://www.xbrl.org/2003/arcrole/concept-label" xlink:from="loc_country_US" xlink:to="lab_country_US" xlink:type="arc" order="1"/>
+<link:labelArc xlink:arcrole="http://www.xbrl.org/2003/arcrole/concept-label" xlink:from="loc_smci_ServiceAndSoftwareMember" xlink:to="lab_smci_ServiceAndSoftwareMember" xlink:type="arc" order="1"/>
+<link:labelArc xlink:arcrole="http://www.xbrl.org/2003/arcrole/concept-label" xlink:from="loc_smci_MilestoneTwoMember" xlink:to="lab_smci_MilestoneTwoMember" xlink:type="arc" order="1"/>
+<link:labelArc xlink:arcrole="http://www.xbrl.org/2003/arcrole/concept-label" xlink:from="loc_smci_AblecomTechnologyMember" xlink:to="lab_smci_AblecomTechnologyMember" xlink:type="arc" order="1"/>
+<link:labelArc xlink:arcrole="http://www.xbrl.org/2003/arcrole/concept-label" xlink:from="loc_us-gaap_ServiceMember" xlink:to="lab_us-gaap_ServiceMember" xlink:type="arc" order="1"/>
+<link:labelArc xlink:arcrole="http://www.xbrl.org/2003/arcrole/concept-label" xlink:from="loc_smci_CorporateVentureInChinaMember" xlink:to="lab_smci_CorporateVentureInChinaMember" xlink:type="arc" order="1"/>
+<link:labelArc xlink:arcrole="http://www.xbrl.org/2003/arcrole/concept-label" xlink:from="loc_smci_MilestoneThreeMember" xlink:to="lab_smci_MilestoneThreeMember" xlink:type="arc" order="1"/>
+<link:labelArc xlink:arcrole="http://www.xbrl.org/2003/arcrole/concept-label" xlink:from="loc_smci_MilestoneFiveMember" xlink:to="lab_smci_MilestoneFiveMember" xlink:type="arc" order="1"/>
+<link:labelArc xlink:arcrole="http://www.xbrl.org/2003/arcrole/concept-label" xlink:from="loc_srt_EuropeMember" xlink:to="lab_srt_EuropeMember" xlink:type="arc" order="1"/>
+<link:labelArc xlink:arcrole="http://www.xbrl.org/2003/arcrole/concept-label" xlink:from="loc_smci_MilestoneOneMember" xlink:to="lab_smci_MilestoneOneMember" xlink:type="arc" order="1"/>
+<link:labelArc xlink:arcrole="http://www.xbrl.org/2003/arcrole/concept-label" xlink:from="loc_smci_CompuwareMember" xlink:to="lab_smci_CompuwareMember" xlink:type="arc" order="1"/>
+<link:labelArc xlink:arcrole="http://www.xbrl.org/2003/arcrole/concept-label" xlink:from="loc_srt_AsiaMember" xlink:to="lab_srt_AsiaMember" xlink:type="arc" order="1"/>
+<link:labelArc xlink:arcrole="http://www.xbrl.org/2003/arcrole/concept-label" xlink:from="loc_us-gaap_RelatedPartyMember" xlink:to="lab_us-gaap_RelatedPartyMember" xlink:type="arc" order="1"/>
+<link:labelArc xlink:arcrole="http://www.xbrl.org/2003/arcrole/concept-label" xlink:from="loc_smci_LeadtekMember" xlink:to="lab_smci_LeadtekMember" xlink:type="arc" order="1"/>
+<link:labelArc xlink:arcrole="http://www.xbrl.org/2003/arcrole/concept-label" xlink:from="loc_smci_MilestoneFourMember" xlink:to="lab_smci_MilestoneFourMember" xlink:type="arc" order="1"/>
+</link:labelLink>
+</link:linkbase>

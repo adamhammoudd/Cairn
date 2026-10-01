@@ -994,6 +994,85 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["company_financials_quarterly"]["Insert"]>;
         Relationships: [];
       };
+      company_profiles: {
+        Row: {
+          symbol: string;
+          cik: string;
+          name: string | null;
+          sic: string | null;
+          sic_description: string | null;
+          accn: string;
+          form: string;
+          filed: string | null;
+          fiscal_year_end: string | null;
+          source_url: string;
+          business_excerpt: string | null;
+          segment_status: string;
+          segment_reason: string | null;
+          plain_one_liner: string | null;
+          plain_paragraph: string | null;
+          plain_source: string | null;
+          plain_failure: string | null;
+          plain_accn: string | null;
+          plain_generated_at: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          symbol: string;
+          cik: string;
+          name?: string | null;
+          sic?: string | null;
+          sic_description?: string | null;
+          accn: string;
+          form?: string;
+          filed?: string | null;
+          fiscal_year_end?: string | null;
+          source_url: string;
+          business_excerpt?: string | null;
+          segment_status?: string;
+          segment_reason?: string | null;
+          plain_one_liner?: string | null;
+          plain_paragraph?: string | null;
+          plain_source?: string | null;
+          plain_failure?: string | null;
+          plain_accn?: string | null;
+          plain_generated_at?: string | null;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["company_profiles"]["Insert"]>;
+        Relationships: [];
+      };
+      company_segments: {
+        Row: {
+          id: number;
+          symbol: string;
+          fiscal_year_end: string;
+          axis: string;
+          member: string;
+          label: string;
+          revenue: number;
+          total: number;
+          concept: string;
+          accn: string;
+          filed: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          symbol: string;
+          fiscal_year_end: string;
+          axis: string;
+          member: string;
+          label: string;
+          revenue: number;
+          total: number;
+          concept: string;
+          accn: string;
+          filed?: string | null;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["company_segments"]["Insert"]>;
+        Relationships: [];
+      };
       company_financials_annual: {
         Row: {
           id: number;

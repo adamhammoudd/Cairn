@@ -9,7 +9,7 @@
 //   3. Scorecard             the six tiles
 //   4. What to watch         dated events and cited sources
 //   5. What this means for you   only when the reader holds it, and only behind the exposure flag
-//   6. Full breakdown        collapsed: sources, every case, company numbers, trader indicators, how
+//   6. Full breakdown        collapsed: what it does, sources, every case, company numbers, trader indicators, how
 //   7. Footer
 //
 // Everything here draws what the server already decided the reader may see
@@ -45,6 +45,8 @@ export interface AnalysisViewProps {
   forYou?: string[] | null;
   /** Premium company table (ticker page). Undefined: the row is not offered here. */
   companyNumbers?: ReactNode;
+  /** "What it does" (ticker page, equities with a stored 10-K profile): the first breakdown row. */
+  whatItDoes?: { oneLiner: string; content: ReactNode };
   /** Extra content per breakdown row (the ticker page adds its news list and key stats). */
   extras?: Partial<Record<"sources" | "cases" | "trader", ReactNode>>;
   /** Shown in "What history says" (the ticker page's request button when there is no analysis yet). */
@@ -351,7 +353,7 @@ function HowRow({ display }: { display: AnalysisDisplay }) {
 
 // ----------------------------------------------------------------- view
 
-export function AnalysisView({ display, sources, closestCase, scorecard, forYou, companyNumbers, extras = {}, historyAction, afterSummary, dense = false, openBreakdown }: AnalysisViewProps) {
+export function AnalysisView({ display, sources, closestCase, scorecard, forYou, companyNumbers, whatItDoes, extras = {}, historyAction, afterSummary, dense = false, openBreakdown }: AnalysisViewProps) {
   const breakdown = useBreakdownState(openBreakdown ?? null);
   const card = scorecard === undefined ? display.scorecard : scorecard;
   const used = new Set(display.sourcesUsed);
@@ -364,6 +366,7 @@ export function AnalysisView({ display, sources, closestCase, scorecard, forYou,
         : `Written ${written}, before the current format.`;
 
   const rows: BreakdownRow[] = [
+    ...(whatItDoes ? [{ id: "business", title: "What it does", detail: whatItDoes.oneLiner, content: whatItDoes.content }] : []),
     {
       id: "sources",
       title: "Sources",

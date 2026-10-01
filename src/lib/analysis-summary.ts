@@ -23,6 +23,7 @@ import type { Scorecard } from "@/lib/scorecard";
 import type { AnalysisWithMethodology } from "@/lib/actions/analysis";
 import { weekAgoLevels } from "@/lib/daily-briefing-data";
 import { scorecardChanges } from "@/lib/daily-briefing";
+import { loadBusinessProfile, type BusinessProfileView } from "@/lib/business-profile-data";
 
 export interface CompanyNumbersRow {
   label: string;
@@ -56,6 +57,8 @@ export interface AnalysisSummaryView {
   plan: "free" | "premium";
   /** True on Free: the quarterly company table is Premium and is not in this payload. */
   companyLocked: boolean;
+  /** "What it does" and the revenue split from the latest 10-K; null for funds, coins and companies not yet read. Free. */
+  business: BusinessProfileView | null;
 }
 
 interface StoredSummary {
@@ -144,6 +147,9 @@ export async function loadAnalysisSummary(args: {
     ? { headline: stored.headline, bullets: stored.bullets, source: stored.source, writtenAt: stored.generatedAt, fromAnalysis: true }
     : { ...templateSummary(inputs), source: "template" as const, writtenAt: null, fromAnalysis: false };
 
+  // A failed read leaves the row out; it is context, not the analysis.
+  const business = bundle.assetType === "equity" ? await loadBusinessProfile(args.symbol, args.name).catch(() => null) : null;
+
   const moves = bundle.reactions.slice(0, 12).map((r) => Math.abs(r.move));
   const medianEarningsMove = moves.length >= 4 ? median(moves) : null;
 
@@ -186,5 +192,6 @@ export async function loadAnalysisSummary(args: {
     companyLocked: status === "available" && args.plan !== "premium",
     medianEarningsMove,
     exposure,
+    business,
   };
 }

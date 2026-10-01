@@ -20,6 +20,7 @@ import { runFactorAnalogsSuite } from "./factor-analogs";
 import { runDeepHistorySuite } from "./deep-history";
 import { runFundamentalsSuite } from "./fundamentals";
 import { runScorecardSuite } from "./scorecard";
+import { runBusinessProfileSuite } from "./business-profile";
 import { runHistoryPlainSuite } from "./history-plain";
 import { runExposureSuite } from "./exposure";
 import { runDailyBriefingSuite } from "./daily-briefing";
@@ -142,6 +143,7 @@ async function main() {
     analysisTitlesSuites,
     newsPaginationSuites,
     assistantTranscriptSuites,
+    businessProfileSuites,
   ] = await Promise.all([
     guarded("Adversarial scope guard", runAdversarialScopeGuardSuites),
     guarded("Methodology substance", async () => [await runMethodologySubstanceSuite()]),
@@ -183,6 +185,7 @@ async function main() {
     guarded("Analysis titles", async () => [await runAnalysisTitlesSuite()]),
     guarded("News pagination", async () => [await runNewsPaginationSuite()]),
     guarded("Assistant transcripts", async () => [await runAssistantTranscriptsSuite()]),
+    guarded("Business profile", async () => [await runBusinessProfileSuite()]),
   ]);
 
   const allSuites = [
@@ -249,6 +252,7 @@ async function main() {
     ...analysisTitlesSuites,
     ...newsPaginationSuites,
     ...assistantTranscriptSuites,
+    ...businessProfileSuites,
   ];
   const reportPath = writeReport(allSuites);
 

@@ -27,6 +27,7 @@ import { OptionsPanel } from "@/components/ticker/options-panel";
 import type { DiscussionComment } from "@/lib/discussion";
 import type { AnalysisSummaryView } from "@/lib/analysis-summary";
 import { exposureLines, roughMoney } from "@/lib/exposure";
+import { WhatItDoes } from "@/components/analysis/what-it-does";
 import { CompanyNumbersTable } from "@/components/ticker/company-numbers-table";
 import { isEstimatedEvent } from "@/lib/calendar";
 
@@ -381,6 +382,7 @@ export function TickerWorkspace({
                   )
                 : null
             }
+            whatItDoes={summary.business ? { oneLiner: summary.business.oneLiner, content: <WhatItDoes profile={summary.business} /> } : undefined}
             companyNumbers={
               summary.companyLocked ? (
                 <PremiumNote what="Premium shows the quarterly company table: sales, EBITDA (profit before interest, tax and write-downs), cash flow and debt, each linked to its SEC filing." />
