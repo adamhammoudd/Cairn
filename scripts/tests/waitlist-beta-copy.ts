@@ -1,6 +1,6 @@
 // Regression test for chore/waitlist-beta-copy: the waitlist said the product
 // was "In development" / "Not yet launched" after the closed beta opened.
-// Source check over both waitlist pages.
+// Source check over both waitlist pages and /welcome.
 //
 // Run: npx tsx --conditions=react-server scripts/tests/waitlist-beta-copy.ts
 
@@ -21,9 +21,18 @@ export function runWaitlistBetaCopySuite(): SuiteResult {
     const stale = ["In development", "Not yet launched"].filter((s) => src.includes(s));
     check(`${name}: no pre-beta status copy`, stale.length === 0, stale.join(", ") || "none");
   }
-  check('/waitlist header label reads "Beta open"', />\s*Beta open\s*</.test(page), "header label");
-  check('/waitlist hero badge reads "Beta now open"', page.includes("Beta now open"), "hero badge");
-  check('/waitlist/confirm header reads "Beta open · Waitlist open"', confirm.includes("Beta open · Waitlist open"), "confirm header");
+  // feat/front-door-design: the header read "Beta open · Waitlist open" - a
+  // beta that is open beside a waitlist you still have to join. The pages now
+  // say what actually happens next, and nothing implies instant access.
+  const form = read("src/app/waitlist/waitlist-form.tsx");
+  const welcome = read("src/app/welcome/page.tsx");
+  const view = read("src/app/waitlist/confirm/confirm-view.tsx");
+  const next = /We invite people in batches, in the order they joined\.\s+You(?:&apos;|')ll get an\s+email with your\s+personal link\./;
+  for (const [name, src] of [["/waitlist", page + form], ["/waitlist/confirm", view], ["/welcome", welcome]] as const) {
+    check(`${name}: no self-contradicting "Beta open" status`, !/Beta open|Beta now open/.test(src), "removed");
+    check(`${name}: says what happens next`, next.test(src), "batches, in order, personal link by email");
+    check(`${name}: no instant-access wording`, !/Free to start|no card required|start now|instant access/i.test(src), "none");
+  }
   return { suiteName: "Waitlist beta status copy", gating: true, cases };
 }
 

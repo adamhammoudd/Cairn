@@ -50,6 +50,7 @@ import { runProxyPublicPathsSuite } from "./proxy-public-paths";
 import { runSignupConsentSuite } from "./signup-consent";
 import { runLiveRefreshSuite } from "./live-refresh";
 import { runWaitlistBetaCopySuite } from "./waitlist-beta-copy";
+import { runFrontDoorTokensSuite } from "./front-door-tokens";
 import { runPremiumAnalogsPrivateSuite } from "./premium-analogs-private";
 import { runAiMethodologyGapsSuite } from "./ai-methodology-gaps";
 import { runFxRatesSuite } from "./fx-rates";
@@ -197,6 +198,7 @@ async function main() {
     runDeepHistorySuite(),
     runFundamentalsSuite(),
     runWaitlistBetaCopySuite(),
+    runFrontDoorTokensSuite(),
     runPremiumAnalogsPrivateSuite(),
     runCalendarIngestSuite(),
     runSplitAdjustmentSuite(),

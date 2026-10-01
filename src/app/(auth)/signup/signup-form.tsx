@@ -5,16 +5,23 @@ import Link from "next/link";
 import { signUp } from "@/lib/actions/auth";
 import { Field } from "@/components/auth/field";
 import { SubmitButton } from "@/components/auth/submit-button";
-import { AuthError, AuthFooter, AuthHeader } from "@/components/auth/auth-chrome";
+import { AuthError, AuthHeader } from "@/components/auth/auth-chrome";
 import { CAPTCHA_ENABLED, Captcha } from "@/components/auth/captcha";
-import { FIELD_LABEL } from "@/components/field-label";
+import { TEXT_LINK } from "@/components/front-door/styles";
 
 // `invitedEmail` set: a personal invite. The address is shown and locked - the
-// invite only works for it, and signUp() rejects any other - and the form is
-// password + consent and nothing else.
-// `invitedEmail` null: a BETA_INVITE_CODES shared code (manual override), the
-// open form exactly as before.
-export function SignupForm({ invite, invitedEmail }: { invite: string; invitedEmail: string | null }) {
+// invite only works for it - and the form is password + consent and nothing
+// else. `invitedEmail` null: a shared invite code, the open form.
+export function SignupForm({
+  invite,
+  invitedEmail,
+  betaUntil = null,
+}: {
+  invite: string;
+  invitedEmail: string | null;
+  /** "31 December 2026" while BETA_PREMIUM_UNTIL is on, else null. */
+  betaUntil?: string | null;
+}) {
   const [error, formAction] = useActionState(signUp, null);
   // Controlled so a rejected sign-up (email already taken, weak password)
   // keeps the name and email the user already typed. Password stays
@@ -30,36 +37,35 @@ export function SignupForm({ invite, invitedEmail }: { invite: string; invitedEm
 
   return (
     <>
-      {personal ? (
-        <AuthHeader eyebrow="Beta invite" title="You've been invited" blurb="Choose a password to create your account." />
-      ) : (
-        <AuthHeader eyebrow="Account" title="Create your account" blurb="Free to start - no card required." />
-      )}
+      <AuthHeader
+        eyebrow="You're invited"
+        title="Create your Cairn account."
+        blurb={personal ? "Choose a password to create your account." : "Use the email you want to sign in with."}
+      />
 
       {error && <AuthError>{error}</AuthError>}
 
       <form action={formAction}>
         <input type="hidden" name="invite" value={invite} />
         {personal ? (
-          // Shown, not editable: a plain value rather than a field that looks
-          // typeable. The hidden input carries it to signUp(), which rejects
-          // any address but the invited one regardless.
-          <div className="mb-3.5">
-            <span id="email-label" className={FIELD_LABEL}>
-              Email
-            </span>
-            <div
-              aria-labelledby="email-label"
+          <>
+            <Field
+              id="email"
+              name="email"
+              type="email"
+              label="Email"
+              value={invitedEmail}
+              readOnly
+              aria-readonly="true"
               aria-describedby="email-locked"
-              className="flex items-center justify-between gap-3 rounded-panel border border-dashed border-line px-3 py-2.5 text-body text-primary"
-            >
-              <span className="min-w-0 truncate">{invitedEmail}</span>
-              <span className="shrink-0 font-mono text-micro text-dim uppercase">Locked</span>
-            </div>
-            <input type="hidden" name="email" value={invitedEmail} />
+              autoComplete="username"
+            />
             {/* Lets a password manager pair the new password with the address. */}
             <input type="text" name="username" value={invitedEmail} autoComplete="username" readOnly hidden />
-          </div>
+            <p id="email-locked" className="-mt-2 mb-4 text-caption text-muted">
+              Your invite is for this address.
+            </p>
+          </>
         ) : (
           <>
             <Field
@@ -68,6 +74,7 @@ export function SignupForm({ invite, invitedEmail }: { invite: string; invitedEm
               type="text"
               label="Name"
               placeholder="Jordan Reyes"
+              autoComplete="name"
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -78,28 +85,27 @@ export function SignupForm({ invite, invitedEmail }: { invite: string; invitedEm
               type="email"
               label="Email"
               placeholder="you@example.com"
+              autoComplete="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
           </>
         )}
-        {personal && (
-          <p id="email-locked" className="-mt-2 mb-4 text-caption text-dim">
-            Your invite is for this address.
-          </p>
-        )}
         <Field
           id="password"
           name="password"
           type="password"
           label="Password"
-          placeholder="••••••••"
+          placeholder="At least 8 characters"
           required
           minLength={8}
           autoComplete="new-password"
         />
-        <div className="mt-4 flex items-start gap-2.5">
+
+        {/* The whole row is the label, so the tap target is the full 44px row,
+            not a 16px box. */}
+        <div className="mt-2 flex min-h-11 items-start gap-3 py-2">
           <input
             id="consent"
             name="consent"
@@ -107,25 +113,15 @@ export function SignupForm({ invite, invitedEmail }: { invite: string; invitedEm
             required
             checked={agreed}
             onChange={(e) => setAgreed(e.target.checked)}
-            className="mt-0.5 size-4 shrink-0 accent-accent"
+            className="mt-0.5 size-5 shrink-0 accent-accent"
           />
-          <label htmlFor="consent" className="text-body leading-[1.5] text-muted">
+          <label htmlFor="consent" className="text-lead leading-relaxed text-muted">
             I am 18 or older and agree to the{" "}
-            <Link
-              href="/terms"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-accent underline underline-offset-2 hover:text-accent-light"
-            >
+            <Link href="/terms" target="_blank" rel="noopener noreferrer" className={TEXT_LINK}>
               Terms of Service
             </Link>{" "}
             and{" "}
-            <Link
-              href="/privacy"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-accent underline underline-offset-2 hover:text-accent-light"
-            >
+            <Link href="/privacy" target="_blank" rel="noopener noreferrer" className={TEXT_LINK}>
               Privacy Policy
             </Link>
             .
@@ -135,20 +131,25 @@ export function SignupForm({ invite, invitedEmail }: { invite: string; invitedEm
         <Captcha onTokenChange={(token) => setCaptchaDone(!CAPTCHA_ENABLED || token !== "")} />
 
         <div className="mt-5">
-          <SubmitButton disabled={!agreed || !captchaDone}>Create account</SubmitButton>
+          <SubmitButton frontDoor disabled={!agreed || !captchaDone}>
+            Create account
+          </SubmitButton>
         </div>
       </form>
 
+      <p className="mt-5 text-caption leading-relaxed text-muted text-pretty">
+        {betaUntil ? `Beta members get full Premium until ${betaUntil}. ` : "Free to start - no card required. "}
+        Cairn explains markets and never tells you to buy or sell.
+      </p>
+
       {!personal && (
-        <p className="mt-5 text-center text-body text-muted">
+        <p className="mt-4 text-center text-lead text-muted">
           Already have an account?{" "}
-          <Link href="/login" className="text-accent transition-colors duration-base ease-standard hover:text-accent-light">
+          <Link href="/login" className={`tap ${TEXT_LINK}`}>
             Sign in
           </Link>
         </p>
       )}
-
-      <AuthFooter />
     </>
   );
 }

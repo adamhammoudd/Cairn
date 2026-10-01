@@ -372,12 +372,12 @@ export async function runBetaInvitesSuite(): Promise<SuiteResult> {
     check("proxy: an invite opens /signup only", !isInviteLinkRequest("/portfolio", generateInviteCode()) && !isInviteLinkRequest("/signup/x", "abc"), "scope");
     check("proxy uses the invite-link check, no database call", /isInviteLinkRequest\(/.test(read("src/proxy.ts")), "source");
     const page = read("src/app/(auth)/signup/page.tsx");
-    check("signup page: invalid invite renders the message and a waitlist link, never a redirect", /INVITE_INVALID_MESSAGE/.test(page) && /href="\/waitlist"/.test(page) && !/redirect\(/.test(page), "source");
+    check("signup page: invalid invite renders the message and a waitlist link, never a redirect", /resolveSignupInvite/.test(page) && /<InviteInvalid \/>/.test(page) && !/redirect\(/.test(page) && /href="\/waitlist"/.test(read("src/app/(auth)/signup/invite-invalid.tsx")), "source");
     const form = read("src/app/(auth)/signup/signup-form.tsx");
-    const branchAt = form.indexOf("Shown, not editable");
+    const branchAt = form.indexOf("{personal ? (");
     const personalBranch = branchAt < 0 ? "" : form.slice(branchAt, form.indexOf(") : (", branchAt));
-    check("signup form: personal invite shows the email as a locked value, not an editable field",
-      /<input type="hidden" name="email" value=\{invitedEmail\} \/>/.test(personalBranch) && !/onChange/.test(personalBranch) && !/<Field/.test(personalBranch), "source");
+    check("signup form: personal invite shows the email as a locked, read-only value",
+      /name="email"/.test(personalBranch) && /value=\{invitedEmail\}/.test(personalBranch) && /\breadOnly\b/.test(personalBranch) && /aria-readonly="true"/.test(personalBranch) && !/onChange/.test(personalBranch), "source");
 
     // ---------------- route + wiring ----------------
     const route = read("src/app/api/cron/send-beta-invites/route.ts");
@@ -387,8 +387,8 @@ export async function runBetaInvitesSuite(): Promise<SuiteResult> {
     const sendEmailFn = waitlistSrc.slice(waitlistSrc.indexOf("export async function sendEmail"), waitlistSrc.indexOf("export function buildConfirmationEmail"));
     check("shared mailer: the no-provider path logs nothing (an invite link carries a code)", !/console\./.test(sendEmailFn), "source");
     check("invites go through the existing mailer (Resend, then the Gmail bridge)", /sendEmail\(to, message\)/.test(read("src/lib/beta-invites/server.ts")), "source");
-    const confirmPage = read("src/app/waitlist/confirm/page.tsx");
-    check("waitlist confirmation page says what happens next", confirmPage.includes("We invite people in batches, in the order they joined. You&apos;ll get an email with your personal link."), "copy");
+    const confirmPage = read("src/app/waitlist/confirm/confirm-view.tsx");
+    check("waitlist confirmation page says what happens next", /We invite people in batches, in the order they joined\./.test(confirmPage) && /email with your personal link/.test(confirmPage), "copy");
     check("waitlist confirmation email says what happens next", waitlistSrc.includes("We invite people in batches, in the order they joined."), "copy");
 
     // ---------------- no code ever logged ----------------

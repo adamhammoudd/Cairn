@@ -5,7 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Field } from "@/components/auth/field";
-import { AuthError, AuthFooter, AuthHeader } from "@/components/auth/auth-chrome";
+import { AuthError, AuthHeader } from "@/components/auth/auth-chrome";
+import { BUTTON_PRIMARY } from "@/components/front-door/styles";
 
 // checking  - exchanging the link's code for a session
 // ready     - a valid session is established; show the new-password form
@@ -67,11 +68,10 @@ export default function ResetPasswordPage() {
         />
         <Link
           href="/forgot-password"
-          className="mt-5 block w-full rounded-panel bg-gradient-to-br from-accent-light to-accent-dark py-3 text-center text-lead font-semibold text-canvas transition-[box-shadow,transform] duration-base ease-standard hover:-translate-y-px hover:shadow-[0_0_26px_rgba(47,198,133,0.35)]"
+          className={`${BUTTON_PRIMARY} mt-5 w-full`}
         >
           Request a new link
         </Link>
-        <AuthFooter />
       </>
     );
   }
@@ -104,13 +104,11 @@ export default function ResetPasswordPage() {
         <button
           type="submit"
           disabled={status !== "ready" || pending}
-          className="mt-5 w-full rounded-panel bg-gradient-to-br from-accent-light to-accent-dark py-3 text-lead font-semibold text-canvas transition-[box-shadow,transform] duration-base ease-standard hover:-translate-y-px hover:shadow-[0_0_26px_rgba(47,198,133,0.35)] disabled:opacity-60"
+          className={`${BUTTON_PRIMARY} mt-5 w-full`}
         >
           {pending ? "Updating…" : "Update password"}
         </button>
       </form>
-
-      <AuthFooter />
     </>
   );
 }

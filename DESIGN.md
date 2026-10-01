@@ -49,6 +49,12 @@ above a stat" is a role that must not drift, while "small" is an invitation to i
 | `text-h2` | 24px | 1.2 | Page section headings |
 | `text-h1` | 30px | 1.15 | Page titles |
 | `text-display` | 34px | 1.1 | Hero figures, headline stats |
+| `text-hero` | 48-58px, fluid | 1.08 | **Front door only.** The h1 on /welcome and /waitlist from 640px up |
+| `text-hero-sm` | 40px | 1.1 | **Front door only.** That h1 on phones |
+
+The two `hero` steps exist because a marketing headline needs more than the app ever
+does; they carry their own `-0.02em` tracking. They are not for app screens - an app
+heading that wants to be bigger than `text-display` is a design question, not a token.
 
 **`text-eyebrow` carries its own `letter-spacing: 0.12em`.** Do not add `tracking-*`
 beside it - that one binding is what collapsed eight competing tracking values, and
@@ -201,6 +207,21 @@ Two shapes, two meanings - do not mix them:
 
 Compliance copy renders through `components/compliance/disclosure.tsx`. It exists so the
 wording cannot drift; do not retype it.
+
+---
+
+## The front door
+
+`/welcome`, `/waitlist` and its confirm page, the auth pages and the invite sign-up are
+built from these same tokens - there is no marketing palette. Their shared pieces live in
+`src/components/front-door/`: the header and footer, `AuthCard` (the raised-to-panel card
+with the accent glow, `.cn-accent-glow` in `globals.css`), and the button and input classes
+in `styles.ts`. Green on these pages is the main action, the live dot and the confidence
+bars, nothing else. `scripts/tests/front-door-tokens.ts` fails on any hex, `rgba()`,
+`text-[Npx]` or arbitrary tracking in them.
+
+Breakpoints are Tailwind's defaults: phone below `sm` (640px), tablet `sm` to `lg`
+(640-1023px), desktop `lg` (1024px) and up. Gutters 18 / 32 / 48px.
 
 ---
 

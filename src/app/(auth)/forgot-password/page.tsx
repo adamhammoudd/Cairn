@@ -4,8 +4,9 @@ import { useActionState, useState } from "react";
 import Link from "next/link";
 import { forgotPassword } from "@/lib/actions/auth";
 import { Field } from "@/components/auth/field";
+import { TEXT_LINK } from "@/components/front-door/styles";
 import { SubmitButton } from "@/components/auth/submit-button";
-import { AuthError, AuthFooter, AuthHeader } from "@/components/auth/auth-chrome";
+import { AuthError, AuthHeader } from "@/components/auth/auth-chrome";
 import { CAPTCHA_ENABLED, Captcha } from "@/components/auth/captcha";
 
 export default function ForgotPasswordPage() {
@@ -26,17 +27,15 @@ export default function ForgotPasswordPage() {
         <Field id="email" name="email" type="email" label="Email" placeholder="you@example.com" required />
         <Captcha onTokenChange={(token) => setCaptchaDone(!CAPTCHA_ENABLED || token !== "")} />
         <div className="mt-5">
-          <SubmitButton disabled={!captchaDone}>Send reset link</SubmitButton>
+          <SubmitButton frontDoor disabled={!captchaDone}>Send reset link</SubmitButton>
         </div>
       </form>
 
-      <p className="mt-5 text-center text-body text-muted">
-        <Link href="/login" className="text-accent transition-colors duration-base ease-standard hover:text-accent-light">
+      <p className="mt-5 text-center text-lead text-muted">
+        <Link href="/login" className={`tap ${TEXT_LINK}`}>
           Back to sign in
         </Link>
       </p>
-
-      <AuthFooter />
     </>
   );
 }

@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { Logo } from "@/components/logo";
-import { MarketingMotion } from "@/components/marketing-motion";
+import { AuthCard, FrontDoorShell, LivePill } from "@/components/front-door/shell";
+import { EYEBROW, GUTTER, PANEL } from "@/components/front-door/styles";
 import { foundingSlotsRemaining, FOUNDING_LIMIT } from "@/lib/waitlist";
-import { ProofCard } from "./proof-card";
 import { WaitlistForm } from "./waitlist-form";
 
 export const metadata: Metadata = {
@@ -16,299 +14,148 @@ export const metadata: Metadata = {
 // Reads the live founding-slot state, so it renders per request.
 export const dynamic = "force-dynamic";
 
-// The waitlist is the one Persuade surface in the product, and it carries its
-// own palette: a near-black a shade off the app canvas, lit by two radial
-// washes. Those values are deliberately page-local rather than app tokens -
-// nothing behind the login should inherit a marketing gradient.
-const GROUND = "#080908";
+// Built from the app's tokens like the rest of the front door (see
+// components/front-door). The form sits in the sign-in card, so the person who
+// joins here later signs up on a card that looks the same.
 
 const PILLARS = [
   {
-    title: "Ranked around what you hold",
-    body: "Your holdings and watchlist decide what Cairn surfaces first - which tickers, which headlines, which analyses. The assistant answers at market, sector and ticker level; it never evaluates your specific position, and never tells you what to do with it.",
-    color: "#2fc685",
+    title: "Ranked around what you hold.",
+    body: "Your holdings and watchlist decide which stocks, headlines and analyses come first. Cairn never evaluates your specific position, and never tells you what to do with it.",
   },
   {
-    title: "Sourced and transparent",
-    body: "Every probability, briefing, and reply shows its inputs. Ranges and confidence are computed in code - a Wilson interval over historical analogs - not guessed by a language model, which only writes the explanation.",
-    color: "#5b8def",
+    title: "Sourced and checkable.",
+    body: "Every answer shows the articles and past cases it used, and a confidence range worked out in code. A language model only writes the explanation.",
   },
   {
-    title: "Informational only",
-    body: "No brokerage, no trade execution. Cairn gives market-level context and lets you draw the conclusion. It never resolves to buy, hold, or sell - on any plan, free or premium.",
-    color: "#9b8ce0",
+    title: "Information only.",
+    body: "No brokerage, no trades. It never says buy, hold or sell, on any plan, free or premium.",
   },
-];
-
-const GUARANTEES = [
-  { label: "Research & analysis only", color: "#2fc685" },
-  { label: "No brokerage account", color: "#5b8def" },
-  { label: "No trade execution", color: "#9b8ce0" },
 ];
 
 const PREMIUM_ADDS = [
-  ["Unlimited chat", "the Free plan caps daily assistant messages; Premium removes that cap."],
-  [
-    "A much larger analysis quota",
-    "Free covers a handful of full analyses a month; Premium raises the monthly cap well above it.",
-  ],
-  ["Full methodology", "every historical analog behind a probability, not just the closest one."],
-  ["Deeper source trails", "the complete set of articles and data an answer was built from."],
+  ["Unlimited chat", "The Free plan caps daily assistant messages; Premium removes that cap."],
+  ["A much larger analysis quota", "Free covers a handful of full analyses a month; Premium raises the monthly cap well above it."],
+  ["Full method", "Every similar past moment behind a probability, not just the closest one."],
+  ["Full source trail", "The complete set of articles and data an answer was built from."],
 ];
+
+const STEPS = [
+  ["Join", "Enter your email on this page."],
+  ["Confirm", "Click the link in the email we send you. That locks in your place."],
+  ["Get your invite", "When your turn comes, we email you a personal link to create your account."],
+];
+
+const SECTION = "flex flex-col gap-6 border-t border-line-soft py-14 sm:py-16 lg:py-18";
 
 export default async function WaitlistPage() {
   const slotsRemaining = await foundingSlotsRemaining();
   const slotsFull = slotsRemaining !== null && slotsRemaining <= 0;
 
   return (
-    <div
-      className="min-h-screen"
-      style={{
-        background: GROUND,
-        backgroundImage:
-          "radial-gradient(1000px 500px at 14% -10%, rgba(47,198,133,.13), transparent 70%), radial-gradient(820px 440px at 92% 4%, rgba(91,141,239,.08), transparent 72%)",
-      }}
-    >
-      <MarketingMotion />
-
-      <header className="mx-auto flex max-w-[1140px] flex-wrap items-center justify-between gap-3.5 border-b border-[#1a1a1a] px-7 pt-[22px] pb-5">
-        <Logo size={27} />
-        <span className="flex items-center gap-2.5 font-mono text-[10.5px] tracking-[0.18em] text-[#7b7b7b] uppercase">
-          Beta open
-          <span className="text-[#2a2a2a]">·</span>
-          <span className="text-[#5ee6a6]">Waitlist open</span>
-        </span>
-      </header>
-
-      <main className="mx-auto max-w-[1140px] px-7 pb-[72px]">
-        {/* ---------- Hero ---------- */}
-        <section id="join" className="flex flex-wrap gap-11 pt-16 pb-[72px]">
-          <div
-            className="wl-anim min-w-0 flex-[1_1_420px]"
-            style={{ animation: "wl-rise 420ms cubic-bezier(.4,0,.2,1) both" }}
-          >
-            <span className="inline-flex items-center gap-2.5 rounded-full border border-[#2a2a2a] bg-[#0d0f0e] px-[13px] py-1.5 font-mono text-[10px] tracking-[0.18em] text-[#9a9a9a] uppercase">
-              <span className="relative h-1.5 w-1.5">
-                <span className="absolute inset-0 rounded-full bg-[#2fc685]" />
-                <span
-                  className="absolute inset-0 rounded-full bg-[#2fc685]"
-                  style={{ animation: "wl-ping 2.4s cubic-bezier(0,0,.2,1) infinite" }}
-                />
-              </span>
-              Beta now open
-            </span>
-
-            {/*
-              "knows your portfolio" was the old headline. It promised the
-              assistant carries your holdings in context, which is a capability
-              that is off - and which the scope guard would block anyway, since
-              it never evaluates a specific position. What is real is ranking:
-              your holdings decide what Cairn puts in front of you. The headline
-              now claims that and nothing more.
-            */}
-            <h1 className="mt-[22px] font-serif text-[clamp(38px,4.6vw,58px)] leading-[1.08] font-normal tracking-[-0.02em] text-primary text-pretty">
-              An AI research assistant ranked around what you hold -{" "}
-              <span className="text-[#5ee6a6]">and it shows its sources.</span>
+    <FrontDoorShell>
+      <main className={`mx-auto w-full max-w-300 ${GUTTER}`}>
+        {/* ---------- Hero: intro, form, then the pillars ----------
+            DOM order is the phone and tablet order (the form right after the
+            intro). On desktop the form moves to the right column and spans
+            both rows. */}
+        <section
+          id="join"
+          className="grid gap-8 pt-9 pb-14 sm:gap-10 sm:pt-18 sm:pb-16 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:gap-x-16 lg:gap-y-8 lg:pt-22 lg:pb-22"
+        >
+          <div className="animate-rise-in flex flex-col items-start gap-5 sm:gap-6 lg:col-start-1 lg:row-start-1">
+            <LivePill>Private beta · waitlist open</LivePill>
+            <h1 className="font-serif text-hero-sm font-normal text-primary sm:text-hero">
+              Be first in when the doors open.
             </h1>
-
-            <p className="mt-5 max-w-[520px] text-[15px] leading-[1.72] text-[#9a9a9a] text-pretty">
-              Ask what a move means for the tickers you follow. Cairn answers with the articles it
-              read, the historical cases it compared, and how confident it is - so you can judge the
-              reasoning, not just the conclusion.
+            <p className="max-w-xl text-title leading-relaxed text-muted text-pretty">
+              Cairn explains what is moving a stock or coin, and shows its sources. Join the list and
+              we will send you a personal invite link.
             </p>
-
-            <div className="mt-6 flex flex-wrap gap-2">
-              {GUARANTEES.map((g, i) => (
-                <span
-                  key={g.label}
-                  className="inline-flex items-center gap-2 rounded-full border border-[#232323] bg-[#0d0d0d] px-[13px] py-2 text-[12.5px] text-[#c9c9c9]"
-                  style={{ animation: `wl-fade 400ms ease ${200 + i * 70}ms both` }}
-                >
-                  <span
-                    aria-hidden
-                    className="h-1.5 w-1.5 rounded-xs"
-                    style={{ background: g.color }}
-                  />
-                  {g.label}
-                </span>
-              ))}
-            </div>
-
-            <div className="mt-7">
-              <WaitlistForm foundingLimit={FOUNDING_LIMIT} />
-            </div>
           </div>
 
-          <div
-            className="wl-anim relative min-w-0 flex-[1_1_400px]"
-            style={{ animation: "wl-rise 460ms cubic-bezier(.4,0,.2,1) 100ms both" }}
-          >
-            <div
-              aria-hidden
-              className="pointer-events-none absolute"
-              style={{
-                inset: "-16% 10% 30% -10%",
-                background: "radial-gradient(closest-side, rgba(47,198,133,.16), transparent)",
-                animation: "wl-glow 8s ease-in-out infinite",
-              }}
-            />
-            <ProofCard />
+          <div className="w-full max-w-130 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:max-w-none lg:self-start">
+            <AuthCard>
+              <WaitlistForm foundingLimit={FOUNDING_LIMIT} slotsRemaining={slotsRemaining} />
+            </AuthCard>
           </div>
+
+          <ul className="flex flex-col border-b border-line-soft lg:col-start-1 lg:row-start-2">
+            {PILLARS.map((p) => (
+              <li key={p.title} className="border-t border-line-soft py-4 text-lead leading-relaxed text-muted text-pretty">
+                <span className="font-medium text-primary">{p.title}</span> {p.body}
+              </li>
+            ))}
+          </ul>
         </section>
 
         {/* ---------- Founding-member offer ---------- */}
-        <section
-          className="wl-anim relative overflow-hidden rounded-[20px] border border-[rgba(47,198,133,0.24)] px-9 py-[34px]"
-          style={{
-            background: "linear-gradient(150deg,#0d1512,#0b0c0b 62%)",
-            animation: "wl-rise 400ms cubic-bezier(.4,0,.2,1) 160ms both",
-          }}
-        >
-          <div
-            aria-hidden
-            className="pointer-events-none absolute"
-            style={{
-              inset: "-40% 60% 30% -14%",
-              background: "radial-gradient(closest-side, rgba(47,198,133,.18), transparent)",
-              animation: "wl-glow 8s ease-in-out infinite",
-            }}
-          />
-          <div className="relative flex flex-wrap gap-9">
-            <div className="min-w-0 flex-[1.25_1_380px]">
-              <div className="font-mono text-[10px] tracking-[0.18em] text-[#5ee6a6] uppercase">
-                Founding members · first {FOUNDING_LIMIT}
-              </div>
-              <h2 className="mt-3.5 font-serif text-[clamp(27px,3vw,35px)] leading-[1.18] font-normal tracking-[-0.015em] text-primary text-pretty">
-                The first {FOUNDING_LIMIT} people on this list get two months of Premium, free.
-              </h2>
-              <p className="mt-5 max-w-[480px] text-[13.5px] leading-[1.72] text-[#9a9a9a] text-pretty">
+        <section className={`${SECTION} sm:grid sm:grid-cols-2 sm:gap-10 lg:gap-16`}>
+          <div className="flex flex-col gap-3">
+            <span className={EYEBROW}>Founding members · first {FOUNDING_LIMIT}</span>
+            <h2 className="font-serif text-h1 font-normal text-primary text-pretty sm:text-display">
+              The first {FOUNDING_LIMIT} people on this list get two months of Premium, free.
+            </h2>
+            <div className="mt-2 flex max-w-xl flex-col gap-3 text-lead leading-relaxed text-muted text-pretty">
+              <p>
                 A place is claimed only when you confirm your email - the first {FOUNDING_LIMIT} to
                 confirm are the founding members. After that the offer closes; that&apos;s the only
                 limit on this page, and it&apos;s a real one.
               </p>
-              <p className="mt-[11px] max-w-[480px] text-[13.5px] leading-[1.72] text-[#9a9a9a] text-pretty">
-                The two months begin on the day{" "}
-                <strong className="font-semibold text-primary">your</strong> access starts at launch -
-                not the day you join the waitlist, and not a fixed calendar date. It is not
-                &ldquo;two months from today.&rdquo;
+              <p>
+                The two months begin on the day <strong className="font-semibold text-primary">your</strong>{" "}
+                access starts at launch - not the day you join the waitlist, and not a fixed calendar date. It is
+                not &ldquo;two months from today.&rdquo;
               </p>
-              <p className="mt-[11px] max-w-[480px] text-[13.5px] leading-[1.72] text-[#9a9a9a] text-pretty">
+              <p>
                 Confirm after the {FOUNDING_LIMIT} places are filled and you still get standard access
                 at launch - the same as any new user - but{" "}
                 <strong className="font-semibold text-primary">no free Premium period</strong>.
               </p>
-              {slotsFull && (
-                <p className="mt-[18px] inline-flex rounded-[9px] border border-[#2a2a2a] bg-[#0d0d0d] px-3 py-[7px] font-mono text-[10px] tracking-[0.16em] text-[#8a8a8a] uppercase">
-                  Founding-member places are now full
-                </p>
-              )}
             </div>
-
-            <div className="min-w-0 flex-[1_1_320px] rounded-2xl border border-[#232323] bg-[#0d0d0d] px-6 py-[22px]">
-              <div className="font-mono text-[10px] tracking-[0.16em] text-[#7b7b7b] uppercase">
-                What Premium adds
-              </div>
-              <ul className="mt-4 flex flex-col gap-[15px]">
-                {PREMIUM_ADDS.map(([title, body], i) => (
-                  <li
-                    key={title}
-                    className="flex gap-[11px]"
-                    style={{ animation: `wl-fade 400ms ease ${260 + i * 70}ms both` }}
-                  >
-                    <span
-                      aria-hidden
-                      className="mt-px grid h-[19px] w-[19px] flex-none place-items-center rounded-md border border-[rgba(47,198,133,0.32)] bg-[rgba(47,198,133,0.14)] text-[10px] text-[#5ee6a6]"
-                    >
-                      ✓
-                    </span>
-                    <span className="text-body leading-[1.62] text-[#9a9a9a] text-pretty">
-                      <strong className="font-semibold text-primary">{title}</strong> - {body}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-              <p className="mt-[18px] border-t border-[#1c1c1c] pt-[15px] text-[11.5px] leading-[1.6] text-dim text-pretty">
-                Premium never changes an analysis or softens a caveat - it shows more of the
-                methodology behind it.
+            {slotsFull && (
+              <p className="mt-2 inline-flex self-start rounded-full border border-line bg-panel px-3 py-1.5 font-mono text-eyebrow text-muted uppercase">
+                Founding-member places are now full
               </p>
-            </div>
+            )}
+          </div>
+
+          <div className="flex flex-col gap-4">
+            <span className={EYEBROW}>What Premium adds</span>
+            <ul className="grid gap-3 lg:grid-cols-2">
+              {PREMIUM_ADDS.map(([title, body]) => (
+                <li key={title} className={`flex flex-col gap-1.5 p-4 ${PANEL}`}>
+                  <span className="text-title font-medium text-primary">{title}</span>
+                  <span className="text-body leading-relaxed text-muted text-pretty">{body}</span>
+                </li>
+              ))}
+            </ul>
+            <p className="text-caption leading-relaxed text-dim text-pretty">
+              Premium never changes an analysis or softens a caveat - it shows more of the methodology
+              behind it.
+            </p>
           </div>
         </section>
 
-        {/* ---------- Pillars ---------- */}
-        <section
-          className="wl-anim mt-16"
-          style={{ animation: "wl-rise 400ms cubic-bezier(.4,0,.2,1) 200ms both" }}
-        >
-          <div className="font-mono text-[10px] tracking-[0.18em] text-[#7b7b7b] uppercase">
-            What you&apos;re waiting for
+        {/* ---------- What happens next ---------- */}
+        <section className={`${SECTION} mb-6`}>
+          <div className="flex flex-col gap-3">
+            <span className={EYEBROW}>What happens next</span>
+            <h2 className="max-w-2xl font-serif text-h1 font-normal text-primary text-pretty sm:text-display">
+              We invite people in batches, in the order they joined.
+            </h2>
           </div>
-          <div className="mt-6 grid grid-cols-[repeat(auto-fit,minmax(260px,1fr))] gap-7">
-            {PILLARS.map((p, i) => (
-              <div
-                key={p.title}
-                className="min-w-0"
-                style={{ animation: `wl-rise 380ms cubic-bezier(.4,0,.2,1) ${220 + i * 90}ms both` }}
-              >
-                <span
-                  aria-hidden
-                  className="block h-[3px] w-[38px] origin-left rounded-xs"
-                  style={{
-                    background: p.color,
-                    animation: `wl-grow 520ms cubic-bezier(.4,0,.2,1) ${240 + i * 100}ms both`,
-                  }}
-                />
-                <h3 className="mt-4 font-serif text-[22px] font-normal tracking-[-0.01em] text-primary">
-                  {p.title}
-                </h3>
-                <p className="mt-2.5 text-[13.5px] leading-[1.72] text-[#9a9a9a] text-pretty">
-                  {p.body}
-                </p>
-              </div>
+          <ol className="grid gap-4 lg:grid-cols-3">
+            {STEPS.map(([title, body], i) => (
+              <li key={title} className={`flex flex-col gap-2 p-4.5 sm:p-6 ${PANEL}`}>
+                <span className="font-mono text-eyebrow text-muted uppercase">Step {i + 1}</span>
+                <h3 className="font-serif text-h3 font-normal text-primary">{title}</h3>
+                <p className="text-lead leading-relaxed text-muted text-pretty">{body}</p>
+              </li>
             ))}
-          </div>
+          </ol>
         </section>
-
-        {/* ---------- Closing CTA ---------- */}
-        <section
-          className="wl-anim mt-16 border-t border-[#1a1a1a] px-7 py-[52px] text-center"
-          style={{ animation: "wl-rise 400ms cubic-bezier(.4,0,.2,1) 240ms both" }}
-        >
-          <div className="font-mono text-[10px] tracking-[0.18em] text-[#5b8def] uppercase">
-            Be there when it opens
-          </div>
-          <h2 className="mx-auto mt-3.5 max-w-[620px] font-serif text-[clamp(28px,3.4vw,40px)] leading-[1.16] font-normal tracking-[-0.015em] text-primary">
-            One confirmation now. <span className="text-[#5ee6a6]">Your invite when it&apos;s your turn.</span>
-          </h2>
-          <div className="mt-[26px]">
-            <WaitlistForm centered foundingLimit={FOUNDING_LIMIT} />
-          </div>
-        </section>
-
-        {/* ---------- Footer ---------- */}
-        <footer className="flex flex-wrap items-start justify-between gap-5 border-t border-[#1a1a1a] pt-7">
-          <p className="max-w-[560px] text-[11.5px] leading-[1.7] text-dim text-pretty">
-            Cairn uses AI to generate market, sector, and ticker analysis. Every output is
-            informational market-level context - not investment advice, not a recommendation about
-            your personal positions, and it can be wrong. Cairn is not a broker and has no trade
-            execution.
-          </p>
-          <nav className="flex flex-wrap gap-[18px] text-caption text-[#8a8a8a]">
-            <Link href="/privacy" className="tap hover:text-[#5ee6a6]">
-              Privacy Policy
-            </Link>
-            <Link href="/terms" className="tap hover:text-[#5ee6a6]">
-              Terms
-            </Link>
-            <Link href="/refunds" className="tap hover:text-[#5ee6a6]">
-              Cancellation &amp; refunds
-            </Link>
-            <Link href="/accessibility" className="tap hover:text-[#5ee6a6]">
-              Accessibility
-            </Link>
-          </nav>
-        </footer>
       </main>
-    </div>
+    </FrontDoorShell>
   );
 }
