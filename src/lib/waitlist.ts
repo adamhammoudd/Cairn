@@ -180,8 +180,26 @@ export function selectEmailProvider(
 }
 
 export async function sendConfirmationEmail(to: string, confirmUrl: string): Promise<EmailResult> {
-  const message = buildConfirmationEmail(confirmUrl);
+  const result = await sendEmail(to, buildConfirmationEmail(confirmUrl));
+  if (result.via === "none") {
+    console.warn(
+      `[cairn] waitlist: no email provider configured (set RESEND_API_KEY + ` +
+        `WAITLIST_EMAIL_FROM for launch, or the temporary GMAIL_SMTP_* pair as a ` +
+        `bridge). Confirmation link for ${to}: ${confirmUrl}`,
+    );
+  }
+  return result;
+}
 
+/**
+ * Sends one message through whichever provider is configured (Resend, then the
+ * Gmail bridge). Shared by the waitlist confirmation and the beta invites
+ * (src/lib/beta-invites). With no provider it returns `{ sent: false }` and
+ * logs nothing about the message - an invite link carries a secret code, so
+ * the console fallback that prints the confirmation link lives in
+ * sendConfirmationEmail() only.
+ */
+export async function sendEmail(to: string, message: ConfirmationMessage): Promise<EmailResult> {
   switch (selectEmailProvider()) {
     case "resend":
       return sendViaResend(
@@ -198,11 +216,6 @@ export async function sendConfirmationEmail(to: string, confirmUrl: string): Pro
         message,
       );
     default:
-      console.warn(
-        `[cairn] waitlist: no email provider configured (set RESEND_API_KEY + ` +
-          `WAITLIST_EMAIL_FROM for launch, or the temporary GMAIL_SMTP_* pair as a ` +
-          `bridge). Confirmation link for ${to}: ${confirmUrl}`,
-      );
       return { sent: false, via: "none", reason: "no-provider" };
   }
 }
@@ -214,6 +227,8 @@ export function buildConfirmationEmail(confirmUrl: string): ConfirmationMessage 
     "Cairn is a pre-launch, portfolio-aware market research assistant. The app",
     "is not open yet - confirming this address holds your place in line, and",
     "your founding-member status if you're among the first 50 to confirm.",
+    "We invite people in batches, in the order they joined. You'll get an",
+    "email with your personal link.",
     "",
     confirmUrl,
     "",
@@ -253,7 +268,7 @@ function confirmationEmailHtml(confirmUrl: string): string {
           </tr>
           <tr>
             <td style="padding:16px 32px 0;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.6;color:#3f3f46;">
-              Cairn is a pre-launch, portfolio-aware market research assistant. The app isn&rsquo;t open yet - confirming this address holds your place in line, and your founding-member status if you&rsquo;re among the first 50 to confirm.
+              Cairn is a pre-launch, portfolio-aware market research assistant. The app isn&rsquo;t open yet - confirming this address holds your place in line, and your founding-member status if you&rsquo;re among the first 50 to confirm. We invite people in batches, in the order they joined. You&rsquo;ll get an email with your personal link.
             </td>
           </tr>
           <tr>
@@ -370,7 +385,7 @@ async function sendViaGmailSmtp(
   if (!slot.ok) {
     console.error(
       `[cairn] waitlist: Gmail SMTP bridge is at or over its daily cap ` +
-        `(${GMAIL_SMTP_DAILY_CAP}). Confirmation email for ${to} was NOT sent. ` +
+        `(${GMAIL_SMTP_DAILY_CAP}). Email to ${to} was NOT sent. ` +
         `Configure Resend (RESEND_API_KEY + WAITLIST_EMAIL_FROM) to remove this ceiling.`,
     );
     return { sent: false, via: "gmail", reason: "daily-cap" };

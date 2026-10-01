@@ -147,7 +147,7 @@ export function WaitlistForm({
       )}
 
       <p className="mt-4 text-caption leading-relaxed text-muted text-pretty">
-        One email to confirm, then one when your invite is ready. No newsletter. We store your email
+        One email to confirm, then your invite when it is ready (and at most one reminder). No newsletter. We store your email
         plus basic anti-abuse data (IP, browser).{" "}
         <Link href="/privacy" className={TEXT_LINK}>
           Privacy Policy

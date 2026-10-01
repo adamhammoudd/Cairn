@@ -1,26 +1,32 @@
 import { betaPremiumUntil, formatBetaUntil } from "@/lib/billing";
-import { inviteAllowed } from "@/lib/public-paths";
+import { resolveSignupInvite } from "@/lib/beta-invites/resolve";
 import { InviteInvalid } from "./invite-invalid";
 import { SignupForm } from "./signup-form";
 
-// Beta sign-up is invite-only: /signup?invite=<code>. The proxy keeps /signup
-// closed without a valid code, and signUp() re-checks it; this page only
-// decides what to show for the value it was given:
-//   - a valid code: the sign-up form, inside the same card as /waitlist
-//   - anything else (reachable when signed in, or if a code is withdrawn
-//     between the link and the visit): "This invite can't be used", with a way
-//     back to the waitlist - never a blank page.
-// SignupForm takes `invitedEmail` for a personal invite that is tied to one
-// address; nothing on this branch issues those yet, so it is always null here.
+// Beta sign-up is invite-only. The proxy only lets /signup through with an
+// ?invite= value; this page decides what that value is worth:
+//   - a personal invite: "You're invited", email locked to the invited
+//     address (src/lib/beta-invites)
+//   - a BETA_INVITE_CODES shared code (manual override): the open form, as before
+//   - anything else: "This invite can't be used", with a way back to the
+//     waitlist - never a blank page and never a redirect.
+// The signUp action re-checks all of this; this page is not the gate.
 
 export const dynamic = "force-dynamic";
 
 export default async function SignupPage({ searchParams }: { searchParams: Promise<{ invite?: string | string[] }> }) {
   const raw = (await searchParams).invite;
-  const invite = (Array.isArray(raw) ? raw[0] : raw) ?? "";
+  const invite = Array.isArray(raw) ? raw[0] : raw;
+  const resolved = await resolveSignupInvite(invite);
 
-  if (!inviteAllowed(invite, process.env.BETA_INVITE_CODES)) return <InviteInvalid />;
+  if (resolved.kind === "invalid") return <InviteInvalid />;
 
   const until = betaPremiumUntil();
-  return <SignupForm invite={invite} invitedEmail={null} betaUntil={until ? formatBetaUntil(until) : null} />;
+  return (
+    <SignupForm
+      invite={invite ?? ""}
+      invitedEmail={resolved.kind === "personal" ? resolved.email : null}
+      betaUntil={until ? formatBetaUntil(until) : null}
+    />
+  );
 }

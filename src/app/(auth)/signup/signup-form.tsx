@@ -60,6 +60,8 @@ export function SignupForm({
               aria-describedby="email-locked"
               autoComplete="username"
             />
+            {/* Lets a password manager pair the new password with the address. */}
+            <input type="text" name="username" value={invitedEmail} autoComplete="username" readOnly hidden />
             <p id="email-locked" className="-mt-2 mb-4 text-caption text-muted">
               Your invite is for this address.
             </p>

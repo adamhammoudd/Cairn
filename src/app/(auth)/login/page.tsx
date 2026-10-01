@@ -16,6 +16,9 @@ function LoginMessage() {
   if (message === "check-your-email") {
     return <Notice>Check your email to confirm your account.</Notice>;
   }
+  if (message === "account-created") {
+    return <Notice>Your account is ready. Sign in to continue.</Notice>;
+  }
   if (message === "check-your-email-for-reset-link") {
     return <Notice>Check your email for a password reset link.</Notice>;
   }
