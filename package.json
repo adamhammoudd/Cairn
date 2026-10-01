@@ -19,6 +19,7 @@
     "test:capital-use": "tsx --conditions=react-server scripts/tests/capital-use.ts",
     "test:business-profile": "tsx --conditions=react-server scripts/tests/business-profile.ts",
     "test:peer-comparison": "tsx --conditions=react-server scripts/tests/peer-comparison.ts",
+    "test:briefing-filing-line": "tsx --conditions=react-server scripts/tests/briefing-filing-line.ts",
     "test:history-plain": "tsx --conditions=react-server scripts/tests/history-plain.ts",
     "test:plain-summary": "tsx --conditions=react-server scripts/tests/plain-summary.ts",
     "test:exposure": "tsx --conditions=react-server scripts/tests/exposure.ts",

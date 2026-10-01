@@ -35,6 +35,7 @@ const nvda: GlanceRow = {
   line: "A fast-growing company. The share costs less than usual for its profit.",
   href: "/ticker/NVDA",
   assetType: "equity",
+  filingNote: null,
 };
 const btc: GlanceRow = {
   symbol: "BTC",
@@ -51,6 +52,7 @@ const btc: GlanceRow = {
   line: "No company behind it, so only the price trend applies, and it is falling.",
   href: "/ticker/BTC",
   assetType: "crypto",
+  filingNote: null,
 };
 const briefing: Briefing = {
   headline: "A quiet week for what you own.",

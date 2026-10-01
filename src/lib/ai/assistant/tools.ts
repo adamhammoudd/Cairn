@@ -69,6 +69,7 @@ export const TOOL_SPECS = [
   fn("get_price_summary", "Price now plus change over a week, month, 6 months and a year, and the 52-week range.", { symbol: sym }, ["symbol"]),
   fn("get_scorecard", "Cairn's plain-language scorecard: price vs profit, growth, financial health, dividend, use of cash, trend, next event.", { symbol: sym }, ["symbol"]),
   fn("get_company_numbers", "Revenue, profit, EBITDA, cash flow, debt and dividend from SEC filings, plus what the company did with its cash over three fiscal years (buybacks, dividends, acquisitions, share count, free cash flow per share).", { symbol: sym }, ["symbol"]),
+  fn("get_business_profile", "What the company sells and who buys it, in plain English from its latest 10-K, and its revenue split by business segment and product line where the filing reports one.", { symbol: sym }, ["symbol"]),
   fn("get_history_outcome", "What happened next in past moments like today in this symbol's own price history (Cairn's analog engine).", { symbol: sym }, ["symbol"]),
   fn("get_news", "Recent news stored by Cairn, newest first, with source and date.", { symbol: sym, query: { type: "string", description: "Keyword, when not about one symbol." }, days: { type: "integer", minimum: 1, maximum: 30 } }, []),
   fn("get_calendar", "Upcoming earnings and dividend dates. symbol = a ticker, or \"portfolio\" for everything the reader holds.", { symbol: { type: "string" } }, ["symbol"]),
@@ -207,6 +208,37 @@ const IMPLS: Record<ToolName, Impl> = {
       ],
       facts,
       tiles: [figures.revenue && { label: "Revenue", value: figures.revenue, note: n.basis === "ttm" ? "last 4 quarters" : n.periodLabel }, figures.free_cash_flow && { label: "Free cash flow", value: figures.free_cash_flow }, payout && { label: "Dividends vs free cash", value: payout }].filter(Boolean) as AnswerTile[],
+    };
+  },
+
+  async get_business_profile(args, ctx) {
+    const s = upper(args.symbol);
+    const p = await ctx.data.businessProfile(s);
+    if (!p) return fail(`${s} business`, `No 10-K business description is stored for ${s} (funds and coins have none).`);
+    const splits = p.splits.map((x) => ({
+      split: x.title,
+      fiscal_year_to: x.fiscalYearEnd,
+      parts: x.segments.map((g) => ({ name: g.label, share_of_revenue: g.display })),
+    }));
+    const largest = p.splits[0]?.segments[0];
+    return {
+      ok: true,
+      label: `${s} business`,
+      data: {
+        symbol: s,
+        name: p.name,
+        what_it_does: p.oneLiner,
+        in_more_detail: p.paragraph,
+        // "template" = the SEC industry class and the company's own words, quoted.
+        written: p.source === "model" ? "plain English written from the 10-K and checked" : "SEC industry class and the company's own words",
+        industry: p.sicDescription,
+        revenue_split: splits,
+        revenue_split_note:
+          p.splits.length > 0 ? "From the 10-K's XBRL data; parts add up to reported revenue." : p.segmentStatus === "single_segment" ? "The company reports one segment." : "The 10-K does not tag a revenue split that adds up to its total.",
+      },
+      sources: [{ kind: "filing", title: `${p.name} ${p.filing.form}${p.filing.filed ? ` filed ${p.filing.filed}` : ""}`, publisher: "SEC EDGAR", url: p.filing.url, date: p.filing.filed }],
+      facts: [`What it does: ${p.oneLiner}`, ...p.splits.map((x) => `${x.title}: ${x.segments.map((g) => `${g.label} ${g.display}`).join(", ")}.`)],
+      tiles: largest ? [{ label: largest.label, value: largest.display, note: "of revenue" }] : [],
     };
   },
 

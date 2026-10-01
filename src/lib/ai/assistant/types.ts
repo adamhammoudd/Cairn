@@ -9,6 +9,7 @@ export type ToolName =
   | "get_price_summary"
   | "get_scorecard"
   | "get_company_numbers"
+  | "get_business_profile"
   | "get_history_outcome"
   | "get_news"
   | "get_calendar"

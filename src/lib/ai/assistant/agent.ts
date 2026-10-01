@@ -149,6 +149,10 @@ export function mentionedSymbols(message: string): string[] {
 }
 
 export const PORTFOLIO_INTENT = /\b(?:my|mine|i\s+own|i\s+hold|i\s+have|i\s+bought|i've\s+got)\b|\b(?:portfolio|holdings)\b/i;
+/** "How does Apple make money?", "What does NVIDIA do?", "What does it sell?" */
+export const BUSINESS_INTENT = /\b(?:make[s]?\s+(?:its\s+|their\s+)?money|what\s+(?:does|do)\s+[\w.&' -]{1,40}\s+(?:do|sell|make)|business\s+model|revenue\s+(?:split|by|from|mix)|segments?|product\s+lines?)\b/i;
+/** "What does NVIDIA do with its cash?", buybacks, dividends, acquisitions. */
+export const CASH_INTENT = /\b(?:cash|buy\s*backs?|buying\s+back|repurchas\w*|dividends?|acquisitions?|share\s+count|dilution)\b/i;
 const ADVICE_INTENT = /\b(?:should\s+i|buy|sell|hold|worth\s+(?:it|buying)|good\s+(?:time|idea)|invest\s+in)\b/i;
 
 export function prefetchCalls(message: string, portfolioOn: boolean): { name: ToolName; args: Record<string, unknown> }[] {
@@ -161,6 +165,9 @@ export function prefetchCalls(message: string, portfolioOn: boolean): { name: To
   }
   for (const s of symbols.slice(0, 2)) {
     calls.push({ name: "get_price_summary", args: { symbol: s } }, { name: "get_scorecard", args: { symbol: s } }, { name: "get_news", args: { symbol: s, days: 7 } });
+    // "With its cash" is about cash use, not what it sells: check that first.
+    if (CASH_INTENT.test(message)) calls.push({ name: "get_company_numbers", args: { symbol: s } });
+    else if (BUSINESS_INTENT.test(message)) calls.push({ name: "get_business_profile", args: { symbol: s } });
   }
   return calls;
 }
@@ -269,7 +276,7 @@ export function factsAnswer(message: string, outcomes: ToolOutcome[], sources: A
   };
   const sections = [
     section("What's happening", ["get_news"]),
-    section("The business", ["get_price_summary", "get_quote", "get_scorecard", "get_company_numbers", "compare", "get_calendar", "find_symbol"]),
+    section("The business", ["get_business_profile", "get_price_summary", "get_quote", "get_scorecard", "get_company_numbers", "compare", "get_calendar", "find_symbol"]),
     section("What history says", ["get_history_outcome"]),
     section("For you", ["get_portfolio"]),
   ].filter((s): s is AnswerSection => s !== null);

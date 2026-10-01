@@ -47,6 +47,8 @@ export interface BriefingHolding {
   /** Latest and previous quarterly dividend per share, from SEC filings. */
   dividends: { latest: { perShare: number; periodEnd: string; filed: string }; previous: { perShare: number } } | null;
   events: BriefingEvent[];
+  /** The 10-K "What it does" was last read from (company_profiles); null when none is stored. */
+  business?: { form: string; filed: string | null } | null;
 }
 
 export type CardTag = "Coming up" | "Good news" | "Unusual move" | "Changed";
@@ -72,6 +74,8 @@ export interface GlanceRow {
   href: string;
   /** For the phone card's "no company behind it" note. */
   assetType: string | null;
+  /** One line, only when a new filing moved "Use of cash" or the business description; null otherwise. */
+  filingNote: string | null;
 }
 
 export interface ComingUpRow {
@@ -230,6 +234,50 @@ export function scorecardChanges(card: Scorecard, weekAgo: WeekAgoLevels | null)
     (RANK[d.level] < RANK[old.level] ? weakened : improved).push(change);
   }
   return { weakened, improved };
+}
+
+// ---------------------------------------------------------- filing changes
+
+/** A 10-K read within this many days counts as new for the briefing. */
+export const NEW_FILING_DAYS = 7;
+
+/** The newest "<form> filed <date>" among a dimension's SEC sources. */
+function newestFiling(sources: { kind: string; label: string }[]): { form: string; filed: string } | null {
+  let best: { form: string; filed: string } | null = null;
+  for (const s of sources) {
+    const m = s.kind === "sec_filing" ? s.label.match(/^(\S+) filed (\d{4}-\d{2}-\d{2})/) : null;
+    if (m && (!best || m[2] > best.filed)) best = { form: m[1], filed: m[2] };
+  }
+  return best;
+}
+
+/**
+ * One line for a holding's row, only when a new filing changed something:
+ *   * "Use of cash" moved to a different level since the card a week ago.
+ *     Its inputs are all filed figures, so only a filing can move it.
+ *   * a 10-K filed in the last NEW_FILING_DAYS days, from which Cairn re-read
+ *     what the company does and its revenue split.
+ * Null when neither happened, so the row stays as it was. A description of
+ * the change, never a judgement of it.
+ */
+export function filingChangeLine(
+  card: Scorecard,
+  weekAgo: WeekAgoLevels | null,
+  business: { form: string; filed: string | null } | null,
+  today: string,
+): string | null {
+  const parts: string[] = [];
+  const cap = card.dimensions.find((d) => d.key === "capital");
+  const old = weekAgo?.levels.capital;
+  if (cap && old && old.level in RANK && cap.level in RANK && old.level !== cap.level) {
+    const f = newestFiling(cap.sources);
+    parts.push(`Use of cash now reads ${cap.verdict} (was ${old.verdict})${f ? ` after its ${f.form} filed ${plainDate(f.filed)}` : " after a new filing"}.`);
+  }
+  if (business?.filed) {
+    const age = (Date.parse(`${today}T00:00:00Z`) - Date.parse(`${business.filed}T00:00:00Z`)) / 86_400_000;
+    if (age >= 0 && age <= NEW_FILING_DAYS) parts.push(`What it does and its revenue split were re-read from its new ${business.form}, filed ${plainDate(business.filed)}.`);
+  }
+  return parts.length > 0 ? parts.join(" ") : null;
 }
 
 // -------------------------------------------------------------- plain lines
@@ -417,6 +465,7 @@ export function buildBriefing(input: { today: string; holdings: BriefingHolding[
       line: holdingLine(h.scorecard, h.assetType),
       href: `/ticker/${encodeURIComponent(h.symbol)}`,
       assetType: h.assetType,
+      filingNote: filingChangeLine(h.scorecard, h.scorecardWeekAgo, h.business ?? null, input.today),
     });
   }
   rows.sort((a, b) => (b.valueUsd ?? -1) - (a.valueUsd ?? -1));

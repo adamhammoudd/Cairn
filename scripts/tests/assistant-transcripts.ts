@@ -14,7 +14,8 @@
 // Run: npx tsx --conditions=react-server scripts/tests/assistant-transcripts.ts
 
 import { pathToFileURL } from "node:url";
-import { runAssistantTurn, type ChatFn } from "@/lib/ai/assistant/agent";
+import { runAssistantTurn, prefetchCalls, type ChatFn } from "@/lib/ai/assistant/agent";
+import type { BusinessProfileView } from "@/lib/business-profile-data";
 import type { AssistantData, CalendarItemData, NewsItemData, PriceSummaryData, ScorecardData } from "@/lib/ai/assistant/data";
 import type { AnswerDraft, AssistantMeta } from "@/lib/ai/assistant/types";
 import type { ChatRequest, ChatResponse, ToolCall } from "@/lib/ai/llm";
@@ -59,6 +60,7 @@ const PRICES: Record<string, PriceSummaryData> = {
   AMD: price("AMD", "AMD", "equity", 160.21, -0.8, 1.9, -3.4, 12.6, 18.2),
   TSLA: price("TSLA", "Tesla", "equity", 243.1, -6.4, -8.9, -2.2, 0.4, 22.8),
   MSFT: price("MSFT", "Microsoft", "equity", 512.37, 0.4, 1.2, 3.3, 41.1, 29.6),
+  AAPL: price("AAPL", "Apple", "equity", 254.6, 0.3, 1.1, 4.2, 18.5, 12.9),
   BTC: price("BTC", "Bitcoin", "crypto", 108420.5, 1.3, 2.6, -4.1, 28.4, 71.9, 4394),
   QXYZ: price("QXYZ", "Qxyz Robotics", "equity", 12.34, 3.1, 7.7, 19.4, 55.2, 80.3, 1400),
 };
@@ -76,10 +78,30 @@ const CARDS: Record<string, ScorecardData> = {
     ["growth", "Growth", "strong", "Strong", "Sales are up 32% on last year, and profit is up 229%."],
     ["trend", "Price trend", "mixed", "Sideways", "Up 13% over 6 months, and 2% above its average price of the last 200 trading days."],
   ]),
-  TSLA: card("TSLA", "Tesla", "equity", [
-    ["valuation", "Price vs profit", "weak", "Pricier than usual", "The share costs 345 times the company's yearly profit, higher than its own 5-year average of 257."],
-    ["trend", "Price trend", "mixed", "Sideways", "Up 0% over 6 months, and 6% below its average price of the last 200 trading days."],
-  ]),
+  TSLA: {
+    ...card("TSLA", "Tesla", "equity", [
+      ["valuation", "Price vs profit", "weak", "Pricier than usual", "The share costs 345 times the company's yearly profit, higher than its own 5-year average of 257."],
+      ["trend", "Price trend", "mixed", "Sideways", "Up 0% over 6 months, and 6% below its average price of the last 200 trading days."],
+    ]),
+    dimensions: [
+      ...card("TSLA", "Tesla", "equity", [
+        ["valuation", "Price vs profit", "weak", "Pricier than usual", "The share costs 345 times the company's yearly profit, higher than its own 5-year average of 257."],
+        ["trend", "Price trend", "mixed", "Sideways", "Up 0% over 6 months, and 6% below its average price of the last 200 trading days."],
+      ]).dimensions,
+      {
+        key: "health",
+        label: "Financial health",
+        level: "strong",
+        verdict: "Strong",
+        sentence: "Keeps 15 cents of every dollar of sales as EBITDA (profit before interest, tax and write-downs). It brings in more cash than it spends. It has more cash than debt.",
+        figures: [
+          { label: "EBITDA margin", value: "15" },
+          { label: "Debt ÷ shareholders' equity (secondary)", value: "0.1" },
+        ],
+      },
+    ],
+  },
+  AAPL: card("AAPL", "Apple", "equity", [["growth", "Growth", "mixed", "Steady", "Sales are up 6% on last year, and profit is up 19%."]]),
   MSFT: card("MSFT", "Microsoft", "equity", [
     ["dividend", "Dividend", "strong", "Well covered", "Pays 0.65% a year. Dividends took 34% of free cash flow."],
     ["health", "Financial health", "strong", "Strong", "More cash than debt."],
@@ -115,6 +137,35 @@ const NVDA_USE_OF_CASH = {
   sources: [{ label: "10-K filed 2026-02-25 (cash flow and share count, fiscal 2024 to 2026)", url: "https://www.sec.gov/Archives/edgar/data/1045810/000104581026000021/" }],
 };
 
+const AAPL_PROFILE: BusinessProfileView = {
+  symbol: "AAPL",
+  name: "Apple",
+  sic: "3571",
+  sicDescription: "Electronic Computers",
+  oneLiner: "Apple makes iPhones, Macs, iPads and wearables, and sells services like the App Store and iCloud.",
+  paragraph: "It sells to consumers, businesses, schools and governments. It sells through its own stores and website, and through other retailers and phone carriers.",
+  source: "model",
+  filing: { form: "10-K", filed: "2025-10-31", accn: "0000320193-25-000079", url: "https://www.sec.gov/Archives/edgar/data/320193/000032019325000079/aapl-20250927.htm" },
+  segmentStatus: "split",
+  segmentReason: null,
+  splits: [
+    {
+      axis: "product_or_service",
+      title: "Revenue by product or service",
+      fiscalYearEnd: "2025-09-27",
+      accn: "0000320193-25-000079",
+      filed: "2025-10-31",
+      segments: [
+        { label: "iPhone", revenue: 209.6e9, share: 0.504, display: "50%" },
+        { label: "Services", revenue: 109.2e9, share: 0.262, display: "26%" },
+        { label: "Wearables, Home and Accessories", revenue: 35.7e9, share: 0.086, display: "9%" },
+        { label: "Mac", revenue: 33.7e9, share: 0.081, display: "8%" },
+        { label: "iPad", revenue: 28.0e9, share: 0.067, display: "7%" },
+      ],
+    },
+  ],
+};
+
 const CAL: CalendarItemData[] = [
   { symbol: "NVDA", kind: "earnings", date: "2026-11-18", estimated: true, perShareUsd: null },
   { symbol: "MSFT", kind: "ex_dividend", date: "2026-11-19", estimated: false, perShareUsd: 0.91 },
@@ -140,6 +191,9 @@ export function mockData(o: MockOptions = {}): AssistantData {
     },
     async scorecard(s) {
       return CARDS[s] ?? null;
+    },
+    async businessProfile(s) {
+      return s === "AAPL" ? AAPL_PROFILE : null;
     },
     async companyNumbers(s) {
       if (s !== "MSFT" && s !== "NVDA") return null;
@@ -489,6 +543,50 @@ export async function runAssistantTranscriptsSuite(): Promise<SuiteResult> {
       bad.meta.guardFailures[0]?.reason === "number_not_in_tool_results" && /60%/.test(bad.meta.guardFailures[0]?.evidence ?? "") && !/60%/.test(bad.markdown),
       JSON.stringify(bad.meta.guardFailures),
     );
+  }
+
+  // 11c. The four questions: what it sells, its cash, its debt (feat/framework-in-assistant).
+  {
+    const q = "How does Apple make money?";
+    add("Prefetch: 'make money' reads the business profile", prefetchCalls(q, false).some((c) => c.name === "get_business_profile"), JSON.stringify(prefetchCalls(q, false).map((c) => c.name)));
+    add("Prefetch: 'with its cash' reads the company numbers (use of cash), not the profile", prefetchCalls("What does NVIDIA do with its cash?", false).some((c) => c.name === "get_company_numbers") && !prefetchCalls("What does NVIDIA do with its cash?", false).some((c) => c.name === "get_business_profile"), JSON.stringify(prefetchCalls("What does NVIDIA do with its cash?", false).map((c) => c.name)));
+    add("Prefetch: a debt question reads the scorecard (financial health)", prefetchCalls("Is Tesla's debt a problem?", false).some((c) => c.name === "get_scorecard" && c.args.symbol === "TSLA"), JSON.stringify(prefetchCalls("Is Tesla's debt a problem?", false)));
+
+    const answer = (iphone: string) => (p: string) => ({
+      lead: `Apple makes iPhones, Macs, iPads and wearables, and sells services. iPhone was ${iphone} of its revenue in fiscal 2025 ${cite(p, "10-K")}.`,
+      tiles: [{ label: "iPhone", value: iphone, note: "of revenue" }],
+      sections: [{ heading: "The business" as const, body: `Services were 26% and Mac 8% ${cite(p, "10-K")}. It sells to consumers, businesses, schools and governments.` }],
+      follow_ups: ["What does Apple do with its cash?", "How is Apple's debt?"],
+    });
+    const ok = await turn(q, { compose: [answer("50%")] });
+    add(
+      "Apple: answered from its 10-K, with the filing as the cited source",
+      ok.meta.source === "model" && ok.meta.checked.includes("AAPL business") && ok.meta.sources.some((x) => x.url === AAPL_PROFILE.filing.url) && noAdvice(ok.markdown),
+      `${ok.meta.source} ${JSON.stringify(ok.meta.guardFailures)}`,
+      transcript(q, ok),
+    );
+    const bad = await turn(q, { compose: [answer("62%"), answer("50%")] });
+    add("Apple: an invented share (62%) is caught by the figure guard", bad.meta.guardFailures[0]?.reason === "number_not_in_tool_results" && !/62%/.test(bad.markdown), JSON.stringify(bad.meta.guardFailures));
+
+    const dq = "Is Tesla's debt a problem?";
+    const describe = await turn(dq, {
+      compose: [
+        () => ({
+          lead: "Cairn rates Tesla's financial health as Strong: it has more cash than debt.",
+          tiles: [{ label: "Financial health", value: "Strong", note: "" }],
+          sections: [{ heading: "The business" as const, body: "Its debt is 0.1 times its shareholders' equity. It brings in more cash than it spends." }],
+          follow_ups: ["What does Tesla do with its cash?", "How does Tesla make money?"],
+        }),
+      ],
+    });
+    add("Debt question: described from the health figures, no verdict on the reader's choice", describe.meta.source === "model" && describe.meta.guardFailures.length === 0 && noAdvice(describe.markdown), JSON.stringify(describe.meta.guardFailures), transcript(dq, describe));
+    const advise = await turn(dq, {
+      compose: [
+        () => ({ lead: "No, Tesla's debt is not a problem, so you should keep holding it.", tiles: [], sections: [], follow_ups: ["a?", "b?"] }),
+        () => ({ lead: "Cairn rates Tesla's financial health as Strong: it has more cash than debt.", tiles: [], sections: [], follow_ups: ["a?", "b?"] }),
+      ],
+    });
+    add("Debt question: 'you should keep holding it' is caught and not shown", advise.meta.guardFailures.length > 0 && !/keep holding|you should/i.test(advise.markdown), JSON.stringify(advise.meta.guardFailures.map((g) => g.reason)));
   }
 
   // 12. Model unreachable at compose: the facts answer, not an error.

@@ -59,7 +59,7 @@ export async function loadDailyBriefing(userId: string, today: string = new Date
   const symbols = [...bySymbol.keys()];
   if (symbols.length === 0) return buildBriefing({ today, holdings: [], exposureEnabled: isExposureEnabled() });
 
-  const [{ data: dir }, { data: cal }] = await Promise.all([
+  const [{ data: dir }, { data: cal }, { data: profiles }] = await Promise.all([
     supabase.from("symbol_directory").select("symbol, name").in("symbol", symbols),
     supabase
       .from("calendar_events")
@@ -68,7 +68,10 @@ export async function loadDailyBriefing(userId: string, today: string = new Date
       .gte("event_date", today)
       // Fetch the whole "Coming up" window, or its tail is empty whatever the rule says.
       .lte("event_date", isoDaysAgo(today, -BRIEFING_RULES.comingUpDays)),
+    // The 10-K each "What it does" was read from (migration 0062); a failed read leaves the line out.
+    supabase.from("company_profiles").select("symbol, form, filed").in("symbol", symbols),
   ]);
+  const profileOf = new Map((profiles ?? []).map((p) => [p.symbol, { form: p.form, filed: p.filed }]));
   const names = new Map((dir ?? []).map((d) => [d.symbol, (d.name as string | null) ?? d.symbol]));
 
   const holdings: BriefingHolding[] = await Promise.all(
@@ -114,6 +117,7 @@ export async function loadDailyBriefing(userId: string, today: string = new Date
         reactions: bundle.reactions,
         dividends,
         events,
+        business: profileOf.get(symbol) ?? null,
       };
     }),
   );

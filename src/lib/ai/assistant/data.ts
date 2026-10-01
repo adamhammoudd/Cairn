@@ -13,6 +13,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { ensureSymbolIngested, normalizeSymbol } from "@/lib/market-data/ingest";
 import { getCurrentPrice } from "@/lib/market-data/current-price";
 import { loadScorecard } from "@/lib/scorecard-data";
+import { loadBusinessProfile, type BusinessProfileView } from "@/lib/business-profile-data";
 import { capitalDimension, capitalInputFromRows, type Dimension, type StoredAnnualRow, type StoredQuarterRow } from "@/lib/scorecard";
 import { loadBars } from "@/lib/ai/factor-analysis";
 import { benchmarkSymbolFor, computeFactorSet, deriveFactorAnalogs, MIN_FACTOR_HISTORY_BARS } from "@/lib/ai/factors";
@@ -154,6 +155,8 @@ export interface AssistantData {
   priceSummary(symbol: string): Promise<PriceSummaryData | null>;
   scorecard(symbol: string): Promise<ScorecardData | null>;
   companyNumbers(symbol: string, plan: "free" | "premium"): Promise<CompanyNumbersData | null>;
+  /** What the company does and its revenue split, from its latest 10-K; null when none is stored. */
+  businessProfile(symbol: string): Promise<BusinessProfileView | null>;
   history(symbol: string): Promise<HistoryData | null>;
   news(args: { symbol?: string; query?: string; days: number }): Promise<NewsItemData[]>;
   calendar(symbols: string[], days: number): Promise<CalendarItemData[]>;
@@ -277,6 +280,12 @@ export function liveAssistantData(opts: { supabase: SupabaseClient<Database>; us
         dimensions: bundle.scorecard.dimensions.map((d) => ({ key: d.key, label: d.label, level: d.level, verdict: d.verdict, sentence: d.sentence, figures: figuresOf(d) })),
         sources: [...sources.values()].slice(0, 4),
       };
+    },
+
+    async businessProfile(symbol) {
+      const dir = await directoryRow(admin, symbol);
+      if (dir?.asset_type && dir.asset_type !== "equity") return null;
+      return loadBusinessProfile(symbol, plainName(dir?.name ?? symbol, symbol, dir?.asset_type ?? null));
     },
 
     async companyNumbers(symbol, plan) {

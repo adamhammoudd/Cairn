@@ -116,6 +116,7 @@ function HoldingCard({ row, value }: { row: GlanceRow; value: string }) {
           ))}
         </dl>
         <p className="m-0 text-[13px] leading-[1.5] text-primary/70">{note ?? row.line}</p>
+        {row.filingNote && <p className="m-0 text-[13px] leading-[1.5] text-info">{row.filingNote}</p>}
       </Link>
     </li>
   );
@@ -232,7 +233,10 @@ export function DailyBriefing({ briefing, dateLabel }: { briefing: Briefing; dat
                         <MiniBars level={b.level} label={b.label} valuation={b.key === "valuation"} />
                       </td>
                     ))}
-                    <td className="hidden px-4 py-3.5 text-[13px] leading-[1.5] text-primary/70 lg:table-cell">{h.line}</td>
+                    <td className="hidden px-4 py-3.5 text-[13px] leading-[1.5] text-primary/70 lg:table-cell">
+                      {h.line}
+                      {h.filingNote && <span className="mt-1 block text-info">{h.filingNote}</span>}
+                    </td>
                   </tr>
                 ))}
               </tbody>
