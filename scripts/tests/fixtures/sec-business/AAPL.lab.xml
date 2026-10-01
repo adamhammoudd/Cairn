@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Trimmed label linkbase, accession 0000320193-25-000079: labels of the members above. -->
+<link:linkbase xmlns:link="http://www.xbrl.org/2003/linkbase" xmlns:xlink="http://www.w3.org/1999/xlink">
+<link:labelLink>
+<link:loc xlink:type="locator" xlink:label="loc_us-gaap_OperatingSegmentsMember" xlink:href="https://xbrl.fasb.org/us-gaap/2025/elts/us-gaap-2025.xsd#us-gaap_OperatingSegmentsMember"/>
+<link:loc xlink:type="locator" xlink:label="loc_aapl_JapanSegmentMember" xlink:href="aapl-20250927.xsd#aapl_JapanSegmentMember"/>
+<link:loc xlink:type="locator" xlink:label="loc_country_US" xlink:href="https://xbrl.sec.gov/country/2025/country-2025.xsd#country_US"/>
+<link:loc xlink:type="locator" xlink:label="loc_aapl_RestOfAsiaPacificSegmentMember" xlink:href="aapl-20250927.xsd#aapl_RestOfAsiaPacificSegmentMember"/>
+<link:loc xlink:type="locator" xlink:label="loc_us-gaap_ProductMember" xlink:href="https://xbrl.fasb.org/us-gaap/2025/elts/us-gaap-2025.xsd#us-gaap_ProductMember"/>
+<link:loc xlink:type="locator" xlink:label="loc_aapl_OtherCountriesMember" xlink:href="aapl-20250927.xsd#aapl_OtherCountriesMember"/>
+<link:loc xlink:type="locator" xlink:label="loc_aapl_AmericasSegmentMember" xlink:href="aapl-20250927.xsd#aapl_AmericasSegmentMember"/>
+<link:loc xlink:type="locator" xlink:label="loc_us-gaap_ServiceMember" xlink:href="https://xbrl.fasb.org/us-gaap/2025/elts/us-gaap-2025.xsd#us-gaap_ServiceMember"/>
+<link:loc xlink:type="locator" xlink:label="loc_country_CN" xlink:href="https://xbrl.sec.gov/country/2025/country-2025.xsd#country_CN"/>
+<link:loc xlink:type="locator" xlink:label="loc_aapl_MacMember" xlink:href="aapl-20250927.xsd#aapl_MacMember"/>
+<link:loc xlink:type="locator" xlink:label="loc_aapl_GreaterChinaSegmentMember" xlink:href="aapl-20250927.xsd#aapl_GreaterChinaSegmentMember"/>
+<link:loc xlink:type="locator" xlink:label="loc_aapl_EuropeSegmentMember" xlink:href="aapl-20250927.xsd#aapl_EuropeSegmentMember"/>
+<link:loc xlink:type="locator" xlink:label="loc_aapl_IPhoneMember" xlink:href="aapl-20250927.xsd#aapl_IPhoneMember"/>
+<link:loc xlink:type="locator" xlink:label="loc_aapl_IPadMember" xlink:href="aapl-20250927.xsd#aapl_IPadMember"/>
+<link:loc xlink:type="locator" xlink:label="loc_aapl_WearablesHomeandAccessoriesMember" xlink:href="aapl-20250927.xsd#aapl_WearablesHomeandAccessoriesMember"/>
+<link:label id="lab_us-gaap_OperatingSegmentsMember_2d733624-9d8a-4c2d-a3d0-25f9257148bc_terseLabel_en-US" xlink:label="lab_us-gaap_OperatingSegmentsMember" xlink:role="http://www.xbrl.org/2003/role/terseLabel" xlink:type="resource" xml:lang="en-US">Operating segments</link:label>
+<link:label id="lab_us-gaap_OperatingSegmentsMember_label_en-US" xlink:label="lab_us-gaap_OperatingSegmentsMember" xlink:role="http://www.xbrl.org/2003/role/label" xlink:type="resource" xml:lang="en-US">Operating Segments [Member]</link:label>
+<link:label id="lab_aapl_JapanSegmentMember_d29c3e7d-1c8f-426b-85c2-739c225c59c7_terseLabel_en-US" xlink:label="lab_aapl_JapanSegmentMember" xlink:role="http://www.xbrl.org/2003/role/terseLabel" xlink:type="resource" xml:lang="en-US">Japan</link:label>
+<link:label id="lab_aapl_JapanSegmentMember_label_en-US" xlink:label="lab_aapl_JapanSegmentMember" xlink:role="http://www.xbrl.org/2003/role/label" xlink:type="resource" xml:lang="en-US">Japan Segment [Member]</link:label>
+<link:label id="lab_country_US_b9c33442-eef2-4db9-b9d4-da156087460a_terseLabel_en-US" xlink:label="lab_country_US" xlink:role="http://www.xbrl.org/2003/role/terseLabel" xlink:type="resource" xml:lang="en-US">U.S.</link:label>
+<link:label id="lab_country_US_label_en-US" xlink:label="lab_country_US" xlink:role="http://www.xbrl.org/2003/role/label" xlink:type="resource" xml:lang="en-US">UNITED STATES</link:label>
+<link:label id="lab_aapl_RestOfAsiaPacificSegmentMember_b37c3a0d-ec4f-4ebe-9347-1ad17e223670_terseLabel_en-US" xlink:label="lab_aapl_RestOfAsiaPacificSegmentMember" xlink:role="http://www.xbrl.org/2003/role/terseLabel" xlink:type="resource" xml:lang="en-US">Rest of Asia Pacific</link:label>
+<link:label id="lab_aapl_RestOfAsiaPacificSegmentMember_label_en-US" xlink:label="lab_aapl_RestOfAsiaPacificSegmentMember" xlink:role="http://www.xbrl.org/2003/role/label" xlink:type="resource" xml:lang="en-US">Rest of Asia Pacific Segment [Member]</link:label>
+<link:label id="lab_us-gaap_ProductMember_2676a035-b776-449f-87c1-38c6acf6a458_terseLabel_en-US" xlink:label="lab_us-gaap_ProductMember" xlink:role="http://www.xbrl.org/2003/role/terseLabel" xlink:type="resource" xml:lang="en-US">Products</link:label>
+<link:label id="lab_us-gaap_ProductMember_label_en-US" xlink:label="lab_us-gaap_ProductMember" xlink:role="http://www.xbrl.org/2003/role/label" xlink:type="resource" xml:lang="en-US">Product [Member]</link:label>
+<link:label id="lab_aapl_OtherCountriesMember_aef7e996-8c5f-41f2-92c1-e8144a836fc1_terseLabel_en-US" xlink:label="lab_aapl_OtherCountriesMember" xlink:role="http://www.xbrl.org/2003/role/terseLabel" xlink:type="resource" xml:lang="en-US">Other countries</link:label>
+<link:label id="lab_aapl_OtherCountriesMember_label_en-US" xlink:label="lab_aapl_OtherCountriesMember" xlink:role="http://www.xbrl.org/2003/role/label" xlink:type="resource" xml:lang="en-US">Other Countries [Member]</link:label>
+<link:label id="lab_aapl_AmericasSegmentMember_430a0d79-b2b2-4164-9efd-9cc4819cd0f2_terseLabel_en-US" xlink:label="lab_aapl_AmericasSegmentMember" xlink:role="http://www.xbrl.org/2003/role/terseLabel" xlink:type="resource" xml:lang="en-US">Americas</link:label>
+<link:label id="lab_aapl_AmericasSegmentMember_label_en-US" xlink:label="lab_aapl_AmericasSegmentMember" xlink:role="http://www.xbrl.org/2003/role/label" xlink:type="resource" xml:lang="en-US">Americas Segment [Member]</link:label>
+<link:label id="lab_us-gaap_ServiceMember_49da0f31-75e9-47cb-a054-4b20e3a667e8_terseLabel_en-US" xlink:label="lab_us-gaap_ServiceMember" xlink:role="http://www.xbrl.org/2003/role/terseLabel" xlink:type="resource" xml:lang="en-US">Services</link:label>
+<link:label id="lab_us-gaap_ServiceMember_label_en-US" xlink:label="lab_us-gaap_ServiceMember" xlink:role="http://www.xbrl.org/2003/role/label" xlink:type="resource" xml:lang="en-US">Service [Member]</link:label>
+<link:label id="lab_country_CN_9163a84e-ce96-4520-b661-f1b1cf25ae8d_terseLabel_en-US" xlink:label="lab_country_CN" xlink:role="http://www.xbrl.org/2003/role/terseLabel" xlink:type="resource" xml:lang="en-US">China</link:label>
+<link:label id="lab_country_CN_label_en-US" xlink:label="lab_country_CN" xlink:role="http://www.xbrl.org/2003/role/label" xlink:type="resource" xml:lang="en-US">CHINA</link:label>
+<link:label id="lab_aapl_MacMember_20ed71d8-f6e1-4c2c-a47e-00aa3d37e015_terseLabel_en-US" xlink:label="lab_aapl_MacMember" xlink:role="http://www.xbrl.org/2003/role/terseLabel" xlink:type="resource" xml:lang="en-US">Mac</link:label>
+<link:label id="lab_aapl_MacMember_label_en-US" xlink:label="lab_aapl_MacMember" xlink:role="http://www.xbrl.org/2003/role/label" xlink:type="resource" xml:lang="en-US">Mac [Member]</link:label>
+<link:label id="lab_aapl_GreaterChinaSegmentMember_02ab04e9-7e35-4ddd-825a-e66db6caa145_terseLabel_en-US" xlink:label="lab_aapl_GreaterChinaSegmentMember" xlink:role="http://www.xbrl.org/2003/role/terseLabel" xlink:type="resource" xml:lang="en-US">Greater China</link:label>
+<link:label id="lab_aapl_GreaterChinaSegmentMember_label_en-US" xlink:label="lab_aapl_GreaterChinaSegmentMember" xlink:role="http://www.xbrl.org/2003/role/label" xlink:type="resource" xml:lang="en-US">Greater China Segment [Member]</link:label>
+<link:label id="lab_aapl_EuropeSegmentMember_0fc9a8a6-6950-4330-b5a0-22ef48d88f4f_terseLabel_en-US" xlink:label="lab_aapl_EuropeSegmentMember" xlink:role="http://www.xbrl.org/2003/role/terseLabel" xlink:type="resource" xml:lang="en-US">Europe</link:label>
+<link:label id="lab_aapl_EuropeSegmentMember_label_en-US" xlink:label="lab_aapl_EuropeSegmentMember" xlink:role="http://www.xbrl.org/2003/role/label" xlink:type="resource" xml:lang="en-US">Europe Segment [Member]</link:label>
+<link:label id="lab_aapl_IPhoneMember_8e273baa-02f0-4f40-8c00-f1e9ff665ce6_terseLabel_en-US" xlink:label="lab_aapl_IPhoneMember" xlink:role="http://www.xbrl.org/2003/role/terseLabel" xlink:type="resource" xml:lang="en-US">iPhone</link:label>
+<link:label id="lab_aapl_IPhoneMember_label_en-US" xlink:label="lab_aapl_IPhoneMember" xlink:role="http://www.xbrl.org/2003/role/label" xlink:type="resource" xml:lang="en-US">iPhone [Member]</link:label>
+<link:label id="lab_aapl_IPadMember_aab7fd9c-5e8c-4579-a12c-79d3076a4ff2_terseLabel_en-US" xlink:label="lab_aapl_IPadMember" xlink:role="http://www.xbrl.org/2003/role/terseLabel" xlink:type="resource" xml:lang="en-US">iPad</link:label>
+<link:label id="lab_aapl_IPadMember_label_en-US" xlink:label="lab_aapl_IPadMember" xlink:role="http://www.xbrl.org/2003/role/label" xlink:type="resource" xml:lang="en-US">iPad [Member]</link:label>
+<link:label id="lab_aapl_WearablesHomeandAccessoriesMember_8fb12357-8006-44cd-9461-e2611a5a787e_terseLabel_en-US" xlink:label="lab_aapl_WearablesHomeandAccessoriesMember" xlink:role="http://www.xbrl.org/2003/role/terseLabel" xlink:type="resource" xml:lang="en-US">Wearables, Home and Accessories</link:label>
+<link:label id="lab_aapl_WearablesHomeandAccessoriesMember_label_en-US" xlink:label="lab_aapl_WearablesHomeandAccessoriesMember" xlink:role="http://www.xbrl.org/2003/role/label" xlink:type="resource" xml:lang="en-US">Wearables, Home and Accessories [Member]</link:label>
+<link:labelArc xlink:arcrole="http://www.xbrl.org/2003/arcrole/concept-label" xlink:from="loc_us-gaap_OperatingSegmentsMember" xlink:to="lab_us-gaap_OperatingSegmentsMember" xlink:type="arc" order="1"/>
+<link:labelArc xlink:arcrole="http://www.xbrl.org/2003/arcrole/concept-label" xlink:from="loc_aapl_JapanSegmentMember" xlink:to="lab_aapl_JapanSegmentMember" xlink:type="arc" order="1"/>
+<link:labelArc xlink:arcrole="http://www.xbrl.org/2003/arcrole/concept-label" xlink:from="loc_country_US" xlink:to="lab_country_US" xlink:type="arc" order="1"/>
+<link:labelArc xlink:arcrole="http://www.xbrl.org/2003/arcrole/concept-label" xlink:from="loc_aapl_RestOfAsiaPacificSegmentMember" xlink:to="lab_aapl_RestOfAsiaPacificSegmentMember" xlink:type="arc" order="1"/>
+<link:labelArc xlink:arcrole="http://www.xbrl.org/2003/arcrole/concept-label" xlink:from="loc_us-gaap_ProductMember" xlink:to="lab_us-gaap_ProductMember" xlink:type="arc" order="1"/>
+<link:labelArc xlink:arcrole="http://www.xbrl.org/2003/arcrole/concept-label" xlink:from="loc_aapl_OtherCountriesMember" xlink:to="lab_aapl_OtherCountriesMember" xlink:type="arc" order="1"/>
+<link:labelArc xlink:arcrole="http://www.xbrl.org/2003/arcrole/concept-label" xlink:from="loc_aapl_AmericasSegmentMember" xlink:to="lab_aapl_AmericasSegmentMember" xlink:type="arc" order="1"/>
+<link:labelArc xlink:arcrole="http://www.xbrl.org/2003/arcrole/concept-label" xlink:from="loc_us-gaap_ServiceMember" xlink:to="lab_us-gaap_ServiceMember" xlink:type="arc" order="1"/>
+<link:labelArc xlink:arcrole="http://www.xbrl.org/2003/arcrole/concept-label" xlink:from="loc_country_CN" xlink:to="lab_country_CN" xlink:type="arc" order="1"/>
+<link:labelArc xlink:arcrole="http://www.xbrl.org/2003/arcrole/concept-label" xlink:from="loc_aapl_MacMember" xlink:to="lab_aapl_MacMember" xlink:type="arc" order="1"/>
+<link:labelArc xlink:arcrole="http://www.xbrl.org/2003/arcrole/concept-label" xlink:from="loc_aapl_GreaterChinaSegmentMember" xlink:to="lab_aapl_GreaterChinaSegmentMember" xlink:type="arc" order="1"/>
+<link:labelArc xlink:arcrole="http://www.xbrl.org/2003/arcrole/concept-label" xlink:from="loc_aapl_EuropeSegmentMember" xlink:to="lab_aapl_EuropeSegmentMember" xlink:type="arc" order="1"/>
+<link:labelArc xlink:arcrole="http://www.xbrl.org/2003/arcrole/concept-label" xlink:from="loc_aapl_IPhoneMember" xlink:to="lab_aapl_IPhoneMember" xlink:type="arc" order="1"/>
+<link:labelArc xlink:arcrole="http://www.xbrl.org/2003/arcrole/concept-label" xlink:from="loc_aapl_IPadMember" xlink:to="lab_aapl_IPadMember" xlink:type="arc" order="1"/>
+<link:labelArc xlink:arcrole="http://www.xbrl.org/2003/arcrole/concept-label" xlink:from="loc_aapl_WearablesHomeandAccessoriesMember" xlink:to="lab_aapl_WearablesHomeandAccessoriesMember" xlink:type="arc" order="1"/>
+</link:labelLink>
+</link:linkbase>
