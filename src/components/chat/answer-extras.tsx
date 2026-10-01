@@ -96,8 +96,12 @@ export function SourcesDisclosure({ sources }: { sources: string }) {
   );
 }
 
-/** Shown when the reader got the code-built answer because the model's draft failed Cairn's checks. */
+/**
+ * Shown when the reader got the code-built answer because the model's draft failed Cairn's checks.
+ * Only when there is data under it: an answer that found nothing says so in its own words, and
+ * "from the data above" over no data would be false.
+ */
 export function FactsNote({ meta }: { meta: AssistantMeta }) {
-  if (meta.source !== "facts") return null;
+  if (meta.source !== "facts" || (meta.tiles.length === 0 && meta.sources.length === 0)) return null;
   return <p className="mt-3 text-micro text-dim">Written by Cairn directly from the data above.</p>;
 }

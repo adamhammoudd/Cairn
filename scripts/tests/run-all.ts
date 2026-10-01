@@ -77,6 +77,7 @@ import { runBetaAccessSuite } from "./beta-access";
 import { runNewsPaginationSuite } from "./news-pagination";
 import { runAssistantGuardsSuite } from "./assistant-guards";
 import { runAssistantTranscriptsSuite } from "./assistant-transcripts";
+import { runAssistantEmptyAnswersSuite } from "./assistant-empty-answers";
 import { runNativeCurrencySuite } from "./native-currency";
 import { runBetaInvitesSuite } from "./beta-invites";
 
@@ -146,6 +147,7 @@ async function main() {
     analysisTitlesSuites,
     newsPaginationSuites,
     assistantTranscriptSuites,
+    assistantEmptyAnswersSuites,
     businessProfileSuites,
     nativeCurrencySuites,
     betaInvitesSuites,
@@ -190,6 +192,7 @@ async function main() {
     guarded("Analysis titles", async () => [await runAnalysisTitlesSuite()]),
     guarded("News pagination", async () => [await runNewsPaginationSuite()]),
     guarded("Assistant transcripts", async () => [await runAssistantTranscriptsSuite()]),
+    guarded("Assistant empty answers", async () => [await runAssistantEmptyAnswersSuite()]),
     guarded("Business profile", async () => [await runBusinessProfileSuite()]),
     guarded("Native currency", async () => [await runNativeCurrencySuite()]),
     guarded("Beta invites", async () => [await runBetaInvitesSuite()]),
@@ -260,6 +263,7 @@ async function main() {
     ...analysisTitlesSuites,
     ...newsPaginationSuites,
     ...assistantTranscriptSuites,
+    ...assistantEmptyAnswersSuites,
     ...businessProfileSuites,
     ...nativeCurrencySuites,
     ...betaInvitesSuites,
