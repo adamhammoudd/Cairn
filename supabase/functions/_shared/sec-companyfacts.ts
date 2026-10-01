@@ -116,6 +116,14 @@ export const FIELD_SPECS = {
   long_term_debt_current: { kind: "instant", unit: "USD", chain: ["LongTermDebtCurrent"] },
   debt_current: { kind: "instant", unit: "USD", chain: ["DebtCurrent"] },
   short_term_borrowings: { kind: "instant", unit: "USD", chain: ["ShortTermBorrowings", "CommercialPaper"] },
+  // Shareholders' equity, for debt ÷ equity (feat/peer-comparison). All 32
+  // ingested equities and KO report StockholdersEquity (checked 2026-10-01);
+  // the figure including minority interests is the fallback.
+  stockholders_equity: {
+    kind: "instant",
+    unit: "USD",
+    chain: ["StockholdersEquity", "StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest"],
+  },
 } as const satisfies Record<string, FieldSpec>;
 
 export type Field = keyof typeof FIELD_SPECS;

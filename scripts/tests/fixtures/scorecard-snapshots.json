@@ -54,7 +54,20 @@
             "label": "Closing price 2025-09-25",
             "ref": "2025-09-25"
           }
-        ]
+        ],
+        "peers": {
+          "pe": "45",
+          "sector": {
+            "median": "24",
+            "peers": 8,
+            "name": "Semiconductors"
+          },
+          "market": {
+            "median": "39",
+            "companies": 15
+          },
+          "differences": []
+        }
       },
       {
         "key": "growth",
@@ -121,6 +134,11 @@
             "label": "Net debt ÷ EBITDA",
             "value": -0.6666666666666666,
             "display": null
+          },
+          {
+            "label": "Debt ÷ shareholders' equity (secondary)",
+            "value": 0.2222222222222222,
+            "display": "0.2"
           }
         ],
         "sources": [
@@ -296,7 +314,17 @@
             "label": "Closing price 2025-09-25",
             "ref": "2025-09-25"
           }
-        ]
+        ],
+        "peers": {
+          "pe": "24",
+          "sector": {
+            "median": "21",
+            "peers": 8,
+            "name": "Semiconductors"
+          },
+          "market": null,
+          "differences": []
+        }
       },
       {
         "key": "growth",
@@ -363,6 +391,11 @@
             "label": "Net debt ÷ EBITDA",
             "value": 2.6,
             "display": "2.6"
+          },
+          {
+            "label": "Debt ÷ shareholders' equity (secondary)",
+            "value": 0.2222222222222222,
+            "display": "0.2"
           }
         ],
         "sources": [

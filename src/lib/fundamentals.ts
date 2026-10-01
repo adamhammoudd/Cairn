@@ -29,6 +29,8 @@ export interface QuarterValues {
   long_term_debt_current: number | null;
   debt_current: number | null;
   short_term_borrowings: number | null;
+  /** Shareholders' equity at the quarter end (migration 0063); absent on rows read before it. */
+  stockholders_equity?: number | null;
 }
 
 export interface Quarter extends QuarterValues {
@@ -200,6 +202,10 @@ export interface CompanyMetrics {
   totalDebt: number | null;
   netDebt: number | null;
   netDebtToEbitda: number | null;
+  /** Shareholders' equity at the latest quarter end; null when not reported. */
+  equity: number | null;
+  /** Total debt / shareholders' equity; null when either is missing or equity is not positive. */
+  debtToEquity: number | null;
   /** Dividends paid / free cash flow, and / net profit (TTM). */
   payoutOfFcf: number | null;
   payoutOfNetIncome: number | null;
@@ -226,9 +232,19 @@ export function companyMetrics(rows: Quarter[], annualEps?: Map<number, number>)
     totalDebt: totalDebt(latest),
     netDebt: nd,
     netDebtToEbitda: nd === null || now.ebitda === null || now.ebitda <= 0 ? null : nd / now.ebitda,
+    equity: latest.stockholders_equity ?? null,
+    debtToEquity: ratio(totalDebt(latest), latest.stockholders_equity ?? null),
     payoutOfFcf: ratio(now.dividends_paid, now.free_cash_flow),
     payoutOfNetIncome: ratio(now.dividends_paid, now.net_income),
   };
+}
+
+/**
+ * Enterprise value: what the whole company costs - the market value of its
+ * shares plus its debt minus its cash. Null without both parts.
+ */
+export function enterpriseValue(marketCap: number | null, netDebtValue: number | null): number | null {
+  return marketCap === null || netDebtValue === null ? null : marketCap + netDebtValue;
 }
 
 // --------------------------------------------------------------- valuation

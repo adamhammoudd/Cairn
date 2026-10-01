@@ -47,6 +47,22 @@ export interface Dimension {
   sentence: string;
   inputs: Input[];
   sources: Source[];
+  /** Price vs profit only: the "vs similar companies" row, present when a comparison clears its minimum. */
+  peers?: PeerComparison;
+}
+
+/**
+ * The company's price-vs-profit next to similar companies and the tracked
+ * market, and the measured differences between it and its peers. Facts only:
+ * no reason is given for why the prices differ.
+ */
+export interface PeerComparison {
+  /** The company's own price ÷ yearly profit per share, as displayed. */
+  pe: string;
+  sector: { median: string; peers: number; name: string } | null;
+  market: { median: string; companies: number } | null;
+  /** Each line: the company's figure and the median of similar companies (sector only). */
+  differences: { label: string; company: string; peers: string }[];
 }
 
 export interface Scorecard {
@@ -168,6 +184,11 @@ export interface ValuationInput {
   market?: { median: number; companies: number } | null;
   /** TTM free cash flow / market value, for companies without profit. */
   fcfYield: number | null;
+  /** Enterprise value ÷ EBITDA, a secondary input: never part of the verdict. */
+  ev?: { enterpriseValue: number; marketCap: number; netDebt: number; ebitda: number; sharesAsOf: string | null } | null;
+  /** The company's own figures and the median of its sector peers', for the measured differences. */
+  company?: PeerMetrics | null;
+  peerMetrics?: (PeerMetrics & { peers: number }) | null;
   priceDate: string | null;
   filing: FilingRef | null;
 }
@@ -187,6 +208,12 @@ export const VALUATION_VERDICTS = {
   modestCash: "Modest cash yield",
   lowCash: "Low cash yield",
 } as const;
+
+export interface PeerMetrics {
+  revenueGrowth: number | null;
+  ebitdaMargin: number | null;
+  netDebtToEbitda: number | null;
+}
 
 /** "lower than", "about the same as", "higher than" for one comparison. */
 function relation(ratio: number): string {
@@ -223,6 +250,12 @@ export function valuationDimension(v: ValuationInput): Dimension {
     ].filter(Boolean);
     const context = others.length > 0 ? ` For comparison, ${others.join("; ")}.` : "";
     const opening = `The share costs ${times(cur.pe)} times the company's yearly profit`;
+    if (v.ev && v.ev.ebitda > 0) {
+      const multiple = v.ev.enterpriseValue / v.ev.ebitda;
+      inputs.push(input("Enterprise value ÷ EBITDA (secondary)", multiple, oneDp(multiple)));
+      sources.push({ kind: "computed", label: "Enterprise value = shares × latest price + debt − cash", ref: v.ev.sharesAsOf ?? undefined });
+    }
+    const peers = peerComparison(cur.pe, sector, market, v.company ?? null, v.peerMetrics ?? null);
     if (!own) {
       return {
         key: "valuation",
@@ -233,6 +266,7 @@ export function valuationDimension(v: ValuationInput): Dimension {
         sentence: `${opening}. There is not enough history yet to say what is usual for it.${context}`,
         inputs,
         sources,
+        ...(peers ? { peers } : {}),
       };
     }
     const ratio = cur.pe / own;
@@ -244,9 +278,10 @@ export function valuationDimension(v: ValuationInput): Dimension {
       level,
       rated: true,
       verdict,
-      sentence: `${opening}, ${relation(ratio)} its own 5-year average of ${times(own)}.${context}`,
+      sentence: `${opening}, ${relation(ratio)} its own 5-year average of ${times(own)}.${context}${disagreement(ratio, cur.pe, sector, market)}`,
       inputs,
       sources,
+      ...(peers ? { peers } : {}),
     };
   }
 
@@ -270,6 +305,61 @@ export function valuationDimension(v: ValuationInput): Dimension {
     };
   }
   return NA("valuation", label, "Profit or cash-flow figures are not available for this company.", "Not available");
+}
+
+/**
+ * When its own history and its peers point opposite ways, the sentence says
+ * so plainly. Similar companies are used when there are enough of them,
+ * otherwise the tracked market. The verdict itself is unchanged: it stays the
+ * share against its own history.
+ */
+export function disagreement(
+  ownRatio: number,
+  pe: number,
+  sector: { median: number } | null,
+  market: { median: number } | null,
+): string {
+  const T = THRESHOLDS.valuation;
+  const against = sector ?? market;
+  if (!against) return "";
+  const who = sector ? "similar companies" : "the companies Cairn tracks";
+  const peerRatio = pe / against.median;
+  if (ownRatio <= T.cheapRatio && peerRatio >= T.expensiveRatio) return ` So it is cheaper than its own history, but pricier than ${who}.`;
+  if (ownRatio >= T.expensiveRatio && peerRatio <= T.cheapRatio) return ` So it is pricier than its own history, but cheaper than ${who}.`;
+  return "";
+}
+
+/**
+ * The "vs similar companies" row. Null when neither comparison clears its
+ * minimum (THRESHOLDS.valuation.minSectorPeers / minMarketCompanies). The
+ * measured differences are listed only against qualifying sector peers.
+ */
+export function peerComparison(
+  pe: number,
+  sector: { median: number; peers: number; name: string } | null,
+  market: { median: number; companies: number } | null,
+  company: PeerMetrics | null,
+  peerMetrics: (PeerMetrics & { peers: number }) | null,
+): PeerComparison | null {
+  const T = THRESHOLDS.valuation;
+  const s = sector && sector.peers >= T.minSectorPeers ? sector : null;
+  const m = market && market.companies >= T.minMarketCompanies ? market : null;
+  if (!s && !m) return null;
+  const differences: PeerComparison["differences"] = [];
+  if (s && company && peerMetrics && peerMetrics.peers >= T.minSectorPeers) {
+    const rows: [string, number | null, number | null, (v: number) => string][] = [
+      ["Sales growth, last 12 months", company.revenueGrowth, peerMetrics.revenueGrowth, signedPct],
+      ["EBITDA margin (profit before interest, tax and write-downs, per dollar of sales)", company.ebitdaMargin, peerMetrics.ebitdaMargin, pct],
+      ["Net debt ÷ EBITDA (years of profit to pay its debt)", company.netDebtToEbitda, peerMetrics.netDebtToEbitda, oneDp],
+    ];
+    for (const [label, a, b, fmt] of rows) if (a !== null && b !== null) differences.push({ label, company: fmt(a), peers: fmt(b) });
+  }
+  return {
+    pe: times(pe),
+    sector: s ? { median: times(s.median), peers: s.peers, name: s.name } : null,
+    market: m ? { median: times(m.median), companies: m.companies } : null,
+    differences,
+  };
 }
 
 export function growthDimension(m: CompanyMetrics | null, filing: FilingRef | null): Dimension {
@@ -347,6 +437,12 @@ export function healthDimension(m: CompanyMetrics | null, filing: FilingRef | nu
       input("Free cash flow, last 12 months (USD)", fcf, null),
       input("Net debt (USD)", nd, null),
       input("Net debt ÷ EBITDA", lev, lev !== null && nd !== null && nd > 0 ? oneDp(lev) : null),
+      // Secondary: shown, never part of the verdict.
+      input(
+        "Debt ÷ shareholders' equity (secondary)",
+        m.debtToEquity,
+        m.debtToEquity !== null ? oneDp(m.debtToEquity) : m.equity !== null && m.equity <= 0 ? "equity below zero" : null,
+      ),
     ],
     sources: filingSource(filing, "EBITDA, cash flow and debt"),
   };

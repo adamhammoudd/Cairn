@@ -20,6 +20,7 @@ import { runFactorAnalogsSuite } from "./factor-analogs";
 import { runDeepHistorySuite } from "./deep-history";
 import { runFundamentalsSuite } from "./fundamentals";
 import { runScorecardSuite } from "./scorecard";
+import { runPeerComparisonSuite } from "./peer-comparison";
 import { runHistoryPlainSuite } from "./history-plain";
 import { runExposureSuite } from "./exposure";
 import { runDailyBriefingSuite } from "./daily-briefing";
@@ -197,6 +198,7 @@ async function main() {
     runHealthInputsSuite(),
     runRunAllRegistrationSuite(),
     runScorecardSuite(),
+    runPeerComparisonSuite(),
     runHistoryPlainSuite(),
     runDirectionEngineSuite(),
     runAnalysisDisplaySuite(),

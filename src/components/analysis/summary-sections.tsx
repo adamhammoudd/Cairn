@@ -8,7 +8,7 @@
 // "lower" in the history dots, never as decoration.
 
 import { useId, useState, type ReactNode } from "react";
-import type { Dimension, Level, Scorecard } from "@/lib/scorecard";
+import type { Dimension, Level, PeerComparison, Scorecard } from "@/lib/scorecard";
 import { barSegments, hasUpcomingEvent } from "@/lib/scorecard";
 import type { HistoryPlain } from "@/lib/ai/history-plain";
 
@@ -130,6 +130,53 @@ function Tile({ d }: { d: Dimension }) {
       <p className="m-0 text-[14px] leading-[1.55] text-primary/70 text-pretty">
         {isEvent && upcoming ? d.sentence.split(". ").slice(1).join(". ") || d.verdict : d.sentence}
       </p>
+      {d.peers && <PeerRow p={d.peers} />}
+    </div>
+  );
+}
+
+/**
+ * "vs similar companies" under price vs profit (feat/peer-comparison): the
+ * company's price ÷ profit next to the medians, with how many companies fed
+ * each, and the measured differences as plain facts - never a reason.
+ */
+export function PeerRow({ p }: { p: PeerComparison }) {
+  return (
+    <div className="mt-1 flex flex-col gap-1.5 border-t border-line-soft pt-3 text-[13px] leading-[1.5]">
+      <span className="text-muted">vs similar companies · price ÷ yearly profit</span>
+      <dl className="m-0 grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-0.5">
+        <dt className="text-primary/70">This company</dt>
+        <dd className="m-0 tabular-nums text-primary">{p.pe}</dd>
+        {p.sector && (
+          <>
+            <dt className="text-primary/70">
+              Similar companies, median ({p.sector.peers} in {p.sector.name})
+            </dt>
+            <dd className="m-0 tabular-nums text-primary">{p.sector.median}</dd>
+          </>
+        )}
+        {p.market && (
+          <>
+            <dt className="text-primary/70">All {p.market.companies} companies Cairn tracks, median</dt>
+            <dd className="m-0 tabular-nums text-primary">{p.market.median}</dd>
+          </>
+        )}
+      </dl>
+      {p.differences.length > 0 && (
+        <>
+          <span className="mt-1 text-muted">Measured differences (this company vs the median of similar companies)</span>
+          <dl className="m-0 grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-0.5">
+            {p.differences.map((x) => (
+              <div key={x.label} className="contents">
+                <dt className="text-primary/70">{x.label}</dt>
+                <dd className="m-0 tabular-nums text-primary">
+                  {x.company} vs {x.peers}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </>
+      )}
     </div>
   );
 }

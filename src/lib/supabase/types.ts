@@ -959,6 +959,7 @@ export interface Database {
           long_term_debt_current: number | null;
           debt_current: number | null;
           short_term_borrowings: number | null;
+          stockholders_equity: number | null;
           provenance: Record<string, { concept: string; method: string; accn: string; form: string; filed: string; approximate?: boolean }>;
           currency: string;
           source: string;
@@ -986,6 +987,7 @@ export interface Database {
           long_term_debt_current?: number | null;
           debt_current?: number | null;
           short_term_borrowings?: number | null;
+          stockholders_equity?: number | null;
           provenance?: Record<string, unknown>;
           currency?: string;
           source?: string;
