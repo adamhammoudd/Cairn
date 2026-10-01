@@ -50,10 +50,35 @@ export async function runCitationFreshnessSuite(): Promise<SuiteResult> {
 
     const newsIds = (links ?? []).map((l) => l.news_item_id);
     if (newsIds.length === 0) {
+      // Since migration 0057 an analysis can rest on data sources alone - its
+      // price history, SEC filings, a fund profile - with no news in the window.
+      // checkCompleteness counts those too (generate.ts: sourceCount = news +
+      // data sources), so this check does the same. Only an analysis with
+      // neither is a failure; a data source dated after the analysis is the
+      // same impossible-timestamp signal as a future news item.
+      const { data: dataSources } = await admin
+        .from("ai_analysis_data_sources")
+        .select("kind, label, as_of")
+        .eq("analysis_id", analysis.id);
+      const sources = dataSources ?? [];
+      if (sources.length === 0) {
+        cases.push({
+          name: `${ticker} (${analysis.id})`,
+          status: "fail",
+          detail: "No cited sources at all (no news, no data sources) - checkCompleteness should have rejected this at generation time.",
+        });
+        continue;
+      }
+      const createdDay = analysis.created_at.slice(0, 10);
+      const future = sources.filter((s) => s.as_of !== null && String(s.as_of).slice(0, 10) > createdDay);
       cases.push({
         name: `${ticker} (${analysis.id})`,
-        status: "fail",
-        detail: "No cited sources to check - checkCompleteness should have rejected this at generation time.",
+        status: future.length > 0 ? "fail" : "pass",
+        detail:
+          future.length > 0
+            ? `${future.length} data source(s) dated AFTER the analysis was created - impossible citation.`
+            : `No news in the window; ${sources.length} data source(s) cited (${Array.from(new Set(sources.map((s) => s.kind))).join(", ")}), none dated after the analysis.`,
+        attachment: future.length > 0 ? JSON.stringify(future, null, 2) : undefined,
       });
       continue;
     }

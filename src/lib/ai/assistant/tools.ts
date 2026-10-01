@@ -4,7 +4,7 @@
 // sentences and headline tiles written in code, which the fallback answer is
 // built from when a model answer fails the guards.
 
-import { formatMoney, type DisplayPrefs } from "@/lib/display-prefs";
+import { CURRENCY_UNKNOWN, formatUserMoney, type DisplayPrefs } from "@/lib/display-prefs";
 import { plainDate } from "@/lib/scorecard";
 import type { AssistantData, CalendarItemData, NewsItemData } from "@/lib/ai/assistant/data";
 import type { AnswerTile, SourceDraft, ToolName, ToolOutcome } from "@/lib/ai/assistant/types";
@@ -19,21 +19,32 @@ export interface ToolContext {
 
 // ------------------------------------------------------------ formatting
 
-/** A share or coin price in its listing currency (USD for everything Cairn stores). */
-export function usd(n: number): string {
+// Two kinds of money, as everywhere in Cairn (lib/display-prefs.ts):
+//  - asset figures (a price, a range, company numbers) in the asset's OWN
+//    currency, never converted, with the currency code beside them in the
+//    tool data ("currency": "USD");
+//  - the reader's portfolio in their display currency (formatUserMoney), with
+//    "display_currency" beside it.
+// The model copies these strings; it never converts one into the other.
+
+/** A share or coin price in the asset's own currency: "$178.43", "CA$31.20", "€4.12". */
+export function assetPrice(n: number, currency: string | null): string {
   const abs = Math.abs(n);
-  const digits = abs >= 1000 ? 2 : abs >= 1 ? 2 : abs >= 0.01 ? 4 : 6;
-  return `${n < 0 ? "-" : ""}$${abs.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: digits })}`;
+  const digits = abs >= 1 ? 2 : abs >= 0.01 ? 4 : 6;
+  const opts = { minimumFractionDigits: 2, maximumFractionDigits: digits };
+  if (!currency) return `${n.toLocaleString("en-US", opts)} (${CURRENCY_UNKNOWN})`;
+  return n.toLocaleString("en-US", { style: "currency", currency, ...opts });
 }
 
-/** Company-sized figures: "$130.5B", "$912.0M". */
-export function bigUsd(n: number): string {
+/** Company-sized figures in the currency they were filed in: "$130.5B", "$912.0M". */
+export function bigMoney(n: number, currency: string): string {
   const abs = Math.abs(n);
   const sign = n < 0 ? "-" : "";
-  if (abs >= 1e12) return `${sign}$${(abs / 1e12).toFixed(2)}T`;
-  if (abs >= 1e9) return `${sign}$${(abs / 1e9).toFixed(1)}B`;
-  if (abs >= 1e6) return `${sign}$${(abs / 1e6).toFixed(1)}M`;
-  return usd(n);
+  const unit = (v: number, d: number, s: string) => `${sign}${v.toLocaleString("en-US", { style: "currency", currency, minimumFractionDigits: d, maximumFractionDigits: d })}${s}`;
+  if (abs >= 1e12) return unit(abs / 1e12, 2, "T");
+  if (abs >= 1e9) return unit(abs / 1e9, 1, "B");
+  if (abs >= 1e6) return unit(abs / 1e6, 1, "M");
+  return assetPrice(n, currency);
 }
 
 export function signedPct(n: number | null): string | null {
@@ -50,7 +61,7 @@ const eventWords = (e: CalendarItemData) =>
   e.kind === "earnings"
     ? `results ${e.estimated ? "expected around" : "due"} ${plainDate(e.date)}${e.estimated ? " (estimated)" : " (confirmed)"}`
     : e.kind === "ex_dividend"
-      ? `dividend cut-off date ${plainDate(e.date)}${e.perShareUsd ? `, ${usd(e.perShareUsd)} a share` : ""}${e.estimated ? " (estimated)" : ""}`
+      ? `dividend cut-off date ${plainDate(e.date)}${e.perShareUsd ? `, ${assetPrice(e.perShareUsd, "USD")} a share` : ""}${e.estimated ? " (estimated)" : ""}`
       : `dividend paid ${plainDate(e.date)}`;
 
 const newsSource = (n: NewsItemData): SourceDraft => ({ kind: "news", title: n.title, publisher: n.publisher, url: n.url, date: n.date });
@@ -107,10 +118,10 @@ const IMPLS: Record<ToolName, Impl> = {
     return {
       ok: true,
       label: `${s} price`,
-      data: { symbol: s, name: p.name, price: usd(p.last.price), as_of: plainDate(p.last.date), price_is: p.last.source === "live" ? "live quote" : "last close", today: day },
+      data: { symbol: s, name: p.name, price: assetPrice(p.last.price, p.currency), currency: p.currency ?? CURRENCY_UNKNOWN, as_of: plainDate(p.last.date), price_is: p.last.source === "live" ? "live quote" : "last close", today: day },
       sources: [{ kind: "data", title: `${s} price, ${p.last.source === "live" ? "live quote" : "last close"} ${plainDate(p.last.date)}`, publisher: "Cairn market data", url: `/ticker/${s}`, date: p.last.date }],
-      facts: [`${p.name} is at ${usd(p.last.price)} (${p.last.source === "live" ? "live" : "last close"}, ${plainDate(p.last.date)})${day ? `, ${day} on the day` : ""}.`],
-      tiles: [{ label: `${s} price`, value: usd(p.last.price), note: day ? `${day} today` : undefined }],
+      facts: [`${p.name} is at ${assetPrice(p.last.price, p.currency)} (${p.last.source === "live" ? "live" : "last close"}, ${plainDate(p.last.date)})${day ? `, ${day} on the day` : ""}.`],
+      tiles: [{ label: `${s} price`, value: assetPrice(p.last.price, p.currency), note: day ? `${day} today` : undefined }],
     };
   },
 
@@ -120,11 +131,11 @@ const IMPLS: Record<ToolName, Impl> = {
     if (!p) return fail(`${s} prices`, `Cairn has no stored prices for ${s}.`);
     const changes = Object.fromEntries(p.changes.map((c) => [c.window, signedPct(c.pct)]));
     const week = changes.week;
-    const facts = [`${p.name} is at ${usd(p.last.price)} (${plainDate(p.last.date)}).`];
+    const facts = [`${p.name} is at ${assetPrice(p.last.price, p.currency)} (${plainDate(p.last.date)}).`];
     const moves = p.changes.filter((c) => c.pct !== null).map((c) => `${signedPct(c.pct)} over ${c.window === "week" ? "a week" : c.window === "month" ? "a month" : c.window}`);
     if (moves.length) facts.push(`It has moved ${moves.join(", ")}.`);
-    if (p.high52 !== null && p.low52 !== null) facts.push(`Its 52-week range is ${usd(p.low52)} to ${usd(p.high52)}.`);
-    const tiles: AnswerTile[] = [{ label: `${s} price`, value: usd(p.last.price), note: signedPct(p.dayChangePct) ? `${signedPct(p.dayChangePct)} today` : undefined }];
+    if (p.high52 !== null && p.low52 !== null) facts.push(`Its 52-week range is ${assetPrice(p.low52, p.currency)} to ${assetPrice(p.high52, p.currency)}.`);
+    const tiles: AnswerTile[] = [{ label: `${s} price`, value: assetPrice(p.last.price, p.currency), note: signedPct(p.dayChangePct) ? `${signedPct(p.dayChangePct)} today` : undefined }];
     if (week) tiles.push({ label: "This week", value: week });
     if (changes["1 year"]) tiles.push({ label: "1 year", value: changes["1 year"]! });
     return {
@@ -134,12 +145,13 @@ const IMPLS: Record<ToolName, Impl> = {
         symbol: s,
         name: p.name,
         type: p.assetType,
-        price: usd(p.last.price),
+        price: assetPrice(p.last.price, p.currency),
+        currency: p.currency ?? CURRENCY_UNKNOWN,
         as_of: plainDate(p.last.date),
         price_is: p.last.source === "live" ? "live quote" : "last close",
         today: signedPct(p.dayChangePct),
         change: changes,
-        range_52_weeks: p.high52 !== null && p.low52 !== null ? { low: usd(p.low52), high: usd(p.high52) } : null,
+        range_52_weeks: p.high52 !== null && p.low52 !== null ? { low: assetPrice(p.low52, p.currency), high: assetPrice(p.high52, p.currency) } : null,
         days_of_price_history: p.bars,
       },
       sources: [{ kind: "data", title: `${s} daily prices to ${plainDate(p.last.date)}`, publisher: "Cairn market data", url: `/ticker/${s}`, date: p.last.date }],
@@ -167,7 +179,7 @@ const IMPLS: Record<ToolName, Impl> = {
     const s = upper(args.symbol);
     const n = await ctx.data.companyNumbers(s, ctx.plan);
     if (!n) return fail(`${s} company numbers`, `No SEC figures are stored for ${s} (funds and coins have none).`);
-    const f = (v: number | null) => (v === null ? null : bigUsd(v));
+    const f = (v: number | null) => (v === null ? null : bigMoney(v, n.currency));
     const figures = {
       revenue: f(n.revenue),
       net_profit: f(n.netIncome),
@@ -176,7 +188,7 @@ const IMPLS: Record<ToolName, Impl> = {
       operating_cash_flow: f(n.operatingCashFlow),
       free_cash_flow: f(n.freeCashFlow),
       dividends_paid: f(n.dividendsPaid === null ? null : Math.abs(n.dividendsPaid)),
-      dividend_per_share: n.dividendsPerShare === null ? null : usd(n.dividendsPerShare),
+      dividend_per_share: n.dividendsPerShare === null ? null : assetPrice(n.dividendsPerShare, n.currency),
       cash: f(n.cash),
       debt: f(n.debt),
     };
@@ -190,7 +202,7 @@ const IMPLS: Record<ToolName, Impl> = {
     return {
       ok: true,
       label: `${s} company numbers`,
-      data: { symbol: s, name: n.name, period: n.periodLabel, basis: n.basis === "ttm" ? "trailing twelve months (last four quarters)" : n.basis === "annual" ? "latest fiscal year" : "latest quarter", figures, dividends_as_share_of_free_cash_flow: payout },
+      data: { symbol: s, name: n.name, currency_as_filed: n.currency, period: n.periodLabel, basis: n.basis === "ttm" ? "trailing twelve months (last four quarters)" : n.basis === "annual" ? "latest fiscal year" : "latest quarter", figures, dividends_as_share_of_free_cash_flow: payout },
       sources: [{ kind: "filing", title: `${n.name} SEC filings, period to ${plainDate(n.periodEnd)}`, publisher: "SEC EDGAR", url: n.source.url, date: n.periodEnd }],
       facts,
       tiles: [figures.revenue && { label: "Revenue", value: figures.revenue, note: n.basis === "ttm" ? "last 4 quarters" : n.periodLabel }, figures.free_cash_flow && { label: "Free cash flow", value: figures.free_cash_flow }, payout && { label: "Dividends vs free cash", value: payout }].filter(Boolean) as AnswerTile[],
@@ -262,7 +274,8 @@ const IMPLS: Record<ToolName, Impl> = {
     if (!ctx.usePortfolio) return fail("your portfolio", "Portfolio context is turned off for this conversation (Settings > AI Assistant).");
     const p = await ctx.data.portfolio();
     if (!p) return { ok: true, label: "your portfolio", data: { holdings: [], note: "The reader has no holdings in Cairn yet." }, sources: [], facts: ["You haven't added any holdings to Cairn yet."], tiles: [] };
-    const money = (v: number | null) => (v === null ? null : formatMoney(v, ctx.prefs));
+    // The reader's own money: converted to their display currency, labelled display_currency.
+    const money = (v: number | null) => (v === null ? null : formatUserMoney(v, ctx.prefs));
     const total = p.totalValueUsd;
     const holdings = p.holdings.map((h) => ({
       symbol: h.symbol,
@@ -319,7 +332,8 @@ const IMPLS: Record<ToolName, Impl> = {
     const table = rows.map(({ s, p, c }) => ({
       symbol: s,
       name: p?.name ?? c?.name ?? s,
-      price: p ? usd(p.last.price) : null,
+      price: p ? assetPrice(p.last.price, p.currency) : null,
+      currency: p ? (p.currency ?? CURRENCY_UNKNOWN) : null,
       change: p ? Object.fromEntries(p.changes.map((x) => [x.window, signedPct(x.pct)])) : null,
       scorecard: c ? c.dimensions.filter((d) => d.level !== "not_applicable").map((d) => `${d.label}: ${d.verdict}`) : [],
     }));

@@ -12,6 +12,7 @@ import type { Database } from "@/lib/supabase/types";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ensureSymbolIngested, normalizeSymbol } from "@/lib/market-data/ingest";
 import { getCurrentPrice } from "@/lib/market-data/current-price";
+import { getAssetCurrency } from "@/lib/market-data/asset-currency";
 import { loadScorecard } from "@/lib/scorecard-data";
 import { loadBars } from "@/lib/ai/factor-analysis";
 import { benchmarkSymbolFor, computeFactorSet, deriveFactorAnalogs, MIN_FACTOR_HISTORY_BARS } from "@/lib/ai/factors";
@@ -47,6 +48,8 @@ export interface PriceSummaryData {
   high52: number | null;
   low52: number | null;
   bars: number;
+  /** The asset's quote currency (lib/asset-currency.ts): every price above is in it, unconverted. Null = unknown. */
+  currency: string | null;
 }
 
 export interface ScorecardData {
@@ -76,6 +79,8 @@ export interface CompanyNumbersData {
   cash: number | null;
   debt: number | null;
   source: { label: string; url: string | null };
+  /** The currency the figures were FILED in - never converted at today's rate. */
+  currency: string;
 }
 
 export interface HistoryData {
@@ -230,6 +235,7 @@ export function liveAssistantData(opts: { supabase: SupabaseClient<Database>; us
         high52: year.length >= (isCrypto ? 300 : 200) ? Math.max(...year) : null,
         low52: year.length >= (isCrypto ? 300 : 200) ? Math.min(...year) : null,
         bars: bars.length,
+        currency: await getAssetCurrency(symbol, { client: admin, assetType: dir?.asset_type ?? null }),
       };
     },
 
@@ -255,7 +261,7 @@ export function liveAssistantData(opts: { supabase: SupabaseClient<Database>; us
         // Quarterly detail is a Premium figure (migration 0053), read here only after the plan is known.
         const { data: q } = await admin
           .from("company_financials_quarterly")
-          .select("period_end, fiscal_year, fiscal_quarter, revenue, net_income, operating_income, depreciation_amortization, operating_cash_flow, capex, dividends_paid, dividends_per_share, cash, long_term_debt, long_term_debt_noncurrent, long_term_debt_current, debt_current, short_term_borrowings")
+          .select("currency, period_end, fiscal_year, fiscal_quarter, revenue, net_income, operating_income, depreciation_amortization, operating_cash_flow, capex, dividends_paid, dividends_per_share, cash, long_term_debt, long_term_debt_noncurrent, long_term_debt_current, debt_current, short_term_borrowings")
           .eq("symbol", symbol)
           .order("period_end", { ascending: false })
           .limit(4);
@@ -293,6 +299,7 @@ export function liveAssistantData(opts: { supabase: SupabaseClient<Database>; us
             cash: latest.cash === null ? null : Number(latest.cash),
             debt,
             source: sec,
+            currency: latest.currency ?? "USD",
           };
         }
       }
@@ -323,6 +330,9 @@ export function liveAssistantData(opts: { supabase: SupabaseClient<Database>; us
         cash: null,
         debt: null,
         source: sec,
+        // The annual table has no currency column: its figures come only from
+        // SEC companyfacts' `units.USD` (supabase/functions/_shared/sec-companyfacts.ts).
+        currency: "USD",
       };
     },
 

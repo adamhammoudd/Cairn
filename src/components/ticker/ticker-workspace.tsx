@@ -4,7 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { assetTypeBadge, formatMarketCap, formatVolume } from "@/lib/screener";
 import { useDisplayPrefs } from "@/components/display-prefs-provider";
-import { formatMoney } from "@/lib/display-prefs";
+import { formatAssetMoney, formatRoughUserMoney, formatUserMoney, pricesInLabel, userEquivalent } from "@/lib/display-prefs";
+import { formatRateDate } from "@/components/layout/currency-note";
 import { formatSupply } from "@/lib/crypto";
 import { formatQuantity } from "@/lib/portfolio";
 import { assetName } from "@/lib/asset-names";
@@ -95,12 +96,20 @@ export function TickerWorkspace({
   // currency either.
   const rate = (n: number | null) => (n === null ? "-" : n.toLocaleString(undefined, { minimumFractionDigits: 4, maximumFractionDigits: 5 }));
   const level = (n: number | null) => (n === null ? "-" : n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
-  // Was hardcoded `currency: "USD"` - every price on this page (the headline
-  // number, day/52w range, avg cost) rendered in USD regardless of Settings >
-  // Display > Primary currency, while Markets/Screener/Portfolio/Comparison
-  // all converted correctly through this same formatMoney() helper.
-  const currency = (n: number | null) => formatMoney(n, prefs);
+  // Every price on this page - the headline, open, day and 52-week ranges,
+  // market cap, chart and technicals - describes the asset, so it is shown in
+  // the asset's own currency and never converted (feat/native-currency). Only
+  // the reader's own position (value, gain) is their money, in their display
+  // currency - see `userMoney` below.
+  const currency = (n: number | null) => formatAssetMoney(n, data.currency);
   const money = isForex ? rate : isIndex ? level : currency;
+  const userMoney = (n: number | null) => formatUserMoney(n, prefs);
+  // "≈ €192.40 (ECB, 26 Sep 2026)" under the price, only when the display
+  // currency differs and a dated rate converts it. A hint, not a restatement:
+  // the headline stays in the asset's currency.
+  const equivalent = isForex || isIndex ? null : userEquivalent(data.price, data.currency, prefs);
+  const priceHint = equivalent && prefs.fxAsOf ? `${equivalent} (ECB, ${formatRateDate(prefs.fxAsOf)})` : equivalent;
+  const pricesIn = isForex || isIndex ? null : pricesInLabel([data.currency]);
   const range = (lo: number | null, hi: number | null) => (lo === null || hi === null ? "-" : `${money(lo)} – ${money(hi)}`);
 
   const fromExtreme = (extreme: number | null) =>
@@ -110,7 +119,7 @@ export function TickerWorkspace({
   // summary-layout). The average cost stays on the Profile tab's position card.
   const unit = isCrypto ? data.symbol : heldQuantity === 1 ? "share" : "shares";
   const heroChips = heldQuantity
-    ? [`You own ${formatQuantity(heldQuantity)} ${unit}${data.price === null ? "" : ` · ${money(data.price * heldQuantity)}`}`]
+    ? [`You own ${formatQuantity(heldQuantity)} ${unit}${data.price === null ? "" : ` · ${userMoney(data.price * heldQuantity)}`}`]
     : [];
 
   // This week's change from the stored daily closes: 5 sessions back for a
@@ -147,7 +156,7 @@ export function TickerWorkspace({
     ? [
         ...common,
         { label: "Volume", value: formatVolume(data.volume) },
-        { label: "Market cap", value: formatMarketCap(data.cryptoMetrics?.market_cap ?? null, prefs) },
+        { label: "Market cap", value: formatMarketCap(data.cryptoMetrics?.market_cap ?? null, data.currency) },
         { label: "Market cap rank", value: data.cryptoMetrics?.market_cap_rank ?? "-" },
         volatility,
         {
@@ -179,7 +188,7 @@ export function TickerWorkspace({
         : [
             ...common,
             { label: "Volume", value: formatVolume(data.volume) },
-            { label: "Market cap", value: formatMarketCap(marketCap, prefs) },
+            { label: "Market cap", value: formatMarketCap(marketCap, data.currency) },
             // The mock labels this P/E (fwd); no forward estimates are ingested,
             // so it stays trailing rather than presenting TTM as a forecast.
             { label: "P/E (TTM)", value: pe === null ? "-" : `${pe.toFixed(1)}x` },
@@ -318,6 +327,8 @@ export function TickerWorkspace({
         }
         priceSource={data.priceSource}
         priceAsOf={data.priceAsOf}
+        priceHint={priceHint}
+        pricesIn={pricesIn}
         refreshRateSeconds={refreshRateSeconds}
         dayRange={dayRange}
         actions={
@@ -377,8 +388,8 @@ export function TickerWorkspace({
             forYou={
               summary.exposure
                 ? exposureLines(name, summary.exposure, (usd) =>
-                    // Rounded in the reader's currency, and shown without cents: "roughly €250".
-                    roughMoney(usd * prefs.fxRate).toLocaleString(undefined, { style: "currency", currency: prefs.effectiveCurrency, maximumFractionDigits: 0 }),
+                    // The reader's own money: rounded in their currency, without cents - "roughly €250".
+                    formatRoughUserMoney(usd, prefs, roughMoney),
                   )
                 : null
             }
@@ -410,7 +421,7 @@ export function TickerWorkspace({
                   </>
                 ) : null,
             }}
-            afterSummary={<TickerChart symbol={data.symbol} bars={data.bars} priceSource={data.priceSource} priceAsOf={data.priceAsOf} />}
+            afterSummary={<TickerChart symbol={data.symbol} bars={data.bars} priceSource={data.priceSource} priceAsOf={data.priceAsOf} currency={data.currency} />}
           />
 
           <DiscussionPanel symbol={data.symbol} comments={discussion} canModerate={canModerate} />
@@ -436,13 +447,13 @@ export function TickerWorkspace({
               quantity={heldQuantity}
               quantityLabel={formatQuantity(heldQuantity)}
               avgCostLabel={avgCost === null ? null : money(avgCost)}
-              valueLabel={data.price === null ? "-" : money(data.price * heldQuantity)}
+              valueLabel={data.price === null ? "-" : userMoney(data.price * heldQuantity)}
               gain={
                 data.price === null || avgCost === null || avgCost === 0
                   ? null
                   : {
                       pct: ((data.price - avgCost) / avgCost) * 100,
-                      amountLabel: money(Math.abs((data.price - avgCost) * heldQuantity)),
+                      amountLabel: userMoney(Math.abs((data.price - avgCost) * heldQuantity)),
                     }
               }
             />
@@ -458,6 +469,7 @@ export function TickerWorkspace({
             priceSource={data.priceSource}
             priceAsOf={data.priceAsOf}
             volatility30d={data.volatility30d}
+            currency={data.currency}
           />
         </div>
       )}

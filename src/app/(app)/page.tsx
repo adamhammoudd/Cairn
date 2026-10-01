@@ -11,11 +11,16 @@ import { readRecentPrices } from "@/lib/market-data/paged-read";
 
 import { guardReads } from "@/components/data-unavailable";
 import { loadDailyBriefing } from "@/lib/daily-briefing-data";
+import { getBetaAccessLabel } from "@/lib/actions/billing";
+import { BetaWelcome } from "@/components/dashboard/beta-welcome";
 
 // A failed market-data read renders the panel instead of throwing into a
 // minified React error; anything else propagates as before.
-export default async function DashboardPage() {
-  return guardReads(DashboardBody);
+export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ welcome?: string }> }) {
+  // /?welcome=beta is where a personal-invite sign-up lands (signUpWithPersonalInvite
+  // in lib/actions/auth.ts): Base Camp with a one-time welcome and the Beta note.
+  const welcome = (await searchParams).welcome === "beta";
+  return guardReads(() => DashboardBody(welcome));
 }
 
 
@@ -32,7 +37,7 @@ export default async function DashboardPage() {
 const DASHBOARD_TIMEFRAMES = ["1W", "1M", "3M", "1Y"] as const;
 const DASHBOARD_DEFAULT_TIMEFRAME = "1M" as const;
 
-async function DashboardBody() {
+async function DashboardBody(welcome: boolean) {
   const supabase = await createClient();
   const {
     data: { user },
@@ -117,7 +122,7 @@ async function DashboardBody() {
   const topMarketRows = marketRows
     .filter((r) => r.price !== null && r.changePct !== null)
     .slice(0, 4)
-    .map((r) => ({ symbol: r.symbol, price: r.price ?? 0, changePct: r.changePct ?? 0 }));
+    .map((r) => ({ symbol: r.symbol, price: r.price ?? 0, changePct: r.changePct ?? 0, currency: r.currency }));
 
   // The strip under the header. It is drawn from the same screen the Markets
   // card reads, so the two cannot disagree about a symbol's day - holdings
@@ -219,8 +224,11 @@ async function DashboardBody() {
   const briefing = await loadDailyBriefing(user.id);
   const briefingDate = new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
 
+  const betaUntil = welcome ? await getBetaAccessLabel() : null;
+
   return (
     <DashboardHome
+      welcome={welcome ? <BetaWelcome until={betaUntil} /> : null}
       briefing={briefing}
       briefingDate={briefingDate}
       refreshRateSeconds={settingsRes.data?.refresh_rate_seconds ?? 30}

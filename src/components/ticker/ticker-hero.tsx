@@ -23,6 +23,10 @@ interface TickerHeroProps {
   changeLabel: string | null;
   priceSource: "live" | "last_close";
   priceAsOf: string | null;
+  /** "≈ €192.40 (ECB, 26 Sep 2026)" - the price in the reader's currency, only when it differs. */
+  priceHint?: string | null;
+  /** "Prices in USD" - the asset's own currency, named once. Null for a rate or an index level. */
+  pricesIn?: string | null;
   refreshRateSeconds: number | null;
   /** Day low/high already formatted, plus where the last price sits, 0-1. */
   dayRange: { low: string; high: string; position: number | null } | null;
@@ -39,6 +43,8 @@ export function TickerHero({
   changeLabel,
   priceSource,
   priceAsOf,
+  priceHint = null,
+  pricesIn = null,
   refreshRateSeconds,
   dayRange,
   actions,
@@ -103,9 +109,11 @@ export function TickerHero({
 
         <div className="flex flex-col items-start gap-4 lg:flex-row lg:flex-wrap lg:items-end lg:gap-5.5">
           <div className="text-left lg:text-right">
+            {pricesIn && <div className="mb-2 font-mono text-eyebrow tracking-[0.14em] text-dim uppercase">{pricesIn}</div>}
             <div className="font-mono text-[36px] leading-none tracking-[-0.015em] tabular-nums text-primary">
               {priceLabel}
             </div>
+            {priceHint && <div className="mt-1.5 font-mono text-caption tabular-nums text-dim">{priceHint}</div>}
             <div className="mt-2.5 flex flex-wrap items-center justify-start gap-2.5 lg:justify-end">
               {changePct !== null && (
                 <span

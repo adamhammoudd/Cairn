@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import Link from "next/link";
 import { resolveReport } from "@/lib/actions/discussion";
 import type { ModerationItem } from "@/lib/actions/discussion";
 import type { AdminSnapshot } from "@/lib/actions/admin";
@@ -88,6 +89,9 @@ export function AdminDashboard({ snapshot, reports }: { snapshot: AdminSnapshot;
           Data refresh status, provider rate-limit outcomes, analysis-engine health and the moderation queue. Every
           figure is counted from stored rows at page load - nothing here is sampled or cached.
         </p>
+        <Link href="/admin/invites" className="mt-3 inline-block text-body text-accent hover:text-accent-light">
+          Beta invites →
+        </Link>
       </div>
 
       <Panel

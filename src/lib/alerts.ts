@@ -5,7 +5,9 @@
 // Deno (supabase/functions/evaluate-alerts) - the two must stay in sync; there
 // is no shared module across the Node/Deno boundary.
 
-import { formatMoney, type DisplayPrefs } from "@/lib/display-prefs";
+import { formatAssetMoney } from "@/lib/display-prefs";
+import { normalizeCurrencyCode } from "@/lib/asset-currency";
+import { MAX_AMOUNT_INPUT } from "@/lib/input-limits";
 
 export type AlertType = "price" | "pct_change" | "volume_spike" | "technical_crossover" | "ai_confidence";
 export type AlertChannel = "in_app" | "push" | "email";
@@ -193,7 +195,8 @@ export function evaluateAlert({
       if (above ? latest > target : latest < target) {
         return {
           triggered: true,
-          message: `${alert.scope_value} is ${above ? "above" : "below"} $${target} (last close $${latest.toFixed(2)}).`,
+          // Both figures in the asset's own currency - the same unit they were compared in.
+          message: `${alert.scope_value} is ${above ? "above" : "below"} ${formatAssetMoney(target, alertCurrency(c))} (last close ${formatAssetMoney(latest, alertCurrency(c))}).`,
         };
       }
       return notTriggered;
@@ -259,21 +262,26 @@ export function evaluateAlert({
   }
 }
 
-// `prefs` is optional so this stays callable from a plain-Node context with
-// no request scope (none currently, but matches every other pure formatter
-// in this module); passing it converts the price condition through the same
-// path as every other money figure in the app (see lib/display-prefs.ts).
-// Without it, this hardcoded "$" - the one Alerts bug the currency setting
-// missed, since every OTHER page's price routes through formatMoney().
-export function describeCondition(
-  alertType: AlertType,
-  condition: Record<string, unknown>,
-  prefs?: DisplayPrefs,
-): string {
+/**
+ * The currency a price alert's threshold is in: the asset's own quote
+ * currency, the same unit evaluate-alerts compares it with (feat/native-
+ * currency). Stored on the condition since that change. An alert saved before
+ * it has none, and its threshold was stored in USD - which is right, because
+ * every price Cairn compares it with is USD (on 2026-09-27 the only stored
+ * price alert was on NVDA). So a missing currency reads as USD.
+ */
+export function alertCurrency(condition: Record<string, unknown> | null | undefined): string {
+  return normalizeCurrencyCode(condition?.currency as string | undefined) ?? "USD";
+}
+
+// A price threshold is shown in the asset's own currency - never converted to
+// the reader's display currency, because it is compared against the asset's
+// own price. "Price above $221.00", or "Price above CA$30.00" for a TSX line.
+export function describeCondition(alertType: AlertType, condition: Record<string, unknown>): string {
   switch (alertType) {
     case "price": {
       const raw = Number(condition.value);
-      const value = prefs && Number.isFinite(raw) ? formatMoney(raw, prefs) : `$${condition.value}`;
+      const value = Number.isFinite(raw) ? formatAssetMoney(raw, alertCurrency(condition)) : String(condition.value);
       return `Price ${condition.comparator} ${value}`;
     }
     case "pct_change":
@@ -286,5 +294,57 @@ export function describeCondition(
       return `AI confidence reaches ${condition.minLevel}`;
     default:
       return "-";
+  }
+}
+
+/**
+ * Build a condition from the alert form. Each type carries its own shape, built
+ * explicitly rather than dumping the whole form, so a stray field can't end up
+ * stored as part of the condition and silently change how it evaluates. Shared
+ * by create and update so an edited alert is validated exactly like a new one.
+ *
+ * A price threshold is typed in the ASSET's currency - the form labels it
+ * ("Alert when NVDA is above ___ USD") - and stored as typed, with that
+ * currency beside it: evaluate-alerts compares it with the asset's own stored
+ * price, so there is nothing to convert. It used to be typed in the display
+ * currency and converted to USD at today's rate, which made a EUR reader's
+ * "$200" line drift with the euro. `assetCurrency` is resolved on the server
+ * (lib/market-data/asset-currency.ts), never taken from the browser.
+ */
+export function buildAlertCondition(
+  alertType: AlertType,
+  formData: Pick<FormData, "get">,
+  assetCurrency: string | null,
+): Record<string, unknown> | string {
+  switch (alertType) {
+    case "price":
+    case "pct_change": {
+      const value = Number(formData.get("value"));
+      if (!Number.isFinite(value)) return "Enter a numeric threshold.";
+      if (Math.abs(value) > MAX_AMOUNT_INPUT) return `Threshold must be within ±${MAX_AMOUNT_INPUT.toLocaleString("en-US")}.`;
+      const comparator = String(formData.get("comparator") ?? "above");
+      if (alertType === "pct_change") return { comparator, value };
+      // A level in an unknown currency can't be labelled or checked honestly.
+      if (!assetCurrency) return "Cairn doesn't know which currency this asset is priced in, so it can't set a price alert on it.";
+      return { comparator, value, currency: assetCurrency };
+    }
+    case "volume_spike": {
+      const multiplier = Number(formData.get("multiplier"));
+      if (!Number.isFinite(multiplier) || multiplier <= 0) return "Enter a volume multiplier above 0.";
+      if (multiplier > 10_000) return "Volume multiplier must be 10,000 or less.";
+      return { multiplier };
+    }
+    case "technical_crossover": {
+      const fastDays = Number(formData.get("fastDays"));
+      const slowDays = Number(formData.get("slowDays"));
+      if (!Number.isFinite(fastDays) || !Number.isFinite(slowDays)) return "Enter both SMA windows.";
+      if (fastDays < 1 || slowDays < 1 || fastDays > 400 || slowDays > 400) return "SMA windows must be between 1 and 400 days.";
+      if (fastDays >= slowDays) return "The fast SMA window must be shorter than the slow one.";
+      return { fastDays, slowDays, direction: String(formData.get("direction") ?? "above") };
+    }
+    case "ai_confidence":
+      return { minLevel: String(formData.get("minLevel") ?? "medium") };
+    default:
+      return "Unknown alert type.";
   }
 }

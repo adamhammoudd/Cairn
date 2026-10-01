@@ -11,6 +11,8 @@ export interface WatchlistItemWithData {
   asOf?: string | null;
   changePct: number | null;
   sparkline: number[];
+  /** Quote currency of latestClose and the sparkline, never converted. Null = unknown. */
+  currency: string | null;
 }
 
 export interface DisplayPrefs {

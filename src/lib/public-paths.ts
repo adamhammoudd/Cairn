@@ -61,11 +61,36 @@ export function isPublicPath(pathname: string): boolean {
 // --------------------------------------------------------------------------
 // Beta invites.
 //
-// During the closed beta, /signup opens only with a valid invite code in the
-// link: /signup?invite=<code>. Codes live in the BETA_INVITE_CODES env var
-// (comma-separated, set in Vercel), so a code is added or revoked by editing
-// that variable and redeploying - no code change. Unset or empty means no
-// invite is valid and sign-up stays closed, which is the safe default.
+// Two kinds of /signup?invite=<code> link exist:
+//
+//   1. Personal invites (the normal path). Single-use, tied to one waitlist
+//      address, emailed by the send-beta-invites job. Checked against the
+//      database (src/lib/beta-invites) by the signup page and the signUp
+//      action - not here, because the proxy has no database access.
+//
+//   2. MANUAL OVERRIDE - shared codes in BETA_INVITE_CODES, below. Unchanged
+//      from before personal invites existed, kept so Adam can still hand-pick
+//      someone outside the waitlist order. Comma-separated, set in Vercel; a
+//      code is added or revoked by editing the variable and redeploying.
+//      Unset or empty means no shared code is valid.
+
+/**
+ * Whether the proxy lets an anonymous request through to /signup. Any
+ * non-empty `invite` value passes: the signup page itself decides whether it
+ * is a usable invite and, if not, shows the one-line "expired or already used"
+ * message with a link back to the waitlist - instead of the proxy silently
+ * bouncing a truncated or expired link to /waitlist. The page renders no form
+ * and the signUp action creates no account without a valid invite, so a
+ * request with no valid invite still cannot sign up. /signup with no `invite`
+ * at all stays gated.
+ */
+export function isInviteLinkRequest(pathname: string, invite: string | null): boolean {
+  if (pathname !== "/signup" || invite === null) return false;
+  const code = invite.trim();
+  return code.length > 0 && code.length <= 256;
+}
+
+// MANUAL OVERRIDE shared codes, as before. The rules below are unchanged.
 //
 // Codes shorter than 8 characters are ignored: a short code is guessable, and
 // this is the only thing between the public and account creation.

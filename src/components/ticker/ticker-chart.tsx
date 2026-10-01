@@ -11,7 +11,7 @@ import { DataFreshness } from "@/components/data-freshness";
 import { getIntradaySeries } from "@/lib/actions/intraday";
 import type { IntradayResult } from "@/lib/intraday-window";
 import { useDisplayPrefs } from "@/components/display-prefs-provider";
-import { formatMoney } from "@/lib/display-prefs";
+import { formatAssetMoney } from "@/lib/display-prefs";
 import type { ChartView } from "@/lib/supabase/types";
 
 const TIMEFRAMES: ChartView[] = ["1D", "1W", "1M", "3M", "1Y", "ALL"];
@@ -23,9 +23,15 @@ interface TickerChartProps {
   priceSource?: "live" | "last_close";
   /** Date of the most recent bar, for the same label. */
   priceAsOf?: string | null;
+  /**
+   * The asset's quote currency. Every point is plotted and labelled in it, as
+   * stored: a past close is never re-priced at today's exchange rate. Null =
+   * currency unknown.
+   */
+  currency?: string | null;
 }
 
-export function TickerChart({ symbol, bars, priceSource = "last_close", priceAsOf = null }: TickerChartProps) {
+export function TickerChart({ symbol, bars, priceSource = "last_close", priceAsOf = null, currency = null }: TickerChartProps) {
   // Settings > Display > "Default chart timeframe", whose hint has always read
   // "Applied when opening a ticker". Until now this was hard-coded to 3M and
   // the setting was written by the form and read by nothing, so the hint
@@ -151,10 +157,12 @@ export function TickerChart({ symbol, bars, priceSource = "last_close", priceAsO
               tick={CHART_AXIS_TICK}
               axisLine={false}
               tickLine={false}
-              tickFormatter={(v) => formatMoney(Number(v), prefs)}
+              // Axis ticks stay short: an unknown currency is named in the
+              // tooltip rather than repeated on every tick.
+              tickFormatter={(v) => (currency ? formatAssetMoney(Number(v), currency) : Number(v).toLocaleString(undefined, { maximumFractionDigits: 2 }))}
             />
             <Tooltip
-              formatter={(value) => [formatMoney(Number(value), prefs), "Close"] as [string, string]}
+              formatter={(value) => [formatAssetMoney(Number(value), currency), "Close"] as [string, string]}
               labelFormatter={(label) => formatTooltipLabel(String(label))}
               {...CHART_TOOLTIP}
             />

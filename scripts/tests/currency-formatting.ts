@@ -1,19 +1,20 @@
-// Regression test for the 2026-09-05 UX review's item 1: "Currency setting
-// isn't actually applied everywhere." The Ticker page and Alerts (and
-// Billing's "$0" free-plan line) formatted money with a hardcoded
-// `currency: "USD"` instead of routing through the shared DisplayPrefs
-// helpers (lib/display-prefs.ts) that Markets/Screener/Portfolio/Comparison/
-// Base Camp already use - so the same underlying figure showed a different
-// currency symbol depending which page you were on.
+// Cross-page currency consistency, under the native-currency rule
+// (feat/native-currency).
 //
-// This checks every formatter this sweep touched or added produces the SAME
-// symbol for the SAME DisplayPrefs, under both a EUR and a USD account - not
-// just "does it show a euro sign somewhere" (which the old, unfixed, always-
-// USD code would still coincidentally pass under a USD account).
+// This suite used to pin the opposite rule - "every price follows the display
+// currency" - from the 2026-09-05 UX review, when Ticker and Alerts printed a
+// hard-coded "$" while Markets converted. That fixed the inconsistency by
+// converting everything, which mixed each stock's move with the euro's. The
+// rule now is: anything that describes an asset (price, market cap, an alert
+// level) is in the asset's own currency and does NOT move with the display
+// setting; only the reader's own money converts.
+//
+// Checked under a EUR account AND a USD account, so a pass cannot come from
+// everything simply defaulting to dollars.
 //
 // Run: npx tsx --conditions=react-server scripts/tests/currency-formatting.ts
 
-import { formatMoney, currencySymbol, type DisplayPrefs } from "@/lib/display-prefs";
+import { formatAssetMoney, formatUserMoney, type DisplayPrefs } from "@/lib/display-prefs";
 import { formatMarketCap } from "@/lib/screener";
 import { describeCondition } from "@/lib/alerts";
 
@@ -21,7 +22,8 @@ let pass = 0;
 let fail = 0;
 function check(name: string, ok: boolean, detail = "") {
   console.log(`${ok ? "pass" : "FAIL"}  ${name}${detail ? ` - ${detail}` : ""}`);
-  ok ? pass++ : fail++;
+  if (ok) pass++;
+  else fail++;
 }
 
 const EUR: DisplayPrefs = {
@@ -36,61 +38,38 @@ const EUR: DisplayPrefs = {
   extendedHours: false,
   defaultChartView: "1D",
 };
-const USD: DisplayPrefs = { ...EUR, currency: "USD", effectiveCurrency: "USD", fxRate: 1 };
+const USD: DisplayPrefs = { ...EUR, currency: "USD", effectiveCurrency: "USD", fxRate: 1, fxSource: null, fxAsOf: null };
 
-const AMOUNT = 319.97; // the AAPL price the audit quoted as showing "$319.97" under EUR
+const AMOUNT = 319.97; // the AAPL price the 2026-09-05 audit quoted
 
-// --- 1. currencySymbol: the exact helper alert-form.tsx's "Price ($)" label needs ---
-check("currencySymbol: EUR account gets €", currencySymbol(EUR) === "€", currencySymbol(EUR));
-check("currencySymbol: USD account gets $", currencySymbol(USD) === "$", currencySymbol(USD));
-
-// --- 2. formatMarketCap (Markets/Screener/Comparison/Ticker's market cap cell) ------
+// --- 1. Asset figures are identical for a EUR and a USD reader -------------------
 {
-  const eur = formatMarketCap(1_500_000_000, EUR);
-  const usd = formatMarketCap(1_500_000_000, USD);
-  check("formatMarketCap: EUR account shows €, not $", eur.includes("€") && !eur.includes("$"), eur);
-  check("formatMarketCap: USD account shows $, not €", usd.includes("$") && !usd.includes("€"), usd);
+  const price = [formatAssetMoney(AMOUNT, "USD"), formatAssetMoney(AMOUNT, "USD")];
+  check("an asset price is $319.97 whatever the reader's currency", price.every((p) => p === "$319.97"), price.join(" / "));
+  const cap = formatMarketCap(1_500_000_000, "USD");
+  check("market cap is in the asset's currency, not converted", cap.includes("$") && !cap.includes("€") && /1\.5B/.test(cap), cap);
+  const condition = { comparator: "above", value: 221, currency: "USD" };
+  const line = describeCondition("price", condition);
+  check("an alert level is shown in the asset's currency", line === "Price above $221.00", line);
+  check("a legacy alert with no stored currency reads as USD", describeCondition("price", { comparator: "above", value: 221 }) === "Price above $221.00");
 }
 
-// --- 3. describeCondition (Alerts' active-alert condition line) --------------------
-{
-  const condition = { comparator: "above", value: 221 };
-  const eur = describeCondition("price", condition, EUR);
-  const usd = describeCondition("price", condition, USD);
-  check("describeCondition: EUR account shows €, not $ (the reported Alerts bug)", eur.includes("€") && !eur.includes("$"), eur);
-  check("describeCondition: USD account still shows $", usd.includes("$"), usd);
-  check(
-    "describeCondition: with no prefs at all, still falls back to a plain value (no crash)",
-    describeCondition("price", condition).includes("221"),
-  );
-}
-
-// --- 4. The actual cross-page consistency check the task asked for -----------------
-// Same raw figure, same prefs, must produce the same symbol from every
-// formatter - this is what "not just hiding the bug by coincidence" means:
-// re-run under EUR AND under USD, and the symbol must track the prefs both
-// times, not just happen to read "$" because everything defaults to USD.
+// --- 2. The reader's own money follows the display currency ---------------------
 for (const prefs of [EUR, USD]) {
-  const symbol = currencySymbol(prefs);
-  const fromFormatMoney = formatMoney(AMOUNT, prefs);
-  const fromMarketCap = formatMarketCap(AMOUNT, prefs);
-  const fromCondition = describeCondition("price", { comparator: "above", value: AMOUNT }, prefs);
+  const own = formatUserMoney(AMOUNT, prefs);
+  const symbol = prefs.effectiveCurrency === "EUR" ? "€" : "$";
+  check(`[${prefs.effectiveCurrency}] portfolio money is in the display currency`, own.includes(symbol), own);
   check(
-    `[${prefs.effectiveCurrency}] formatMoney and currencySymbol agree`,
-    fromFormatMoney.includes(symbol),
-    `${symbol} / ${fromFormatMoney}`,
-  );
-  check(
-    `[${prefs.effectiveCurrency}] formatMarketCap and currencySymbol agree`,
-    fromMarketCap.includes(symbol),
-    `${symbol} / ${fromMarketCap}`,
-  );
-  check(
-    `[${prefs.effectiveCurrency}] describeCondition and currencySymbol agree`,
-    fromCondition.includes(symbol),
-    `${symbol} / ${fromCondition}`,
+    `[${prefs.effectiveCurrency}] the same figure as an asset price does not move with it`,
+    formatAssetMoney(AMOUNT, "USD") === "$319.97",
+    formatAssetMoney(AMOUNT, "USD"),
   );
 }
+check("EUR portfolio money is converted at the rate", formatUserMoney(100, EUR) === "€92.00", formatUserMoney(100, EUR));
+
+// --- 3. Never a euro sign on a dollar figure, never "$" on a non-USD one ---------
+check("a CAD asset is not printed with a bare $", !/^\$/.test(formatAssetMoney(31.2, "CAD")), formatAssetMoney(31.2, "CAD"));
+check("a EUR asset shows €", formatAssetMoney(31.2, "EUR").includes("€"), formatAssetMoney(31.2, "EUR"));
 
 console.log(`\n${pass}/${pass + fail} currency-formatting cases passed`);
 process.exit(fail === 0 ? 0 : 1);

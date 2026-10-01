@@ -22,7 +22,7 @@ function check(name: string, ok: boolean, detail = "") {
 function row(over: Partial<ScreenerRow>): ScreenerRow {
   return {
     symbol: "X", assetType: "equity", name: null, price: 100, changePct: 1, volume: 1_000_000,
-    asOf: "2026-09-04", trend: [], marketCap: 5e9, pe: 20, dividendYield: 2, week52High: 120, week52Low: 80,
+    asOf: "2026-09-04", trend: [], marketCap: 5e9, pe: 20, dividendYield: 2, week52High: 120, week52Low: 80, currency: "USD",
     ...over,
   };
 }

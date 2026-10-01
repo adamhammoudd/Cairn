@@ -5,7 +5,7 @@ import { ASSET_TYPE_LABEL, ASSET_TYPE_TAG_CLASS, assetTypeBadge, formatMarketCap
 import { assetName } from "@/lib/asset-names";
 import { Sparkline } from "@/components/sparkline";
 import { useDisplayPrefs } from "@/components/display-prefs-provider";
-import { absoluteChangeFrom, formatChange, formatMoney } from "@/lib/display-prefs";
+import { absoluteChangeFrom, formatAssetChange, formatAssetMoney, pricesInLabel } from "@/lib/display-prefs";
 
 // The one ticker list. Every asset type on Markets renders through this --
 // crypto used to get its own seven-column table, so switching the category
@@ -33,16 +33,17 @@ function initialsOf(symbol: string) {
 }
 
 export function TickerList({ rows, names, marketCaps, emptyState, asOf = null }: TickerListProps) {
-  // Settings > Display: currency converts the price column, and the change
-  // column follows the percent-vs-dollar choice. ScreenerRow carries only
-  // changePct, so the dollar move is derived from it and the price rather than
-  // the column silently staying in percent when the user asked for dollars.
+  // Every figure here describes an asset, so it is in that asset's own
+  // currency and never converted (feat/native-currency); the footer names it
+  // once. The change column follows Settings > Display's percent-vs-money
+  // choice. ScreenerRow carries only changePct, so the money move is derived
+  // from it and the price rather than the column silently staying in percent.
   const prefs = useDisplayPrefs();
-  const money = (n: number | null) => formatMoney(n, prefs);
+  const money = (r: ScreenerRow) => formatAssetMoney(r.price, r.currency);
   // The 24h bar is scaled to the largest move on screen, not to a fixed span:
   // on a quiet day a 0.4% move should still read as the biggest one here.
   const maxAbsPct = Math.max(...rows.map((r) => Math.abs(r.changePct ?? 0)), 1);
-  const change = (r: ScreenerRow) => formatChange(absoluteChangeFrom(r.price, r.changePct), r.changePct, prefs);
+  const change = (r: ScreenerRow) => formatAssetChange(absoluteChangeFrom(r.price, r.changePct), r.changePct, r.currency, prefs);
 
   return (
     <div className="overflow-hidden rounded-2xl border border-[#232323] bg-panel">
@@ -100,7 +101,7 @@ export function TickerList({ rows, names, marketCaps, emptyState, asOf = null }:
                   </div>
                 </div>
                 <div className="shrink-0 text-right">
-                  <div className="text-body tabular-nums text-primary">{money(r.price)}</div>
+                  <div className="text-body tabular-nums text-primary">{money(r)}</div>
                   <div
                     className={`mt-1 text-caption tabular-nums ${
                       r.changePct === null ? "text-muted" : r.changePct >= 0 ? "text-accent" : "text-negative"
@@ -140,7 +141,7 @@ export function TickerList({ rows, names, marketCaps, emptyState, asOf = null }:
                 {assetTypeBadge(r.assetType)}
               </span>
             </div>
-            <div className="hidden font-mono text-[12.5px] tabular-nums text-primary sm:block">{money(r.price)}</div>
+            <div className="hidden font-mono text-[12.5px] tabular-nums text-primary sm:block">{money(r)}</div>
             <div className="hidden min-w-0 items-center gap-2 sm:flex">
               <span
                 className={`shrink-0 font-mono text-[12.5px] tabular-nums ${
@@ -164,7 +165,7 @@ export function TickerList({ rows, names, marketCaps, emptyState, asOf = null }:
               className="hidden font-mono text-[12.5px] tabular-nums text-muted sm:block"
               title={marketCap === null ? "Market cap not reported for this asset" : undefined}
             >
-              {formatMarketCap(marketCap, prefs)}
+              {formatMarketCap(marketCap, r.currency)}
             </div>
             <div
               className="hidden font-mono text-[12.5px] tabular-nums text-muted sm:block"
@@ -186,7 +187,7 @@ export function TickerList({ rows, names, marketCaps, emptyState, asOf = null }:
       {rows.length > 0 && (
         <div className="flex flex-wrap items-center justify-between gap-2.5 border-t border-[#1c1c1c] bg-[#0c0c0c] px-5 py-3 text-caption text-dim">
           <span>
-            {rows.length} {rows.length === 1 ? "symbol" : "symbols"}
+            {rows.length} {rows.length === 1 ? "symbol" : "symbols"} · {pricesInLabel(rows.map((r) => r.currency))}
           </span>
           {asOf && (
             <span className="flex items-center gap-[7px]">

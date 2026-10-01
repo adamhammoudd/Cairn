@@ -7,6 +7,7 @@ import { readDisplayPrefs, type DisplayPrefs, type WatchlistWithItems } from "@/
 import { validateSymbol, validateText } from "@/lib/validation";
 import { ensureSymbolIngested } from "@/lib/market-data/ingest";
 import { unwrapRows, MIGRATIONS } from "@/lib/supabase/read";
+import { getAssetCurrencies } from "@/lib/market-data/asset-currency";
 
 export type { WatchlistWithItems } from "@/lib/watchlists";
 
@@ -73,6 +74,7 @@ export async function listWatchlists(): Promise<WatchlistWithItems[]> {
     await supabase.from("crypto_metrics").select("symbol, price_change_24h_pct").in("symbol", symbols),
   );
   const rolling = new Map(coinRows.filter((c) => c.price_change_24h_pct != null).map((c) => [c.symbol, Number(c.price_change_24h_pct)]));
+  const currencies = await getAssetCurrencies(symbols, { client: supabase });
 
   return lists.map((l) => ({
     id: l.id,
@@ -95,6 +97,7 @@ export async function listWatchlists(): Promise<WatchlistWithItems[]> {
           changePct: rolling.get(i.symbol) ?? closeToClose,
           asOf: asOfBySymbol.get(i.symbol) ?? null,
           sparkline: [...desc].reverse(),
+          currency: currencies.get(i.symbol) ?? null,
         };
       }),
   }));

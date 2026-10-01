@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useDisplayPrefs } from "@/components/display-prefs-provider";
-import { formatMoney } from "@/lib/display-prefs";
+import { formatUserMoney } from "@/lib/display-prefs";
 import type { AllocationSlice } from "@/lib/portfolio";
 
 const DIMENSIONS = [
@@ -48,7 +48,7 @@ export function AllocationPanel({ byDimension }: AllocationPanelProps) {
                 <span>
                   {s.label} · {s.pct.toFixed(0)}%
                 </span>
-                <span>{formatMoney(s.value, prefs)}</span>
+                <span>{formatUserMoney(s.value, prefs)}</span>
               </div>
               <div className="h-1.5 rounded-full bg-active">
                 <div

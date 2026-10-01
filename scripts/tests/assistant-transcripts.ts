@@ -18,7 +18,7 @@ import { runAssistantTurn, type ChatFn } from "@/lib/ai/assistant/agent";
 import type { AssistantData, CalendarItemData, NewsItemData, PriceSummaryData, ScorecardData } from "@/lib/ai/assistant/data";
 import type { AnswerDraft, AssistantMeta } from "@/lib/ai/assistant/types";
 import type { ChatRequest, ChatResponse, ToolCall } from "@/lib/ai/llm";
-import { DEFAULT_DISPLAY_PREFS } from "@/lib/display-prefs";
+import { DEFAULT_DISPLAY_PREFS, type DisplayPrefs } from "@/lib/display-prefs";
 import { checkAnswer } from "@/lib/ai/assistant/guards";
 import { writeReport, type SuiteResult, type TestCase } from "./report";
 import { renderComponentHtml } from "./render-helper";
@@ -44,6 +44,7 @@ const price = (symbol: string, name: string, assetType: string, p: number, day: 
   high52: p * 1.1,
   low52: p * 0.55,
   bars,
+  currency: "USD",
 });
 
 const card = (symbol: string, name: string, assetType: string, dims: [string, string, string, string, string][]): ScorecardData => ({
@@ -129,8 +130,8 @@ export function mockData(o: MockOptions = {}): AssistantData {
     async companyNumbers(s) {
       if (s !== "MSFT" && s !== "NVDA") return null;
       return s === "MSFT"
-        ? { symbol: s, name: "Microsoft", basis: "ttm", periodLabel: "the four quarters to 2026-06-30", periodEnd: "2026-06-30", revenue: 281.7e9, netIncome: 101.8e9, operatingIncome: 128.5e9, ebitda: 162.1e9, operatingCashFlow: 136.2e9, freeCashFlow: 71.6e9, capex: -64.6e9, dividendsPerShare: 3.32, dividendsPaid: -24.7e9, cash: 94.6e9, debt: 43.2e9, source: { label: "SEC", url: "https://www.sec.gov/msft" } }
-        : { symbol: s, name: "NVIDIA", basis: "ttm", periodLabel: "the four quarters to 2026-07-27", periodEnd: "2026-07-27", revenue: 165.2e9, netIncome: 86.6e9, operatingIncome: 100.1e9, ebitda: 103.4e9, operatingCashFlow: 83.2e9, freeCashFlow: 78.9e9, capex: -4.3e9, dividendsPerShare: 0.04, dividendsPaid: -1.0e9, cash: 56.8e9, debt: 8.5e9, source: { label: "SEC", url: "https://www.sec.gov/nvda" } };
+        ? { symbol: s, name: "Microsoft", basis: "ttm", periodLabel: "the four quarters to 2026-06-30", periodEnd: "2026-06-30", revenue: 281.7e9, netIncome: 101.8e9, operatingIncome: 128.5e9, ebitda: 162.1e9, operatingCashFlow: 136.2e9, freeCashFlow: 71.6e9, capex: -64.6e9, dividendsPerShare: 3.32, dividendsPaid: -24.7e9, cash: 94.6e9, debt: 43.2e9, source: { label: "SEC", url: "https://www.sec.gov/msft" }, currency: "USD" }
+        : { symbol: s, name: "NVIDIA", basis: "ttm", periodLabel: "the four quarters to 2026-07-27", periodEnd: "2026-07-27", revenue: 165.2e9, netIncome: 86.6e9, operatingIncome: 100.1e9, ebitda: 103.4e9, operatingCashFlow: 83.2e9, freeCashFlow: 78.9e9, capex: -4.3e9, dividendsPerShare: 0.04, dividendsPaid: -1.0e9, cash: 56.8e9, debt: 8.5e9, source: { label: "SEC", url: "https://www.sec.gov/nvda" }, currency: "USD" };
     },
     async history(s) {
       if (s === "BLORB") return { symbol: s, name: s, kind: "too_young", line: "BLORB has only 4 days of price history, too new to compare with its own past.", range: null, confidence: "Confidence: low.", caveat: "", n: 0, higher: 0, matchedOn: [], bars: 4 };
@@ -204,13 +205,13 @@ function cite(prompt: string, fragment: string): string {
 
 const clear = async () => ({ status: "clear" as const });
 
-async function turn(message: string, script: Script, o: MockOptions & { portfolio?: boolean; classify?: () => Promise<{ status: "clear" } | { status: "unavailable"; detail: string }> } = {}) {
+async function turn(message: string, script: Script, o: MockOptions & { portfolio?: boolean; prefs?: DisplayPrefs; classify?: () => Promise<{ status: "clear" } | { status: "unavailable"; detail: string }> } = {}) {
   const { chat, prompts } = mockModel(script);
   const activity: string[] = [];
   const result = await runAssistantTurn({
     message,
     history: [],
-    ctx: { data: mockData(o), plan: "premium", prefs: DEFAULT_DISPLAY_PREFS, usePortfolio: o.portfolio ?? true },
+    ctx: { data: mockData(o), plan: "premium", prefs: o.prefs ?? DEFAULT_DISPLAY_PREFS, usePortfolio: o.portfolio ?? true },
     chat,
     classify: o.classify ?? clear,
     onActivity: (l) => activity.push(l),
@@ -460,7 +461,9 @@ export async function runAssistantTranscriptsSuite(): Promise<SuiteResult> {
     const text = html.replace(/<[^>]*>/g, " ").replace(/&#x27;/g, "'").replace(/\s+/g, " ");
     add("Bubble: the model's answer passed (so this is the model bubble)", r.meta.source === "model", JSON.stringify(r.meta.guardFailures));
     add("Bubble: shows the Checked line", /Checked: NVDA prices, NVDA scorecard, NVDA news/.test(text), text.slice(0, 120));
-    add("Bubble: lead first, then the tiles, then the sections and sources", text.indexOf("NVIDIA's share is at $178.43") < text.indexOf("NVDA price $178.43") && text.indexOf("NVDA price $178.43") < text.indexOf("The business") && /Sources/.test(text), text.slice(0, 300));
+    // Since #177 the sources sit behind a "See all sources (n)" toggle rather
+    // than under a "Sources" heading; they are still in the bubble, after the sections.
+    add("Bubble: lead first, then the tiles, then the sections and sources", text.indexOf("NVIDIA's share is at $178.43") < text.indexOf("NVDA price $178.43") && text.indexOf("NVDA price $178.43") < text.indexOf("The business") && text.indexOf("The business") < text.indexOf("See all sources") && /See all sources \(\d+\)/.test(text), text.slice(0, 300));
     add("Bubble: a gain tile is green, never red", /text-accent-light[^>]*>\+2\.1%/.test(html) && !/negative[^>]*>\+2\.1%/.test(html), "tone");
     const withFollow = renderComponentHtml("src/components/chat/chat-message.tsx", "ChatMessage", { message: { role: "assistant", content: r.markdown, meta: r.meta } });
     add("Bubble: follow-ups render only when there is a handler (latest answer)", !/Suggested follow-up/.test(withFollow), "no handler -> no buttons");
@@ -468,6 +471,49 @@ export async function runAssistantTranscriptsSuite(): Promise<SuiteResult> {
 
   // Across every answer above: nothing points at the Research page.
   add("No answer in this suite sends the reader to the Research page", cases.every((c) => !/research page/i.test(c.attachment ?? "")), "checked every transcript");
+
+  // ---- feat/native-currency: a EUR reader. Asset figures stay in the asset's
+  // own currency (dollars for NVIDIA); only the reader's portfolio is in euros.
+  const EUR: DisplayPrefs = { ...DEFAULT_DISPLAY_PREFS, currency: "EUR", effectiveCurrency: "EUR", fxRate: 0.86, fxAsOf: "2026-09-26", fxSource: "ECB" };
+  {
+    const q = "How's NVIDIA looking?";
+    const good = (): AnswerDraft => ({
+      lead: "NVIDIA's share is at $178.43, up +2.1% today.",
+      tiles: [{ label: "NVDA price", value: "$178.43", note: "+2.1% today" }],
+      sections: [],
+      follow_ups: ["Compare NVDA and AMD", "When does NVIDIA report results?"],
+    });
+    const r = await turn(q, { compose: [good] }, { prefs: EUR, portfolio: false });
+    const tools = JSON.stringify(r.meta);
+    add("EUR reader, NVIDIA: the price is in dollars, unconverted", r.meta.source === "model" && r.markdown.includes("$178.43") && !/€s?d/.test(r.markdown), r.meta.source, transcript(q, r));
+    add("EUR reader, NVIDIA: no euro figure anywhere in the answer", !/€/.test(r.markdown), r.markdown.slice(0, 160));
+    add("EUR reader, NVIDIA: the tool data names the asset's currency", r.prompts.some((p) => /"currency":"USD"/.test(p)), tools.slice(0, 80));
+    add("EUR reader: the prompt says asset figures stay in their own currency", r.prompts.some((p) => /NVIDIA is in US dollars whatever the reader's settings say/.test(p) && /display currency, EUR/.test(p)), "system prompt");
+
+    // The same answer with the reader's "€" put on NVIDIA's dollar price must be caught.
+    const wrong = (): AnswerDraft => ({ ...good(), lead: "NVIDIA's share is at €178.43, up +2.1% today.", tiles: [{ label: "NVDA price", value: "€178.43", note: "+2.1% today" }] });
+    const w = await turn(q, { compose: [wrong, wrong] }, { prefs: EUR, portfolio: false });
+    add("EUR reader, NVIDIA: \"€178.43\" for a dollar price is rejected, never shown", w.meta.guardFailures.some((g) => g.reason === "figure_in_wrong_currency") && !w.markdown.includes("€178.43"), w.meta.guardFailures.map((g) => `${g.reason}:${g.evidence ?? ""}`).join(" | "), transcript(q, w));
+  }
+  {
+    const q = "How's my portfolio doing?";
+    const r = await turn(
+      q,
+      {
+        rounds: [[{ name: "get_portfolio", args: {} }]],
+        compose: [
+          (p) => {
+            const total = p.match(/"total_value":"([^"]+)"/)?.[1] ?? "?";
+            return { lead: `Your portfolio is worth ${total}, +1.5% today.`, tiles: [{ label: "Portfolio value", value: total, note: "+1.5% today" }], sections: [], follow_ups: ["What is my largest holding?", "Any results coming up?"] };
+          },
+        ],
+      },
+      { prefs: EUR },
+    );
+    add("EUR reader, portfolio: the total is in euros", r.meta.source === "model" && /€6,503.48/.test(r.markdown), r.meta.tiles.map((t) => t.value).join(", "), transcript(q, r));
+    add("EUR reader, portfolio: the tool labels it display_currency EUR", r.prompts.some((p) => /"display_currency":"EUR"/.test(p)), "tool data");
+    add("EUR reader, portfolio: no dollar figure in the answer", !/$s?d/.test(r.markdown), r.markdown.slice(0, 160));
+  }
 
   return { suiteName: "Assistant v2 transcripts (mocked tools and model; real agent, tools and guards)", gating: true, cases };
 }

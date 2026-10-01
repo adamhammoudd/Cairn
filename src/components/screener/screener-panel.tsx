@@ -8,6 +8,7 @@ import {
   ASSET_TYPES,
   EMPTY_FILTERS,
   PRESET_SCREENS,
+  SCREENER_MONEY_CURRENCY,
   SCREENER_NUMERIC_FIELDS,
   applyScreenSort,
   applyScreenerFilters,
@@ -23,7 +24,7 @@ import { DataFreshness } from "@/components/data-freshness";
 import { Sparkline } from "@/components/sparkline";
 import { useDisplayPrefs } from "@/components/display-prefs-provider";
 import { PromptDialog } from "@/components/dialog";
-import { absoluteChangeFrom, formatChange, formatMoney, currencySymbol } from "@/lib/display-prefs";
+import { absoluteChangeFrom, formatAssetChange, formatAssetMoney, pricesInLabel } from "@/lib/display-prefs";
 import { ScrollX } from "@/components/scroll-x";
 
 type NumericField = (typeof SCREENER_NUMERIC_FIELDS)[number];
@@ -134,8 +135,9 @@ function FilterInput({
 }
 
 export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }: ScreenerPanelProps) {
-  // Settings > Display: same currency and percent-vs-dollar treatment the
-  // Markets, Watchlists and Holdings tables use.
+  // Every figure here describes an asset: in its own currency, never
+  // converted (feat/native-currency). Settings > Display still picks percent
+  // vs. money for the change column.
   const prefs = useDisplayPrefs();
   const [filters, setFilters] = useState<ScreenerFilters>(EMPTY_FILTERS);
   // Text mirror for the filter boxes, so a preset / reset / saved-screen load
@@ -272,7 +274,9 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
             })}
           </div>
 
-          <FieldLabel>Price</FieldLabel>
+          {/* Typed in the asset's currency and compared against the stored,
+              unconverted price - so the box says which currency that is. */}
+          <FieldLabel>Price, {SCREENER_MONEY_CURRENCY}</FieldLabel>
           <div className="flex items-center gap-2">
             <FilterInput field="minPrice" placeholder="Min" text={filterText} onEdit={editFilter} />
             <FilterInput field="maxPrice" placeholder="Max" text={filterText} onEdit={editFilter} />
@@ -287,7 +291,7 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
           <FieldLabel>Min volume</FieldLabel>
           <FilterInput field="minVolume" placeholder="e.g. 1000000" text={filterText} onEdit={editFilter} />
 
-          <FieldLabel>Market cap ({currencySymbol(prefs)}M)</FieldLabel>
+          <FieldLabel>Market cap, {SCREENER_MONEY_CURRENCY} millions</FieldLabel>
           <div className="flex items-center gap-2">
             <FilterInput field="minMarketCapM" placeholder="Min" text={filterText} onEdit={editFilter} />
             <FilterInput field="maxMarketCapM" placeholder="Max" text={filterText} onEdit={editFilter} />
@@ -374,6 +378,7 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
           <div className="flex flex-wrap items-center justify-between gap-2.5 border-b border-[#1c1c1c] bg-[#0c0c0c] px-5 py-3.5">
             <span className="font-mono text-micro tracking-[0.14em] text-primary uppercase">
               <span className="text-accent">{visibleRows.length}</span> {visibleRows.length === 1 ? "match" : "matches"}
+              <span className="text-dim"> · {pricesInLabel(visibleRows.map((r) => r.currency))}</span>
             </span>
             <span className="hidden text-caption text-dim sm:inline">Market cap derived at query time</span>
           </div>
@@ -455,14 +460,14 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
                     {assetTypeBadge(r.assetType)}
                   </div>
                   <div className="font-mono text-[12.5px] tabular-nums text-primary">
-                    {formatMoney(r.price, prefs)}
+                    {formatAssetMoney(r.price, r.currency)}
                   </div>
                   <div
                     className={`font-mono text-[12.5px] tabular-nums ${
                       r.changePct === null ? "text-muted" : r.changePct >= 0 ? "text-accent" : "text-negative"
                     }`}
                   >
-                    {formatChange(absoluteChangeFrom(r.price, r.changePct), r.changePct, prefs)}
+                    {formatAssetChange(absoluteChangeFrom(r.price, r.changePct), r.changePct, r.currency, prefs)}
                   </div>
                   <div
                     className="font-mono text-[12.5px] tabular-nums text-muted"
@@ -474,7 +479,7 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
                     className="font-mono text-[12.5px] tabular-nums text-muted"
                     title={r.marketCap === null ? "Market cap not reported - funds and ETFs don't file it" : undefined}
                   >
-                    {formatMarketCap(r.marketCap, prefs)}
+                    {formatMarketCap(r.marketCap, r.currency)}
                   </div>
                   <div className="font-mono text-[12.5px] tabular-nums text-muted">{r.pe === null ? "n/a" : `${r.pe.toFixed(1)}\u00d7`}</div>
                   <div className="font-mono text-[12.5px] tabular-nums text-muted">

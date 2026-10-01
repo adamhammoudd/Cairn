@@ -8,6 +8,9 @@ import { checkAuthRateLimit, recordAuthAttempt } from "@/lib/auth-rate-limit";
 import { TOS_VERSION, PRIVACY_VERSION, consentGiven } from "@/lib/legal-versions";
 import { captchaTokenFrom, friendlyAuthError, missingCaptchaMessage } from "@/lib/captcha";
 import { inviteAllowed } from "@/lib/public-paths";
+import { INVITE_INVALID_MESSAGE, isWellFormedInviteCode, normalizeEmail } from "@/lib/beta-invites/codes";
+import { claimInviteAndCreateAccount } from "@/lib/beta-invites/claim";
+import { createSupabaseInviteStore } from "@/lib/beta-invites/supabase-store";
 
 // Behind a proxy the socket address is the proxy's, so the forwarded chain is
 // the only thing that identifies the caller. First entry is the client;
@@ -54,11 +57,16 @@ export async function signUp(_prevState: string | null, formData: FormData) {
     return "You must agree to the Terms of Service and Privacy Policy to create an account.";
   }
 
-  // Beta: accounts are invite-only. The proxy already keeps /signup closed
-  // without a valid ?invite=, but a server action is a plain POST endpoint, so
-  // the same check runs here too.
-  if (!inviteAllowed(String(formData.get("invite") ?? ""), process.env.BETA_INVITE_CODES)) {
-    return "Sign-up is invite-only during the beta. Join the waitlist and we will let you know.";
+  // Beta: accounts are invite-only. The proxy keeps /signup closed without an
+  // ?invite=, but a server action is a plain POST endpoint, so the invite is
+  // checked here too - and this is the check that counts.
+  const invite = String(formData.get("invite") ?? "").trim();
+  // MANUAL OVERRIDE: a shared BETA_INVITE_CODES code takes the original open
+  // sign-up path below, unchanged.
+  const shared = inviteAllowed(invite, process.env.BETA_INVITE_CODES);
+  if (!shared) {
+    if (invite === "") return "Sign-up is invite-only during the beta. Join the waitlist and we will let you know.";
+    if (!isWellFormedInviteCode(invite)) return INVITE_INVALID_MESSAGE;
   }
 
   const noCaptcha = missingCaptchaMessage(formData);
@@ -71,6 +79,8 @@ export async function signUp(_prevState: string | null, formData: FormData) {
 
   const limit = await checkAuthRateLimit(email, "sign_up", ip);
   if (!limit.allowed) return limit.message ?? "Too many attempts. Try again later.";
+
+  if (!shared) return signUpWithPersonalInvite({ invite, email, password, formData, ip, userAgent, consentedAt });
 
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({
@@ -93,28 +103,97 @@ export async function signUp(_prevState: string | null, formData: FormData) {
 
   if (error) return friendlyAuthError(error.message);
 
-  // The compliance record. Service-role client: a user must not be able to
-  // forge or delete their own consent row. A failure here is logged with the
-  // user id (recoverable from the auth-user metadata backstop) rather than
-  // failing a signup whose auth user already exists.
-  if (data.user) {
-    const { error: consentError } = await createAdminClient()
-      .from("user_consents")
-      .insert({
-        user_id: data.user.id,
-        consented_at: consentedAt,
-        tos_version: TOS_VERSION,
-        privacy_version: PRIVACY_VERSION,
-        ip,
-        user_agent: userAgent ? userAgent.slice(0, 500) : null,
-      });
-    if (consentError) {
-      console.error(`[signUp] user_consents insert failed for ${data.user.id}:`, consentError.message);
-    }
-  }
+  if (data.user) await recordConsent(data.user.id, consentedAt, ip, userAgent);
 
   if (!data.session) redirect("/login?message=check-your-email");
   redirect("/");
+}
+
+// The compliance record. Service-role client: a user must not be able to
+// forge or delete their own consent row. A failure here is logged with the
+// user id (recoverable from the auth-user metadata backstop) rather than
+// failing a signup whose auth user already exists.
+async function recordConsent(userId: string, consentedAt: string, ip: string | null, userAgent: string | null) {
+  const { error: consentError } = await createAdminClient()
+    .from("user_consents")
+    .insert({
+      user_id: userId,
+      consented_at: consentedAt,
+      tos_version: TOS_VERSION,
+      privacy_version: PRIVACY_VERSION,
+      ip,
+      user_agent: userAgent ? userAgent.slice(0, 500) : null,
+    });
+  if (consentError) {
+    console.error(`[signUp] user_consents insert failed for ${userId}:`, consentError.message);
+  }
+}
+
+/**
+ * Sign-up with a personal invite (src/lib/beta-invites). The invite is
+ * reserved atomically before the account exists, so two simultaneous requests
+ * on one link create at most one account; it is marked claimed by that
+ * account in the same step.
+ *
+ * The account is created already email-confirmed: the invite link was
+ * delivered to this address and the address had already passed the waitlist's
+ * double opt-in, so a third confirmation email would only stand between the
+ * person and onboarding. That is also why the address must match the invite.
+ */
+async function signUpWithPersonalInvite(input: {
+  invite: string;
+  email: string;
+  password: string;
+  formData: FormData;
+  ip: string | null;
+  userAgent: string | null;
+  consentedAt: string;
+}): Promise<string> {
+  const admin = createAdminClient();
+  const result = await claimInviteAndCreateAccount(
+    createSupabaseInviteStore(),
+    { code: input.invite, email: input.email, now: new Date() },
+    async (invitedEmail) => {
+      const { data, error } = await admin.auth.admin.createUser({
+        email: invitedEmail,
+        password: input.password,
+        email_confirm: true,
+        user_metadata: {
+          // Backstop copy of the consent, as on the open path.
+          tos_version: TOS_VERSION,
+          privacy_version: PRIVACY_VERSION,
+          consented_at: input.consentedAt,
+          beta_invite: true,
+        },
+      });
+      if (error || !data.user) {
+        const exists = error?.code === "email_exists" || /already (been )?registered/i.test(error?.message ?? "");
+        return {
+          ok: false,
+          message: exists
+            ? "An account already exists for this email. Sign in instead."
+            : friendlyAuthError(error?.message ?? "Could not create the account."),
+        };
+      }
+      return { ok: true, userId: data.user.id };
+    },
+  );
+
+  await recordAuthAttempt(input.email, "sign_up", result.ok, input.ip);
+  if (!result.ok) return result.message;
+
+  await recordConsent(result.userId, input.consentedAt, input.ip, input.userAgent);
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.signInWithPassword({
+    email: normalizeEmail(input.email),
+    password: input.password,
+    options: { captchaToken: captchaTokenFrom(input.formData) },
+  });
+  // The account exists either way; if the automatic sign-in is refused (a
+  // spent captcha token, say), send them to sign in by hand.
+  if (error) redirect("/login?message=account-created");
+  redirect("/?welcome=beta");
 }
 
 export async function forgotPassword(_prevState: string | null, formData: FormData) {

@@ -9,7 +9,9 @@ create table if not exists auth.users (
   id uuid primary key default gen_random_uuid(),
   email text unique,
   raw_user_meta_data jsonb not null default '{}'::jsonb,
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  -- Read by beta_invite_active_users() (migration 0064).
+  last_sign_in_at timestamptz
 );
 
 create or replace function auth.uid() returns uuid
