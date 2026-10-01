@@ -3,7 +3,7 @@
 // 10-K. The words come from ./business-profile.ts, where they are checked.
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { generateDescription, revenueSplits, type DescriptionFailure, type RevenueSplitView, type SegmentRow } from "@/lib/business-profile";
+import { generateDescription, needsDescription, revenueSplits, type RevenueSplitView, type SegmentRow } from "@/lib/business-profile";
 
 export interface BusinessProfileView {
   symbol: string;
@@ -20,9 +20,6 @@ export interface BusinessProfileView {
   splits: RevenueSplitView[];
 }
 
-/** Failures that say nothing about the text: retried on the next view instead of cached. */
-const TRANSIENT: DescriptionFailure[] = ["model_error", "model_unusable"];
-
 /**
  * Null when no profile is stored (a fund, a coin, a company not yet read by
  * ingest-business-profile, or migration 0062 not applied).
@@ -38,26 +35,25 @@ export async function loadBusinessProfile(symbol: string, name: string): Promise
   let oneLiner = p.plain_one_liner;
   let paragraph = p.plain_paragraph;
   let source = (p.plain_source as "model" | "template" | null) ?? "template";
-  if (!oneLiner || !paragraph || p.plain_accn !== p.accn) {
+  if (needsDescription(p)) {
     const d = await generateDescription({ name, sicDescription: p.sic_description, excerpt: p.business_excerpt ?? "" });
     oneLiner = d.oneLiner;
     paragraph = d.paragraph;
     source = d.source;
-    // Cached per filing; a model outage is not cached, so it is written once the model is back.
-    if (!d.failure || !TRANSIENT.includes(d.failure)) {
-      await db
-        .from("company_profiles")
-        .update({
-          plain_one_liner: d.oneLiner,
-          plain_paragraph: d.paragraph,
-          plain_source: d.source,
-          plain_failure: d.failure ? `${d.failure}${d.evidence ? `: ${d.evidence}` : ""}`.slice(0, 500) : null,
-          plain_accn: p.accn,
-          plain_generated_at: new Date().toISOString(),
-        })
-        .eq("symbol", symbol)
-        .eq("accn", p.accn);
-    }
+    // Cached per filing. A model outage is cached as well, marked, and
+    // retried after MODEL_RETRY_MS (needsDescription).
+    await db
+      .from("company_profiles")
+      .update({
+        plain_one_liner: d.oneLiner,
+        plain_paragraph: d.paragraph,
+        plain_source: d.source,
+        plain_failure: d.failure ? `${d.failure}${d.evidence ? `: ${d.evidence}` : ""}`.slice(0, 500) : null,
+        plain_accn: p.accn,
+        plain_generated_at: new Date().toISOString(),
+      })
+      .eq("symbol", symbol)
+      .eq("accn", p.accn);
   }
 
   return {
@@ -65,8 +61,9 @@ export async function loadBusinessProfile(symbol: string, name: string): Promise
     name,
     sic: p.sic,
     sicDescription: p.sic_description,
-    oneLiner,
-    paragraph,
+    // Set either way: needsDescription is true whenever either stored field is empty.
+    oneLiner: oneLiner!,
+    paragraph: paragraph!,
     source,
     filing: { form: p.form, filed: p.filed, accn: p.accn, url: p.source_url },
     segmentStatus: p.segment_status as BusinessProfileView["segmentStatus"],

@@ -140,10 +140,15 @@ Deno.serve(async (req) => {
   const limit = Number(url.searchParams.get("limit") ?? MAX_SYMBOLS_PER_RUN);
 
   // Companies with stored SEC figures: equities only, already matched to a CIK by ingest-fundamentals.
-  const { data: companies, error } = await supabase.from("company_financials_annual").select("symbol, cik").order("symbol");
-  if (error) return Response.json({ error: `company_financials_annual read failed: ${error.message}` }, { status: 500, headers: corsHeaders });
+  // Paged: one row per company per year, far past the API's 1000-row cap as
+  // coverage grows (the same cap that truncated recent_prices).
   const cikOf = new Map<string, string>();
-  for (const c of (companies ?? []) as { symbol: string; cik: string }[]) cikOf.set(c.symbol, c.cik);
+  for (let from = 0; ; from += 1000) {
+    const { data: page, error } = await supabase.from("company_financials_annual").select("symbol, cik").order("symbol").order("fiscal_year").range(from, from + 999);
+    if (error) return Response.json({ error: `company_financials_annual read failed: ${error.message}` }, { status: 500, headers: corsHeaders });
+    for (const c of (page ?? []) as { symbol: string; cik: string }[]) cikOf.set(c.symbol, c.cik);
+    if (!page || page.length < 1000) break;
+  }
 
   const { data: profiles } = await supabase.from("company_profiles").select("symbol, accn, updated_at");
   const stored = new Map<string, { accn: string; updated_at: string }>(((profiles ?? []) as { symbol: string; accn: string; updated_at: string }[]).map((p) => [p.symbol, p]));

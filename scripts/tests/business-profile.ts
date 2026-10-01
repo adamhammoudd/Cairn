@@ -23,6 +23,8 @@ import {
   checkDescription,
   firstDescriptiveSentence,
   generateDescription,
+  needsDescription,
+  MODEL_RETRY_MS,
   revenueSplits,
   sharePct,
   templateDescription,
@@ -155,6 +157,23 @@ export async function runBusinessProfileSuite(): Promise<SuiteResult> {
       `${t.oneLiner} ${t.paragraph.slice(0, 120)}`,
     );
     check("Template passes the scope guard", checkScopeGuard(`${t.oneLiner} ${t.paragraph}`).passed, "scope guard");
+    {
+      const now = Date.parse("2026-10-01T12:00:00Z");
+      const stored = { plain_one_liner: "x", plain_paragraph: "y", plain_accn: "A", accn: "A", plain_failure: null as string | null, plain_generated_at: "2026-10-01T11:00:00Z" };
+      check("Description cached for this 10-K: not rewritten on a page view", !needsDescription(stored, now), "false");
+      check("A new 10-K: rewritten", needsDescription({ ...stored, accn: "B" }, now), "true");
+      check(
+        "Model outage: the template is cached, so page views don't wait on a failing call",
+        !needsDescription({ ...stored, plain_failure: "model_error: HTTP 402" }, now),
+        "false within a day",
+      );
+      check(
+        `…and the model is tried again after ${MODEL_RETRY_MS / 3_600_000} hours`,
+        needsDescription({ ...stored, plain_failure: "model_error: HTTP 402", plain_generated_at: "2026-09-30T11:00:00Z" }, now),
+        "true after a day",
+      );
+      check("A guard rejection is kept, not retried (the same text would fail again)", !needsDescription({ ...stored, plain_failure: "unsourced_claim: largest", plain_generated_at: "2026-01-01T00:00:00Z" }, now), "false");
+    }
     const empty = await generateDescription({ ...KO, excerpt: "" }, async () => good);
     check("No stored Item 1 text: the template, flagged no_source, and the model is not asked", empty.source === "template" && empty.failure === "no_source", String(empty.failure));
     {

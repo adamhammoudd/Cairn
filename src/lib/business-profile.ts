@@ -210,6 +210,27 @@ export async function generateDescription(inputs: DescriptionInputs, complete: D
   return { ...text, source: "model", failure: null };
 }
 
+// ------------------------------------------------------------- caching
+
+/** Failures that say nothing about the text: the model was unreachable or unusable. */
+const TRANSIENT: DescriptionFailure[] = ["model_error", "model_unusable"];
+/**
+ * After a model outage the template is cached too, and the model is tried
+ * again at most this often per company. Without it every page view waited
+ * on a failing call (1.5 s measured against DeepInfra's 402, 2026-10-01).
+ */
+export const MODEL_RETRY_MS = 24 * 60 * 60 * 1000;
+
+/** True when the stored description must be (re)written now. */
+export function needsDescription(
+  p: { plain_one_liner: string | null; plain_paragraph: string | null; plain_accn: string | null; accn: string; plain_failure: string | null; plain_generated_at: string | null },
+  now: number = Date.now(),
+): boolean {
+  if (!p.plain_one_liner || !p.plain_paragraph || p.plain_accn !== p.accn) return true;
+  const transient = TRANSIENT.some((f) => p.plain_failure?.startsWith(f));
+  return transient && (!p.plain_generated_at || now - Date.parse(p.plain_generated_at) >= MODEL_RETRY_MS);
+}
+
 // ------------------------------------------------------------ revenue split
 
 export interface SegmentRow {
