@@ -38,6 +38,8 @@ export interface CompanyNumbersRow {
   derived: boolean;
   filingUrl: string | null;
   filingLabel: string | null;
+  /** company_financials_quarterly.currency: the currency the quarter was FILED in, never converted. */
+  currency: string;
 }
 
 export interface AnalysisSummaryView {
@@ -101,7 +103,7 @@ function fiscalLabel(q: Quarter): string {
 
 function companyRows(quarters: Quarter[]): CompanyNumbersRow[] {
   return quarters.slice(0, 8).map((q) => {
-    const withProv = q as Quarter & { cik?: string; provenance?: Record<string, { accn: string; form: string; filed: string; method: string }> };
+    const withProv = q as Quarter & { cik?: string; currency?: string | null; provenance?: Record<string, { accn: string; form: string; filed: string; method: string }> };
     const prov = withProv.provenance ?? {};
     const any = prov.revenue ?? prov.net_income ?? Object.values(prov)[0];
     return {
@@ -117,6 +119,9 @@ function companyRows(quarters: Quarter[]): CompanyNumbersRow[] {
       derived: Object.values(prov).some((p) => p.method !== "reported"),
       filingUrl: any && withProv.cik ? `https://www.sec.gov/Archives/edgar/data/${Number(withProv.cik)}/${any.accn.replace(/-/g, "")}/` : null,
       filingLabel: any ? `${any.form} filed ${any.filed}` : null,
+      // The column is NOT NULL DEFAULT 'USD' (migration 0048); the fallback only
+      // covers a row read without it.
+      currency: withProv.currency ?? "USD",
     };
   });
 }

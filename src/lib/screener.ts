@@ -2,7 +2,7 @@
 // because a "use server" module may only export async functions - a plain
 // object export there is a build error.
 
-import type { DisplayPrefs } from "@/lib/display-prefs";
+import { CURRENCY_UNKNOWN } from "@/lib/display-prefs";
 
 export interface ScreenerFilters {
   assetTypes: string[];
@@ -38,7 +38,21 @@ export interface ScreenerRow {
   /** One-year extremes over intraday high/low, from symbol_52w_range(). */
   week52High: number | null;
   week52Low: number | null;
+  /**
+   * The quote currency of price, trend, market cap and range - the asset's own,
+   * never converted (lib/asset-currency.ts). Null = currency unknown.
+   */
+  currency: string | null;
 }
+
+/**
+ * The currency the Screener's price and market-cap filters are typed in, and
+ * labelled with ("Price, USD"). Every asset Cairn tracks today is quoted in
+ * USD (lib/asset-currency.ts). A row quoted in anything else is excluded by an
+ * active money filter rather than compared across currencies - 100 in a USD
+ * box says nothing about a price in yen.
+ */
+export const SCREENER_MONEY_CURRENCY = "USD";
 
 /**
  * How far the latest price sits below its one-year high, in percent (0 = at
@@ -137,20 +151,18 @@ export function formatVolume(n: number | null): string {
   return n.toLocaleString();
 }
 
-// Was hardcoded `$` - every other money figure in the app converts through
-// DisplayPrefs (see lib/display-prefs.ts's formatMoney/formatCompactMoney);
-// this one didn't, so market cap kept showing USD on a EUR account even on
-// pages (Markets, Screener, Comparison) that convert every other figure
-// correctly.
-export function formatMarketCap(n: number | null, prefs: DisplayPrefs): string {
+// Market cap is asset money: shown in the asset's own currency and never
+// converted to the reader's display currency (feat/native-currency). It was
+// converted before, so a EUR reader saw NVIDIA's cap move with the euro.
+export function formatMarketCap(n: number | null, assetCurrency: string | null): string {
   // "n/a", not "-": a formatted figure (even "€0") can never be this string, so
   // "not reported" (a fund that doesn't file it, a forex pair) stays distinct
   // from a genuine zero in the same column.
   if (n === null) return "n/a";
-  const value = n * prefs.fxRate;
-  return value.toLocaleString(undefined, {
+  if (!assetCurrency) return `${n.toLocaleString(undefined, { notation: "compact", maximumFractionDigits: 2 })} (${CURRENCY_UNKNOWN})`;
+  return n.toLocaleString(undefined, {
     style: "currency",
-    currency: prefs.effectiveCurrency,
+    currency: assetCurrency,
     notation: "compact",
     maximumFractionDigits: 2,
   });
@@ -231,9 +243,15 @@ export const PRESET_SCREENS: PresetScreen[] = [
  * a filter constrains is excluded by that filter (a null P/E is not "0").
  */
 export function applyScreenerFilters(rows: ScreenerRow[], filters: ScreenerFilters): ScreenerRow[] {
+  const moneyFilter =
+    filters.minPrice !== null || filters.maxPrice !== null || filters.minMarketCapM !== null || filters.maxMarketCapM !== null;
   return rows
     .filter((r) => {
       if (filters.assetTypes.length > 0 && !filters.assetTypes.includes(r.assetType)) return false;
+      // Price and market-cap filters are in SCREENER_MONEY_CURRENCY, compared
+      // against the row's own unconverted figures - so only a row quoted in
+      // that currency can meet them.
+      if (moneyFilter && r.currency !== SCREENER_MONEY_CURRENCY) return false;
       if (filters.minPrice !== null && (r.price === null || r.price < filters.minPrice)) return false;
       if (filters.maxPrice !== null && (r.price === null || r.price > filters.maxPrice)) return false;
       if (filters.minChangePct !== null && (r.changePct === null || r.changePct < filters.minChangePct)) return false;

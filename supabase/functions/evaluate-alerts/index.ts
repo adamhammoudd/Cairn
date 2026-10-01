@@ -46,6 +46,20 @@ function sma(values: number[], days: number, offset = 0): number | null {
   return slice.reduce((a, b) => a + b, 0) / days;
 }
 
+/**
+ * A price in the asset's own currency, for the delivery message. The threshold
+ * and the close are both in it (feat/native-currency: the alert form stores the
+ * currency on the condition). An alert saved before that has none; its
+ * threshold was stored in USD, which is what every compared price is.
+ * Sub-unit prices keep enough decimals to be non-zero, like the app.
+ */
+function assetMoney(value: number, currency: unknown): string {
+  const code = typeof currency === "string" && /^[A-Z]{3}$/.test(currency) ? currency : "USD";
+  const abs = Math.abs(value);
+  const maxDigits = abs > 0 && abs < 1 ? Math.min(6, Math.ceil(-Math.log10(abs)) + 2) : 2;
+  return value.toLocaleString("en-US", { style: "currency", currency: code, minimumFractionDigits: 2, maximumFractionDigits: maxDigits });
+}
+
 function isCoolingDown(lastTriggeredAt: string | null, cooldownSeconds: number): boolean {
   if (!lastTriggeredAt) return false;
   return Date.now() - new Date(lastTriggeredAt).getTime() < cooldownSeconds * 1000;
@@ -103,7 +117,7 @@ function evaluate(
     if (!Number.isFinite(target)) return null;
     const above = (c.comparator as Comparator) === "above";
     if (above ? latest > target : latest < target) {
-      return `${alert.scope_value} is ${above ? "above" : "below"} $${target} (last close $${latest.toFixed(2)}).`;
+      return `${alert.scope_value} is ${above ? "above" : "below"} ${assetMoney(target, c.currency)} (last close ${assetMoney(latest, c.currency)}).`;
     }
     return null;
   }

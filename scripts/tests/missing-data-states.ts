@@ -12,7 +12,6 @@
 // Run: npx tsx --conditions=react-server scripts/tests/missing-data-states.ts
 
 import { formatMarketCap, formatVolume } from "@/lib/screener";
-import type { DisplayPrefs } from "@/lib/display-prefs";
 
 let pass = 0;
 let fail = 0;
@@ -22,24 +21,12 @@ function check(name: string, ok: boolean, detail = "") {
   else fail++;
 }
 
-const EUR: DisplayPrefs = {
-  currency: "EUR",
-  effectiveCurrency: "EUR",
-  fxRate: 0.92,
-  fxAsOf: "2026-09-05",
-  fxSource: "ECB",
-  fxUnavailable: false,
-  metricStyle: "percent",
-  compactMode: false,
-  extendedHours: false,
-  defaultChartView: "1D",
-};
-const USD: DisplayPrefs = { ...EUR, currency: "USD", effectiveCurrency: "USD", fxRate: 1 };
 
 // --- market cap: absent vs. a real zero -----------------------------------------
-for (const prefs of [EUR, USD]) {
-  const absent = formatMarketCap(null, prefs);
-  const zero = formatMarketCap(0, prefs);
+for (const currency of ["USD", "EUR", null] as (string | null)[]) {
+  const prefs = { effectiveCurrency: currency ?? "unknown" }; // label only: market cap is asset money (feat/native-currency)
+  const absent = formatMarketCap(null, currency);
+  const zero = formatMarketCap(0, currency);
   check(`[${prefs.effectiveCurrency}] formatMarketCap(null) is the explicit token, not a dash`, absent === "n/a", absent);
   check(`[${prefs.effectiveCurrency}] formatMarketCap(0) is a formatted figure, not "n/a"`, zero !== "n/a" && /\d/.test(zero), zero);
   check(`[${prefs.effectiveCurrency}] absent and zero market cap are distinguishable`, absent !== zero, `${absent} vs ${zero}`);
@@ -55,7 +42,7 @@ for (const prefs of [EUR, USD]) {
 }
 
 // --- neither formatter emits a bare hyphen anymore ---------------------------
-check("formatMarketCap(null) is not \"-\"", formatMarketCap(null, EUR) !== "-");
+check("formatMarketCap(null) is not \"-\"", formatMarketCap(null, "USD") !== "-");
 check("formatVolume(null) is not \"-\"", formatVolume(null) !== "-");
 
 console.log(`\n${pass}/${pass + fail} missing-data-states cases passed`);

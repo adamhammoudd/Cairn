@@ -5,7 +5,7 @@
 // numbers" change adds, all pure and DB-free:
 //   1. computeUsageSummary/computeChatUsageSummary with unlimited=true
 //   2. boundedAmount / clampAmount enforce [0, MAX_AMOUNT_INPUT]
-//   3. formatCompactMoney / formatCompactNumber / the formatMoney safety net
+//   3. formatCompactUserMoney / formatCompactNumber / the formatUserMoney safety net
 //
 // Run: npm run test:billing-limits
 
@@ -13,8 +13,8 @@ import { computeUsageSummary, computeChatUsageSummary } from "@/lib/billing";
 import { MAX_AMOUNT_INPUT, boundedAmount, clampAmount } from "@/lib/input-limits";
 import {
   DEFAULT_DISPLAY_PREFS,
-  formatMoney,
-  formatCompactMoney,
+  formatUserMoney,
+  formatCompactUserMoney,
   formatCompactNumber,
 } from "@/lib/display-prefs";
 import type { SuiteResult, TestCase } from "./report";
@@ -51,19 +51,19 @@ export function runBillingLimitsSuite(): SuiteResult {
 
   // ---- large-number formatting ----
   const prefs = DEFAULT_DISPLAY_PREFS;
-  cases.push(check("small money keeps full precision", formatCompactMoney(1234.5, prefs) === formatMoney(1234.5, prefs), formatCompactMoney(1234.5, prefs)));
-  cases.push(check("money over $1M compacts", /M|B|T/.test(formatCompactMoney(4_200_000, prefs)), formatCompactMoney(4_200_000, prefs)));
-  cases.push(check("money in the billions compacts", /B/.test(formatCompactMoney(3_400_000_000, prefs)), formatCompactMoney(3_400_000_000, prefs)));
+  cases.push(check("small money keeps full precision", formatCompactUserMoney(1234.5, prefs) === formatUserMoney(1234.5, prefs), formatCompactUserMoney(1234.5, prefs)));
+  cases.push(check("money over $1M compacts", /M|B|T/.test(formatCompactUserMoney(4_200_000, prefs)), formatCompactUserMoney(4_200_000, prefs)));
+  cases.push(check("money in the billions compacts", /B/.test(formatCompactUserMoney(3_400_000_000, prefs)), formatCompactUserMoney(3_400_000_000, prefs)));
   cases.push(
     check(
-      "formatMoney compacts an absurd value instead of a 30-digit string",
-      formatMoney(1e21, prefs).length < 20 && formatMoney(1e21, prefs).includes("T"),
-      formatMoney(1e21, prefs),
+      "formatUserMoney compacts an absurd value instead of a 30-digit string",
+      formatUserMoney(1e21, prefs).length < 20 && formatUserMoney(1e21, prefs).includes("T"),
+      formatUserMoney(1e21, prefs),
     ),
   );
   cases.push(check("formatCompactNumber compacts a huge share count", /M|B/.test(formatCompactNumber(12_500_000)), formatCompactNumber(12_500_000)));
   cases.push(check("formatCompactNumber leaves a small count alone", formatCompactNumber(842) === "842", formatCompactNumber(842)));
-  cases.push(check("non-finite inputs format to a dash", formatCompactMoney(Number.POSITIVE_INFINITY, prefs) === "-" && formatCompactNumber(Number.NaN) === "-", "dash"));
+  cases.push(check("non-finite inputs format to a dash", formatCompactUserMoney(Number.POSITIVE_INFINITY, prefs) === "-" && formatCompactNumber(Number.NaN) === "-", "dash"));
 
   return { suiteName: "Admin-unlimited billing + input bounds + big-number formatting", gating: true, cases };
 }

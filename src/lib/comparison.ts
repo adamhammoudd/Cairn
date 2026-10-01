@@ -23,6 +23,8 @@ export interface ComparisonRow {
   /** Date of the newest bar for this symbol, YYYY-MM-DD. */
   asOf: string | null;
   bars: { ts: string; close: number | null }[];
+  /** Quote currency of price and market cap, never converted. Null = unknown. */
+  currency: string | null;
 }
 
 // The summary card's sparkline. It takes the timeframe because it sits under a

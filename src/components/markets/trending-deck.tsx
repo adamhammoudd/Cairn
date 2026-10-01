@@ -5,8 +5,7 @@ import { useMemo } from "react";
 import { Sparkline } from "@/components/sparkline";
 import { formatVolume, type ScreenerRow } from "@/lib/screener";
 import { assetName } from "@/lib/asset-names";
-import { useDisplayPrefs } from "@/components/display-prefs-provider";
-import { formatMoney } from "@/lib/display-prefs";
+import { formatAssetMoney } from "@/lib/display-prefs";
 import { DECKS, deckComparator, deckHasSignal, deckValue, type DeckId } from "@/lib/market-decks";
 
 // The movers deck above the Markets table. Every card is derived from the same
@@ -30,7 +29,6 @@ interface TrendingDeckProps {
 }
 
 export function TrendingDeck({ rows, requestCounts, names, deck, onDeckChange }: TrendingDeckProps) {
-  const prefs = useDisplayPrefs();
 
   const items = useMemo(() => {
     if (!deckHasSignal(rows, deck, requestCounts)) return [];
@@ -114,7 +112,7 @@ export function TrendingDeck({ rows, requestCounts, names, deck, onDeckChange }:
                     debug label; the deck's own method caption already says it
                     ranks by lookups, and the asset name is on the line above. */}
                 <div className="font-mono text-[11.5px] text-muted">
-                  {deck === "active" ? `Vol ${formatVolume(r.volume)}` : formatMoney(r.price, prefs)}
+                  {deck === "active" ? `Vol ${formatVolume(r.volume)}` : formatAssetMoney(r.price, r.currency)}
                 </div>
               </Link>
             );

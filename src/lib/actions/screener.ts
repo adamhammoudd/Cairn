@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { cryptoRolling24hFor } from "@/lib/market-data/current-price";
 import { EMPTY_FILTERS, applyScreenerFilters, type SavedScreen, type ScreenerFilters, type ScreenerRow } from "@/lib/screener";
 import { MIGRATIONS, unwrapRows } from "@/lib/supabase/read";
+import { getAssetCurrencies } from "@/lib/market-data/asset-currency";
 
 // Market cap, P/E, and dividend yield are derived here from SEC XBRL
 // fundamentals (shares outstanding, TTM EPS, TTM dividends) against the latest
@@ -74,6 +75,12 @@ export async function runScreen(rawFilters: ScreenerFilters): Promise<ScreenerRo
     .map(([symbol]) => symbol);
   const rolling = await cryptoRolling24hFor(cryptoSymbols);
 
+  // Each row's quote currency, so its price and cap render in it, unconverted.
+  const currencies = await getAssetCurrencies(Array.from(bySymbol.keys()), {
+    client: supabase,
+    assetTypes: new Map(Array.from(bySymbol.entries()).map(([symbol, e]) => [symbol, directoryBySymbol.get(symbol)?.asset_type ?? e.assetType])),
+  });
+
   const rows: ScreenerRow[] = Array.from(bySymbol.entries()).map(([symbol, e]) => {
     const price = e.closes[0] ?? null;
     const prev = e.closes[1] ?? null;
@@ -100,6 +107,7 @@ export async function runScreen(rawFilters: ScreenerFilters): Promise<ScreenerRo
       week52Low: rangeBySymbol.get(symbol)?.week52_low === undefined || rangeBySymbol.get(symbol)?.week52_low === null
         ? null
         : Number(rangeBySymbol.get(symbol)!.week52_low),
+      currency: currencies.get(symbol) ?? null,
     };
   });
 

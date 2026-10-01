@@ -46,6 +46,31 @@ export function allowedNumbers(outcomes: ToolOutcome[]): Set<number> {
   return out;
 }
 
+/**
+ * Every money figure the tools returned, keyed by currency sign AND value:
+ * "$|225.07", "€|49.6". The plain allow-list above compares digits only, so
+ * "€225.07" for a share the tools priced at "$225.07" would pass it; this is
+ * the currency half of the figure check (feat/native-currency).
+ */
+export function allowedMoney(outcomes: ToolOutcome[]): Set<string> {
+  const texts = outcomes.flatMap((o) => [JSON.stringify(o.data), ...o.facts, ...o.tiles.flatMap((t) => [t.label, t.value, t.note ?? ""])]);
+  const out = new Set<string>();
+  for (const t of texts) for (const m of t.replace(NAMED_NUMBERS, " ").matchAll(NUMBER)) if (m[1]) out.add(`${m[1]}|${parse(m[2])}`);
+  return out;
+}
+
+/** Money figures in the answer whose currency sign differs from the one the tools gave that value. */
+export function wrongCurrencyFigures(text: string, allowed: Set<string>): string[] {
+  const cleaned = text.replace(CITATION, " ").replace(NAMED_NUMBERS, " ");
+  const bad: string[] = [];
+  for (const m of cleaned.matchAll(NUMBER)) {
+    const [whole, currency, digits] = m;
+    if (!currency) continue;
+    if (!allowed.has(`${currency}|${parse(digits)}`)) bad.push(whole.trim());
+  }
+  return bad;
+}
+
 /** Numbers the answer states that are not in the allow-list (exemptions applied). */
 export function unsourcedNumbers(text: string, allowed: Set<number>): string[] {
   const cleaned = text.replace(CITATION, " ").replace(NAMED_NUMBERS, " ");
@@ -70,9 +95,13 @@ export function answerText(a: AnswerDraft): string {
 const stripQuotes = (s: string) => s.replace(/["“][^"”]{0,300}["”]/g, " ");
 
 export function checkFigures(a: AnswerDraft, outcomes: ToolOutcome[]): GuardResult {
-  const allowed = allowedNumbers(outcomes);
-  const bad = unsourcedNumbers(answerText(a), allowed);
-  return bad.length === 0 ? PASS : failWith("number_not_in_tool_results", bad.slice(0, 5).join(", "));
+  const text = answerText(a);
+  const bad = unsourcedNumbers(text, allowedNumbers(outcomes));
+  if (bad.length > 0) return failWith("number_not_in_tool_results", bad.slice(0, 5).join(", "));
+  // The number is real, but is it in the currency the tools gave it? A share
+  // price copied with the reader's "€" in front of it is a wrong figure.
+  const wrong = wrongCurrencyFigures(text, allowedMoney(outcomes));
+  return wrong.length === 0 ? PASS : failWith("figure_in_wrong_currency", wrong.slice(0, 5).join(", "));
 }
 
 export function checkScope(a: AnswerDraft, outcomes: ToolOutcome[]): GuardResult {

@@ -117,7 +117,7 @@ async function DashboardBody() {
   const topMarketRows = marketRows
     .filter((r) => r.price !== null && r.changePct !== null)
     .slice(0, 4)
-    .map((r) => ({ symbol: r.symbol, price: r.price ?? 0, changePct: r.changePct ?? 0 }));
+    .map((r) => ({ symbol: r.symbol, price: r.price ?? 0, changePct: r.changePct ?? 0, currency: r.currency }));
 
   // The strip under the header. It is drawn from the same screen the Markets
   // card reads, so the two cannot disagree about a symbol's day - holdings

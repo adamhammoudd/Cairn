@@ -294,8 +294,11 @@ export function runSettingsWiringSuite(): SuiteResult {
       /currency:\s*"USD"/.test(f.code),
   );
   // Ticker-level panels legitimately print the symbol's own listing currency
-  // (profile, statements), which is not the reader's display currency.
-  const ALLOWED_LISTING_CURRENCY = ["src/components/ticker/"];
+  // (profile, statements), which is not the reader's display currency. The
+  // assistant's data layer states the currency annual SEC figures were FILED
+  // in - they are read only from companyfacts' units.USD - which is asset
+  // money and must not convert (feat/native-currency).
+  const ALLOWED_LISTING_CURRENCY = ["src/components/ticker/", "src/lib/ai/assistant/data.ts"];
   const offenders = hardCodedUsd
     .map((f) => f.rel)
     .filter((rel) => !ALLOWED_LISTING_CURRENCY.some((prefix) => rel.startsWith(prefix)));

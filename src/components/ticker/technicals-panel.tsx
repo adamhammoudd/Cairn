@@ -15,8 +15,7 @@ import {
 import { CHART_TOOLTIP, CHART_AXIS_TICK, CHART_GRID } from "@/lib/chart-theme";
 import { sma, ema, rsi, macd, INDICATOR_COLOURS } from "@/lib/indicators";
 import { DataFreshness } from "@/components/data-freshness";
-import { useDisplayPrefs } from "@/components/display-prefs-provider";
-import { formatMoney } from "@/lib/display-prefs";
+import { formatAssetMoney } from "@/lib/display-prefs";
 
 // Technical overlays computed from the daily closes already in the trend
 // store - no extra provider call, and the same numbers the chart is drawn
@@ -37,6 +36,8 @@ interface TechnicalsPanelProps {
   priceAsOf: string | null;
   /** Annualised stdev of the last 30 daily returns, in percent, from loadTicker(). */
   volatility30d?: number | null;
+  /** The asset's quote currency (TickerData.currency). Null = currency unknown. */
+  currency?: string | null;
 }
 
 // The mock's "Indicators" list: one row per reading, with what it is in words
@@ -89,7 +90,7 @@ const OVERLAYS = [
 ] as const;
 type OverlayId = (typeof OVERLAYS)[number]["id"];
 
-export function TechnicalsPanel({ symbol, bars, priceSource, priceAsOf, volatility30d = null }: TechnicalsPanelProps) {
+export function TechnicalsPanel({ symbol, bars, priceSource, priceAsOf, volatility30d = null, currency = null }: TechnicalsPanelProps) {
   const [windowLabel, setWindowLabel] = useState<(typeof WINDOWS)[number]["label"]>("1Y");
   const [enabled, setEnabled] = useState<Record<OverlayId, boolean>>({ sma50: true, sma200: true, ema20: false });
 
@@ -135,11 +136,9 @@ export function TechnicalsPanel({ symbol, bars, priceSource, priceAsOf, volatili
     const [, m, d] = v.split("-");
     return `${d}/${m}`;
   };
-  // Was hardcoded `currency: "USD"` - the price-overlay axis/tooltip (SMA/EMA
-  // lines are price, same units as the headline number) didn't follow
-  // Settings > Display > Primary currency like the rest of the Ticker page.
-  const prefs = useDisplayPrefs();
-  const money = (n: number) => formatMoney(n, prefs);
+  // SMA/EMA lines are price, in the same units as the headline number: the
+  // asset's own currency, never converted (feat/native-currency).
+  const money = (n: number) => formatAssetMoney(n, currency);
   // Wide enough for the longest price label: at a fixed 62px, a coin's
   // "$115,517.88" was cut at the chart's left edge on a phone.
   const priceAxisWidth = useMemo(() => {
@@ -147,7 +146,7 @@ export function TechnicalsPanel({ symbol, bars, priceSource, priceAsOf, volatili
     const longest = closes.length ? Math.max(money(Math.max(...closes)).length, money(Math.min(...closes)).length) : 0;
     return Math.max(62, longest * 6 + 8);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [points, prefs]);
+  }, [points, currency]);
 
   // A window shorter than an indicator's period has no value to draw, and the
   // reader is told which rather than shown an empty axis.

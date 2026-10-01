@@ -8,7 +8,7 @@
 
 import Link from "next/link";
 import { useDisplayPrefs } from "@/components/display-prefs-provider";
-import { formatMoney } from "@/lib/display-prefs";
+import { formatRoughUserMoney, formatUserMoney } from "@/lib/display-prefs";
 import { formatQuantity } from "@/lib/portfolio";
 import type { Briefing, CardTag, GlanceRow } from "@/lib/daily-briefing";
 import type { Level } from "@/lib/scorecard";
@@ -127,7 +127,8 @@ function unitFor(row: GlanceRow): string {
 
 export function DailyBriefing({ briefing, dateLabel }: { briefing: Briefing; dateLabel: string }) {
   const prefs = useDisplayPrefs();
-  const money = (usd: number | null) => formatMoney(usd, prefs);
+  // Everything this briefing totals is the reader's own money: in their display currency.
+  const money = (usd: number | null) => formatUserMoney(usd, prefs);
   const [first, ...restSentences] = briefing.headline.split(/(?<=\.)\s+/);
   const worth =
     briefing.valueUsd === null
@@ -266,7 +267,7 @@ export function DailyBriefing({ briefing, dateLabel }: { briefing: Briefing; dat
                       <span className="text-primary/70">
                         {e.detail}
                         {e.amountUsd !== null &&
-                          ` About ${roughMoney(e.amountUsd * prefs.fxRate).toLocaleString(undefined, { style: "currency", currency: prefs.effectiveCurrency, maximumFractionDigits: 0 })} to you.`}
+                          ` About ${formatRoughUserMoney(e.amountUsd, prefs, roughMoney)} to you.`}
                       </span>
                     </span>
                   </li>

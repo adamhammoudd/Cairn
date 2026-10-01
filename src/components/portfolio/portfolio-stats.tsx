@@ -4,11 +4,11 @@ import { StatCard } from "@/components/portfolio/stat-card";
 import { LivePricePoll } from "@/components/live-price-poll";
 import { useDisplayPrefs } from "@/components/display-prefs-provider";
 import {
-  formatCompactMoney,
-  formatCompactSignedMoney,
-  formatMoney,
+  formatCompactUserMoney,
+  formatCompactSignedUserMoney,
+  formatUserMoney,
   formatPercent,
-  formatSignedMoney,
+  formatSignedUserMoney,
 } from "@/lib/display-prefs";
 import type { PortfolioTotals } from "@/lib/portfolio";
 
@@ -39,14 +39,14 @@ export function PortfolioStats({
       <div className="mb-3.5 grid grid-cols-[repeat(auto-fit,minmax(196px,1fr))] gap-3">
       <StatCard
         label="Total value"
-        value={formatCompactMoney(totals.totalValue, prefs)}
-        exact={formatMoney(totals.totalValue, prefs)}
+        value={formatCompactUserMoney(totals.totalValue, prefs)}
+        exact={formatUserMoney(totals.totalValue, prefs)}
         sub={`${positions} ${positions === 1 ? "position" : "positions"}`}
       />
       <StatCard
         label="Unrealised gain"
-        value={formatCompactSignedMoney(totals.totalGain, prefs)}
-        exact={formatSignedMoney(totals.totalGain, prefs)}
+        value={formatCompactSignedUserMoney(totals.totalGain, prefs)}
+        exact={formatSignedUserMoney(totals.totalGain, prefs)}
         sub={`${formatPercent(totals.totalGainPct)} on cost`}
         tone={totals.totalGain >= 0 ? "positive" : "negative"}
         delayMs={50}
@@ -60,8 +60,8 @@ export function PortfolioStats({
       />
       <StatCard
         label="Cost basis"
-        value={formatCompactMoney(totals.totalCostBasis, prefs)}
-        exact={formatMoney(totals.totalCostBasis, prefs)}
+        value={formatCompactUserMoney(totals.totalCostBasis, prefs)}
+        exact={formatUserMoney(totals.totalCostBasis, prefs)}
         sub={`Across ${assetTypeCount} asset ${assetTypeCount === 1 ? "type" : "types"}`}
         delayMs={150}
         accent="var(--color-info)"

@@ -14,16 +14,18 @@ export function formatRateDate(isoDate: string): string {
 }
 
 /**
- * One line, on every app page, that dates a converted figure - or says the
- * conversion did not happen. Nothing for a USD account: nothing is converted.
+ * One line, on every app page, that explains the split (feat/native-currency):
+ * share and coin prices are in their own currency; only the reader's own money
+ * is converted, and that conversion is dated. Nothing for a USD account:
+ * nothing is converted.
  */
 export function currencyNoteText(prefs: DisplayPrefs): string | null {
   if (prefs.currency === "USD") return null;
   if (prefs.fxUnavailable) {
-    return `Figures in USD - the ${prefs.currency} reference rate could not be fetched, so nothing is converted.`;
+    return `Share and coin prices are in their own currency. Your portfolio is shown in USD: the ${prefs.currency} reference rate could not be fetched, so nothing is converted.`;
   }
   if (!prefs.fxAsOf) return null;
-  return `Figures in ${prefs.effectiveCurrency}, converted from USD at the European Central Bank reference rate of ${formatRateDate(prefs.fxAsOf)}.`;
+  return `Share and coin prices are in their own currency. Your portfolio is shown in ${prefs.effectiveCurrency} (ECB rate, ${formatRateDate(prefs.fxAsOf)}).`;
 }
 
 export function CurrencyNote({ prefs }: { prefs: DisplayPrefs }) {

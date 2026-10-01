@@ -6,7 +6,8 @@ import { deleteHolding } from "@/lib/actions/holdings";
 import { HoldingModal } from "@/components/portfolio/holding-modal";
 import { Sparkline } from "@/components/sparkline";
 import { useDisplayPrefs } from "@/components/display-prefs-provider";
-import { formatMoney, formatCompactMoney, formatChange, formatSecondaryChange } from "@/lib/display-prefs";
+import { formatUserMoney, formatCompactUserMoney, formatCompactAssetMoney, formatUserChange, formatUserSecondaryChange } from "@/lib/display-prefs";
+import { resolveAssetCurrency } from "@/lib/asset-currency";
 import { formatQuantity, type Holding, type HoldingMetrics } from "@/lib/portfolio";
 import { assetTypeBadge, ASSET_TYPE_TAG_CLASS } from "@/lib/screener";
 import { ConfirmDialog } from "@/components/dialog";
@@ -51,12 +52,18 @@ export function HoldingsTable({
   // Currency and percent-vs-dollar both come from Settings > Display. Every
   // figure below goes through the shared formatters so a currency change
   // cannot reach the value column and miss the cost basis.
+  //
+  // Two kinds of money on one row (feat/native-currency): value, cost basis
+  // and gain are the reader's own money, in their display currency; the price
+  // describes the asset, so it stays in the asset's own currency - "€49.60"
+  // beside "$225.07".
   const prefs = useDisplayPrefs();
   // Compact once a figure passes ~$1M so a large position can't stretch a
   // column; the exact value is on the cell's title. Ordinary holdings are
-  // unaffected (formatCompactMoney defers to formatMoney below the threshold).
-  const fmtCurrency = (n: number | null) => formatCompactMoney(n, prefs);
-  const fmtExact = (n: number | null) => formatMoney(n, prefs);
+  // unaffected (formatCompactUserMoney defers to formatUserMoney below the threshold).
+  const fmtCurrency = (n: number | null) => formatCompactUserMoney(n, prefs);
+  const fmtExact = (n: number | null) => formatUserMoney(n, prefs);
+  const fmtPrice = (m: HoldingMetrics) => formatCompactAssetMoney(m.currentPrice, resolveAssetCurrency({ symbol: m.symbol, assetType: m.asset_type }));
 
   // The mock lists positions largest-first; unpriced rows sink to the bottom.
   const rows = [...metrics].sort((a, b) => (b.value ?? -Infinity) - (a.value ?? -Infinity));
@@ -179,7 +186,7 @@ export function HoldingsTable({
                         className="mt-1 flex items-center gap-1 text-body tabular-nums text-primary"
                         title={m.priceStale ? `Stale - last updated ${m.priceAsOf ?? "unknown"}` : undefined}
                       >
-                        {fmtCurrency(m.currentPrice)}
+                        {fmtPrice(m)}
                         {m.priceStale && (
                           <span aria-label={`Price stale as of ${m.priceAsOf ?? "unknown date"}`} className="text-negative">
                             ⚠
@@ -192,7 +199,7 @@ export function HoldingsTable({
                       <div
                         className={`mt-1 text-body tabular-nums ${positive ? "text-accent" : "text-negative"}`}
                       >
-                        {formatChange(m.gain, m.gainPct, prefs, 1)}
+                        {formatUserChange(m.gain, m.gainPct, prefs, 1)}
                       </div>
                     </div>
                   </div>
@@ -250,7 +257,7 @@ export function HoldingsTable({
                       className="flex items-center gap-1 font-mono text-[12.5px] tabular-nums text-primary"
                       title={m.priceStale ? `Stale - last updated ${m.priceAsOf ?? "unknown"}` : undefined}
                     >
-                      {fmtCurrency(m.currentPrice)}
+                      {fmtPrice(m)}
                       {m.priceStale && (
                         <span aria-label={`Price stale as of ${m.priceAsOf ?? "unknown date"}`} className="text-negative">
                           ⚠
@@ -273,12 +280,12 @@ export function HoldingsTable({
                         reader could want is taken away by a display choice. */}
                     <div className="flex flex-col gap-0.5">
                       <span className={`font-mono text-[12.5px] tabular-nums ${positive ? "text-accent" : "text-negative"}`}>
-                        {formatChange(m.gain, m.gainPct, prefs, 1)}
+                        {formatUserChange(m.gain, m.gainPct, prefs, 1)}
                       </span>
                       <span
                         className={`font-mono text-micro tabular-nums opacity-75 ${positive ? "text-accent" : "text-negative"}`}
                       >
-                        {m.gain === null && m.gainPct === null ? "" : formatSecondaryChange(m.gain, m.gainPct, prefs, 1)}
+                        {m.gain === null && m.gainPct === null ? "" : formatUserSecondaryChange(m.gain, m.gainPct, prefs, 1)}
                       </span>
                     </div>
 
