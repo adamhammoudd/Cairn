@@ -461,7 +461,9 @@ export async function runAssistantTranscriptsSuite(): Promise<SuiteResult> {
     const text = html.replace(/<[^>]*>/g, " ").replace(/&#x27;/g, "'").replace(/\s+/g, " ");
     add("Bubble: the model's answer passed (so this is the model bubble)", r.meta.source === "model", JSON.stringify(r.meta.guardFailures));
     add("Bubble: shows the Checked line", /Checked: NVDA prices, NVDA scorecard, NVDA news/.test(text), text.slice(0, 120));
-    add("Bubble: lead first, then the tiles, then the sections and sources", text.indexOf("NVIDIA's share is at $178.43") < text.indexOf("NVDA price $178.43") && text.indexOf("NVDA price $178.43") < text.indexOf("The business") && /Sources/.test(text), text.slice(0, 300));
+    // Since #177 the sources sit behind a "See all sources (n)" toggle rather
+    // than under a "Sources" heading; they are still in the bubble, after the sections.
+    add("Bubble: lead first, then the tiles, then the sections and sources", text.indexOf("NVIDIA's share is at $178.43") < text.indexOf("NVDA price $178.43") && text.indexOf("NVDA price $178.43") < text.indexOf("The business") && text.indexOf("The business") < text.indexOf("See all sources") && /See all sources \(\d+\)/.test(text), text.slice(0, 300));
     add("Bubble: a gain tile is green, never red", /text-accent-light[^>]*>\+2\.1%/.test(html) && !/negative[^>]*>\+2\.1%/.test(html), "tone");
     const withFollow = renderComponentHtml("src/components/chat/chat-message.tsx", "ChatMessage", { message: { role: "assistant", content: r.markdown, meta: r.meta } });
     add("Bubble: follow-ups render only when there is a handler (latest answer)", !/Suggested follow-up/.test(withFollow), "no handler -> no buttons");

@@ -40,6 +40,14 @@ export async function runMethodologySubstanceSuite(): Promise<SuiteResult> {
   ]);
   void newsRows;
 
+  // Data sources (migration 0057): price history, SEC filings, fund profile.
+  // checkCompleteness counts these alongside news (generate.ts), so an
+  // analysis citing only them is complete, not "uncited".
+  const { data: dataSourceRows } =
+    ids.length > 0
+      ? await admin.from("ai_analysis_data_sources").select("analysis_id, kind").in("analysis_id", ids)
+      : { data: [] as { analysis_id: string; kind: string }[] };
+
   const newsIds = Array.from(new Set((sourceLinks ?? []).map((s) => s.news_item_id)));
   const { data: newsItems } =
     newsIds.length > 0
@@ -51,10 +59,14 @@ export async function runMethodologySubstanceSuite(): Promise<SuiteResult> {
     const links = (sourceLinks ?? []).filter((s) => s.analysis_id === analysis.id);
 
     if (links.length === 0) {
+      const data = (dataSourceRows ?? []).filter((d) => d.analysis_id === analysis.id);
       cases.push({
         name: `${analysis.scope_type}/${analysis.scope_value} (${analysis.id})`,
-        status: "fail",
-        detail: "No cited sources found - checkCompleteness should have rejected this at generation time.",
+        status: data.length > 0 ? "pass" : "fail",
+        detail:
+          data.length > 0
+            ? `No news cited; ${data.length} data source(s) cited (${Array.from(new Set(data.map((d) => d.kind))).join(", ")}).`
+            : "No cited sources found (no news, no data sources) - checkCompleteness should have rejected this at generation time.",
       });
       continue;
     }
