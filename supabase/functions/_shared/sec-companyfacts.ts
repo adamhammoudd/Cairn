@@ -155,6 +155,14 @@ export const FIELD_SPECS = {
     unit: "USD",
     chain: ["StockRepurchaseProgramRemainingAuthorizedRepurchaseAmount1", "StockRepurchaseProgramRemainingAuthorizedRepurchaseAmount"],
   },
+  // Shareholders' equity, for debt ÷ equity (feat/peer-comparison). All 32
+  // ingested equities and KO report StockholdersEquity (checked 2026-10-01);
+  // the figure including minority interests is the fallback.
+  stockholders_equity: {
+    kind: "instant",
+    unit: "USD",
+    chain: ["StockholdersEquity", "StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest"],
+  },
 } as const satisfies Record<string, FieldSpec>;
 
 export type Field = keyof typeof FIELD_SPECS;

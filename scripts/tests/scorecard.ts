@@ -70,6 +70,8 @@ function metrics(over: Partial<Omit<CompanyMetrics, "ttm">> & { ttm?: Partial<Co
     totalDebt: 200,
     netDebt: -300,
     netDebtToEbitda: -300 / 450,
+    equity: 900,
+    debtToEquity: 200 / 900,
     payoutOfFcf: 0,
     payoutOfNetIncome: 0,
     ...rest,

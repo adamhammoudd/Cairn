@@ -9,7 +9,7 @@
 //   3. Scorecard             the seven tiles
 //   4. What to watch         dated events and cited sources
 //   5. What this means for you   only when the reader holds it, and only behind the exposure flag
-/   6. Full breakdown        collapsed: what it does, sources, every case, company numbers, use of cash, trader indicators, how
+//   6. Full breakdown        collapsed: what it does, sources, every case, company numbers, use of cash, trader indicators, how
 //   7. Footer
 //
 // Everything here draws what the server already decided the reader may see

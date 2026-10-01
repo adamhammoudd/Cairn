@@ -22,6 +22,7 @@ import { runFundamentalsSuite } from "./fundamentals";
 import { runScorecardSuite } from "./scorecard";
 import { runCapitalUseSuite } from "./capital-use";
 import { runBusinessProfileSuite } from "./business-profile";
+import { runPeerComparisonSuite } from "./peer-comparison";
 import { runHistoryPlainSuite } from "./history-plain";
 import { runExposureSuite } from "./exposure";
 import { runDailyBriefingSuite } from "./daily-briefing";
@@ -202,6 +203,7 @@ async function main() {
     runRunAllRegistrationSuite(),
     runScorecardSuite(),
     runCapitalUseSuite(),
+    runPeerComparisonSuite(),
     runHistoryPlainSuite(),
     runDirectionEngineSuite(),
     runAnalysisDisplaySuite(),

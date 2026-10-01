@@ -16,6 +16,8 @@ import {
   companyMetrics,
   dividendGrowthYears,
   earningsReactions,
+  enterpriseValue,
+  median,
   peHistory,
   sortQuarters,
   ttmSnapshot,
@@ -118,6 +120,22 @@ function trackedMarketPe(supabase: SupabaseClient<Database>): Promise<{ median: 
   return value;
 }
 
+/**
+ * Median sales growth, EBITDA margin and net debt ÷ EBITDA across sector
+ * peers, each from the peer's own stored quarters by the same code as the
+ * company's. A metric a peer lacks is left out of that metric's median.
+ */
+async function sectorPeerMetrics(secure: SupabaseClient<Database>, symbols: string[]): Promise<{ revenueGrowth: number | null; ebitdaMargin: number | null; netDebtToEbitda: number | null; peers: number } | null> {
+  if (symbols.length === 0) return null;
+  // Eight quarters each: growth compares the last four with the four before.
+  const reads = await Promise.all(
+    symbols.map((s) => secure.from("company_financials_quarterly").select("*").eq("symbol", s).order("period_end", { ascending: false }).limit(8)),
+  );
+  const all = reads.map((r) => companyMetrics((r.data ?? []) as unknown as Quarter[])).filter((m): m is CompanyMetrics => m !== null);
+  const med = (f: (m: CompanyMetrics) => number | null) => median(all.map(f).filter((v): v is number => v !== null));
+  return { revenueGrowth: med((m) => m.revenueGrowth), ebitdaMargin: med((m) => m.ebitdaMargin), netDebtToEbitda: med((m) => m.netDebtToEbitda), peers: all.length };
+}
+
 export async function loadScorecard(symbolRaw: string, opts: LoadOptions = {}): Promise<ScorecardBundle> {
   const symbol = symbolRaw.toUpperCase();
   const today = opts.today ?? todayIso();
@@ -137,7 +155,7 @@ export async function loadScorecard(symbolRaw: string, opts: LoadOptions = {}): 
       .limit(QUARTERS),
     // Every column: the use-of-cash figures (migration 0061) are read when present.
     secure.from("company_financials_annual").select("*").eq("symbol", symbol),
-    supabase.from("fundamentals").select("shares_outstanding, sector").eq("symbol", symbol).maybeSingle(),
+    supabase.from("fundamentals").select("shares_outstanding, sector, as_of_date").eq("symbol", symbol).maybeSingle(),
     supabase.from("earnings_releases").select("release_date, timing").eq("symbol", symbol).order("release_date", { ascending: false }).limit(16),
     supabase.from("calendar_events").select("event_type, event_date, title, metadata").eq("symbol", symbol).gte("event_date", today).order("event_date").limit(10),
     readNewestFirstPaged(
@@ -173,6 +191,7 @@ export async function loadScorecard(symbolRaw: string, opts: LoadOptions = {}): 
 
   // Sector median P/E: profitable tracked peers in the same SEC industry.
   let sector: { median: number; peers: number; name: string } | null = null;
+  let profitablePeers: string[] = [];
   const sectorName = fRes.data?.sector ?? null;
   if (status === "available" && sectorName) {
     const { data: peers } = await supabase.from("fundamentals").select("symbol, eps_ttm").eq("sector", sectorName).neq("symbol", symbol);
@@ -187,6 +206,7 @@ export async function loadScorecard(symbolRaw: string, opts: LoadOptions = {}): 
       });
       const med = sectorMedianPe(pes);
       if (med) sector = { ...med, name: sectorName };
+      profitablePeers = (peers ?? []).filter((_, i) => pes[i] !== null).map((p) => p.symbol);
     }
   }
 
@@ -195,6 +215,19 @@ export async function loadScorecard(symbolRaw: string, opts: LoadOptions = {}): 
   const shares = fRes.data?.shares_outstanding === null || fRes.data?.shares_outstanding === undefined ? null : Number(fRes.data.shares_outstanding);
   const fcf = metrics?.ttm.free_cash_flow ?? null;
   const fcfYield = fcf !== null && shares && price ? fcf / (shares * price) : null;
+
+  // Enterprise value ÷ EBITDA, a secondary input beside price vs profit.
+  const marketCap = shares && price ? shares * price : null;
+  const ev = enterpriseValue(marketCap, metrics?.netDebt ?? null);
+  const evInput =
+    ev !== null && marketCap !== null && metrics?.netDebt != null && metrics.ttm.ebitda !== null && metrics.ttm.ebitda > 0
+      ? { enterpriseValue: ev, marketCap, netDebt: metrics.netDebt, ebitda: metrics.ttm.ebitda, sharesAsOf: fRes.data?.as_of_date ?? null }
+      : null;
+
+  // The measured differences from similar companies: only when the sector
+  // comparison itself qualifies, so these reads happen only then.
+  const own = metrics ? { revenueGrowth: metrics.revenueGrowth, ebitdaMargin: metrics.ebitdaMargin, netDebtToEbitda: metrics.netDebtToEbitda } : null;
+  const peerMetrics = sector ? await sectorPeerMetrics(secure, profitablePeers) : null;
 
   const releases: ReleaseDate[] = (relRes.data ?? []).map((r) => ({ release_date: String(r.release_date), timing: r.timing as ReleaseDate["timing"] }));
   const reactions = earningsReactions(releases, pricesAsc);
@@ -210,7 +243,7 @@ export async function loadScorecard(symbolRaw: string, opts: LoadOptions = {}): 
     today,
     companyData: status,
     metrics,
-    valuation: { pe, sector, market, fcfYield: pe?.current ? null : fcfYield, priceDate, filing },
+    valuation: { pe, sector, market, fcfYield: pe?.current ? null : fcfYield, priceDate, filing, ev: evInput, company: own, peerMetrics },
     dividend: {
       perShareTtm: snap?.dividends_per_share ?? null,
       price,
