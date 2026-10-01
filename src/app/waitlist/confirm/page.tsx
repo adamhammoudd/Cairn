@@ -107,7 +107,7 @@ export default async function ConfirmPage({
                 )}
 
                 <p className="mt-4 text-caption leading-[1.6] text-dim text-pretty">
-                  Nothing else to do now. We&apos;ll email this address once when access opens.
+                  Nothing else to do now. We invite people in batches, in the order they joined. You&apos;ll get an email with your personal link.
                 </p>
               </>
             )}
