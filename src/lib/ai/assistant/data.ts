@@ -25,6 +25,8 @@ import { isEstimatedEvent } from "@/lib/calendar";
 import { plainName } from "@/lib/ai/ticker-analysis";
 import { loadDailyBriefing } from "@/lib/daily-briefing-data";
 import { computeHoldingMetrics, computeTotals } from "@/lib/portfolio";
+import { loadCostFx } from "@/lib/market-data/fx-history";
+import type { DisplayPrefs } from "@/lib/display-prefs";
 import { getLatestCloses } from "@/lib/market-data/current-price";
 import { webSearch, type WebSearchResult } from "@/lib/ai/assistant/web-search";
 
@@ -175,8 +177,13 @@ function pctChange(from: number | undefined, to: number): number | null {
  * holdings are the signed-in user's own); public market tables are read with
  * the service role where migration 0053 closed them to signed-in reads.
  */
-export function liveAssistantData(opts: { supabase: SupabaseClient<Database>; userId: string }): AssistantData {
-  const { supabase, userId } = opts;
+export function liveAssistantData(opts: {
+  supabase: SupabaseClient<Database>;
+  userId: string;
+  /** The reader's display settings: with them, cost is converted at the purchase-date rate, as on the Portfolio page. */
+  prefs?: DisplayPrefs;
+}): AssistantData {
+  const { supabase, userId, prefs } = opts;
   const admin = createAdminClient();
 
   return {
@@ -429,7 +436,11 @@ export function liveAssistantData(opts: { supabase: SupabaseClient<Database>; us
       if (!holdings || holdings.length === 0) return null;
       const symbols = Array.from(new Set(holdings.map((h) => h.symbol)));
       const closes = await getLatestCloses(symbols, undefined, new Map(holdings.map((h) => [h.symbol, h.asset_type])));
-      const metrics = computeHoldingMetrics(holdings, closes);
+      // The same cost conversion as the Portfolio page (lib/fx-history.ts), so the
+      // gain the assistant states is the gain on screen. Cost and gain are "USD
+      // at today's rate" like value: the tool multiplies them by the display rate.
+      const costFx = prefs ? await loadCostFx(supabase, prefs, holdings.map((h) => h.purchase_date)) : null;
+      const metrics = computeHoldingMetrics(holdings, closes, costFx);
       const totals = computeTotals(metrics, closes);
       // The dashboard's own briefing: week change, scorecard levels and dates,
       // computed exactly as the reader sees them on Base Camp.
@@ -439,7 +450,7 @@ export function liveAssistantData(opts: { supabase: SupabaseClient<Database>; us
       for (const m of metrics) {
         const cur = bySymbol.get(m.symbol);
         const g = glance.get(m.symbol);
-        const cost = m.purchase_price * m.quantity;
+        const cost = m.costBasis;
         const next: PortfolioHoldingData = cur
           ? { ...cur, quantity: cur.quantity + m.quantity, valueUsd: cur.valueUsd === null || m.value === null ? null : cur.valueUsd + m.value, costBasisUsd: (cur.costBasisUsd ?? 0) + cost }
           : {

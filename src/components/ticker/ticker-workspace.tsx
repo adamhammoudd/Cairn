@@ -39,6 +39,12 @@ interface TickerWorkspaceProps {
   /** Quantity held and weighted average cost, for the mock subline. */
   heldQuantity: number | null;
   avgCost: number | null;
+  /**
+   * Total cost of the held lots, each converted at the rate on its purchase date
+   * (lib/fx-history.ts), in the same units as price x quantity. The position's
+   * gain is measured from this, not from avgCost x quantity.
+   */
+  gainCostBasis?: number | null;
   watchlists: { id: string; name: string; hasSymbol: boolean }[];
   /** Whether this reader may resolve reports; drives the moderation affordance. */
   canModerate?: boolean;
@@ -56,6 +62,7 @@ export function TickerWorkspace({
   discussion,
   heldQuantity,
   avgCost,
+  gainCostBasis = null,
   watchlists,
   canModerate = false,
   refreshRateSeconds = null,
@@ -117,6 +124,8 @@ export function TickerWorkspace({
 
   // The hero's position line: "You own 20 shares · €3,050" (feat/analysis-
   // summary-layout). The average cost stays on the Profile tab's position card.
+  // Unconverted fallback for a caller that does not pass the date-converted cost.
+  const gainBasis = gainCostBasis ?? (avgCost !== null && heldQuantity ? avgCost * heldQuantity : null);
   const unit = isCrypto ? data.symbol : heldQuantity === 1 ? "share" : "shares";
   const heroChips = heldQuantity
     ? [`You own ${formatQuantity(heldQuantity)} ${unit}${data.price === null ? "" : ` · ${userMoney(data.price * heldQuantity)}`}`]
@@ -449,11 +458,11 @@ export function TickerWorkspace({
               avgCostLabel={avgCost === null ? null : money(avgCost)}
               valueLabel={data.price === null ? "-" : userMoney(data.price * heldQuantity)}
               gain={
-                data.price === null || avgCost === null || avgCost === 0
+                data.price === null || gainBasis === null || gainBasis === 0
                   ? null
                   : {
-                      pct: ((data.price - avgCost) / avgCost) * 100,
-                      amountLabel: userMoney(Math.abs((data.price - avgCost) * heldQuantity)),
+                      pct: ((data.price * heldQuantity - gainBasis) / gainBasis) * 100,
+                      amountLabel: userMoney(Math.abs(data.price * heldQuantity - gainBasis)),
                     }
               }
             />

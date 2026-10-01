@@ -8,9 +8,11 @@ interface StatCardProps {
   delayMs?: number;
   /** Hairline colour across the card's top edge. Defaults to the tone's own. */
   accent?: string;
+  /** Extra lines under the sub-label (e.g. where a gain comes from). */
+  children?: React.ReactNode;
 }
 
-export function StatCard({ label, value, exact, sub, tone = "primary", delayMs = 0, accent }: StatCardProps) {
+export function StatCard({ label, value, exact, sub, tone = "primary", delayMs = 0, accent, children }: StatCardProps) {
   const color = tone === "positive" ? "text-accent" : tone === "negative" ? "text-negative" : "text-primary";
   const hairline =
     accent ??
@@ -38,6 +40,7 @@ export function StatCard({ label, value, exact, sub, tone = "primary", delayMs =
         {value}
       </div>
       {sub && <div className="text-caption text-muted">{sub}</div>}
+      {children}
     </div>
   );
 }

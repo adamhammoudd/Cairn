@@ -1,5 +1,6 @@
 import type { ChartView, Database } from "@/lib/supabase/types";
 import { formatChartLabel, isInstant } from "@/lib/chart-dates";
+import { costRatio, rateOn, type CostFx, type CostRate } from "@/lib/fx-history";
 
 /**
  * Holdings-table quantity display. Rounding a fractional crypto quantity to
@@ -22,26 +23,64 @@ export type PriceBar = Database["public"]["Tables"]["historical_prices"]["Row"];
 export interface HoldingMetrics extends Holding {
   currentPrice: number | null;
   value: number | null;
+  /** What was paid, in dollars (purchase_price x quantity), unconverted. */
+  costBasisUsd: number;
+  /**
+   * What the gain is measured from, in the same units as `value` ("USD at
+   * today's rate": x DisplayPrefs.fxRate is the display currency). Equals
+   * costBasisUsd for a USD reader; for anyone else it is the dollars paid
+   * converted at the rate on the PURCHASE DATE (lib/fx-history.ts), so the gain
+   * is what they actually made in their own money.
+   */
+  costBasis: number;
+  /** Whether costBasis used the purchase date's rate or fell back to today's. */
+  costRate: CostRate;
   gain: number | null;
   gainPct: number | null;
+  /** The asset's own move (value - costBasisUsd), at today's rate. Null when unpriced. */
+  priceGain: number | null;
+  /** What the exchange rate added since purchase (costBasisUsd - costBasis). Null when unpriced. */
+  fxGain: number | null;
   /** True when currentPrice fell back to a stale stored close - see getLatestCloses(). */
   priceStale: boolean;
   /** Date currentPrice is as of (bar date, or the live quote's own date). */
   priceAsOf: string | null;
 }
 
+/**
+ * Per-holding value, cost and gain. `costFx` is the reader's USD -> display
+ * currency history (loadCostFx); null for a USD reader, who is unchanged. With
+ * it, the cost is converted at the rate on each holding's purchase date and the
+ * gain is value today minus that cost - see lib/fx-history.ts.
+ */
 export function computeHoldingMetrics(
   holdings: Holding[],
   closes: Map<string, { latest: number | null; prev: number | null; stale?: boolean; asOf?: string | null }>,
+  costFx: CostFx | null = null,
 ): HoldingMetrics[] {
   return holdings.map((h) => {
     const close = closes.get(h.symbol);
     const currentPrice = close?.latest ?? null;
     const value = currentPrice !== null ? currentPrice * h.quantity : null;
-    const costBasis = h.purchase_price * h.quantity;
+    const costBasisUsd = h.purchase_price * h.quantity;
+    const { ratio, basis } = costRatio(costFx, h.purchase_date);
+    const costBasis = costBasisUsd * ratio;
     const gain = value !== null ? value - costBasis : null;
     const gainPct = value !== null && costBasis !== 0 ? (gain! / costBasis) * 100 : null;
-    return { ...h, currentPrice, value, gain, gainPct, priceStale: close?.stale ?? false, priceAsOf: close?.asOf ?? null };
+    return {
+      ...h,
+      currentPrice,
+      value,
+      costBasisUsd,
+      costBasis,
+      costRate: basis,
+      gain,
+      gainPct,
+      priceGain: value !== null ? value - costBasisUsd : null,
+      fxGain: value !== null ? costBasisUsd - costBasis : null,
+      priceStale: close?.stale ?? false,
+      priceAsOf: close?.asOf ?? null,
+    };
   });
 }
 
@@ -50,6 +89,14 @@ export interface PortfolioTotals {
   totalCostBasis: number;
   totalGain: number;
   totalGainPct: number;
+  /** Of totalGain: the assets' own moves, at today's rate. */
+  totalPriceGain: number;
+  /** Of totalGain: what the exchange rate added since each purchase. 0 for a USD reader. */
+  totalFxGain: number;
+  /** True when the cost was converted into a non-USD display currency (the split is meaningful). */
+  costConverted: boolean;
+  /** Holdings whose cost had to use today's rate - no rate held for the purchase date. */
+  costAtTodayRateCount: number;
   todayChangeValue: number;
   todayChangePct: number;
 }
@@ -76,10 +123,16 @@ export function computeTotals(
   let totalValue = 0;
   let totalCostBasis = 0;
   let prevTotalValue = 0;
+  let totalPriceGain = 0;
+  let totalFxGain = 0;
+  let costConverted = false;
+  let costAtTodayRateCount = 0;
 
   for (const m of metrics) {
-    const costBasis = m.purchase_price * m.quantity;
+    const costBasis = m.costBasis;
     totalCostBasis += costBasis;
+    if (m.costRate !== "same-currency") costConverted = true;
+    if (m.costRate === "today-rate") costAtTodayRateCount++;
 
     // No price: cost basis on both sides, so it adds 0 to gain and to the day
     // change. Not `prev` - a stranded prior close against a cost-basis value
@@ -90,6 +143,8 @@ export function computeTotals(
       continue;
     }
     totalValue += m.value;
+    totalPriceGain += m.priceGain ?? 0;
+    totalFxGain += m.fxGain ?? 0;
 
     const prev = closes.get(m.symbol)?.prev;
     // No prior close (e.g. a newly listed symbol): fall back to the current
@@ -103,7 +158,18 @@ export function computeTotals(
   const todayChangeValue = totalValue - prevTotalValue;
   const todayChangePct = prevTotalValue !== 0 ? (todayChangeValue / prevTotalValue) * 100 : 0;
 
-  return { totalValue, totalCostBasis, totalGain, totalGainPct, todayChangeValue, todayChangePct };
+  return {
+    totalValue,
+    totalCostBasis,
+    totalGain,
+    totalGainPct,
+    totalPriceGain,
+    totalFxGain,
+    costConverted,
+    costAtTodayRateCount,
+    todayChangeValue,
+    todayChangePct,
+  };
 }
 
 export interface AllocationSlice {
@@ -140,7 +206,7 @@ export function computeAllocation(
   let grandTotal = 0;
 
   for (const m of metrics) {
-    const value = m.value ?? m.purchase_price * m.quantity;
+    const value = m.value ?? m.costBasis;
     const fallback = groupBy === "asset_class" ? (ASSET_TYPE_CLASS_LABEL[m.asset_type] ?? null) : null;
     const key = (m[groupBy] as string | null) || fallback || "Unclassified";
     totals.set(key, (totals.get(key) ?? 0) + value);
@@ -167,7 +233,7 @@ export interface ConcentrationSummary {
 export function computeConcentration(metrics: HoldingMetrics[]): ConcentrationSummary | null {
   if (metrics.length === 0) return null;
   const priced = metrics
-    .map((m) => ({ symbol: m.symbol, value: m.value ?? m.purchase_price * m.quantity }))
+    .map((m) => ({ symbol: m.symbol, value: m.value ?? m.costBasis }))
     .sort((a, b) => b.value - a.value);
   const total = priced.reduce((sum, p) => sum + p.value, 0);
   if (total <= 0) return null;
@@ -229,7 +295,12 @@ export function timelineCoverage(
   };
 }
 
-export function computeTimelineSeries(holdings: Holding[], prices: PriceBar[], timeframe: ChartView): TimelinePoint[] {
+export function computeTimelineSeries(
+  holdings: Holding[],
+  prices: PriceBar[],
+  timeframe: ChartView,
+  costFx: CostFx | null = null,
+): TimelinePoint[] {
   if (holdings.length === 0) return [];
 
   const bySymbol = new Map<string, PriceBar[]>();
@@ -277,7 +348,14 @@ export function computeTimelineSeries(holdings: Holding[], prices: PriceBar[], t
         }
       }
 
-      return anyActive ? { date, value } : null;
+      // Each point is valued at the rate of ITS day, not today's: a euro reader's
+      // line from last December is what the position was worth in euros then.
+      // Carried in "USD at today's rate" units like every other figure, so the
+      // chart's formatter is unchanged and the last point equals Total value.
+      // A day with no rate held (older than the table) keeps today's rate.
+      const dayRate = costFx ? rateOn(costFx, date) : null;
+      const ratio = costFx && dayRate !== null && costFx.today > 0 ? dayRate / costFx.today : 1;
+      return anyActive ? { date, value: value * ratio } : null;
     })
     .filter((p): p is TimelinePoint => p !== null);
 }

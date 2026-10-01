@@ -147,7 +147,7 @@ export function HoldingModal({ holding, initialSymbol, onClose }: HoldingModalPr
             </Field>
             {/* Stored and priced as USD whatever the display currency - see the
                 open decision on per-holding currency (2026-09-26). */}
-            <Field label="Purchase price (USD)">
+            <Field label="Purchase price (USD)" hint="In the asset's own currency, not your display currency.">
               <input
                 name="purchase_price"
                 type="number"
@@ -162,7 +162,7 @@ export function HoldingModal({ holding, initialSymbol, onClose }: HoldingModalPr
             </Field>
           </div>
 
-          <Field label="Purchase date">
+          <Field label="Purchase date" hint="Your cost is converted to your display currency at the exchange rate on this date.">
             <input
               name="purchase_date"
               type="date"
@@ -231,11 +231,12 @@ export function HoldingModal({ holding, initialSymbol, onClose }: HoldingModalPr
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
     <label className="block">
       <span className={FIELD_LABEL}>{label}</span>
       {children}
+      {hint && <span className="mt-1 block text-caption text-dim">{hint}</span>}
     </label>
   );
 }

@@ -266,9 +266,15 @@ export function HoldingsTable({
                     </div>
                     <div
                       className="font-mono text-[12.5px] tabular-nums text-muted"
-                      title={fmtExact(m.purchase_price * m.quantity)}
+                      title={
+                        m.costRate === "today-rate"
+                          ? `${fmtExact(m.costBasis)} - converted at today's rate (no exchange rate held for the purchase date)`
+                          : m.costRate === "purchase-date"
+                            ? `${fmtExact(m.costBasis)} - converted at the rate on ${m.purchase_date}`
+                            : fmtExact(m.costBasis)
+                      }
                     >
-                      {fmtCurrency(m.purchase_price * m.quantity)}
+                      {fmtCurrency(m.costBasis)}
                     </div>
                     <div className="font-mono text-[12.5px] tabular-nums text-primary" title={fmtExact(m.value)}>
                       {fmtCurrency(m.value)}

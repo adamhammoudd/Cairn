@@ -55,6 +55,7 @@ import { runFrontDoorTokensSuite } from "./front-door-tokens";
 import { runPremiumAnalogsPrivateSuite } from "./premium-analogs-private";
 import { runAiMethodologyGapsSuite } from "./ai-methodology-gaps";
 import { runFxRatesSuite } from "./fx-rates";
+import { runCostBasisFxSuite } from "./cost-basis-fx";
 import { runBriefingOnOpenSuite } from "./briefing-on-open";
 import { runCalendarIngestSuite } from "./calendar-ingest";
 import { runSplitAdjustmentSuite } from "./split-adjustment";
@@ -136,6 +137,7 @@ async function main() {
     plainSummarySuites,
     aiMethodologyGapsSuites,
     fxRatesSuites,
+    costBasisFxSuites,
     portfolioHistorySuites,
     briefingOnOpenSuites,
     analysisTextSuites,
@@ -181,6 +183,7 @@ async function main() {
     guarded("Plain summary", async () => [await runPlainSummarySuite()]),
     guarded("AI methodology gaps", async () => [await runAiMethodologyGapsSuite()]),
     guarded("Display currency", async () => [await runFxRatesSuite()]),
+    guarded("Cost basis at the purchase-date rate", async () => [await runCostBasisFxSuite()]),
     guarded("Portfolio chart history read", async () => [await runPortfolioHistoryReadSuite()]),
     guarded("Daily briefing built on open", async () => [await runBriefingOnOpenSuite()]),
     guarded("Analysis text", async () => [await runAnalysisTextSuite()]),
@@ -267,6 +270,7 @@ async function main() {
     ...businessProfileSuites,
     ...nativeCurrencySuites,
     ...betaInvitesSuites,
+    ...costBasisFxSuites,
   ];
   const reportPath = writeReport(allSuites);
 

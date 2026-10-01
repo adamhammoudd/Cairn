@@ -836,6 +836,14 @@ export interface Database {
         Update: { sent?: number };
         Relationships: [];
       };
+      // ECB daily reference rates, units per 1 EUR (migration 0065). Public
+      // reference data: signed-in users read it, only the service role writes.
+      fx_rates_daily: {
+        Row: { date: string; currency: string; rate_per_eur: number };
+        Insert: { date: string; currency: string; rate_per_eur: number };
+        Update: { rate_per_eur?: number };
+        Relationships: [];
+      };
       // Pre-launch waitlist (migration 0033). Service-role only - RLS is on
       // with no policy, so the anon/authenticated clients never see this.
       waitlist: {
@@ -1351,6 +1359,12 @@ export interface Database {
       symbol_52w_range: {
         Args: Record<string, never>;
         Returns: { symbol: string; week52_high: number | null; week52_low: number | null }[];
+      };
+      // USD -> currency from the ECB daily rates, [date, rate] pairs in date
+      // order from the last publication on or before p_from (migration 0065).
+      fx_usd_cross_series: {
+        Args: { p_currency: string; p_from: string };
+        Returns: [string, number][];
       };
       recent_prices_all: {
         Args: { per_symbol?: number; asset_types?: string[] };

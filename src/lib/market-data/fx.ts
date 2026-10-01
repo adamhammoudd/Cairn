@@ -112,3 +112,41 @@ export async function fetchUsdRate(target: string, fetchImpl: FetchLike = fetch)
   if (rate === null || !Number.isFinite(rate) || rate <= 0) return null;
   return { rate, asOf: daily.date, source: "ECB" };
 }
+
+// ---------------------------------------------------------------- history
+//
+// The same ECB reference rates, as a daily history, for converting a cost at the
+// rate on its purchase date (lib/fx-history.ts, migration 0065 fx_rates_daily).
+// Same publisher, same file format, no new provider.
+
+/** The full history since 1999, and the last 90 days. Both are the ECB's own files. */
+export const ECB_HIST_URL = "https://www.ecb.europa.eu/stats/eurofxref/eurofxref-hist.xml";
+export const ECB_HIST_90D_URL = "https://www.ecb.europa.eu/stats/eurofxref/eurofxref-hist-90d.xml";
+
+/**
+ * Every publication in an ECB history file, reduced to the currencies Settings
+ * offers (plus USD, the cross leg). The full file is ~8 MB covering 30
+ * currencies; nothing else is stored. Oldest first.
+ */
+export function parseEcbHistory(xml: string): EcbDaily[] {
+  const keep = new Set<string>(["USD", ...SUPPORTED_CURRENCIES]);
+  const out: EcbDaily[] = [];
+  for (const day of xml.matchAll(/<Cube\s+time=['"](\d{4}-\d{2}-\d{2})['"]\s*>([\s\S]*?)<\/Cube>/g)) {
+    const perEur: Record<string, number> = { EUR: 1 };
+    for (const m of day[2].matchAll(/<Cube\s+currency=['"]([A-Z]{3})['"]\s+rate=['"]([0-9.]+)['"]/g)) {
+      const rate = Number(m[2]);
+      if (keep.has(m[1]) && Number.isFinite(rate) && rate > 0) perEur[m[1]] = rate;
+    }
+    if (perEur.USD) out.push({ date: day[1], perEur });
+  }
+  return out.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+}
+
+/** fx_rates_daily rows for a parsed history (EUR is the base, so it is not stored). */
+export function ecbHistoryRows(days: EcbDaily[]): { date: string; currency: string; rate_per_eur: number }[] {
+  return days.flatMap((d) =>
+    Object.entries(d.perEur)
+      .filter(([currency]) => currency !== "EUR")
+      .map(([currency, rate_per_eur]) => ({ date: d.date, currency, rate_per_eur })),
+  );
+}

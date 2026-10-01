@@ -8,6 +8,8 @@ import { DashboardHome } from "@/components/dashboard/dashboard-home";
 import { computeHoldingMetrics, computeTimelineSeries, computeTotals } from "@/lib/portfolio";
 import { getLatestCloses, latestDataDate } from "@/lib/market-data/current-price";
 import { readRecentPrices } from "@/lib/market-data/paged-read";
+import { getDisplayPrefs } from "@/lib/actions/display-prefs";
+import { loadCostFx } from "@/lib/market-data/fx-history";
 
 import { guardReads } from "@/components/data-unavailable";
 import { loadDailyBriefing } from "@/lib/daily-briefing-data";
@@ -89,7 +91,9 @@ async function DashboardBody(welcome: boolean) {
   // Portfolio page for why this can't be inferred from historical_prices bars.
   const assetTypeBySymbol = new Map(holdings.map((h) => [h.symbol, h.asset_type]));
   const closes = await getLatestCloses(symbols, undefined, assetTypeBySymbol);
-  const metrics = computeHoldingMetrics(holdings, closes);
+  // Same conversion as the Portfolio page: cost at the purchase-date rate, one query.
+  const costFx = await loadCostFx(supabase, await getDisplayPrefs(), holdings.map((h) => h.purchase_date));
+  const metrics = computeHoldingMetrics(holdings, closes, costFx);
   const totals = computeTotals(metrics, closes);
 
   // Same per-symbol window the Portfolio page uses, and the same timeframe, so
@@ -103,7 +107,7 @@ async function DashboardBody(welcome: boolean) {
   // ranges cost four passes over rows already in memory, not four queries.
   const portfolioSeries: Partial<Record<(typeof DASHBOARD_TIMEFRAMES)[number], { values: number[]; dates: string[] }>> = {};
   for (const timeframe of DASHBOARD_TIMEFRAMES) {
-    const points = computeTimelineSeries(holdings, priceRows, timeframe);
+    const points = computeTimelineSeries(holdings, priceRows, timeframe, costFx);
     if (points.length > 1) {
       portfolioSeries[timeframe] = {
         values: points.map((p) => p.value),

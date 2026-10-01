@@ -94,7 +94,7 @@ export async function POST(req: Request) {
         const result = await runAssistantTurn({
           message,
           history,
-          ctx: { data: liveAssistantData({ supabase, userId: user.id }), plan: plan === "premium" ? "premium" : "free", prefs, usePortfolio },
+          ctx: { data: liveAssistantData({ supabase, userId: user.id, prefs }), plan: plan === "premium" ? "premium" : "free", prefs, usePortfolio },
           onActivity: (label) => send({ t: "activity", label }),
         });
 
