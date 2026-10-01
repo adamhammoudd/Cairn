@@ -10,6 +10,9 @@ import { TickerWorkspace } from "@/components/ticker/ticker-workspace";
 import { guardReads } from "@/components/data-unavailable";
 import { loadAnalysisSummary } from "@/lib/analysis-summary";
 import { assetName } from "@/lib/asset-names";
+import { getDisplayPrefs } from "@/lib/actions/display-prefs";
+import { loadCostFx } from "@/lib/market-data/fx-history";
+import { costRatio } from "@/lib/fx-history";
 
 // A failed market-data read renders the panel instead of throwing into a
 // minified React error; anything else propagates as before.
@@ -99,7 +102,7 @@ async function TickerBody({ params }: { params: Promise<{ symbol: string }> }) {
     // "<name> · <held>" in the header. Filtered by user_id explicitly as a
     // second line of defence, matching every other holdings read in the app -
     // RLS is the backstop, not the only guard.
-    supabase.from("holdings").select("quantity, purchase_price").eq("symbol", data.symbol).eq("user_id", user.id),
+    supabase.from("holdings").select("quantity, purchase_price, purchase_date").eq("symbol", data.symbol).eq("user_id", user.id),
   ]);
 
   // The plain summary, scorecard, history and company numbers at the top of
@@ -116,6 +119,17 @@ async function TickerBody({ params }: { params: Promise<{ symbol: string }> }) {
     heldQuantity > 0
       ? held.reduce((sum, h) => sum + Number(h.quantity ?? 0) * Number(h.purchase_price ?? 0), 0) / heldQuantity
       : null;
+  // What this position's gain is measured from, in the Portfolio page's units:
+  // each lot's cost converted at the rate on ITS purchase date, so the gain here
+  // is the same figure the Portfolio page shows for these lots.
+  const costFx = held.length > 0 ? await loadCostFx(supabase, await getDisplayPrefs(), held.map((h) => h.purchase_date)) : null;
+  const gainCostBasis =
+    heldQuantity > 0
+      ? held.reduce(
+          (sum, h) => sum + Number(h.quantity ?? 0) * Number(h.purchase_price ?? 0) * costRatio(costFx, h.purchase_date).ratio,
+          0,
+        )
+      : null;
   const watchlists = watchlistRows.map((w) => ({
     id: w.id,
     name: w.name,
@@ -129,6 +143,7 @@ async function TickerBody({ params }: { params: Promise<{ symbol: string }> }) {
       discussion={discussion}
       heldQuantity={heldQuantity}
       avgCost={avgCost}
+      gainCostBasis={gainCostBasis}
       watchlists={watchlists}
       canModerate={profileRow.data?.role === "admin"}
       refreshRateSeconds={settingsRow.data?.refresh_rate_seconds ?? null}

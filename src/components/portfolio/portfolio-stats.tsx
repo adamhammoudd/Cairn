@@ -11,6 +11,7 @@ import {
   formatSignedUserMoney,
 } from "@/lib/display-prefs";
 import type { PortfolioTotals } from "@/lib/portfolio";
+import { gainSplit } from "@/lib/gain-split";
 
 // The four headline figures above the holdings table. Split out of the
 // (server) Portfolio page purely so they can read the display preferences:
@@ -30,6 +31,10 @@ export function PortfolioStats({
   refreshRateSeconds?: number | null;
 }) {
   const prefs = useDisplayPrefs();
+  // A reader whose display currency differs from the assets': the gain in their
+  // own money is the price move plus what the exchange rate did since each
+  // purchase, and the card says how much is which. Null (hidden) otherwise.
+  const split = gainSplit(totals, prefs, positions);
 
   return (
     <>
@@ -50,7 +55,21 @@ export function PortfolioStats({
         sub={`${formatPercent(totals.totalGainPct)} on cost`}
         tone={totals.totalGain >= 0 ? "positive" : "negative"}
         delayMs={50}
-      />
+      >
+        {split && (
+          <dl className="mt-0.5 flex flex-col gap-0.5 border-t border-[#232323] pt-1.5 text-caption text-muted" aria-label="Where the gain comes from">
+            <div className="flex justify-between gap-2">
+              <dt className="min-w-0">From the price</dt>
+              <dd className="shrink-0 whitespace-nowrap font-mono tabular-nums text-primary">{split.priceLabel.replace("From the price: ", "")}</dd>
+            </div>
+            <div className="flex justify-between gap-2">
+              <dt className="min-w-0">From the exchange rate</dt>
+              <dd className="shrink-0 whitespace-nowrap font-mono tabular-nums text-primary">{split.exchangeLabel.replace("From the exchange rate: ", "")}</dd>
+            </div>
+            {split.note && <div className="mt-0.5 text-micro text-dim">{split.note}</div>}
+          </dl>
+        )}
+      </StatCard>
       <StatCard
         label="Today"
         value={formatPercent(totals.todayChangePct)}

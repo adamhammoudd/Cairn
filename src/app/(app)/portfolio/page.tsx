@@ -12,6 +12,8 @@ import {
 } from "@/lib/portfolio";
 import { getLatestCloses, latestDataDate, groupBarsBySymbol } from "@/lib/market-data/current-price";
 import { readRecentPrices } from "@/lib/market-data/paged-read";
+import { getDisplayPrefs } from "@/lib/actions/display-prefs";
+import { loadCostFx } from "@/lib/market-data/fx-history";
 import type { ChartView } from "@/lib/supabase/types";
 import { PortfolioStats } from "@/components/portfolio/portfolio-stats";
 import { PortfolioChart } from "@/components/portfolio/portfolio-chart";
@@ -85,7 +87,10 @@ async function PortfolioBody() {
     getLatestCloses(symbols, undefined, assetTypeBySymbol),
     latestDataDate(symbols, barsBySymbol),
   ]);
-  const metrics = computeHoldingMetrics(rows, closes);
+  // The cost is converted at the rate on each purchase date, the chart at the
+  // rate of each day (lib/fx-history.ts); null for a USD reader. One query.
+  const costFx = await loadCostFx(supabase, await getDisplayPrefs(), rows.map((h) => h.purchase_date));
+  const metrics = computeHoldingMetrics(rows, closes, costFx);
   const totals = computeTotals(metrics, closes);
 
   // Which held symbols the line can actually plot - the chart names the rest
@@ -93,7 +98,7 @@ async function PortfolioBody() {
   const coverage = timelineCoverage(rows, priceRows);
 
   const seriesByTimeframe = Object.fromEntries(
-    TIMEFRAMES.map((tf) => [tf, computeTimelineSeries(rows, priceRows, tf)]),
+    TIMEFRAMES.map((tf) => [tf, computeTimelineSeries(rows, priceRows, tf, costFx)]),
   ) as Record<ChartView, ReturnType<typeof computeTimelineSeries>>;
 
   const allocationByDimension = {

@@ -206,6 +206,19 @@ export function formatSignedUserMoney(usd: number | null | undefined, prefs: Dis
   return `${usd >= 0 ? "+" : ""}${formatUserMoney(usd, prefs)}`;
 }
 
+/**
+ * A figure that is ALREADY in the display currency (not USD to convert), signed.
+ * For amounts built in the display currency, like the two parts of a gain that
+ * are rounded separately so that they sum.
+ */
+export function formatSignedDisplayMoney(
+  value: number | null | undefined,
+  prefs: Pick<DisplayPrefs, "effectiveCurrency">,
+): string {
+  if (value === null || value === undefined || !Number.isFinite(value)) return "-";
+  return `${value >= 0 ? "+" : ""}${currencyString(value, prefs.effectiveCurrency)}`;
+}
+
 /** An asset's move in money, signed, in its own currency. */
 export function formatSignedAssetMoney(value: number | null | undefined, assetCurrency: string | null): string {
   if (value === null || value === undefined || !Number.isFinite(value)) return "-";
