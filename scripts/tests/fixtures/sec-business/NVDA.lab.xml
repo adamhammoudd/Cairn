@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Trimmed label linkbase, accession 0001045810-26-000021: labels of the members above. -->
+<link:linkbase xmlns:link="http://www.xbrl.org/2003/linkbase" xmlns:xlink="http://www.w3.org/1999/xlink">
+<link:labelLink>
+<link:loc xlink:type="locator" xlink:label="loc_us-gaap_OperatingSegmentsMember" xlink:href="https://xbrl.fasb.org/us-gaap/2025/elts/us-gaap-2025.xsd#us-gaap_OperatingSegmentsMember"/>
+<link:loc xlink:type="locator" xlink:label="loc_nvda_ComputeMember" xlink:href="nvda-20260125.xsd#nvda_ComputeMember"/>
+<link:loc xlink:type="locator" xlink:label="loc_nvda_GamingMember" xlink:href="nvda-20260125.xsd#nvda_GamingMember"/>
+<link:loc xlink:type="locator" xlink:label="loc_nvda_AutomotiveMember" xlink:href="nvda-20260125.xsd#nvda_AutomotiveMember"/>
+<link:loc xlink:type="locator" xlink:label="loc_nvda_ChinaIncludingHongKongMember" xlink:href="nvda-20260125.xsd#nvda_ChinaIncludingHongKongMember"/>
+<link:loc xlink:type="locator" xlink:label="loc_nvda_DataCenterMember" xlink:href="nvda-20260125.xsd#nvda_DataCenterMember"/>
+<link:loc xlink:type="locator" xlink:label="loc_nvda_NetworkingMember" xlink:href="nvda-20260125.xsd#nvda_NetworkingMember"/>
+<link:loc xlink:type="locator" xlink:label="loc_nvda_ComputeAndNetworkingSegmentMember" xlink:href="nvda-20260125.xsd#nvda_ComputeAndNetworkingSegmentMember"/>
+<link:loc xlink:type="locator" xlink:label="loc_country_TW" xlink:href="https://xbrl.sec.gov/country/2025/country-2025.xsd#country_TW"/>
+<link:loc xlink:type="locator" xlink:label="loc_nvda_GraphicsSegmentMember" xlink:href="nvda-20260125.xsd#nvda_GraphicsSegmentMember"/>
+<link:loc xlink:type="locator" xlink:label="loc_country_US" xlink:href="https://xbrl.sec.gov/country/2025/country-2025.xsd#country_US"/>
+<link:loc xlink:type="locator" xlink:label="loc_nvda_OtherCountriesMember" xlink:href="nvda-20260125.xsd#nvda_OtherCountriesMember"/>
+<link:loc xlink:type="locator" xlink:label="loc_nvda_ProfessionalVisualizationMember" xlink:href="nvda-20260125.xsd#nvda_ProfessionalVisualizationMember"/>
+<link:loc xlink:type="locator" xlink:label="loc_nvda_OEMAndOtherMember" xlink:href="nvda-20260125.xsd#nvda_OEMAndOtherMember"/>
+<link:label id="lab_us-gaap_OperatingSegmentsMember_a6e49203-c4ff-44e4-b58b-f12b4327cc4f_terseLabel_en-US" xlink:label="lab_us-gaap_OperatingSegmentsMember" xlink:role="http://www.xbrl.org/2003/role/terseLabel" xlink:type="resource" xml:lang="en-US">Operating Segments</link:label>
+<link:label id="lab_us-gaap_OperatingSegmentsMember_label_en-US" xlink:label="lab_us-gaap_OperatingSegmentsMember" xlink:role="http://www.xbrl.org/2003/role/label" xlink:type="resource" xml:lang="en-US">Operating Segments [Member]</link:label>
+<link:label id="lab_nvda_ComputeMember_c0d1d9ee-4f80-4f22-9c46-87aa8245aa02_terseLabel_en-US" xlink:label="lab_nvda_ComputeMember" xlink:role="http://www.xbrl.org/2003/role/terseLabel" xlink:type="resource" xml:lang="en-US">Compute</link:label>
+<link:label id="lab_nvda_ComputeMember_label_en-US" xlink:label="lab_nvda_ComputeMember" xlink:role="http://www.xbrl.org/2003/role/label" xlink:type="resource" xml:lang="en-US">Compute [Member]</link:label>
+<link:label id="lab_nvda_GamingMember_a8325d0a-de22-423b-9e47-17358ff48354_terseLabel_en-US" xlink:label="lab_nvda_GamingMember" xlink:role="http://www.xbrl.org/2003/role/terseLabel" xlink:type="resource" xml:lang="en-US">Gaming</link:label>
+<link:label id="lab_nvda_GamingMember_label_en-US" xlink:label="lab_nvda_GamingMember" xlink:role="http://www.xbrl.org/2003/role/label" xlink:type="resource" xml:lang="en-US">Gaming [Member]</link:label>
+<link:label id="lab_nvda_AutomotiveMember_6e5f714f-8a2c-4552-ba64-218cf12fd445_terseLabel_en-US" xlink:label="lab_nvda_AutomotiveMember" xlink:role="http://www.xbrl.org/2003/role/terseLabel" xlink:type="resource" xml:lang="en-US">Automotive</link:label>
+<link:label id="lab_nvda_AutomotiveMember_label_en-US" xlink:label="lab_nvda_AutomotiveMember" xlink:role="http://www.xbrl.org/2003/role/label" xlink:type="resource" xml:lang="en-US">Automotive [Member]</link:label>
+<link:label id="lab_nvda_ChinaIncludingHongKongMember_e299f460-9302-4b77-92c4-a755ca05bd85_terseLabel_en-US" xlink:label="lab_nvda_ChinaIncludingHongKongMember" xlink:role="http://www.xbrl.org/2003/role/terseLabel" xlink:type="resource" xml:lang="en-US">China (including Hong Kong)</link:label>
+<link:label id="lab_nvda_ChinaIncludingHongKongMember_label_en-US" xlink:label="lab_nvda_ChinaIncludingHongKongMember" xlink:role="http://www.xbrl.org/2003/role/label" xlink:type="resource" xml:lang="en-US">China Including Hong Kong [Member]</link:label>
+<link:label id="lab_nvda_DataCenterMember_008e695f-79e7-462e-b086-6143e066ffda_terseLabel_en-US" xlink:label="lab_nvda_DataCenterMember" xlink:role="http://www.xbrl.org/2003/role/terseLabel" xlink:type="resource" xml:lang="en-US">Data Center</link:label>
+<link:label id="lab_nvda_DataCenterMember_label_en-US" xlink:label="lab_nvda_DataCenterMember" xlink:role="http://www.xbrl.org/2003/role/label" xlink:type="resource" xml:lang="en-US">Data Center [Member]</link:label>
+<link:label id="lab_nvda_NetworkingMember_5dfe1aa8-2313-45a3-a452-9c92598fd6ae_terseLabel_en-US" xlink:label="lab_nvda_NetworkingMember" xlink:role="http://www.xbrl.org/2003/role/terseLabel" xlink:type="resource" xml:lang="en-US">Networking</link:label>
+<link:label id="lab_nvda_NetworkingMember_label_en-US" xlink:label="lab_nvda_NetworkingMember" xlink:role="http://www.xbrl.org/2003/role/label" xlink:type="resource" xml:lang="en-US">Networking [Member]</link:label>
+<link:label id="lab_nvda_ComputeAndNetworkingSegmentMember_d8bee6b5-b91e-49d5-8797-b710030021e0_terseLabel_en-US" xlink:label="lab_nvda_ComputeAndNetworkingSegmentMember" xlink:role="http://www.xbrl.org/2003/role/terseLabel" xlink:type="resource" xml:lang="en-US">Compute &amp; Networking</link:label>
+<link:label id="lab_nvda_ComputeAndNetworkingSegmentMember_label_en-US" xlink:label="lab_nvda_ComputeAndNetworkingSegmentMember" xlink:role="http://www.xbrl.org/2003/role/label" xlink:type="resource" xml:lang="en-US">Compute And Networking Segment [Member]</link:label>
+<link:label id="lab_country_TW_da7924a1-25b4-4ae6-a87c-a5ec7c4bbeab_terseLabel_en-US" xlink:label="lab_country_TW" xlink:role="http://www.xbrl.org/2003/role/terseLabel" xlink:type="resource" xml:lang="en-US">Taiwan</link:label>
+<link:label id="lab_country_TW_label_en-US" xlink:label="lab_country_TW" xlink:role="http://www.xbrl.org/2003/role/label" xlink:type="resource" xml:lang="en-US">TAIWAN</link:label>
+<link:label id="lab_nvda_GraphicsSegmentMember_a4892925-dc4f-45b9-bb30-6e59136e4dea_terseLabel_en-US" xlink:label="lab_nvda_GraphicsSegmentMember" xlink:role="http://www.xbrl.org/2003/role/terseLabel" xlink:type="resource" xml:lang="en-US">Graphics</link:label>
+<link:label id="lab_nvda_GraphicsSegmentMember_label_en-US" xlink:label="lab_nvda_GraphicsSegmentMember" xlink:role="http://www.xbrl.org/2003/role/label" xlink:type="resource" xml:lang="en-US">Graphics Segment [Member]</link:label>
+<link:label id="lab_country_US_label_en-US" xlink:label="lab_country_US" xlink:role="http://www.xbrl.org/2003/role/label" xlink:type="resource" xml:lang="en-US">UNITED STATES</link:label>
+<link:label id="lab_nvda_OtherCountriesMember_e3ab64a3-d293-4246-8afe-bb0688f6a986_terseLabel_en-US" xlink:label="lab_nvda_OtherCountriesMember" xlink:role="http://www.xbrl.org/2003/role/terseLabel" xlink:type="resource" xml:lang="en-US">Other</link:label>
+<link:label id="lab_nvda_OtherCountriesMember_label_en-US" xlink:label="lab_nvda_OtherCountriesMember" xlink:role="http://www.xbrl.org/2003/role/label" xlink:type="resource" xml:lang="en-US">Other Countries [Member]</link:label>
+<link:label id="lab_nvda_ProfessionalVisualizationMember_c2939afe-f9c8-4f1f-afa5-f38635067fa7_terseLabel_en-US" xlink:label="lab_nvda_ProfessionalVisualizationMember" xlink:role="http://www.xbrl.org/2003/role/terseLabel" xlink:type="resource" xml:lang="en-US">Professional Visualization</link:label>
+<link:label id="lab_nvda_ProfessionalVisualizationMember_label_en-US" xlink:label="lab_nvda_ProfessionalVisualizationMember" xlink:role="http://www.xbrl.org/2003/role/label" xlink:type="resource" xml:lang="en-US">Professional Visualization [Member]</link:label>
+<link:label id="lab_nvda_OEMAndOtherMember_1a12c954-39f9-4228-88f3-17300d63aec8_terseLabel_en-US" xlink:label="lab_nvda_OEMAndOtherMember" xlink:role="http://www.xbrl.org/2003/role/terseLabel" xlink:type="resource" xml:lang="en-US">OEM and Other</link:label>
+<link:label id="lab_nvda_OEMAndOtherMember_label_en-US" xlink:label="lab_nvda_OEMAndOtherMember" xlink:role="http://www.xbrl.org/2003/role/label" xlink:type="resource" xml:lang="en-US">OEM and Other [Member]</link:label>
+<link:labelArc xlink:arcrole="http://www.xbrl.org/2003/arcrole/concept-label" xlink:from="loc_us-gaap_OperatingSegmentsMember" xlink:to="lab_us-gaap_OperatingSegmentsMember" xlink:type="arc" order="1"/>
+<link:labelArc xlink:arcrole="http://www.xbrl.org/2003/arcrole/concept-label" xlink:from="loc_nvda_ComputeMember" xlink:to="lab_nvda_ComputeMember" xlink:type="arc" order="1"/>
+<link:labelArc xlink:arcrole="http://www.xbrl.org/2003/arcrole/concept-label" xlink:from="loc_nvda_GamingMember" xlink:to="lab_nvda_GamingMember" xlink:type="arc" order="1"/>
+<link:labelArc xlink:arcrole="http://www.xbrl.org/2003/arcrole/concept-label" xlink:from="loc_nvda_AutomotiveMember" xlink:to="lab_nvda_AutomotiveMember" xlink:type="arc" order="1"/>
+<link:labelArc xlink:arcrole="http://www.xbrl.org/2003/arcrole/concept-label" xlink:from="loc_nvda_ChinaIncludingHongKongMember" xlink:to="lab_nvda_ChinaIncludingHongKongMember" xlink:type="arc" order="1"/>
+<link:labelArc xlink:arcrole="http://www.xbrl.org/2003/arcrole/concept-label" xlink:from="loc_nvda_DataCenterMember" xlink:to="lab_nvda_DataCenterMember" xlink:type="arc" order="1"/>
+<link:labelArc xlink:arcrole="http://www.xbrl.org/2003/arcrole/concept-label" xlink:from="loc_nvda_NetworkingMember" xlink:to="lab_nvda_NetworkingMember" xlink:type="arc" order="1"/>
+<link:labelArc xlink:arcrole="http://www.xbrl.org/2003/arcrole/concept-label" xlink:from="loc_nvda_ComputeAndNetworkingSegmentMember" xlink:to="lab_nvda_ComputeAndNetworkingSegmentMember" xlink:type="arc" order="1"/>
+<link:labelArc xlink:arcrole="http://www.xbrl.org/2003/arcrole/concept-label" xlink:from="loc_country_TW" xlink:to="lab_country_TW" xlink:type="arc" order="1"/>
+<link:labelArc xlink:arcrole="http://www.xbrl.org/2003/arcrole/concept-label" xlink:from="loc_nvda_GraphicsSegmentMember" xlink:to="lab_nvda_GraphicsSegmentMember" xlink:type="arc" order="1"/>
+<link:labelArc xlink:arcrole="http://www.xbrl.org/2003/arcrole/concept-label" xlink:from="loc_country_US" xlink:to="lab_country_US" xlink:type="arc" order="1"/>
+<link:labelArc xlink:arcrole="http://www.xbrl.org/2003/arcrole/concept-label" xlink:from="loc_nvda_OtherCountriesMember" xlink:to="lab_nvda_OtherCountriesMember" xlink:type="arc" order="1"/>
+<link:labelArc xlink:arcrole="http://www.xbrl.org/2003/arcrole/concept-label" xlink:from="loc_nvda_ProfessionalVisualizationMember" xlink:to="lab_nvda_ProfessionalVisualizationMember" xlink:type="arc" order="1"/>
+<link:labelArc xlink:arcrole="http://www.xbrl.org/2003/arcrole/concept-label" xlink:from="loc_nvda_OEMAndOtherMember" xlink:to="lab_nvda_OEMAndOtherMember" xlink:type="arc" order="1"/>
+</link:labelLink>
+</link:linkbase>

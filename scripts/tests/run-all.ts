@@ -20,6 +20,7 @@ import { runFactorAnalogsSuite } from "./factor-analogs";
 import { runDeepHistorySuite } from "./deep-history";
 import { runFundamentalsSuite } from "./fundamentals";
 import { runScorecardSuite } from "./scorecard";
+import { runBusinessProfileSuite } from "./business-profile";
 import { runHistoryPlainSuite } from "./history-plain";
 import { runExposureSuite } from "./exposure";
 import { runDailyBriefingSuite } from "./daily-briefing";
@@ -145,6 +146,7 @@ async function main() {
     analysisTitlesSuites,
     newsPaginationSuites,
     assistantTranscriptSuites,
+    businessProfileSuites,
     nativeCurrencySuites,
     betaInvitesSuites,
   ] = await Promise.all([
@@ -188,6 +190,7 @@ async function main() {
     guarded("Analysis titles", async () => [await runAnalysisTitlesSuite()]),
     guarded("News pagination", async () => [await runNewsPaginationSuite()]),
     guarded("Assistant transcripts", async () => [await runAssistantTranscriptsSuite()]),
+    guarded("Business profile", async () => [await runBusinessProfileSuite()]),
     guarded("Native currency", async () => [await runNativeCurrencySuite()]),
     guarded("Beta invites", async () => [await runBetaInvitesSuite()]),
   ]);
@@ -257,6 +260,7 @@ async function main() {
     ...analysisTitlesSuites,
     ...newsPaginationSuites,
     ...assistantTranscriptSuites,
+    ...businessProfileSuites,
     ...nativeCurrencySuites,
     ...betaInvitesSuites,
   ];
