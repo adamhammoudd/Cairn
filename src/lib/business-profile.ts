@@ -99,7 +99,7 @@ export function checkDescription(d: DescriptionText, inputs: DescriptionInputs):
 
 // ----------------------------------------------------------------- template
 
-const DESCRIBES = /\b(?:is\s+(?:a|an|the)|designs|develops|makes|manufactures|sells|provides|operates|offers|owns|builds|produces|markets|distributes)\b/i;
+const DESCRIBES = /\b(?:is\s+(?:a|an|the)|are\s+(?:a|an|the)|designs?|develops?|makes?|manufactures?|sells?|provides?|operates?|offers?|owns?|builds?|produces?|markets?|distributes?)\b/i;
 /** Longest quoted sentence: a 10-K opening sentence is often long, but not a page. */
 const MAX_QUOTE_WORDS = 60;
 
@@ -110,12 +110,19 @@ const MAX_QUOTE_WORDS = 60;
  */
 export function firstDescriptiveSentence(excerpt: string, name: string): string | null {
   const short = name.replace(/,?\s+(?:Inc|Corp|Corporation|Company|Co|Ltd|Holdings|Group|plc|N\.V|S\.A)\.?$/i, "").trim();
-  const nameRe = new RegExp(`\\b(?:${short.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}|we|the company|the corporation)\\b`, "i");
+  // The sentence must open with the company as its subject - its name, or
+  // "The Company". "Model 3 is a four-door sedan that we designed" (Tesla)
+  // and "In 2024, we launched..." (NVIDIA) are about a product or an event.
+  // No such sentence: no quote, and the page links the full text instead.
+  const nameRe = new RegExp(`^(?:the\\s+)?(?:${short.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}|company|corporation)\\b`, "i");
   for (const para of excerpt.split("\n")) {
     for (const s of sentences(para)) {
       const words = wordCount(s);
       if (words < 6 || words > MAX_QUOTE_WORDS) continue;
       if (!/[.!]$/.test(s) || /\b(?:refer to|see\s+(?:part|item|note)|forward-looking|incorporated by reference|unless (?:otherwise|the context))\b/i.test(s)) continue;
+      // The quote is held to the rules the model's text is: nothing about the
+      // future, no "leading/unique" marketing. None left: no quote at all.
+      if (FUTURE_CLAIM.test(s) || UNSOURCED_CLAIM.test(s)) continue;
       if (nameRe.test(s) && DESCRIBES.test(s)) return s;
     }
   }
