@@ -33,6 +33,8 @@ export interface WebSearchResult {
   summary: string;
   results: WebResultItem[];
   costUsd: number;
+  /** False when the call failed before any request was sent (provider off): not counted, not billed. */
+  sent?: boolean;
   error?: string;
 }
 
@@ -106,7 +108,7 @@ export function parseBraveSearch(json: Record<string, unknown>): WebResultItem[]
 export async function webSearch(query: string, fetchImpl: typeof fetch = fetch): Promise<WebSearchResult> {
   const provider = webSearchProvider();
   const q = clip(query, 200);
-  if (provider === "off") return { ok: false, provider, summary: "", results: [], costUsd: 0, error: "Web search is not switched on for Cairn yet." };
+  if (provider === "off") return { ok: false, provider, summary: "", results: [], costUsd: 0, sent: false, error: "Web search is not switched on for Cairn yet." };
   const key = process.env.WEB_SEARCH_API_KEY!;
   try {
     if (provider === "brave") {

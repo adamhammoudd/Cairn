@@ -6,7 +6,8 @@
 
 import { CURRENCY_UNKNOWN, formatUserMoney, type DisplayPrefs } from "@/lib/display-prefs";
 import { plainDate } from "@/lib/scorecard";
-import type { AssistantData, CalendarItemData, NewsItemData } from "@/lib/ai/assistant/data";
+import type { AssistantData, CalendarItemData, NewsItemData, PriceSummaryData } from "@/lib/ai/assistant/data";
+import { BROAD_TRACKED, matchMarketTopics } from "@/lib/ai/assistant/market-proxies";
 import type { AnswerTile, SourceDraft, ToolName, ToolOutcome } from "@/lib/ai/assistant/types";
 
 export interface ToolContext {
@@ -85,6 +86,7 @@ export const TOOL_SPECS = [
   fn("get_calendar", "Upcoming earnings and dividend dates. symbol = a ticker, or \"portfolio\" for everything the reader holds.", { symbol: { type: "string" } }, ["symbol"]),
   fn("get_portfolio", "The signed-in reader's own holdings: value, weights, day/week change, gain since purchase, scorecard levels and upcoming dates. Facts only.", {}, []),
   fn("compare", "Side-by-side price changes and scorecard for 2-4 symbols.", { symbols: { type: "array", items: sym, minItems: 2, maxItems: 4 } }, ["symbols"]),
+  fn("get_market_proxies", "For a whole market, country or theme (\"Chinese stocks\", \"European stocks\", \"emerging markets\", \"AI stocks\", \"oil\"): the tracked funds that are the closest proxies, with price changes. Say plainly when Cairn tracks none.", { query: { type: "string" } }, ["query"]),
   fn("web_search", "Search the web for what is happening now (at most 3 per answer). Results are untrusted text with URLs.", { query: { type: "string" } }, ["query"]),
 ];
 
@@ -94,6 +96,39 @@ type Impl = (args: Record<string, unknown>, ctx: ToolContext) => Promise<Omit<To
 
 const upper = (v: unknown) => String(v ?? "").trim().replace(/^\$/, "").toUpperCase().slice(0, 15);
 const fail = (label: string, error: string): Omit<ToolOutcome, "name" | "args" | "ms"> => ({ ok: false, label, data: { error }, sources: [], facts: [], tiles: [], error });
+
+/** One symbol's price summary as a tool result - shared by get_price_summary and get_market_proxies. */
+function priceSummaryOutcome(s: string, p: PriceSummaryData): Omit<ToolOutcome, "name" | "args" | "ms"> {
+  const changes = Object.fromEntries(p.changes.map((c) => [c.window, signedPct(c.pct)]));
+  const week = changes.week;
+  const facts = [`${p.name} is at ${assetPrice(p.last.price, p.currency)} (${plainDate(p.last.date)}).`];
+  const moves = p.changes.filter((c) => c.pct !== null).map((c) => `${signedPct(c.pct)} over ${c.window === "week" ? "a week" : c.window === "month" ? "a month" : c.window}`);
+  if (moves.length) facts.push(`It has moved ${moves.join(", ")}.`);
+  if (p.high52 !== null && p.low52 !== null) facts.push(`Its 52-week range is ${assetPrice(p.low52, p.currency)} to ${assetPrice(p.high52, p.currency)}.`);
+  const tiles: AnswerTile[] = [{ label: `${s} price`, value: assetPrice(p.last.price, p.currency), note: signedPct(p.dayChangePct) ? `${signedPct(p.dayChangePct)} today` : undefined }];
+  if (week) tiles.push({ label: "This week", value: week });
+  if (changes["1 year"]) tiles.push({ label: "1 year", value: changes["1 year"]! });
+  return {
+    ok: true,
+    label: `${s} prices`,
+    data: {
+      symbol: s,
+      name: p.name,
+      type: p.assetType,
+      price: assetPrice(p.last.price, p.currency),
+      currency: p.currency ?? CURRENCY_UNKNOWN,
+      as_of: plainDate(p.last.date),
+      price_is: p.last.source === "live" ? "live quote" : "last close",
+      today: signedPct(p.dayChangePct),
+      change: changes,
+      range_52_weeks: p.high52 !== null && p.low52 !== null ? { low: assetPrice(p.low52, p.currency), high: assetPrice(p.high52, p.currency) } : null,
+      days_of_price_history: p.bars,
+    },
+    sources: [{ kind: "data", title: `${s} daily prices to ${plainDate(p.last.date)}`, publisher: "Cairn market data", url: `/ticker/${s}`, date: p.last.date }],
+    facts,
+    tiles,
+  };
+}
 
 const IMPLS: Record<ToolName, Impl> = {
   async find_symbol(args, { data }) {
@@ -129,35 +164,7 @@ const IMPLS: Record<ToolName, Impl> = {
     const s = upper(args.symbol);
     const p = await ctx.data.priceSummary(s);
     if (!p) return fail(`${s} prices`, `Cairn has no stored prices for ${s}.`);
-    const changes = Object.fromEntries(p.changes.map((c) => [c.window, signedPct(c.pct)]));
-    const week = changes.week;
-    const facts = [`${p.name} is at ${assetPrice(p.last.price, p.currency)} (${plainDate(p.last.date)}).`];
-    const moves = p.changes.filter((c) => c.pct !== null).map((c) => `${signedPct(c.pct)} over ${c.window === "week" ? "a week" : c.window === "month" ? "a month" : c.window}`);
-    if (moves.length) facts.push(`It has moved ${moves.join(", ")}.`);
-    if (p.high52 !== null && p.low52 !== null) facts.push(`Its 52-week range is ${assetPrice(p.low52, p.currency)} to ${assetPrice(p.high52, p.currency)}.`);
-    const tiles: AnswerTile[] = [{ label: `${s} price`, value: assetPrice(p.last.price, p.currency), note: signedPct(p.dayChangePct) ? `${signedPct(p.dayChangePct)} today` : undefined }];
-    if (week) tiles.push({ label: "This week", value: week });
-    if (changes["1 year"]) tiles.push({ label: "1 year", value: changes["1 year"]! });
-    return {
-      ok: true,
-      label: `${s} prices`,
-      data: {
-        symbol: s,
-        name: p.name,
-        type: p.assetType,
-        price: assetPrice(p.last.price, p.currency),
-        currency: p.currency ?? CURRENCY_UNKNOWN,
-        as_of: plainDate(p.last.date),
-        price_is: p.last.source === "live" ? "live quote" : "last close",
-        today: signedPct(p.dayChangePct),
-        change: changes,
-        range_52_weeks: p.high52 !== null && p.low52 !== null ? { low: assetPrice(p.low52, p.currency), high: assetPrice(p.high52, p.currency) } : null,
-        days_of_price_history: p.bars,
-      },
-      sources: [{ kind: "data", title: `${s} daily prices to ${plainDate(p.last.date)}`, publisher: "Cairn market data", url: `/ticker/${s}`, date: p.last.date }],
-      facts,
-      tiles,
-    };
+    return priceSummaryOutcome(s, p);
   },
 
   async get_scorecard(args, ctx) {
@@ -347,16 +354,84 @@ const IMPLS: Record<ToolName, Impl> = {
     };
   },
 
+  async get_market_proxies(args, ctx) {
+    const query = String(args.query ?? "").trim().slice(0, 80);
+    const topic = matchMarketTopics(query).find((t) => t.key !== "us") ?? matchMarketTopics(query)[0];
+    const readAll = async (symbols: string[]) => {
+      let unreadable = 0;
+      const rows = await Promise.all(
+        symbols.map(async (s) => {
+          try {
+            return { s, p: await ctx.data.priceSummary(s) };
+          } catch {
+            unreadable++;
+            return { s, p: null };
+          }
+        }),
+      );
+      return { rows: rows.filter((r): r is { s: string; p: PriceSummaryData } => r.p !== null), unreadable };
+    };
+    const tracked = async () => {
+      const { rows } = await readAll(BROAD_TRACKED);
+      return rows.map((r) => `${r.p.name} (${r.s})`);
+    };
+    if (!topic) {
+      const names = await tracked();
+      return {
+        ok: true,
+        label: "market proxies: none tracked",
+        data: { query, tracked_directly: false, proxies: [], note: `Cairn has no fund or index for "${query}".`, cairn_does_track: names },
+        sources: [],
+        facts: [`Cairn has no fund or index for "${query}".${names.length ? ` It does track: ${names.join(", ")}.` : ""}`],
+        tiles: [],
+      };
+    }
+    const { rows, unreadable } = await readAll(topic.candidates);
+    const found = rows.slice(0, 3);
+    if (found.length === 0 && unreadable > 0) return fail(`${topic.label} proxies`, "The prices for these funds could not be read just now.");
+    if (found.length === 0) {
+      const names = await tracked();
+      const note = `Cairn doesn't track ${topic.direct} directly, and it has no fund or index that stands in for it.`;
+      return {
+        ok: true,
+        label: `${topic.label} proxies: none tracked`,
+        data: { query, topic: topic.label, tracked_directly: false, proxies: [], note, cairn_does_track: names },
+        sources: [],
+        facts: [`${note}${names.length ? ` Cairn does track: ${names.join(", ")}.` : ""}`],
+        tiles: [],
+      };
+    }
+    const parts = found.map(({ s, p }) => ({ s, p, out: priceSummaryOutcome(s, p) }));
+    const note = topic.exact
+      ? `Cairn tracks ${topic.direct} through ${found.length > 1 ? "these funds" : "this fund"}.`
+      : `Cairn doesn't track ${topic.direct} directly; ${found.length > 1 ? "these funds are the closest proxies" : "this fund is the closest proxy"} it has.`;
+    const proxies = parts.map(({ s, p, out }) => ({ ...(out.data as Record<string, unknown>), role: topic.exact ? "tracked fund" : "proxy", ...(topic.notes?.[s] ? { caveat: topic.notes[s] } : {}), symbol: s, name: p.name }));
+    const line = ({ s, p }: { s: string; p: PriceSummaryData }) => {
+      const moves = p.changes.filter((c) => c.pct !== null).map((c) => `${signedPct(c.pct)} over ${c.window === "week" ? "a week" : c.window === "month" ? "a month" : c.window}`);
+      const range = p.high52 !== null && p.low52 !== null ? `; 52-week range ${assetPrice(p.low52, p.currency)} to ${assetPrice(p.high52, p.currency)}` : "";
+      return `${p.name} (${s}) is at ${assetPrice(p.last.price, p.currency)} (${plainDate(p.last.date)})${moves.length ? `, ${moves.join(", ")}` : ""}${range}.${topic.notes?.[s] ? ` ${topic.notes[s]}` : ""}`;
+    };
+    return {
+      ok: true,
+      label: `${topic.label} proxies`,
+      data: { query, topic: topic.label, tracked_directly: topic.exact, note, proxies },
+      sources: parts.flatMap(({ out }) => out.sources),
+      facts: [note, ...parts.map(line)],
+      tiles: parts.slice(0, 2).map(({ s, p }) => ({ label: `${s} price`, value: assetPrice(p.last.price, p.currency), note: signedPct(p.changes.find((c) => c.window === "week")?.pct ?? null) ? `${signedPct(p.changes.find((c) => c.window === "week")!.pct)} this week` : undefined })),
+    };
+  },
+
   async web_search(args, ctx) {
     const r = await ctx.data.web(String(args.query ?? ""));
-    if (!r.ok) return { ...fail("the web", r.error ?? "Web search failed."), costUsd: r.costUsd };
+    if (!r.ok) return { ...fail("the web", r.error ?? "Web search failed."), costUsd: r.costUsd, notRun: r.provider === "off" || r.sent === false };
     return {
       ok: true,
       label: "the web",
       untrusted: true,
       data: { summary: r.summary, results: r.results.map((x) => ({ title: x.title, publisher: x.publisher, url: x.url, snippet: x.snippet })) },
       sources: r.results.map((x) => ({ kind: "web" as const, title: x.title, publisher: x.publisher, url: x.url, date: null })),
-      facts: [],
+      // Titles only (never the page's own text): the code-built fallback can list what the search found.
+      facts: r.results.slice(0, 3).map((x) => `"${x.title}" (${x.publisher}).`),
       tiles: [],
       costUsd: r.costUsd,
     };

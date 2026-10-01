@@ -14,6 +14,7 @@ export type ToolName =
   | "get_calendar"
   | "get_portfolio"
   | "compare"
+  | "get_market_proxies"
   | "web_search";
 
 /** One citable source. `n` is assigned in code, in the order sources first appear. */
@@ -51,6 +52,8 @@ export interface ToolOutcome {
   /** Up to a few headline figures, for the fallback answer's tiles. */
   tiles: AnswerTile[];
   ms: number;
+  /** The tool failed before it sent anything (web search switched off): nothing was spent, and it must not be counted or reported as a search. */
+  notRun?: boolean;
   /** Money spent by the tool itself (a paid web search), USD. */
   costUsd?: number;
   /** A stored analysis the tool reused, for the methodology card. */
