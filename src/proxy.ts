@@ -1,6 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { isInvitedSignup, isPublicPath } from "@/lib/public-paths";
+import { isInviteLinkRequest, isPublicPath } from "@/lib/public-paths";
 
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
@@ -41,13 +41,11 @@ export async function proxy(request: NextRequest) {
   // settings route. Committing it in that state would have shipped that to
   // production on the next deploy. Re-enabled deliberately; if you need the
   // app open locally, set a session rather than commenting this out again.
-  // Beta invites: /signup?invite=<code> opens sign-up for that link only
-  // (codes in BETA_INVITE_CODES; see lib/public-paths.ts).
-  const invited = isInvitedSignup(
-    request.nextUrl.pathname,
-    request.nextUrl.searchParams.get("invite"),
-    process.env.BETA_INVITE_CODES,
-  );
+  // Beta invites: /signup?invite=<code> reaches the signup page, which checks
+  // the code (personal invite in the database, or a BETA_INVITE_CODES manual
+  // override) and shows either the form or the "expired or already used"
+  // message. See lib/public-paths.ts. /signup without an invite stays gated.
+  const invited = isInviteLinkRequest(request.nextUrl.pathname, request.nextUrl.searchParams.get("invite"));
   if (!user && !isPublicPath(request.nextUrl.pathname) && !invited) {
     return NextResponse.redirect(new URL("/waitlist", request.url));
   }

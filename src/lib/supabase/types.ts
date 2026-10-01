@@ -870,6 +870,72 @@ export interface Database {
         };
         Relationships: [];
       };
+      // Personal single-use beta invites (migration 0064). Service-role only;
+      // token_hash is sha256(code), the code itself is never stored.
+      beta_invites: {
+        Row: {
+          id: number;
+          waitlist_id: number;
+          token_hash: string;
+          created_at: string;
+          emailed_at: string | null;
+          expires_at: string;
+          reminded_at: string | null;
+          emails_sent: number;
+          send_attempts: number;
+          last_send_error: string | null;
+          claim_started_at: string | null;
+          claimed_at: string | null;
+          claimed_by: string | null;
+          revoked_at: string | null;
+          source: "job" | "admin";
+        };
+        Insert: {
+          waitlist_id: number;
+          token_hash: string;
+          expires_at?: string;
+          source?: "job" | "admin";
+        };
+        Update: {
+          token_hash?: string;
+          emailed_at?: string | null;
+          expires_at?: string;
+          reminded_at?: string | null;
+          emails_sent?: number;
+          send_attempts?: number;
+          last_send_error?: string | null;
+          revoked_at?: string | null;
+        };
+        Relationships: [];
+      };
+      // One row per send-beta-invites run (migration 0064). Counts only.
+      beta_invite_runs: {
+        Row: { id: number; started_at: string; finished_at: string | null; outcome: string | null; detail: Record<string, unknown> };
+        Insert: never;
+        Update: { finished_at?: string; outcome?: string; detail?: Record<string, unknown> };
+        Relationships: [];
+      };
+      // Admin invite actions (migration 0064).
+      beta_invite_audit: {
+        Row: {
+          id: number;
+          at: string;
+          actor: string | null;
+          action: "send_now" | "revoke" | "resend";
+          invite_id: number | null;
+          waitlist_id: number | null;
+          outcome: string;
+        };
+        Insert: {
+          actor: string | null;
+          action: "send_now" | "revoke" | "resend";
+          invite_id?: number | null;
+          waitlist_id?: number | null;
+          outcome: string;
+        };
+        Update: never;
+        Relationships: [];
+      };
       // Everything Cairn has ever been asked about, and what came back -
       // the registry behind on-demand ingestion (migration 0027).
       symbol_profiles: {
@@ -1232,6 +1298,45 @@ export interface Database {
       record_email_send: {
         Args: { p_cap: number };
         Returns: boolean;
+      };
+      // Beta invites (migration 0064). All service-role only.
+      beta_invite_active_users: {
+        Args: { p_days?: number };
+        Returns: number;
+      };
+      beta_invite_next_in_line: {
+        Args: { p_limit: number };
+        Returns: { waitlist_id: number; email: string; waitlist_position: number | null; founding_member: boolean }[];
+      };
+      beta_invite_start_run: {
+        Args: Record<string, never>;
+        Returns: number | null;
+      };
+      beta_invite_begin_claim: {
+        Args: { p_token_hash: string; p_email: string };
+        Returns: { invite_id: number; email: string }[];
+      };
+      beta_invite_finish_claim: {
+        Args: { p_invite_id: number; p_user_id: string };
+        Returns: boolean;
+      };
+      beta_invite_abort_claim: {
+        Args: { p_invite_id: number };
+        Returns: undefined;
+      };
+      beta_invite_stats: {
+        Args: Record<string, never>;
+        Returns: {
+          confirmed_waitlist: number;
+          sent: number;
+          claimed: number;
+          expired: number;
+          revoked: number;
+          pending: number;
+          unsent: number;
+          outstanding: number;
+          active_users: number;
+        }[];
       };
     };
     Enums: Record<string, never>;

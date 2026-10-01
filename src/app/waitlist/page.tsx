@@ -278,7 +278,7 @@ export default async function WaitlistPage() {
             Be there when it opens
           </div>
           <h2 className="mx-auto mt-3.5 max-w-[620px] font-serif text-[clamp(28px,3.4vw,40px)] leading-[1.16] font-normal tracking-[-0.015em] text-primary">
-            One confirmation now. <span className="text-[#5ee6a6]">One launch email later.</span>
+            One confirmation now. <span className="text-[#5ee6a6]">Your invite when it&apos;s your turn.</span>
           </h2>
           <div className="mt-[26px]">
             <WaitlistForm centered foundingLimit={FOUNDING_LIMIT} />

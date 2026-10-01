@@ -23,6 +23,8 @@ import {
 
 interface DashboardHomeProps {
   today: string;
+  /** First landing after an invite sign-up (/?welcome=beta): shown above the page heading. */
+  welcome?: React.ReactNode;
   /** "What changed for what you own" (feat/daily-briefing); leads the page. */
   briefing?: Briefing | null;
   /** Long date for the briefing's eyebrow. */
@@ -143,6 +145,7 @@ function formatShortDate(iso: string): string {
 
 export function DashboardHome({
   today,
+  welcome = null,
   briefing = null,
   briefingDate = "",
   tickerItems,
@@ -587,6 +590,8 @@ export function DashboardHome({
           keeps its own width for the header and for the table-shaped pages
           that need it; this is Base Camp's column, not a global change. */}
       <div className="mx-auto w-full max-w-[1240px]">
+
+      {welcome}
 
       <div className="mb-5.5 flex flex-wrap items-end justify-between gap-4">
         <div>

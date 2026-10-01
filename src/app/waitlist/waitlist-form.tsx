@@ -30,6 +30,10 @@ function Confirmed({ title, children }: { title: string; children: React.ReactNo
   );
 }
 
+// What happens after confirming. Invites go out in waitlist order from the
+// send-beta-invites job (src/lib/beta-invites); nothing here promises instant access.
+const NEXT_STEP = "We invite people in batches, in the order they joined. You'll get an email with your personal link.";
+
 export function WaitlistForm({
   centered = false,
   foundingLimit,
@@ -68,7 +72,7 @@ export function WaitlistForm({
             : "We've sent a confirmation link to "}
           <span className="text-primary">{state.email}</span>. Your place is held once you click it.
           If you&apos;re among the first {foundingLimit} to confirm, that click is what locks the founding-member
-          2&nbsp;months of Premium to this address.
+          2&nbsp;months of Premium to this address. {NEXT_STEP}
         </Confirmed>
         {!state.emailDelivered && (
           <p className="mt-2.5 rounded-[9px] border border-warning/40 bg-warning/8 px-2.5 py-2 text-caption leading-[1.5] text-warning text-pretty">
@@ -91,9 +95,8 @@ export function WaitlistForm({
                 ? "As a founding member, your first 2 months of Premium are free - they start the day your access begins at launch, not today."
                 : `You'll get standard access when Cairn launches; the ${foundingLimit} founding-member places were already taken.`}
             </>
-          ) : (
-            "We'll email you when your access is ready."
-          )}
+          ) : null}{" "}
+          {NEXT_STEP}
         </Confirmed>
       </div>
     );
@@ -136,7 +139,7 @@ export function WaitlistForm({
           centered ? "mx-auto max-w-[440px]" : "max-w-[460px]"
         }`}
       >
-        No spam, no newsletter - one confirmation email now and one launch email later.
+        No spam, no newsletter - one confirmation email now, then your invite when your turn comes (and at most one reminder).
         {centered ? " " : " We store your email plus basic anti-abuse data (IP, browser). "}
         <Link
           href="/privacy"
