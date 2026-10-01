@@ -4,39 +4,40 @@ import { useActionState, useState } from "react";
 import Link from "next/link";
 import { useFormStatus } from "react-dom";
 import { joinWaitlist, type JoinState } from "@/lib/actions/waitlist";
+import { BUTTON_PRIMARY, EYEBROW, INPUT, INPUT_LABEL, TEXT_LINK } from "@/components/front-door/styles";
 
 const JOIN_IDLE: JoinState = { status: "idle" };
+
+const NEXT_STEP = "We invite people in batches, in the order they joined. You'll get an email with your personal link.";
 
 function SubmitButton() {
   const { pending } = useFormStatus();
   return (
-    <button
-      type="submit"
-      disabled={pending}
-      className="flex-none rounded-xl bg-[#2fc685] px-6 py-3.5 text-lead font-bold text-[#07120d] transition-[background,transform] duration-200 hover:-translate-y-0.5 hover:bg-[#5ee6a6] disabled:opacity-60 disabled:hover:translate-y-0 disabled:hover:bg-[#2fc685]"
-      style={{ boxShadow: "0 8px 26px rgba(47,198,133,.22)" }}
-    >
+    <button type="submit" disabled={pending} className={`${BUTTON_PRIMARY} w-full`}>
       {pending ? "Joining…" : "Join the waitlist"}
     </button>
   );
 }
 
-function Confirmed({ title, children }: { title: string; children: React.ReactNode }) {
+function Heading({ eyebrow, title }: { eyebrow: string; title: string }) {
   return (
-    <div className="rounded-xl border border-[rgba(47,198,133,0.4)] bg-[rgba(47,198,133,0.06)] px-4 py-4">
-      <p className="font-serif text-[18px] leading-[1.35] text-primary">{title}</p>
-      <p className="mt-1.5 text-body leading-[1.6] text-[#9a9a9a] text-pretty">{children}</p>
+    <div className="mb-3 flex flex-col gap-2">
+      <span className={EYEBROW}>{eyebrow}</span>
+      <h2 className="font-serif text-h1 font-normal text-primary">{title}</h2>
     </div>
   );
 }
 
+const BODY = "text-lead leading-relaxed text-muted text-pretty";
+
+/** Lives inside the page's AuthCard - the same card the sign-in and invite pages use. */
 export function WaitlistForm({
-  centered = false,
   foundingLimit,
+  slotsRemaining,
 }: {
-  centered?: boolean;
   // Passed in from the page: FOUNDING_LIMIT lives in a server-only module.
   foundingLimit: number;
+  slotsRemaining: number | null;
 }) {
   const [state, formAction] = useActionState<JoinState, FormData>(joinWaitlist, JOIN_IDLE);
   // Controlled so a rejected submission (invalid address, rate-limited) keeps
@@ -57,21 +58,19 @@ export function WaitlistForm({
     formAction(formData);
   };
 
-  const align = centered ? "mx-auto max-w-[440px] text-center" : "";
-
   if (state.status === "pending") {
     return (
-      <div className={align}>
-        <Confirmed title="Check your inbox">
-          {state.resent
-            ? "We've re-sent a confirmation link to "
-            : "We've sent a confirmation link to "}
-          <span className="text-primary">{state.email}</span>. Your place is held once you click it.
-          If you&apos;re among the first {foundingLimit} to confirm, that click is what locks the founding-member
-          2&nbsp;months of Premium to this address.
-        </Confirmed>
+      <div role="status">
+        <Heading eyebrow="Almost there" title="Check your inbox" />
+        <p className={BODY}>
+          {state.resent ? "We've re-sent a confirmation link to " : "We've sent a confirmation link to "}
+          <span className="text-primary">{state.email}</span>. Your place is held once you click it. If
+          you&apos;re among the first {foundingLimit} to confirm, that click is what locks the
+          founding-member 2&nbsp;months of Premium to this address.
+        </p>
+        <p className={`mt-3 ${BODY}`}>{NEXT_STEP}</p>
         {!state.emailDelivered && (
-          <p className="mt-2.5 rounded-[9px] border border-warning/40 bg-warning/8 px-2.5 py-2 text-caption leading-[1.5] text-warning text-pretty">
+          <p className="mt-4 rounded-panel border border-warning/40 bg-warning/8 px-3 py-2.5 text-caption leading-relaxed text-warning text-pretty">
             Email delivery isn&apos;t configured on this environment, so the link was written to the
             server log instead of sent. This must be set up before the page goes live.
           </p>
@@ -82,8 +81,9 @@ export function WaitlistForm({
 
   if (state.status === "already-confirmed") {
     return (
-      <div className={align}>
-        <Confirmed title="You're already on the list">
+      <div role="status">
+        <Heading eyebrow="Waitlist" title="You're already on the list" />
+        <p className={BODY}>
           {state.position !== null ? (
             <>
               You&apos;re <span className="text-primary">#{state.position}</span>.{" "}
@@ -94,54 +94,62 @@ export function WaitlistForm({
           ) : (
             "We'll email you when your access is ready."
           )}
-        </Confirmed>
+        </p>
+        <p className={`mt-3 ${BODY}`}>{NEXT_STEP}</p>
       </div>
     );
   }
 
   return (
-    <div className={centered ? "mx-auto max-w-[520px]" : "max-w-[520px]"}>
+    <div>
+      <Heading eyebrow="Early access" title="Get your place in line." />
+      <p className={`mb-6 ${BODY}`}>
+        Confirm your email and we add you to the list. {NEXT_STEP}
+      </p>
+
       <form action={submit} noValidate>
-        <label htmlFor={`wl-email${centered ? "-2" : ""}`} className="sr-only">
-          Email address
+        <label htmlFor="waitlist-email" className={INPUT_LABEL}>
+          Email
         </label>
-        <div className={`flex flex-wrap gap-2.5 ${centered ? "justify-center" : ""}`}>
-          <input
-            id={`wl-email${centered ? "-2" : ""}`}
-            name="email"
-            type="email"
-            autoComplete="email"
-            required
-            placeholder="you@email.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            aria-describedby={state.status === "error" ? "wl-error" : undefined}
-            className="min-w-0 flex-[1_1_240px] rounded-xl border border-[#2a2a2a] bg-[#0d0d0d] px-4 py-3.5 text-lead text-primary transition-[border-color,box-shadow] duration-200 outline-none placeholder:text-dim focus:border-[#2fc685] focus:shadow-[0_0_0_3px_rgba(47,198,133,0.14)]"
-          />
+        <input
+          id="waitlist-email"
+          name="email"
+          type="email"
+          autoComplete="email"
+          required
+          placeholder="you@example.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          aria-describedby={state.status === "error" ? "waitlist-error" : undefined}
+          className={INPUT}
+        />
+        {state.status === "error" && (
+          <p
+            id="waitlist-error"
+            role="alert"
+            className="mt-3 rounded-panel border border-warning/40 bg-warning/8 px-3 py-2.5 text-body text-warning"
+          >
+            {state.message}
+          </p>
+        )}
+        <div className="mt-4">
           <SubmitButton />
         </div>
       </form>
 
-      {state.status === "error" && (
-        <p
-          id="wl-error"
-          className="mt-2.5 rounded-xl border border-warning/40 bg-warning/8 px-3 py-2.5 text-body text-warning"
-        >
-          {state.message}
+      {slotsRemaining !== null && (
+        <p className="mt-4 flex items-baseline justify-between gap-3 border-t border-line-soft pt-4 text-body">
+          <span className="text-muted">Founding places left</span>
+          <span className="font-mono text-primary">
+            {Math.max(0, slotsRemaining)} of {foundingLimit}
+          </span>
         </p>
       )}
 
-      <p
-        className={`mt-[11px] text-caption leading-[1.6] text-dim text-pretty ${
-          centered ? "mx-auto max-w-[440px]" : "max-w-[460px]"
-        }`}
-      >
-        No spam, no newsletter - one confirmation email now and one launch email later.
-        {centered ? " " : " We store your email plus basic anti-abuse data (IP, browser). "}
-        <Link
-          href="/privacy"
-          className="text-[#8a8a8a] underline underline-offset-[3px] hover:text-[#5ee6a6]"
-        >
+      <p className="mt-4 text-caption leading-relaxed text-muted text-pretty">
+        One email to confirm, then one when your invite is ready. No newsletter. We store your email
+        plus basic anti-abuse data (IP, browser).{" "}
+        <Link href="/privacy" className={TEXT_LINK}>
           Privacy Policy
         </Link>
       </p>

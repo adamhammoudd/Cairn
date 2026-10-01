@@ -1,121 +1,26 @@
-"use client";
+import { betaPremiumUntil, formatBetaUntil } from "@/lib/billing";
+import { inviteAllowed } from "@/lib/public-paths";
+import { InviteInvalid } from "./invite-invalid";
+import { SignupForm } from "./signup-form";
 
-import { Suspense, useActionState, useState } from "react";
-import { useSearchParams } from "next/navigation";
-import Link from "next/link";
-import { signUp } from "@/lib/actions/auth";
-import { Field } from "@/components/auth/field";
-import { SubmitButton } from "@/components/auth/submit-button";
-import { AuthError, AuthFooter, AuthHeader } from "@/components/auth/auth-chrome";
-import { CAPTCHA_ENABLED, Captcha } from "@/components/auth/captcha";
+// Beta sign-up is invite-only: /signup?invite=<code>. The proxy keeps /signup
+// closed without a valid code, and signUp() re-checks it; this page only
+// decides what to show for the value it was given:
+//   - a valid code: the sign-up form, inside the same card as /waitlist
+//   - anything else (reachable when signed in, or if a code is withdrawn
+//     between the link and the visit): "This invite can't be used", with a way
+//     back to the waitlist - never a blank page.
+// SignupForm takes `invitedEmail` for a personal invite that is tied to one
+// address; nothing on this branch issues those yet, so it is always null here.
 
-// Beta sign-up is invite-only: the invite code from the link (/signup?invite=)
-// travels with the form so the server action can check it again.
-function InviteField() {
-  const invite = useSearchParams().get("invite") ?? "";
-  return <input type="hidden" name="invite" value={invite} />;
-}
+export const dynamic = "force-dynamic";
 
-export default function SignupPage() {
-  const [error, formAction] = useActionState(signUp, null);
-  // Controlled so a rejected sign-up (email already taken, weak password)
-  // keeps the name and email the user already typed. Password stays
-  // uncontrolled - never in React state.
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  // The submit button stays disabled until this is checked - the consent is
-  // gated before the request, not validated after it. signUp() re-checks it
-  // server-side and records the consent (src/lib/actions/auth.ts).
-  const [agreed, setAgreed] = useState(false);
-  const [captchaDone, setCaptchaDone] = useState(!CAPTCHA_ENABLED);
+export default async function SignupPage({ searchParams }: { searchParams: Promise<{ invite?: string | string[] }> }) {
+  const raw = (await searchParams).invite;
+  const invite = (Array.isArray(raw) ? raw[0] : raw) ?? "";
 
-  return (
-    <>
-      <AuthHeader eyebrow="Account" title="Create your account" blurb="Free to start - no card required." />
+  if (!inviteAllowed(invite, process.env.BETA_INVITE_CODES)) return <InviteInvalid />;
 
-      {error && <AuthError>{error}</AuthError>}
-
-      <form action={formAction}>
-        <Suspense fallback={null}>
-          <InviteField />
-        </Suspense>
-        <Field
-          id="name"
-          name="name"
-          type="text"
-          label="Name"
-          placeholder="Jordan Reyes"
-          required
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
-        <Field
-          id="email"
-          name="email"
-          type="email"
-          label="Email"
-          placeholder="you@example.com"
-          required
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-        <Field
-          id="password"
-          name="password"
-          type="password"
-          label="Password"
-          placeholder="••••••••"
-          required
-          minLength={8}
-        />
-        <div className="mt-4 flex items-start gap-2.5">
-          <input
-            id="consent"
-            name="consent"
-            type="checkbox"
-            required
-            checked={agreed}
-            onChange={(e) => setAgreed(e.target.checked)}
-            className="mt-0.5 size-4 shrink-0 accent-accent"
-          />
-          <label htmlFor="consent" className="text-body leading-[1.5] text-muted">
-            I am 18 or older and agree to the{" "}
-            <Link
-              href="/terms"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-accent underline underline-offset-2 hover:text-accent-light"
-            >
-              Terms of Service
-            </Link>{" "}
-            and{" "}
-            <Link
-              href="/privacy"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-accent underline underline-offset-2 hover:text-accent-light"
-            >
-              Privacy Policy
-            </Link>
-            .
-          </label>
-        </div>
-
-        <Captcha onTokenChange={(token) => setCaptchaDone(!CAPTCHA_ENABLED || token !== "")} />
-
-        <div className="mt-5">
-          <SubmitButton disabled={!agreed || !captchaDone}>Create account</SubmitButton>
-        </div>
-      </form>
-
-      <p className="mt-5 text-center text-body text-muted">
-        Already have an account?{" "}
-        <Link href="/login" className="text-accent transition-colors duration-base ease-standard hover:text-accent-light">
-          Sign in
-        </Link>
-      </p>
-
-      <AuthFooter />
-    </>
-  );
+  const until = betaPremiumUntil();
+  return <SignupForm invite={invite} invitedEmail={null} betaUntil={until ? formatBetaUntil(until) : null} />;
 }

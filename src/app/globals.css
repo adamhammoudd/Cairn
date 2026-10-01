@@ -132,6 +132,17 @@
   --text-display: 34px;
   --text-display--line-height: 1.1;
 
+  /* Marketing headlines only (/welcome, /waitlist). The app tops out at
+     display; the front door's h1 needs more. Two steps, not a second scale:
+     `hero` is fluid between the tablet (48px at 640) and desktop (58px from
+     1280) sizes in the design, `hero-sm` is the phone headline. */
+  --text-hero: clamp(48px, 41.3px + 1.304vw, 58px);
+  --text-hero--line-height: 1.08;
+  --text-hero--letter-spacing: -0.02em;
+  --text-hero-sm: 40px;
+  --text-hero-sm--line-height: 1.1;
+  --text-hero-sm--letter-spacing: -0.02em;
+
   /* -- Radius ---------------------------------------------------------------
      Five steps, keyed to what the shape *is*. Deliberately not an override of
      Tailwind's rounded-sm/md/lg, so a stray default utility stays visibly
@@ -329,6 +340,22 @@ main:has(.cn-ticker-band) > .cn-currency-note {
     animation: none !important;
     transform: translateX(0) !important;
   }
+}
+
+/* The accent glow at the top of the auth card and the front door's closing
+   band - one definition, so the front door and the sign-in card cannot drift.
+   Sits behind the content: give the content `relative`. */
+.cn-accent-glow {
+  position: relative;
+  isolation: isolate;
+}
+.cn-accent-glow::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(420px 160px at 50% 0%, color-mix(in srgb, var(--color-accent) 12%, transparent), transparent 70%);
 }
 
 html {
