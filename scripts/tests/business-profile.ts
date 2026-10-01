@@ -157,6 +157,22 @@ export async function runBusinessProfileSuite(): Promise<SuiteResult> {
     check("Template passes the scope guard", checkScopeGuard(`${t.oneLiner} ${t.paragraph}`).passed, "scope guard");
     const empty = await generateDescription({ ...KO, excerpt: "" }, async () => good);
     check("No stored Item 1 text: the template, flagged no_source, and the model is not asked", empty.source === "template" && empty.failure === "no_source", String(empty.failure));
+    {
+      const text =
+        "Model 3 is a four-door mid-size sedan that we designed for manufacturability with a base price for mass-market appeal. In 2024, we launched a new energy storage product for utilities. Tesla designs, develops, manufactures and sells electric vehicles and energy storage products.";
+      const picked = firstDescriptiveSentence(text, "Tesla, Inc.");
+      check(
+        "firstDescriptiveSentence wants the company as the subject: a product sentence and 'In 2024, we launched...' are skipped",
+        picked === "Tesla designs, develops, manufactures and sells electric vehicles and energy storage products.",
+        String(picked),
+      );
+      check(
+        "A quote about plans or in marketing words is skipped; none left means no quote",
+        firstDescriptiveSentence("Acme Corp is the leading maker of widgets in the world. Acme Corp will expand into gadgets next year.", "Acme Corp") === null &&
+          /did not open with a short self-description/.test(templateDescription({ name: "Acme Corp", sicDescription: null, excerpt: "Acme Corp is the leading maker of widgets in the world." }).paragraph),
+        "null",
+      );
+    }
     check(
       "firstDescriptiveSentence skips cross-references and boilerplate",
       firstDescriptiveSentence("Unless the context otherwise requires, we refer to Acme Inc. as the Company. See Part II, Item 7 for more. Acme makes widgets for hospitals and clinics in the US.", "Acme Inc.") === "Acme makes widgets for hospitals and clinics in the US.",
