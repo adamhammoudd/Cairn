@@ -28,6 +28,7 @@ export async function addWatchlistItem(_prevState: string | null, formData: Form
     sort_order: list.items.length,
     latestClose: 100,
     asOf: "2026-09-25",
+    currency: "USD",
     changePct: 1,
     sparkline: [],
   });

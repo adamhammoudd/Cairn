@@ -6,7 +6,7 @@ import { createCheckoutSession, createPortalSession } from "@/lib/actions/checko
 import { TIER_LIMITS, BETA_CHAT_DAILY_CAP } from "@/lib/billing";
 import { nextResetLabel } from "@/lib/chat-state";
 import { useDisplayPrefs } from "@/components/display-prefs-provider";
-import { formatMoney } from "@/lib/display-prefs";
+import { formatUserMoney } from "@/lib/display-prefs";
 import { BetaNote } from "@/components/billing/beta-note";
 
 // Settings > Billing, transcribed from Cairn Settings.dc.html: a plan card
@@ -101,7 +101,7 @@ export function BillingSettingsPanel({ detail }: { detail: BillingDetail }) {
                       figure in the app (Stripe's own price isn't shown here at
                       all, precisely to avoid a mismatch - $0 is the one figure
                       safe to render locally since 0 converts to 0 in any currency). */}
-                  <span className="text-body text-muted">{betaUntil ? "free during the beta" : premium ? "billed monthly" : formatMoney(0, prefs)}</span>
+                  <span className="text-body text-muted">{betaUntil ? "free during the beta" : premium ? "billed monthly" : formatUserMoney(0, prefs)}</span>
                 </div>
                 <p className="mt-2.5 max-w-[380px] text-body leading-[1.55] text-muted text-pretty">
                   {premium

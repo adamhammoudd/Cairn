@@ -1,5 +1,6 @@
 // The Display settings, resolved once per request and shared by every surface
-// that renders money or a change figure.
+// that renders money or a change figure - and the money formatters, split into
+// asset money (never converted) and the reader's own money (converted).
 //
 // Before this module, five of the eight Display controls were write-only:
 // `default_chart_view`, `currency`, `metric_style`, `compact_mode` and
@@ -55,24 +56,63 @@ export const DEFAULT_DISPLAY_PREFS: DisplayPrefs = {
   defaultChartView: "1D",
 };
 
+// ------------------------------------------------------------------ money
+//
+// Two kinds of money, two formatters (feat/native-currency):
+//
+//  - ASSET money - anything that describes a share, fund or coin: its price,
+//    chart, 52-week range, market cap, screener and market lists, alert
+//    thresholds, analysis figures. Shown in the asset's OWN currency and never
+//    converted, like Yahoo Finance and TradingView. Converting NVIDIA's price
+//    at today's ECB rate mixes the stock's move with the currency's move, and
+//    the figure stops matching the filings and the news.
+//  - USER money - the reader's own: portfolio value, holdings values, gains,
+//    allocation, dashboard and briefing totals. Converted from USD to the
+//    display currency at the ECB reference rate, as before.
+//
+// There is deliberately no plain `formatMoney`: every call site picks one.
+
 /**
- * Format a USD figure in the user's display currency, converting it first.
- * Every money string in the app goes through here so a currency change cannot
- * reach some columns and miss others.
+ * The reader's own money (portfolio, holdings values, gains), converted from
+ * USD to their display currency. Never use this for an asset's price - that is
+ * formatAssetMoney.
  */
-export function formatMoney(usd: number | null | undefined, prefs: DisplayPrefs): string {
+export function formatUserMoney(usd: number | null | undefined, prefs: DisplayPrefs): string {
   if (usd === null || usd === undefined || !Number.isFinite(usd)) return "-";
-  const value = usd * prefs.fxRate;
+  return currencyString(usd * prefs.fxRate, prefs.effectiveCurrency);
+}
+
+/** Label appended to an asset figure whose currency isn't known. */
+export const CURRENCY_UNKNOWN = "currency unknown";
+
+/**
+ * An asset figure (price, range, market cap) in the asset's own currency,
+ * never converted. `assetCurrency` comes from lib/asset-currency.ts; null means
+ * it isn't known, and the figure says so instead of wearing a guessed symbol.
+ */
+export function formatAssetMoney(value: number | null | undefined, assetCurrency: string | null): string {
+  if (value === null || value === undefined || !Number.isFinite(value)) return "-";
+  if (!assetCurrency) return `${plainAmount(value)} (${CURRENCY_UNKNOWN})`;
+  return currencyString(value, assetCurrency);
+}
+
+function currencyString(value: number, currency: string): string {
   // Safety net: a genuinely enormous figure gets compact notation rather than
   // a 20-digit string that overflows every cell it lands in. Ordinary money
   // (below a quadrillion) is unaffected.
   const notation = Math.abs(value) >= 1e15 ? "compact" : "standard";
   return value.toLocaleString(undefined, {
     style: "currency",
-    currency: prefs.effectiveCurrency,
+    currency,
     notation,
     ...subUnitDigits(value),
   });
+}
+
+/** The number alone, with the same sub-unit precision as a currency figure. */
+function plainAmount(value: number, compact = false): string {
+  if (compact) return value.toLocaleString(undefined, { notation: "compact", maximumFractionDigits: 2 });
+  return value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2, ...subUnitDigits(value) });
 }
 
 /**
@@ -108,33 +148,49 @@ function subUnitDigits(value: number): { minimumFractionDigits: number; maximumF
 /**
  * Money in compact notation ($1.2M, $340K, $4.1B) once the figure is large
  * enough that the exact digits stop mattering and the width starts to. Below
- * `threshold` it defers to formatMoney so small values keep their cents.
+ * `threshold` it defers to formatUserMoney so small values keep their cents.
  * Use in stat tiles, table cells and chart labels - anywhere space is tight.
  */
-export function formatCompactMoney(
+export function formatCompactUserMoney(
   usd: number | null | undefined,
   prefs: DisplayPrefs,
   threshold = 1_000_000,
 ): string {
   if (usd === null || usd === undefined || !Number.isFinite(usd)) return "-";
   const value = usd * prefs.fxRate;
-  if (Math.abs(value) < threshold) return formatMoney(usd, prefs);
+  if (Math.abs(value) < threshold) return formatUserMoney(usd, prefs);
+  return compactCurrencyString(value, prefs.effectiveCurrency);
+}
+
+/** formatCompactUserMoney for an asset figure: its own currency, never converted. */
+export function formatCompactAssetMoney(
+  value: number | null | undefined,
+  assetCurrency: string | null,
+  threshold = 1_000_000,
+): string {
+  if (value === null || value === undefined || !Number.isFinite(value)) return "-";
+  if (Math.abs(value) < threshold) return formatAssetMoney(value, assetCurrency);
+  if (!assetCurrency) return `${plainAmount(value, true)} (${CURRENCY_UNKNOWN})`;
+  return compactCurrencyString(value, assetCurrency);
+}
+
+function compactCurrencyString(value: number, currency: string): string {
   return value.toLocaleString(undefined, {
     style: "currency",
-    currency: prefs.effectiveCurrency,
+    currency,
     notation: "compact",
     maximumFractionDigits: 2,
   });
 }
 
-/** formatCompactMoney with an explicit leading sign - gain/loss stat tiles. */
-export function formatCompactSignedMoney(
+/** formatCompactUserMoney with an explicit leading sign - gain/loss stat tiles. */
+export function formatCompactSignedUserMoney(
   usd: number | null | undefined,
   prefs: DisplayPrefs,
   threshold = 1_000_000,
 ): string {
   if (usd === null || usd === undefined || !Number.isFinite(usd)) return "-";
-  return `${usd >= 0 ? "+" : ""}${formatCompactMoney(usd, prefs, threshold)}`;
+  return `${usd >= 0 ? "+" : ""}${formatCompactUserMoney(usd, prefs, threshold)}`;
 }
 
 /** A plain count in compact notation once it's large (share quantities etc.). */
@@ -144,10 +200,16 @@ export function formatCompactNumber(n: number | null | undefined, threshold = 10
   return n.toLocaleString(undefined, { notation: "compact", maximumFractionDigits: 1 });
 }
 
-/** Same, with an explicit leading sign - gain/loss columns. */
-export function formatSignedMoney(usd: number | null | undefined, prefs: DisplayPrefs): string {
+/** The reader's money with an explicit leading sign - gain/loss columns. */
+export function formatSignedUserMoney(usd: number | null | undefined, prefs: DisplayPrefs): string {
   if (usd === null || usd === undefined || !Number.isFinite(usd)) return "-";
-  return `${usd >= 0 ? "+" : ""}${formatMoney(usd, prefs)}`;
+  return `${usd >= 0 ? "+" : ""}${formatUserMoney(usd, prefs)}`;
+}
+
+/** An asset's move in money, signed, in its own currency. */
+export function formatSignedAssetMoney(value: number | null | undefined, assetCurrency: string | null): string {
+  if (value === null || value === undefined || !Number.isFinite(value)) return "-";
+  return `${value >= 0 ? "+" : ""}${formatAssetMoney(value, assetCurrency)}`;
 }
 
 export function formatPercent(pct: number | null | undefined, digits = 2): string {
@@ -174,15 +236,29 @@ function roundsToZero(formatted: string): boolean {
   return digits.length > 0 && !/[1-9]/.test(digits);
 }
 
-export function formatChange(
+/** The reader's own change (a holding's gain): money in the display currency, or percent. */
+export function formatUserChange(
   absoluteUsd: number | null | undefined,
   pct: number | null | undefined,
   prefs: DisplayPrefs,
   digits = 2,
 ): string {
-  if (prefs.metricStyle !== "absolute") return formatPercent(pct, digits);
+  return changeIn(formatSignedUserMoney(absoluteUsd, prefs), pct, prefs, digits);
+}
 
-  const money = formatSignedMoney(absoluteUsd, prefs);
+/** An asset's change (a price move): money in the asset's own currency, or percent. */
+export function formatAssetChange(
+  absolute: number | null | undefined,
+  pct: number | null | undefined,
+  assetCurrency: string | null,
+  prefs: DisplayPrefs,
+  digits = 2,
+): string {
+  return changeIn(formatSignedAssetMoney(absolute, assetCurrency), pct, prefs, digits);
+}
+
+function changeIn(money: string, pct: number | null | undefined, prefs: DisplayPrefs, digits: number): string {
+  if (prefs.metricStyle !== "absolute") return formatPercent(pct, digits);
   // A sub-cent asset moving 20% still moves less than one cent, so the absolute
   // unit renders "+€0.00" - which reads as "unchanged" beside a symbol that led
   // the day's gainers. Where the chosen unit has nothing to say, fall back to
@@ -194,14 +270,14 @@ export function formatChange(
   return money;
 }
 
-/** The unit `formatChange` did not use, for surfaces that show both. */
-export function formatSecondaryChange(
+/** The unit `formatUserChange` did not use, for surfaces that show both. */
+export function formatUserSecondaryChange(
   absoluteUsd: number | null | undefined,
   pct: number | null | undefined,
   prefs: DisplayPrefs,
   digits = 2,
 ): string {
-  return prefs.metricStyle === "absolute" ? formatPercent(pct, digits) : formatSignedMoney(absoluteUsd, prefs);
+  return prefs.metricStyle === "absolute" ? formatPercent(pct, digits) : formatSignedUserMoney(absoluteUsd, prefs);
 }
 
 /**
@@ -217,31 +293,34 @@ export function absoluteChangeFrom(price: number | null, changePct: number | nul
 }
 
 /**
- * Just the symbol ("€", "£", "$") for the user's display currency - for a
- * label like "Price (€)" where a full formatted amount would be wrong. Never
- * hardcode "$" in a label a non-USD account will see (the alert form's
- * "Price ($)" was exactly that).
+ * The reader's money rounded for a sentence ("about €250 to you"): converted,
+ * no cents. `round` is the caller's rounding (lib/exposure.ts roughMoney).
  */
+export function formatRoughUserMoney(usd: number, prefs: DisplayPrefs, round: (v: number) => number): string {
+  return round(usd * prefs.fxRate).toLocaleString(undefined, { style: "currency", currency: prefs.effectiveCurrency, maximumFractionDigits: 0 });
+}
+
 /**
- * A money amount a user typed in their display currency, as the USD figure it
- * is stored and compared as. Alert thresholds are checked against USD prices
- * (supabase/functions/evaluate-alerts), so a EUR 200 threshold stored as 200
- * would fire at $200. Rounded to 6 decimal places - sub-cent prices exist.
+ * "≈ €192.40" - an asset figure's equivalent in the reader's display currency,
+ * for the optional hint under a ticker price. Null when there is nothing to
+ * convert (same currency) or no way to (the ECB rate Cairn fetches is from
+ * USD, so only a USD-quoted asset can be converted).
  */
-export function displayAmountToUsd(amount: number, prefs: Pick<DisplayPrefs, "fxRate">): number {
-  if (!Number.isFinite(amount) || !(prefs.fxRate > 0)) return amount;
-  return Math.round((amount / prefs.fxRate) * 1e6) / 1e6;
+export function userEquivalent(value: number | null | undefined, assetCurrency: string | null, prefs: DisplayPrefs): string | null {
+  if (value === null || value === undefined || !Number.isFinite(value)) return null;
+  if (assetCurrency !== "USD" || prefs.effectiveCurrency === "USD" || prefs.fxSource === null) return null;
+  return `≈ ${formatUserMoney(value, prefs)}`;
 }
 
-/** The inverse, for showing a stored USD amount back in an editable field. */
-export function usdToDisplayAmount(usd: number, prefs: Pick<DisplayPrefs, "fxRate">): number {
-  if (!Number.isFinite(usd)) return usd;
-  return Math.round(usd * prefs.fxRate * 1e4) / 1e4;
-}
-
-export function currencySymbol(prefs: DisplayPrefs): string {
-  return (0)
-    .toLocaleString(undefined, { style: "currency", currency: prefs.effectiveCurrency, minimumFractionDigits: 0, maximumFractionDigits: 0 })
-    .replace(/[0-9]/g, "")
-    .trim();
+/**
+ * The tag a list or page shows once: "Prices in USD". A code, not a symbol -
+ * "$" is also CAD's and AUD's. Mixed lists say so; an unknown currency says
+ * that rather than implying dollars.
+ */
+export function pricesInLabel(currencies: (string | null)[]): string {
+  const known = new Set(currencies.filter((c): c is string => !!c));
+  const anyUnknown = currencies.some((c) => !c);
+  if (known.size === 1 && !anyUnknown) return `Prices in ${[...known][0]}`;
+  if (known.size === 0 && anyUnknown) return `Prices: ${CURRENCY_UNKNOWN}`;
+  return "Prices in each asset's own currency";
 }

@@ -75,6 +75,7 @@ import { runBetaAccessSuite } from "./beta-access";
 import { runNewsPaginationSuite } from "./news-pagination";
 import { runAssistantGuardsSuite } from "./assistant-guards";
 import { runAssistantTranscriptsSuite } from "./assistant-transcripts";
+import { runNativeCurrencySuite } from "./native-currency";
 
 // A suite that throws (missing credentials, unreachable service) must surface
 // as a hard failure of that suite, not take the whole run down with a stack
@@ -142,6 +143,7 @@ async function main() {
     analysisTitlesSuites,
     newsPaginationSuites,
     assistantTranscriptSuites,
+    nativeCurrencySuites,
   ] = await Promise.all([
     guarded("Adversarial scope guard", runAdversarialScopeGuardSuites),
     guarded("Methodology substance", async () => [await runMethodologySubstanceSuite()]),
@@ -183,6 +185,7 @@ async function main() {
     guarded("Analysis titles", async () => [await runAnalysisTitlesSuite()]),
     guarded("News pagination", async () => [await runNewsPaginationSuite()]),
     guarded("Assistant transcripts", async () => [await runAssistantTranscriptsSuite()]),
+    guarded("Native currency", async () => [await runNativeCurrencySuite()]),
   ]);
 
   const allSuites = [
@@ -249,6 +252,7 @@ async function main() {
     ...analysisTitlesSuites,
     ...newsPaginationSuites,
     ...assistantTranscriptSuites,
+    ...nativeCurrencySuites,
   ];
   const reportPath = writeReport(allSuites);
 

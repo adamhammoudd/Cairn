@@ -21,7 +21,9 @@ function compact(value: number | undefined, currency: string | null): string {
   const unit = abs >= 1e12 ? ["T", 1e12] : abs >= 1e9 ? ["B", 1e9] : abs >= 1e6 ? ["M", 1e6] : abs >= 1e3 ? ["K", 1e3] : ["", 1];
   const scaled = value / (unit[1] as number);
   const sign = value < 0 ? "-" : "";
-  const symbol = currency === "USD" || currency === null ? "$" : `${currency} `;
+  // No currency on the row means it isn't known: show the number with no
+  // symbol (the header says "currency unknown") rather than guess a "$".
+  const symbol = currency === "USD" ? "$" : currency === null ? "" : `${currency} `;
   return `${sign}${symbol}${Math.abs(scaled).toLocaleString(undefined, { maximumFractionDigits: 2 })}${unit[0]}`;
 }
 
@@ -77,7 +79,7 @@ export function StatementsPanel({ symbol }: { symbol: string }) {
             <thead>
               <tr className="border-b border-line">
                 <th className="px-4 py-3 text-left font-mono text-eyebrow text-dim uppercase">
-                  {currency ? `Line item · ${currency}` : "Line item"}
+                  {currency ? `Line item · ${currency}` : table && table.periods.length > 0 ? "Line item · currency unknown" : "Line item"}
                 </th>
                 {table.periods.map((p) => (
                   <th key={p.period_end} className="px-4 py-3 text-right font-mono text-eyebrow text-dim uppercase">

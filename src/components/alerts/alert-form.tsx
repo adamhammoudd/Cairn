@@ -1,13 +1,12 @@
 "use client";
 
 import { useActionState, useEffect, useState } from "react";
-import { createAlert, updateAlert } from "@/lib/actions/alerts";
+import { alertThresholdCurrency, createAlert, updateAlert } from "@/lib/actions/alerts";
 import { MAX_AMOUNT_INPUT } from "@/lib/input-limits";
 import { SymbolTypeahead } from "@/components/symbol-typeahead";
-import { useDisplayPrefs } from "@/components/display-prefs-provider";
-import { currencySymbol, usdToDisplayAmount } from "@/lib/display-prefs";
 import {
   ALERT_TYPE_LABELS,
+  alertCurrency,
   COOLDOWN_OPTIONS,
   type Alert,
   type AlertChannel,
@@ -54,7 +53,6 @@ interface AlertFormProps {
 
 export function AlertForm({ alert, defaultChannels, onDone, onCancel }: AlertFormProps) {
   const editing = Boolean(alert);
-  const prefs = useDisplayPrefs();
   const [error, formAction] = useActionState(editing ? updateAlert : createAlert, null);
   const [alertType, setAlertType] = useState<AlertType>(alert?.alert_type ?? "price");
   const condition = alert?.condition ?? {};
@@ -66,11 +64,8 @@ export function AlertForm({ alert, defaultChannels, onDone, onCancel }: AlertFor
   // them across a failed submit, matching new-watchlist-form.tsx.
   const [cond, setCond] = useState({
     comparator: str(condition, "comparator", "above"),
-    // A price threshold is stored in USD; edit it in the currency the label names.
-    value:
-      "value" in condition
-        ? String(alert?.alert_type === "price" ? usdToDisplayAmount(num(condition, "value", 0), prefs) : num(condition, "value", 0))
-        : "",
+    // Stored as typed, in the asset's own currency - nothing to convert back.
+    value: "value" in condition ? String(num(condition, "value", 0)) : "",
     multiplier: String(num(condition, "multiplier", 2)),
     fastDays: String(num(condition, "fastDays", 50)),
     slowDays: String(num(condition, "slowDays", 200)),
@@ -79,6 +74,27 @@ export function AlertForm({ alert, defaultChannels, onDone, onCancel }: AlertFor
     cooldown_seconds: String(alert?.cooldown_seconds ?? 3600),
   });
   const setC = <K extends keyof typeof cond>(key: K, v: string) => setCond((c) => ({ ...c, [key]: v }));
+
+  // The threshold is typed in the ASSET's currency, so the label names it:
+  // "Alert when NVDA is above ___ USD". Looked up on the server for the picked
+  // symbol (the same resolver the save uses); an existing alert starts from the
+  // currency stored on it.
+  const [symbol, setSymbol] = useState<string | null>(alert?.scope_value ?? null);
+  const [thresholdCurrency, setThresholdCurrency] = useState<string | null | undefined>(
+    alert?.alert_type === "price" ? alertCurrency(condition) : undefined,
+  );
+  useEffect(() => {
+    if (!symbol) return;
+    let live = true;
+    alertThresholdCurrency(symbol).then((c) => {
+      if (live) setThresholdCurrency(c);
+    });
+    return () => {
+      live = false;
+    };
+  }, [symbol]);
+  const priceLabel = symbol ? `Alert when ${symbol} is ${cond.comparator === "below" ? "below" : "above"}` : "Price";
+  const priceUnit = !symbol ? "pick a ticker" : thresholdCurrency === undefined ? "…" : (thresholdCurrency ?? "currency unknown");
 
   // The action returns the sentinel "saved" rather than redirecting, so the
   // panel closes the form (and drops back to the list) only once the write
@@ -139,7 +155,7 @@ export function AlertForm({ alert, defaultChannels, onDone, onCancel }: AlertFor
             name="scope_value"
             placeholder="Search ticker…"
             initial={alert ? { symbol: alert.scope_value, assetType: "equity", name: null } : null}
-            onSelect={() => {}}
+            onSelect={(r) => setSymbol(r.symbol)}
             inputClassName={`${inputClass} uppercase placeholder:normal-case`}
           />
         </div>
@@ -165,22 +181,26 @@ export function AlertForm({ alert, defaultChannels, onDone, onCancel }: AlertFor
               </select>
             </label>
             <label className="block">
-              {/* The alert threshold is entered in the account's display currency, so
-                  the label has to name it. A hardcoded "$" here told a EUR account
-                  to type dollars for a figure the rest of the page shows in euro. */}
-              <span className={LABEL}>
-                {alertType === "price" ? `Price (${currencySymbol(prefs)})` : "Day change (%)"}
+              {/* The threshold is in the asset's own currency - a code, not a
+                  bare "$", which CAD and AUD share. */}
+              <span className={LABEL}>{alertType === "price" ? priceLabel : "Day change (%)"}</span>
+              <span className="flex items-center gap-2">
+                <input
+                  name="value"
+                  type="number"
+                  step="any"
+                  max={MAX_AMOUNT_INPUT}
+                  required
+                  value={cond.value}
+                  onChange={(e) => setC("value", e.target.value)}
+                  className={inputClass}
+                />
+                {alertType === "price" && (
+                  <span data-testid="alert-threshold-currency" className="shrink-0 font-mono text-caption text-muted">
+                    {priceUnit}
+                  </span>
+                )}
               </span>
-              <input
-                name="value"
-                type="number"
-                step="any"
-                max={MAX_AMOUNT_INPUT}
-                required
-                value={cond.value}
-                onChange={(e) => setC("value", e.target.value)}
-                className={inputClass}
-              />
             </label>
           </>
         )}

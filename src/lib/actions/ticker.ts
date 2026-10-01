@@ -5,6 +5,7 @@ import { MIGRATIONS, unwrap } from "@/lib/supabase/read";
 import { getCurrentPrice } from "@/lib/market-data/current-price";
 import { ensureSymbolIngested } from "@/lib/market-data/ingest";
 import { readNewestFirstPaged } from "@/lib/market-data/paged-read";
+import { getAssetCurrency } from "@/lib/market-data/asset-currency";
 import type { AssetType } from "@/lib/supabase/types";
 
 export interface TickerData {
@@ -37,6 +38,11 @@ export interface TickerData {
   /** Annualised stdev of the last 30 daily returns, in percent. */
   volatility30d: number | null;
   nextEvent: { event_type: string; event_date: string; metadata?: unknown } | null;
+  /**
+   * The quote currency of every price on the page (headline, chart, ranges,
+   * market cap) - the asset's own, never converted. Null = currency unknown.
+   */
+  currency: string | null;
   esg: { environmental: number | null; social: number | null; governance: number | null; total: number | null; source: string } | null;
 }
 
@@ -173,6 +179,8 @@ export async function loadTicker(symbolRaw: string): Promise<TickerData | Ticker
   // symbol_directory (0027 not applied) is a broken deployment, not a symbol
   // Cairn happens to know nothing about, and must not read as the latter.
   const directory = unwrap("Ticker profile (symbol_directory)", directoryRes, MIGRATIONS.onDemandIngestion);
+  const assetType = (directory?.asset_type ?? latest.asset_type) as AssetType;
+  const currency = await getAssetCurrency(symbol, { client: supabase, assetType });
 
   const yearHighs = (yearRange ?? []).filter((b) => b.high !== null).map((b) => Number(b.high));
   const yearLows = (yearRange ?? []).filter((b) => b.low !== null).map((b) => Number(b.low));
@@ -196,7 +204,7 @@ export async function loadTicker(symbolRaw: string): Promise<TickerData | Ticker
 
   return {
     symbol,
-    assetType: (directory?.asset_type ?? latest.asset_type) as AssetType,
+    assetType,
     name: directory?.name ?? cryptoMetrics?.name ?? null,
     bars: bars.map((b) => ({ ts: b.ts, close: b.close })),
     price: currentPrice.price ?? (latest.close === null ? null : Number(latest.close)),
@@ -215,5 +223,6 @@ export async function loadTicker(symbolRaw: string): Promise<TickerData | Ticker
     week52Low: yearLows.length > 0 ? Math.min(...yearLows) : null,
     volatility30d,
     nextEvent: nextEvent ?? null,
+    currency,
   };
 }

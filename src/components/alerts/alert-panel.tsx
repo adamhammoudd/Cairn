@@ -4,9 +4,8 @@ import { useState, useTransition } from "react";
 import { deleteAlert, toggleAlert, type DeliveryWithAlert } from "@/lib/actions/alerts";
 import { Switch } from "@/components/switch";
 import { AlertForm, CHANNEL_LABELS } from "@/components/alerts/alert-form";
-import { ALERT_TYPE_LABELS, COOLDOWN_OPTIONS, describeCondition, type Alert, type AlertChannel } from "@/lib/alerts";
-import { useDisplayPrefs } from "@/components/display-prefs-provider";
-import { formatMoney, type DisplayPrefs } from "@/lib/display-prefs";
+import { ALERT_TYPE_LABELS, COOLDOWN_OPTIONS, alertCurrency, describeCondition, type Alert, type AlertChannel } from "@/lib/alerts";
+import { formatAssetMoney } from "@/lib/display-prefs";
 
 type AlertTab = "armed" | "triggered" | "paused";
 
@@ -48,7 +47,9 @@ interface Reading {
  * and the card simply has no bar. Everything is arithmetic on the stored
  * closes - nothing is projected.
  */
-function readAlert(a: Alert, quotes: AlertQuotes, prefs: DisplayPrefs): Reading | null {
+// Price alerts are asset money: the level and the latest price are both in the
+// asset's own currency, the unit evaluate-alerts compares them in.
+function readAlert(a: Alert, quotes: AlertQuotes): Reading | null {
   const q = quotes[a.scope_value];
   const level = Number(a.condition?.value);
   if (!q || !Number.isFinite(level)) return null;
@@ -60,7 +61,7 @@ function readAlert(a: Alert, quotes: AlertQuotes, prefs: DisplayPrefs): Reading 
     const met = above ? price >= level : price <= level;
     const gapPct = met ? null : (Math.abs(level - price) / price) * 100;
     return {
-      current: formatMoney(price, prefs),
+      current: formatAssetMoney(price, alertCurrency(a.condition)),
       progress: Math.max(0, Math.min(100, above ? (price / level) * 100 : (level / price) * 100)),
       distance: met ? "at or past the level" : `${gapPct!.toFixed(1)}% away`,
       gapPct,
@@ -106,7 +107,6 @@ export function AlertPanel({ alerts, deliveries, quotes, defaultChannels }: Aler
   const [openForm, setOpenForm] = useState<string | null>(null);
   const [tab, setTab] = useState<AlertTab>("armed");
   const [, startMutate] = useTransition();
-  const prefs = useDisplayPrefs();
 
   const editing = openForm ? alerts.find((a) => a.id === openForm) : undefined;
 
@@ -127,10 +127,10 @@ export function AlertPanel({ alerts, deliveries, quotes, defaultChannels }: Aler
   let closest: { symbol: string; gapPct: number; level: string } | null = null;
   for (const a of armed) {
     if (a.alert_type !== "price") continue;
-    const r = readAlert(a, quotes, prefs);
+    const r = readAlert(a, quotes);
     if (r?.gapPct == null) continue;
     if (!closest || r.gapPct < closest.gapPct) {
-      closest = { symbol: a.scope_value, gapPct: r.gapPct, level: formatMoney(Number(a.condition.value), prefs) };
+      closest = { symbol: a.scope_value, gapPct: r.gapPct, level: formatAssetMoney(Number(a.condition.value), alertCurrency(a.condition)) };
     }
   }
 
@@ -251,7 +251,7 @@ export function AlertPanel({ alerts, deliveries, quotes, defaultChannels }: Aler
           ) : (
             shown.map((a, index) => {
               const tone = alertTone(a);
-              const reading = readAlert(a, quotes, prefs);
+              const reading = readAlert(a, quotes);
               return (
                 <div
                   key={a.id}
@@ -330,7 +330,7 @@ export function AlertPanel({ alerts, deliveries, quotes, defaultChannels }: Aler
                     </div>
 
                     <div className="text-body leading-[1.55] text-[#c9c9c9] text-pretty">
-                      {describeCondition(a.alert_type, a.condition, prefs)}
+                      {describeCondition(a.alert_type, a.condition)}
                     </div>
 
                     {reading && (

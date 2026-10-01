@@ -2,7 +2,7 @@
 
 import { ASSET_TYPE_TAG_CLASS, assetTypeBadge, formatMarketCap } from "@/lib/screener";
 import { useDisplayPrefs } from "@/components/display-prefs-provider";
-import { absoluteChangeFrom, formatChange, formatMoney, type DisplayPrefs } from "@/lib/display-prefs";
+import { absoluteChangeFrom, formatAssetChange, formatAssetMoney, pricesInLabel, type DisplayPrefs } from "@/lib/display-prefs";
 import { COMPARISON_COLORS, seriesFor, type ComparisonRow } from "@/lib/comparison";
 import type { ChartView } from "@/lib/supabase/types";
 
@@ -18,14 +18,13 @@ const TONE_CLASS: Record<Cell["tone"], string> = {
   negative: "text-negative",
 };
 
-// `cell` takes the display preferences rather than closing over a module-level
-// formatter, so the Price row and the Change row both follow Settings >
-// Display. A module-scope fmtCurrency() is exactly how this table came to be
-// the one surface still printing dollars after a currency change.
+// Every money cell is asset money: each column in its own symbol's currency,
+// never converted (feat/native-currency). `cell` still takes the display
+// preferences for the percent-vs-money choice on the change row.
 const METRICS: { label: string; cell: (row: ComparisonRow, prefs: DisplayPrefs, timeframe: ChartView) => Cell }[] = [
   {
     label: "Last price",
-    cell: (r, prefs) => ({ text: formatMoney(r.price, prefs), tone: r.price === null ? "muted" : "primary" }),
+    cell: (r) => ({ text: formatAssetMoney(r.price, r.currency), tone: r.price === null ? "muted" : "primary" }),
   },
   {
     // The move across the window the chart above is drawing, so the table and
@@ -49,11 +48,11 @@ const METRICS: { label: string; cell: (row: ComparisonRow, prefs: DisplayPrefs, 
       r.changePct === null
         ? { text: "-", tone: "muted" }
         : {
-            text: formatChange(absoluteChangeFrom(r.price, r.changePct), r.changePct, prefs),
+            text: formatAssetChange(absoluteChangeFrom(r.price, r.changePct), r.changePct, r.currency, prefs),
             tone: r.changePct >= 0 ? "positive" : "negative",
           },
   },
-  { label: "Market cap", cell: (r, prefs) => ({ text: formatMarketCap(r.marketCap, prefs), tone: r.marketCap === null ? "muted" : "primary" }) },
+  { label: "Market cap", cell: (r) => ({ text: formatMarketCap(r.marketCap, r.currency), tone: r.marketCap === null ? "muted" : "primary" }) },
   { label: "P/E", cell: (r) => ({ text: r.pe === null ? "-" : r.pe.toFixed(1), tone: r.pe === null ? "muted" : "primary" }) },
   {
     label: "Div. yield",
@@ -143,7 +142,7 @@ export function ComparisonTable({ rows, timeframe }: { rows: ComparisonRow[]; ti
 
       <p className="border-t border-line px-4.5 py-3 text-caption text-dim">
         Change is CoinGecko&apos;s rolling 24 hours for crypto and the last two daily closes for session-based markets -
-        the same figure each asset shows on its own page. Prices are last closes, not live quotes.
+        the same figure each asset shows on its own page. Prices are last closes, not live quotes. {pricesInLabel(rows.map((r) => r.currency))}.
       </p>
     </div>
   );

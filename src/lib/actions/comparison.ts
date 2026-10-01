@@ -5,6 +5,7 @@ import { cryptoRolling24hFor } from "@/lib/market-data/current-price";
 import { unwrapRows, MIGRATIONS } from "@/lib/supabase/read";
 import { readRecentPrices } from "@/lib/market-data/paged-read";
 import type { ComparisonRow } from "@/lib/comparison";
+import { getAssetCurrencies } from "@/lib/market-data/asset-currency";
 
 // The universe every symbol picker draws on (Compare, the Sector Heat Map).
 //
@@ -89,6 +90,10 @@ export async function getComparisonData(symbols: string[]): Promise<ComparisonRo
   // Compare than on its own ticker page.
   const cryptoSymbols = symbols.filter((s) => metaBySymbol.get(s)?.assetType === "crypto");
   const rolling = await cryptoRolling24hFor(cryptoSymbols);
+  const currencies = await getAssetCurrencies(symbols, {
+    client: supabase,
+    assetTypes: new Map(symbols.map((s) => [s, directoryBySymbol.get(s)?.asset_type ?? metaBySymbol.get(s)?.assetType ?? null])),
+  });
 
   return symbols
     .map((symbol) => {
@@ -111,6 +116,7 @@ export async function getComparisonData(symbols: string[]): Promise<ComparisonRo
         volume: meta?.volume ?? null,
         asOf: meta?.asOf ?? null,
         bars: symbolBars,
+        currency: currencies.get(symbol) ?? null,
       };
     })
     .filter((row) => row.bars.length > 0);

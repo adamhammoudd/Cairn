@@ -102,7 +102,7 @@ export async function runFxRatesSuite(): Promise<SuiteResult> {
   } catch {
     /* missing on main */
   }
-  const { DEFAULT_DISPLAY_PREFS, formatMoney } = await import("../../src/lib/display-prefs");
+  const { DEFAULT_DISPLAY_PREFS, formatUserMoney, formatAssetMoney } = await import("../../src/lib/display-prefs");
   const eurPrefs = { ...DEFAULT_DISPLAY_PREFS, currency: "EUR", effectiveCurrency: "EUR", fxRate: 1 / 1.1403, fxAsOf: "2026-09-25", fxSource: "ECB" as const };
   const fellBack = { ...DEFAULT_DISPLAY_PREFS, currency: "EUR", effectiveCurrency: "USD", fxUnavailable: true };
   if (!note) {
@@ -110,26 +110,24 @@ export async function runFxRatesSuite(): Promise<SuiteResult> {
     check("every page says when conversion fell back to USD", false, "no currency note - fxUnavailable is shown nowhere");
   } else {
     const t = note(eurPrefs) ?? "";
-    check("every page dates a converted figure", /European Central Bank/.test(t) && t.includes("25 Sep 2026"), t);
+    check("every page dates a converted figure", /ECB rate/.test(t) && t.includes("25 Sep 2026"), t);
+    check("the note says asset prices stay in their own currency", /Share and coin prices are in their own currency/.test(t), t);
+    check("the note says the portfolio is what converts", /Your portfolio is shown in EUR/.test(t), t);
     const f = note(fellBack) ?? "";
-    check("every page says when conversion fell back to USD", /Figures in USD/.test(f) && /EUR/.test(f), f);
+    check("every page says when conversion fell back to USD", /portfolio is shown in USD/.test(f) && /EUR/.test(f), f);
     check("a USD account gets no note", note(DEFAULT_DISPLAY_PREFS) === null, String(note(DEFAULT_DISPLAY_PREFS)));
   }
 
-  // --- alert threshold: typed in EUR, stored in USD, shown back in EUR ---
-  const dp = (await import("../../src/lib/display-prefs")) as Record<string, unknown>;
-  const toUsd = dp.displayAmountToUsd as ((a: number, p: { fxRate: number }) => number) | undefined;
-  const fromUsd = dp.usdToDisplayAmount as ((a: number, p: { fxRate: number }) => number) | undefined;
-  if (!toUsd || !fromUsd) {
-    check("a EUR 200 price alert is stored as its USD value", false, "no conversion - EUR 200 is stored as 200 and compared with USD prices");
-  } else {
-    const stored = toUsd(200, eurPrefs);
-    check("a EUR 200 price alert is stored as its USD value", near(stored, 228.06, 1e-6), `stored ${stored} (200 x 1.1403)`);
-    check("the edit form shows it back as EUR 200", fromUsd(stored, eurPrefs) === 200, String(fromUsd(stored, eurPrefs)));
-    const shown = formatMoney(stored, eurPrefs);
-    check("the alert list shows it back as EUR 200.00", /200[.,]00/.test(shown) && shown.includes("€"), shown);
-    check("a USD account's threshold is unchanged", toUsd(200, DEFAULT_DISPLAY_PREFS) === 200, String(toUsd(200, DEFAULT_DISPLAY_PREFS)));
-  }
+  // --- alert threshold: typed in the ASSET's currency, stored as typed ---
+  // (feat/native-currency). It used to be typed in the display currency and
+  // converted to USD at today's rate; a EUR reader's "200" drifted with the euro.
+  const { buildAlertCondition, describeCondition } = await import("../../src/lib/alerts");
+  const form = (v: string) => ({ get: (k: string) => (k === "value" ? v : k === "comparator" ? "above" : null) }) as Pick<FormData, "get">;
+  const stored = buildAlertCondition("price", form("200"), "USD") as Record<string, unknown>;
+  check("a 200 USD price alert on NVDA is stored as 200, not converted", stored.value === 200 && stored.currency === "USD", JSON.stringify(stored));
+  const shown = describeCondition("price", stored);
+  check("the alert list shows it back in USD, whatever the display currency", shown.includes("$200.00") && !shown.includes("€"), shown);
+  check("the reader's own money still converts", formatUserMoney(200, eurPrefs).includes("€") && formatAssetMoney(200, "USD").includes("$"), `${formatUserMoney(200, eurPrefs)} vs ${formatAssetMoney(200, "USD")}`);
 
   // --- source checks for the two pieces that need a session to exercise ---
   const { readFileSync } = await import("node:fs");

@@ -6,7 +6,7 @@ import type { Briefing } from "@/lib/daily-briefing";
 import { getMarketStatus } from "@/lib/market-hours";
 import { useLiveRefresh } from "@/components/use-live-refresh";
 import { useDisplayPrefs } from "@/components/display-prefs-provider";
-import { formatMoney } from "@/lib/display-prefs";
+import { formatAssetMoney, formatUserMoney } from "@/lib/display-prefs";
 import { DashboardSummaryCard, type ModuleTint } from "@/components/dashboard/dashboard-summary-card";
 import { decodeEntities } from "@/lib/news";
 import { TimeAgo } from "@/components/time-ago";
@@ -52,7 +52,7 @@ interface DashboardHomeProps {
   };
   markets: {
     trackedSymbols: number;
-    top: { symbol: string; price: number; changePct: number }[];
+    top: { symbol: string; price: number; changePct: number; currency: string | null }[];
   };
   watchlist: {
     lists: number;
@@ -187,7 +187,7 @@ export function DashboardHome({
                 >
                   <span className="text-body text-primary">{r.symbol}</span>
                   <span className="ml-auto font-mono text-body tabular-nums text-muted">
-                    {formatMoney(r.price, prefs)}
+                    {formatAssetMoney(r.price, r.currency)}
                   </span>
                   {/* Percent, not the absolute delta the display preference
                       would otherwise pick. On a summary card the move is the
@@ -344,7 +344,7 @@ export function DashboardHome({
           <div className="min-w-0">
             <div className="font-mono text-eyebrow text-muted uppercase">Total value</div>
             <div className="mt-2 font-serif text-[clamp(2.5rem,5.2vw,62px)] leading-none font-normal tracking-[-0.02em] tabular-nums text-primary">
-              {formatMoney(portfolio.totalValue, prefs)}
+              {formatUserMoney(portfolio.totalValue, prefs)}
             </div>
 
             {/* The gain sat as bare coloured text beside two grey phrases, so
@@ -364,7 +364,7 @@ export function DashboardHome({
                     the glyph, which is the one place the sign has to survive. */}
                 <span aria-hidden>{portfolio.positive ? "▲" : "▼"}</span>
                 <span className="sr-only">{portfolio.positive ? "Up" : "Down"} </span>
-                {formatMoney(Math.abs(portfolio.totalGain), prefs)} ·{" "}
+                {formatUserMoney(Math.abs(portfolio.totalGain), prefs)} ·{" "}
                 {Math.abs(portfolio.totalGainPct).toFixed(2)}%
               </span>
               <span className="text-muted">all time</span>

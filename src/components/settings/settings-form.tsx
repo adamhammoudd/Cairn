@@ -165,11 +165,14 @@ export function SettingsForm({ settings, activeTab, sectorOptions, watchlists, f
 
   // States what is actually happening: which rate, from whom, dated - or that
   // the rate could not be fetched and figures are still in USD.
+  // Only the reader's own money converts; share and coin prices stay in their
+  // own currency (feat/native-currency), so the hint must not promise that
+  // every price changes.
   const currencyHint = fx.unavailable
-    ? "The European Central Bank reference rate couldn't be fetched just now, so every figure is still shown in USD. Nothing is converted at a guessed rate."
+    ? "Used for your own money: portfolio value, holdings, gains and briefing totals. The European Central Bank reference rate couldn't be fetched just now, so those are still shown in USD. Nothing is converted at a guessed rate. Share and coin prices are always in their own currency."
     : fx.effectiveCurrency === "USD"
-      ? "Applied to every price, portfolio value and gain/loss figure in the app."
-      : `Applied to every figure, converted from USD at the European Central Bank reference rate${fx.asOf ? ` of ${formatRateDate(fx.asOf)}` : ""}. Rates: European Central Bank reference rates${fx.asOf ? `, ${fx.asOf}` : ""}.`;
+      ? "Used for your own money: portfolio value, holdings, gains and briefing totals. Share and coin prices are always shown in their own currency."
+      : `Used for your own money: portfolio value, holdings, gains and briefing totals, converted from USD at the European Central Bank reference rate${fx.asOf ? ` of ${formatRateDate(fx.asOf)}` : ""}. Share and coin prices are always shown in their own currency.`;
 
   return (
     <form

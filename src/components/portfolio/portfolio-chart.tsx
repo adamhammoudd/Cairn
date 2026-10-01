@@ -11,7 +11,7 @@ import type { IntradayResult } from "@/lib/intraday-window";
 import type { ChartView } from "@/lib/supabase/types";
 import { DataFreshness } from "@/components/data-freshness";
 import { useDisplayPrefs } from "@/components/display-prefs-provider";
-import { formatMoney } from "@/lib/display-prefs";
+import { formatUserMoney } from "@/lib/display-prefs";
 
 const TIMEFRAMES: ChartView[] = ["1D", "1W", "1M", "3M", "1Y", "ALL"];
 
@@ -211,10 +211,10 @@ export function PortfolioChart({
               tick={CHART_AXIS_TICK}
               axisLine={false}
               tickLine={false}
-              tickFormatter={(v) => formatMoney(Number(v), prefs)}
+              tickFormatter={(v) => formatUserMoney(Number(v), prefs)}
             />
             <Tooltip
-              formatter={(value) => [formatMoney(Number(value), prefs), "Value"] as [string, string]}
+              formatter={(value) => [formatUserMoney(Number(value), prefs), "Value"] as [string, string]}
               labelFormatter={(label) => formatTooltipLabel(String(label))}
               {...CHART_TOOLTIP}
             />

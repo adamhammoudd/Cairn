@@ -14,14 +14,14 @@ import { tintClassesForWatchlist } from "@/lib/watchlists";
 import { Sparkline } from "@/components/sparkline";
 import { DataFreshness } from "@/components/data-freshness";
 import { useDisplayPrefs } from "@/components/display-prefs-provider";
-import { absoluteChangeFrom, formatChange, formatMoney } from "@/lib/display-prefs";
+import { absoluteChangeFrom, formatAssetChange, formatAssetMoney } from "@/lib/display-prefs";
 import { ConfirmDialog } from "@/components/dialog";
 
 export function WatchlistPanel({ watchlists }: { watchlists: WatchlistWithItems[] }) {
-  // Settings > Display drives the currency on the price column and the unit on
-  // the 24h column, the same as Markets and Holdings.
+  // A watchlist lists assets, so prices are in each asset's own currency and
+  // never converted (feat/native-currency). Settings > Display still picks the
+  // unit on the 24h column.
   const prefs = useDisplayPrefs();
-  const fmtCurrency = (n: number | null) => formatMoney(n, prefs);
   const [activeId, setActiveId] = useState(watchlists[0]?.id ?? null);
   // `added` counts server-confirmed adds; it keys the picker below so it
   // resets only once the item is really in the list. The action returns the
@@ -332,9 +332,10 @@ export function WatchlistPanel({ watchlists }: { watchlists: WatchlistWithItems[
                               item.changePct === null ? "text-muted" : positive ? "text-accent" : "text-negative"
                             }`}
                           >
-                            {formatChange(
+                            {formatAssetChange(
                               absoluteChangeFrom(item.latestClose, item.changePct),
                               item.changePct,
+                              item.currency,
                               prefs,
                             )}
                           </span>
@@ -350,7 +351,7 @@ export function WatchlistPanel({ watchlists }: { watchlists: WatchlistWithItems[
                         )}
 
                         <div className="flex items-center justify-between gap-2 font-mono text-[11.5px]">
-                          <span className="tabular-nums text-primary">{fmtCurrency(item.latestClose)}</span>
+                          <span className="tabular-nums text-primary">{formatAssetMoney(item.latestClose, item.currency)}</span>
                           <button
                             type="button"
                             onClick={() => startMutate(() => removeWatchlistItem(item.id))}
