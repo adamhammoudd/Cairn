@@ -32,6 +32,7 @@ const PUBLIC_EXACT = new Set([
   "/legal-notice",
   "/refunds",
   "/accessibility",
+  "/data-sources",
   "/welcome",
 ]);
 const PUBLIC_PREFIXES = ["/waitlist"];

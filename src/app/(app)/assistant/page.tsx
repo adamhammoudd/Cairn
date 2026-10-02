@@ -29,7 +29,7 @@ export default async function AssistantPage() {
       <ChatThread
         expandMethodology={settings?.assistant_expand_methodology ?? true}
         betaUntil={betaUntil}
-        usePortfolioContext={settings?.assistant_use_portfolio_context ?? true}
+        usePortfolioContext={settings?.assistant_use_portfolio_context ?? false}
       />
     </div>
   );

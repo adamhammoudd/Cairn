@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { LEGAL_NOTICE_LIVE } from "@/lib/site";
+import { legalNoticeLive } from "@/lib/operator";
 import { GUTTER } from "./styles";
 
 const LINK =
@@ -9,8 +9,8 @@ const LINK =
 // The second sentence carries the AI and probability caveat the old marketing
 // footers spelled out at length. /refunds stays linked: the cancellation terms
 // have to be reachable before anyone is bound (see lib/public-paths.ts). The
-// legal notice 404s in production until its placeholders are filled, so it is
-// linked only where it is served (LEGAL_NOTICE_LIVE).
+// legal notice 404s until the operator identity is set in the environment
+// (lib/operator.ts), so it is linked only where it is served.
 export function FrontDoorFooter() {
   return (
     <footer className="border-t border-line-soft pb-[env(safe-area-inset-bottom)]">
@@ -31,13 +31,16 @@ export function FrontDoorFooter() {
           <Link href="/terms" className={LINK}>
             Terms
           </Link>
-          {LEGAL_NOTICE_LIVE && (
+          {legalNoticeLive() && (
             <Link href="/legal-notice" className={LINK}>
               Legal notice
             </Link>
           )}
           <Link href="/refunds" className={LINK}>
             Cancellation &amp; refunds
+          </Link>
+          <Link href="/data-sources" className={LINK}>
+            Data sources
           </Link>
           <Link href="/accessibility" className={LINK}>
             Accessibility

@@ -81,6 +81,10 @@ import { runAssistantTranscriptsSuite } from "./assistant-transcripts";
 import { runAssistantEmptyAnswersSuite } from "./assistant-empty-answers";
 import { runNativeCurrencySuite } from "./native-currency";
 import { runBetaInvitesSuite } from "./beta-invites";
+import { runOperatorAndEmailFooterSuite } from "./operator-and-email-footer";
+import { runForwardLookingSuite } from "./forward-looking";
+import { runLegalCopySuite } from "./legal-copy";
+import { runPortfolioContextPayloadSuite } from "./portfolio-context-payload";
 
 // A suite that throws (missing credentials, unreachable service) must surface
 // as a hard failure of that suite, not take the whole run down with a stack
@@ -153,6 +157,10 @@ async function main() {
     businessProfileSuites,
     nativeCurrencySuites,
     betaInvitesSuites,
+    operatorFooterSuites,
+    forwardLookingSuites,
+    legalCopySuites,
+    portfolioPayloadSuites,
   ] = await Promise.all([
     guarded("Adversarial scope guard", runAdversarialScopeGuardSuites),
     guarded("Methodology substance", async () => [await runMethodologySubstanceSuite()]),
@@ -199,6 +207,10 @@ async function main() {
     guarded("Business profile", async () => [await runBusinessProfileSuite()]),
     guarded("Native currency", async () => [await runNativeCurrencySuite()]),
     guarded("Beta invites", async () => [await runBetaInvitesSuite()]),
+    guarded("Operator identity, email footers, removal", async () => [await runOperatorAndEmailFooterSuite()]),
+    guarded("Forward-looking direction check", async () => [await runForwardLookingSuite()]),
+    guarded("Legal pages match the code", async () => [await runLegalCopySuite()]),
+    guarded("Portfolio context opt-in + payload", async () => [await runPortfolioContextPayloadSuite()]),
   ]);
 
   const allSuites = [
@@ -271,6 +283,10 @@ async function main() {
     ...nativeCurrencySuites,
     ...betaInvitesSuites,
     ...costBasisFxSuites,
+    ...operatorFooterSuites,
+    ...forwardLookingSuites,
+    ...legalCopySuites,
+    ...portfolioPayloadSuites,
   ];
   const reportPath = writeReport(allSuites);
 

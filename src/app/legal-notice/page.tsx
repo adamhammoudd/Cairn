@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { LegalShell } from "@/components/legal-shell";
-import { LEGAL_NOTICE_LIVE } from "@/lib/site";
+import { readOperatorIdentity } from "@/lib/operator";
 
 export const metadata = {
   title: "Legal notice - Cairn",
@@ -16,45 +16,44 @@ export const metadata = {
 // Code of Economic Law, require an online service provider to make its
 // identity, geographic address and contact details "easily, directly and
 // permanently accessible". Book VI adds the pre-contractual information duties
-// for distance selling to consumers. A site taking €12/month from EU consumers
-// with no identifiable trader behind it is in breach before any other question
-// is reached.
+// for distance selling to consumers.
 //
-// EVERY VALUE MARKED "TO BE COMPLETED" BELOW MUST BE FILLED IN WITH REAL
-// DETAILS BEFORE THIS PAGE GOES LIVE. A legal notice carrying placeholder or
-// invented identity details is worse than no page at all: it is a false
-// statement about who the consumer is contracting with.
+// The identity is read from the environment (lib/operator.ts), never written
+// here. The page is served only when ALL of the operator's name, address,
+// enterprise number and contact are set; until then it is a 404 and is not
+// linked or in the sitemap. A legal notice carrying placeholder or invented
+// identity details is worse than no page: it is a false statement about who
+// the consumer is contracting with.
 export default function LegalNoticePage() {
-  // Placeholders below are unfilled - see LEGAL_NOTICE_LIVE in src/lib/site.ts.
-  if (!LEGAL_NOTICE_LIVE) notFound();
+  const operator = readOperatorIdentity();
+  if (!operator) notFound();
 
   return (
-    <LegalShell eyebrow="Legal" title="Legal notice" updated="19 September 2026">
+    <LegalShell eyebrow="Legal" title="Legal notice" updated="2 October 2026">
       <section>
         <h2>Who operates this service</h2>
         <p>
-          Cairn is operated by <strong>[TO BE COMPLETED - full legal name: your own name if you
-          are trading as a sole trader, or the company&apos;s registered name]</strong>.
+          Cairn is operated by <strong>{operator.name}</strong>.
         </p>
         <ul>
+          {operator.legalForm ? (
+            <li>
+              <strong>Legal form:</strong> {operator.legalForm}
+            </li>
+          ) : null}
           <li>
-            <strong>Legal form:</strong> [TO BE COMPLETED - e.g. sole trader (personne physique /
-            natuurlijke persoon), or SRL/BV, SA/NV]
+            <strong>Registered address:</strong> {operator.address}
           </li>
           <li>
-            <strong>Registered address:</strong> [TO BE COMPLETED - a real geographic address. A
-            PO box is not sufficient.]
+            <strong>Enterprise number (KBO/BCE):</strong> {operator.enterpriseNumber}
           </li>
+          {operator.vatNumber ? (
+            <li>
+              <strong>VAT:</strong> {operator.vatNumber}
+            </li>
+          ) : null}
           <li>
-            <strong>Enterprise number (KBO/BCE):</strong> [TO BE COMPLETED - the Belgian enterprise
-            number, format 0xxx.xxx.xxx]
-          </li>
-          <li>
-            <strong>VAT number:</strong> [TO BE COMPLETED - BE0xxx.xxx.xxx, or state &quot;not VAT
-            registered&quot; if that is accurate and lawful for your turnover]
-          </li>
-          <li>
-            <strong>Email:</strong> [TO BE COMPLETED - a monitored address on your own domain]
+            <strong>Email:</strong> <a href={`mailto:${operator.contactEmail}`}>{operator.contactEmail}</a>
           </li>
         </ul>
       </section>

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Logo } from "@/components/logo";
-import { LEGAL_NOTICE_LIVE } from "@/lib/site";
+import { legalNoticeLive } from "@/lib/operator";
 
 // These pages had zero className attributes - raw unstyled text on a white
 // background, reachable from the footer of a dark product. The content was
@@ -78,11 +78,14 @@ export function LegalShell({
           <Link href="/refunds" className="transition-colors duration-base ease-standard hover:text-accent">
             Cancellation &amp; refunds
           </Link>
-          {LEGAL_NOTICE_LIVE ? (
+          {legalNoticeLive() ? (
             <Link href="/legal-notice" className="transition-colors duration-base ease-standard hover:text-accent">
               Legal notice
             </Link>
           ) : null}
+          <Link href="/data-sources" className="transition-colors duration-base ease-standard hover:text-accent">
+            Data sources
+          </Link>
           <Link href="/accessibility" className="transition-colors duration-base ease-standard hover:text-accent">
             Accessibility
           </Link>

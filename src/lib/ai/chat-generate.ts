@@ -216,7 +216,7 @@ export async function runChatTurn({
   history,
   supabaseClient,
   isTest = false,
-  usePortfolioContext = true,
+  usePortfolioContext = false,
 }: ChatTurnInput): Promise<ChatTurnResult> {
   // Defense in depth: the route rejects an over-length message with a 400, but
   // this is the single choke point every caller (route, test suite) passes
