@@ -81,6 +81,9 @@ import { runAssistantTranscriptsSuite } from "./assistant-transcripts";
 import { runAssistantEmptyAnswersSuite } from "./assistant-empty-answers";
 import { runNativeCurrencySuite } from "./native-currency";
 import { runBetaInvitesSuite } from "./beta-invites";
+import { runCodeHealthSuite } from "./code-health";
+import { runChatCapTimezoneSuite } from "./chat-cap-timezone";
+import { runMoneyTwoDecimalsSuite } from "./money-two-decimals";
 
 // A suite that throws (missing credentials, unreachable service) must surface
 // as a hard failure of that suite, not take the whole run down with a stack
@@ -153,6 +156,9 @@ async function main() {
     businessProfileSuites,
     nativeCurrencySuites,
     betaInvitesSuites,
+    codeHealthSuites,
+    chatCapTzSuites,
+    moneyDecimalsSuites,
   ] = await Promise.all([
     guarded("Adversarial scope guard", runAdversarialScopeGuardSuites),
     guarded("Methodology substance", async () => [await runMethodologySubstanceSuite()]),
@@ -199,6 +205,9 @@ async function main() {
     guarded("Business profile", async () => [await runBusinessProfileSuite()]),
     guarded("Native currency", async () => [await runNativeCurrencySuite()]),
     guarded("Beta invites", async () => [await runBetaInvitesSuite()]),
+    guarded("Code health", async () => [await runCodeHealthSuite()]),
+    guarded("Chat cap day boundary", async () => [await runChatCapTimezoneSuite()]),
+    guarded("Money two decimals", async () => [await runMoneyTwoDecimalsSuite()]),
   ]);
 
   const allSuites = [
@@ -271,6 +280,9 @@ async function main() {
     ...nativeCurrencySuites,
     ...betaInvitesSuites,
     ...costBasisFxSuites,
+    ...codeHealthSuites,
+    ...chatCapTzSuites,
+    ...moneyDecimalsSuites,
   ];
   const reportPath = writeReport(allSuites);
 

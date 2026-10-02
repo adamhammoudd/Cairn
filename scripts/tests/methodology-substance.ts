@@ -7,11 +7,13 @@ import "./env";
 import { pathToFileURL } from "node:url";
 import { writeReport, type SuiteResult, type TestCase } from "./report";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { hasLiveDb, liveDbSkipped } from "./live-db";
 
 const SAMPLE_SIZE = 15;
 const MIN_SAMPLE_FOR_CONFIDENCE_CHECK = 10;
 
 export async function runMethodologySubstanceSuite(): Promise<SuiteResult> {
+  if (!hasLiveDb()) return liveDbSkipped("Methodology substance", "stored analyses cite real, relevant sources");
   const admin = createAdminClient();
   const cases: TestCase[] = [];
   const notes: string[] = [];

@@ -74,7 +74,13 @@ if (!isDev) {
 const nextConfig: NextConfig = {
   // Was in a second, separate next.config.js. Two config files is one config
   // file silently ignored, so they are merged here.
-  allowedDevOrigins: ["192.168.0.106"],
+  // Extra hostnames/IPs the dev server may be opened from (a phone on the same
+  // network), comma-separated, e.g. ALLOWED_DEV_ORIGINS=192.168.1.20. Was one
+  // developer's LAN address committed to the repo (audit 4.3). Dev only.
+  allowedDevOrigins: (process.env.ALLOWED_DEV_ORIGINS ?? "")
+    .split(",")
+    .map((o) => o.trim())
+    .filter(Boolean),
 
   // Build-time stamp for the corner BuildBadge (src/lib/build-id.ts). Captured
   // here, once, so the badge does not shell out to git on every render and
