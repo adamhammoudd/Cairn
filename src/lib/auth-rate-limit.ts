@@ -19,13 +19,50 @@ export const WINDOW_MINUTES = 15;
 export type AuthAttemptKind = "sign_in" | "sign_up" | "password_reset";
 
 // Hashed with a server-side salt so the table is not a plaintext list of every
-// address anyone has tried. SUPABASE_SERVICE_ROLE_KEY is already a server-only
-// secret and is stable across instances, which is what a peppering value needs
-// to be; a dedicated AUTH_HASH_SALT is preferred if one is configured.
-function hashIdentifier(value: string): string {
-  const salt = process.env.AUTH_HASH_SALT || process.env.SUPABASE_SERVICE_ROLE_KEY || "cairn-dev-salt";
-  return createHash("sha256").update(`${value.toLowerCase()}:${salt}`).digest("hex");
+// address anyone has tried. The salt MUST be a dedicated secret, AUTH_HASH_SALT.
+// It used to fall back to the service-role key (reusing a secret that opens the
+// whole database as a hashing pepper) and then to the literal "cairn-dev-salt"
+// (a public constant, so the hashes of common emails could be precomputed)
+// - audit 2026-10-02, item 2.4. Now there is no fallback: missing means loud.
+export function requireAuthHashSalt(env: Record<string, string | undefined> = process.env): string {
+  const salt = env.AUTH_HASH_SALT;
+  if (!salt || salt.length < 16) {
+    throw new Error(
+      "AUTH_HASH_SALT is not set (or shorter than 16 characters). It salts the sign-in attempt log; set it to a long random string in the environment. Refusing to run the credential endpoints without it.",
+    );
+  }
+  return salt;
 }
+
+function hashIdentifier(value: string): string {
+  return createHash("sha256").update(`${value.toLowerCase()}:${requireAuthHashSalt()}`).digest("hex");
+}
+
+/** Where the limiter reads and writes. Injectable so the fail-closed path can be tested without a database. */
+export interface RateLimitDb {
+  countFailures(identifierHash: string, kind: AuthAttemptKind, sinceIso: string): Promise<number>;
+  insertAttempts(rows: { identifier_hash: string; kind: AuthAttemptKind; succeeded: boolean }[]): Promise<void>;
+}
+
+const supabaseDb: RateLimitDb = {
+  async countFailures(identifierHash, kind, sinceIso) {
+    const { count, error } = await createAdminClient()
+      .from("auth_attempts")
+      .select("*", { count: "exact", head: true })
+      .eq("identifier_hash", identifierHash)
+      .eq("kind", kind)
+      .eq("succeeded", false)
+      .gte("attempted_at", sinceIso);
+    // A database error used to read as "0 failures" here, which is how the
+    // limiter failed open without ever reaching its catch block.
+    if (error) throw new Error(error.message);
+    return count ?? 0;
+  },
+  async insertAttempts(rows) {
+    const { error } = await createAdminClient().from("auth_attempts").insert(rows);
+    if (error) throw new Error(error.message);
+  },
+};
 
 export interface RateLimitVerdict {
   allowed: boolean;
@@ -35,33 +72,29 @@ export interface RateLimitVerdict {
 
 const ALLOWED: RateLimitVerdict = { allowed: true, retryAfterMinutes: 0 };
 
-async function countRecentFailures(identifier: string, kind: AuthAttemptKind): Promise<number> {
-  const admin = createAdminClient();
+async function countRecentFailures(db: RateLimitDb, identifier: string, kind: AuthAttemptKind): Promise<number> {
   const since = new Date(Date.now() - WINDOW_MINUTES * 60_000).toISOString();
-  const { count } = await admin
-    .from("auth_attempts")
-    .select("*", { count: "exact", head: true })
-    .eq("identifier_hash", hashIdentifier(identifier))
-    .eq("kind", kind)
-    .eq("succeeded", false)
-    .gte("attempted_at", since);
-  return count ?? 0;
+  return db.countFailures(hashIdentifier(identifier), kind, since);
 }
 
 /**
- * Checks both the account identifier and the client IP. Fails OPEN on a
- * database error: a transient DB problem must not lock every user out of the
- * product. The tradeoff is explicit rather than incidental - the window where
- * this degrades is a window where sign-in is largely broken anyway.
+ * Checks both the account identifier and the client IP.
+ *
+ * On a database error, SIGN-IN fails CLOSED: with the counter unreadable,
+ * "allowed" would let a password-guessing run through exactly when the
+ * protection is down. The user gets a plain message and a log line records it.
+ * Other kinds (sign-up, password reset) stay open on error - a short outage
+ * there costs a delayed email, not an open door - but are logged too.
  */
 export async function checkAuthRateLimit(
   identifier: string,
   kind: AuthAttemptKind,
   clientIp?: string | null,
+  db: RateLimitDb = supabaseDb,
 ): Promise<RateLimitVerdict> {
   try {
-    const checks = [countRecentFailures(identifier, kind)];
-    if (clientIp) checks.push(countRecentFailures(`ip:${clientIp}`, kind));
+    const checks = [countRecentFailures(db, identifier, kind)];
+    if (clientIp) checks.push(countRecentFailures(db, `ip:${clientIp}`, kind));
 
     const [identifierFailures, ipFailures = 0] = await Promise.all(checks);
 
@@ -76,7 +109,16 @@ export async function checkAuthRateLimit(
       };
     }
     return ALLOWED;
-  } catch {
+  } catch (err) {
+    // Never the identifier or the IP in the log - only what failed.
+    console.error(`[cairn] auth rate limit (${kind}): could not read the attempt log (${err instanceof Error ? err.message : "unknown"}); ${kind === "sign_in" ? "refusing the attempt" : "allowing it"}`);
+    if (kind === "sign_in") {
+      return {
+        allowed: false,
+        retryAfterMinutes: 1,
+        message: "We couldn't check sign-in attempts just now, so sign-in is paused for a moment. Please try again in a minute.",
+      };
+    }
     return ALLOWED;
   }
 }
@@ -86,13 +128,15 @@ export async function recordAuthAttempt(
   kind: AuthAttemptKind,
   succeeded: boolean,
   clientIp?: string | null,
+  db: RateLimitDb = supabaseDb,
 ): Promise<void> {
   try {
-    const admin = createAdminClient();
     const rows = [{ identifier_hash: hashIdentifier(identifier), kind, succeeded }];
     if (clientIp) rows.push({ identifier_hash: hashIdentifier(`ip:${clientIp}`), kind, succeeded });
-    await admin.from("auth_attempts").insert(rows);
-  } catch {
-    // Never let bookkeeping fail a sign-in the credentials themselves allowed.
+    await db.insertAttempts(rows);
+  } catch (err) {
+    // Never let bookkeeping fail a sign-in the credentials themselves allowed,
+    // but do leave a trace: a silent failure here is a limiter that counts nothing.
+    console.error(`[cairn] auth rate limit (${kind}): could not record an attempt (${err instanceof Error ? err.message : "unknown"})`);
   }
 }

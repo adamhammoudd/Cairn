@@ -107,15 +107,19 @@ export async function postComment(_prevState: string | null, formData: FormData)
   }
 
   const flagged = isLikelySpam(body);
-
-  const { error } = await supabase.from("discussion_threads").insert({
-    symbol,
-    user_id: user.id,
-    parent_id: parentId,
-    body,
-    flagged,
-  });
+  // Only symbol/user_id/parent_id/body can be written as the user (migration
+  // 0066 grants nothing more), so the spam flag is applied right afterwards by
+  // the server, in the same request and before the page revalidates.
+  const { data: created, error } = await supabase
+    .from("discussion_threads")
+    .insert({ symbol, user_id: user.id, parent_id: parentId, body })
+    .select("id")
+    .single();
   if (error) return error.message;
+  if (flagged && created) {
+    const { error: flagError } = await createAdminClient().from("discussion_threads").update({ flagged: true }).eq("id", created.id);
+    if (flagError) console.error("[cairn] discussion: could not apply the spam flag", flagError.message);
+  }
 
   revalidatePath(`/ticker/${symbol}`);
   return "saved";

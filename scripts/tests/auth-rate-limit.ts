@@ -27,7 +27,7 @@ import { createHash } from "node:crypto";
 const IDENTIFIER = `ratelimit-test-${Math.random().toString(36).slice(2)}@cairn-test.invalid`;
 
 function hashIdentifier(value: string): string {
-  const salt = process.env.AUTH_HASH_SALT || process.env.SUPABASE_SERVICE_ROLE_KEY || "cairn-dev-salt";
+  const salt = process.env.AUTH_HASH_SALT as string; // required - see requireAuthHashSalt()
   return createHash("sha256").update(`${value.toLowerCase()}:${salt}`).digest("hex");
 }
 

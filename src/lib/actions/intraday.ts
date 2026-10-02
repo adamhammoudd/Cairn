@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { getAuthUser } from "@/lib/supabase/auth";
 import { fetchIntradaySeries, isMarketDataProviderConfigured } from "@/lib/market-data/provider";
 import { getDisplayPrefs } from "@/lib/actions/display-prefs";
 import {
@@ -32,6 +33,8 @@ async function assetTypeOf(symbol: string): Promise<"equity" | "etf" | "crypto" 
 }
 
 export async function getIntradaySeries(symbol: string, view: IntradayView): Promise<IntradayResult> {
+  // Session required: every call spends the shared provider budget (audit 2.3).
+  if (!(await getAuthUser())) return { points: [], available: false, stale: false, asOf: null };
   if (!isMarketDataProviderConfigured()) return { points: [], available: false, stale: false, asOf: null };
 
   const { interval, outputsize, spanMs } = RANGES[view];

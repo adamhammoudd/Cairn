@@ -183,7 +183,7 @@ export async function runAiMethodologyGapsSuite(): Promise<SuiteResult> {
   }
 
   const actions = stripComments(read("src/lib/actions/billing.ts"));
-  const chatGate = fnBody(actions, "checkChatUsageAllowed");
+  const chatGate = fnBody(stripComments(read("src/lib/chat-usage.ts")), "checkChatUsageAllowed");
   check(
     "checkChatUsageAllowed gets the plan from getUserPlan()",
     chatGate.includes("getUserPlan()") && !chatGate.includes('from("subscriptions")'),

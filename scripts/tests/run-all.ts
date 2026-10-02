@@ -81,6 +81,11 @@ import { runAssistantTranscriptsSuite } from "./assistant-transcripts";
 import { runAssistantEmptyAnswersSuite } from "./assistant-empty-answers";
 import { runNativeCurrencySuite } from "./native-currency";
 import { runBetaInvitesSuite } from "./beta-invites";
+import { runAuthRateLimitFailClosedSuite } from "./auth-rate-limit-failclosed";
+import { runDiscussionPoliciesSuite } from "./discussion-policies";
+import { runEndpointAuthAuditSuite } from "./endpoint-auth-audit";
+import { runChatUsageSessionSuite } from "./chat-usage-session";
+import { runCspNonceSuite } from "./csp-nonce";
 
 // A suite that throws (missing credentials, unreachable service) must surface
 // as a hard failure of that suite, not take the whole run down with a stack
@@ -153,6 +158,11 @@ async function main() {
     businessProfileSuites,
     nativeCurrencySuites,
     betaInvitesSuites,
+    authFailClosedSuites,
+    discussionPolicySuites,
+    endpointAuditSuites,
+    chatUsageSessionSuites,
+    cspNonceSuites,
   ] = await Promise.all([
     guarded("Adversarial scope guard", runAdversarialScopeGuardSuites),
     guarded("Methodology substance", async () => [await runMethodologySubstanceSuite()]),
@@ -199,6 +209,11 @@ async function main() {
     guarded("Business profile", async () => [await runBusinessProfileSuite()]),
     guarded("Native currency", async () => [await runNativeCurrencySuite()]),
     guarded("Beta invites", async () => [await runBetaInvitesSuite()]),
+    guarded("Auth rate limit fail-closed", async () => [await runAuthRateLimitFailClosedSuite()]),
+    guarded("Discussion policies", async () => [await runDiscussionPoliciesSuite()]),
+    guarded("Endpoint auth audit", async () => [await runEndpointAuthAuditSuite()]),
+    guarded("Chat quota session-bound", async () => [await runChatUsageSessionSuite()]),
+    guarded("CSP nonce policy", async () => [await runCspNonceSuite()]),
   ]);
 
   const allSuites = [
@@ -271,6 +286,11 @@ async function main() {
     ...nativeCurrencySuites,
     ...betaInvitesSuites,
     ...costBasisFxSuites,
+    ...authFailClosedSuites,
+    ...discussionPolicySuites,
+    ...endpointAuditSuites,
+    ...chatUsageSessionSuites,
+    ...cspNonceSuites,
   ];
   const reportPath = writeReport(allSuites);
 
