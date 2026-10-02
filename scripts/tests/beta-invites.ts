@@ -372,7 +372,7 @@ export async function runBetaInvitesSuite(): Promise<SuiteResult> {
     check("proxy: an invite opens /signup only", !isInviteLinkRequest("/portfolio", generateInviteCode()) && !isInviteLinkRequest("/signup/x", "abc"), "scope");
     check("proxy uses the invite-link check, no database call", /isInviteLinkRequest\(/.test(read("src/proxy.ts")), "source");
     const page = read("src/app/(auth)/signup/page.tsx");
-    check("signup page: invalid invite renders the message and a waitlist link, never a redirect", /resolveSignupInvite/.test(page) && /<InviteInvalid \/>/.test(page) && !/redirect\(/.test(page) && /href="\/waitlist"/.test(read("src/app/(auth)/signup/invite-invalid.tsx")), "source");
+    check("signup page: invalid invite renders the message and a waitlist link, never a redirect", /resolveSignupInvite/.test(page) && /<InviteInvalid[^>]*\/>/.test(page) && !/redirect\(/.test(page) && /href="\/waitlist"/.test(read("src/app/(auth)/signup/invite-invalid.tsx")), "source");
     const form = read("src/app/(auth)/signup/signup-form.tsx");
     const branchAt = form.indexOf("{personal ? (");
     const personalBranch = branchAt < 0 ? "" : form.slice(branchAt, form.indexOf(") : (", branchAt));

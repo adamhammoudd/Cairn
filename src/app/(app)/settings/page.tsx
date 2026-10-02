@@ -8,6 +8,9 @@ import { getDisplayPrefs } from "@/lib/actions/display-prefs";
 import { listSectorMapSectors } from "@/lib/actions/sector-map";
 import { isMarketDataProviderConfigured } from "@/lib/market-data/provider";
 import { isSettingsTabId, type SettingsTabId } from "@/lib/settings-categories";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = { title: "Settings - Cairn" };
 
 // `?tab=billing` opens straight on a category, so a link from elsewhere in the
 // app (the Alerts page, a quota panel) can land on the row it means.

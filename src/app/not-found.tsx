@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { getAuthUser } from "@/lib/supabase/auth";
+import { notFoundCopy } from "@/lib/not-found-copy";
 
 // Root not-found. Without this, any URL that matches no route at all -
 // /markets/nonexistent, /news/anything, a mistyped path - fell through to
@@ -9,8 +11,13 @@ import Link from "next/link";
 //
 // This lives at the root so it catches everything, and it deliberately does
 // not use the app chrome: an unmatched route may be outside the authenticated
-// layout entirely.
-export default function RootNotFound() {
+// layout entirely. The copy follows who is looking (lib/not-found-copy.ts): a
+// signed-in reader is pointed at the app, a logged-out visitor at the waitlist.
+export default async function RootNotFound() {
+  // A failed session read is "not signed in", never an error page on an error page.
+  const signedIn = await getAuthUser().then((u) => !!u, () => false);
+  const copy = notFoundCopy(signedIn);
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-canvas px-6 py-24">
       <div className="mx-auto flex max-w-[520px] flex-col items-center text-center">
@@ -22,28 +29,21 @@ export default function RootNotFound() {
         </div>
 
         <div className="font-mono text-eyebrow text-muted uppercase">Not found</div>
-        <h1 className="mt-2 font-serif text-h1 leading-[1.15] font-normal text-primary">Nothing at this address</h1>
-        <p className="mt-2.5 text-lead leading-[1.6] text-muted text-pretty">
-          That page doesn&apos;t exist. If you were looking for a ticker, use the search in the app&apos;s header
-          once you&apos;re signed in - Cairn fetches any ticker its data provider carries the first time it&apos;s
-          asked for.
-        </p>
+        <h1 className="mt-2 font-serif text-h1 leading-[1.15] font-normal text-primary">{copy.heading}</h1>
+        <p className="mt-2.5 text-lead leading-[1.6] text-muted text-pretty">{copy.body}</p>
 
-        {/* This page is shown to logged-out visitors too, so the links must work
-            for them: "/" sends a signed-in user to the dashboard and anyone else
-            to the waitlist, and /welcome is public. */}
         <div className="mt-7 flex flex-wrap items-center justify-center gap-2.5">
           <Link
-            href="/"
+            href={copy.primary.href}
             className="rounded-control bg-gradient-to-br from-accent-light to-accent-dark px-4 py-2.5 text-body font-semibold text-canvas transition-[box-shadow,transform] duration-base ease-standard hover:-translate-y-px hover:shadow-[0_0_22px_rgba(47,198,133,0.35)]"
           >
-            Back to dashboard
+            {copy.primary.label}
           </Link>
           <Link
-            href="/welcome"
+            href={copy.secondary.href}
             className="tap rounded-control border border-line px-4 py-2.5 text-body text-primary transition-colors duration-base ease-standard hover:border-line-strong hover:bg-active"
           >
-            About Cairn
+            {copy.secondary.label}
           </Link>
         </div>
       </div>

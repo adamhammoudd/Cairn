@@ -1,5 +1,8 @@
 import Link from "next/link";
 import { NewWatchlistForm } from "@/components/watchlists/new-watchlist-form";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = { title: "New watchlist - Cairn" };
 
 export default function NewWatchlistPage() {
   return (

@@ -3,6 +3,9 @@ import { createClient } from "@/lib/supabase/server";
 import { getAdminSnapshot } from "@/lib/actions/admin";
 import { listOpenReports } from "@/lib/actions/discussion";
 import { AdminDashboard } from "@/components/admin/admin-dashboard";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = { title: "Admin - Cairn" };
 
 export const dynamic = "force-dynamic";
 

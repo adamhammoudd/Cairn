@@ -2,6 +2,9 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getBillingDetail } from "@/lib/actions/billing";
 import { BillingPanel } from "@/components/billing/billing-panel";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = { title: "Billing - Cairn" };
 
 export default async function BillingPage() {
   const supabase = await createClient();

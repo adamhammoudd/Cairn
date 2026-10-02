@@ -19,6 +19,7 @@ import Link from "next/link";
 import { Disclosure } from "@/components/compliance/disclosure";
 import { ChatMessage } from "@/components/chat/chat-message";
 import { BetaNote } from "@/components/billing/beta-note";
+import { uniqueSessions, withCreatedSession } from "@/lib/chat-sessions";
 
 const MESSAGES_PAGE_SIZE = 30;
 
@@ -124,6 +125,7 @@ export function ChatThread({
   // app/api/chat/route.ts). So the button is "Skip", not "Stop", and on click
   // the view is synced to the persisted turn rather than left truncated.
   const abortRef = useRef<AbortController | null>(null);
+  const sendingRef = useRef(false);
 
   // Every turn that cited an analysis gets its methodology, not just the most
   // recent one.
@@ -198,7 +200,7 @@ export function ChatThread({
         // so the header never misstates what the next answer will do.
         void getAssistantPortfolioContext().then(setPortfolioDefault).catch(() => {});
         const list = await listChatSessions();
-        setSessions(list);
+        setSessions(uniqueSessions(list));
         // No session is created here. An empty thread is a UI state, not a row.
         if (list.length > 0) await loadSession(list[0].id);
       } finally {
@@ -214,7 +216,10 @@ export function ChatThread({
 
   async function send(override?: string) {
     const text = (override ?? input).trim();
-    if (!text || streaming) return;
+    // `streaming` is React state: a second Enter/click in the same tick still sees
+    // false and ran this twice, creating two sessions. The ref flips synchronously.
+    if (!text || streaming || sendingRef.current) return;
+    sendingRef.current = true;
 
     setInput("");
     setMessages((prev) => [...prev, { role: "user", content: text }, { role: "assistant", content: "" }]);
@@ -231,7 +236,7 @@ export function ChatThread({
         activeSessionId = created.id;
         createdNow = true;
         setSessionId(created.id);
-        setSessions((prev) => [created, ...prev]);
+        setSessions((prev) => withCreatedSession(prev, created));
       }
 
       abortRef.current = new AbortController();
@@ -311,7 +316,7 @@ export function ChatThread({
       // the list so it shows up as something other than a bare date.
       const wasUntitled = createdNow || sessions.find((s) => s.id === activeSessionId)?.title == null;
       if (wasUntitled) {
-        setSessions(await listChatSessions());
+        setSessions(uniqueSessions(await listChatSessions()));
       }
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") {
@@ -342,6 +347,7 @@ export function ChatThread({
       }
     } finally {
       abortRef.current = null;
+      sendingRef.current = false;
       setStreaming(false);
     }
   }

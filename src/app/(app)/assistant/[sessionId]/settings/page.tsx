@@ -2,6 +2,9 @@ import { notFound } from "next/navigation";
 import { getChatSession } from "@/lib/actions/chat";
 import { getUserSettings } from "@/lib/actions/settings";
 import { ChatSettingsPanel } from "@/components/chat/chat-settings-panel";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = { title: "Chat settings - Cairn" };
 
 // A dedicated route, not a modal: managing a conversation is its own place in
 // the app, and the Back control at the top-left returns to /assistant. Nested
