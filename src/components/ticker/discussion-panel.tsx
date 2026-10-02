@@ -29,7 +29,7 @@ function ReportForm({ comment, symbol, onDone }: { comment: DiscussionComment; s
         id={`reason-${comment.id}`}
         name="reason"
         defaultValue="spam"
-        className="rounded-control border border-line bg-panel px-2.5 py-2 text-body text-primary outline-none"
+        className="rounded-control border border-line bg-panel px-2.5 py-2 text-body text-primary outline-none focus-visible:ring-2 focus-visible:ring-accent"
       >
         {REPORT_REASONS.map((r) => (
           <option key={r.id} value={r.id}>
@@ -40,7 +40,7 @@ function ReportForm({ comment, symbol, onDone }: { comment: DiscussionComment; s
       <input
         name="detail"
         placeholder="Anything a moderator should know (optional)"
-        className="rounded-control border border-line bg-panel px-2.5 py-2 text-body text-primary outline-none"
+        className="rounded-control border border-line bg-panel px-2.5 py-2 text-body text-primary outline-none focus-visible:ring-2 focus-visible:ring-accent"
       />
       {result && result !== "reported" && <p className="text-caption text-negative">{result}</p>}
       <div className="flex items-center justify-end gap-2">
@@ -146,7 +146,7 @@ export function DiscussionPanel({
           name="body"
           rows={3}
           placeholder={`Share your thoughts on ${symbol}...`}
-          className="w-full resize-none rounded-control border border-line bg-active px-3 py-2 text-lead text-primary outline-none"
+          className="w-full resize-none rounded-control border border-line bg-active px-3 py-2 text-lead text-primary outline-none focus-visible:ring-2 focus-visible:ring-accent"
         />
         <div className="flex items-center justify-between">
           {error && error !== "saved" ? (
@@ -180,7 +180,7 @@ export function DiscussionPanel({
       </div>
 
       {canModerate && (
-        <a href="/admin#moderation" className="mt-3 inline-block text-caption text-muted hover:text-primary">
+        <a href="/admin#moderation" className="tap mt-3 inline-flex min-h-11 items-center text-caption text-muted hover:text-primary">
           Open the moderation queue →
         </a>
       )}

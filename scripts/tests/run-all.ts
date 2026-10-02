@@ -81,6 +81,7 @@ import { runAssistantTranscriptsSuite } from "./assistant-transcripts";
 import { runAssistantEmptyAnswersSuite } from "./assistant-empty-answers";
 import { runNativeCurrencySuite } from "./native-currency";
 import { runBetaInvitesSuite } from "./beta-invites";
+import { runDesignA11ySuite } from "./design-a11y";
 
 // A suite that throws (missing credentials, unreachable service) must surface
 // as a hard failure of that suite, not take the whole run down with a stack
@@ -153,6 +154,7 @@ async function main() {
     businessProfileSuites,
     nativeCurrencySuites,
     betaInvitesSuites,
+    designA11ySuites,
   ] = await Promise.all([
     guarded("Adversarial scope guard", runAdversarialScopeGuardSuites),
     guarded("Methodology substance", async () => [await runMethodologySubstanceSuite()]),
@@ -199,6 +201,7 @@ async function main() {
     guarded("Business profile", async () => [await runBusinessProfileSuite()]),
     guarded("Native currency", async () => [await runNativeCurrencySuite()]),
     guarded("Beta invites", async () => [await runBetaInvitesSuite()]),
+    guarded("Design and accessibility", async () => [await runDesignA11ySuite()]),
   ]);
 
   const allSuites = [
@@ -271,6 +274,7 @@ async function main() {
     ...nativeCurrencySuites,
     ...betaInvitesSuites,
     ...costBasisFxSuites,
+    ...designA11ySuites,
   ];
   const reportPath = writeReport(allSuites);
 

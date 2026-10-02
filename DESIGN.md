@@ -16,12 +16,12 @@ of the 117 components found:
 
 | | Before | Now |
 |---|---|---|
-| Font sizes | 25 arbitrary values (8.5, 9, 9.5, 10, 10.5, 11, 11.5, 12, 12.5, 13, 13.5…) | 10-step scale |
+| Font sizes | 25 arbitrary values (8.5, 9, 9.5, 10, 10.5, 11, 11.5, 12, 12.5, 13, 13.5…) | 12-step scale (but see below: ~200 `text-[Npx]` remain) |
 | Border radii | 20 distinct values, incl. `rounded-[14px]` hardcoded beside the 14px token | 5-step scale |
 | Eyebrow tracking | 8 values across the same mono-uppercase label | 1, bound to the token |
 | Off-grid spacing | 268 `.25`/`.75` values | 0 |
 | Near-black greys | ~12 undeclared literals | 4 named surfaces |
-| Hex literals in components | ~230 | 0 |
+| Hex literals in components | ~230 | 0, enforced by `scripts/tests/design-a11y.ts` (2026-10-02: the last 157 were moved to tokens; a few near-greys were snapped to the nearest named surface) |
 | Files with a focus style | 1 of 117 | global |
 
 None of that was visible as a bug. It was visible as the app not feeling like one app.
@@ -33,7 +33,7 @@ that is a gap in the system to be discussed - not a licence to write a literal.
 
 ## Type scale
 
-Ten steps, named for the job rather than a size, because in a data product "the eyebrow
+Twelve steps (ten for the app, two front-door heroes), named for the job rather than a size, because in a data product "the eyebrow
 above a stat" is a role that must not drift, while "small" is an invitation to invent
 12.5px.
 
@@ -55,6 +55,8 @@ above a stat" is a role that must not drift, while "small" is an invitation to i
 The two `hero` steps exist because a marketing headline needs more than the app ever
 does; they carry their own `-0.02em` tracking. They are not for app screens - an app
 heading that wants to be bigger than `text-display` is a design question, not a token.
+
+**Known gap (2026-10-02):** 206 `text-[Npx]` arbitrary sizes still sit in components beside this scale (for example `ticker-hero.tsx`). They are not new drift - they pre-date the scale - and moving them to the nearest step is a follow-up, listed in the audit report, because several sit between two steps and need a design call.
 
 **`text-eyebrow` carries its own `letter-spacing: 0.12em`.** Do not add `tracking-*`
 beside it - that one binding is what collapsed eight competing tracking values, and

@@ -117,7 +117,7 @@ export function WatchlistPanel({ watchlists }: { watchlists: WatchlistWithItems[
         }`}
       >
       {watchlists.length > 0 && (
-        <aside className="flex flex-col gap-[7px] rounded-2xl border border-[#232323] bg-panel p-3.5 min-[900px]:sticky min-[900px]:top-[78px]">
+        <aside className="flex flex-col gap-[7px] rounded-2xl border border-line-soft bg-panel p-3.5 min-[900px]:sticky min-[900px]:top-[78px]">
           <div className="px-1 pt-0.5 pb-1.5 font-mono text-eyebrow tracking-[0.16em] text-dim uppercase">Your lists</div>
           {watchlists.map((w) => {
             const isActive = active?.id === w.id;
@@ -129,8 +129,8 @@ export function WatchlistPanel({ watchlists }: { watchlists: WatchlistWithItems[
                   setActiveId(w.id);
                   setQuery("");
                 }}
-                className={`flex items-center gap-2.5 rounded-[10px] px-[11px] py-2.5 text-left transition-colors duration-base ease-standard hover:bg-[#161616] ${
-                  isActive ? "bg-[#181818]" : "bg-transparent"
+                className={`flex items-center gap-2.5 rounded-[10px] px-[11px] py-2.5 text-left transition-colors duration-base ease-standard hover:bg-raised ${
+                  isActive ? "bg-active" : "bg-transparent"
                 }`}
               >
                 <span
@@ -139,7 +139,7 @@ export function WatchlistPanel({ watchlists }: { watchlists: WatchlistWithItems[
                 <span className={`min-w-0 flex-1 truncate text-[12.5px] ${isActive ? "text-primary" : "text-muted"}`}>{w.name}</span>
                 <span
                   className={`rounded-[5px] px-1.5 py-px font-mono text-eyebrow ${
-                    isActive ? tintClassesForWatchlist(w.id).count : "bg-[#161616] text-dim"
+                    isActive ? tintClassesForWatchlist(w.id).count : "bg-raised text-dim"
                   }`}
                 >
                   {w.items.length}
@@ -149,7 +149,7 @@ export function WatchlistPanel({ watchlists }: { watchlists: WatchlistWithItems[
           })}
           <Link
             href="/watchlists/new"
-            className="tap mt-1.5 flex items-center justify-center gap-1.5 rounded-[10px] border border-dashed border-[#2f2f2f] p-2.5 text-[12.5px] text-muted transition-colors duration-base ease-standard hover:border-accent/50 hover:text-accent-light"
+            className="tap mt-1.5 flex items-center justify-center gap-1.5 rounded-[10px] border border-dashed border-line p-2.5 text-[12.5px] text-muted transition-colors duration-base ease-standard hover:border-accent/50 hover:text-accent-light"
           >
             + Add list
           </Link>
@@ -179,7 +179,7 @@ export function WatchlistPanel({ watchlists }: { watchlists: WatchlistWithItems[
       ) : (
         <>
           <div
-            className="animate-rise-in flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#232323] bg-panel px-5.5 py-[18px]"
+            className="animate-rise-in flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-line-soft bg-panel px-5.5 py-[18px]"
             style={{ animationDelay: "110ms" }}
           >
             <div className="min-w-0">
@@ -204,7 +204,7 @@ export function WatchlistPanel({ watchlists }: { watchlists: WatchlistWithItems[
               >
                 {listSize === 0 ? "No symbols yet" : `${greens} up · ${listSize - greens} down`}
               </span>
-              <label className="flex items-center gap-[7px] rounded-[10px] border border-line bg-[#0c0c0c] px-3 py-2 pointer-coarse:min-h-11">
+              <label className="flex items-center gap-[7px] rounded-[10px] border border-line bg-canvas px-3 py-2 pointer-coarse:min-h-11">
                 <span aria-hidden className="text-caption text-dim">
                   ⌕
                 </span>
@@ -265,7 +265,7 @@ export function WatchlistPanel({ watchlists }: { watchlists: WatchlistWithItems[
                 <path
                   d="M2 24 C 12 24, 15 6, 24 8 S 38 22, 44 4"
                   fill="none"
-                  stroke="#9b8ce0"
+                  stroke="var(--color-violet)"
                   strokeWidth="2"
                   strokeLinecap="round"
                 />
@@ -300,7 +300,7 @@ export function WatchlistPanel({ watchlists }: { watchlists: WatchlistWithItems[
                         onDragStart={() => setDragId(item.id)}
                         onDragOver={(e) => e.preventDefault()}
                         onDrop={() => handleDrop(item.id)}
-                        className={`cn-row animate-rise-in flex flex-col gap-2.5 rounded-[14px] border border-[#232323] bg-panel px-4 py-[15px] transition-[transform,border-color,background] duration-[220ms] ease-standard hover:-translate-y-[3px] hover:border-line-strong hover:bg-[#131313] ${
+                        className={`cn-row animate-rise-in flex flex-col gap-2.5 rounded-[14px] border border-line-soft bg-panel px-4 py-[15px] transition-[transform,border-color,background] duration-[220ms] ease-standard hover:-translate-y-[3px] hover:border-line-strong hover:bg-raised ${
                           dragId === item.id ? "opacity-50" : ""
                         }`}
                         style={{ animationDelay: `${120 + index * 50}ms` }}

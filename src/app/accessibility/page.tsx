@@ -14,7 +14,7 @@ export const metadata = {
 // in the same voice as the rest of the product.
 export default function AccessibilityPage() {
   return (
-    <LegalShell eyebrow="Accessibility" title="Accessibility at Cairn" updated="30 August 2026" draft={false}>
+    <LegalShell eyebrow="Accessibility" title="Accessibility at Cairn" updated="2 October 2026" draft={false}>
       <section>
         <h2>What this page is</h2>
         <p>
@@ -41,8 +41,9 @@ export default function AccessibilityPage() {
         <ul>
           <li>Meaningful images and icon-only controls carry text alternatives; icons that are
             purely decorative are hidden from assistive technology rather than given filler labels.</li>
-          <li>Pages follow a single, descending heading structure, so the heading outline can be
-            used for navigation.</li>
+          <li>Every page has exactly one main heading, and headings never skip a level, so the
+            heading outline can be used for navigation. A script that opens each page and counts
+            them is run before releases (it found /billing had no main heading; that is fixed).</li>
           <li>Form fields have associated labels, and validation errors are announced next to the
             field they concern rather than only as colour.</li>
           <li>Gain and loss are never signalled by colour alone - a direction is always carried by

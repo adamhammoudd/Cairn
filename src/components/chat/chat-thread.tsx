@@ -464,7 +464,7 @@ export function ChatThread({
         <span
           aria-hidden
           className="absolute top-0 right-0 left-0 h-px"
-          style={{ background: "linear-gradient(90deg,#2fc685,rgba(47,198,133,0))" }}
+          style={{ background: "linear-gradient(90deg,var(--color-accent),rgba(47,198,133,0))" }}
         />
         <div className="flex items-end gap-2.5">
           <input
@@ -517,7 +517,7 @@ export function ChatThread({
   if (!compact) {
     return (
       <div className="grid items-start gap-4 min-[900px]:grid-cols-[232px_1fr]">
-        <aside className="overflow-hidden rounded-2xl border border-[#232323] bg-panel">
+        <aside className="overflow-hidden rounded-2xl border border-line-soft bg-panel">
           <div className="border-b border-line px-4 py-3.5">
             <button
               type="button"
@@ -566,7 +566,7 @@ export function ChatThread({
                     href={`/assistant/${sess.id}/settings`}
                     aria-label={`Manage ${sessionLabel(sess)}`}
                     title="Manage conversation"
-                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-control text-dim opacity-0 transition-opacity duration-fast ease-standard group-hover:opacity-100 focus-visible:opacity-100 hover:text-primary max-[900px]:opacity-100"
+                    className="tap flex h-7 w-7 shrink-0 items-center justify-center rounded-control text-dim opacity-0 transition-opacity duration-fast ease-standard group-hover:opacity-100 focus-visible:opacity-100 hover:text-primary max-[900px]:opacity-100"
                   >
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <circle cx="12" cy="12" r="3" />
@@ -585,7 +585,7 @@ export function ChatThread({
         </aside>
 
         <div className="flex min-w-0 flex-col gap-4">
-          <div className="flex min-h-75 flex-col overflow-hidden rounded-2xl border border-[#232323] bg-panel">
+          <div className="flex min-h-75 flex-col overflow-hidden rounded-2xl border border-line-soft bg-panel">
             {conversation}
           </div>
         </div>
@@ -618,7 +618,7 @@ export function ChatThread({
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search conversations…"
-                className="w-full rounded-control border border-line bg-active px-2.5 py-1.5 text-body text-primary outline-none"
+                className="w-full rounded-control border border-line bg-active px-2.5 py-1.5 text-body text-primary outline-none focus-visible:ring-2 focus-visible:ring-accent"
               />
             </div>
             <div className="px-3 pt-2 pb-1 font-mono text-eyebrow text-dim uppercase">History</div>
@@ -649,7 +649,7 @@ export function ChatThread({
                       href={`/assistant/${sess.id}/settings`}
                       aria-label={`Manage ${sessionLabel(sess)}`}
                       title="Manage conversation"
-                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-control text-dim hover:text-primary"
+                      className="tap flex h-7 w-7 shrink-0 items-center justify-center rounded-control text-dim hover:text-primary"
                     >
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <circle cx="12" cy="12" r="3" />

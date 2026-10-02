@@ -17,10 +17,10 @@ export type ModuleTint = "accent" | "info" | "violet" | "warning";
 // reads as a state (selected, erroring); a hairline that dissolves reads as a
 // label, which is what this is.
 const TINT_CLASSES: Record<ModuleTint, { label: string; hairline: string }> = {
-  accent: { label: "text-accent", hairline: "#2fc685" },
-  info: { label: "text-info", hairline: "#5b8def" },
-  violet: { label: "text-violet", hairline: "#9b8ce0" },
-  warning: { label: "text-warning", hairline: "#d9a441" },
+  accent: { label: "text-accent", hairline: "var(--color-accent)" },
+  info: { label: "text-info", hairline: "var(--color-info)" },
+  violet: { label: "text-violet", hairline: "var(--color-violet)" },
+  warning: { label: "text-warning", hairline: "var(--color-warning)" },
 };
 
 interface DashboardSummaryCardProps {
@@ -58,7 +58,7 @@ export function DashboardSummaryCard({
   const tintClasses = tint ? TINT_CLASSES[tint] : null;
   return (
     <div
-      className={`animate-rise-in group relative self-start overflow-hidden rounded-2xl border border-[#232323] bg-panel px-[22px] py-5 transition-[border-color,transform,box-shadow] duration-base ease-standard hover:-translate-y-0.5 hover:border-line-strong hover:shadow-[0_12px_30px_rgba(0,0,0,0.45)] ${className}`}
+      className={`animate-rise-in group relative self-start overflow-hidden rounded-2xl border border-line-soft bg-panel px-[22px] py-5 transition-[border-color,transform,box-shadow] duration-base ease-standard hover:-translate-y-0.5 hover:border-line-strong hover:shadow-[0_12px_30px_rgba(0,0,0,0.45)] ${className}`}
       style={{ animationDelay: `${delay}ms` }}
     >
       {tintClasses && (

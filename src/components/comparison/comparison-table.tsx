@@ -80,11 +80,11 @@ export function ComparisonTable({ rows, timeframe }: { rows: ComparisonRow[]; ti
   const gridTemplate = `minmax(120px, 170px) repeat(${rows.length}, minmax(0, 1fr))`;
 
   return (
-    <div className="animate-rise-in overflow-hidden rounded-card border border-[#232323] bg-panel" style={{ animationDelay: "140ms" }}>
+    <div className="animate-rise-in overflow-hidden rounded-card border border-line-soft bg-panel" style={{ animationDelay: "140ms" }}>
       <div className="overflow-x-auto">
         <div className="min-w-fit">
           <div
-            className="grid items-center gap-3.5 border-b border-[#1c1c1c] bg-[#0c0c0c] px-5 py-3.5 font-mono text-eyebrow tracking-[0.16em] text-dim uppercase"
+            className="grid items-center gap-3.5 border-b border-line-soft bg-canvas px-5 py-3.5 font-mono text-eyebrow tracking-[0.16em] text-dim uppercase"
             style={{ gridTemplateColumns: gridTemplate }}
           >
             <div>Metric</div>
@@ -105,7 +105,7 @@ export function ComparisonTable({ rows, timeframe }: { rows: ComparisonRow[]; ti
           {METRICS.map((metric, index) => (
             <div
               key={metric.label}
-              className="cn-row animate-rise-in grid items-center gap-3.5 border-b border-[#171717] px-5 py-3 transition-colors duration-fast ease-standard last:border-b-0 hover:bg-raised"
+              className="cn-row animate-rise-in grid items-center gap-3.5 border-b border-active px-5 py-3 transition-colors duration-fast ease-standard last:border-b-0 hover:bg-raised"
               style={{ gridTemplateColumns: gridTemplate, animationDelay: `${index * 30}ms` }}
             >
               <div className="text-[12.5px] text-muted">{metric.label}</div>

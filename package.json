@@ -25,6 +25,7 @@
     "test:asset-class": "tsx --conditions=react-server scripts/tests/asset-class-identity.ts",
     "test:methodology": "tsx --conditions=react-server scripts/tests/methodology-substance.ts",
     "test:citations": "tsx --conditions=react-server scripts/tests/citation-freshness.ts",
+    "test:design-a11y": "tsx --conditions=react-server scripts/tests/design-a11y.ts",
     "test:ai-suite": "tsx --conditions=react-server scripts/tests/run-all.ts",
     "check-db": "tsx --conditions=react-server scripts/check-db.ts",
     "test:live": "tsx --conditions=react-server scripts/live-check.ts",

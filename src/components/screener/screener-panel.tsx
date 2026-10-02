@@ -110,7 +110,7 @@ function FieldLabel({ children }: { children: React.ReactNode }) {
 }
 
 const NUM_INPUT_CLASS =
-  "w-full rounded-[9px] border border-line bg-[#0c0c0c] px-2.5 py-2.5 font-mono text-[11.5px] text-primary outline-none transition-colors duration-fast ease-standard placeholder:text-dim focus:border-accent";
+  "w-full rounded-[9px] border border-line bg-canvas px-2.5 py-2.5 font-mono text-[11.5px] text-primary outline-none transition-colors duration-fast ease-standard placeholder:text-dim focus:border-accent";
 
 function FilterInput({
   field,
@@ -254,7 +254,7 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
       </div>
 
       <div className="grid grid-cols-1 items-start gap-3.5 min-[900px]:grid-cols-[232px_1fr]">
-        <aside className="rounded-2xl border border-[#232323] bg-panel p-4.5 min-[900px]:sticky min-[900px]:top-[78px]">
+        <aside className="rounded-2xl border border-line-soft bg-panel p-4.5 min-[900px]:sticky min-[900px]:top-[78px]">
           <div className="font-mono text-eyebrow tracking-[0.16em] text-dim uppercase">Asset type</div>
           <div className="mt-2 flex flex-wrap gap-1.5">
             {ASSET_TYPES.map((t) => {
@@ -265,7 +265,7 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
                   type="button"
                   onClick={() => toggleAssetType(t)}
                   className={`rounded-full border px-3 py-[7px] text-caption transition-colors duration-fast ease-standard hover:border-line-strong ${
-                    active ? "border-accent/50 bg-accent/10 text-accent-light" : "border-line bg-[#0c0c0c] text-muted"
+                    active ? "border-accent/50 bg-accent/10 text-accent-light" : "border-line bg-canvas text-muted"
                   }`}
                 >
                   {ASSET_TYPE_LABEL[t] ?? t}
@@ -374,8 +374,8 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
           </p>
         </aside>
 
-        <div className="overflow-hidden rounded-2xl border border-[#232323] bg-panel">
-          <div className="flex flex-wrap items-center justify-between gap-2.5 border-b border-[#1c1c1c] bg-[#0c0c0c] px-5 py-3.5">
+        <div className="overflow-hidden rounded-2xl border border-line-soft bg-panel">
+          <div className="flex flex-wrap items-center justify-between gap-2.5 border-b border-line-soft bg-canvas px-5 py-3.5">
             <span className="font-mono text-micro tracking-[0.14em] text-primary uppercase">
               <span className="text-accent">{visibleRows.length}</span> {visibleRows.length === 1 ? "match" : "matches"}
               <span className="text-dim"> · {pricesInLabel(visibleRows.map((r) => r.currency))}</span>
@@ -409,7 +409,7 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
           ) : (
             <ScrollX label="Screener results" hintClassName="lg:hidden">
               <div className="min-w-[940px]">
-              <div className={`${GRID} border-b border-[#1c1c1c] bg-[#0c0c0c] px-5 py-3 font-mono text-eyebrow tracking-[0.14em] uppercase`}>
+              <div className={`${GRID} border-b border-line-soft bg-canvas px-5 py-3 font-mono text-eyebrow tracking-[0.14em] uppercase`}>
                 {COLUMNS.map((c) => {
                   if (c.key === "trend") {
                     return (
@@ -440,7 +440,7 @@ export function ScreenerPanel({ initialRows, savedScreens: initialSavedScreens }
                 <Link
                   key={r.symbol}
                   href={`/ticker/${r.symbol}`}
-                  className={`cn-row animate-rise-in ${GRID} border-b border-[#171717] px-5 py-[11px] transition-colors duration-fast ease-standard last:border-b-0 hover:bg-raised`}
+                  className={`cn-row animate-rise-in ${GRID} border-b border-active px-5 py-[11px] transition-colors duration-fast ease-standard last:border-b-0 hover:bg-raised`}
                   style={{ animationDelay: `${index * 25}ms` }}
                 >
                   <div className="flex min-w-0 items-center gap-2.5">

@@ -75,8 +75,8 @@ export function CardFooter({ children }: { children: ReactNode }) {
 }
 
 /**
- * The mockup's segmented control: 3px padding on a #232323 border, 7px 13px
- * buttons, #1C1C1C behind the active one. Used for radio-group settings.
+ * The mockup's segmented control: 3px padding on a hairline border, 7px 13px
+ * buttons, the active surface behind the active one. Used for radio-group settings.
  */
 export function Segmented({
   name,

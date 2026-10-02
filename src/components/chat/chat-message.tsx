@@ -64,8 +64,8 @@ export function ChatMessage({ message, streaming, onFollowUp }: ChatMessageProps
               ? // The design gives the visitor's own turn a tinted bubble with
                 // one squared corner on the side it came from, so a thread
                 // reads as a conversation rather than a stack of panels.
-                "max-w-[min(560px,86%)] rounded-[16px_16px_4px_16px] border-accent/25 bg-[#1c2a23] px-[17px] py-[13px] text-[#e6f5ee]"
-              : "w-full rounded-[16px_16px_16px_4px] border-[#232323] bg-panel px-[22px] py-5 text-primary"
+                "max-w-[min(560px,86%)] rounded-[16px_16px_4px_16px] border-accent/25 bg-tint-accent-bg px-[17px] py-[13px] text-tint-accent-text"
+              : "w-full rounded-[16px_16px_16px_4px] border-line-soft bg-panel px-[22px] py-5 text-primary"
         }`}
       >
         {/* Cairn's turns are signed. An answer that carries sources and a

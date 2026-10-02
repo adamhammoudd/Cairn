@@ -46,9 +46,9 @@ export function TickerList({ rows, names, marketCaps, emptyState, asOf = null }:
   const change = (r: ScreenerRow) => formatAssetChange(absoluteChangeFrom(r.price, r.changePct), r.changePct, r.currency, prefs);
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-[#232323] bg-panel">
+    <div className="overflow-hidden rounded-2xl border border-line-soft bg-panel">
       <div
-        className={`hidden gap-3.5 border-b border-[#1c1c1c] bg-[#0c0c0c] px-5 py-3 font-mono text-eyebrow tracking-[0.16em] text-dim uppercase sm:grid ${GRID}`}
+        className={`hidden gap-3.5 border-b border-line-soft bg-canvas px-5 py-3 font-mono text-eyebrow tracking-[0.16em] text-dim uppercase sm:grid ${GRID}`}
       >
         <div>Asset</div>
         <div>Type</div>
@@ -78,7 +78,7 @@ export function TickerList({ rows, names, marketCaps, emptyState, asOf = null }:
           <Link
             key={r.symbol}
             href={`/ticker/${r.symbol}`}
-            className={`cn-row block border-b border-[#171717] transition-colors duration-fast ease-standard last:border-b-0 hover:bg-raised sm:grid sm:items-center sm:gap-3.5 sm:px-5 sm:py-3 ${GRID}`}
+            className={`cn-row block border-b border-active transition-colors duration-fast ease-standard last:border-b-0 hover:bg-raised sm:grid sm:items-center sm:gap-3.5 sm:px-5 sm:py-3 ${GRID}`}
           >
             {/* Phone (<640px): the mock collapses the row into a card. */}
             <div className="flex flex-col gap-2 px-4 py-3.5 sm:hidden">
@@ -151,7 +151,7 @@ export function TickerList({ rows, names, marketCaps, emptyState, asOf = null }:
                 {change(r)}
               </span>
               {r.changePct !== null && (
-                <span aria-hidden className="h-1 min-w-0 flex-1 overflow-hidden rounded-xs bg-[#191919]">
+                <span aria-hidden className="h-1 min-w-0 flex-1 overflow-hidden rounded-xs bg-active">
                   <span
                     className={`block h-full origin-left rounded-xs opacity-65 ${
                       r.changePct >= 0 ? "bg-accent" : "bg-negative"
@@ -185,7 +185,7 @@ export function TickerList({ rows, names, marketCaps, emptyState, asOf = null }:
       {rows.length === 0 && emptyState}
 
       {rows.length > 0 && (
-        <div className="flex flex-wrap items-center justify-between gap-2.5 border-t border-[#1c1c1c] bg-[#0c0c0c] px-5 py-3 text-caption text-dim">
+        <div className="flex flex-wrap items-center justify-between gap-2.5 border-t border-line-soft bg-canvas px-5 py-3 text-caption text-dim">
           <span>
             {rows.length} {rows.length === 1 ? "symbol" : "symbols"} · {pricesInLabel(rows.map((r) => r.currency))}
           </span>

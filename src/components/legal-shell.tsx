@@ -26,12 +26,12 @@ export function LegalShell({
     <div className="min-h-screen bg-canvas">
       <header className="border-b border-line">
         <div className="mx-auto flex max-w-[760px] items-center justify-between px-6 py-5">
-          <Link href="/" className="flex items-center gap-2.5">
+          <Link href="/" className="tap inline-flex min-h-11 items-center gap-2.5">
             <Logo size={26} />
           </Link>
           <Link
             href="/"
-            className="text-body text-muted transition-colors duration-base ease-standard hover:text-accent"
+            className="tap inline-flex min-h-11 items-center text-body text-muted transition-colors duration-base ease-standard hover:text-accent"
           >
             Back to Cairn
           </Link>
@@ -69,21 +69,21 @@ export function LegalShell({
 
       <footer className="border-t border-line">
         <div className="mx-auto flex max-w-[760px] flex-wrap items-center gap-4 px-6 py-6 text-caption text-dim">
-          <Link href="/terms" className="transition-colors duration-base ease-standard hover:text-accent">
+          <Link href="/terms" className="tap inline-flex min-h-11 items-center transition-colors duration-base ease-standard hover:text-accent">
             Terms
           </Link>
-          <Link href="/privacy" className="transition-colors duration-base ease-standard hover:text-accent">
+          <Link href="/privacy" className="tap inline-flex min-h-11 items-center transition-colors duration-base ease-standard hover:text-accent">
             Privacy
           </Link>
-          <Link href="/refunds" className="transition-colors duration-base ease-standard hover:text-accent">
+          <Link href="/refunds" className="tap inline-flex min-h-11 items-center transition-colors duration-base ease-standard hover:text-accent">
             Cancellation &amp; refunds
           </Link>
           {LEGAL_NOTICE_LIVE ? (
-            <Link href="/legal-notice" className="transition-colors duration-base ease-standard hover:text-accent">
+            <Link href="/legal-notice" className="tap inline-flex min-h-11 items-center transition-colors duration-base ease-standard hover:text-accent">
               Legal notice
             </Link>
           ) : null}
-          <Link href="/accessibility" className="transition-colors duration-base ease-standard hover:text-accent">
+          <Link href="/accessibility" className="tap inline-flex min-h-11 items-center transition-colors duration-base ease-standard hover:text-accent">
             Accessibility
           </Link>
           <span className="ml-auto">Cairn is informational only - not a broker and not investment advice.</span>
