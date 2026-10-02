@@ -204,7 +204,8 @@ export function runScorecardSuite(opts: { update?: boolean } = {}): SuiteResult 
     hs.sentence.startsWith("Keeps 52 cents of every dollar of sales as EBITDA (profit before interest, tax and write-downs).") && /more cash than debt/.test(hs.sentence),
     hs.sentence,
   );
-  check("health: incomplete figures -> not available", healthDimension(metrics({ ttm: { ebitda: null } }), FILING).verdict === "Not available", "ebitda null");
+  check("health: no EBITDA and no operating profit -> not available", healthDimension(metrics({ ttm: { ebitda: null, operating_income: null } }), FILING).verdict === "Not available", "ebitda + operating income null");
+  check("health: no EBITDA but operating profit -> rated on operating profit, and says so", (() => { const d = healthDimension(metrics({ ttm: { ebitda: null } }), FILING); return d.verdict !== "Not available" && /operating profit/.test(d.sentence) && !/EBITDA/.test(d.sentence); })(), "ebitda null, operating income present");
 
   // ---- dividend -----------------------------------------------------------
   const base = { price: 60, freeCashFlow: 1000, growthYears: 12, filing: FILING };

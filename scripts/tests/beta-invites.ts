@@ -381,7 +381,8 @@ export async function runBetaInvitesSuite(): Promise<SuiteResult> {
 
     // ---------------- route + wiring ----------------
     const route = read("src/app/api/cron/send-beta-invites/route.ts");
-    check("cron route: requires Bearer CRON_SECRET, compared in constant time", /process\.env\.CRON_SECRET/.test(route) && /timingSafeEqual/.test(route) && /status: 401/.test(route), "source");
+    const cronAuth = read("src/lib/cron-auth.ts");
+    check("cron route: requires Bearer CRON_SECRET, compared in constant time", /process\.env\.CRON_SECRET/.test(route) && /checkCronAuth/.test(route) && /timingSafeEqual/.test(cronAuth) && /status: 401/.test(cronAuth), "source");
     check("cron route: scheduled in vercel.json", JSON.parse(read("vercel.json")).crons?.some((c: { path: string }) => c.path === "/api/cron/send-beta-invites"), "vercel.json");
     const waitlistSrc = read("src/lib/waitlist.ts");
     const sendEmailFn = waitlistSrc.slice(waitlistSrc.indexOf("export async function sendEmail"), waitlistSrc.indexOf("export function buildConfirmationEmail"));

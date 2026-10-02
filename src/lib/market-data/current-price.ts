@@ -14,6 +14,8 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { MIGRATIONS, unwrapRows } from "@/lib/supabase/read";
+import { isStaleClose, STALE_AFTER_HOURS } from "@/lib/market-data/stale";
+import { describePriceFreshness } from "@/lib/price-freshness";
 import { fetchQuote, isMarketDataProviderConfigured } from "@/lib/market-data/provider";
 
 export interface CurrentPrice {
@@ -178,19 +180,7 @@ export async function getCurrentPrice(symbol: string): Promise<CurrentPrice> {
   return rolling === undefined ? base : { ...base, changePct: rolling };
 }
 
-// How old a fallen-back-to daily close can be before Holdings should say so
-// rather than silently presenting it as the current price. Crypto trades
-// every calendar day, so a gap past ~a day and a half is a real ingestion
-// gap, not a weekend; equities/ETFs only trade on the exchange calendar, so
-// the same gap is routine over a long weekend and needs a much wider berth.
-export const STALE_AFTER_HOURS: Record<"crypto" | "other", number> = { crypto: 36, other: 96 };
-
-export function isStaleClose(assetType: string | undefined, asOf: string | null, now = new Date()): boolean {
-  if (!asOf) return false;
-  const ageMs = now.getTime() - new Date(`${asOf}T00:00:00Z`).getTime();
-  const limitHours = assetType === "crypto" ? STALE_AFTER_HOURS.crypto : STALE_AFTER_HOURS.other;
-  return ageMs > limitHours * 60 * 60 * 1000;
-}
+export { STALE_AFTER_HOURS, isStaleClose };
 
 export interface LatestClose {
   latest: number | null;
@@ -207,6 +197,8 @@ export interface LatestClose {
   stale: boolean;
   /** Date the returned price is as of (bar date, or the live quote's own date). */
   asOf: string | null;
+  /** True only for an in-session live quote (never a stored close). */
+  live: boolean;
 }
 
 // Drop-in replacement for `latestCloseBySymbol(historical_prices rows)` used
@@ -254,14 +246,14 @@ export async function getLatestCloses(
           // predecessor is the one before that.
           const prev = quote.marketOpen ? num(rows[0]?.close) : num(rows[1]?.close);
           const asOf = quote.quoteDate ?? quote.fetchedAt.slice(0, 10);
-          return [symbol, { latest: quote.price, prev, stale: false, asOf }] as const;
+          return [symbol, { latest: quote.price, prev, stale: false, asOf, live: quote.marketOpen || cryptoHint(assetType) === "crypto" }] as const;
         }
       }
       const fallback = toLastClosePrice(symbol, rows);
       const asOf = fallback.asOf;
       return [
         symbol,
-        { latest: fallback.price, prev: num(rows[1]?.close), stale: isStaleClose(assetType, asOf), asOf },
+        { latest: fallback.price, prev: num(rows[1]?.close), stale: describePriceFreshness({ source: "last_close", asOf, assetType }).stale, asOf, live: false },
       ] as const;
     }),
   );
@@ -278,10 +270,16 @@ export async function latestDataDate(
   prefetchedBars?: Map<string, Bar[]>,
 ): Promise<string | null> {
   const bySymbol = prefetchedBars ?? (await lastBars(symbols, 1));
-  let newest: string | null = null;
+  // The date of the newest EXCHANGE close, so one crypto bar dated today does
+  // not make the whole page say "close of <today>" while equities are a day
+  // behind (audit 1.4). Crypto only decides it when nothing else is held.
+  let newestExchange: string | null = null;
+  let newestAny: string | null = null;
   for (const rows of bySymbol.values()) {
     const ts = rows[0]?.ts ?? null;
-    if (ts && (newest === null || ts > newest)) newest = ts;
+    if (!ts) continue;
+    if (newestAny === null || ts > newestAny) newestAny = ts;
+    if (rows[0].asset_type !== "crypto" && (newestExchange === null || ts > newestExchange)) newestExchange = ts;
   }
-  return newest;
+  return newestExchange ?? newestAny;
 }

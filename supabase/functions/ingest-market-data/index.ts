@@ -8,6 +8,7 @@ import { corsHeaders } from "../_shared/cors.ts";
 import { requireCronSecret } from "../_shared/auth.ts";
 import { fetchYahooFinanceDaily, type PriceBar } from "../_shared/market-adapters.ts";
 import { buildDirectoryPatch } from "../_shared/symbol-directory.ts";
+import { drainQueue, orderForRefresh, type RefreshCandidate } from "../_shared/refresh-queue.ts";
 
 
 // asset_type used to be read once per provider and applied to every symbol
@@ -30,13 +31,12 @@ const VALID_ASSET_TYPES = ["equity", "etf", "crypto", "forex", "index", "future"
 
 // Symbols ingested on demand join this job's set, so a symbol someone searched
 // for last week is still current this week. Bounded three ways: only symbols
-// requested inside DEMAND_WINDOW_DAYS, at most MAX_ON_DEMAND_SYMBOLS of them
-// (stalest first), and paced by REQUEST_DELAY_MS like every other call here.
+// requested inside DEMAND_WINDOW_DAYS, ordered stalest-first with held/watched
+// symbols ahead, drained against RUN_BUDGET_MS, and paced by REQUEST_DELAY_MS.
 // Without the pacing this loop was ~500 sequential unthrottled requests
 // against a feed that publishes no quota - the same "broken and quiet" shape
 // as the cron bug it was meant to fix.
 const DEMAND_WINDOW_DAYS = 30;
-const MAX_ON_DEMAND_SYMBOLS = 150;
 const REQUEST_DELAY_MS = 400;
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -85,12 +85,24 @@ function readSymbols(config: Record<string, unknown> | null, fallback: PriceBar[
   return out;
 }
 
+// The run is cut off by the platform's wall-clock limit, so it stops starting
+// new symbols after this and reports the rest as skipped. Skipped symbols are
+// the freshest ones (the queue is stalest-first), and they head tomorrow's
+// queue if they are still the stalest. See _shared/refresh-queue.ts.
+const RUN_BUDGET_MS = 100_000;
+
+interface QueueItem extends RefreshCandidate {
+  assetType: PriceBar["asset_type"];
+  source: string;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   // Scheduled callers must present the shared secret; see _shared/auth.ts.
   const unauthorized = requireCronSecret(req);
   if (unauthorized) return unauthorized;
 
+  const startedAt = Date.now();
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
@@ -106,122 +118,135 @@ Deno.serve(async (req) => {
     return Response.json({ error: providersError.message }, { status: 500, headers: corsHeaders });
   }
 
-  const results = [];
+  const results: Record<string, unknown>[] = [];
 
-  // What the configured provider rows already cover, so a symbol is not
-  // fetched twice in one run.
-  const configured = new Set<string>();
-  for (const provider of providers ?? []) {
-    const providerAssetType = (provider.config?.asset_type as PriceBar["asset_type"]) ?? "equity";
-    for (const { symbol } of readSymbols(provider.config, providerAssetType)) configured.add(symbol.toUpperCase());
-  }
-
+  // --- Gather every symbol this job is responsible for ---------------------
+  const wanted = new Map<string, { assetType: PriceBar["asset_type"]; source: string }>();
   for (const provider of providers ?? []) {
     const adapterName = String(provider.config?.adapter ?? "");
-    const providerAssetType = (provider.config?.asset_type as PriceBar["asset_type"]) ?? "equity";
-    const symbols = readSymbols(provider.config, providerAssetType);
-
     if (adapterName !== "yahoo_finance_chart") {
       results.push({ provider: provider.name, error: `unknown adapter "${adapterName}"` });
       continue;
     }
+    const providerAssetType = (provider.config?.asset_type as PriceBar["asset_type"]) ?? "equity";
+    for (const { symbol, assetType } of readSymbols(provider.config, providerAssetType)) {
+      wanted.set(symbol.toUpperCase(), { assetType, source: String(provider.name) });
+    }
+  }
 
-    for (const { symbol, assetType } of symbols) {
+  // Held and watched symbols are refreshed ahead of everything else, whether or
+  // not anyone searched for them recently (ISRG was a holding, on no list).
+  const prioritySymbols = new Set<string>();
+  const holdingTypes = new Map<string, string>();
+  for (const table of ["holdings", "watchlist_items"] as const) {
+    const cols = table === "holdings" ? "symbol, asset_type" : "symbol";
+    for (let from = 0; ; from += 1000) {
+      const { data, error } = await supabase.from(table).select(cols).range(from, from + 999);
+      if (error || !data || data.length === 0) break;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      for (const row of data as any[]) {
+        const s = String(row.symbol).toUpperCase();
+        prioritySymbols.add(s);
+        if (row.asset_type) holdingTypes.set(s, row.asset_type);
+      }
+      if (data.length < 1000) break;
+    }
+  }
+
+  // Directory rows: freshness for ordering, and the on-demand set.
+  const since = new Date(Date.now() - DEMAND_WINDOW_DAYS * 24 * 60 * 60 * 1000).toISOString();
+  const directory = new Map<string, { asset_type: string; last_checked_at: string | null; last_success_at: string | null; recent: boolean }>();
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await supabase
+      .from("symbol_directory")
+      .select("symbol, asset_type, last_checked_at, last_success_at, last_requested_at, status")
+      .in("status", ["available", "error", "rate_limited"])
+      .range(from, from + 999);
+    if (error || !data || data.length === 0) break;
+    for (const row of data) {
+      directory.set(String(row.symbol).toUpperCase(), {
+        asset_type: row.asset_type,
+        last_checked_at: row.last_checked_at,
+        last_success_at: row.last_success_at,
+        recent: row.last_requested_at >= since,
+      });
+    }
+    if (data.length < 1000) break;
+  }
+  for (const [symbol, d] of directory) {
+    // Crypto history comes from ingest-crypto's CoinGecko pass, not this one.
+    if (d.asset_type === "crypto" || wanted.has(symbol)) continue;
+    if (d.recent || (prioritySymbols.has(symbol) && d.last_success_at !== null)) {
+      wanted.set(symbol, { assetType: d.asset_type as PriceBar["asset_type"], source: "on_demand" });
+    }
+  }
+
+  const queue = orderForRefresh<QueueItem>(
+    [...wanted.entries()].map(([symbol, w]) => ({
+      symbol,
+      assetType: w.assetType,
+      source: w.source,
+      lastCheckedAt: directory.get(symbol)?.last_checked_at ?? null,
+      lastSuccessAt: directory.get(symbol)?.last_success_at ?? null,
+      prioritised: prioritySymbols.has(symbol),
+    })),
+  );
+
+  // --- Drain it, stalest/held first, against the run budget ----------------
+  const drained = await drainQueue(
+    queue,
+    async ({ symbol, assetType, source }) => {
       const now = new Date().toISOString();
       try {
         await sleep(REQUEST_DELAY_MS);
-        const before = await storedBarCount(supabase, symbol.toUpperCase());
-        const bars = await fetchYahooFinanceDaily(symbol, assetType, refreshRange(before));
+        const before = await storedBarCount(supabase, symbol);
+        // On-demand forex rows are stored without the provider's `=X` suffix.
+        const providerSymbol = source === "on_demand" && assetType === "forex" ? `${symbol}=X` : symbol;
+        const bars = await fetchYahooFinanceDaily(providerSymbol, assetType, refreshRange(before));
         if (bars.length === 0) {
-          results.push({ provider: provider.name, symbol, error: "no data returned" });
-          await supabase
-            .from("symbol_directory")
-            .update(buildDirectoryPatch({ kind: "no_data" }, now))
-            .eq("symbol", symbol);
-          continue;
+          results.push({ provider: source, symbol, error: "no data returned" });
+          await supabase.from("symbol_directory").update(buildDirectoryPatch({ kind: "no_data" }, now)).eq("symbol", symbol);
+          return;
         }
 
         const { error: upsertError } = await supabase
           .from("historical_prices")
-          .upsert(bars, { onConflict: "symbol,ts", ignoreDuplicates: false });
+          .upsert(source === "on_demand" ? bars.map((b) => ({ ...b, symbol })) : bars, { onConflict: "symbol,ts", ignoreDuplicates: false });
         // What is stored, not what this call fetched: a 2y refresh of a
         // 30-year series used to write bars=~505 back, which made the
         // analysis path think the symbol was shallow and re-fetch it.
-        const storedAfter = (await storedBarCount(supabase, symbol.toUpperCase())) ?? bars.length;
+        const storedAfter = (await storedBarCount(supabase, symbol)) ?? bars.length;
 
-        // Every configured symbol gets its directory row bumped here -
-        // previously only the on-demand pass below did this, so this loop's
-        // 40-plus tracked equities/ETFs kept refreshing historical_prices
-        // while /admin's staleness check (and the Holdings-table fallback
-        // that reads it) kept reporting them as untouched for days.
+        // Every attempt bumps the directory row - success or failure - so
+        // /admin's staleness check and the queue order both see what happened.
         await supabase
           .from("symbol_directory")
           .update(
             buildDirectoryPatch(
-              upsertError
-                ? { kind: "error", message: upsertError.message }
-                : { kind: "success", bars: storedAfter },
+              upsertError ? { kind: "error", message: upsertError.message } : { kind: "success", bars: storedAfter },
               now,
             ),
           )
           .eq("symbol", symbol);
 
-        results.push({
-          provider: provider.name,
-          symbol,
-          asset_type: assetType,
-          bars: bars.length,
-          error: upsertError?.message,
-        });
+        results.push({ provider: source, symbol, asset_type: assetType, bars: bars.length, error: upsertError?.message });
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
-        results.push({ provider: provider.name, symbol, error: message });
-        await supabase
-          .from("symbol_directory")
-          .update(buildDirectoryPatch({ kind: "error", message }, now))
-          .eq("symbol", symbol);
+        results.push({ provider: source, symbol, error: message });
+        await supabase.from("symbol_directory").update(buildDirectoryPatch({ kind: "error", message }, now)).eq("symbol", symbol);
       }
-    }
-  }
+    },
+    startedAt + RUN_BUDGET_MS,
+  );
 
-  // Second pass: on-demand symbols, refreshed by demand and staleness.
-  const since = new Date(Date.now() - DEMAND_WINDOW_DAYS * 24 * 60 * 60 * 1000).toISOString();
-  const { data: onDemand } = await supabase
-    .from("symbol_directory")
-    .select("symbol, asset_type, last_success_at")
-    .eq("status", "available")
-    .gte("last_requested_at", since)
-    // Crypto history comes from ingest-crypto's CoinGecko pass, not this one.
-    .neq("asset_type", "crypto")
-    .order("last_success_at", { ascending: true, nullsFirst: true })
-    .limit(MAX_ON_DEMAND_SYMBOLS);
-
-  for (const row of onDemand ?? []) {
-    const symbol = row.symbol.toUpperCase();
-    if (configured.has(symbol)) continue;
-    try {
-      await sleep(REQUEST_DELAY_MS);
-      // Storage symbols drop the provider's suffix (BTC-USD -> BTC); forex and
-      // indices keep theirs, so re-derive the provider form here.
-      const providerSymbol = row.asset_type === "forex" ? `${symbol}=X` : symbol;
-      const before = await storedBarCount(supabase, symbol);
-      const bars = await fetchYahooFinanceDaily(providerSymbol, row.asset_type as PriceBar["asset_type"], refreshRange(before));
-      if (bars.length === 0) {
-        results.push({ provider: "on_demand", symbol, error: "no data returned" });
-        continue;
-      }
-      const { error: upsertError } = await supabase
-        .from("historical_prices")
-        .upsert(bars.map((b) => ({ ...b, symbol })), { onConflict: "symbol,ts", ignoreDuplicates: false });
-      await supabase
-        .from("symbol_directory")
-        .update({ last_success_at: new Date().toISOString(), last_checked_at: new Date().toISOString(), bars: (await storedBarCount(supabase, symbol)) ?? bars.length })
-        .eq("symbol", symbol);
-      results.push({ provider: "on_demand", symbol, asset_type: row.asset_type, bars: bars.length, error: upsertError?.message });
-    } catch (err) {
-      results.push({ provider: "on_demand", symbol, error: err instanceof Error ? err.message : String(err) });
-    }
-  }
-
-  return Response.json({ results }, { headers: corsHeaders });
+  return Response.json(
+    {
+      queued: queue.length,
+      refreshed: drained.done.length,
+      skipped_for_time: drained.skipped.length,
+      skipped_symbols: drained.skipped.slice(0, 50).map((s) => s.symbol),
+      results,
+    },
+    { headers: corsHeaders },
+  );
 });

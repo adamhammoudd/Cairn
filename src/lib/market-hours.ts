@@ -123,3 +123,42 @@ export function getMarketStatus(at: Date = new Date()): MarketStatus {
   }
   return { phase: "closed", label: "Markets closed", isOpen: false };
 }
+
+const pad2 = (n: number) => String(n).padStart(2, "0");
+
+function isTradingDay(year: number, month: number, day: number, weekday: number): boolean {
+  if (weekday === 0 || weekday === 6) return false;
+  // Past the holiday table a closure cannot be told from a session; weekdays count as sessions.
+  return !HOLIDAYS.has(`${year}-${pad2(month)}-${pad2(day)}`);
+}
+
+// Hour (New York) after which today's daily bar is expected to be stored. The
+// daily ingest runs at 22:00 UTC (18:00 or 17:00 New York); an hour of grace.
+const CLOSE_BAR_EXPECTED_AFTER_MINUTES = 19 * 60;
+
+/**
+ * Date (YYYY-MM-DD) of the newest daily bar that should exist at `at` for a
+ * US-listed symbol. Every "close of ..." label and every staleness decision is
+ * judged against this, so a price is only called current when it is the latest
+ * close that could exist. During a session it is the PREVIOUS trading day -
+ * today's close has not happened yet.
+ */
+export function expectedLatestCloseDate(at: Date = new Date()): string {
+  const p = nyParts(at);
+  // Walk the New York calendar in UTC arithmetic; only the date matters.
+  let cursor = Date.UTC(p.year, p.month - 1, p.day);
+  let weekday = p.weekday;
+  const todayCounts = p.hour * 60 + p.minute >= CLOSE_BAR_EXPECTED_AFTER_MINUTES;
+  let first = true;
+  for (let i = 0; i < 14; i++) {
+    const d = new Date(cursor);
+    const y = d.getUTCFullYear();
+    const m = d.getUTCMonth() + 1;
+    const day = d.getUTCDate();
+    if ((!first || todayCounts) && isTradingDay(y, m, day, weekday)) return `${y}-${pad2(m)}-${pad2(day)}`;
+    first = false;
+    cursor -= 86_400_000;
+    weekday = (weekday + 6) % 7;
+  }
+  return `${p.year}-${pad2(p.month)}-${pad2(p.day)}`;
+}

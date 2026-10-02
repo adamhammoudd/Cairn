@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { describePriceFreshness, shortDate } from "@/lib/price-freshness";
 import Link from "next/link";
 import { assetTypeBadge, formatMarketCap, formatVolume } from "@/lib/screener";
 import { useDisplayPrefs } from "@/components/display-prefs-provider";
@@ -161,6 +162,11 @@ export function TickerWorkspace({
   // Asset-type routing (roadmap Phase 9). Forex and index used to fall through
   // to the equity grid and print "P/E (TTM)" and "Next event" on a currency
   // pair, which are not things a currency pair has.
+  // P/E and market cap are price x something. When the price is an old close,
+  // say which day it is, so a stale price cannot pass as a current ratio.
+  const priceFresh = describePriceFreshness({ source: data.priceSource, asOf: data.priceAsOf, assetType: data.assetType });
+  const derivedFrom = priceFresh.stale && data.priceAsOf ? ` (price of ${shortDate(data.priceAsOf)})` : "";
+
   const stats: { label: string; value: string | number }[] = isCrypto
     ? [
         ...common,
@@ -197,10 +203,10 @@ export function TickerWorkspace({
         : [
             ...common,
             { label: "Volume", value: formatVolume(data.volume) },
-            { label: "Market cap", value: formatMarketCap(marketCap, data.currency) },
+            { label: `Market cap${derivedFrom}`, value: formatMarketCap(marketCap, data.currency) },
             // The mock labels this P/E (fwd); no forward estimates are ingested,
             // so it stays trailing rather than presenting TTM as a forecast.
-            { label: "P/E (TTM)", value: pe === null ? "-" : `${pe.toFixed(1)}x` },
+            { label: `P/E (TTM)${derivedFrom}`, value: pe === null ? "-" : `${pe.toFixed(1)}x` },
             volatility,
             {
               label: "Next event",
