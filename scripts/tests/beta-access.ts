@@ -57,7 +57,7 @@ export function runBetaAccessSuite(): SuiteResult {
   cases.push(check("getUserPlan() applies betaPremiumUntil + resolvePlan", /betaPremiumUntil\(\)/.test(planFn) && /resolvePlan\(/.test(planFn), "source"));
   const detailFn = actions.slice(actions.indexOf("export async function getBillingDetail"));
   cases.push(check("getBillingDetail() resolves the tier through resolvePlan, not the raw row", /resolvePlan\(subscription\?\.tier/.test(detailFn) && !/const tier = subscription\?\.tier/.test(detailFn), "source"));
-  const chatFn = actions.slice(actions.indexOf("export async function checkChatUsageAllowed"));
+  const chatFn = fs.readFileSync(path.resolve(process.cwd(), "src/lib/chat-usage.ts"), "utf8");
   cases.push(check("the chat gate enforces BETA_CHAT_DAILY_CAP while beta is on", /betaPremiumUntil\(\)\s*&&\s*\(count \?\? 0\) >= BETA_CHAT_DAILY_CAP/.test(chatFn), "source"));
   cases.push(check("beta never writes a subscription (no insert/upsert added to getUserPlan)", !/upsert|insert\(/.test(planFn), "source"));
 

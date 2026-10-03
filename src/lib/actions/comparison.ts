@@ -1,5 +1,6 @@
 "use server";
 
+import { getAuthUser } from "@/lib/supabase/auth";
 import { createClient } from "@/lib/supabase/server";
 import { cryptoRolling24hFor } from "@/lib/market-data/current-price";
 import { unwrapRows, MIGRATIONS } from "@/lib/supabase/read";
@@ -19,6 +20,8 @@ import { getAssetCurrencies } from "@/lib/market-data/asset-currency";
 // have data for": the provider config only lists what the daily job refreshes,
 // while anything ingested on demand is in the directory the moment it lands.
 export async function getTrackedSymbols(): Promise<string[]> {
+  // Session required: a server action is a public POST endpoint, whatever page the proxy guards.
+  if (!(await getAuthUser())) return [];
   const supabase = await createClient();
   const rows = unwrapRows(
     "Tracked symbols (symbol_directory)",
@@ -37,6 +40,8 @@ const COMPARISON_BARS_PER_SYMBOL = 400;
 // duplication, the formula is already computed in three places in this
 // codebase.
 export async function getComparisonData(symbols: string[]): Promise<ComparisonRow[]> {
+  // Session required: a server action is a public POST endpoint, whatever page the proxy guards.
+  if (!(await getAuthUser())) return [];
   if (symbols.length === 0) return [];
   const supabase = await createClient();
 

@@ -1,10 +1,13 @@
 "use server";
 
+import { getAuthUser } from "@/lib/supabase/auth";
 import { createClient } from "@/lib/supabase/server";
 import { getTrackedSymbols } from "@/lib/actions/comparison";
 import type { SectorMapNode } from "@/lib/sector-map";
 
 export async function getSectorHeatmap(): Promise<SectorMapNode[]> {
+  // Session required: a server action is a public POST endpoint, whatever page the proxy guards.
+  if (!(await getAuthUser())) return [];
   const symbols = await getTrackedSymbols();
   if (symbols.length === 0) return [];
 
@@ -86,6 +89,8 @@ export async function getSectorHeatmap(): Promise<SectorMapNode[]> {
  * -style), while the map groups by SEC SIC descriptions.
  */
 export async function listSectorMapSectors(): Promise<string[]> {
+  // Session required: a server action is a public POST endpoint, whatever page the proxy guards.
+  if (!(await getAuthUser())) return [];
   const symbols = await getTrackedSymbols();
   if (symbols.length === 0) return [];
 
