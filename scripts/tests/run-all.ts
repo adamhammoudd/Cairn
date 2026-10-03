@@ -86,7 +86,9 @@ import { runDiscussionPoliciesSuite } from "./discussion-policies";
 import { runEndpointAuthAuditSuite } from "./endpoint-auth-audit";
 import { runChatUsageSessionSuite } from "./chat-usage-session";
 import { runCspNonceSuite } from "./csp-nonce";
-
+import { runRefreshQueueSuite } from "./refresh-queue";
+import { runPriceFreshnessSuite } from "./price-freshness";
+import { runCronAndFxRefreshSuite } from "./cron-and-fx-refresh";
 // A suite that throws (missing credentials, unreachable service) must surface
 // as a hard failure of that suite, not take the whole run down with a stack
 // trace that reports nothing about the suites that did run.
@@ -163,7 +165,9 @@ async function main() {
     endpointAuditSuites,
     chatUsageSessionSuites,
     cspNonceSuites,
-  ] = await Promise.all([
+    refreshQueueSuites,
+    priceFreshnessSuites,
+    cronFxSuites,  ] = await Promise.all([
     guarded("Adversarial scope guard", runAdversarialScopeGuardSuites),
     guarded("Methodology substance", async () => [await runMethodologySubstanceSuite()]),
     guarded("Citation freshness", async () => [await runCitationFreshnessSuite()]),
@@ -214,7 +218,9 @@ async function main() {
     guarded("Endpoint auth audit", async () => [await runEndpointAuthAuditSuite()]),
     guarded("Chat quota session-bound", async () => [await runChatUsageSessionSuite()]),
     guarded("CSP nonce policy", async () => [await runCspNonceSuite()]),
-  ]);
+    guarded("Data refresh queue", async () => [await runRefreshQueueSuite()]),
+    guarded("Price freshness labels", async () => [await runPriceFreshnessSuite()]),
+    guarded("Cron auth + FX top-up", async () => [await runCronAndFxRefreshSuite()]),  ]);
 
   const allSuites = [
     runProbabilityMathSuite(),
@@ -285,6 +291,9 @@ async function main() {
     ...businessProfileSuites,
     ...nativeCurrencySuites,
     ...betaInvitesSuites,
+    ...refreshQueueSuites,
+    ...priceFreshnessSuites,
+    ...cronFxSuites,
     ...costBasisFxSuites,
     ...authFailClosedSuites,
     ...discussionPolicySuites,

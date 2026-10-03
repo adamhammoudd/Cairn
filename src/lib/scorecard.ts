@@ -309,31 +309,42 @@ export function growthDimension(m: CompanyMetrics | null, filing: FilingRef | nu
 export function healthDimension(m: CompanyMetrics | null, filing: FilingRef | null): Dimension {
   const label = "Financial health";
   const T = THRESHOLDS.health;
-  if (!m || m.ttm.ebitda === null || m.ttm.free_cash_flow === null || m.ttm.revenue === null) {
+  // Some companies (Intuitive Surgical) tag depreciation for full years only, so
+  // trailing EBITDA cannot be built. Operating profit (before interest and tax,
+  // but AFTER depreciation) is then used instead. It is never higher than
+  // EBITDA, so the leverage reading errs cautious, and the card says which it used.
+  const basisIsOperating = !!m && m.ttm.ebitda === null && m.ttm.operating_income !== null;
+  const profit = m ? (m.ttm.ebitda ?? m.ttm.operating_income) : null;
+  if (!m || profit === null || m.ttm.free_cash_flow === null || m.ttm.revenue === null) {
     return NA("health", label, "Profit and cash-flow figures are not complete for this company.", "Not available");
   }
+  const profitName = basisIsOperating ? "operating profit" : "EBITDA";
   const fcf = m.ttm.free_cash_flow;
   const nd = m.netDebt;
-  const lev = m.netDebtToEbitda;
+  const lev = nd === null || profit <= 0 ? null : nd / profit;
   const verdict =
-    fcf <= 0 || m.ttm.ebitda <= 0 || (lev !== null && lev > T.stretchedNetDebtToEbitda)
+    fcf <= 0 || profit <= 0 || (lev !== null && lev > T.stretchedNetDebtToEbitda)
       ? "Stretched"
       : fcf > 0 && nd !== null && (nd <= 0 || (lev !== null && lev < T.strongNetDebtToEbitda))
         ? "Strong"
         : "OK";
   const level: Level = verdict === "Strong" ? "strong" : verdict === "OK" ? "mixed" : "weak";
 
-  const margin = m.ebitdaMargin;
+  const margin = basisIsOperating ? m.operatingMargin : m.ebitdaMargin;
   const parts: string[] = [];
   if (margin !== null && margin > 0) {
-    parts.push(`Keeps ${Math.round(margin * 100)} cents of every dollar of sales as EBITDA (profit before interest, tax and write-downs).`);
+    parts.push(
+      basisIsOperating
+        ? `Keeps ${Math.round(margin * 100)} cents of every dollar of sales as operating profit (profit before interest and tax).`
+        : `Keeps ${Math.round(margin * 100)} cents of every dollar of sales as EBITDA (profit before interest, tax and write-downs).`,
+    );
   } else {
-    parts.push("It makes no EBITDA (profit before interest, tax and write-downs).");
+    parts.push(basisIsOperating ? "It makes no operating profit." : "It makes no EBITDA (profit before interest, tax and write-downs).");
   }
   parts.push(fcf > 0 ? "It brings in more cash than it spends." : "It spent more cash than it brought in last year.");
   if (nd !== null) {
     if (nd <= 0) parts.push("It has more cash than debt.");
-    else if (lev !== null) parts.push(`Its debt minus its cash equals ${oneDp(lev)} years of EBITDA.`);
+    else if (lev !== null) parts.push(`Its debt minus its cash equals ${oneDp(lev)} years of ${profitName}.`);
   }
   return {
     key: "health",
@@ -343,12 +354,12 @@ export function healthDimension(m: CompanyMetrics | null, filing: FilingRef | nu
     verdict,
     sentence: parts.join(" "),
     inputs: [
-      input("EBITDA margin", margin, margin !== null && margin > 0 ? String(Math.round(margin * 100)) : null),
+      input(basisIsOperating ? "Operating margin" : "EBITDA margin", margin, margin !== null && margin > 0 ? String(Math.round(margin * 100)) : null),
       input("Free cash flow, last 12 months (USD)", fcf, null),
       input("Net debt (USD)", nd, null),
-      input("Net debt ÷ EBITDA", lev, lev !== null && nd !== null && nd > 0 ? oneDp(lev) : null),
+      input(`Net debt ÷ ${profitName}`, lev, lev !== null && nd !== null && nd > 0 ? oneDp(lev) : null),
     ],
-    sources: filingSource(filing, "EBITDA, cash flow and debt"),
+    sources: filingSource(filing, basisIsOperating ? "operating profit, cash flow and debt" : "EBITDA, cash flow and debt"),
   };
 }
 
