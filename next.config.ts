@@ -30,6 +30,10 @@ const isDev = process.env.NODE_ENV !== "production";
 // list hCaptcha documents for CSP.
 const HCAPTCHA = "https://hcaptcha.com https://*.hcaptcha.com";
 
+// When CSP_MODE is set, src/proxy.ts sends a per-request nonce policy instead
+// (lib/csp.ts) and this static one is left out, so the two never stack.
+const nonceCspActive = ["report-only", "enforce"].includes((process.env.CSP_MODE ?? "").trim().toLowerCase());
+
 const csp = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} ${HCAPTCHA}`,
@@ -59,7 +63,7 @@ const securityHeaders = [
   // Nothing in Cairn uses any of these; deny them rather than inherit defaults.
   { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=(), usb=()" },
   { key: "X-DNS-Prefetch-Control", value: "off" },
-  { key: "Content-Security-Policy-Report-Only", value: csp },
+  ...(nonceCspActive ? [] : [{ key: "Content-Security-Policy-Report-Only", value: csp }]),
 ];
 
 // HSTS only in production: sending it from a local http dev server is either

@@ -1,5 +1,6 @@
 "use server";
 
+import { getAuthUser } from "@/lib/supabase/auth";
 import { createClient } from "@/lib/supabase/server";
 import type { CalendarEvent } from "@/lib/calendar";
 
@@ -7,6 +8,8 @@ import type { CalendarEvent } from "@/lib/calendar";
 // upcoming events for those same symbols so an earnings date can be surfaced
 // next to the probability output it's relevant to.
 export async function getEventsForScopes(scopeValues: string[]): Promise<Record<string, CalendarEvent[]>> {
+  // Session required: a server action is a public POST endpoint, whatever page the proxy guards.
+  if (!(await getAuthUser())) return {};
   if (scopeValues.length === 0) return {};
 
   const supabase = await createClient();

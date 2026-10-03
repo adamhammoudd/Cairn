@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { getAuthUser } from "@/lib/supabase/auth";
 import { MIGRATIONS, unwrap } from "@/lib/supabase/read";
 import { getCurrentPrice } from "@/lib/market-data/current-price";
 import { ensureSymbolIngested } from "@/lib/market-data/ingest";
@@ -68,6 +69,8 @@ export interface TickerUnavailable {
  */
 export async function loadTicker(symbolRaw: string): Promise<TickerData | TickerUnavailable> {
   const symbol = symbolRaw.trim().toUpperCase();
+  // Session required: a cold symbol is fetched from the provider (audit 2.3).
+  if (!(await getAuthUser())) return { symbol, reason: "unavailable", detail: "Sign in to view this symbol." };
   const supabase = await createClient();
 
   // How many daily bars this page ships to the client. Must stay above the

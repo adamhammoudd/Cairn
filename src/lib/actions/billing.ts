@@ -284,53 +284,7 @@ export interface UsageGate {
   message?: string;
 }
 
-// The AI-analysis quota (reserve before generating, refund on failure) lives in
-// lib/ai-usage.ts - not here, where every export is a callable server action.
-
-// Checked by app/api/chat/route.ts before calling the model - same
-// before-not-after discipline as reserveAiUsage (lib/ai-usage.ts). Daily rather
-// than monthly (chat is a much higher-frequency surface than requesting a
-// full analysis), and Premium's null limit means "never denied."
-export async function checkChatUsageAllowed(userId: string): Promise<UsageGate> {
-  const supabase = await createClient();
-
-  const [tier, { count }, admin] = await Promise.all([
-    getUserPlan(),
-    supabase
-      .from("chat_usage_events")
-      .select("*", { count: "exact", head: true })
-      .eq("user_id", userId)
-      .gte("created_at", startOfTodayIso()),
-    isAdminUser(supabase, userId),
-  ]);
-
-  if (admin) return { allowed: true };
-
-  // Beta: everyone is on Premium (unlimited chat), so this abuse ceiling is
-  // the only thing between one account and the model bill.
-  if (betaPremiumUntil() && (count ?? 0) >= BETA_CHAT_DAILY_CAP) {
-    return {
-      allowed: false,
-      message: `You've sent ${BETA_CHAT_DAILY_CAP} messages today, the most the beta allows in one day. It resets tomorrow.`,
-    };
-  }
-
-  const summary = computeChatUsageSummary(tier, count ?? 0);
-  if (summary.limit !== null && (summary.remaining ?? 0) <= 0) {
-    return {
-      allowed: false,
-      message: `You've used all ${summary.limit} chat messages included in your ${summary.tier} plan today. Switch plans on the Billing page or try again tomorrow.`,
-    };
-  }
-  return { allowed: true };
-}
-
-// A response is recorded as usage whenever the user actually received one -
-// including a scope-guard rewrite, since a model call was made and an answer
-// was shown either way. Only a genuine failure upstream (no response at all)
-// should skip this, matching reserveAiUsage's "never costs a slot on
-// failure" philosophy adapted to chat's every-turn cadence.
-export async function recordChatUsage(userId: string): Promise<void> {
-  const admin = createAdminClient();
-  await admin.from("chat_usage_events").insert({ user_id: userId });
-}
+// The AI-analysis quota lives in lib/ai-usage.ts and the chat quota in
+// lib/chat-usage.ts - not here, where every export is a callable server action.
+// A callable "record usage for user X" is a way to burn someone else's quota,
+// and a callable "check user X" reads another account's usage.

@@ -81,10 +81,14 @@ import { runAssistantTranscriptsSuite } from "./assistant-transcripts";
 import { runAssistantEmptyAnswersSuite } from "./assistant-empty-answers";
 import { runNativeCurrencySuite } from "./native-currency";
 import { runBetaInvitesSuite } from "./beta-invites";
+import { runAuthRateLimitFailClosedSuite } from "./auth-rate-limit-failclosed";
+import { runDiscussionPoliciesSuite } from "./discussion-policies";
+import { runEndpointAuthAuditSuite } from "./endpoint-auth-audit";
+import { runChatUsageSessionSuite } from "./chat-usage-session";
+import { runCspNonceSuite } from "./csp-nonce";
 import { runRefreshQueueSuite } from "./refresh-queue";
 import { runPriceFreshnessSuite } from "./price-freshness";
 import { runCronAndFxRefreshSuite } from "./cron-and-fx-refresh";
-
 // A suite that throws (missing credentials, unreachable service) must surface
 // as a hard failure of that suite, not take the whole run down with a stack
 // trace that reports nothing about the suites that did run.
@@ -156,10 +160,14 @@ async function main() {
     businessProfileSuites,
     nativeCurrencySuites,
     betaInvitesSuites,
+    authFailClosedSuites,
+    discussionPolicySuites,
+    endpointAuditSuites,
+    chatUsageSessionSuites,
+    cspNonceSuites,
     refreshQueueSuites,
     priceFreshnessSuites,
-    cronFxSuites,
-  ] = await Promise.all([
+    cronFxSuites,  ] = await Promise.all([
     guarded("Adversarial scope guard", runAdversarialScopeGuardSuites),
     guarded("Methodology substance", async () => [await runMethodologySubstanceSuite()]),
     guarded("Citation freshness", async () => [await runCitationFreshnessSuite()]),
@@ -205,10 +213,14 @@ async function main() {
     guarded("Business profile", async () => [await runBusinessProfileSuite()]),
     guarded("Native currency", async () => [await runNativeCurrencySuite()]),
     guarded("Beta invites", async () => [await runBetaInvitesSuite()]),
+    guarded("Auth rate limit fail-closed", async () => [await runAuthRateLimitFailClosedSuite()]),
+    guarded("Discussion policies", async () => [await runDiscussionPoliciesSuite()]),
+    guarded("Endpoint auth audit", async () => [await runEndpointAuthAuditSuite()]),
+    guarded("Chat quota session-bound", async () => [await runChatUsageSessionSuite()]),
+    guarded("CSP nonce policy", async () => [await runCspNonceSuite()]),
     guarded("Data refresh queue", async () => [await runRefreshQueueSuite()]),
     guarded("Price freshness labels", async () => [await runPriceFreshnessSuite()]),
-    guarded("Cron auth + FX top-up", async () => [await runCronAndFxRefreshSuite()]),
-  ]);
+    guarded("Cron auth + FX top-up", async () => [await runCronAndFxRefreshSuite()]),  ]);
 
   const allSuites = [
     runProbabilityMathSuite(),
@@ -283,6 +295,11 @@ async function main() {
     ...priceFreshnessSuites,
     ...cronFxSuites,
     ...costBasisFxSuites,
+    ...authFailClosedSuites,
+    ...discussionPolicySuites,
+    ...endpointAuditSuites,
+    ...chatUsageSessionSuites,
+    ...cspNonceSuites,
   ];
   const reportPath = writeReport(allSuites);
 
