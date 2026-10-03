@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { getAuthUser } from "@/lib/supabase/auth";
 import { ensureSymbolIngested, normalizeSymbol } from "@/lib/market-data/ingest";
 import { ensureProfile } from "@/lib/market-data/reference";
 import { normalizeSector, SECTOR_LABEL } from "@/lib/sectors";
@@ -42,6 +43,9 @@ export interface SymbolSearchResult {
 export async function searchSymbols(query: string): Promise<SymbolSearchResult[]> {
   const q = query.trim();
   if (!q) return [];
+  // Server actions are reachable by anyone who has an action id, whatever page
+  // the proxy guards - so each one checks the session itself (audit 2.3).
+  if (!(await getAuthUser())) return [];
 
   const supabase = await createClient();
   const { data } = await supabase.rpc("search_symbols", { prefix: q, max_results: 8 });
@@ -64,6 +68,8 @@ export async function searchSymbols(query: string): Promise<SymbolSearchResult[]
  * symbol_directory without touching the provider.
  */
 export async function lookupSymbol(query: string): Promise<SymbolSearchResult | null> {
+  // Signed-in users only: this one spends the shared provider budget.
+  if (!(await getAuthUser())) return null;
   const symbol = normalizeSymbol(query);
   if (!symbol) return null;
 
@@ -134,6 +140,7 @@ export async function getSymbolProfile(
   assetType: AssetType,
 ): Promise<{ sector: string | null; assetClass: string | null }> {
   const assetClass = ASSET_CLASS_LABEL[assetType] ?? null;
+  if (!(await getAuthUser())) return { sector: null, assetClass };
   const normalized = normalizeSymbol(symbol);
   if (!normalized) return { sector: null, assetClass };
 

@@ -95,6 +95,8 @@ export interface AssistantMeta {
   /** Guard failures on the way (first draft, repair), for review. */
   guardFailures: { reason: string; evidence?: string }[];
   portfolioUsed: boolean;
+  /** Which web search provider received the search terms, when the answer used a web search (audit 3.5). Absent on older messages. */
+  webProvider?: "groq" | "brave" | null;
   tools: { name: ToolName; args: Record<string, unknown>; ok: boolean; ms: number; error?: string }[];
   usage: { calls: number; promptTokens: number; completionTokens: number; webSearches: number };
   costUsd: number;

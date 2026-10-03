@@ -24,6 +24,7 @@
 //   * sentence_too_long: at most 25 words (the target is under 20).
 
 import { checkNoFreelancedProbability, checkScopeGuard } from "@/lib/ai/scope-guard";
+import { hasForwardLooking } from "@/lib/ai/forward-looking";
 import { NO_EVENT_VERDICT, VALUATION_VERDICTS, type Scorecard, type Dimension } from "@/lib/scorecard";
 import type { HistoryPlain } from "@/lib/ai/history-plain";
 
@@ -45,6 +46,7 @@ export type SummaryFailure =
   | "addresses_reader"
   | "scope_guard"
   | "freelanced_probability"
+  | "forward_looking"
   | "number_not_in_inputs"
   | "unexplained_jargon"
   | "sentence_too_long"
@@ -190,6 +192,8 @@ export function checkSummaryText(s: SummaryText, inputs: SummaryInputs, opts: { 
   }
   if (!checkScopeGuard(all).passed) return fail("scope_guard", all);
   if (!checkNoFreelancedProbability(all, []).passed) return fail("freelanced_probability", all);
+  // No market-direction forecast, however hedged ("may keep climbing").
+  for (const p of parts) if (hasForwardLooking(p)) return fail("forward_looking", p);
 
   const allowed = allowedNumbersFor(inputs);
   for (const p of parts) {

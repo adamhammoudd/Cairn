@@ -2,6 +2,7 @@
 
 import { MarkdownMessage } from "@/components/chat/markdown-message";
 import type { AnswerTile, AssistantMeta } from "@/lib/ai/assistant/types";
+import { webSearchLine } from "@/lib/ai/assistant/web-line";
 
 // The pieces of an assistant v2 answer around its text (feat/assistant-v2):
 // the "Checked: ..." activity line, up to four key-figure tiles and the
@@ -101,6 +102,17 @@ export function SourcesDisclosure({ sources }: { sources: string }) {
  * Only when there is data under it: an answer that found nothing says so in its own words, and
  * "from the data above" over no data would be false.
  */
+/**
+ * "Searched the web" - said whenever a web search ran for this answer, naming who
+ * received the search words. Built from what the server recorded, so it cannot
+ * claim a search that did not happen or hide one that did (audit 3.5).
+ */
+export function WebSearchLine({ meta }: { meta: AssistantMeta }) {
+  const line = webSearchLine(meta);
+  if (!line) return null;
+  return <p className="mt-2.5 font-mono text-micro leading-[1.5] text-dim">{line}</p>;
+}
+
 export function FactsNote({ meta }: { meta: AssistantMeta }) {
   if (meta.source !== "facts" || (meta.tiles.length === 0 && meta.sources.length === 0)) return null;
   return <p className="mt-3 text-micro text-dim">Written by Cairn directly from the data above.</p>;

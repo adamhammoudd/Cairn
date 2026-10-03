@@ -28,7 +28,11 @@
 // proration paragraph replaced (there is one paid plan), the 14-day past_due
 // grace stated, cancellation path corrected, §14 now gives the contact email
 // directly instead of pointing at the unpublished Legal notice.
-export const TOS_VERSION = "2026-09-25";
+// 2026-10-02: §10 now says prices are delayed quotes and daily closes (it said
+// "generally daily closes, not a live feed", but the app shows delayed live
+// quotes and intraday charts); §9 and §14 link a sample withdrawal form; §14 links
+// the Legal notice once the operator identity is set. For counsel review.
+export const TOS_VERSION = "2026-10-02";
 
 /** ISO date of the current Privacy Policy revision. */
 // 2026-09-18: subprocessor list made complete (Vercel, Stripe, the email
@@ -49,7 +53,12 @@ export const TOS_VERSION = "2026-09-25";
 // added as a processor. The same day the AI provider was briefly listed as
 // DeepInfra; that switch never went live (sign-up needed a VAT number), so
 // the page names Groq again, as it did before.
-export const PRIVACY_VERSION = "2026-09-26";
+// 2026-10-02: Brave Search listed as a processor (assistant web search sends the
+// search words to it when switched on); hCaptcha entry now says what loads and
+// when; waitlist removal is self-service (personal link, reply STOP). For counsel
+// review. NOT changed here: the statement about portfolio figures and the AI
+// model - that waits for the founder's decision (audit item 3.1).
+export const PRIVACY_VERSION = "2026-10-02";
 
 /**
  * "30 August 2026" - the format LegalShell's "Last updated" line expects.

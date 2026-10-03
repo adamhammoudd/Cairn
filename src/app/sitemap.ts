@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
-import { LEGAL_NOTICE_LIVE, getSiteUrl } from "@/lib/site";
+import { legalNoticeLive } from "@/lib/operator";
+import { getSiteUrl } from "@/lib/site";
 
 // Only the public surface. Anything under (app) or (auth) is a logged-in
 // product screen and is noindexed; /waitlist/confirm is a one-time token link.
@@ -11,11 +12,12 @@ const PUBLIC_PAGES = [
   "/terms",
   "/refunds",
   "/accessibility",
-  // 404s on the production deployment while its placeholders are unfilled.
-  ...(LEGAL_NOTICE_LIVE ? ["/legal-notice"] : []),
+  "/data-sources",
 ];
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const site = getSiteUrl();
-  return PUBLIC_PAGES.map((path) => ({ url: `${site}${path}` }));
+  // /legal-notice 404s until the operator identity is set (lib/operator.ts).
+  const pages = legalNoticeLive() ? [...PUBLIC_PAGES, "/legal-notice"] : PUBLIC_PAGES;
+  return pages.map((path) => ({ url: `${site}${path}` }));
 }

@@ -25,6 +25,7 @@ import { answerText, checkAnswer, type GuardResult } from "@/lib/ai/assistant/gu
 import type { AnswerDraft, AnswerSection, AnswerTile, AssistantMeta, AssistantSource, SectionHeading, ToolName, ToolOutcome } from "@/lib/ai/assistant/types";
 import { checkedLabel, isEmptyOutcome, webWasOff } from "@/lib/ai/assistant/outcomes";
 import { marketTopicFor } from "@/lib/ai/assistant/market-proxies";
+import { webSearchProvider } from "@/lib/ai/assistant/web-search";
 
 export const MAX_ROUNDS = 6;
 export const MAX_TOOL_CALLS = 14;
@@ -523,6 +524,7 @@ export async function runAssistantTurn(input: AssistantTurnInput): Promise<Assis
     source,
     guardFailures,
     portfolioUsed: outcomes.some((o) => o.name === "get_portfolio" && o.ok),
+    webProvider: usage.webSearches > 0 ? (webSearchProvider() === "off" ? null : (webSearchProvider() as "groq" | "brave")) : null,
     tools: outcomes.map((o) => ({ name: o.name, args: o.args, ok: o.ok, ms: o.ms, ...(o.error ? { error: o.error } : {}) })),
     usage,
     costUsd: Math.round(costUsd * 1e6) / 1e6,

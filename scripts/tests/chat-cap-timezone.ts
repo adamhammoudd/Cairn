@@ -39,8 +39,10 @@ export function runChatCapTimezoneSuite(): SuiteResult {
   eq("reset phrase names the zone", resetPhrase("Europe/Brussels"), "midnight (Europe/Brussels)");
   eq("an invalid zone is described as UTC, the zone actually used", resetPhrase("nope"), "midnight (UTC)");
   const billing = fs.readFileSync(path.resolve(__dirname, "../../src/lib/actions/billing.ts"), "utf8");
-  check("neither limit message says 'tomorrow' any more", !/tomorrow/.test(billing.split(/\r?\n/).filter((l) => !l.trim().startsWith("//")).join("\n")));
-  check("every chat-usage count uses the reader's zone", (billing.match(/startOfTodayIso\(timeZone\)/g) ?? []).length === 3 && !/startOfTodayIso\(\)/.test(billing));
+  const usageSrc = fs.readFileSync(path.resolve(__dirname, "../../src/lib/chat-usage.ts"), "utf8");
+  const noComments = (t: string) => t.split(/\r?\n/).filter((l) => !l.trim().startsWith("//")).join("\n");
+  check("neither limit message says 'tomorrow' any more", !/tomorrow/.test(noComments(billing)) && !/tomorrow/.test(noComments(usageSrc)));
+  check("every chat-usage count uses the reader's zone", (billing.match(/startOfTodayIso\(timeZone\)/g) ?? []).length + (usageSrc.match(/startOfTodayIso\(timeZone\)/g) ?? []).length === 3 && !/startOfTodayIso\(\)/.test(billing + usageSrc));
   return result();
 }
 

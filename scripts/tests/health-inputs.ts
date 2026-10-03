@@ -75,6 +75,29 @@ export function runHealthInputsSuite(): SuiteResult {
     );
   }
 
+  // ---- ISRG: D&A is annual-only in companyfacts ------------------------------
+  // Audit 2026-10-02 item 1.5. ISRG files capex (PaymentsToAcquireProductiveAssets)
+  // and operating cash flow quarterly, but its quarterly D&A sits in a
+  // company-specific tag that companyfacts does not carry; us-gaap
+  // `Depreciation` exists for full years only. Quarterly D&A is therefore null,
+  // so trailing EBITDA was null and the health card read "Not available".
+  const isrg = health("ISRG");
+  check(
+    "ISRG capital spending and operating cash flow are read, so free cash flow is known",
+    isrg.metrics?.ttm.free_cash_flow != null,
+    `FCF ${isrg.metrics?.ttm.free_cash_flow}`,
+  );
+  check(
+    "ISRG financial health is rated, not 'Not available'",
+    isrg.dim.verdict !== "Not available" && isrg.dim.level !== "not_applicable",
+    `${isrg.dim.verdict}: ${isrg.dim.sentence}`,
+  );
+  check(
+    "ISRG's health card says it used operating profit, because D&A is not available quarterly",
+    /operating profit/i.test(isrg.dim.sentence) && !/EBITDA/.test(isrg.dim.sentence),
+    isrg.dim.sentence,
+  );
+
   return { suiteName: "Financial health inputs (capex + D&A concepts)", gating: true, cases };
 }
 

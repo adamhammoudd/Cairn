@@ -1,5 +1,6 @@
 "use server";
 
+import { getAuthUser } from "@/lib/supabase/auth";
 import { createClient } from "@/lib/supabase/server";
 import {
   keysetOrFilter,
@@ -41,6 +42,7 @@ export interface NewsPageRequest {
 
 /** One page of the feed: newest-first by (published_at, id), ranked by relevance within the page. */
 export async function getNewsPage(req: NewsPageRequest = {}): Promise<NewsPage> {
+  if (!(await getAuthUser())) return { items: [], nextCursor: null };
   const supabase = await createClient();
   const interests = await readNewsInterests(supabase);
   const limit = Math.min(Math.max(req.limit ?? NEWS_PAGE_SIZE, 1), 100);
@@ -72,6 +74,8 @@ export async function getNewsPage(req: NewsPageRequest = {}): Promise<NewsPage> 
  * filter chips. Head-only counts on indexed columns.
  */
 export async function getNewsCounts(search = ""): Promise<Record<NewsFilter, number>> {
+  // Session required: a server action is a public POST endpoint, whatever page the proxy guards.
+  if (!(await getAuthUser())) return { all: 0, holding: 0, sector: 0, general: 0 };
   const supabase = await createClient();
   const interests = await readNewsInterests(supabase);
   const filters: NewsFilter[] = ["all", "holding", "sector", "general"];

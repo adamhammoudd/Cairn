@@ -860,6 +860,8 @@ export interface Database {
           user_agent: string | null;
           client_timezone: string | null;
           review_flag: boolean;
+          /** Personal removal link token (migration 0067). */
+          removal_token: string;
           created_at: string;
         };
         Insert: {

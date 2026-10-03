@@ -1,5 +1,8 @@
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { appendFooter, buildEmailFooter } from "@/lib/email-footer";
+import { readOperatorIdentity } from "@/lib/operator";
+import { CONTACT_EMAIL } from "@/lib/site";
 
 // Shared logic for the pre-launch waitlist. The server action
 // (src/lib/actions/waitlist.ts) and the confirmation route
@@ -191,6 +194,36 @@ export async function sendConfirmationEmail(to: string, confirmUrl: string): Pro
   return result;
 }
 
+/** Seams for tests: no network, no database, no real environment. */
+export interface SendDeps {
+  env?: Record<string, string | undefined>;
+  fetch?: typeof fetch;
+  /** The recipient's personal removal link, or null when it cannot be built. */
+  removalUrlFor?: (to: string) => Promise<string | null>;
+}
+
+/**
+ * The personal "stop emailing me" link for a waitlist member. Null when the
+ * address is not on the list, the column is missing (migration 0067 not yet
+ * applied) or the site origin is unknown - the footer then still carries the
+ * reply-STOP line and the contact address.
+ */
+async function removalUrlForRecipient(to: string): Promise<string | null> {
+  try {
+    const origin = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+    if (!origin) return null;
+    const { data, error } = await createAdminClient()
+      .from("waitlist")
+      .select("removal_token")
+      .eq("email_normalized", to.trim().toLowerCase())
+      .maybeSingle();
+    if (error || !data?.removal_token) return null;
+    return `${new URL(origin).origin}/waitlist/remove?token=${data.removal_token}`;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Sends one message through whichever provider is configured (Resend, then the
  * Gmail bridge). Shared by the waitlist confirmation and the beta invites
@@ -198,23 +231,28 @@ export async function sendConfirmationEmail(to: string, confirmUrl: string): Pro
  * logs nothing about the message - an invite link carries a secret code, so
  * the console fallback that prints the confirmation link lives in
  * sendConfirmationEmail() only.
+ *
+ * EVERY message leaves through here, and here the footer is added (who is
+ * sending, how to reach them, how to stop - lib/email-footer.ts). A message
+ * type that skips this function cannot reach a provider.
  */
-export async function sendEmail(to: string, message: ConfirmationMessage): Promise<EmailResult> {
-  switch (selectEmailProvider()) {
+export async function sendEmail(to: string, message: ConfirmationMessage, deps: SendDeps = {}): Promise<EmailResult> {
+  const env = deps.env ?? process.env;
+  const operator = readOperatorIdentity(env);
+  // Launch switch: with EMAIL_REQUIRE_IDENTITY=1, nothing is sent until the
+  // operator identity is complete, because the footer cannot then say who is
+  // sending. Off by default so the pre-launch waitlist keeps working.
+  if (env.EMAIL_REQUIRE_IDENTITY === "1" && !operator) {
+    return { sent: false, via: selectEmailProvider(env), reason: "operator-identity-missing" };
+  }
+  const removalUrl = await (deps.removalUrlFor ?? removalUrlForRecipient)(to);
+  const footed = appendFooter(message, buildEmailFooter({ operator, fallbackContact: CONTACT_EMAIL, removalUrl }));
+
+  switch (selectEmailProvider(env)) {
     case "resend":
-      return sendViaResend(
-        process.env.RESEND_API_KEY!,
-        process.env.WAITLIST_EMAIL_FROM!,
-        to,
-        message,
-      );
+      return sendViaResend(env.RESEND_API_KEY!, env.WAITLIST_EMAIL_FROM!, to, footed, deps.fetch ?? fetch);
     case "gmail":
-      return sendViaGmailSmtp(
-        process.env.GMAIL_SMTP_USER!,
-        process.env.GMAIL_SMTP_APP_PASSWORD!,
-        to,
-        message,
-      );
+      return sendViaGmailSmtp(env.GMAIL_SMTP_USER!, env.GMAIL_SMTP_APP_PASSWORD!, to, footed);
     default:
       return { sent: false, via: "none", reason: "no-provider" };
   }
@@ -318,9 +356,10 @@ async function sendViaResend(
   from: string,
   to: string,
   message: ConfirmationMessage,
+  fetchImpl: typeof fetch = fetch,
 ): Promise<EmailResult> {
   try {
-    const res = await fetch("https://api.resend.com/emails", {
+    const res = await fetchImpl("https://api.resend.com/emails", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${apiKey}`,
