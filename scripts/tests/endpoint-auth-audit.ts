@@ -30,6 +30,7 @@ const ROUTE_GUARDS: Record<string, { why: string; marker: RegExp }> = {
   "src/app/api/chat/route.ts": { why: "signed-in session", marker: /auth\.getUser\(\)[\s\S]*status: 401/ },
   "src/app/api/cron/send-beta-invites/route.ts": { why: "CRON_SECRET bearer", marker: /checkCronAuth\(|authorized\(/ },
   "src/app/api/cron/refresh-fx-rates/route.ts": { why: "CRON_SECRET bearer", marker: /checkCronAuth\(|authorized\(/ },
+  "src/app/api/email/inbound/route.ts": { why: "INBOUND_EMAIL_SECRET bearer (503 without it)", marker: /INBOUND_EMAIL_SECRET/ },
   "src/app/api/stripe/webhook/route.ts": { why: "Stripe signature", marker: /constructEvent\(/ },
   "src/app/api/v1/analyses/route.ts": { why: "session", marker: /requireUser\(\)/ },
   "src/app/api/v1/holdings/route.ts": { why: "session", marker: /requireUser\(\)/ },
@@ -43,6 +44,7 @@ const ROUTE_GUARDS: Record<string, { why: string; marker: RegExp }> = {
 const ACTION_ALLOWLIST = new Set([
   "auth.ts:signIn", "auth.ts:signUp", "auth.ts:forgotPassword", "auth.ts:signOut", // credential endpoints, rate-limited
   "waitlist.ts:joinWaitlist", // public form
+  "waitlist.ts:removeFromWaitlist", // public by design: the unguessable removal token is the credential
   "billing.ts:getBetaAccessLabel", // a date string
   "billing.ts:getUserPlan", // returns "free" with no session
   "admin.ts:getAdminSnapshot", // isCurrentUserAdmin() inside

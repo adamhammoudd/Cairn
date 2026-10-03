@@ -85,7 +85,7 @@ export async function POST(req: Request) {
     getUserPlan(),
     getDisplayPrefs(),
   ]);
-  const usePortfolio = session.use_portfolio_context ?? settings?.assistant_use_portfolio_context ?? true;
+  const usePortfolio = session.use_portfolio_context ?? settings?.assistant_use_portfolio_context ?? false;
 
   const encoder = new TextEncoder();
   const body = new ReadableStream({

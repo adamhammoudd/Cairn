@@ -458,7 +458,7 @@ export function SettingsForm({ settings, activeTab, sectorOptions, watchlists, f
             label="Portfolio context"
             desc="Let the assistant read your holdings and watchlists when deciding what is relevant. Answers stay market/sector/ticker-level either way - Cairn never analyses your position or resolves to buy, hold, or sell."
           >
-            <Toggle name="assistant_use_portfolio_context" defaultChecked={settings.assistant_use_portfolio_context ?? true} />
+            <Toggle name="assistant_use_portfolio_context" defaultChecked={settings.assistant_use_portfolio_context ?? false} />
           </CardRow>
         </Card>
       </div>

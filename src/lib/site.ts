@@ -9,7 +9,7 @@ export const SITE_NAME = "Cairn";
 // The one published contact address for privacy, legal, billing, complaint and
 // accessibility requests. Legal pages must read it from here rather than
 // pointing at /legal-notice, which is not public until the operator's identity
-// details are filled in (see LEGAL_NOTICE_LIVE below).
+// is set in the environment (see lib/operator.ts).
 export const CONTACT_EMAIL = "cairnai.business@gmail.com";
 
 // Root <meta name="description"> - what every page without its own inherits.
@@ -103,20 +103,3 @@ export function softwareApplicationJsonLd(site = getSiteUrl()) {
     },
   };
 }
-
-/**
- * Is /legal-notice allowed to be served?
- *
- * The page still carries "TO BE COMPLETED" placeholders for the operator's
- * legal name, address, KBO/BCE and VAT numbers. Published, it would be a false
- * statement about who the consumer is contracting with, so it is a 404 on the
- * Vercel production deployment (VERCEL_ENV is unset locally, so it stays
- * viewable in dev and `next start`; previews show it too).
- *
- * TO GO LIVE: fill in every placeholder in src/app/legal-notice/page.tsx, then
- * delete this constant and each place that reads it (the page's notFound(), the
- * sitemap entry, the LegalShell footer link) and re-add the line in
- * public/llms.txt. Note the withdrawal instructions on /refunds and Terms
- * section 14 both point at this page.
- */
-export const LEGAL_NOTICE_LIVE = process.env.VERCEL_ENV !== "production";
