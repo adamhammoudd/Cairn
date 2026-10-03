@@ -99,14 +99,14 @@ export function SectorTreemap({
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <div className="flex w-fit flex-wrap gap-[3px] rounded-[10px] border border-[#232323] bg-[#0c0c0c] p-[3px]">
+        <div className="flex w-fit flex-wrap gap-[3px] rounded-[10px] border border-line-soft bg-canvas p-[3px]">
           {SORTS.map(([key, label]) => (
             <button
               key={key}
               type="button"
               onClick={() => setSort(key)}
               className={`rounded-[7px] px-3 py-1.5 text-[11.5px] whitespace-nowrap transition-colors duration-base ease-standard ${
-                sort === key ? "bg-[#1e1e1e] text-primary" : "text-muted hover:text-primary"
+                sort === key ? "bg-line-soft text-primary" : "text-muted hover:text-primary"
               }`}
             >
               {label}
@@ -121,7 +121,7 @@ export function SectorTreemap({
               // The spec's stops. The flat mid-tones are what a near-zero
               // tile actually looks like once its low-alpha fill sits on the
               // panel, so the key matches the ground it explains.
-              background: "linear-gradient(90deg, #d96c6c, #3a2a2a, #1f3a30, #2fc685)",
+              background: "linear-gradient(90deg, var(--color-negative), var(--color-legend-neg), var(--color-legend-pos), var(--color-accent))",
             }}
           />
           <span className="font-mono text-eyebrow text-dim">+5%</span>
@@ -134,7 +134,7 @@ export function SectorTreemap({
         {stats.map((stat, i) => (
           <div
             key={stat.label}
-            className="animate-rise-in flex flex-col gap-1.5 rounded-[14px] border border-[#232323] bg-panel px-4.5 py-4"
+            className="animate-rise-in flex flex-col gap-1.5 rounded-[14px] border border-line-soft bg-panel px-4.5 py-4"
             style={{ animationDelay: `${60 + i * 55}ms` }}
           >
             <div className="font-mono text-eyebrow tracking-[0.18em] text-dim uppercase">{stat.label}</div>
@@ -159,12 +159,12 @@ export function SectorTreemap({
               // nothing else, so "this is the one you picked" has to be said
               // with the frame.
               className={`animate-rise-in rounded-[14px] border bg-panel px-4 py-[15px] transition-[border-color,transform] duration-[220ms] ease-standard hover:-translate-y-0.5 hover:border-line-strong ${
-                sector.name === focusedSector ? "border-accent/45" : "border-[#232323]"
+                sector.name === focusedSector ? "border-accent/45" : "border-line-soft"
               }`}
               style={{ animationDelay: `${100 + index * 40}ms` }}
             >
               <div className="mb-3 flex items-center justify-between gap-3">
-                <span className="flex items-center gap-2 font-mono text-eyebrow leading-[1.5] tracking-[0.13em] text-[#9a9a9a] uppercase">
+                <span className="flex items-center gap-2 font-mono text-eyebrow leading-[1.5] tracking-[0.13em] text-muted uppercase">
                   {sector.name}
                   {sector.name === focusedSector && <span className="text-accent normal-case">· focus</span>}
                   <span className="font-sans text-micro tracking-normal text-dim normal-case">{sectorCountLabel(sector.name, sector.children.length)}</span>
@@ -204,10 +204,9 @@ export function SectorTreemap({
                       style={{
                         flexGrow: Math.max(tile.size, total * 0.1),
                         flexBasis: 0,
-                        minWidth: "34px",
                         background: colorForChange(tile.changePct),
                       }}
-                      className="@container flex min-w-0 flex-col justify-end gap-1 overflow-hidden rounded-control p-2 transition-[filter,box-shadow] duration-base ease-standard hover:brightness-[1.22] hover:outline hover:outline-1 hover:outline-white/20"
+                      className="@container flex min-w-[34px] flex-col pointer-coarse:min-w-11 justify-end gap-1 overflow-hidden rounded-control p-2 transition-[filter,box-shadow] duration-base ease-standard hover:brightness-[1.22] hover:outline hover:outline-1 hover:outline-white/20"
                     >
                       {/* A 34px tile minus p-2 leaves ~18px of text - two
                           characters. The earlier pass added the title tooltip

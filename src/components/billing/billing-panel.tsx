@@ -29,7 +29,7 @@ export function BillingPanel({ detail }: { detail: BillingDetail }) {
   return (
     <div className="flex max-w-[900px] flex-col gap-6">
       <div>
-        <h2 className="font-serif text-h2 text-primary">Billing</h2>
+        <h1 className="font-serif text-h2 text-primary">Billing</h1>
         <p className="mt-1 text-body text-muted">
           {billingEnabled
             ? "Premium is billed monthly through Stripe. Manage your card, invoices, or cancellation from the Stripe portal; your plan updates here automatically once Stripe confirms it."

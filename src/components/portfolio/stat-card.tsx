@@ -24,7 +24,7 @@ export function StatCard({ label, value, exact, sub, tone = "primary", delayMs =
 
   return (
     <div
-      className="animate-rise-in relative flex flex-col gap-1.5 overflow-hidden rounded-[15px] border border-[#232323] bg-panel px-5 py-4.5"
+      className="animate-rise-in relative flex flex-col gap-1.5 overflow-hidden rounded-[15px] border border-line-soft bg-panel px-5 py-4.5"
       style={{ animationDelay: `${delayMs}ms` }}
     >
       <span

@@ -135,22 +135,22 @@ export function AlertPanel({ alerts, deliveries, quotes, defaultChannels }: Aler
   }
 
   const STATS: { label: string; value: string; note: string; textClass: string; accent: string }[] = [
-    { label: "Armed", value: String(armed.length), note: "watching at every close", textClass: "text-accent", accent: "#2fc685" },
+    { label: "Armed", value: String(armed.length), note: "watching at every close", textClass: "text-accent", accent: "var(--color-accent)" },
     {
       label: "Recent deliveries",
       value: String(deliveries.length),
       note: `across ${new Set(deliveries.map((d) => d.scope_value)).size} symbols`,
       textClass: "text-warning",
-      accent: "#d9a441",
+      accent: "var(--color-warning)",
     },
     {
       label: "Closest to firing",
       value: closest?.symbol ?? "-",
       note: closest ? `${closest.gapPct.toFixed(1)}% from ${closest.level}` : "no armed price level yet",
       textClass: closest ? "text-info" : "text-dim",
-      accent: "#5b8def",
+      accent: "var(--color-info)",
     },
-    { label: "Paused", value: String(paused.length), note: "not being evaluated", textClass: "text-muted", accent: "#3a3a3a" },
+    { label: "Paused", value: String(paused.length), note: "not being evaluated", textClass: "text-muted", accent: "var(--color-line-strong)" },
   ];
   const TABS: { key: AlertTab; label: string; count: number }[] = [
     { key: "armed", label: "Armed", count: armed.length },
@@ -187,7 +187,7 @@ export function AlertPanel({ alerts, deliveries, quotes, defaultChannels }: Aler
         {STATS.map((stat, i) => (
           <div
             key={stat.label}
-            className="animate-rise-in relative flex flex-col gap-1.5 overflow-hidden rounded-[15px] border border-[#232323] bg-panel px-[19px] py-[17px]"
+            className="animate-rise-in relative flex flex-col gap-1.5 overflow-hidden rounded-[15px] border border-line-soft bg-panel px-[19px] py-[17px]"
             style={{ animationDelay: `${60 + i * 55}ms` }}
           >
             <span
@@ -209,7 +209,7 @@ export function AlertPanel({ alerts, deliveries, quotes, defaultChannels }: Aler
               a level sat indistinguishable except for a switch position. */}
           {alerts.length > 0 && (
             <div
-              className="animate-rise-in flex w-fit flex-wrap gap-[3px] rounded-[11px] border border-[#232323] bg-[#0c0c0c] p-[3px]"
+              className="animate-rise-in flex w-fit flex-wrap gap-[3px] rounded-[11px] border border-line-soft bg-canvas p-[3px]"
               style={{ animationDelay: "100ms" }}
             >
               {TABS.map((t) => {
@@ -220,13 +220,13 @@ export function AlertPanel({ alerts, deliveries, quotes, defaultChannels }: Aler
                     type="button"
                     onClick={() => setTab(t.key)}
                     className={`inline-flex items-center gap-[7px] rounded-[9px] px-[13px] py-[7px] text-[12.5px] whitespace-nowrap transition-colors duration-base ease-standard ${
-                      on ? "bg-[#1e1e1e] text-primary" : "text-muted hover:text-primary"
+                      on ? "bg-line-soft text-primary" : "text-muted hover:text-primary"
                     }`}
                   >
                     {t.label}
                     <span
                       className={`rounded-[5px] px-[5px] py-px font-mono text-eyebrow ${
-                        on ? "bg-accent/15 text-accent-light" : "bg-[#161616] text-dim"
+                        on ? "bg-accent/15 text-accent-light" : "bg-raised text-dim"
                       }`}
                     >
                       {t.count}
@@ -255,7 +255,7 @@ export function AlertPanel({ alerts, deliveries, quotes, defaultChannels }: Aler
               return (
                 <div
                   key={a.id}
-                  className="animate-rise-in flex gap-[15px] overflow-hidden rounded-[14px] border border-[#232323] bg-panel transition-[border-color,background] duration-base ease-standard hover:border-line-strong hover:bg-[#121212]"
+                  className="animate-rise-in flex gap-[15px] overflow-hidden rounded-[14px] border border-line-soft bg-panel transition-[border-color,background] duration-base ease-standard hover:border-line-strong hover:bg-panel"
                   style={{ animationDelay: `${140 + index * 55}ms` }}
                 >
                   {/* The rail carries the alert's kind, and dims when it is not
@@ -329,14 +329,14 @@ export function AlertPanel({ alerts, deliveries, quotes, defaultChannels }: Aler
                       </button>
                     </div>
 
-                    <div className="text-body leading-[1.55] text-[#c9c9c9] text-pretty">
+                    <div className="text-body leading-[1.55] text-text-soft text-pretty">
                       {describeCondition(a.alert_type, a.condition)}
                     </div>
 
                     {reading && (
                       <div className="flex flex-wrap items-center gap-2.5 font-mono text-micro text-dim">
                         <span className="text-primary">{reading.current}</span>
-                        <span className="h-[5px] min-w-[90px] flex-1 overflow-hidden rounded-[3px] bg-[#191919]">
+                        <span className="h-[5px] min-w-[90px] flex-1 overflow-hidden rounded-[3px] bg-active">
                           <span
                             className={`animate-grow-x block h-full rounded-[3px] opacity-80 ${tone.rail}`}
                             style={{ width: `${reading.progress}%`, animationDelay: `${200 + index * 60}ms` }}
@@ -383,22 +383,22 @@ export function AlertPanel({ alerts, deliveries, quotes, defaultChannels }: Aler
           />
 
           <section
-            className="animate-rise-in relative overflow-hidden rounded-2xl border border-[#232323] bg-panel"
+            className="animate-rise-in relative overflow-hidden rounded-2xl border border-line-soft bg-panel"
             style={{ animationDelay: "180ms" }}
           >
             <span
               aria-hidden
               className="absolute top-0 right-0 left-0 h-px"
-              style={{ background: "linear-gradient(90deg,#d9a441,rgba(217,164,65,0))" }}
+              style={{ background: "linear-gradient(90deg,var(--color-warning),rgba(217,164,65,0))" }}
             />
-            <div className="border-b border-[#1c1c1c] px-4 py-3.5 font-mono text-eyebrow tracking-[0.18em] text-warning uppercase">
+            <div className="border-b border-line-soft px-4 py-3.5 font-mono text-eyebrow tracking-[0.18em] text-warning uppercase">
               Recent deliveries
             </div>
             {deliveries.length === 0 ? (
               <p className="px-4 py-5 text-body text-dim">Nothing yet - alerts appear here when they fire.</p>
             ) : (
               deliveries.map((d) => (
-                <div key={d.id} className="flex gap-3 border-b border-[#171717] px-4 py-3.5 last:border-b-0">
+                <div key={d.id} className="flex gap-3 border-b border-active px-4 py-3.5 last:border-b-0">
                   <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
                   <div className="min-w-0">
                     <div className="text-body leading-relaxed text-primary text-pretty">

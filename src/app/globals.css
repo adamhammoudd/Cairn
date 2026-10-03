@@ -66,6 +66,16 @@
   --color-info: #5b8def;
   --color-violet: #9b8ce0;
 
+  /* Literals that were hard-coded in components (audit 2026-10-02, 6.4). Named here
+     because each is a real role; each is used in one or two places. */
+  --color-text-soft: #c9c9c9; /* secondary body text brighter than --color-muted (alert messages) */
+  --color-tint-accent-bg: #1c2a23; /* green-tinted fill: the user's chat bubble */
+  --color-tint-accent-text: #e6f5ee; /* text on --color-tint-accent-bg */
+  --color-tint-warning-border: #2a2418; /* amber-tinted border: the portfolio chart note */
+  --color-tint-warning-text: #c8c0ad; /* text in the portfolio chart note */
+  --color-legend-neg: #3a2a2a; /* sector-map legend: the flat tone just short of full red */
+  --color-legend-pos: #1f3a30; /* sector-map legend: the flat tone just short of full green */
+
   --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
   --duration-fast: 120ms;
   --duration-base: 200ms;
@@ -93,6 +103,13 @@
   --color-warning: var(--color-warning);
   --color-info: var(--color-info);
   --color-violet: var(--color-violet);
+  --color-text-soft: var(--color-text-soft);
+  --color-tint-accent-bg: var(--color-tint-accent-bg);
+  --color-tint-accent-text: var(--color-tint-accent-text);
+  --color-tint-warning-border: var(--color-tint-warning-border);
+  --color-tint-warning-text: var(--color-tint-warning-text);
+  --color-legend-neg: var(--color-legend-neg);
+  --color-legend-pos: var(--color-legend-pos);
 
   --font-sans: "Helvetica Neue", Helvetica, Arial, sans-serif;
   --font-serif: var(--font-newsreader), Georgia, "Times New Roman", serif;

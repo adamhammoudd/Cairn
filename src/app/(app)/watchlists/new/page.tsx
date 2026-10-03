@@ -9,7 +9,7 @@ export default function NewWatchlistPage() {
     <div className="animate-page-in flex flex-col gap-4">
       <Link
         href="/watchlists"
-        className="w-fit text-body text-muted transition-colors duration-fast ease-standard hover:text-primary"
+        className="tap inline-flex min-h-11 w-fit items-center text-body text-muted transition-colors duration-fast ease-standard hover:text-primary"
       >
         ← Watchlists
       </Link>

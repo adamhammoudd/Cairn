@@ -60,7 +60,7 @@ export function PortfolioStats({
         delayMs={50}
       >
         {split && (
-          <dl className="mt-0.5 flex flex-col gap-0.5 border-t border-[#232323] pt-1.5 text-caption text-muted" aria-label="Where the gain comes from">
+          <dl className="mt-0.5 flex flex-col gap-0.5 border-t border-line-soft pt-1.5 text-caption text-muted" aria-label="Where the gain comes from">
             <div className="flex justify-between gap-2">
               <dt className="min-w-0">From the price</dt>
               <dd className="shrink-0 whitespace-nowrap font-mono tabular-nums text-primary">{split.priceLabel.replace("From the price: ", "")}</dd>

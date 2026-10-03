@@ -13,7 +13,7 @@ export function ConcentrationPanel({ summary }: { summary: ConcentrationSummary 
       : `${namesOverThreshold} ${namesOverThreshold === 1 ? "position makes" : "positions make"} up over 60% of the book.`;
 
   return (
-    <div className="relative flex flex-col gap-3 overflow-hidden rounded-2xl border border-[#232323] bg-panel px-[22px] py-5">
+    <div className="relative flex flex-col gap-3 overflow-hidden rounded-2xl border border-line-soft bg-panel px-[22px] py-5">
       <span
         aria-hidden
         className="absolute top-0 right-0 left-0 h-px"

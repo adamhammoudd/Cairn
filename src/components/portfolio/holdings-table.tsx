@@ -107,8 +107,8 @@ export function HoldingsTable({
           </button>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-2xl border border-[#232323] bg-panel">
-          <div className="flex flex-wrap items-center justify-between gap-2.5 border-b border-[#1c1c1c] bg-[#0c0c0c] px-5 py-3.5">
+        <div className="overflow-hidden rounded-2xl border border-line-soft bg-panel">
+          <div className="flex flex-wrap items-center justify-between gap-2.5 border-b border-line-soft bg-canvas px-5 py-3.5">
             <span className="font-mono text-eyebrow tracking-[0.16em] text-primary uppercase">
               {metrics.length} {metrics.length === 1 ? "position" : "positions"}
             </span>
@@ -123,7 +123,7 @@ export function HoldingsTable({
               const positive = (m.gain ?? 0) >= 0;
               const series = sparklines[m.symbol] ?? [];
               return (
-                <div key={m.id} className="cn-row flex flex-col gap-2.5 border-b border-[#171717] px-4 py-3.5 last:border-b-0">
+                <div key={m.id} className="cn-row flex flex-col gap-2.5 border-b border-active px-4 py-3.5 last:border-b-0">
                   <div className="flex items-center justify-between gap-2.5">
                     <div className="flex min-w-0 items-center gap-2.5">
                       <div
@@ -211,7 +211,7 @@ export function HoldingsTable({
           <div className="hidden overflow-x-auto lg:block">
             <div className="min-w-[860px]">
               <div
-                className={`grid ${COLS} gap-3 border-b border-[#1c1c1c] bg-[#0c0c0c] px-5 py-2.5 font-mono text-eyebrow tracking-[0.14em] text-dim uppercase`}
+                className={`grid ${COLS} gap-3 border-b border-line-soft bg-canvas px-5 py-2.5 font-mono text-eyebrow tracking-[0.14em] text-dim uppercase`}
               >
                 <div>Holding</div>
                 <div>Qty</div>
@@ -229,7 +229,7 @@ export function HoldingsTable({
                 return (
                   <div
                     key={m.id}
-                    className={`cn-row grid ${COLS} items-center gap-3 border-b border-[#171717] px-5 py-[13px] transition-colors duration-fast ease-standard last:border-b-0 hover:bg-raised`}
+                    className={`cn-row grid ${COLS} items-center gap-3 border-b border-active px-5 py-[13px] transition-colors duration-fast ease-standard last:border-b-0 hover:bg-raised`}
                   >
                     <div className="flex min-w-0 items-center gap-2.5">
                       <div

@@ -43,8 +43,8 @@ export function TrendingDeck({ rows, requestCounts, names, deck, onDeckChange }:
   return (
     <section
       aria-label="Market movers"
-      className="animate-rise-in relative mb-3.5 overflow-hidden rounded-2xl border border-[#232323] px-[22px] py-5"
-      style={{ background: "linear-gradient(180deg,#101110,#0d0d0d)" }}
+      className="animate-rise-in relative mb-3.5 overflow-hidden rounded-2xl border border-line-soft px-[22px] py-5"
+      style={{ background: "linear-gradient(180deg,var(--color-panel),var(--color-panel))" }}
     >
       <div
         aria-hidden
@@ -56,7 +56,7 @@ export function TrendingDeck({ rows, requestCounts, names, deck, onDeckChange }:
         }}
       />
       <div className="relative mb-4 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap gap-[3px] rounded-[11px] border border-[#232323] bg-[#0c0c0c] p-[3px]">
+        <div className="flex flex-wrap gap-[3px] rounded-[11px] border border-line-soft bg-canvas p-[3px]">
           {DECKS.map((d) => (
             <button
               key={d.id}
@@ -64,7 +64,7 @@ export function TrendingDeck({ rows, requestCounts, names, deck, onDeckChange }:
               aria-pressed={deck === d.id}
               onClick={() => onDeckChange(d.id)}
               className={`rounded-[9px] px-[13px] py-[7px] text-[12.5px] whitespace-nowrap transition-colors duration-base ease-standard ${
-                deck === d.id ? "bg-[#1e1e1e] text-primary" : "text-muted hover:text-primary"
+                deck === d.id ? "bg-line-soft text-primary" : "text-muted hover:text-primary"
               }`}
             >
               {d.label}
@@ -88,7 +88,7 @@ export function TrendingDeck({ rows, requestCounts, names, deck, onDeckChange }:
               <Link
                 key={r.symbol}
                 href={`/ticker/${encodeURIComponent(r.symbol)}`}
-                className="group flex flex-col gap-1.5 rounded-[13px] border border-[#232323] bg-[#101010] px-3.5 py-[13px] transition-[transform,border-color,background] duration-[220ms] ease-standard hover:-translate-y-[3px] hover:border-line-strong hover:bg-[#131313]"
+                className="group flex flex-col gap-1.5 rounded-[13px] border border-line-soft bg-panel px-3.5 py-[13px] transition-[transform,border-color,background] duration-[220ms] ease-standard hover:-translate-y-[3px] hover:border-line-strong hover:bg-raised"
               >
                 <div className="flex items-baseline justify-between gap-2">
                   <span className="truncate text-[13.5px] font-semibold tracking-[0.01em] text-primary">{r.symbol}</span>

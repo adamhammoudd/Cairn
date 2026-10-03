@@ -109,13 +109,13 @@ export function AlertForm({ alert, defaultChannels, onDone, onCancel }: AlertFor
   return (
     <form
       action={formAction}
-      className="animate-rise-in relative overflow-hidden rounded-2xl border border-[#232323] bg-panel px-5.5 py-5"
+      className="animate-rise-in relative overflow-hidden rounded-2xl border border-line-soft bg-panel px-5.5 py-5"
       style={{ animationDelay: "140ms" }}
     >
       <span
         aria-hidden
         className="absolute top-0 right-0 left-0 h-px"
-        style={{ background: "linear-gradient(90deg,#2fc685,rgba(47,198,133,0))" }}
+        style={{ background: "linear-gradient(90deg,var(--color-accent),rgba(47,198,133,0))" }}
       />
       {alert && <input type="hidden" name="id" value={alert.id} />}
       <div className="mb-3.5 flex items-center justify-between gap-3">

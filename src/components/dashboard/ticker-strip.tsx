@@ -61,7 +61,7 @@ export function TickerStrip({ items }: TickerStripProps) {
           `100vw - --sbw`, not `100vw`: the latter includes the scrollbar
           gutter and overshoots both edges. See layout/scrollbar-width-var.tsx. */}
       <div
-        className="relative left-1/2 -mt-6.5 w-[calc(100vw-var(--sbw,0px))] -translate-x-1/2 overflow-hidden border-b border-[#171717] bg-[#0c0c0c]"
+        className="relative left-1/2 -mt-6.5 w-[calc(100vw-var(--sbw,0px))] -translate-x-1/2 overflow-hidden border-b border-active bg-canvas"
         // Not a live region: it repeats on a loop and would be announced over
         // and over. The same figures are reachable as real content on /markets.
         aria-hidden="true"
@@ -76,7 +76,7 @@ export function TickerStrip({ items }: TickerStripProps) {
                 <Link
                   key={`${copy}-${item.rep}-${item.symbol}`}
                   href={`/ticker/${item.symbol}`}
-                  className="flex shrink-0 items-center gap-1.5 px-4 py-[7px] transition-colors duration-fast ease-standard hover:bg-active"
+                  className="tap flex shrink-0 items-center gap-1.5 px-4 py-[7px] transition-colors duration-fast ease-standard hover:bg-active"
                   tabIndex={-1}
                 >
                   <span className="font-mono text-[11px] tracking-[0.04em] text-muted uppercase">{item.symbol}</span>

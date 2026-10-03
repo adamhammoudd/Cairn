@@ -97,7 +97,7 @@ export function MarketsPanel({
       <TrendingDeck rows={rows} requestCounts={requestCounts} names={names} deck={deck} onDeckChange={setDeck} />
 
       <div className="mb-4 flex flex-wrap items-center gap-2.5">
-        <div className="flex flex-wrap gap-[3px] rounded-[11px] border border-[#232323] bg-[#0c0c0c] p-[3px]">
+        <div className="flex flex-wrap gap-[3px] rounded-[11px] border border-line-soft bg-canvas p-[3px]">
           {TABS.map((t) => {
             const on = tab === t;
             // The count is the honest part of a filter chip: it says what is
@@ -109,13 +109,13 @@ export function MarketsPanel({
                 type="button"
                 onClick={() => setTab(t)}
                 className={`inline-flex items-center gap-[7px] rounded-[9px] px-[13px] py-[7px] text-[12.5px] whitespace-nowrap transition-colors duration-base ease-standard ${
-                  on ? "bg-[#1e1e1e] text-primary" : "text-muted hover:text-primary"
+                  on ? "bg-line-soft text-primary" : "text-muted hover:text-primary"
                 }`}
               >
                 {ASSET_TYPE_LABEL[t] ?? t}
                 <span
                   className={`rounded-[5px] px-[5px] py-px font-mono text-eyebrow ${
-                    on ? "bg-accent/15 text-accent-light" : "bg-[#161616] text-dim"
+                    on ? "bg-accent/15 text-accent-light" : "bg-raised text-dim"
                   }`}
                 >
                   {count}
@@ -135,7 +135,7 @@ export function MarketsPanel({
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Filter this view"
             aria-label="Filter this view"
-            className="w-full min-w-0 bg-transparent text-[12.5px] text-primary placeholder:text-dim outline-none"
+            className="w-full min-w-0 bg-transparent text-[12.5px] text-primary placeholder:text-dim outline-none rounded-xs focus-visible:ring-2 focus-visible:ring-accent"
           />
         </label>
       </div>

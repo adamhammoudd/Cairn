@@ -144,8 +144,8 @@ export function NewsPanel({
           received would be inventing coverage. */}
       {lead && (
         <section
-          className="animate-rise-in relative overflow-hidden rounded-2xl border border-[#232323] px-6 py-[22px]"
-          style={{ background: "linear-gradient(180deg,#111010,#0d0d0d)" }}
+          className="animate-rise-in relative overflow-hidden rounded-2xl border border-line-soft px-6 py-[22px]"
+          style={{ background: "linear-gradient(180deg,var(--color-panel),var(--color-panel))" }}
         >
           <div
             aria-hidden
@@ -200,7 +200,7 @@ export function NewsPanel({
               {(["holding", "sector", "general"] as NewsRelevance[]).map((tier, i) => (
                 <div key={tier} className="grid grid-cols-[92px_minmax(0,1fr)_34px] items-center gap-2.5 text-caption">
                   <span className="text-muted">{RELEVANCE_LABEL[tier]}</span>
-                  <span aria-hidden className="h-1.5 overflow-hidden rounded-xs bg-[#1a1a1a]">
+                  <span aria-hidden className="h-1.5 overflow-hidden rounded-xs bg-active">
                     <span
                       className={`block h-full rounded-xs opacity-80 ${RELEVANCE_BAR[tier]}`}
                       style={{
@@ -218,7 +218,7 @@ export function NewsPanel({
       )}
 
       <div className="mt-3.5 mb-3 flex flex-wrap items-center gap-2.5">
-        <div className="flex w-fit flex-wrap gap-[3px] rounded-[11px] border border-[#232323] bg-[#0c0c0c] p-[3px]">
+        <div className="flex w-fit flex-wrap gap-[3px] rounded-[11px] border border-line-soft bg-canvas p-[3px]">
           {FILTERS.map((f) => {
             const active = f.id === filter;
             const tierCount = counts[f.id];
@@ -228,13 +228,13 @@ export function NewsPanel({
                 type="button"
                 onClick={() => setFilter(f.id)}
                 className={`inline-flex items-center gap-[7px] rounded-[9px] px-[13px] py-[7px] text-[12.5px] whitespace-nowrap transition-colors duration-base ease-standard ${
-                  active ? "bg-[#1e1e1e] text-primary" : "text-muted hover:text-primary"
+                  active ? "bg-line-soft text-primary" : "text-muted hover:text-primary"
                 }`}
               >
                 {f.label}
                 <span
                   className={`rounded-[5px] px-[5px] py-px font-mono text-eyebrow ${
-                    active ? "bg-accent/15 text-accent-light" : "bg-[#161616] text-dim"
+                    active ? "bg-accent/15 text-accent-light" : "bg-raised text-dim"
                   }`}
                 >
                   {tierCount.toLocaleString("en-US")}
@@ -261,7 +261,7 @@ export function NewsPanel({
         {visible.map((item, index) => (
           <article
             key={item.id}
-            className="animate-rise-in flex gap-[15px] overflow-hidden rounded-[14px] border border-[#232323] bg-panel transition-[border-color,transform,background] duration-base ease-standard hover:-translate-y-0.5 hover:border-line-strong hover:bg-[#121212]"
+            className="animate-rise-in flex gap-[15px] overflow-hidden rounded-[14px] border border-line-soft bg-panel transition-[border-color,transform,background] duration-base ease-standard hover:-translate-y-0.5 hover:border-line-strong hover:bg-panel"
             style={{ animationDelay: `${120 + Math.min(index, 8) * 55}ms` }}
           >
             <span className={`w-[3px] shrink-0 self-stretch ${RELEVANCE_BAR[item.relevance]}`} />
@@ -300,7 +300,7 @@ export function NewsPanel({
                     <Link
                       key={ticker}
                       href={`/ticker/${ticker}`}
-                      className="tap rounded-full border border-line bg-[#121212] px-2.5 py-[3px] font-mono text-eyebrow tracking-[0.1em] text-muted transition-colors duration-base ease-standard hover:border-accent hover:text-primary"
+                      className="tap rounded-full border border-line bg-panel px-2.5 py-[3px] font-mono text-eyebrow tracking-[0.1em] text-muted transition-colors duration-base ease-standard hover:border-accent hover:text-primary"
                     >
                       {ticker}
                     </Link>

@@ -96,7 +96,7 @@ export function ComparisonPanel({
       </div>
 
       <section
-        className="animate-rise-in relative overflow-hidden rounded-card border border-[#232323] bg-gradient-to-b from-[#101110] to-[#0d0d0d] px-6 py-5.5"
+        className="animate-rise-in relative overflow-hidden rounded-card border border-line-soft bg-gradient-to-b from-panel to-panel px-6 py-5.5"
         style={{ animationDelay: "60ms" }}
       >
         <div
@@ -153,14 +153,14 @@ export function ComparisonPanel({
               />
             )}
           </div>
-          <div className="flex gap-[3px] rounded-[10px] border border-[#232323] bg-[#0c0c0c] p-[3px]">
+          <div className="flex gap-[3px] rounded-[10px] border border-line-soft bg-canvas p-[3px]">
             {TIMEFRAMES.map((tf) => (
               <button
                 key={tf}
                 type="button"
                 onClick={() => setTimeframe(tf)}
                 className={`rounded-[7px] px-[11px] py-[5px] font-mono text-micro transition-colors duration-base ease-standard ${
-                  timeframe === tf ? "bg-[#1e1e1e] text-primary" : "text-dim hover:text-primary"
+                  timeframe === tf ? "bg-line-soft text-primary" : "text-dim hover:text-primary"
                 }`}
               >
                 {tf}

@@ -186,7 +186,7 @@ export function DashboardHome({
                 <Link
                   key={r.symbol}
                   href={`/ticker/${encodeURIComponent(r.symbol)}`}
-                  className="tap -mx-2 flex items-center justify-between gap-3 rounded-lg px-2 py-[9px] transition-colors duration-fast ease-standard hover:bg-[#151515]"
+                  className="tap -mx-2 flex items-center justify-between gap-3 rounded-lg px-2 py-[9px] transition-colors duration-fast ease-standard hover:bg-raised"
                 >
                   <span className="text-body text-primary">{r.symbol}</span>
                   <span className="ml-auto font-mono text-body tabular-nums text-muted">
@@ -276,7 +276,7 @@ export function DashboardHome({
                   <Link
                     key={i}
                     href="/news"
-                    className="flex gap-[11px] rounded-xl border border-[#1e1e1e] bg-[#101010] p-[13px] transition-[transform,border-color] duration-fast ease-standard hover:-translate-y-0.5 hover:border-line-strong"
+                    className="flex gap-[11px] rounded-xl border border-line-soft bg-panel p-[13px] transition-[transform,border-color] duration-fast ease-standard hover:-translate-y-0.5 hover:border-line-strong"
                   >
                     <span
                       className={`w-[3px] shrink-0 rounded-xs ${NEWS_TINT[item.tint].className}`}
@@ -319,8 +319,8 @@ export function DashboardHome({
     const gainTone = portfolio.positive ? "text-accent" : "text-negative";
     return (
       <section
-        className="animate-rise-in relative overflow-hidden rounded-2xl border border-[#232323] px-[26px] py-6"
-        style={{ background: "linear-gradient(180deg,#101110,#0d0d0d)" }}
+        className="animate-rise-in relative overflow-hidden rounded-2xl border border-line-soft px-[26px] py-6"
+        style={{ background: "linear-gradient(180deg,var(--color-panel),var(--color-panel))" }}
       >
         {/* The wash behind the headline figure follows the chart beside it,
             not all-time gain. Those two disagree whenever the selected range
@@ -387,7 +387,7 @@ export function DashboardHome({
                   <Link
                     key={h.symbol}
                     href={`/ticker/${h.symbol}`}
-                    className="tap flex items-center gap-2 rounded-full border border-line bg-[#101010] px-[11px] py-[7px] transition-[border-color,transform,background] duration-fast ease-standard hover:-translate-y-0.5 hover:border-line-strong hover:bg-active"
+                    className="tap flex items-center gap-2 rounded-full border border-line bg-panel px-[11px] py-[7px] transition-[border-color,transform,background] duration-fast ease-standard hover:-translate-y-0.5 hover:border-line-strong hover:bg-active"
                   >
                     <span className="text-[12.5px] text-primary">{h.symbol}</span>
                     <span className={`font-mono text-[11.5px] tabular-nums ${h.gainPct >= 0 ? "text-accent" : "text-negative"}`}>
@@ -436,11 +436,11 @@ export function DashboardHome({
   function renderFlagged() {
     const analysis = assistant.latestAnalysis;
     return (
-      <section className="animate-rise-in relative h-full overflow-hidden rounded-2xl border border-[#232323] bg-panel px-6 py-[22px]">
+      <section className="animate-rise-in relative h-full overflow-hidden rounded-2xl border border-line-soft bg-panel px-6 py-[22px]">
         <span
           aria-hidden
           className="absolute top-0 right-0 left-0 h-px"
-          style={{ background: "linear-gradient(90deg,#2fc685,rgba(47,198,133,0))" }}
+          style={{ background: "linear-gradient(90deg,var(--color-accent),rgba(47,198,133,0))" }}
         />
         <div className="mb-4 flex items-center justify-between gap-3">
           <span className="flex items-center gap-2 font-mono text-eyebrow text-accent uppercase">
@@ -499,7 +499,7 @@ export function DashboardHome({
             </div>
             {/* Confidence beside the history line it qualifies. Low confidence
                 takes the warning tone, not the gain green. */}
-            <div className="mt-5 flex flex-wrap items-center gap-4 border-y border-[#1a1a1a] py-3.5">
+            <div className="mt-5 flex flex-wrap items-center gap-4 border-y border-active py-3.5">
               <span
                 className={`inline-flex items-center gap-[7px] rounded-lg border px-[11px] py-1.5 text-[11.5px] capitalize ${
                   analysis.confidenceLevel === "low"
@@ -520,8 +520,8 @@ export function DashboardHome({
               </div>
             </div>
             {analysis.topSource && (
-              <div className="mt-4 overflow-hidden rounded-xl border border-[#1f1f1f] bg-[#0b0b0b] transition-colors duration-fast ease-standard hover:border-[#2f2f2f] sm:max-w-[420px]">
-                <div className="flex items-center justify-between gap-2.5 border-b border-[#1a1a1a] px-[13px] py-2.5">
+              <div className="mt-4 overflow-hidden rounded-xl border border-line-soft bg-canvas transition-colors duration-fast ease-standard hover:border-line sm:max-w-[420px]">
+                <div className="flex items-center justify-between gap-2.5 border-b border-active px-[13px] py-2.5">
                   <span className="font-mono text-[9px] tracking-[0.14em] text-dim uppercase">
                     Sources · {analysis.sourceCount}
                   </span>

@@ -306,7 +306,7 @@ export function ResearchWorkspace({
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <div className="flex gap-[3px] rounded-[10px] border border-[#232323] bg-[#0c0c0c] p-[3px]">
+          <div className="flex gap-[3px] rounded-[10px] border border-line-soft bg-canvas p-[3px]">
             {(
               [
                 ["list", "List"],
@@ -318,7 +318,7 @@ export function ResearchWorkspace({
                 type="button"
                 onClick={() => setView(key)}
                 className={`rounded-[7px] px-3 py-1.5 text-[11.5px] transition-colors duration-base ease-standard ${
-                  view === key ? "bg-[#1e1e1e] text-primary" : "text-muted hover:text-primary"
+                  view === key ? "bg-line-soft text-primary" : "text-muted hover:text-primary"
                 }`}
               >
                 {label}
@@ -348,7 +348,7 @@ export function ResearchWorkspace({
           it is the panel that has to be ranked. z-10 and no higher: the sticky
           top nav is z-30 and must keep covering the list as the page scrolls. */}
       {composerOpen && (
-        <div className="animate-menu-in relative z-10 mt-5 rounded-2xl border border-[#232323] bg-panel px-[22px] py-5">
+        <div className="animate-menu-in relative z-10 mt-5 rounded-2xl border border-line-soft bg-panel px-[22px] py-5">
           <div className="mb-2.5 flex flex-wrap items-baseline justify-between gap-3">
             <div className={MONO_LABEL}>What should Cairn research?</div>
             <div className="text-caption tabular-nums text-dim">
@@ -481,7 +481,7 @@ export function ResearchWorkspace({
 
       {/* Hero: the open analysis, condensed, beside the library's own numbers. */}
       <section
-        className="animate-rise-in relative mt-3.5 overflow-hidden rounded-card border border-[#232323] bg-gradient-to-b from-[#111012] to-[#0d0d0d] px-6 py-5.5"
+        className="animate-rise-in relative mt-3.5 overflow-hidden rounded-card border border-line-soft bg-gradient-to-b from-panel to-panel px-6 py-5.5"
         style={{ animationDelay: "60ms" }}
       >
         <div
@@ -535,7 +535,7 @@ export function ResearchWorkspace({
             {STATS.map((s) => (
               <span
                 key={s.label}
-                className="flex items-baseline justify-between gap-2.5 border-b border-[#1a1a1a] py-[9px] text-[12.5px]"
+                className="flex items-baseline justify-between gap-2.5 border-b border-active py-[9px] text-[12.5px]"
               >
                 <span className="text-muted">{s.label}</span>
                 <span className={`font-mono text-[13px] ${s.className}`}>{s.value}</span>
@@ -570,7 +570,7 @@ export function ResearchWorkspace({
       )}
 
       <div className="animate-rise-in mt-3.5 flex flex-wrap items-center gap-2.5" style={{ animationDelay: "120ms" }}>
-        <div className="flex flex-wrap gap-[3px] rounded-[11px] border border-[#232323] bg-[#0c0c0c] p-[3px]">
+        <div className="flex flex-wrap gap-[3px] rounded-[11px] border border-line-soft bg-canvas p-[3px]">
           {TABS.map((t) => {
             const on = t.key === tab;
             return (
@@ -579,13 +579,13 @@ export function ResearchWorkspace({
                 type="button"
                 onClick={() => setTab(t.key)}
                 className={`inline-flex items-center gap-[7px] rounded-[9px] px-[13px] py-[7px] text-[12.5px] whitespace-nowrap transition-colors duration-base ease-standard ${
-                  on ? "bg-[#1e1e1e] text-primary" : "text-muted hover:text-primary"
+                  on ? "bg-line-soft text-primary" : "text-muted hover:text-primary"
                 }`}
               >
                 {t.label}
                 <span
                   className={`rounded-[5px] px-[5px] py-px font-mono text-eyebrow ${
-                    on ? "bg-accent/15 text-accent-light" : "bg-[#161616] text-dim"
+                    on ? "bg-accent/15 text-accent-light" : "bg-raised text-dim"
                   }`}
                 >
                   {counts[t.key]}
@@ -652,8 +652,8 @@ export function ResearchWorkspace({
           return (
             <div
               key={a.id}
-              className={`animate-rise-in relative flex gap-[15px] overflow-hidden rounded-[14px] border bg-panel transition-[transform,border-color,background] duration-200 ease-standard hover:-translate-y-0.5 hover:border-line-strong hover:bg-[#121212] ${
-                isOpen ? "border-violet/45" : pinned ? "border-violet/25" : "border-[#232323]"
+              className={`animate-rise-in relative flex gap-[15px] overflow-hidden rounded-[14px] border bg-panel transition-[transform,border-color,background] duration-200 ease-standard hover:-translate-y-0.5 hover:border-line-strong hover:bg-panel ${
+                isOpen ? "border-violet/45" : pinned ? "border-violet/25" : "border-line-soft"
               }`}
               style={{ animationDelay: `${120 + i * 50}ms` }}
             >
@@ -690,7 +690,7 @@ export function ResearchWorkspace({
                   suppressHydrationWarning
                 >
                   <span>{whenLabel(a.created_at)}</span>
-                  <span className="text-[#3a3a3a]">·</span>
+                  <span className="text-line-strong">·</span>
                   <span>
                     {a.sources.length} {a.sources.length === 1 ? "source" : "sources"}
                   </span>
@@ -699,7 +699,7 @@ export function ResearchWorkspace({
                   {[a.scope_value, a.analysis_type.replace(/_/g, " ")].map((tag) => (
                     <span
                       key={tag}
-                      className="rounded-full border border-line bg-[#0c0c0c] px-2.5 py-[3px] font-mono text-[10px] tracking-[0.08em] text-[#9a9a9a]"
+                      className="rounded-full border border-line bg-canvas px-2.5 py-[3px] font-mono text-[10px] tracking-[0.08em] text-muted"
                     >
                       {tag}
                     </span>
@@ -784,7 +784,7 @@ function FeaturedAnalysis({
       </div>
       <p className="mt-3 max-w-[600px] font-serif text-[19px] leading-[1.45] text-primary text-pretty">{finding}</p>
 
-      <div className="mt-4 flex flex-wrap items-center gap-4 border-y border-[#1a1a1a] py-3.5">
+      <div className="mt-4 flex flex-wrap items-center gap-4 border-y border-active py-3.5">
         <span
           className="flex items-center gap-[7px] rounded-lg border px-[11px] py-1.5 text-[11.5px]"
           style={{ borderColor: `${c.tint}55`, background: `${c.tint}14`, color: c.tint }}
@@ -800,8 +800,8 @@ function FeaturedAnalysis({
       </div>
 
       <div className="mt-4 grid grid-cols-[repeat(auto-fit,minmax(228px,1fr))] gap-3">
-        <div className="overflow-hidden rounded-xl border border-[#1f1f1f] bg-[#0b0b0b] transition-colors duration-base ease-standard hover:border-[#2f2f2f]">
-          <div className="flex items-center justify-between gap-2.5 border-b border-[#1a1a1a] px-[13px] py-2.5">
+        <div className="overflow-hidden rounded-xl border border-line-soft bg-canvas transition-colors duration-base ease-standard hover:border-line">
+          <div className="flex items-center justify-between gap-2.5 border-b border-active px-[13px] py-2.5">
             <span className="font-mono text-[9px] tracking-[0.14em] text-dim uppercase">Sources · {a.sources.length}</span>
             <button type="button" onClick={onToggleMethod} className="text-[11px] text-accent-light hover:underline">
               {methodOpen ? "Hide" : "View all"}
@@ -821,8 +821,8 @@ function FeaturedAnalysis({
             )}
           </div>
         </div>
-        <div className="overflow-hidden rounded-xl border border-[#1f1f1f] bg-[#0b0b0b] transition-colors duration-base ease-standard hover:border-[#2f2f2f]">
-          <div className="flex items-center justify-between gap-2.5 border-b border-[#1a1a1a] px-[13px] py-2.5">
+        <div className="overflow-hidden rounded-xl border border-line-soft bg-canvas transition-colors duration-base ease-standard hover:border-line">
+          <div className="flex items-center justify-between gap-2.5 border-b border-active px-[13px] py-2.5">
             <span className="font-mono text-[9px] tracking-[0.14em] text-dim uppercase">Similar moments</span>
             <span className="font-mono text-[9px] tracking-[0.1em] text-dim">{similar.counted}</span>
           </div>
@@ -836,7 +836,7 @@ function FeaturedAnalysis({
                   </span>
                   <span className="font-mono text-[10.5px] text-muted">{Math.round(topAnalog.similarity_score * 100)}%</span>
                 </div>
-                <div className="mt-2.5 h-[3px] overflow-hidden rounded-full bg-[#1c1c1c]">
+                <div className="mt-2.5 h-[3px] overflow-hidden rounded-full bg-line-soft">
                   <div
                     className="animate-grow-x h-full origin-left rounded-full bg-gradient-to-r from-accent to-accent-light"
                     style={{ width: `${Math.round(topAnalog.similarity_score * 100)}%` }}

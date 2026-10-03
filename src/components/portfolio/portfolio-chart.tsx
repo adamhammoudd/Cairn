@@ -93,8 +93,8 @@ export function PortfolioChart({
 
   return (
     <div
-      className="relative overflow-hidden rounded-2xl border border-[#232323] px-[22px] py-5"
-      style={{ background: "linear-gradient(180deg,#111010,#0d0d0d)" }}
+      className="relative overflow-hidden rounded-2xl border border-line-soft px-[22px] py-5"
+      style={{ background: "linear-gradient(180deg,var(--color-panel),var(--color-panel))" }}
     >
       <div
         aria-hidden
@@ -110,14 +110,14 @@ export function PortfolioChart({
         }}
       />
       <div className="relative flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap gap-[3px] rounded-[10px] border border-[#232323] bg-[#0c0c0c] p-[3px]">
+        <div className="flex flex-wrap gap-[3px] rounded-[10px] border border-line-soft bg-canvas p-[3px]">
           {TIMEFRAMES.map((tf) => (
             <button
               key={tf}
               type="button"
               onClick={() => selectTimeframe(tf)}
               className={`rounded-[7px] px-3 py-1.5 font-mono text-micro transition-colors duration-base ease-standard hover:text-primary ${
-                timeframe === tf ? "bg-[#1e1e1e] text-primary" : "text-dim"
+                timeframe === tf ? "bg-line-soft text-primary" : "text-dim"
               }`}
             >
               {tf}
@@ -156,7 +156,7 @@ export function PortfolioChart({
           current price backwards as flat history, and this product does not
           invent prices it does not have. */}
       {missingHistory.length > 0 && (
-        <div className="relative mt-3.5 flex items-start gap-2.5 rounded-[11px] border border-[#2a2418] bg-warning/[0.07] px-3.5 py-[11px] text-[12.5px] leading-[1.55] text-[#c8c0ad] text-pretty">
+        <div className="relative mt-3.5 flex items-start gap-2.5 rounded-[11px] border border-tint-warning-border bg-warning/[0.07] px-3.5 py-[11px] text-[12.5px] leading-[1.55] text-tint-warning-text text-pretty">
           <span aria-hidden className="w-[3px] flex-none self-stretch rounded-xs bg-warning" />
           <span>
           Not in this line:{" "}
