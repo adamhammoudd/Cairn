@@ -1,4 +1,5 @@
 import { CONTACT_EMAIL } from "@/lib/site";
+import { legalNoticeLive } from "@/lib/operator";
 import { LegalShell } from "@/components/legal-shell";
 import { TOS_VERSION, legalDateDisplay } from "@/lib/legal-versions";
 
@@ -138,7 +139,9 @@ export default function TermsofServicePage() {
             lose the 14-day withdrawal right once the service has been fully performed. Checkout
             cannot be completed without that request, so if you would rather keep the full
             withdrawal right, do not subscribe yet. If you withdraw within the 14 days, you pay a
-            proportionate amount for what you used and we refund the rest.
+            proportionate amount for what you used and we refund the rest. A{" "}
+            <a href="/refunds#withdrawal-form">sample withdrawal form</a> you can copy into an email is
+            on the Cancellation and refunds page.
           </p>
           <p>
             <strong>Refunds after that.</strong> Outside the withdrawal right, monthly payments are
@@ -165,8 +168,8 @@ export default function TermsofServicePage() {
           <h2>10. What Cairn does and does not promise</h2>
           <p>
             <strong>What the service is.</strong> Market and news data comes from third-party
-            sources and may be delayed, incomplete, or wrong. Prices are generally daily closes, not
-            a live feed. The AI analysis engine produces probability-weighted, market-level context
+            sources and may be delayed, incomplete, or wrong. Prices are delayed quotes
+            and daily closes, not a real-time feed. The AI analysis engine produces probability-weighted, market-level context
             computed from a historical sample that is sometimes small; it can be mistaken. It is not
             a recommendation, not personal advice, and not a substitute for a licensed professional.
             Every investment decision you make is yours.
@@ -240,13 +243,23 @@ export default function TermsofServicePage() {
         <section>
           <h2>14. Who you are contracting with, and how to reach us</h2>
           <p>
-            These terms are between you and the operator of Cairn. The operator&apos;s full
-            identity, registered address and enterprise number will be published on a Legal notice
-            page before paid subscriptions open.
+            These terms are between you and the operator of Cairn.{" "}
+            {legalNoticeLive() ? (
+              <>
+                The operator&apos;s full identity, registered address and enterprise number are on
+                the <a href="/legal-notice">Legal notice</a>.
+              </>
+            ) : (
+              <>
+                The operator&apos;s full identity, registered address and enterprise number will be
+                published on a Legal notice page before paid subscriptions open.
+              </>
+            )}
           </p>
           <p>
             Questions about these terms, complaints under Section 7, billing queries and withdrawals
-            under Section 9, and legal or takedown notices under Section 6 all go to{" "}
+            under Section 9 (see the <a href="/refunds#withdrawal-form">sample withdrawal form</a>), and
+            legal or takedown notices under Section 6 all go to{" "}
             <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.
           </p>
         </section>

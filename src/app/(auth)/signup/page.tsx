@@ -2,6 +2,9 @@ import { betaPremiumUntil, formatBetaUntil } from "@/lib/billing";
 import { resolveSignupInvite } from "@/lib/beta-invites/resolve";
 import { InviteInvalid } from "./invite-invalid";
 import { SignupForm } from "./signup-form";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = { title: "Create your account - Cairn" };
 
 // Beta sign-up is invite-only. The proxy only lets /signup through with an
 // ?invite= value; this page decides what that value is worth:
@@ -19,7 +22,8 @@ export default async function SignupPage({ searchParams }: { searchParams: Promi
   const invite = Array.isArray(raw) ? raw[0] : raw;
   const resolved = await resolveSignupInvite(invite);
 
-  if (resolved.kind === "invalid") return <InviteInvalid />;
+  // No invite at all (just /signup) is not "an invite that expired".
+  if (resolved.kind === "invalid") return <InviteInvalid missing={!invite || !invite.trim()} />;
 
   const until = betaPremiumUntil();
   return (

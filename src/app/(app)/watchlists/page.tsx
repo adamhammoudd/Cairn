@@ -1,6 +1,9 @@
 import { listWatchlists } from "@/lib/actions/watchlists";
 import { WatchlistPanel } from "@/components/watchlists/watchlist-panel";
 import { guardReads } from "@/components/data-unavailable";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = { title: "Watchlists - Cairn" };
 
 // A failed market-data read renders the panel instead of throwing into a
 // minified React error; anything else propagates as before.

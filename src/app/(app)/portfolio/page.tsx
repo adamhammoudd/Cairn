@@ -10,7 +10,8 @@ import {
   timelineCoverage,
   type PriceBar,
 } from "@/lib/portfolio";
-import { getLatestCloses, latestDataDate, groupBarsBySymbol } from "@/lib/market-data/current-price";
+import { getLatestCloses, groupBarsBySymbol } from "@/lib/market-data/current-price";
+import { portfolioCloseDate } from "@/lib/portfolio-as-of";
 import { readRecentPrices } from "@/lib/market-data/paged-read";
 import { getDisplayPrefs } from "@/lib/actions/display-prefs";
 import { loadCostFx } from "@/lib/market-data/fx-history";
@@ -22,6 +23,9 @@ import { ConcentrationPanel } from "@/components/portfolio/concentration-panel";
 import { HoldingsTable } from "@/components/portfolio/holdings-table";
 
 import { guardReads } from "@/components/data-unavailable";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = { title: "Portfolio - Cairn" };
 
 // A failed market-data read renders the panel instead of throwing into a
 // minified React error; anything else propagates as before.
@@ -83,10 +87,12 @@ async function PortfolioBody() {
   // bars must not silently lose its crypto hint and resolve to the wrong
   // instrument's live quote.
   const assetTypeBySymbol = new Map(rows.map((h) => [h.symbol, h.asset_type]));
-  const [closes, asOf] = await Promise.all([
-    getLatestCloses(symbols, undefined, assetTypeBySymbol),
-    latestDataDate(symbols, barsBySymbol),
-  ]);
+  const closes = await getLatestCloses(symbols, undefined, assetTypeBySymbol);
+  // The chart card's date comes from the same per-holding dates the table
+  // prints, so the two cannot disagree (see lib/portfolio-as-of.ts).
+  const asOf = portfolioCloseDate(
+    symbols.map((symbol) => ({ symbol, assetType: assetTypeBySymbol.get(symbol), asOf: closes.get(symbol)?.asOf })),
+  );
   // The cost is converted at the rate on each purchase date, the chart at the
   // rate of each day (lib/fx-history.ts); null for a USD reader. One query.
   const costFx = await loadCostFx(supabase, await getDisplayPrefs(), rows.map((h) => h.purchase_date));
@@ -131,6 +137,7 @@ async function PortfolioBody() {
           positions={metrics.length}
           assetTypeCount={assetTypeCount}
           refreshRateSeconds={settingsRes.data?.refresh_rate_seconds ?? null}
+          live={[...closes.values()].some((c) => c.live)}
         />
 
         <div className="mb-3.5">

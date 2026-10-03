@@ -3,6 +3,7 @@
 import { headers } from "next/headers";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { validateEmail } from "@/lib/validation";
+import { removeByToken } from "@/lib/waitlist-removal";
 import {
   checkSignupRate,
   flagIfClustered,
@@ -102,4 +103,33 @@ export async function joinWaitlist(_prev: JoinState, formData: FormData): Promis
   const delivery = await sendConfirmationEmail(row.email, confirmUrl);
 
   return { status: "pending", email: row.email, resent: false, emailDelivered: delivery.sent };
+}
+
+export type RemoveState =
+  | { status: "idle" }
+  | { status: "removed" }
+  | { status: "not-found" }
+  | { status: "error"; message: string };
+
+// Public on purpose: it is the "remove me" button on /waitlist/remove, reached
+// from a personal link in an email, no login. The unguessable removal token is
+// the credential. Deletes the row (and, by cascade, any invite on it).
+export async function removeFromWaitlist(_prev: RemoveState, formData: FormData): Promise<RemoveState> {
+  const admin = createAdminClient();
+  const result = await removeByToken(
+    {
+      async deleteByToken(token) {
+        const { data, error } = await admin.from("waitlist").delete().eq("removal_token", token).select("id");
+        if (error) throw new Error(error.message);
+        return data?.length ?? 0;
+      },
+      async deleteByEmail() {
+        return 0; // not reachable from this action
+      },
+    },
+    formData.get("token"),
+  ).catch(() => "error" as const);
+  if (result === "removed") return { status: "removed" };
+  if (result === "not-found") return { status: "not-found" };
+  return { status: "error", message: "That link isn't valid, or something went wrong. Reply STOP to the email instead." };
 }

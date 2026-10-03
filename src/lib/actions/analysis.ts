@@ -1,5 +1,6 @@
 "use server";
 
+import { getAuthUser } from "@/lib/supabase/auth";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -90,6 +91,7 @@ export async function runAnalysisGeneration(
 export async function findMissingAnalysisScope(
   message: string,
 ): Promise<{ scopeType: ScopeType; scopeValue: string } | null> {
+  if (!(await getAuthUser())) return null;
   const mentioned = await detectTickers(message);
   // More than one ticker in the question is ambiguous - generating for a guess
   // would be the silent auto-generation this is explicitly not meant to do.
@@ -295,6 +297,8 @@ async function attachMethodology(
 // validated rows, exactly as the old "public read" policy allowed.
 
 export async function listAnalyses(): Promise<AnalysisWithMethodology[]> {
+  // Session required: a server action is a public POST endpoint, whatever page the proxy guards.
+  if (!(await getAuthUser())) return [];
   const supabase = await createClient();
   const { data: analyses } = await createAdminClient()
     .from("ai_analyses")
@@ -309,6 +313,8 @@ export async function listAnalyses(): Promise<AnalysisWithMethodology[]> {
 }
 
 export async function getAnalysesForScope(scopeType: ScopeType, scopeValue: string): Promise<AnalysisWithMethodology[]> {
+  // Session required: a server action is a public POST endpoint, whatever page the proxy guards.
+  if (!(await getAuthUser())) return [];
   const supabase = await createClient();
   const { data: analyses } = await createAdminClient()
     .from("ai_analyses")
@@ -325,6 +331,8 @@ export async function getAnalysesForScope(scopeType: ScopeType, scopeValue: stri
 }
 
 export async function getAnalysesByIds(ids: string[]): Promise<AnalysisWithMethodology[]> {
+  // Session required: a server action is a public POST endpoint, whatever page the proxy guards.
+  if (!(await getAuthUser())) return [];
   if (ids.length === 0) return [];
   const supabase = await createClient();
 

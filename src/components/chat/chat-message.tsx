@@ -2,7 +2,7 @@
 
 import type { AnalysisWithMethodology } from "@/lib/actions/analysis";
 import { MarkdownMessage } from "@/components/chat/markdown-message";
-import { AnswerTiles, CheckedLine, FactsNote, FollowUps, SourcesDisclosure, splitSources } from "@/components/chat/answer-extras";
+import { AnswerTiles, CheckedLine, FactsNote, FollowUps, SourcesDisclosure, WebSearchLine, splitSources } from "@/components/chat/answer-extras";
 import type { AssistantMeta } from "@/lib/ai/assistant/types";
 
 // Just the bubble, per the `messages` sc-for in the AI Assistant artboard
@@ -101,6 +101,7 @@ export function ChatMessage({ message, streaming, onFollowUp }: ChatMessageProps
             <AnswerTiles tiles={meta.tiles} />
             {rest && <MarkdownMessage content={rest} />}
             <FactsNote meta={meta} />
+            <WebSearchLine meta={meta} />
             <SourcesDisclosure sources={sources} />
             {!streaming && <FollowUps items={meta.followUps} onPick={onFollowUp} />}
           </>

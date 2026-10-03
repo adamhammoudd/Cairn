@@ -15,11 +15,14 @@ const TIMEFRAMES: ChartView[] = ["1D", "1W", "1M", "3M", "1Y", "ALL"];
 
 export function ComparisonPanel({
   universe,
+  suggestions,
   selected,
   rows,
   defaultTimeframe = "3M",
 }: {
   universe: string[];
+  /** Held, then watched, then the largest by market cap (getCompareSuggestions). */
+  suggestions: string[];
   selected: string[];
   rows: ComparisonRow[];
   /** Settings > Display default; which timeframe the page opens on. */
@@ -37,6 +40,8 @@ export function ComparisonPanel({
   // actually landed.
   const [pendingAdd, setPendingAdd] = useState<string | null>(null);
   const available = universe.filter((s) => !selected.includes(s));
+  // The chips come from the ranked suggestions, not from the alphabetical universe.
+  const chips = suggestions.filter((s) => !selected.includes(s) && universe.includes(s));
   const isPending = pendingAdd !== null && available.includes(pendingAdd);
 
   function updateSelection(next: string[]) {
@@ -73,7 +78,7 @@ export function ComparisonPanel({
             <span className="text-[12.5px] text-dim">
               {selected.length} of {MAX_COMPARE} slots used
             </span>
-            {available.slice(0, 3).map((symbol) => (
+            {chips.slice(0, 3).map((symbol) => (
               <button
                 key={symbol}
                 type="button"

@@ -48,8 +48,10 @@ export default function PrivacyPolicyPage() {
             it.
           </p>
           <p>
-            You can ask us to remove your waitlist entry at any time via the contact address below;
-            if you never confirm your email, the entry stays unconfirmed and grants nothing.
+            You can remove yourself at any time: every email we send you carries a personal link that
+            takes you off the waitlist without logging in, and you can also reply STOP to any of
+            those emails or write to the contact address below. If you never confirm your email,
+            the entry stays unconfirmed and grants nothing.
           </p>
         </section>
         <section>
@@ -91,8 +93,21 @@ export default function PrivacyPolicyPage() {
               <strong>hCaptcha</strong> (Intuition Machines, Inc.) - the security check on the
               sign-in, account creation, password reset and password change forms. When you use one
               of those forms, hCaptcha receives your IP address and technical information about your
-              browser and device, to tell people apart from automated abuse. It runs in its own frame
-              on hCaptcha&apos;s domain; Cairn receives only a pass/fail token.
+              browser and device, to tell people apart from automated abuse. The check is drawn by a
+              script that your browser loads from js.hcaptcha.com as soon as one of those forms opens,
+              before you interact with it, so hCaptcha receives your IP address and browser details
+              at that point. It runs in its own frame on hCaptcha&apos;s domain and may keep its own
+              cookie or similar browser storage there for the check; Cairn does not read it. Cairn
+              receives only a pass/fail token.
+            </li>
+            <li>
+              <strong>Brave Search</strong> (Brave Software, Inc.) - web search for the assistant, used
+              only when web search is switched on and set to Brave. When the assistant searches the
+              web for an answer, the search words it writes (up to 200 characters, and they can
+              reflect what you asked) are sent to Brave to get results back. Cairn sends nothing
+              else about you - no account, email or portfolio data. Any answer that used a web
+              search says so under the answer (&quot;Searched the web&quot;). If web search is set
+              to Groq instead, the search runs through Groq as described below.
             </li>
             <li>
               <strong>Stripe</strong> - payments, if you subscribe to Premium. Stripe receives your
@@ -105,7 +120,7 @@ export default function PrivacyPolicyPage() {
               your email address only.
             </li>
             <li>
-              <strong>Configured news and market data providers</strong> - Cairn fetches data
+              <strong>Configured news and market data providers</strong> - Cairn fetches data{" "}
               <em>from</em> these; no personal data is sent to them.
             </li>
           </ul>

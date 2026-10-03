@@ -132,7 +132,7 @@ export function TickerHero({
                 </span>
               )}
               <DataFreshness source={priceSource} asOf={priceAsOf} />
-              <LivePricePoll refreshRateSeconds={refreshRateSeconds} />
+              <LivePricePoll refreshRateSeconds={refreshRateSeconds} live={priceSource === "live"} />
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2.5">{actions}</div>

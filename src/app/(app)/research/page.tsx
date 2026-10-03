@@ -7,6 +7,9 @@ import { ResearchWorkspace } from "@/components/analysis/research-workspace";
 // Shared with the chat quota panel so both surfaces name the reset date the
 // same way - see lib/chat-state.ts.
 import { nextResetLabel } from "@/lib/chat-state";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = { title: "Research - Cairn" };
 
 export default async function ResearchPage() {
   const supabase = await createClient();

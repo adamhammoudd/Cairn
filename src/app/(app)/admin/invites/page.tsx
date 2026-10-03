@@ -2,6 +2,9 @@ import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getBetaInviteAdminView } from "@/lib/actions/beta-invites";
 import { BetaInvitesPanel } from "@/components/admin/beta-invites-panel";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = { title: "Beta invites - Cairn" };
 
 export const dynamic = "force-dynamic";
 

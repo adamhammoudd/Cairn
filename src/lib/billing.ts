@@ -103,11 +103,60 @@ export function startOfCurrentMonthIso(): string {
   return new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
 }
 
-// Calendar-day boundary (server/local time), same reset-with-no-job pattern
-// as startOfCurrentMonthIso, applied to chat_usage_events.
-export function startOfTodayIso(): string {
-  const now = new Date();
-  return new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+// Calendar-day boundary, same reset-with-no-job pattern as
+// startOfCurrentMonthIso, applied to chat_usage_events.
+//
+// "Today" is the day in the READER'S time zone (user_settings.briefing_timezone,
+// the one zone Settings already asks for), not the server's. It used to be the
+// server's clock - UTC on Vercel - so for a reader in Belgium the daily cap
+// reset at 01:00 or 02:00 local time while the message said "tomorrow"
+// (audit 2026-10-02, item 4.2). An unknown or invalid zone falls back to UTC,
+// and the limit message names the zone so the reset time is never a guess.
+export function isValidTimeZone(tz: string | null | undefined): tz is string {
+  if (!tz) return false;
+  try {
+    new Intl.DateTimeFormat("en-US", { timeZone: tz });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** Minutes the zone is ahead of UTC at the instant `at` (DST-aware, via Intl). */
+function zoneOffsetMinutes(timeZone: string, at: Date): number {
+  const p: Record<string, number> = {};
+  for (const part of new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    hourCycle: "h23",
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+    hour: "numeric",
+    minute: "numeric",
+    second: "numeric",
+  }).formatToParts(at)) {
+    if (part.type !== "literal") p[part.type] = Number(part.value);
+  }
+  const asUtc = Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute, p.second);
+  return Math.round((asUtc - Math.floor(at.getTime() / 1000) * 1000) / 60_000);
+}
+
+/** The instant (ISO, UTC) at which today began in `timeZone`. */
+export function startOfTodayIso(timeZone: string | null | undefined = "UTC", now: Date = new Date()): string {
+  const tz = isValidTimeZone(timeZone) ? timeZone : "UTC";
+  const local = new Intl.DateTimeFormat("en-US", { timeZone: tz, year: "numeric", month: "numeric", day: "numeric" }).formatToParts(now);
+  const get = (t: string) => Number(local.find((x) => x.type === t)?.value);
+  const midnightAsUtc = Date.UTC(get("year"), get("month") - 1, get("day"));
+  // Local midnight = that wall-clock moment minus the zone's offset at the time.
+  // Re-evaluated at the result so a DST change between guess and answer settles.
+  let guess = midnightAsUtc - zoneOffsetMinutes(tz, new Date(midnightAsUtc)) * 60_000;
+  guess = midnightAsUtc - zoneOffsetMinutes(tz, new Date(guess)) * 60_000;
+  return new Date(guess).toISOString();
+}
+
+/** "midnight (Europe/Brussels)" - what the limit messages say instead of "tomorrow". */
+export function resetPhrase(timeZone: string | null | undefined): string {
+  return `midnight (${isValidTimeZone(timeZone) ? timeZone : "UTC"})`;
 }
 
 // ---------------------------------------------------------------------------

@@ -1,5 +1,8 @@
 import { getNewsCounts, getNewsPage } from "@/lib/actions/news";
 import { NewsPanel } from "@/components/news/news-panel";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = { title: "News - Cairn" };
 
 // ?q= pre-fills the search (the ticker page links here as /news?q=NVDA).
 export default async function NewsPage({ searchParams }: { searchParams: Promise<{ q?: string | string[] }> }) {

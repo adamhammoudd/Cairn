@@ -13,6 +13,13 @@ import { assetName } from "@/lib/asset-names";
 import { getDisplayPrefs } from "@/lib/actions/display-prefs";
 import { loadCostFx } from "@/lib/market-data/fx-history";
 import { costRatio } from "@/lib/fx-history";
+import type { Metadata } from "next";
+
+// One title per symbol: "NVDA - Cairn". The symbol is the URL's own, upper-cased.
+export async function generateMetadata({ params }: { params: Promise<{ symbol: string }> }): Promise<Metadata> {
+  const { symbol } = await params;
+  return { title: `${decodeURIComponent(symbol).toUpperCase()} - Cairn` };
+}
 
 // A failed market-data read renders the panel instead of throwing into a
 // minified React error; anything else propagates as before.

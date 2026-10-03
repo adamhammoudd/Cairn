@@ -134,7 +134,7 @@ export function BillingSettingsPanel({ detail }: { detail: BillingDetail }) {
                       </button>
                     </form>
                   )
-                ) : hasStripeCustomer ? (
+                ) : billingEnabled && hasStripeCustomer ? (
                   <form action={portal}>
                     <button
                       type="submit"
@@ -229,7 +229,7 @@ export function BillingSettingsPanel({ detail }: { detail: BillingDetail }) {
           <span className="font-serif text-h3 text-primary">
             {premium && hasStripeCustomer ? "Plan history" : "Payment history"}
           </span>
-          {premium && hasStripeCustomer && (
+          {billingEnabled && premium && hasStripeCustomer && (
             <form action={portal}>
               <button
                 type="submit"

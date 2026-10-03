@@ -3,6 +3,9 @@ import { EMPTY_FILTERS } from "@/lib/screener";
 import { ScreenerPanel } from "@/components/screener/screener-panel";
 
 import { guardReads } from "@/components/data-unavailable";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = { title: "Screener - Cairn" };
 
 // A failed market-data read renders the panel instead of throwing into a
 // minified React error; anything else propagates as before.

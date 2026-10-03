@@ -99,7 +99,7 @@ export function AdminDashboard({ snapshot, reports }: { snapshot: AdminSnapshot;
         note="A symbol is stale when its last successful check is more than 24h old."
       >
         <div className="grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-4">
-          <Stat label="Symbols tracked" value={String(ingestion.total)} sub={`${ingestion.symbolsWithBars} with stored bars`} />
+          <Stat label="Symbols tracked" value={String(ingestion.total)} sub={`${ingestion.symbolsWithBars} with stored bars - the rest are fetched when first opened`} />
           <Stat label="Stored bars" value={ingestion.barCount.toLocaleString()} sub="sum of symbol_directory.bars" />
           <Stat label="Newest bar" value={ingestion.newestBar ?? "-"} sub="high-water mark of the trend store" />
           <Stat

@@ -1,5 +1,8 @@
 export interface SectorMapNode {
+  /** Plain name (lib/sector-names.ts), never the raw SEC description. */
   name: string;
+  /** The raw SEC descriptions that were grouped under this name, so a focus saved before the rename still finds its card. */
+  raw?: string[];
   children: {
     name: string;
     size: number;

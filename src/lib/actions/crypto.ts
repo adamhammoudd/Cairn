@@ -1,12 +1,28 @@
 "use server";
 
+import { getAuthUser } from "@/lib/supabase/auth";
 import { createClient } from "@/lib/supabase/server";
 import type { CryptoRow } from "@/lib/crypto";
+
+/** Market cap (USD) of the largest coins, by symbol - for ranking what to promote, not for display. */
+export async function getCryptoMarketCaps(limit = 100): Promise<Record<string, number>> {
+  if (!(await getAuthUser())) return {};
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("crypto_metrics")
+    .select("symbol, market_cap")
+    .not("market_cap", "is", null)
+    .order("market_cap", { ascending: false })
+    .limit(limit);
+  return Object.fromEntries((data ?? []).map((m) => [m.symbol, Number(m.market_cap)]));
+}
 
 // Price isn't stored on crypto_metrics (it's an overview snapshot: cap,
 // volume, supply, rank) - derive it from the latest ingested daily close so
 // the overview and the ticker chart never disagree on price.
 export async function getCryptoOverview(): Promise<CryptoRow[]> {
+  // Session required: a server action is a public POST endpoint, whatever page the proxy guards.
+  if (!(await getAuthUser())) return [];
   const supabase = await createClient();
 
   // One bar per coin, with a per-symbol LIMIT. The previous query took the

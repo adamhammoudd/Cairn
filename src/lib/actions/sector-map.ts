@@ -1,10 +1,14 @@
 "use server";
 
+import { getAuthUser } from "@/lib/supabase/auth";
 import { createClient } from "@/lib/supabase/server";
 import { getTrackedSymbols } from "@/lib/actions/comparison";
 import type { SectorMapNode } from "@/lib/sector-map";
+import { plainSectorName, UNCLASSIFIED } from "@/lib/sector-names";
 
 export async function getSectorHeatmap(): Promise<SectorMapNode[]> {
+  // Session required: a server action is a public POST endpoint, whatever page the proxy guards.
+  if (!(await getAuthUser())) return [];
   const symbols = await getTrackedSymbols();
   if (symbols.length === 0) return [];
 
@@ -16,7 +20,7 @@ export async function getSectorHeatmap(): Promise<SectorMapNode[]> {
     // a grey "-" tile. That is also unfixable by raising the multiplier once
     // the universe is on-demand.
     supabase.rpc("recent_prices", { symbols, per_symbol: 2 }),
-    supabase.from("fundamentals").select("symbol, sector, shares_outstanding").in("symbol", symbols),
+    supabase.from("fundamentals").select("symbol, sector, sic, shares_outstanding").in("symbol", symbols),
     supabase.from("crypto_metrics").select("symbol, name, price_change_24h_pct, market_cap").in("symbol", symbols),
     // Same name-resolution source ticker-list.tsx uses for equities: the
     // provider's own display name, stored at ingest - so a small tile's
@@ -37,6 +41,7 @@ export async function getSectorHeatmap(): Promise<SectorMapNode[]> {
   }
 
   const bySector = new Map<string, SectorMapNode["children"]>();
+  const rawBySector = new Map<string, Set<string>>();
   for (const symbol of symbols) {
     const closes = closesBySymbol.get(symbol) ?? [];
     const price = closes[0] ?? null;
@@ -54,7 +59,9 @@ export async function getSectorHeatmap(): Promise<SectorMapNode[]> {
         : price !== null && f?.shares_outstanding
           ? price * f.shares_outstanding
           : null;
-    const sectorName = f?.sector ?? (coin ? "Digital assets" : "Unclassified");
+    // Plain name from the SIC code (or the cleaned SEC description) - never the raw SEC text.
+    const sectorName = f?.sector || f?.sic ? plainSectorName(f?.sic, f?.sector) : coin ? "Digital assets" : UNCLASSIFIED;
+    if (f?.sector) rawBySector.set(sectorName, (rawBySector.get(sectorName) ?? new Set()).add(f.sector));
 
     const displayName = coin?.name ?? directoryNameBySymbol.get(symbol) ?? null;
     const children = bySector.get(sectorName) ?? [];
@@ -66,7 +73,7 @@ export async function getSectorHeatmap(): Promise<SectorMapNode[]> {
   // it is a coverage gap, not a sector, and shouldn't outrank real ones just
   // because it happens to hold the most symbols.
   return Array.from(bySector.entries())
-    .map(([name, children]) => ({ name, children }))
+    .map(([name, children]) => ({ name, children, raw: Array.from(rawBySector.get(name) ?? []) }))
     .sort((a, b) => {
       if (a.name === "Unclassified") return 1;
       if (b.name === "Unclassified") return -1;
@@ -86,18 +93,20 @@ export async function getSectorHeatmap(): Promise<SectorMapNode[]> {
  * -style), while the map groups by SEC SIC descriptions.
  */
 export async function listSectorMapSectors(): Promise<string[]> {
+  // Session required: a server action is a public POST endpoint, whatever page the proxy guards.
+  if (!(await getAuthUser())) return [];
   const symbols = await getTrackedSymbols();
   if (symbols.length === 0) return [];
 
   const supabase = await createClient();
   const [{ data: fundamentals }, { data: coinRows }] = await Promise.all([
-    supabase.from("fundamentals").select("sector").in("symbol", symbols),
+    supabase.from("fundamentals").select("sector, sic").in("symbol", symbols),
     supabase.from("crypto_metrics").select("symbol").in("symbol", symbols).limit(1),
   ]);
 
   const names = new Set<string>();
   for (const f of fundamentals ?? []) {
-    if (f.sector) names.add(f.sector);
+    if (f.sector || f.sic) names.add(plainSectorName(f.sic, f.sector));
   }
   if ((coinRows ?? []).length > 0) names.add("Digital assets");
 

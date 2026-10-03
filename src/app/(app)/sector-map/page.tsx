@@ -3,6 +3,9 @@ import { getUserSettings } from "@/lib/actions/settings";
 import { SectorTreemap } from "@/components/sector-map/sector-treemap";
 
 import { guardReads } from "@/components/data-unavailable";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = { title: "Sector map - Cairn" };
 
 // A failed market-data read renders the panel instead of throwing into a
 // minified React error; anything else propagates as before.
@@ -22,7 +25,8 @@ async function SectorMapBody() {
   // Reordering rather than filtering: hiding the other sectors would turn a
   // heat map into a single card and lose the comparison the page exists for.
   const focus = settings?.sector_map_default_sector ?? null;
-  const focusedSector = focus && heatmap.some((s) => s.name === focus) ? focus : null;
+  // A focus saved before sectors were renamed holds the raw SEC text; it still finds its card.
+  const focusedSector = focus ? (heatmap.find((s) => s.name === focus || s.raw?.some((r) => r.toLowerCase() === focus.toLowerCase()))?.name ?? null) : null;
   const data = focusedSector
     ? [...heatmap].sort((a, b) => (a.name === focusedSector ? -1 : b.name === focusedSector ? 1 : 0))
     : heatmap;

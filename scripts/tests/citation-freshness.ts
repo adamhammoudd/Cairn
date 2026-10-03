@@ -7,11 +7,13 @@ import "./env";
 import { pathToFileURL } from "node:url";
 import { writeReport, type SuiteResult, type TestCase } from "./report";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { hasLiveDb, liveDbSkipped } from "./live-db";
 
 const RECENCY_WINDOW_DAYS = 90;
 const SAMPLE_TICKER_LIMIT = 10;
 
 export async function runCitationFreshnessSuite(): Promise<SuiteResult> {
+  if (!hasLiveDb()) return liveDbSkipped("Citation freshness", "cited sources are not newer than their analysis");
   const admin = createAdminClient();
   const cases: TestCase[] = [];
   const notes: string[] = [];

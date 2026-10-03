@@ -72,7 +72,10 @@ export function BillingPanel({ detail }: { detail: BillingDetail }) {
           )
         )}
 
-        {usage.tier === "premium" && hasStripeCustomer && (
+        {/* One flag: the Stripe portal is offered only while payments are enabled
+            (billingEnabled). Showing it beside "payments open at launch" was a
+            contradiction on one screen (audit 2026-10-02, item 5.1). The beta line stays. */}
+        {billingEnabled && usage.tier === "premium" && hasStripeCustomer && (
           <form action={portal} className="mt-4">
             <button
               type="submit"

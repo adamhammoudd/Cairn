@@ -32,6 +32,7 @@ const PUBLIC_EXACT = new Set([
   "/legal-notice",
   "/refunds",
   "/accessibility",
+  "/data-sources",
   "/welcome",
 ]);
 const PUBLIC_PREFIXES = ["/waitlist"];
@@ -46,6 +47,16 @@ const PUBLIC_FILES = new Set(["/robots.txt", "/sitemap.xml", "/llms.txt", "/site
 // The generated share image (src/app/opengraph-image.tsx). Link-preview bots
 // fetch it with no session; the path may carry a hash suffix, so it is a prefix.
 const PUBLIC_IMAGE_PREFIX = "/opengraph-image";
+
+/**
+ * The sign-in and sign-up entry points. A person who is already signed in has
+ * no use for them, so the proxy sends them to the app instead (audit
+ * 2026-10-02, item 5.8). `/forgot-password` and `/reset-password` are NOT here:
+ * a reset link has to work whatever state the browser is in.
+ */
+export function isAuthEntryPath(pathname: string): boolean {
+  return pathname === "/login" || pathname === "/signup";
+}
 
 export function isPublicPath(pathname: string): boolean {
   // API routes carry their own auth (session cookie / webhook signature).

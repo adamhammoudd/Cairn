@@ -11,6 +11,24 @@ import { MAX_AMOUNT_INPUT } from "@/lib/input-limits";
 
 export type AlertType = "price" | "pct_change" | "volume_spike" | "technical_crossover" | "ai_confidence";
 export type AlertChannel = "in_app" | "push" | "email";
+/**
+ * Channels a person can choose today. Push and email are offered nowhere until a
+ * provider is wired (audit 2026-10-02, item 5.2): an option that records a
+ * preference and then does nothing reads as a live feature that is broken.
+ */
+export const SELECTABLE_CHANNELS: readonly AlertChannel[] = ["in_app"];
+
+/**
+ * The channels to store for a save. A new alert gets only what can be delivered.
+ * An existing alert keeps any channel it already had - those rows keep working
+ * exactly as before - but cannot gain a new unavailable one. Never empty: in-app.
+ */
+export function allowedChannels(requested: readonly string[], existing: readonly AlertChannel[] = []): AlertChannel[] {
+  const ok = new Set<string>([...SELECTABLE_CHANNELS, ...existing]);
+  const out = requested.filter((c): c is AlertChannel => (c === "in_app" || c === "push" || c === "email") && ok.has(c));
+  return out.length > 0 ? Array.from(new Set(out)) : ["in_app"];
+}
+
 export type Comparator = "above" | "below";
 export type ConfidenceLevel = "low" | "medium" | "high";
 

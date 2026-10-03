@@ -17,6 +17,7 @@
 // `template`. Text that did not pass is never stored.
 
 import { checkNoFreelancedProbability, checkScopeGuard } from "@/lib/ai/scope-guard";
+import { hasForwardLooking } from "@/lib/ai/forward-looking";
 import type { ClassifierOutcome } from "@/lib/ai/scope-classifier";
 import {
   MAX_SENTENCE_WORDS,
@@ -107,6 +108,7 @@ export type TextFailure =
   | "scope_guard"
   | "advice_phrasing"
   | "stated_as_fact"
+  | "forward_looking"
   | "elevated_move"
   | "freelanced_probability"
   | "number_not_in_inputs"
@@ -408,6 +410,8 @@ export function checkAnalysisText(t: ModelAnalysisText, i: TextInputs, opts: { m
   if (!checkScopeGuard(all).passed) return fail("scope_guard", all);
   for (const p of parts) if (ADVICE.test(p)) return fail("advice_phrasing", p);
   for (const p of parts) if (STATED_AS_FACT.test(p)) return fail("stated_as_fact", p);
+  // The same forecast hedged with a modal: "may keep climbing", "could fall".
+  for (const p of parts) if (hasForwardLooking(p)) return fail("forward_looking", p);
   for (const p of parts) if (ELEVATED.test(p)) return fail("elevated_move", p);
   // The base rate is every stretch of history, not moments like today.
   if (i.historyBasis === "baseline" || i.historyBasis === "earnings") for (const p of parts) if (/\bsimilar\s+(?:past\s+)?moments?\b/i.test(p)) return fail("baseline_called_similar", p);

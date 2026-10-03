@@ -1,5 +1,7 @@
 import { runScreen } from "@/lib/actions/screener";
 import { EMPTY_FILTERS } from "@/lib/screener";
+import { rankForDisplay, withCoinCaps } from "@/lib/symbol-ranking";
+import { getCryptoMarketCaps } from "@/lib/actions/crypto";
 import { getCryptoOverview } from "@/lib/actions/crypto";
 import { getUserSettings } from "@/lib/actions/settings";
 import { MarketsPanel } from "@/components/markets/markets-panel";
@@ -7,6 +9,9 @@ import { createClient } from "@/lib/supabase/server";
 import { MIGRATIONS, unwrapRows } from "@/lib/supabase/read";
 
 import { guardReads } from "@/components/data-unavailable";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = { title: "Markets - Cairn" };
 
 // A failed market-data read renders the panel instead of throwing into a
 // minified React error; anything else propagates as before.
@@ -40,11 +45,12 @@ async function MarketsBody() {
   // is read. Same stored closes the table below shows: whatever is moving
   // hardest right now, across every asset class, capped at a dozen so the
   // loop stays short.
-  const tickerItems = [...rows]
-    .filter((r) => r.changePct !== null)
-    .sort((a, b) => Math.abs(b.changePct ?? 0) - Math.abs(a.changePct ?? 0))
-    .slice(0, 12)
-    .map((r) => ({ symbol: r.symbol, changePct: r.changePct as number }));
+  // The largest by market cap above a floor - not the biggest percent moves,
+  // which put tiny coins first (lib/symbol-ranking.ts).
+  const tickerItems = rankForDisplay(
+    withCoinCaps(rows.filter((r) => r.changePct !== null), await getCryptoMarketCaps()),
+    { limit: 12 },
+  ).map((r) => ({ symbol: r.symbol, changePct: r.changePct as number }));
 
   return (
     <MarketsPanel

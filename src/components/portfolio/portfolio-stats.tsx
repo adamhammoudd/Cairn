@@ -23,12 +23,15 @@ export function PortfolioStats({
   positions,
   assetTypeCount,
   refreshRateSeconds = null,
+  live = false,
 }: {
   totals: PortfolioTotals;
   positions: number;
   assetTypeCount: number;
   /** user_settings.refresh_rate_seconds - poll cadence for the live-quote refresh. */
   refreshRateSeconds?: number | null;
+  /** True only when a price on this page came from a live quote; gates the "Updates every N min" label. */
+  live?: boolean;
 }) {
   const prefs = useDisplayPrefs();
   // A reader whose display currency differs from the assets': the gain in their
@@ -39,7 +42,7 @@ export function PortfolioStats({
   return (
     <>
       <div className="mb-2 flex min-h-[18px] justify-end">
-        <LivePricePoll refreshRateSeconds={refreshRateSeconds} />
+        <LivePricePoll refreshRateSeconds={refreshRateSeconds} live={live} />
       </div>
       <div className="mb-3.5 grid grid-cols-[repeat(auto-fit,minmax(196px,1fr))] gap-3">
       <StatCard

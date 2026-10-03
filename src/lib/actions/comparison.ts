@@ -1,11 +1,16 @@
 "use server";
 
+import { getAuthUser } from "@/lib/supabase/auth";
 import { createClient } from "@/lib/supabase/server";
 import { cryptoRolling24hFor } from "@/lib/market-data/current-price";
 import { unwrapRows, MIGRATIONS } from "@/lib/supabase/read";
 import { readRecentPrices } from "@/lib/market-data/paged-read";
 import type { ComparisonRow } from "@/lib/comparison";
 import { getAssetCurrencies } from "@/lib/market-data/asset-currency";
+import { runScreen } from "@/lib/actions/screener";
+import { getCryptoMarketCaps } from "@/lib/actions/crypto";
+import { EMPTY_FILTERS } from "@/lib/screener";
+import { rankForDisplay, withCoinCaps } from "@/lib/symbol-ranking";
 
 // The universe every symbol picker draws on (Compare, the Sector Heat Map).
 //
@@ -19,6 +24,8 @@ import { getAssetCurrencies } from "@/lib/market-data/asset-currency";
 // have data for": the provider config only lists what the daily job refreshes,
 // while anything ingested on demand is in the directory the moment it lands.
 export async function getTrackedSymbols(): Promise<string[]> {
+  // Session required: a server action is a public POST endpoint, whatever page the proxy guards.
+  if (!(await getAuthUser())) return [];
   const supabase = await createClient();
   const rows = unwrapRows(
     "Tracked symbols (symbol_directory)",
@@ -37,6 +44,8 @@ const COMPARISON_BARS_PER_SYMBOL = 400;
 // duplication, the formula is already computed in three places in this
 // codebase.
 export async function getComparisonData(symbols: string[]): Promise<ComparisonRow[]> {
+  // Session required: a server action is a public POST endpoint, whatever page the proxy guards.
+  if (!(await getAuthUser())) return [];
   if (symbols.length === 0) return [];
   const supabase = await createClient();
 
@@ -120,4 +129,27 @@ export async function getComparisonData(symbols: string[]): Promise<ComparisonRo
       };
     })
     .filter((row) => row.bars.length > 0);
+}
+
+/**
+ * What the Compare quick-add chips offer: the reader's holdings, then their
+ * watchlists, then the largest tracked symbols by market cap above a floor
+ * (lib/symbol-ranking.ts). The chips used to be the first three tracked symbols
+ * in ALPHABETICAL order - "1INCH, 2Z, A7A5" - which is neither useful nor a
+ * sensible first impression (audit 2026-10-02, item 5.5).
+ */
+export async function getCompareSuggestions(): Promise<string[]> {
+  if (!(await getAuthUser())) return [];
+  const supabase = await createClient();
+  const [rows, coinCaps, holdingsRes, itemsRes] = await Promise.all([
+    runScreen(EMPTY_FILTERS),
+    getCryptoMarketCaps(),
+    supabase.from("holdings").select("symbol"),
+    supabase.from("watchlist_items").select("symbol"),
+  ]);
+  return rankForDisplay(withCoinCaps(rows, coinCaps), {
+    held: (holdingsRes.data ?? []).map((h) => h.symbol),
+    watched: (itemsRes.data ?? []).map((i) => i.symbol),
+    limit: 12,
+  }).map((r) => r.symbol);
 }

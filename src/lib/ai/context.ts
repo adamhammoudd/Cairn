@@ -156,7 +156,7 @@ export async function buildChatContext(
   // news rather than the user's own symbols. This only changes WHICH stored
   // analyses surface; it cannot change what the assistant is allowed to say,
   // which the scope guard enforces server-side either way.
-  usePortfolioContext = true,
+  usePortfolioContext = false,
 ): Promise<ChatContext> {
   const supabase = client ?? (await createClient());
 

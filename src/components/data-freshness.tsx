@@ -11,46 +11,47 @@
 // Deliberately not hidden when a live feed IS configured: it flips to "Live",
 // so the label always states the actual source rather than disappearing.
 
+import { describePriceFreshness } from "@/lib/price-freshness";
+
 interface DataFreshnessProps {
   source: "live" | "last_close";
   /** YYYY-MM-DD of the bar the numbers came from. */
   asOf?: string | null;
   /** Extra words about what is being labelled, e.g. "daily closes". */
   detail?: string;
+  /** Optional; lets crypto (trades daily) be judged by its own staleness rule. */
+  assetType?: string | null;
   className?: string;
 }
 
-// Fixed locale and time zone: a date formatted with the server's locale and
-// then re-formatted with the browser's is a hydration mismatch, and this
-// string is small enough that a stable format is better than a local one.
-function formatAsOf(iso: string): string {
-  const [y, m, d] = iso.split("-").map(Number);
-  if (!y || !m || !d) return iso;
-  const date = new Date(Date.UTC(y, m - 1, d));
-  return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
+// The date comes from the data itself (describePriceFreshness), formatted with a
+// fixed locale and zone so server and browser render the same string.
+export function freshnessText({
+  source,
+  asOf,
+  detail,
+  assetType,
+}: Omit<DataFreshnessProps, "className">): string {
+  const f = describePriceFreshness({ source, asOf, assetType });
+  return detail ? `${f.label} · ${detail}` : f.label;
 }
 
-export function freshnessText({ source, asOf, detail }: Omit<DataFreshnessProps, "className">): string {
-  if (source === "live") return detail ? `Live · ${detail}` : "Live";
-  const parts = ["Delayed"];
-  if (detail) parts.push(detail);
-  if (asOf) parts.push(`close of ${formatAsOf(asOf)}`);
-  return parts.join(" · ");
-}
-
-export function DataFreshness({ source, asOf, detail, className = "" }: DataFreshnessProps) {
+export function DataFreshness({ source, asOf, detail, assetType, className = "" }: DataFreshnessProps) {
+  const f = describePriceFreshness({ source, asOf, assetType });
   return (
-    <span
-      title={
-        source === "live"
-          ? "Prices from the live quote provider."
-          : "No live-quote provider is configured, so prices are the last daily close from the trend store."
-      }
-      // Wraps on a phone: on one line the ticker chart's "Delayed · daily
-      // closes · close of Sep 25, 2026" ran past its card at 360px and was cut.
-      className={`font-mono text-eyebrow text-dim uppercase sm:whitespace-nowrap ${className}`}
-    >
-      {freshnessText({ source, asOf, detail })}
+    <span className={`inline-flex flex-col gap-0.5 ${className}`}>
+      <span
+        title={
+          source === "live"
+            ? "Prices from the live quote provider."
+            : "These are stored daily closing prices, not a live feed."
+        }
+        // Wraps on a phone: on one line the ticker chart's label ran past its card at 360px and was cut.
+        className="font-mono text-eyebrow text-dim uppercase sm:whitespace-nowrap"
+      >
+        {freshnessText({ source, asOf, detail, assetType })}
+      </span>
+      {f.reason && <span className="text-micro text-negative">{f.reason}</span>}
     </span>
   );
 }

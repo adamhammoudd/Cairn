@@ -1,5 +1,6 @@
 "use server";
 
+import { getAuthUser } from "@/lib/supabase/auth";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -15,6 +16,8 @@ import { getAssetCurrencies } from "@/lib/market-data/asset-currency";
 // concepts) keeps null for all three and is excluded by those filters rather
 // than being given a fabricated value.
 export async function runScreen(rawFilters: ScreenerFilters): Promise<ScreenerRow[]> {
+  // Session required: a server action is a public POST endpoint, whatever page the proxy guards.
+  if (!(await getAuthUser())) return [];
   // Screens saved before the fundamentals fields existed have `undefined` for
   // them, and `undefined !== null` - so coalesce before any comparison.
   const filters: ScreenerFilters = { ...EMPTY_FILTERS, ...rawFilters };
