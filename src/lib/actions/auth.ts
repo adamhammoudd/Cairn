@@ -11,6 +11,7 @@ import { inviteAllowed } from "@/lib/public-paths";
 import { INVITE_INVALID_MESSAGE, isWellFormedInviteCode, normalizeEmail } from "@/lib/beta-invites/codes";
 import { claimInviteAndCreateAccount } from "@/lib/beta-invites/claim";
 import { createSupabaseInviteStore } from "@/lib/beta-invites/supabase-store";
+import { validateDisplayName } from "@/lib/display-name";
 
 // Behind a proxy the socket address is the proxy's, so the forwarded chain is
 // the only thing that identifies the caller. First entry is the client;
@@ -47,9 +48,14 @@ export async function signIn(_prevState: string | null, formData: FormData) {
 }
 
 export async function signUp(_prevState: string | null, formData: FormData) {
-  const name = String(formData.get("name") ?? "");
   const email = String(formData.get("email") ?? "");
   const password = String(formData.get("password") ?? "");
+
+  // Checked before anything is claimed or created, so a bad name costs the
+  // person nothing: no spent invite, no half-made account.
+  const nameResult = validateDisplayName(formData.get("name"));
+  if (!nameResult.ok) return nameResult.error;
+  const name = nameResult.value;
 
   // Server-side gate, not just the disabled button: a hand-crafted POST must
   // not be able to create an account without a consent record behind it.
@@ -80,7 +86,7 @@ export async function signUp(_prevState: string | null, formData: FormData) {
   const limit = await checkAuthRateLimit(email, "sign_up", ip);
   if (!limit.allowed) return limit.message ?? "Too many attempts. Try again later.";
 
-  if (!shared) return signUpWithPersonalInvite({ invite, email, password, formData, ip, userAgent, consentedAt });
+  if (!shared) return signUpWithPersonalInvite({ invite, email, password, name, formData, ip, userAgent, consentedAt });
 
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({
@@ -89,7 +95,7 @@ export async function signUp(_prevState: string | null, formData: FormData) {
     options: {
       captchaToken: captchaTokenFrom(formData),
       data: {
-        display_name: name,
+        ...(name ? { display_name: name } : {}),
         // Backstop copy of the consent, on the auth user itself, in case the
         // user_consents insert below fails.
         tos_version: TOS_VERSION,
@@ -144,6 +150,7 @@ async function signUpWithPersonalInvite(input: {
   invite: string;
   email: string;
   password: string;
+  name: string;
   formData: FormData;
   ip: string | null;
   userAgent: string | null;
@@ -159,6 +166,11 @@ async function signUpWithPersonalInvite(input: {
         password: input.password,
         email_confirm: true,
         user_metadata: {
+          // Saved in the same createUser call: the handle_new_user trigger
+          // copies it into profiles.display_name in the same transaction, so
+          // there is no second write that could fail and leave a nameless
+          // account. If it did fail, createUser fails and the invite is released.
+          ...(input.name ? { display_name: input.name } : {}),
           // Backstop copy of the consent, as on the open path.
           tos_version: TOS_VERSION,
           privacy_version: PRIVACY_VERSION,

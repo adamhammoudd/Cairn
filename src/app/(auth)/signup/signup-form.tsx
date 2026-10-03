@@ -8,6 +8,7 @@ import { SubmitButton } from "@/components/auth/submit-button";
 import { AuthError, AuthHeader } from "@/components/auth/auth-chrome";
 import { CAPTCHA_ENABLED, Captcha } from "@/components/auth/captcha";
 import { TEXT_LINK } from "@/components/front-door/styles";
+import { NAME_REQUIRED, isNameError, validateDisplayName } from "@/lib/display-name";
 
 // `invitedEmail` set: a personal invite. The address is shown and locked - the
 // invite only works for it - and the form is password + consent and nothing
@@ -34,6 +35,10 @@ export function SignupForm({
   const [agreed, setAgreed] = useState(false);
   const [captchaDone, setCaptchaDone] = useState(!CAPTCHA_ENABLED);
   const personal = invitedEmail !== null;
+  // The same rules run on the server (signUp); checking here too just saves
+  // the round trip and puts the message next to the field.
+  const [nameError, setNameError] = useState<string | null>(null);
+  const shownNameError = nameError ?? (isNameError(error) ? error : null);
 
   return (
     <>
@@ -43,10 +48,36 @@ export function SignupForm({
         blurb={personal ? "Choose a password to create your account." : "Use the email you want to sign in with."}
       />
 
-      {error && <AuthError>{error}</AuthError>}
+      {error && !isNameError(error) && <AuthError>{error}</AuthError>}
 
-      <form action={formAction}>
+      <form
+        action={formAction}
+        onSubmit={(e) => {
+          const result = validateDisplayName(name);
+          if (result.ok) return;
+          e.preventDefault();
+          setNameError(result.error);
+          document.getElementById("name")?.focus();
+        }}
+      >
         <input type="hidden" name="invite" value={invite} />
+        <Field
+          id="name"
+          name="name"
+          type="text"
+          label={NAME_REQUIRED ? "Your name" : "Your name (optional)"}
+          placeholder="e.g. Alex Martin"
+          autoComplete="name"
+          autoCapitalize="words"
+          spellCheck={false}
+          required={NAME_REQUIRED}
+          value={name}
+          error={shownNameError}
+          onChange={(e) => {
+            setName(e.target.value);
+            setNameError(null);
+          }}
+        />
         {personal ? (
           <>
             <Field
@@ -68,17 +99,6 @@ export function SignupForm({
           </>
         ) : (
           <>
-            <Field
-              id="name"
-              name="name"
-              type="text"
-              label="Name"
-              placeholder="Jordan Reyes"
-              autoComplete="name"
-              required
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
             <Field
               id="email"
               name="email"
