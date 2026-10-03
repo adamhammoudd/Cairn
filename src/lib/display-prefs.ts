@@ -79,7 +79,7 @@ export const DEFAULT_DISPLAY_PREFS: DisplayPrefs = {
  */
 export function formatUserMoney(usd: number | null | undefined, prefs: DisplayPrefs): string {
   if (usd === null || usd === undefined || !Number.isFinite(usd)) return "-";
-  return currencyString(usd * prefs.fxRate, prefs.effectiveCurrency);
+  return userCurrencyString(usd * prefs.fxRate, prefs.effectiveCurrency);
 }
 
 /** Label appended to an asset figure whose currency isn't known. */
@@ -94,6 +94,19 @@ export function formatAssetMoney(value: number | null | undefined, assetCurrency
   if (value === null || value === undefined || !Number.isFinite(value)) return "-";
   if (!assetCurrency) return `${plainAmount(value)} (${CURRENCY_UNKNOWN})`;
   return currencyString(value, assetCurrency);
+}
+
+/**
+ * The reader's OWN money - a portfolio value, a gain, a cost - always at the
+ * currency's own precision (two decimals for EUR and USD). A loss of 16.4 cents
+ * read "-EUR 0.164" because this went through the same sub-unit rule as an asset
+ * PRICE, below; every other amount on the page had two decimals (audit
+ * 2026-10-02, item 4.5). Extra decimals are for what something TRADES at (a coin
+ * under a cent), never for what the reader has made or lost.
+ */
+function userCurrencyString(value: number, currency: string): string {
+  const notation = Math.abs(value) >= 1e15 ? "compact" : "standard";
+  return value.toLocaleString(undefined, { style: "currency", currency, notation });
 }
 
 function currencyString(value: number, currency: string): string {
@@ -179,6 +192,10 @@ function compactCurrencyString(value: number, currency: string): string {
     style: "currency",
     currency,
     notation: "compact",
+    // Explicit minimum: without it the currency's own two decimals apply on some
+    // ICU versions ("$3.40B") and not on others ("$3.4B"), so the same figure
+    // read differently on two machines (audit 4.1).
+    minimumFractionDigits: 0,
     maximumFractionDigits: 2,
   });
 }
@@ -216,7 +233,7 @@ export function formatSignedDisplayMoney(
   prefs: Pick<DisplayPrefs, "effectiveCurrency">,
 ): string {
   if (value === null || value === undefined || !Number.isFinite(value)) return "-";
-  return `${value >= 0 ? "+" : ""}${currencyString(value, prefs.effectiveCurrency)}`;
+  return `${value >= 0 ? "+" : ""}${userCurrencyString(value, prefs.effectiveCurrency)}`;
 }
 
 /** An asset's move in money, signed, in its own currency. */

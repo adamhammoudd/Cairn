@@ -198,5 +198,5 @@ export async function getAssistantPortfolioContext(): Promise<boolean> {
   } = await supabase.auth.getUser();
   if (!user) return true;
   const { data } = await supabase.from("user_settings").select("assistant_use_portfolio_context").eq("user_id", user.id).maybeSingle();
-  return data?.assistant_use_portfolio_context ?? true;
+  return data?.assistant_use_portfolio_context ?? false;
 }

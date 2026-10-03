@@ -22,7 +22,7 @@ export default async function ChatSettingsPage({ params }: { params: Promise<{ s
       session={session}
       accountDefaults={{
         expandMethodology: settings?.assistant_expand_methodology ?? true,
-        usePortfolioContext: settings?.assistant_use_portfolio_context ?? true,
+        usePortfolioContext: settings?.assistant_use_portfolio_context ?? false,
       }}
       fallbackTitle={`Chat - ${new Date(session.created_at).toLocaleDateString()}`}
     />

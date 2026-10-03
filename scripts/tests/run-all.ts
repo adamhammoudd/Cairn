@@ -81,6 +81,21 @@ import { runAssistantTranscriptsSuite } from "./assistant-transcripts";
 import { runAssistantEmptyAnswersSuite } from "./assistant-empty-answers";
 import { runNativeCurrencySuite } from "./native-currency";
 import { runBetaInvitesSuite } from "./beta-invites";
+import { runRefreshQueueSuite } from "./refresh-queue";
+import { runPriceFreshnessSuite } from "./price-freshness";
+import { runCronAndFxRefreshSuite } from "./cron-and-fx-refresh";
+import { runAuthRateLimitFailClosedSuite } from "./auth-rate-limit-failclosed";
+import { runDiscussionPoliciesSuite } from "./discussion-policies";
+import { runEndpointAuthAuditSuite } from "./endpoint-auth-audit";
+import { runChatUsageSessionSuite } from "./chat-usage-session";
+import { runCspNonceSuite } from "./csp-nonce";
+import { runOperatorAndEmailFooterSuite } from "./operator-and-email-footer";
+import { runForwardLookingSuite } from "./forward-looking";
+import { runLegalCopySuite } from "./legal-copy";
+import { runPortfolioContextPayloadSuite } from "./portfolio-context-payload";
+import { runCodeHealthSuite } from "./code-health";
+import { runChatCapTimezoneSuite } from "./chat-cap-timezone";
+import { runMoneyTwoDecimalsSuite } from "./money-two-decimals";
 import { runCoherenceContentSuite } from "./coherence-content";
 
 // A suite that throws (missing credentials, unreachable service) must surface
@@ -154,6 +169,21 @@ async function main() {
     businessProfileSuites,
     nativeCurrencySuites,
     betaInvitesSuites,
+    refreshQueueSuites,
+    priceFreshnessSuites,
+    cronFxSuites,
+    authFailClosedSuites,
+    discussionPolicySuites,
+    endpointAuditSuites,
+    chatUsageSessionSuites,
+    cspNonceSuites,
+    operatorFooterSuites,
+    forwardLookingSuites,
+    legalCopySuites,
+    portfolioPayloadSuites,
+    codeHealthSuites,
+    chatCapTzSuites,
+    moneyDecimalsSuites,
     coherenceSuites,
   ] = await Promise.all([
     guarded("Adversarial scope guard", runAdversarialScopeGuardSuites),
@@ -201,6 +231,21 @@ async function main() {
     guarded("Business profile", async () => [await runBusinessProfileSuite()]),
     guarded("Native currency", async () => [await runNativeCurrencySuite()]),
     guarded("Beta invites", async () => [await runBetaInvitesSuite()]),
+    guarded("Data refresh queue", async () => [await runRefreshQueueSuite()]),
+    guarded("Price freshness labels", async () => [await runPriceFreshnessSuite()]),
+    guarded("Cron auth + FX top-up", async () => [await runCronAndFxRefreshSuite()]),
+    guarded("Auth rate limit fail-closed", async () => [await runAuthRateLimitFailClosedSuite()]),
+    guarded("Discussion policies", async () => [await runDiscussionPoliciesSuite()]),
+    guarded("Endpoint auth audit", async () => [await runEndpointAuthAuditSuite()]),
+    guarded("Chat quota session-bound", async () => [await runChatUsageSessionSuite()]),
+    guarded("CSP nonce policy", async () => [await runCspNonceSuite()]),
+    guarded("Operator identity, email footers, removal", async () => [await runOperatorAndEmailFooterSuite()]),
+    guarded("Forward-looking direction check", async () => [await runForwardLookingSuite()]),
+    guarded("Legal pages match the code", async () => [await runLegalCopySuite()]),
+    guarded("Portfolio context opt-in + payload", async () => [await runPortfolioContextPayloadSuite()]),
+    guarded("Code health", async () => [await runCodeHealthSuite()]),
+    guarded("Chat cap day boundary", async () => [await runChatCapTimezoneSuite()]),
+    guarded("Money two decimals", async () => [await runMoneyTwoDecimalsSuite()]),
     guarded("Coherence and content", async () => [await runCoherenceContentSuite()]),
   ]);
 
@@ -273,7 +318,22 @@ async function main() {
     ...businessProfileSuites,
     ...nativeCurrencySuites,
     ...betaInvitesSuites,
+    ...refreshQueueSuites,
+    ...priceFreshnessSuites,
+    ...cronFxSuites,
     ...costBasisFxSuites,
+    ...authFailClosedSuites,
+    ...discussionPolicySuites,
+    ...endpointAuditSuites,
+    ...chatUsageSessionSuites,
+    ...cspNonceSuites,
+    ...operatorFooterSuites,
+    ...forwardLookingSuites,
+    ...legalCopySuites,
+    ...portfolioPayloadSuites,
+    ...codeHealthSuites,
+    ...chatCapTzSuites,
+    ...moneyDecimalsSuites,
     ...coherenceSuites,
   ];
   const reportPath = writeReport(allSuites);

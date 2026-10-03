@@ -1,5 +1,6 @@
 import type Stripe from "stripe";
 import { stripe, syncSubscriptionForCustomer } from "@/lib/stripe";
+import { logEvent, ref } from "@/lib/log";
 
 // Phase 12 - the only endpoint that grants or revokes premium.
 //
@@ -62,7 +63,8 @@ export async function POST(req: Request) {
   try {
     const result = await syncSubscriptionForCustomer(customerId);
     if (result && result.fromTier !== result.toTier) {
-      console.log(`[stripe] ${event.type}: user ${result.userId} ${result.fromTier} -> ${result.toTier} (${result.status})`);
+      // Structured, and the account is a short hash, not its id (audit 4.4).
+      logEvent("info", "stripe.tier_changed", { type: event.type, account: ref(result.userId), from: result.fromTier, to: result.toTier, status: result.status });
     }
   } catch (err) {
     // A 500 tells Stripe to retry with backoff, which is what we want on a

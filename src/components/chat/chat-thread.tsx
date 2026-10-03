@@ -91,7 +91,7 @@ export function ChatThread({
   compact = false,
   expandMethodology = true,
   betaUntil = null,
-  usePortfolioContext = true,
+  usePortfolioContext = false,
 }: {
   compact?: boolean;
   /** "31 December 2026" while beta Premium access is on (getBetaAccessLabel), else null. */

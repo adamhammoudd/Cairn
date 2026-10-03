@@ -1,7 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
 import { MAX_CHAT_MESSAGE_CHARS } from "@/lib/ai/chat-generate";
-import { checkChatUsageAllowed, recordChatUsage, getUserPlan } from "@/lib/actions/billing";
+import { getUserPlan } from "@/lib/actions/billing";
+import { checkChatUsageAllowed, recordChatUsage } from "@/lib/chat-usage";
 import { getDisplayPrefs } from "@/lib/actions/display-prefs";
 import { rateLimit, sweepRateLimits } from "@/lib/rate-limit";
 import { BUSY_MESSAGE, LlmBusyError } from "@/lib/ai/llm";
@@ -63,7 +64,7 @@ export async function POST(req: Request) {
     .maybeSingle();
   if (!session) return new Response("Chat session not found", { status: 404 });
 
-  const gate = await checkChatUsageAllowed(user.id);
+  const gate = await checkChatUsageAllowed();
   if (!gate.allowed) return new Response(gate.message ?? "Daily chat limit reached.", { status: 429 });
 
   // Newest-first at the DB so the LIMIT keeps the most recent turns, then
@@ -84,7 +85,7 @@ export async function POST(req: Request) {
     getUserPlan(),
     getDisplayPrefs(),
   ]);
-  const usePortfolio = session.use_portfolio_context ?? settings?.assistant_use_portfolio_context ?? true;
+  const usePortfolio = session.use_portfolio_context ?? settings?.assistant_use_portfolio_context ?? false;
 
   const encoder = new TextEncoder();
   const body = new ReadableStream({
@@ -116,7 +117,7 @@ export async function POST(req: Request) {
         if (!session.title) {
           await supabase.from("chat_sessions").update({ title: message.trim().slice(0, 60) }).eq("id", sessionId);
         }
-        await recordChatUsage(user.id);
+        await recordChatUsage();
 
         console.info(`[assistant] turn cost $${result.meta.costUsd.toFixed(5)} (${result.meta.usage.calls} model calls, ${result.meta.usage.promptTokens}+${result.meta.usage.completionTokens} tokens, ${result.meta.usage.webSearches} web searches, source=${result.meta.source})`);
 

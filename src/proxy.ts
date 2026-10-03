@@ -1,9 +1,39 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { isAuthEntryPath, isInviteLinkRequest, isPublicPath } from "@/lib/public-paths";
+import { buildCsp, cspHeaderName, newNonce, readCspMode } from "@/lib/csp";
 
 export async function proxy(request: NextRequest) {
-  let response = NextResponse.next({ request });
+  // Nonce CSP, only when CSP_MODE is set (see lib/csp.ts). Next reads the nonce
+  // from the request's CSP header and puts it on its own scripts; x-nonce is for
+  // anything in the app that has to emit an inline script itself.
+  const cspMode = readCspMode();
+  const nonce = cspMode ? newNonce() : null;
+  const csp = nonce
+    ? buildCsp({
+        nonce,
+        isDev: process.env.NODE_ENV !== "production",
+        supabaseOrigin: (() => {
+          try {
+            return new URL(process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").origin;
+          } catch {
+            return "";
+          }
+        })(),
+      })
+    : null;
+  // Built after any cookie refresh below, so the refreshed session still
+  // reaches the server components (request.cookies writes into request.headers).
+  const next = () => {
+    if (!cspMode || !nonce || !csp) return NextResponse.next({ request });
+    const headers = new Headers(request.headers);
+    headers.set("x-nonce", nonce);
+    headers.set(cspHeaderName(cspMode).toLowerCase(), csp);
+    const res = NextResponse.next({ request: { headers } });
+    res.headers.set(cspHeaderName(cspMode), csp);
+    return res;
+  };
+  let response = next();
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -17,7 +47,7 @@ export async function proxy(request: NextRequest) {
           for (const { name, value } of cookiesToSet) {
             request.cookies.set(name, value);
           }
-          response = NextResponse.next({ request });
+          response = next();
           for (const { name, value, options } of cookiesToSet) {
             response.cookies.set(name, value, options);
           }

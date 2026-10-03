@@ -14,12 +14,14 @@ import { resolveQuotePollSeconds } from "@/lib/live-refresh";
 // "Delayed · close of <date>" from the price's actual source, so this only
 // adds the "when it last checked" / pause affordance, and only when a poll is
 // actually possible.
-export function LivePricePoll({ refreshRateSeconds }: { refreshRateSeconds: number | null }) {
+export function LivePricePoll({ refreshRateSeconds, live }: { refreshRateSeconds: number | null; live: boolean }) {
   const market = getMarketStatus();
   const seconds = resolveQuotePollSeconds(refreshRateSeconds);
   const { active, paused, setPaused, lastRefreshedAt } = useLiveRefresh(seconds, market.isOpen);
 
-  if (!market.isOpen) return null;
+  // "Updates every N min" is a claim that the price is live. It is only made
+  // beside a price that came from a live quote, never beside a stored close.
+  if (!live || !market.isOpen) return null;
 
   const time = lastRefreshedAt
     ? lastRefreshedAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })

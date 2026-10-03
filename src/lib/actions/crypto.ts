@@ -21,6 +21,8 @@ export async function getCryptoMarketCaps(limit = 100): Promise<Record<string, n
 // volume, supply, rank) - derive it from the latest ingested daily close so
 // the overview and the ticker chart never disagree on price.
 export async function getCryptoOverview(): Promise<CryptoRow[]> {
+  // Session required: a server action is a public POST endpoint, whatever page the proxy guards.
+  if (!(await getAuthUser())) return [];
   const supabase = await createClient();
 
   // One bar per coin, with a per-symbol LIMIT. The previous query took the

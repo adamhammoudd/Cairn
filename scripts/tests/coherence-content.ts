@@ -6,7 +6,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { allowedChannels, SELECTABLE_CHANNELS } from "../../src/lib/alerts";
-import { similarMomentsCard } from "../../src/lib/analysis-display";
+import { similarMomentsCard } from "../../src/lib/similar-moments-card";
 import { cleanSicDescription, countLabel, plainSectorName, SIC_NAMES, sectorCountLabel } from "../../src/lib/sector-names";
 import { MIN_SUGGEST_MARKET_CAP, rankForDisplay, withCoinCaps } from "../../src/lib/symbol-ranking";
 import { applyNewsFilter, classifyNews, isFiling, pickSectorLeaders, type NewsInterests } from "../../src/lib/news-query";

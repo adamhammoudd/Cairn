@@ -15,6 +15,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
+import { renderChildEnv } from "./render-helper";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { summaryLine } from "@/lib/analysis-display";
 import { fixture } from "./fixtures/analysis-display-fixtures";
@@ -26,7 +27,7 @@ const read = (p: string) => fs.readFileSync(path.join(ROOT, p), "utf8");
 
 function render(...args: string[]): string {
   try {
-    const html = execFileSync(process.execPath, [path.join(ROOT, "node_modules/tsx/dist/cli.mjs"), path.join(DIR, "render-analysis-view.ts"), ...args], { cwd: ROOT, encoding: "utf8" });
+    const html = execFileSync(process.execPath, [path.join(ROOT, "node_modules/tsx/dist/cli.mjs"), path.join(DIR, "render-analysis-view.ts"), ...args], { cwd: ROOT, encoding: "utf8", env: renderChildEnv() });
     return html.replace(/<[^>]*>/g, " ").replace(/&#x27;/g, "'").replace(/\s+/g, " ");
   } catch (err) {
     return `RENDER FAILED: ${err instanceof Error ? err.message : String(err)}`;

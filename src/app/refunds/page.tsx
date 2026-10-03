@@ -1,4 +1,5 @@
 import { LegalShell } from "@/components/legal-shell";
+import { WithdrawalForm } from "@/components/withdrawal-form";
 import { CONTACT_EMAIL } from "@/lib/site";
 
 export const metadata = {
@@ -18,7 +19,7 @@ export const metadata = {
 // section 9 is the point; if one changes, change both.
 export default function RefundsPage() {
   return (
-    <LegalShell eyebrow="Legal" title="Cancellation and refunds" updated="25 September 2026">
+    <LegalShell eyebrow="Legal" title="Cancellation and refunds" updated="2 October 2026">
       <section>
         <h2>The short version</h2>
         <p>
@@ -63,8 +64,10 @@ export default function RefundsPage() {
         </p>
         <p>
           To withdraw, email us at <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.
-          Any clear statement is enough - you do not have to use a particular form of words.
+          Any clear statement is enough - you do not have to use a particular form of words. If it
+          helps, there is a sample form to copy below.
         </p>
+        <WithdrawalForm />
       </section>
 
       <section>

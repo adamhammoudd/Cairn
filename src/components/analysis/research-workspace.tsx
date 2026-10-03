@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { runAnalysisGeneration, type AnalysisWithMethodology } from "@/lib/actions/analysis";
 import { eventTypeLabel, type YoungHistoryInfo } from "@/lib/analysis";
 import type { GapExplanation } from "@/lib/analysis-gaps";
-import { similarMomentsCard } from "@/lib/analysis-display";
+import { similarMomentsCard } from "@/lib/similar-moments-card";
 import { searchSymbols, type SymbolSearchResult } from "@/lib/actions/symbols";
 import { MethodologyCard } from "@/components/analysis/methodology-card";
 import { decodeEntities } from "@/lib/news";

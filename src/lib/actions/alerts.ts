@@ -1,5 +1,6 @@
 "use server";
 
+import { getAuthUser } from "@/lib/supabase/auth";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -34,6 +35,8 @@ async function conditionFor(alertType: AlertType, formData: FormData, symbol: st
 
 /** The currency the alert form labels a price threshold with ("Alert when NVDA is above ___ USD"). */
 export async function alertThresholdCurrency(symbol: string): Promise<string | null> {
+  // Session required: a server action is a public POST endpoint, whatever page the proxy guards.
+  if (!(await getAuthUser())) return null;
   const scope = validateAlertScope(symbol, "price");
   if (!scope.ok) return null;
   return getAssetCurrency(scope.value);
