@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { colorForChange, labelToneForChange, weightedAvgChange } from "@/lib/sector-map";
 import type { SectorMapNode } from "@/lib/sector-map";
+import { sectorCountLabel } from "@/lib/sector-names";
 
 // Cap tiles per sector so labels stay legible; the rest roll into a remainder
 // tile rather than becoming unreadable slivers.
@@ -69,15 +70,17 @@ export function SectorTreemap({
         },
         {
           label: "Strongest",
-          value: best?.top?.name ?? "n/a",
-          note: best ? `${best.avg >= 0 ? "+" : "−"}${Math.abs(best.avg).toFixed(2)}% sector move` : "not enough data",
+          // The SECTOR, by name - not its biggest ticker ("Strongest: BE" read as a
+          // company call). The note says how many companies the move is based on.
+          value: best?.sector.name ?? "n/a",
+          note: best ? `${best.avg >= 0 ? "+" : "−"}${Math.abs(best.avg).toFixed(2)}% · ${sectorCountLabel(best.sector.name, best.sector.children.length)}` : "not enough data",
           tone: "text-accent",
         },
         {
           label: "Weakest",
-          value: worst?.top?.name ?? "n/a",
+          value: worst?.sector.name ?? "n/a",
           note: worst
-            ? `${worst.avg >= 0 ? "+" : "−"}${Math.abs(worst.avg).toFixed(2)}% sector move`
+            ? `${worst.avg >= 0 ? "+" : "−"}${Math.abs(worst.avg).toFixed(2)}% · ${sectorCountLabel(worst.sector.name, worst.sector.children.length)}`
             : "not enough data",
           tone: "text-negative",
         },
@@ -164,6 +167,7 @@ export function SectorTreemap({
                 <span className="flex items-center gap-2 font-mono text-eyebrow leading-[1.5] tracking-[0.13em] text-[#9a9a9a] uppercase">
                   {sector.name}
                   {sector.name === focusedSector && <span className="text-accent normal-case">· focus</span>}
+                  <span className="font-sans text-micro tracking-normal text-dim normal-case">{sectorCountLabel(sector.name, sector.children.length)}</span>
                 </span>
                 <span
                   className={`font-mono text-[11.5px] whitespace-nowrap tabular-nums ${

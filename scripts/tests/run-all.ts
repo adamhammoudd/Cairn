@@ -96,6 +96,7 @@ import { runPortfolioContextPayloadSuite } from "./portfolio-context-payload";
 import { runCodeHealthSuite } from "./code-health";
 import { runChatCapTimezoneSuite } from "./chat-cap-timezone";
 import { runMoneyTwoDecimalsSuite } from "./money-two-decimals";
+import { runCoherenceContentSuite } from "./coherence-content";
 
 // A suite that throws (missing credentials, unreachable service) must surface
 // as a hard failure of that suite, not take the whole run down with a stack
@@ -183,6 +184,7 @@ async function main() {
     codeHealthSuites,
     chatCapTzSuites,
     moneyDecimalsSuites,
+    coherenceSuites,
   ] = await Promise.all([
     guarded("Adversarial scope guard", runAdversarialScopeGuardSuites),
     guarded("Methodology substance", async () => [await runMethodologySubstanceSuite()]),
@@ -244,6 +246,7 @@ async function main() {
     guarded("Code health", async () => [await runCodeHealthSuite()]),
     guarded("Chat cap day boundary", async () => [await runChatCapTimezoneSuite()]),
     guarded("Money two decimals", async () => [await runMoneyTwoDecimalsSuite()]),
+    guarded("Coherence and content", async () => [await runCoherenceContentSuite()]),
   ]);
 
   const allSuites = [
@@ -331,6 +334,7 @@ async function main() {
     ...codeHealthSuites,
     ...chatCapTzSuites,
     ...moneyDecimalsSuites,
+    ...coherenceSuites,
   ];
   const reportPath = writeReport(allSuites);
 

@@ -5,8 +5,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { validateAlertScope } from "@/lib/validation";
-import { buildAlertCondition, dedupeConsecutiveDeliveries, parseCooldownSeconds } from "@/lib/alerts";
-import type { Alert, AlertDelivery, AlertType } from "@/lib/alerts";
+import { allowedChannels, buildAlertCondition, dedupeConsecutiveDeliveries, parseCooldownSeconds } from "@/lib/alerts";
+import type { Alert, AlertChannel, AlertDelivery, AlertType } from "@/lib/alerts";
 import { getAssetCurrency } from "@/lib/market-data/asset-currency";
 
 export async function listAlerts(): Promise<Alert[]> {
@@ -60,7 +60,8 @@ export async function createAlert(_prevState: string | null, formData: FormData)
   const condition = await conditionFor(alertType, formData, scope.value);
   if (typeof condition === "string") return condition;
 
-  const channels = (formData.getAll("channels") as string[]).filter(Boolean);
+  // Only channels that can be delivered today (lib/alerts.ts SELECTABLE_CHANNELS).
+  const channels = allowedChannels((formData.getAll("channels") as string[]).filter(Boolean));
 
   const { error } = await supabase.from("alerts").insert({
     user_id: user.id,
@@ -68,7 +69,7 @@ export async function createAlert(_prevState: string | null, formData: FormData)
     scope_value: scope.value,
     condition,
     cooldown_seconds: cooldownSeconds,
-    channels: channels.length > 0 ? channels : ["in_app"],
+    channels,
   });
   if (error) return error.message;
 
@@ -101,7 +102,10 @@ export async function updateAlert(_prevState: string | null, formData: FormData)
   const condition = await conditionFor(alertType, formData, scope.value);
   if (typeof condition === "string") return condition;
 
-  const channels = (formData.getAll("channels") as string[]).filter(Boolean);
+  // An edit keeps the channels the alert already has (those rows keep working)
+  // but cannot add push or email, which are not available yet.
+  const { data: current } = await supabase.from("alerts").select("channels").eq("id", id).eq("user_id", user.id).maybeSingle();
+  const channels = allowedChannels((formData.getAll("channels") as string[]).filter(Boolean), (current?.channels ?? []) as AlertChannel[]);
 
   const { error } = await supabase
     .from("alerts")
@@ -110,7 +114,7 @@ export async function updateAlert(_prevState: string | null, formData: FormData)
       scope_value: scope.value,
       condition,
       cooldown_seconds: cooldownSeconds,
-      channels: channels.length > 0 ? channels : ["in_app"],
+      channels,
       last_triggered_at: null,
     })
     .eq("id", id)

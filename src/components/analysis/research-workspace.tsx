@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { runAnalysisGeneration, type AnalysisWithMethodology } from "@/lib/actions/analysis";
 import { eventTypeLabel, type YoungHistoryInfo } from "@/lib/analysis";
 import type { GapExplanation } from "@/lib/analysis-gaps";
+import { similarMomentsCard } from "@/lib/similar-moments-card";
 import { searchSymbols, type SymbolSearchResult } from "@/lib/actions/symbols";
 import { MethodologyCard } from "@/components/analysis/methodology-card";
 import { decodeEntities } from "@/lib/news";
@@ -765,6 +766,7 @@ function FeaturedAnalysis({
   const h = a.display.history;
   const topSource = a.sources[0];
   const topAnalog = a.analogs[0];
+  const similar = similarMomentsCard({ caseCount: a.display.caseCount, kind: a.display.history.kind, hasAnalog: !!topAnalog });
   return (
     <div>
       <div className="flex items-center gap-2">
@@ -822,7 +824,7 @@ function FeaturedAnalysis({
         <div className="overflow-hidden rounded-xl border border-[#1f1f1f] bg-[#0b0b0b] transition-colors duration-base ease-standard hover:border-[#2f2f2f]">
           <div className="flex items-center justify-between gap-2.5 border-b border-[#1a1a1a] px-[13px] py-2.5">
             <span className="font-mono text-[9px] tracking-[0.14em] text-dim uppercase">Similar moments</span>
-            <span className="font-mono text-[9px] tracking-[0.1em] text-dim">{a.display.caseCount} counted</span>
+            <span className="font-mono text-[9px] tracking-[0.1em] text-dim">{similar.counted}</span>
           </div>
           <div className="px-[13px] py-[11px]">
             {topAnalog ? (
@@ -842,7 +844,7 @@ function FeaturedAnalysis({
                 </div>
               </>
             ) : (
-              <div className="text-[12px] text-dim">No close historical analog on record.</div>
+              <div className="text-[12px] text-dim">{similar.empty}</div>
             )}
           </div>
         </div>

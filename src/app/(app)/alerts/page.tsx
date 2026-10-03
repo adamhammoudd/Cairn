@@ -3,6 +3,9 @@ import { getComparisonData } from "@/lib/actions/comparison";
 import { getUserSettings } from "@/lib/actions/settings";
 import { AlertPanel, type AlertQuotes } from "@/components/alerts/alert-panel";
 import type { AlertChannel } from "@/lib/alerts";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = { title: "Alerts - Cairn" };
 
 export default async function AlertsPage() {
   const [alerts, deliveries, settings] = await Promise.all([listAlerts(), listDeliveries(), getUserSettings()]);

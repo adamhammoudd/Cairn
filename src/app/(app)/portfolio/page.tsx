@@ -23,6 +23,9 @@ import { ConcentrationPanel } from "@/components/portfolio/concentration-panel";
 import { HoldingsTable } from "@/components/portfolio/holdings-table";
 
 import { guardReads } from "@/components/data-unavailable";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = { title: "Portfolio - Cairn" };
 
 // A failed market-data read renders the panel instead of throwing into a
 // minified React error; anything else propagates as before.

@@ -7,6 +7,8 @@ import { EMPTY_FILTERS } from "@/lib/screener";
 import { DashboardHome } from "@/components/dashboard/dashboard-home";
 import { computeHoldingMetrics, computeTimelineSeries, computeTotals } from "@/lib/portfolio";
 import { getLatestCloses, latestDataDate } from "@/lib/market-data/current-price";
+import { rankForDisplay, withCoinCaps } from "@/lib/symbol-ranking";
+import { getCryptoMarketCaps } from "@/lib/actions/crypto";
 import { readRecentPrices } from "@/lib/market-data/paged-read";
 import { getDisplayPrefs } from "@/lib/actions/display-prefs";
 import { loadCostFx } from "@/lib/market-data/fx-history";
@@ -15,6 +17,9 @@ import { guardReads } from "@/components/data-unavailable";
 import { loadDailyBriefing } from "@/lib/daily-briefing-data";
 import { getBetaAccessLabel } from "@/lib/actions/billing";
 import { BetaWelcome } from "@/components/dashboard/beta-welcome";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = { title: "Base Camp - Cairn" };
 
 // A failed market-data read renders the panel instead of throwing into a
 // minified React error; anything else propagates as before.
@@ -134,19 +139,14 @@ async function DashboardBody(welcome: boolean) {
   // the rest of the screen's movers to fill the track out. Capped, because
   // beyond ~18 the loop is long enough that a symbol leaves and does not come
   // back inside a glance.
-  const heldOrder = new Map(symbols.map((sym, i) => [sym, i]));
-  const tickerItems = marketRows
-    .filter((r) => r.changePct !== null)
-    .sort((a, b) => {
-      const aHeld = heldOrder.get(a.symbol);
-      const bHeld = heldOrder.get(b.symbol);
-      if (aHeld !== undefined && bHeld !== undefined) return aHeld - bHeld;
-      if (aHeld !== undefined) return -1;
-      if (bHeld !== undefined) return 1;
-      return Math.abs(b.changePct ?? 0) - Math.abs(a.changePct ?? 0);
-    })
-    .slice(0, 18)
-    .map((r) => ({ symbol: r.symbol, changePct: r.changePct ?? 0 }));
+  // Held, then watched, then the largest by market cap above a floor (see
+  // lib/symbol-ranking.ts). It used to rank by size of move, so a tiny coin up
+  // 400% led the strip.
+  const coinCaps = await getCryptoMarketCaps();
+  const tickerItems = rankForDisplay(
+    withCoinCaps(marketRows.filter((r) => r.changePct !== null), coinCaps),
+    { held: symbols, watched: (watchlistItemsRes.data ?? []).map((item) => item.symbol), limit: 18 },
+  ).map((r) => ({ symbol: r.symbol, changePct: r.changePct ?? 0 }));
 
   const watchlistSymbols = new Set((watchlistItemsRes.data ?? []).map((item) => item.symbol));
   const watchlistCloses = await getLatestCloses(Array.from(watchlistSymbols));

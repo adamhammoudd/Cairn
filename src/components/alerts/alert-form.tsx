@@ -8,6 +8,7 @@ import {
   ALERT_TYPE_LABELS,
   alertCurrency,
   COOLDOWN_OPTIONS,
+  SELECTABLE_CHANNELS,
   type Alert,
   type AlertChannel,
   type AlertType,
@@ -22,10 +23,11 @@ export const CHANNEL_LABELS: Record<AlertChannel, string> = {
   email: "Email",
 };
 
-const CHANNELS: { value: AlertChannel; hint?: string }[] = [
+const CHANNELS: { value: AlertChannel; soon?: boolean }[] = [
   { value: "in_app" },
-  { value: "push", hint: "Needs a push provider" },
-  { value: "email", hint: "Needs an email provider" },
+  // Offered as "Coming soon" until a provider is wired (SELECTABLE_CHANNELS).
+  { value: "push", soon: true },
+  { value: "email", soon: true },
 ];
 
 const LABEL = FIELD_LABEL;
@@ -56,7 +58,8 @@ export function AlertForm({ alert, defaultChannels, onDone, onCancel }: AlertFor
   const [error, formAction] = useActionState(editing ? updateAlert : createAlert, null);
   const [alertType, setAlertType] = useState<AlertType>(alert?.alert_type ?? "price");
   const condition = alert?.condition ?? {};
-  const channels = alert ? alert.channels : defaultChannels;
+  // A new alert starts with only what can be delivered; an existing one shows what it already has.
+  const channels = alert ? alert.channels : defaultChannels.filter((c) => SELECTABLE_CHANNELS.includes(c));
 
   // Controlled condition fields. React 19 resets an uncontrolled form once its
   // action settles, so a validation error (e.g. fast SMA >= slow SMA) used to
@@ -311,26 +314,32 @@ export function AlertForm({ alert, defaultChannels, onDone, onCancel }: AlertFor
       <div className="mt-4">
         <span className={LABEL}>Deliver via</span>
         <div className="flex flex-wrap gap-4">
-          {CHANNELS.map((c) => (
-            <label
-              key={c.value}
-              title={c.hint}
-              className={`flex items-center gap-2 text-body pointer-coarse:min-h-11 ${c.value === "in_app" ? "text-primary" : "text-muted"}`}
-            >
-              <input
-                type="checkbox"
-                name="channels"
-                value={c.value}
-                defaultChecked={channels.includes(c.value)}
-                className="accent-accent"
-              />
-              {CHANNEL_LABELS[c.value]}
-            </label>
-          ))}
+          {CHANNELS.map((c) => {
+            const had = channels.includes(c.value);
+            return (
+              <label
+                key={c.value}
+                className={`flex items-center gap-2 text-body pointer-coarse:min-h-11 ${c.soon ? "text-dim" : c.value === "in_app" ? "text-primary" : "text-muted"}`}
+              >
+                <input
+                  type="checkbox"
+                  name={c.soon ? undefined : "channels"}
+                  value={c.value}
+                  defaultChecked={had}
+                  disabled={c.soon}
+                  className="accent-accent"
+                />
+                {CHANNEL_LABELS[c.value]}
+                {c.soon && <span className="font-mono text-eyebrow tracking-normal uppercase">Coming soon</span>}
+                {/* A disabled checkbox is not submitted. An existing alert that already
+                    had this channel keeps it through an edit: those rows keep working. */}
+                {c.soon && had && <input type="hidden" name="channels" value={c.value} />}
+              </label>
+            );
+          })}
         </div>
         <p className="mt-2 text-caption text-dim">
-          Push and email are recorded but not delivered - no provider is wired yet, so those rows are logged as{" "}
-          <span className="text-muted">unconfigured</span> rather than silently dropped.
+          Alerts appear in the app. Push and email are coming soon.
         </p>
       </div>
 

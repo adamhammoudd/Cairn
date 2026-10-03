@@ -3,6 +3,9 @@ import { createClient } from "@/lib/supabase/server";
 import { getUserSettings } from "@/lib/actions/settings";
 import { getBetaAccessLabel } from "@/lib/actions/billing";
 import { ChatThread } from "@/components/chat/chat-thread";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = { title: "Assistant - Cairn" };
 
 export default async function AssistantPage() {
   const supabase = await createClient();
