@@ -81,6 +81,9 @@ import { runAssistantTranscriptsSuite } from "./assistant-transcripts";
 import { runAssistantEmptyAnswersSuite } from "./assistant-empty-answers";
 import { runNativeCurrencySuite } from "./native-currency";
 import { runBetaInvitesSuite } from "./beta-invites";
+import { runRefreshQueueSuite } from "./refresh-queue";
+import { runPriceFreshnessSuite } from "./price-freshness";
+import { runCronAndFxRefreshSuite } from "./cron-and-fx-refresh";
 
 // A suite that throws (missing credentials, unreachable service) must surface
 // as a hard failure of that suite, not take the whole run down with a stack
@@ -153,6 +156,9 @@ async function main() {
     businessProfileSuites,
     nativeCurrencySuites,
     betaInvitesSuites,
+    refreshQueueSuites,
+    priceFreshnessSuites,
+    cronFxSuites,
   ] = await Promise.all([
     guarded("Adversarial scope guard", runAdversarialScopeGuardSuites),
     guarded("Methodology substance", async () => [await runMethodologySubstanceSuite()]),
@@ -199,6 +205,9 @@ async function main() {
     guarded("Business profile", async () => [await runBusinessProfileSuite()]),
     guarded("Native currency", async () => [await runNativeCurrencySuite()]),
     guarded("Beta invites", async () => [await runBetaInvitesSuite()]),
+    guarded("Data refresh queue", async () => [await runRefreshQueueSuite()]),
+    guarded("Price freshness labels", async () => [await runPriceFreshnessSuite()]),
+    guarded("Cron auth + FX top-up", async () => [await runCronAndFxRefreshSuite()]),
   ]);
 
   const allSuites = [
@@ -270,6 +279,9 @@ async function main() {
     ...businessProfileSuites,
     ...nativeCurrencySuites,
     ...betaInvitesSuites,
+    ...refreshQueueSuites,
+    ...priceFreshnessSuites,
+    ...cronFxSuites,
     ...costBasisFxSuites,
   ];
   const reportPath = writeReport(allSuites);

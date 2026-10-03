@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { MIGRATIONS, unwrap } from "@/lib/supabase/read";
 import { getCurrentPrice } from "@/lib/market-data/current-price";
 import { ensureSymbolIngested } from "@/lib/market-data/ingest";
+import { expectedLatestCloseDate } from "@/lib/market-hours";
 import { readNewestFirstPaged } from "@/lib/market-data/paged-read";
 import { getAssetCurrency } from "@/lib/market-data/asset-currency";
 import type { AssetType } from "@/lib/supabase/types";
@@ -115,6 +116,20 @@ export async function loadTicker(symbolRaw: string): Promise<TickerData | Ticker
     recentBarsDesc = await readChartBars(ingested.symbol);
     if (recentBarsDesc.length === 0) {
       return { symbol, reason: "unavailable", detail: `No market data available for ${symbol}.` };
+    }
+  }
+
+  // Bars that exist but are older than the newest close that could exist (ISRG
+  // sat on 25 Sep for a week) used to be shown as they were: only a symbol with
+  // NO bars was ever fetched on view. Heal it here. ensureSymbolIngested is
+  // guarded by the 15-minute directory window, so this costs at most one
+  // provider call per symbol per window, and only for a stale non-crypto symbol
+  // (coins are refreshed by ingest-crypto).
+  if (recentBarsDesc[0].asset_type !== "crypto" && recentBarsDesc[0].ts < expectedLatestCloseDate()) {
+    const refreshed = await ensureSymbolIngested(symbol, { range: "2y" }).catch(() => null);
+    if (refreshed?.status === "available") {
+      const fresh = await readChartBars(refreshed.symbol);
+      if (fresh.length > 0) recentBarsDesc = fresh;
     }
   }
 

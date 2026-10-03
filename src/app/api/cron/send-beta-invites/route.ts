@@ -1,5 +1,5 @@
-import { createHash, timingSafeEqual } from "node:crypto";
 import { NextResponse, type NextRequest } from "next/server";
+import { checkCronAuth, cronRejection } from "@/lib/cron-auth";
 import { readInviteJobConfig } from "@/lib/beta-invites/config";
 import { runInviteJob } from "@/lib/beta-invites/job";
 import { productionInviteDeps } from "@/lib/beta-invites/server";
@@ -23,18 +23,12 @@ export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
-function authorized(header: string | null, secret: string | undefined): boolean {
-  if (!secret || secret.length < 16 || !header) return false;
-  // Hash both sides so the comparison is constant-time regardless of length.
-  const a = createHash("sha256").update(header).digest();
-  const b = createHash("sha256").update(`Bearer ${secret}`).digest();
-  return timingSafeEqual(a, b);
-}
-
 export async function GET(request: NextRequest) {
-  if (!authorized(request.headers.get("authorization"), process.env.CRON_SECRET)) {
-    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  }
+  // A missing CRON_SECRET is reported (503 + a log line), not hidden behind a
+  // bare 401: Vercel sends no Authorization header at all without it, so the
+  // job never runs and the admin page says "Last run: never".
+  const rejected = cronRejection("send-beta-invites", checkCronAuth(request.headers.get("authorization"), process.env.CRON_SECRET));
+  if (rejected) return NextResponse.json({ error: rejected.error }, { status: rejected.status });
 
   const result = await runInviteJob({ ...productionInviteDeps(), config: readInviteJobConfig() });
   // Counts and an outcome only - never an address or a code.
