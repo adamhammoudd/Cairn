@@ -7,6 +7,7 @@ import { Logo } from "@/components/logo";
 import { GlobalSearch } from "@/components/layout/global-search";
 import { NAV_ITEMS, isNavGroup, type NavGroup } from "@/lib/nav-items";
 import { signOut } from "@/lib/actions/auth";
+import { initialsOf } from "@/lib/display-name";
 
 interface TopNavProps {
   displayName: string;
@@ -21,13 +22,6 @@ function isRouteActive(pathname: string, route: string) {
 
 function groupHasActiveRoute(pathname: string, group: NavGroup) {
   return group.items.some((item) => isRouteActive(pathname, item.route));
-}
-
-function initialsOf(name: string) {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return "?";
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return (parts[0][0] + parts[1][0]).toUpperCase();
 }
 
 const ACCOUNT_MENU = [

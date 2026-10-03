@@ -81,6 +81,7 @@ import { runAssistantTranscriptsSuite } from "./assistant-transcripts";
 import { runAssistantEmptyAnswersSuite } from "./assistant-empty-answers";
 import { runNativeCurrencySuite } from "./native-currency";
 import { runBetaInvitesSuite } from "./beta-invites";
+import { runSignupNameSuite } from "./signup-name";
 import { runRefreshQueueSuite } from "./refresh-queue";
 import { runPriceFreshnessSuite } from "./price-freshness";
 import { runCronAndFxRefreshSuite } from "./cron-and-fx-refresh";
@@ -170,6 +171,7 @@ async function main() {
     businessProfileSuites,
     nativeCurrencySuites,
     betaInvitesSuites,
+    signupNameSuites,
     refreshQueueSuites,
     priceFreshnessSuites,
     cronFxSuites,
@@ -233,6 +235,7 @@ async function main() {
     guarded("Business profile", async () => [await runBusinessProfileSuite()]),
     guarded("Native currency", async () => [await runNativeCurrencySuite()]),
     guarded("Beta invites", async () => [await runBetaInvitesSuite()]),
+    guarded("Sign-up name", async () => [await runSignupNameSuite()]),
     guarded("Data refresh queue", async () => [await runRefreshQueueSuite()]),
     guarded("Price freshness labels", async () => [await runPriceFreshnessSuite()]),
     guarded("Cron auth + FX top-up", async () => [await runCronAndFxRefreshSuite()]),
@@ -321,6 +324,7 @@ async function main() {
     ...businessProfileSuites,
     ...nativeCurrencySuites,
     ...betaInvitesSuites,
+    ...signupNameSuites,
     ...refreshQueueSuites,
     ...priceFreshnessSuites,
     ...cronFxSuites,
