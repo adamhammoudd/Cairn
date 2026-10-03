@@ -6,8 +6,8 @@ Cairn has not launched yet. The only open action is joining the waitlist for ear
 
 ## Pages
 
-- [Join the waitlist](/waitlist): what Cairn is and how to get early access
-- [Overview](/welcome): what an answer contains and the Free and Premium plans
+- [Join the waitlist](/waitlist): what Cairn is, what Premium adds, and how to get early access
+- [Overview](/welcome): what an answer contains
 
 ## Legal
 

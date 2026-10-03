@@ -32,7 +32,7 @@ const countQuery = () => {
 };
 const stubs: Record<string, unknown> = {
   "@/lib/supabase/auth": { getAuthUser: async () => (fake.session ? { id: fake.session } : null) },
-  "@/lib/supabase/server": { createClient: async () => ({ from: () => ({ select: countQuery }) }) },
+  "@/lib/supabase/server": { createClient: async () => ({ from: (t: string) => (t === "user_settings" ? { select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { briefing_timezone: "Europe/Brussels" } }) }) }) } : { select: countQuery }) }) },
   "@/lib/supabase/admin": { createAdminClient: () => ({ from: (table: string) => ({ insert: async (row: Record<string, unknown>) => { fake.inserts.push({ table, row }); return { error: null }; } }) }) },
   "@/lib/actions/billing": { getUserPlan: async () => "free" },
   "@/lib/admin-role": { isAdminUser: async () => false },

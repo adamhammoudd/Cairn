@@ -93,6 +93,9 @@ import { runOperatorAndEmailFooterSuite } from "./operator-and-email-footer";
 import { runForwardLookingSuite } from "./forward-looking";
 import { runLegalCopySuite } from "./legal-copy";
 import { runPortfolioContextPayloadSuite } from "./portfolio-context-payload";
+import { runCodeHealthSuite } from "./code-health";
+import { runChatCapTimezoneSuite } from "./chat-cap-timezone";
+import { runMoneyTwoDecimalsSuite } from "./money-two-decimals";
 
 // A suite that throws (missing credentials, unreachable service) must surface
 // as a hard failure of that suite, not take the whole run down with a stack
@@ -177,6 +180,9 @@ async function main() {
     forwardLookingSuites,
     legalCopySuites,
     portfolioPayloadSuites,
+    codeHealthSuites,
+    chatCapTzSuites,
+    moneyDecimalsSuites,
   ] = await Promise.all([
     guarded("Adversarial scope guard", runAdversarialScopeGuardSuites),
     guarded("Methodology substance", async () => [await runMethodologySubstanceSuite()]),
@@ -235,6 +241,9 @@ async function main() {
     guarded("Forward-looking direction check", async () => [await runForwardLookingSuite()]),
     guarded("Legal pages match the code", async () => [await runLegalCopySuite()]),
     guarded("Portfolio context opt-in + payload", async () => [await runPortfolioContextPayloadSuite()]),
+    guarded("Code health", async () => [await runCodeHealthSuite()]),
+    guarded("Chat cap day boundary", async () => [await runChatCapTimezoneSuite()]),
+    guarded("Money two decimals", async () => [await runMoneyTwoDecimalsSuite()]),
   ]);
 
   const allSuites = [
@@ -319,6 +328,9 @@ async function main() {
     ...forwardLookingSuites,
     ...legalCopySuites,
     ...portfolioPayloadSuites,
+    ...codeHealthSuites,
+    ...chatCapTzSuites,
+    ...moneyDecimalsSuites,
   ];
   const reportPath = writeReport(allSuites);
 

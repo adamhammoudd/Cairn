@@ -13,7 +13,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getAuthUser } from "@/lib/supabase/auth";
 import { getUserPlan, type UsageGate } from "@/lib/actions/billing";
 import { isAdminUser } from "@/lib/admin-role";
-import { BETA_CHAT_DAILY_CAP, betaPremiumUntil, computeChatUsageSummary, startOfTodayIso } from "@/lib/billing";
+import { BETA_CHAT_DAILY_CAP, betaPremiumUntil, computeChatUsageSummary, isValidTimeZone, resetPhrase, startOfTodayIso } from "@/lib/billing";
 
 // Before-not-after discipline, same as reserveAiUsage (lib/ai-usage.ts). Daily
 // rather than monthly (chat is a much higher-frequency surface than requesting a
@@ -23,13 +23,16 @@ export async function checkChatUsageAllowed(): Promise<UsageGate> {
   if (!user) return { allowed: false, message: "Sign in to use the assistant." };
 
   const supabase = await createClient();
+  // "Today" is the day in the reader's own time zone (audit 4.2), UTC if unknown.
+  const { data: settings } = await supabase.from("user_settings").select("briefing_timezone").eq("user_id", user.id).maybeSingle();
+  const timeZone = isValidTimeZone(settings?.briefing_timezone) ? settings.briefing_timezone : "UTC";
   const [tier, { count }, admin] = await Promise.all([
     getUserPlan(),
     supabase
       .from("chat_usage_events")
       .select("*", { count: "exact", head: true })
       .eq("user_id", user.id)
-      .gte("created_at", startOfTodayIso()),
+      .gte("created_at", startOfTodayIso(timeZone)),
     isAdminUser(supabase, user.id),
   ]);
 
@@ -40,7 +43,7 @@ export async function checkChatUsageAllowed(): Promise<UsageGate> {
   if (betaPremiumUntil() && (count ?? 0) >= BETA_CHAT_DAILY_CAP) {
     return {
       allowed: false,
-      message: `You've sent ${BETA_CHAT_DAILY_CAP} messages today, the most the beta allows in one day. It resets tomorrow.`,
+      message: `You've sent ${BETA_CHAT_DAILY_CAP} messages today, the most the beta allows in one day. It resets at ${resetPhrase(timeZone)}.`,
     };
   }
 
@@ -48,7 +51,7 @@ export async function checkChatUsageAllowed(): Promise<UsageGate> {
   if (summary.limit !== null && (summary.remaining ?? 0) <= 0) {
     return {
       allowed: false,
-      message: `You've used all ${summary.limit} chat messages included in your ${summary.tier} plan today. Switch plans on the Billing page or try again tomorrow.`,
+      message: `You've used all ${summary.limit} chat messages included in your ${summary.tier} plan today. Switch plans on the Billing page or try again after it resets at ${resetPhrase(timeZone)}.`,
     };
   }
   return { allowed: true };

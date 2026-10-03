@@ -16,6 +16,7 @@
 //
 // Run: npx tsx --conditions=react-server scripts/tests/ai-methodology-gaps.ts
 import { execFileSync } from "node:child_process";
+import { renderChildEnv } from "./render-helper";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { SuiteResult, TestCase } from "./report";
@@ -87,6 +88,7 @@ export async function runAiMethodologyGapsSuite(): Promise<SuiteResult> {
       html = execFileSync(process.execPath, [require.resolve("tsx/cli"), join(__dirname, "render-methodology-card.ts")], {
         cwd: ROOT,
         encoding: "utf8",
+        env: renderChildEnv(),
       });
     } catch (err) {
       console.error(err);

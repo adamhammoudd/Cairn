@@ -11,6 +11,7 @@ import {
   computeChatUsageSummary,
   startOfCurrentMonthIso,
   startOfTodayIso,
+  isValidTimeZone,
   betaPremiumUntil,
   resolvePlan,
   formatBetaUntil,
@@ -68,11 +69,20 @@ export async function getBillingSummary(): Promise<UsageSummary> {
   return computeUsageSummary(tier, count ?? 0, admin);
 }
 
+// The reader's time zone, for "today" in the daily chat cap. user_settings
+// holds one (briefing_timezone); a missing row or an invalid zone is UTC.
+async function readerTimeZone(supabase: Awaited<ReturnType<typeof createClient>>, userId: string): Promise<string> {
+  const { data } = await supabase.from("user_settings").select("briefing_timezone").eq("user_id", userId).maybeSingle();
+  const tz = data?.briefing_timezone;
+  return isValidTimeZone(tz) ? tz : "UTC";
+}
+
 export async function getChatUsageSummary(): Promise<ChatUsageSummary> {
   const user = await getAuthUser();
   if (!user) return computeChatUsageSummary("free", 0);
 
   const supabase = await createClient();
+  const timeZone = await readerTimeZone(supabase, user.id);
 
   const [tier, { count }, admin] = await Promise.all([
     getUserPlan(),
@@ -80,7 +90,7 @@ export async function getChatUsageSummary(): Promise<ChatUsageSummary> {
       .from("chat_usage_events")
       .select("*", { count: "exact", head: true })
       .eq("user_id", user.id)
-      .gte("created_at", startOfTodayIso()),
+      .gte("created_at", startOfTodayIso(timeZone)),
     isAdminUser(supabase, user.id),
   ]);
 
@@ -213,6 +223,7 @@ export interface BillingDetail {
 export async function getBillingDetail(): Promise<BillingDetail> {
   const user = await getAuthUser();
   const supabase = await createClient();
+  const timeZone = user ? await readerTimeZone(supabase, user.id) : "UTC";
 
   if (!user) {
     return {
@@ -246,7 +257,7 @@ export async function getBillingDetail(): Promise<BillingDetail> {
       .from("chat_usage_events")
       .select("*", { count: "exact", head: true })
       .eq("user_id", user.id)
-      .gte("created_at", startOfTodayIso()),
+      .gte("created_at", startOfTodayIso(timeZone)),
     isAdminUser(supabase, user.id),
     supabase
       .from("subscription_events")
